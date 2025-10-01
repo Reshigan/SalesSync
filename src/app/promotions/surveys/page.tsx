@@ -29,34 +29,34 @@ export default function SurveysPage() {
   const [showModal, setShowModal] = useState(false);
 
   const columns = [
-    { key: 'title', header: 'Survey Title', sortable: true },
-    { key: 'campaign', header: 'Campaign' },
+    { accessor: 'title', header: 'Survey Title', sortable: true },
+    { accessor: 'campaign', header: 'Campaign' },
     {
       key: 'responses',
       header: 'Progress',
-      render: (survey: Survey) => (
+      cell: ({ row }: { row: Survey }) => (
         <div className="flex items-center gap-2">
           <div className="w-24 bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full"
-              style={{ width: `${(survey.responses / survey.target) * 100}%` }}
+              style={{ width: `${(.responses / .target) * 100}%` }}
             ></div>
           </div>
-          <span className="text-sm">{survey.responses}/{survey.target}</span>
+          <span className="text-sm">{.responses}/{.target}</span>
         </div>
       )
     },
     {
       key: 'features',
       header: 'Features',
-      render: (survey: Survey) => (
+      cell: ({ row }: { row: Survey }) => (
         <div className="flex gap-2">
-          {survey.hasPhotos && (
+          {.hasPhotos && (
             <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs flex items-center gap-1">
               <Camera className="h-3 w-3" /> Photos
             </span>
           )}
-          {survey.hasGeoValidation && (
+          {.hasGeoValidation && (
             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs flex items-center gap-1">
               <MapPin className="h-3 w-3" /> Geo
             </span>
@@ -67,17 +67,17 @@ export default function SurveysPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (survey: Survey) => (
+      cell: ({ row }: { row: Survey }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          survey.status === 'active' ? 'bg-green-100 text-green-800' :
-          survey.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+          .status === 'active' ? 'bg-green-100 text-green-800' :
+          .status === 'completed' ? 'bg-blue-100 text-blue-800' :
           'bg-gray-100 text-gray-800'
         }`}>
-          {survey.status}
+          {.status}
         </span>
       )
     },
-    { key: 'createdAt', header: 'Created', sortable: true },
+    { accessor: 'createdAt', header: 'Created', sortable: true },
   ];
 
   const totalResponses = surveys.reduce((sum, s) => sum + s.responses, 0);

@@ -31,35 +31,35 @@ export default function TenantsPage() {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
 
   const columns = [
-    { key: 'name', header: 'Tenant Name', sortable: true },
-    { key: 'code', header: 'Code' },
-    { key: 'industry', header: 'Industry' },
-    { key: 'plan', header: 'Plan' },
-    { key: 'users', header: 'Users', sortable: true },
+    { accessor: 'name', header: 'Tenant Name', sortable: true },
+    { accessor: 'code', header: 'Code' },
+    { accessor: 'industry', header: 'Industry' },
+    { accessor: 'plan', header: 'Plan' },
+    { accessor: 'users', header: 'Users', sortable: true },
     {
       key: 'status',
       header: 'Status',
-      render: (tenant: Tenant) => (
+      cell: ({ row }: { row: Tenant }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          tenant.status === 'active' ? 'bg-green-100 text-green-800' :
-          tenant.status === 'trial' ? 'bg-blue-100 text-blue-800' :
+          .status === 'active' ? 'bg-green-100 text-green-800' :
+          .status === 'trial' ? 'bg-blue-100 text-blue-800' :
           'bg-red-100 text-red-800'
         }`}>
-          {tenant.status}
+          {.status}
         </span>
       )
     },
-    { key: 'createdAt', header: 'Created', sortable: true },
+    { accessor: 'createdAt', header: 'Created', sortable: true },
     {
       key: 'actions',
       header: 'Actions',
-      render: (tenant: Tenant) => (
+      cell: ({ row }: { row: Tenant }) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => {
-              setEditingTenant(tenant);
+              setEditingTenant(row);
               setShowModal(true);
             }}
           >
@@ -68,7 +68,7 @@ export default function TenantsPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => window.location.href = `/admin/tenants/${tenant.id}/settings`}
+            onClick={() => window.location.href = `/admin/tenants/${.id}/settings`}
           >
             <Settings className="h-4 w-4" />
           </Button>

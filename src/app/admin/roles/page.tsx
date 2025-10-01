@@ -32,32 +32,32 @@ export default function RolesPage() {
   const [editingRole, setEditingRole] = useState<Role | null>(null);
 
   const columns = [
-    { key: 'name', header: 'Role Name', sortable: true },
-    { key: 'code', header: 'Code' },
-    { key: 'description', header: 'Description' },
-    { key: 'userCount', header: 'Users', sortable: true },
-    { key: 'permissions', header: 'Permissions', sortable: true },
+    { accessor: 'name', header: 'Role Name', sortable: true },
+    { accessor: 'code', header: 'Code' },
+    { accessor: 'description', header: 'Description' },
+    { accessor: 'userCount', header: 'Users', sortable: true },
+    { accessor: 'permissions', header: 'Permissions', sortable: true },
     {
       key: 'status',
       header: 'Status',
-      render: (role: Role) => (
+      cell: ({ row }: { row: Role }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          role.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+          row.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
         }`}>
-          {role.status}
+          {row.status}
         </span>
       )
     },
     {
       key: 'actions',
       header: 'Actions',
-      render: (role: Role) => (
+      cell: ({ row }: { row: Role }) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => {
-              setEditingRole(role);
+              setEditingRole(row);
               setShowModal(true);
             }}
           >
@@ -66,7 +66,7 @@ export default function RolesPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => handleManagePermissions(role)}
+            onClick={() => handleManagePermissions(row)}
           >
             <CheckSquare className="h-4 w-4" />
           </Button>
@@ -74,7 +74,7 @@ export default function RolesPage() {
             size="sm"
             variant="ghost"
             className="text-red-600"
-            onClick={() => handleDelete(role.id)}
+            onClick={() => handleDelete(row.id)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -85,7 +85,7 @@ export default function RolesPage() {
 
   const handleManagePermissions = (role: Role) => {
     // Navigate to permissions page
-    window.location.href = `/admin/roles/${role.id}/permissions`;
+    window.location.href = `/admin/roles/${.id}/permissions`;
   };
 
   const handleDelete = (id: string) => {
