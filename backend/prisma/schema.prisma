@@ -1,0 +1,635 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenancy
+model Tenant {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?  @unique
+  settings    Json?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  products    Product[]
+  customers   Customer[]
+  orders      Order[]
+  routes      Route[]
+  campaigns   Campaign[]
+  stores      Store[]
+  inventories Inventory[]
+
+  @@map("tenants")
+}
+
+// User Management
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  firstName   String
+  lastName    String
+  phone       String?
+  avatar      String?
+  role        UserRole
+  status      UserStatus @default(ACTIVE)
+  lastLoginAt DateTime?
+  settings    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  routes           Route[]
+  orders           Order[]
+  vanSalesLoads    VanSalesLoad[]
+  promoterActivities PromoterActivity[]
+  merchandisingVisits MerchandisingVisit[]
+  simDistributions SimDistribution[]
+  commissions      Commission[]
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  MANAGER
+  VAN_SALES_AGENT
+  PROMOTER
+  MERCHANDISER
+  FIELD_AGENT
+  WAREHOUSE_STAFF
+  BACK_OFFICE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  PENDING
+}
+
+// Product Management
+model Product {
+  id          String   @id @default(cuid())
+  sku         String
+  name        String
+  description String?
+  category    String
+  brand       String?
+  unitPrice   Decimal
+  costPrice   Decimal
+  weight      Decimal?
+  dimensions  Json?
+  barcode     String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  orderItems     OrderItem[]
+  loadItems      VanSalesLoadItem[]
+  inventories    Inventory[]
+  priceHistories PriceHistory[]
+
+  @@unique([tenantId, sku])
+  @@map("products")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  price     Decimal
+  reason    String?
+  createdAt DateTime @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("price_histories")
+}
+
+// Customer Management
+model Customer {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  coordinates Json?
+  customerType CustomerType
+  creditLimit Decimal?
+  paymentTerms String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  orders      Order[]
+  routeStops  RouteStop[]
+
+  @@unique([tenantId, code])
+  @@map("customers")
+}
+
+enum CustomerType {
+  RETAIL
+  WHOLESALE
+  DISTRIBUTOR
+  CORPORATE
+}
+
+// Route Management
+model Route {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  startTime   DateTime?
+  endTime     DateTime?
+  status      RouteStatus @default(PLANNED)
+  totalDistance Decimal?
+  estimatedDuration Int?
+  actualDuration Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  stops       RouteStop[]
+  loads       VanSalesLoad[]
+
+  @@map("routes")
+}
+
+model RouteStop {
+  id          String    @id @default(cuid())
+  sequence    Int
+  plannedTime DateTime?
+  actualTime  DateTime?
+  status      StopStatus @default(PENDING)
+  notes       String?
+  coordinates Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  routeId     String
+  route       Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id])
+
+  @@map("route_stops")
+}
+
+enum RouteStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum StopStatus {
+  PENDING
+  VISITED
+  SKIPPED
+  FAILED
+}
+
+// Van Sales Management
+model VanSalesLoad {
+  id          String   @id @default(cuid())
+  loadNumber  String
+  loadDate    DateTime
+  totalValue  Decimal
+  status      LoadStatus @default(LOADED)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  routeId     String?
+  route       Route?   @relation(fields: [routeId], references: [id])
+
+  // Relations
+  items       VanSalesLoadItem[]
+  reconciliation VanSalesReconciliation?
+
+  @@map("van_sales_loads")
+}
+
+model VanSalesLoadItem {
+  id          String  @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal
+  totalValue  Decimal
+
+  loadId      String
+  load        VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  @@map("van_sales_load_items")
+}
+
+model VanSalesReconciliation {
+  id              String   @id @default(cuid())
+  cashCollected   Decimal
+  cashExpected    Decimal
+  cashVariance    Decimal
+  stockReturned   Json
+  stockSold       Json
+  notes           String?
+  reconciliationDate DateTime
+  createdAt       DateTime @default(now())
+
+  loadId          String   @unique
+  load            VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
+
+  @@map("van_sales_reconciliations")
+}
+
+enum LoadStatus {
+  LOADED
+  IN_TRANSIT
+  DELIVERED
+  RECONCILED
+}
+
+// Order Management
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber String
+  orderDate   DateTime
+  deliveryDate DateTime?
+  totalAmount Decimal
+  status      OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+
+  // Relations
+  items       OrderItem[]
+  invoices    Invoice[]
+
+  @@unique([tenantId, orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+  discount    Decimal @default(0)
+
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  REFUNDED
+}
+
+// Invoice Management
+model Invoice {
+  id          String        @id @default(cuid())
+  invoiceNumber String
+  invoiceDate DateTime
+  dueDate     DateTime
+  totalAmount Decimal
+  paidAmount  Decimal       @default(0)
+  status      InvoiceStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+enum InvoiceStatus {
+  PENDING
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// Promoter Activities
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  budget      Decimal?
+  status      CampaignStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  activities  PromoterActivity[]
+
+  @@map("campaigns")
+}
+
+model PromoterActivity {
+  id              String   @id @default(cuid())
+  activityType    String
+  location        String
+  startTime       DateTime
+  endTime         DateTime?
+  samplesDistributed Int   @default(0)
+  contactsMade    Int      @default(0)
+  surveysCompleted Int     @default(0)
+  photos          Json?
+  notes           String?
+  status          ActivityStatus @default(PENDING)
+  verificationScore Decimal?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id])
+
+  @@map("promoter_activities")
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum ActivityStatus {
+  PENDING
+  VERIFIED
+  APPROVED
+  REJECTED
+}
+
+// Merchandising
+model Store {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  address     String?
+  city        String?
+  state       String?
+  coordinates Json?
+  storeType   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  visits      MerchandisingVisit[]
+
+  @@unique([tenantId, code])
+  @@map("stores")
+}
+
+model MerchandisingVisit {
+  id              String   @id @default(cuid())
+  visitDate       DateTime
+  shelfShare      Decimal?
+  facingsCount    Int?
+  complianceScore Decimal?
+  issuesFound     Json?
+  photos          Json?
+  notes           String?
+  status          VisitStatus @default(COMPLETED)
+  aiScore         Decimal?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
+
+  @@map("merchandising_visits")
+}
+
+enum VisitStatus {
+  COMPLETED
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+// Field Agent Operations
+model SimDistribution {
+  id              String   @id @default(cuid())
+  customerName    String
+  customerPhone   String
+  customerType    String
+  simNumber       String
+  activationCode  String
+  location        String
+  distributionDate DateTime
+  kycStatus       KycStatus @default(PENDING)
+  activationStatus ActivationStatus @default(PENDING)
+  commission      Decimal
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@map("sim_distributions")
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum ActivationStatus {
+  PENDING
+  ACTIVATED
+  FAILED
+}
+
+// Inventory Management
+model Inventory {
+  id          String   @id @default(cuid())
+  currentStock Int
+  minStock    Int
+  maxStock    Int
+  location    String?
+  lastMovement DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+
+  // Relations
+  movements   InventoryMovement[]
+
+  @@unique([tenantId, productId, location])
+  @@map("inventories")
+}
+
+model InventoryMovement {
+  id          String     @id @default(cuid())
+  movementType MovementType
+  quantity    Int
+  reason      String?
+  reference   String?
+  createdAt   DateTime   @default(now())
+
+  inventoryId String
+  inventory   Inventory  @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_movements")
+}
+
+enum MovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER
+}
+
+// Commission Management
+model Commission {
+  id              String   @id @default(cuid())
+  period          String
+  baseSalary      Decimal
+  salesAmount     Decimal
+  commissionRate  Decimal
+  commissionAmount Decimal
+  bonuses         Decimal  @default(0)
+  deductions      Decimal  @default(0)
+  totalEarnings   Decimal
+  status          CommissionStatus @default(PENDING)
+  paymentDate     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@map("commissions")
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  DISPUTED
+}
+
+// Audit Logging
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entity      String
+  entityId    String
+  oldValues   Json?
+  newValues   Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// File Management
+model FileUpload {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  url         String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@map("file_uploads")
+}
