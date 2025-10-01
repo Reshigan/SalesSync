@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { NotificationCenter } from '@/components/ui/NotificationCenter'
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
 import { 
   LayoutDashboard,
   Truck,
@@ -374,6 +375,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+      
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   )
 }
