@@ -18,41 +18,11 @@ import {
 } from 'lucide-react';
 
 export const RealTimeDemo: React.FC = () => {
-  const { token, isAuthenticated, user } = useAuthStore();
-  const [hydrated, setHydrated] = useState(false);
-  const [actualToken, setActualToken] = useState<string | null>(null);
+  const { token, isAuthenticated, user, _hasHydrated } = useAuthStore();
   
-  // Handle hydration and token retrieval
-  useEffect(() => {
-    setHydrated(true);
-    
-    // Get token from multiple sources
-    const zustandToken = token;
-    const lsToken = localStorage.getItem('accessToken');
-    const authStorageData = localStorage.getItem('auth-storage');
-    
-    let parsedToken = null;
-    if (authStorageData) {
-      try {
-        const parsed = JSON.parse(authStorageData);
-        parsedToken = parsed.state?.token;
-      } catch (e) {
-        console.warn('Failed to parse auth-storage:', e);
-      }
-    }
-    
-    const finalToken = zustandToken || lsToken || parsedToken;
-    setActualToken(finalToken);
-    
-    console.log('🔍 RealTimeDemo - Token Resolution:');
-    console.log('  - Zustand token:', zustandToken ? `${zustandToken.substring(0, 20)}...` : 'null');
-    console.log('  - localStorage accessToken:', lsToken ? `${lsToken.substring(0, 20)}...` : 'null');
-    console.log('  - auth-storage token:', parsedToken ? `${parsedToken.substring(0, 20)}...` : 'null');
-    console.log('  - Final token:', finalToken ? `${finalToken.substring(0, 20)}...` : 'null');
-  }, [token, isAuthenticated, user]);
-  
-  if (!hydrated) {
-    return <div>Loading...</div>;
+  // Wait for Zustand to hydrate before rendering
+  if (!_hasHydrated) {
+    return <div className="p-4">Loading auth state...</div>;
   }
   
   const {
@@ -111,16 +81,10 @@ export const RealTimeDemo: React.FC = () => {
     try {
       console.log('🔔 Sending test notification...');
       
-      // Use the resolved token
-      const authToken = actualToken;
-      
-      console.log('Token from Zustand:', !!token);
-      console.log('Token from localStorage:', !!(typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null));
-      console.log('Final token available:', !!authToken);
-      console.log('Token preview:', authToken ? `${authToken.substring(0, 20)}...` : 'null');
+      console.log('🔔 Using token:', token ? `${token.substring(0, 20)}...` : 'null');
       console.log('API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
       
-      if (!authToken) {
+      if (!token) {
         console.error('❌ No authentication token available');
         alert('No authentication token available. Please login again.');
         return;
@@ -130,7 +94,7 @@ export const RealTimeDemo: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: 'user_1', // Demo user ID
@@ -262,9 +226,9 @@ export const RealTimeDemo: React.FC = () => {
           {/* Debug Auth Status */}
           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
             <div>Auth Status: {isAuthenticated ? '✅ Authenticated' : '❌ Not Authenticated'}</div>
-            <div>Zustand Token: {token ? `✅ Available (${token.substring(0, 20)}...)` : '❌ Missing'}</div>
-            <div>Actual Token: {actualToken ? `✅ Available (${actualToken.substring(0, 20)}...)` : '❌ Missing'}</div>
+            <div>Token: {token ? `✅ Available (${token.substring(0, 20)}...)` : '❌ Missing'}</div>
             <div>User: {user ? `✅ ${user.name} (${user.role})` : '❌ No User'}</div>
+            <div>Hydrated: {_hasHydrated ? '✅ Yes' : '❌ No'}</div>
           </div>
         </div>
       </Card>

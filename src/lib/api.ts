@@ -13,10 +13,8 @@ class ApiService {
 
   constructor() {
     this.baseURL = API_BASE_URL;
-    // Get token from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('accessToken');
-    }
+    // Token will be set by Zustand store after rehydration
+    // via apiService.setToken() in auth store
   }
 
   private async request<T>(
@@ -67,11 +65,11 @@ class ApiService {
 
     if (response.data) {
       this.token = response.data.accessToken;
+      // Store refresh token separately (not managed by Zustand)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', response.data.accessToken);
         localStorage.setItem('refreshToken', response.data.refreshToken);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
       }
+      // Note: accessToken and user are now managed by Zustand persist
     }
 
     return response;
@@ -115,10 +113,19 @@ class ApiService {
   logout(): void {
     this.token = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
+      // Note: accessToken and user are now managed by Zustand persist
     }
+  }
+  
+  // Method to set token from Zustand store
+  setToken(token: string | null): void {
+    this.token = token;
+  }
+  
+  // Method to get current token
+  getToken(): string | null {
+    return this.token;
   }
 
   // User methods

@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       permissions: [],
+      _hasHydrated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true })
@@ -44,9 +45,13 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (response.data) {
+            const token = response.data.accessToken;
+            // Set token in API service
+            apiService.setToken(token);
+            
             set({
               user: response.data.user,
-              token: response.data.accessToken,
+              token: token,
               isAuthenticated: true,
               permissions: response.data.user.permissions || [],
               isLoading: false,
@@ -114,6 +119,10 @@ export const useAuthStore = create<AuthState>()(
         const roleArray = Array.isArray(roles) ? roles : [roles]
         return roleArray.includes(user.role)
       },
+      
+      setHasHydrated: (hasHydrated: boolean) => {
+        set({ _hasHydrated: hasHydrated })
+      },
     }),
     {
       name: 'auth-storage',
@@ -123,6 +132,15 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         permissions: state.permissions,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Sync token to API service after rehydration
+          if (state.token) {
+            apiService.setToken(state.token);
+          }
+          state.setHasHydrated(true);
+        }
+      },
     }
   )
 )
