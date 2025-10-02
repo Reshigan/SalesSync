@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { usePermissions } from '@/hooks/usePermissions'
 import { NotificationCenter } from '@/components/ui/NotificationCenter'
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { GlobalSearch } from '@/components/GlobalSearch'
 import { 
   LayoutDashboard,
   Truck,
@@ -302,14 +304,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center justify-between h-16 px-6">
             {/* Search */}
             <div className="flex-1 max-w-lg">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search transactions, customers, products..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
+              <GlobalSearch />
             </div>
 
             {/* Right side */}
@@ -372,7 +367,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page content */}
         <main className="p-6">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
       

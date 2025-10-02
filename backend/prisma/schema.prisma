@@ -23,9 +23,12 @@ model Tenant {
 
   // Relations
   users       User[]
+  productCategories ProductCategory[]
   products    Product[]
   customers   Customer[]
   orders      Order[]
+  regions     Region[]
+  areas       Area[]
   routes      Route[]
   campaigns   Campaign[]
   stores      Store[]
@@ -86,14 +89,43 @@ enum UserStatus {
   PENDING
 }
 
+// Product Category Hierarchy
+model ProductCategory {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Hierarchy (self-referencing for sub-categories)
+  parentId    String?
+  parent      ProductCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryHierarchy")
+
+  // Relations
+  products    Product[]
+
+  @@unique([tenantId, code])
+  @@map("product_categories")
+}
+
 // Product Management
 model Product {
   id          String   @id @default(cuid())
   sku         String
   name        String
   description String?
-  category    String
   brand       String?
+  
+  // Category relationship
+  categoryId  String
+  category    ProductCategory @relation(fields: [categoryId], references: [id])
   unitPrice   Decimal
   costPrice   Decimal
   weight      Decimal?
@@ -153,6 +185,10 @@ model Customer {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // Territory assignment
+  routeId     String?
+  route       Route?   @relation(fields: [routeId], references: [id])
+
   // Relations
   orders      Order[]
   routeStops  RouteStop[]
@@ -166,6 +202,51 @@ enum CustomerType {
   WHOLESALE
   DISTRIBUTOR
   CORPORATE
+}
+
+// Geographic Hierarchy: Region → Area → Route → Customer
+model Region {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Relations
+  areas       Area[]
+
+  @@unique([tenantId, code])
+  @@map("regions")
+}
+
+model Area {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Multi-tenancy
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Hierarchy
+  regionId    String
+  region      Region   @relation(fields: [regionId], references: [id])
+
+  // Relations
+  routes      Route[]
+
+  @@unique([tenantId, code])
+  @@map("areas")
 }
 
 // Route Management
@@ -185,6 +266,10 @@ model Route {
   // Multi-tenancy
   tenantId    String
   tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // Hierarchy
+  areaId      String
+  area        Area       @relation(fields: [areaId], references: [id])
 
   // Relations
   userId      String
