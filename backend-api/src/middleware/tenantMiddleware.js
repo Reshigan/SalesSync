@@ -1,9 +1,11 @@
 const { getOneQuery } = require('../database/init');
 const { AppError } = require('./errorHandler');
 
+const jwt = require('jsonwebtoken');
+
 const tenantMiddleware = async (req, res, next) => {
   try {
-    // Get tenant ID from header or subdomain
+    // Get tenant ID from header, subdomain, or JWT token
     let tenantId = req.headers['x-tenant-id'];
     
     if (!tenantId) {
@@ -20,6 +22,22 @@ const tenantMiddleware = async (req, res, next) => {
           if (tenant) {
             tenantId = tenant.id;
           }
+        }
+      }
+    }
+    
+    if (!tenantId) {
+      // Try to extract from JWT token
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      console.log('Tenant middleware: token found:', !!token);
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          console.log('Tenant middleware: decoded JWT:', { userId: decoded.userId, tenantId: decoded.tenantId });
+          tenantId = decoded.tenantId;
+        } catch (error) {
+          // JWT verification failed, but we'll let auth middleware handle this
+          console.log('JWT verification failed in tenant middleware:', error.message);
         }
       }
     }

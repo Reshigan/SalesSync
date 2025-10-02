@@ -13,10 +13,10 @@ const authMiddleware = async (req, res, next) => {
     // Verify JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get user from database
+    // Get user from database using tenantId from JWT token
     const user = await getOneQuery(
       'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
-      [decoded.userId, req.tenantId, 'active']
+      [decoded.userId, decoded.tenantId, 'active']
     );
     
     if (!user) {
@@ -38,7 +38,7 @@ const authMiddleware = async (req, res, next) => {
       JOIN modules m ON m.id = rp.module_id
       JOIN functions f ON f.id = rp.function_id
       WHERE rp.tenant_id = ? AND rp.role = ?
-    `, [req.tenantId, user.role]);
+    `, [decoded.tenantId, user.role]);
     
     // Organize permissions by module
     const userPermissions = {};

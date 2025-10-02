@@ -32,6 +32,9 @@ class ApiService {
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+      console.log('Using token:', this.token.substring(0, 20) + '...');
+    } else {
+      console.log('No token available for API request');
     }
 
     try {

@@ -10,8 +10,7 @@ require('dotenv').config();
 const config = require('./config/database');
 const { initializeDatabase } = require('./database/init');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const { tenantMiddleware } = require('./middleware/tenantMiddleware');
-const { authMiddleware } = require('./middleware/authMiddleware');
+const { authTenantMiddleware, requirePermission, requireFeature, checkUserLimits } = require('./middleware/authTenantMiddleware');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -169,13 +168,18 @@ if (process.env.NODE_ENV !== 'production') {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 }
 
-// Routes
+// Public routes (no authentication required)
 app.use('/api/auth', authRoutes);
 app.use('/api/tenants', tenantRoutes);
 
-// Protected routes with tenant context
-app.use('/api', tenantMiddleware);
-app.use('/api', authMiddleware);
+// Apply unified authentication and tenant middleware to all other /api routes
+app.use('/api', (req, res, next) => {
+  // Skip auth for public routes
+  if (req.path.startsWith('/auth') || req.path.startsWith('/tenants')) {
+    return next();
+  }
+  return authTenantMiddleware(req, res, next);
+});
 
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
