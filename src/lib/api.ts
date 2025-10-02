@@ -1,5 +1,5 @@
 // API service for connecting to SalesSync backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 interface ApiResponse<T = any> {
