@@ -163,6 +163,7 @@ async function startServer() {
     const routeRoutes = require('./routes/routes');
     const agentRoutes = require('./routes/agents');
     const supplierRoutes = require('./routes/suppliers');
+    const vanSalesRoutes = require('./routes/van-sales');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -197,6 +198,7 @@ async function startServer() {
     app.use('/api/routes', authTenantMiddleware, routeRoutes);
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
+    app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
 
     logger.info('Routes configured successfully');
 
