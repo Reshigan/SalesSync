@@ -1,33 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:12001';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // For demo purposes, return mock data
-    // In production, this would proxy to your actual backend
-    if (body.email === 'demo@salessync.com' && body.password === 'demo123') {
-      return NextResponse.json({
-        success: true,
-        data: {
-          user: {
-            id: '1',
-            email: 'demo@salessync.com',
-            name: 'Demo User',
-            role: 'admin',
-            tenantId: 'default'
-          },
-          token: 'mock-jwt-token-12345',
-          refreshToken: 'mock-refresh-token-67890'
-        }
-      });
+    // Proxy to the actual backend API
+    const response = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: body.email,
+        password: body.password,
+        tenantCode: body.tenantCode || 'DEMO' // Default to DEMO tenant
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      return NextResponse.json(data);
     } else {
-      return NextResponse.json(
-        { success: false, error: 'Invalid credentials' },
-        { status: 401 }
-      );
+      return NextResponse.json(data, { status: response.status });
     }
   } catch (error) {
+    console.error('Login proxy error:', error);
     return NextResponse.json(
       { success: false, error: 'Server error' },
       { status: 500 }

@@ -227,7 +227,7 @@ export const RealTimeDemo: React.FC = () => {
           <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
             <div>Auth Status: {isAuthenticated ? '✅ Authenticated' : '❌ Not Authenticated'}</div>
             <div>Token: {token ? `✅ Available (${token.substring(0, 20)}...)` : '❌ Missing'}</div>
-            <div>User: {user ? `✅ ${user.name} (${user.role})` : '❌ No User'}</div>
+            <div>User: {user ? `✅ ${user.firstName} ${user.lastName} (${user.role})` : '❌ No User'}</div>
             <div>Hydrated: {_hasHydrated ? '✅ Yes' : '❌ No'}</div>
           </div>
         </div>

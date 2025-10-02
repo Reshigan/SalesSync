@@ -1,5 +1,5 @@
 // API service for connecting to SalesSync backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 interface ApiResponse<T = any> {
@@ -32,6 +32,9 @@ class ApiService {
 
     if (this.token) {
       headers.Authorization = `Bearer ${this.token}`;
+      console.log('Using token:', this.token.substring(0, 20) + '...');
+    } else {
+      console.log('No token available for API request');
     }
 
     try {
@@ -68,17 +71,18 @@ class ApiService {
 
   // Authentication methods
   async login(email: string, password: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string; user: any }>> {
-    const response = await this.request<{ user: any; token: string; refreshToken: string }>('/auth/login', {
+    const response = await this.request<{ success: boolean; data: { user: any; token: string; refreshToken: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
 
-    if (response.data) {
+    if (response.data && response.data.success && response.data.data) {
       // Transform backend response format to frontend expected format
+      const backendData = response.data.data;
       const transformedData = {
-        accessToken: response.data.token,
-        refreshToken: response.data.refreshToken,
-        user: response.data.user
+        accessToken: backendData.token,
+        refreshToken: backendData.refreshToken,
+        user: backendData.user
       };
       
       this.token = transformedData.accessToken;
@@ -303,6 +307,36 @@ class ApiService {
     return this.request(`/customers/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // Dashboard methods
+  async getDashboard(): Promise<ApiResponse<{
+    overview: {
+      totalUsers: number;
+      totalCustomers: number;
+      totalProducts: number;
+      totalOrders: number;
+      todayOrders: number;
+      todayRevenue: number;
+      activeAgents: number;
+    };
+    recentOrders: any[];
+    topCustomers: any[];
+    salesByMonth: any[];
+    agentPerformance: any[];
+  }>> {
+    return this.request('/dashboard');
+  }
+
+  async getDashboardStats(period?: string): Promise<ApiResponse<{
+    period: string;
+    orders: any;
+    revenue: any;
+    visits: any;
+    customers: any;
+  }>> {
+    const query = period ? `?period=${period}` : '';
+    return this.request(`/dashboard/stats${query}`);
   }
 }
 

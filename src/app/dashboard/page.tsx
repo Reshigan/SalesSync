@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useAuthStore } from '@/store/auth.store'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { RealTimeDemo } from '@/components/ui/RealTimeDemo'
+import { HydrationBoundary } from '@/components/ui/HydrationBoundary'
+import apiService from '@/lib/api'
 import { 
   Truck, 
   Package, 
@@ -19,25 +22,69 @@ import {
   Megaphone
 } from 'lucide-react'
 
-interface DashboardStats {
-  totalSales: number
-  totalOrders: number
-  activeAgents: number
-  pendingReconciliations: number
-  lowStockAlerts: number
-  completedActivities: number
+interface DashboardData {
+  overview: {
+    totalUsers: number;
+    totalCustomers: number;
+    totalProducts: number;
+    totalOrders: number;
+    todayOrders: number;
+    todayRevenue: number;
+    activeAgents: number;
+  };
+  recentOrders: any[];
+  topCustomers: any[];
+  salesByMonth: any[];
+  agentPerformance: any[];
 }
 
 export default function DashboardPage() {
   const { userRole, user } = usePermissions()
-  const [stats, setStats] = useState<DashboardStats>({
-    totalSales: 125000,
-    totalOrders: 342,
-    activeAgents: 28,
-    pendingReconciliations: 5,
-    lowStockAlerts: 12,
-    completedActivities: 89,
-  })
+  const { _hasHydrated } = useAuthStore()
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch dashboard data when user is authenticated and store is hydrated
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      // Wait for store to be hydrated
+      if (!_hasHydrated) {
+        console.log('Dashboard: Store not hydrated yet, waiting...')
+        return
+      }
+
+      // Only fetch if user is authenticated and we have a token
+      if (!user || !user.id) {
+        console.log('Dashboard: User not authenticated yet, skipping API call', { user })
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        setError(null)
+        console.log('Dashboard: Fetching data for authenticated user:', user.firstName)
+        
+        const response = await apiService.getDashboard()
+        
+        if (response.error) {
+          console.error('Dashboard API error:', response.error)
+          setError(response.error)
+        } else if (response.data) {
+          console.log('Dashboard: Data loaded successfully:', response.data)
+          setDashboardData(response.data)
+        }
+      } catch (err) {
+        console.error('Dashboard fetch error:', err)
+        setError('Failed to load dashboard data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [user, _hasHydrated]) // Depend on user being available and store being hydrated
 
   const [recentActivities] = useState([
     {
@@ -194,8 +241,8 @@ export default function DashboardPage() {
       default:
         return [
           {
-            name: 'Total Sales',
-            value: `$${stats.totalSales.toLocaleString()}`,
+            name: 'Today\'s Revenue',
+            value: dashboardData?.overview?.todayRevenue ? `$${dashboardData.overview.todayRevenue.toLocaleString()}` : '$0',
             change: '+12%',
             icon: DollarSign,
             color: 'text-green-600',
@@ -203,7 +250,7 @@ export default function DashboardPage() {
           },
           {
             name: 'Active Agents',
-            value: stats.activeAgents.toString(),
+            value: dashboardData?.overview?.activeAgents?.toString() || '0',
             change: '+5%',
             icon: Users,
             color: 'text-blue-600',
@@ -211,17 +258,17 @@ export default function DashboardPage() {
           },
           {
             name: 'Total Orders',
-            value: stats.totalOrders.toString(),
+            value: dashboardData?.overview?.totalOrders?.toString() || '0',
             change: '+8%',
             icon: Package,
             color: 'text-purple-600',
             bgColor: 'bg-purple-50',
           },
           {
-            name: 'Pending Items',
-            value: stats.pendingReconciliations.toString(),
+            name: 'Today\'s Orders',
+            value: dashboardData?.overview?.todayOrders?.toString() || '0',
             change: '',
-            icon: AlertTriangle,
+            icon: CheckCircle,
             color: 'text-orange-600',
             bgColor: 'bg-orange-50',
           },
@@ -259,9 +306,62 @@ export default function DashboardPage() {
     }
   }
 
+  // Loading state
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
+            <h1 className="text-2xl font-bold">Loading Dashboard...</h1>
+            <p className="text-primary-100 mt-1">Please wait while we fetch your data.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h1 className="text-xl font-bold text-red-800">Error Loading Dashboard</h1>
+            <p className="text-red-600 mt-1">{typeof error === 'string' ? error : 'Failed to load dashboard data'}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <HydrationBoundary fallback={
+        <div className="space-y-6">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
+            <h1 className="text-2xl font-bold">Loading Dashboard...</h1>
+            <p className="text-primary-100 mt-1">Please wait while we initialize your dashboard.</p>
+          </div>
+        </div>
+      }>
+        <div className="space-y-6">
         {/* Welcome Header */}
         <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
           <h1 className="text-2xl font-bold">
@@ -434,7 +534,8 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Real-time Features Demo</h2>
           <RealTimeDemo />
         </div>
-      </div>
+        </div>
+      </HydrationBoundary>
     </DashboardLayout>
   )
 }

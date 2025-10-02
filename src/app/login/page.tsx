@@ -12,8 +12,8 @@ export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading } = useAuthStore()
   const [formData, setFormData] = useState({
-    email: 'demo@salessync.com',
-    password: 'demo123',
+    email: 'admin@demo.com',
+    password: 'admin123',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
