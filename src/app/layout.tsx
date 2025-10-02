@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   description: 'Enterprise-grade multi-tenant platform for field operations in emerging markets',
   keywords: 'field force, sales management, van sales, merchandising, promotions',
   authors: [{ name: 'SalesSync Team' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

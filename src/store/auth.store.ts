@@ -34,17 +34,22 @@ export const useAuthStore = create<AuthState>()(
       _hasHydrated: false,
 
       login: async (email: string, password: string) => {
+        console.log('Auth store: Starting login process');
         set({ isLoading: true })
         
         try {
+          console.log('Auth store: Calling apiService.login');
           const response = await apiService.login(email, password)
+          console.log('Auth store: API response received:', response);
           
           if (response.error) {
+            console.log('Auth store: API returned error:', response.error);
             set({ isLoading: false })
             return { success: false, error: response.message || response.error }
           }
 
           if (response.data) {
+            console.log('Auth store: Login successful, setting user data');
             const token = response.data.accessToken;
             // Set token in API service
             apiService.setToken(token);
@@ -59,9 +64,11 @@ export const useAuthStore = create<AuthState>()(
             return { success: true }
           }
 
+          console.log('Auth store: No data in response');
           set({ isLoading: false })
           return { success: false, error: 'Login failed' }
         } catch (error) {
+          console.error('Auth store: Exception caught:', error);
           set({ isLoading: false })
           return { success: false, error: 'Network error' }
         }

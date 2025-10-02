@@ -1,5 +1,6 @@
 // API service for connecting to SalesSync backend
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+console.log('API_BASE_URL:', API_BASE_URL);
 
 interface ApiResponse<T = any> {
   data?: T;
@@ -13,6 +14,7 @@ class ApiService {
 
   constructor() {
     this.baseURL = API_BASE_URL;
+    console.log('ApiService initialized with baseURL:', this.baseURL);
     // Token will be set by Zustand store after rehydration
     // via apiService.setToken() in auth store
   }
@@ -33,12 +35,19 @@ class ApiService {
     }
 
     try {
+      console.log('Making API request to:', url);
+      console.log('Request options:', { ...options, headers });
+      
       const response = await fetch(url, {
         ...options,
         headers,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (!response.ok) {
         return {
@@ -49,6 +58,7 @@ class ApiService {
 
       return { data };
     } catch (error) {
+      console.error('API request error:', error);
       return {
         error: 'Network Error',
         message: error instanceof Error ? error.message : 'Unknown error',
@@ -58,21 +68,29 @@ class ApiService {
 
   // Authentication methods
   async login(email: string, password: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string; user: any }>> {
-    const response = await this.request<{ accessToken: string; refreshToken: string; user: any }>('/auth/login', {
+    const response = await this.request<{ user: any; token: string; refreshToken: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
 
     if (response.data) {
-      this.token = response.data.accessToken;
+      // Transform backend response format to frontend expected format
+      const transformedData = {
+        accessToken: response.data.token,
+        refreshToken: response.data.refreshToken,
+        user: response.data.user
+      };
+      
+      this.token = transformedData.accessToken;
       // Store refresh token separately (not managed by Zustand)
       if (typeof window !== 'undefined') {
-        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('refreshToken', transformedData.refreshToken);
       }
-      // Note: accessToken and user are now managed by Zustand persist
+      
+      return { data: transformedData };
     }
 
-    return response;
+    return response as ApiResponse<{ accessToken: string; refreshToken: string; user: any }>;
   }
 
   async register(userData: {
