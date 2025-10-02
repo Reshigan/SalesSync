@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
-const { getOneQuery, runQuery } = require('../database/init');
+// Database functions will be lazy-loaded to avoid circular dependencies
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { tenantMiddleware } = require('../middleware/tenantMiddleware');
 
@@ -67,6 +67,9 @@ const refreshSchema = Joi.object({
  *         description: Authentication failed
  */
 router.post('/login', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   // Validate request
   const { error, value } = loginSchema.validate(req.body);
   if (error) {
@@ -179,6 +182,9 @@ router.post('/login', asyncHandler(async (req, res, next) => {
  *         description: Invalid refresh token
  */
 router.post('/refresh', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery } = require('../database/init');
+  
   const { error, value } = refreshSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400, 'VALIDATION_ERROR'));

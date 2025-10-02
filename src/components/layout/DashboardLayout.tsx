@@ -28,6 +28,9 @@ import {
   X,
   ChevronDown,
   LogOut,
+  MapPin,
+  Route,
+  Building,
   User
 } from 'lucide-react'
 
@@ -192,6 +195,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           { name: 'Users', href: '/admin/users', icon: Users },
           { name: 'Roles', href: '/admin/roles', icon: Shield },
           { name: 'Permissions', href: '/admin/permissions', icon: Shield },
+          { name: 'Areas', href: '/admin/areas', icon: MapPin },
+          { name: 'Routes', href: '/admin/routes', icon: Route },
+          { name: 'Agents', href: '/admin/agents', icon: Users },
+          { name: 'Warehouses', href: '/admin/warehouses', icon: Warehouse },
+          { name: 'Suppliers', href: '/admin/suppliers', icon: Building },
           { name: 'Commissions', href: '/admin/commissions', icon: ShoppingBag },
         ],
       })

@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { getOneQuery, getQuery } = require('../database/init');
 const { AppError } = require('./errorHandler');
 
 /**
@@ -9,6 +8,9 @@ const { AppError } = require('./errorHandler');
  */
 const authTenantMiddleware = async (req, res, next) => {
   try {
+    // Lazy-load database functions to avoid circular dependencies
+    const { getOneQuery, getQuery } = require('../database/init');
+    
     // Extract JWT token
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -146,6 +148,9 @@ const requireFeature = (featureName) => {
 // Middleware to check tenant user limits
 const checkUserLimits = async (req, res, next) => {
   try {
+    // Lazy-load database functions
+    const { getOneQuery } = require('../database/init');
+    
     if (req.method === 'POST' && req.path.includes('/users')) {
       const userCount = await getOneQuery(
         'SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND status = ?',

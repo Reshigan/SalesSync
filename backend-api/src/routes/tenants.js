@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
 const { v4: uuidv4 } = require('uuid');
-const { getQuery, getOneQuery, runQuery } = require('../database/init');
+// Database functions will be lazy-loaded to avoid circular dependencies
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 
 const router = express.Router();
@@ -81,6 +81,9 @@ const updateTenantSchema = Joi.object({
  *         description: Tenant code already exists
  */
 router.post('/', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { error, value } = createTenantSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400, 'VALIDATION_ERROR'));
@@ -247,6 +250,9 @@ router.post('/', asyncHandler(async (req, res, next) => {
  *         description: Tenants retrieved successfully
  */
 router.get('/', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../database/init');
+  
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
@@ -332,6 +338,9 @@ router.get('/', asyncHandler(async (req, res, next) => {
  *         description: Tenant not found
  */
 router.get('/:id', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, getQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {
@@ -417,6 +426,9 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
  *         description: Tenant not found
  */
 router.put('/:id', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   const { error, value } = updateTenantSchema.validate(req.body);
   
@@ -504,6 +516,9 @@ router.put('/:id', asyncHandler(async (req, res, next) => {
  *         description: Billing record created successfully
  */
 router.post('/:id/billing', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {

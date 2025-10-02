@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const Joi = require('joi');
 const { v4: uuidv4 } = require('uuid');
-const { getQuery, getOneQuery, runQuery } = require('../database/init');
+// Database functions will be lazy-loaded to avoid circular dependencies
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { requireFunction } = require('../middleware/authMiddleware');
 const { checkUserLimits } = require('../middleware/tenantMiddleware');
@@ -69,6 +69,9 @@ const changePasswordSchema = Joi.object({
  *         description: Users retrieved successfully
  */
 router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../database/init');
+  
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
@@ -170,6 +173,9 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
  *         description: User created successfully
  */
 router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { error, value } = createUserSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400, 'VALIDATION_ERROR'));
@@ -237,6 +243,9 @@ router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandl
  *         description: User not found
  */
 router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {
@@ -303,6 +312,9 @@ router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, re
  *         description: User updated successfully
  */
 router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   const { error, value } = updateUserSchema.validate(req.body);
   
@@ -400,6 +412,9 @@ router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, re
  *         description: User deleted successfully
  */
 router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {
@@ -467,6 +482,9 @@ router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (re
  *         description: Password changed successfully
  */
 router.post('/:id/change-password', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   const { error, value } = changePasswordSchema.validate(req.body);
   

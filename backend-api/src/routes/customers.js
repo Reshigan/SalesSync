@@ -1,7 +1,7 @@
 const express = require('express');
 const Joi = require('joi');
 const { v4: uuidv4 } = require('uuid');
-const { getQuery, getOneQuery, runQuery } = require('../database/init');
+// Database functions will be lazy-loaded to avoid circular dependencies
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { requireFunction } = require('../middleware/authMiddleware');
 
@@ -77,6 +77,9 @@ const updateCustomerSchema = Joi.object({
  *         description: Customers retrieved successfully
  */
 router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../database/init');
+  
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
@@ -197,6 +200,9 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
  *         description: Customer created successfully
  */
 router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { error, value } = createCustomerSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400, 'VALIDATION_ERROR'));
@@ -278,6 +284,9 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
  *         description: Customer not found
  */
 router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {
@@ -388,6 +397,9 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
  *         description: Customer updated successfully
  */
 router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   const { error, value } = updateCustomerSchema.validate(req.body);
   
@@ -504,6 +516,9 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
  *         description: Customer deleted successfully
  */
 router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, runQuery } = require('../database/init');
+  
   const { id } = req.params;
   
   try {
@@ -576,6 +591,9 @@ router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async
  *         description: Customer orders retrieved successfully
  */
 router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, getQuery } = require('../database/init');
+  
   const { id } = req.params;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;

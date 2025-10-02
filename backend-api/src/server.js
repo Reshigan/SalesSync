@@ -10,28 +10,8 @@ require('dotenv').config();
 const config = require('./config/database');
 const { initializeDatabase } = require('./database/init');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
-const { authTenantMiddleware, requirePermission, requireFeature, checkUserLimits } = require('./middleware/authTenantMiddleware');
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const tenantRoutes = require('./routes/tenants');
-const userRoutes = require('./routes/users');
-const customerRoutes = require('./routes/customers');
-const productRoutes = require('./routes/products');
-const inventoryRoutes = require('./routes/inventory');
-const orderRoutes = require('./routes/orders');
-const visitRoutes = require('./routes/visits');
-const commissionRoutes = require('./routes/commissions');
-const reportRoutes = require('./routes/reports');
-const dashboardRoutes = require('./routes/dashboard');
-const warehouseRoutes = require('./routes/warehouses');
-const vanRoutes = require('./routes/vans');
-const promotionRoutes = require('./routes/promotions');
-const merchandisingRoutes = require('./routes/merchandising');
-const fieldAgentRoutes = require('./routes/fieldAgents');
-const kycRoutes = require('./routes/kyc');
-const surveyRoutes = require('./routes/surveys');
-const analyticsRoutes = require('./routes/analytics');
+// Routes will be imported after database initialization
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -132,81 +112,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Documentation
-if (process.env.NODE_ENV !== 'production') {
-  const swaggerJsdoc = require('swagger-jsdoc');
-  const swaggerUi = require('swagger-ui-express');
-  
-  const options = {
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'SalesSync API',
-        version: '1.0.0',
-        description: 'Advanced Field Force Management System API',
-      },
-      servers: [
-        {
-          url: `http://localhost:${PORT}`,
-          description: 'Development server',
-        },
-      ],
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-          },
-        },
-      },
-    },
-    apis: ['./src/routes/*.js'],
-  };
-  
-  const specs = swaggerJsdoc(options);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-}
+// API Documentation will be set up after database initialization
 
-// Public routes (no authentication required)
-app.use('/api/auth', authRoutes);
-app.use('/api/tenants', tenantRoutes);
+// Routes will be set up after database initialization
 
-// Apply unified authentication and tenant middleware to all other /api routes
-app.use('/api', (req, res, next) => {
-  // Skip auth for public routes
-  if (req.path.startsWith('/auth') || req.path.startsWith('/tenants')) {
-    return next();
-  }
-  return authTenantMiddleware(req, res, next);
-});
-
-app.use('/api/users', userRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/visits', visitRoutes);
-app.use('/api/commissions', commissionRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/warehouses', warehouseRoutes);
-app.use('/api/vans', vanRoutes);
-app.use('/api/promotions', promotionRoutes);
-app.use('/api/merchandising', merchandisingRoutes);
-app.use('/api/field-agents', fieldAgentRoutes);
-app.use('/api/kyc', kycRoutes);
-app.use('/api/surveys', surveyRoutes);
-app.use('/api/analytics', analyticsRoutes);
-
-// Error handling
-app.use(notFoundHandler);
-app.use(errorHandler);
-
-// Error logging
-app.use(expressWinston.errorLogger({
-  winstonInstance: logger
-}));
+// Error handling will be set up after routes
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
@@ -224,6 +134,117 @@ async function startServer() {
   try {
     await initializeDatabase();
     logger.info('Database initialized successfully');
+
+    // Import routes after database initialization
+    logger.info('Importing middleware...');
+    const { authTenantMiddleware, requirePermission, requireFeature, checkUserLimits } = require('./middleware/authTenantMiddleware');
+    logger.info('Importing auth routes...');
+    const authRoutes = require('./routes/auth');
+    logger.info('Importing tenant routes...');
+    const tenantRoutes = require('./routes/tenants');
+    const userRoutes = require('./routes/users');
+    const customerRoutes = require('./routes/customers');
+    const productRoutes = require('./routes/products');
+    const inventoryRoutes = require('./routes/inventory');
+    const orderRoutes = require('./routes/orders');
+    const visitRoutes = require('./routes/visits');
+    const commissionRoutes = require('./routes/commissions');
+    const reportRoutes = require('./routes/reports');
+    const dashboardRoutes = require('./routes/dashboard');
+    const warehouseRoutes = require('./routes/warehouses');
+    const vanRoutes = require('./routes/vans');
+    const promotionRoutes = require('./routes/promotions');
+    const merchandisingRoutes = require('./routes/merchandising');
+    const fieldAgentRoutes = require('./routes/fieldAgents');
+    const kycRoutes = require('./routes/kyc');
+    const surveyRoutes = require('./routes/surveys');
+    const analyticsRoutes = require('./routes/analytics');
+    const areaRoutes = require('./routes/areas');
+    const routeRoutes = require('./routes/routes');
+    const agentRoutes = require('./routes/agents');
+    const supplierRoutes = require('./routes/suppliers');
+
+    // Test route
+    app.get('/api/test', (req, res) => {
+      res.json({ message: 'Test route working' });
+    });
+    
+    // Public routes (no authentication required)
+    logger.info('Registering auth routes...');
+    app.use('/api/auth', authRoutes);
+    logger.info('Registering tenant routes...');
+    app.use('/api/tenants', tenantRoutes);
+
+    // Apply authentication middleware to protected routes
+    app.use('/api/users', authTenantMiddleware, userRoutes);
+    app.use('/api/customers', authTenantMiddleware, customerRoutes);
+    app.use('/api/products', authTenantMiddleware, productRoutes);
+    app.use('/api/inventory', authTenantMiddleware, inventoryRoutes);
+    app.use('/api/orders', authTenantMiddleware, orderRoutes);
+    app.use('/api/visits', authTenantMiddleware, visitRoutes);
+    app.use('/api/commissions', authTenantMiddleware, commissionRoutes);
+    app.use('/api/reports', authTenantMiddleware, reportRoutes);
+    app.use('/api/dashboard', authTenantMiddleware, dashboardRoutes);
+    app.use('/api/warehouses', authTenantMiddleware, warehouseRoutes);
+    app.use('/api/vans', authTenantMiddleware, vanRoutes);
+    app.use('/api/promotions', authTenantMiddleware, promotionRoutes);
+    app.use('/api/merchandising', authTenantMiddleware, merchandisingRoutes);
+    app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
+    app.use('/api/kyc', authTenantMiddleware, kycRoutes);
+    app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
+    app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/areas', authTenantMiddleware, areaRoutes);
+    app.use('/api/routes', authTenantMiddleware, routeRoutes);
+    app.use('/api/agents', authTenantMiddleware, agentRoutes);
+    app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
+
+    logger.info('Routes configured successfully');
+
+    // Error handling (must be after routes)
+    app.use(notFoundHandler);
+    app.use(errorHandler);
+
+    // Error logging
+    app.use(expressWinston.errorLogger({
+      winstonInstance: logger
+    }));
+
+    // API Documentation
+    if (process.env.NODE_ENV !== 'production') {
+      const swaggerJsdoc = require('swagger-jsdoc');
+      const swaggerUi = require('swagger-ui-express');
+      
+      const options = {
+        definition: {
+          openapi: '3.0.0',
+          info: {
+            title: 'SalesSync API',
+            version: '1.0.0',
+            description: 'Advanced Field Force Management System API',
+          },
+          servers: [
+            {
+              url: `http://localhost:${PORT}`,
+              description: 'Development server',
+            },
+          ],
+          components: {
+            securitySchemes: {
+              bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'JWT',
+              },
+            },
+          },
+        },
+        apis: ['./src/routes/*.js'],
+      };
+      
+      const specs = swaggerJsdoc(options);
+      app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+      logger.info('API Documentation configured successfully');
+    }
     
     app.listen(PORT, HOST, () => {
       logger.info(`SalesSync API server running on http://${HOST}:${PORT}`);

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getQuery, getOneQuery } = require('../database/init');
+// Database functions will be lazy-loaded to avoid circular dependencies
 const { asyncHandler } = require('../middleware/errorHandler');
 
 const router = express.Router();
@@ -17,6 +17,9 @@ const router = express.Router();
  *         description: Dashboard data retrieved successfully
  */
 router.get('/', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery, getQuery } = require('../database/init');
+  
   try {
     // Get basic counts
     const [
@@ -141,6 +144,9 @@ router.get('/', asyncHandler(async (req, res, next) => {
  *         description: Dashboard statistics retrieved successfully
  */
 router.get('/stats', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery } = require('../database/init');
+  
   const period = req.query.period || 'month';
   
   try {

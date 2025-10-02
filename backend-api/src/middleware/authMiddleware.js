@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken');
-const { getOneQuery, getQuery } = require('../database/init');
 const { AppError } = require('./errorHandler');
 
 const authMiddleware = async (req, res, next) => {
   try {
+    // Lazy-load database functions
+    const { getOneQuery, getQuery } = require('../database/init');
+    
     const token = req.headers.authorization?.replace('Bearer ', '');
     
     if (!token) {
@@ -95,8 +97,13 @@ const requirePermission = (module, action) => {
 // Middleware to check if user can access specific function
 const requireFunction = (module, functionCode, action = 'view') => {
   return (req, res, next) => {
-    const hasPermission = req.userPermissions[module]?.[functionCode]?.[action] || 
-                         req.user.role === 'admin';
+    // Admin users have access to everything
+    if (req.user?.role === 'admin') {
+      return next();
+    }
+    
+    // Check permissions if they exist
+    const hasPermission = req.userPermissions?.[module]?.[functionCode]?.[action];
     
     if (!hasPermission) {
       return next(new AppError(`Access denied to ${module}:${functionCode}:${action}`, 403, 'ACCESS_DENIED'));
