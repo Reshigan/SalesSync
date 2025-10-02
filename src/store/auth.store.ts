@@ -34,23 +34,19 @@ export const useAuthStore = create<AuthState>()(
       _hasHydrated: false,
 
       login: async (email: string, password: string) => {
-        console.log('Auth store: Starting login process');
         set({ isLoading: true })
         
         try {
-          console.log('Auth store: Calling apiService.login');
           const response = await apiService.login(email, password)
-          console.log('Auth store: API response received:', response);
           
           if (response.error) {
-            console.log('Auth store: API returned error:', response.error);
             set({ isLoading: false })
             return { success: false, error: response.message || response.error }
           }
 
           if (response.data) {
-            console.log('Auth store: Login successful, setting user data');
             const token = response.data.accessToken;
+            
             // Set token in API service
             apiService.setToken(token);
             
@@ -58,17 +54,17 @@ export const useAuthStore = create<AuthState>()(
               user: response.data.user,
               token: token,
               isAuthenticated: true,
-              permissions: response.data.user.permissions || [],
+              permissions: (response.data.user && response.data.user.permissions) || [],
               isLoading: false,
             })
+            
             return { success: true }
           }
 
-          console.log('Auth store: No data in response');
           set({ isLoading: false })
           return { success: false, error: 'Login failed' }
         } catch (error) {
-          console.error('Auth store: Exception caught:', error);
+          console.error('Auth store login error:', error);
           set({ isLoading: false })
           return { success: false, error: 'Network error' }
         }
@@ -87,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user: User) => {
         set({
           user,
-          permissions: user.permissions || [],
+          permissions: (user && user.permissions) || [],
         })
       },
 
