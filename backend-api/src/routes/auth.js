@@ -70,36 +70,39 @@ router.post('/login', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
   const { getOneQuery, runQuery } = require('../database/init');
   
+  // SECURITY FIX: Require X-Tenant-ID header
+  const tenantId = req.headers['x-tenant-id'];
+  
+  if (!tenantId) {
+    return next(new AppError('Tenant ID header (X-Tenant-ID) is required', 400, 'TENANT_REQUIRED'));
+  }
+  
   // Validate request
   const { error, value } = loginSchema.validate(req.body);
   if (error) {
     return next(new AppError(error.details[0].message, 400, 'VALIDATION_ERROR'));
   }
   
-  const { email, password, tenantCode } = value;
+  const { email, password } = value;
   
   try {
-    // Find user by email
-    let user;
-    if (tenantCode) {
-      // Find user by email and tenant code
-      user = await getOneQuery(`
-        SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
-        FROM users u
-        JOIN tenants t ON t.id = u.tenant_id
-        WHERE u.email = ? AND t.code = ? AND u.status = 'active' AND t.status = 'active'
-      `, [email, tenantCode.toUpperCase()]);
-    } else {
-      // Find user by email (first active tenant)
-      user = await getOneQuery(`
-        SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
-        FROM users u
-        JOIN tenants t ON t.id = u.tenant_id
-        WHERE u.email = ? AND u.status = 'active' AND t.status = 'active'
-        ORDER BY u.created_at ASC
-        LIMIT 1
-      `, [email]);
+    // SECURITY FIX: Validate tenant exists and is active
+    const tenant = await getOneQuery(
+      'SELECT * FROM tenants WHERE code = ? AND status = ?',
+      [tenantId.toUpperCase(), 'active']
+    );
+    
+    if (!tenant) {
+      return next(new AppError('Invalid or inactive tenant', 401, 'INVALID_TENANT'));
     }
+    
+    // SECURITY FIX: Find user by email AND tenant_id (case-insensitive email)
+    const user = await getOneQuery(`
+      SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
+      FROM users u
+      JOIN tenants t ON t.id = u.tenant_id
+      WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
+    `, [email, tenant.id]);
     
     if (!user) {
       return next(new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS'));
@@ -132,6 +135,17 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       [user.id]
     );
     
+    // Get full tenant data
+    const tenantData = await getOneQuery(
+      'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
+      [user.tenant_id]
+    );
+    
+    // Parse features JSON if it's a string
+    if (tenantData && typeof tenantData.features === 'string') {
+      tenantData.features = JSON.parse(tenantData.features);
+    }
+    
     // Return user data and tokens
     const userData = {
       id: user.id,
@@ -141,13 +155,23 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       role: user.role,
       tenantId: user.tenant_id,
       tenantCode: user.tenant_code,
-      tenantName: user.tenant_name
+      tenantName: user.tenant_name,
+      areaId: user.area_id,
+      routeId: user.route_id,
+      managerId: user.manager_id,
+      employeeId: user.employee_id,
+      hireDate: user.hire_date,
+      monthlyTarget: user.monthly_target,
+      status: user.status,
+      lastLogin: user.last_login,
+      createdAt: user.created_at
     };
     
     res.json({
       success: true,
       data: {
         user: userData,
+        tenant: tenantData,
         token,
         refreshToken
       }
@@ -246,7 +270,18 @@ router.post('/refresh', asyncHandler(async (req, res, next) => {
  *       401:
  *         description: Unauthorized
  */
-router.get('/me', tenantMiddleware, require('../middleware/authMiddleware').authMiddleware, asyncHandler(async (req, res) => {
+router.get('/me', asyncHandler(async (req, res) => {
+  // Lazy-load auth and tenant middleware
+  const { authTenantMiddleware } = require('../middleware/authTenantMiddleware');
+  
+  // Use unified auth-tenant middleware which handles both auth and tenant resolution
+  await new Promise((resolve, reject) => {
+    authTenantMiddleware(req, res, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+  
   res.json({
     success: true,
     data: {
@@ -257,7 +292,7 @@ router.get('/me', tenantMiddleware, require('../middleware/authMiddleware').auth
         code: req.tenant.code,
         features: req.tenantFeatures
       },
-      permissions: req.userPermissions
+      permissions: req.permissions
     }
   });
 }));

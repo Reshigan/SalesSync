@@ -41,6 +41,20 @@ const authTenantMiddleware = async (req, res, next) => {
       return next(new AppError('Invalid or inactive tenant', 403, 'INVALID_TENANT'));
     }
 
+    // SECURITY FIX: Validate X-Tenant-ID header matches JWT token tenant
+    const headerTenantId = req.headers['x-tenant-id'];
+    
+    if (headerTenantId) {
+      // Compare header tenant with token tenant (case-insensitive)
+      if (headerTenantId.toLowerCase() !== tenant.code.toLowerCase()) {
+        return next(new AppError(
+          'Tenant ID in header does not match token tenant', 
+          403, 
+          'TENANT_MISMATCH'
+        ));
+      }
+    }
+
     // Get user from database
     const user = await getOneQuery(
       'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
