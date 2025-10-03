@@ -37,21 +37,21 @@ export default function TenantsPage() {
     { accessor: 'plan', header: 'Plan' },
     { accessor: 'users', header: 'Users', sortable: true },
     {
-      key: 'status',
+      accessor: 'status',
       header: 'Status',
       cell: ({ row }: { row: Tenant }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          .status === 'active' ? 'bg-green-100 text-green-800' :
-          .status === 'trial' ? 'bg-blue-100 text-blue-800' :
+          row.status === 'active' ? 'bg-green-100 text-green-800' :
+          row.status === 'trial' ? 'bg-blue-100 text-blue-800' :
           'bg-red-100 text-red-800'
         }`}>
-          {.status}
+          {row.status}
         </span>
       )
     },
     { accessor: 'createdAt', header: 'Created', sortable: true },
     {
-      key: 'actions',
+      accessor: 'actions',
       header: 'Actions',
       cell: ({ row }: { row: Tenant }) => (
         <div className="flex gap-2">
@@ -68,7 +68,7 @@ export default function TenantsPage() {
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => window.location.href = `/admin/tenants/${.id}/settings`}
+            onClick={() => window.location.href = `/admin/tenants/${row.id}/settings`}
           >
             <Settings className="h-4 w-4" />
           </Button>
@@ -132,8 +132,6 @@ export default function TenantsPage() {
           <DataTable
             data={tenants}
             columns={columns}
-            searchable
-            searchPlaceholder="Search tenants..."
           />
         </Card>
       </div>

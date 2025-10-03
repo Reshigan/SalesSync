@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
+const getDatabase = () => require('../utils/database').getDatabase();
 // Authentication middleware is applied globally in server.js
 
 /**
@@ -79,19 +80,19 @@ const { v4: uuidv4 } = require('uuid');
  */
 router.get('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     
     const query = `
       SELECT 
         r.*,
         a.name as area_name,
         reg.name as region_name,
-        u.firstName || ' ' || u.lastName as agent_name,
+        u.first_name || ' ' || u.last_name as agent_name,
         COUNT(DISTINCT c.id) as customer_count
       FROM routes r
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
-      LEFT JOIN users u ON r.agent_id = u.id
+      LEFT JOIN users u ON r.salesman_id = u.id
       LEFT JOIN customers c ON r.id = c.route_id
       WHERE r.tenant_id = ?
       GROUP BY r.id
@@ -135,7 +136,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     const query = `
@@ -143,11 +144,11 @@ router.get('/:id', async (req, res) => {
         r.*,
         a.name as area_name,
         reg.name as region_name,
-        u.firstName || ' ' || u.lastName as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM routes r
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
-      LEFT JOIN users u ON r.agent_id = u.id
+      LEFT JOIN users u ON r.salesman_id = u.id
       WHERE r.id = ? AND r.tenant_id = ?
     `;
     
@@ -220,7 +221,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { 
       code, name, area_id, agent_id, description, status = 'active',
       visit_frequency = 'weekly', estimated_duration, target_calls
@@ -264,11 +265,11 @@ router.post('/', async (req, res) => {
         r.*,
         a.name as area_name,
         reg.name as region_name,
-        u.firstName || ' ' || u.lastName as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM routes r
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
-      LEFT JOIN users u ON r.agent_id = u.id
+      LEFT JOIN users u ON r.salesman_id = u.id
       WHERE r.id = ?
     `;
     
@@ -336,7 +337,7 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     const { 
       code, name, area_id, agent_id, description, status,
@@ -391,11 +392,11 @@ router.put('/:id', async (req, res) => {
         r.*,
         a.name as area_name,
         reg.name as region_name,
-        u.firstName || ' ' || u.lastName as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM routes r
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
-      LEFT JOIN users u ON r.agent_id = u.id
+      LEFT JOIN users u ON r.salesman_id = u.id
       WHERE r.id = ?
     `;
     
@@ -438,7 +439,7 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     // Check if route exists

@@ -203,94 +203,94 @@ export default function AreasPage() {
   // Table columns
   const columns = [
     {
-      key: 'code',
-      label: 'Code',
+      header: 'Code',
+      accessor: 'code',
       sortable: true,
-      render: (area: Area) => (
-        <div className="font-medium text-gray-900">{area.code}</div>
+      cell: ({ row }: { row: Area; value: any }) => (
+        <div className="font-medium text-gray-900">{row.code}</div>
       )
     },
     {
-      key: 'name',
-      label: 'Area Name',
+      header: 'Area Name',
+      accessor: 'name',
       sortable: true,
-      render: (area: Area) => (
+      cell: ({ row }: { row: Area; value: any }) => (
         <div>
-          <div className="font-medium text-gray-900">{area.name}</div>
-          {area.description && (
-            <div className="text-sm text-gray-500">{area.description}</div>
+          <div className="font-medium text-gray-900">{row.name}</div>
+          {row.description && (
+            <div className="text-sm text-gray-500">{row.description}</div>
           )}
         </div>
       )
     },
     {
-      key: 'region_name',
-      label: 'Region',
+      header: 'Region',
+      accessor: 'region_name',
       sortable: true,
-      render: (area: Area) => (
+      cell: ({ row }: { row: Area; value: any }) => (
         <div className="flex items-center">
           <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-          <span>{area.region_name}</span>
+          <span>{row.region_name}</span>
         </div>
       )
     },
     {
-      key: 'manager_name',
-      label: 'Manager',
-      render: (area: Area) => (
+      header: 'Manager',
+      accessor: 'manager_name',
+      cell: ({ row }: { row: Area; value: any }) => (
         <div className="flex items-center">
           <Users className="h-4 w-4 text-gray-400 mr-2" />
-          <span>{area.manager_name || 'Unassigned'}</span>
+          <span>{row.manager_name || 'Unassigned'}</span>
         </div>
       )
     },
     {
-      key: 'route_count',
-      label: 'Routes',
-      render: (area: Area) => (
+      header: 'Routes',
+      accessor: 'route_count',
+      cell: ({ row }: { row: Area; value: any }) => (
         <div className="text-center">
           <Badge variant="secondary">
-            {area.route_count || 0} routes
+            {row.route_count || 0} routes
           </Badge>
         </div>
       )
     },
     {
-      key: 'agent_count',
-      label: 'Agents',
-      render: (area: Area) => (
+      header: 'Agents',
+      accessor: 'agent_count',
+      cell: ({ row }: { row: Area; value: any }) => (
         <div className="text-center">
           <Badge variant="secondary">
-            {area.agent_count || 0} agents
+            {row.agent_count || 0} agents
           </Badge>
         </div>
       )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (area: Area) => (
-        <Badge variant={area.status === 'active' ? 'success' : 'secondary'}>
-          {area.status}
+      header: 'Status',
+      accessor: 'status',
+      cell: ({ row }: { row: Area; value: any }) => (
+        <Badge variant={row.status === 'active' ? 'success' : 'secondary'}>
+          {row.status}
         </Badge>
       )
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      render: (area: Area) => (
+      header: 'Actions',
+      accessor: 'id',
+      cell: ({ row }: { row: Area; value: any }) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(area)}
+            onClick={() => handleEdit(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(area)}
+            onClick={() => handleDelete(row)}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -386,22 +386,20 @@ export default function AreasPage() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }
+              ]}
+            />
             <Select
               value={regionFilter}
               onChange={(e) => setRegionFilter(e.target.value)}
-            >
-              <option value="all">All Regions</option>
-              {regions.map(region => (
-                <option key={region.id} value={region.id}>
-                  {region.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Regions' },
+                ...regions.map(region => ({ value: region.id, label: region.name }))
+              ]}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -470,14 +468,11 @@ export default function AreasPage() {
                   value={formData.region_id}
                   onChange={(e) => setFormData({ ...formData, region_id: e.target.value })}
                   required
-                >
-                  <option value="">Select Region</option>
-                  {regions.map(region => (
-                    <option key={region.id} value={region.id}>
-                      {region.name}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Region' },
+                    ...regions.map(region => ({ value: region.id, label: region.name }))
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -486,14 +481,11 @@ export default function AreasPage() {
                 <Select
                   value={formData.manager_id}
                   onChange={(e) => setFormData({ ...formData, manager_id: e.target.value })}
-                >
-                  <option value="">Select Manager</option>
-                  {managers.map(manager => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Manager' },
+                    ...managers.map(manager => ({ value: manager.id, label: `${manager.firstName} ${manager.lastName}` }))
+                  ]}
+                />
               </div>
             </div>
 
@@ -517,10 +509,11 @@ export default function AreasPage() {
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </Select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' }
+                ]}
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

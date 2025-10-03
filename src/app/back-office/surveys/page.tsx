@@ -44,7 +44,6 @@ import {
   MapPin,
   Phone,
   Mail,
-  IdCard,
   Gamepad2,
   Banknote
 } from 'lucide-react'
@@ -383,8 +382,6 @@ export default function SurveyManagementPage() {
             required: false
           }
         ],
-        kycRequired: false,
-        kycFields: [],
         productSpecific: true,
         productCategories: ['BEVERAGES'],
         triggerEvent: 'after_purchase',
@@ -638,17 +635,17 @@ export default function SurveyManagementPage() {
   const surveyColumns = [
     {
       header: 'Survey Details',
-      accessorKey: 'survey',
-      cell: (survey: Survey) => (
+      accessor: 'survey',
+      cell: ({ row }: { row: Survey }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <MessageSquare className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{survey.title}</div>
-            <div className="text-sm text-gray-500 max-w-xs truncate">{survey.description}</div>
+            <div className="font-medium text-gray-900">{row.title}</div>
+            <div className="text-sm text-gray-500 max-w-xs truncate">{row.description}</div>
             <div className="text-xs text-gray-400">
-              Created: {new Date(survey.createdAt).toLocaleDateString()}
+              Created: {new Date(row.createdAt).toLocaleDateString()}
             </div>
           </div>
         </div>
@@ -656,18 +653,18 @@ export default function SurveyManagementPage() {
     },
     {
       header: 'Type & Status',
-      accessorKey: 'typeStatus',
-      cell: (survey: Survey) => {
-        const StatusIcon = getStatusIcon(survey.status)
+      accessor: 'typeStatus',
+      cell: ({ row }: { row: Survey }) => {
+        const StatusIcon = getStatusIcon(row.status)
         return (
           <div className="space-y-2">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(survey.type)}`}>
-              {survey.type.replace('_', ' ').toUpperCase()}
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(row.type)}`}>
+              {row.type.replace('_', ' ').toUpperCase()}
             </span>
             <div className="flex items-center space-x-1">
               <StatusIcon className="w-4 h-4" />
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(survey.status)}`}>
-                {survey.status.toUpperCase()}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
+                {row.status.toUpperCase()}
               </span>
             </div>
           </div>
@@ -676,26 +673,26 @@ export default function SurveyManagementPage() {
     },
     {
       header: 'Configuration',
-      accessorKey: 'config',
-      cell: (survey: Survey) => (
+      accessor: 'config',
+      cell: ({ row }: { row: Survey }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Target className="w-3 h-3 text-gray-400" />
-            <span className={`text-xs px-2 py-1 rounded ${survey.mandatory ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-              {survey.mandatory ? 'Mandatory' : 'Optional'}
+            <span className={`text-xs px-2 py-1 rounded ${row.mandatory ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+              {row.mandatory ? 'Mandatory' : 'Optional'}
             </span>
           </div>
           <div className="text-xs text-gray-600">
-            {survey.questions.length} questions
+            {row.questions.length} questions
           </div>
-          {survey.productSpecific && (
+          {row.productSpecific && (
             <div className="text-xs text-purple-600">
               Product-specific
             </div>
           )}
-          {survey.triggerEvent && (
+          {row.triggerEvent && (
             <div className="text-xs text-blue-600">
-              Trigger: {survey.triggerEvent.replace('_', ' ')}
+              Trigger: {row.triggerEvent.replace('_', ' ')}
             </div>
           )}
         </div>
@@ -703,42 +700,42 @@ export default function SurveyManagementPage() {
     },
     {
       header: 'Schedule',
-      accessorKey: 'schedule',
-      cell: (survey: Survey) => (
+      accessor: 'schedule',
+      cell: ({ row }: { row: Survey }) => (
         <div className="space-y-1">
           <div className="text-sm text-gray-900">
-            {new Date(survey.startDate).toLocaleDateString()}
+            {new Date(row.startDate).toLocaleDateString()}
           </div>
           <div className="text-sm text-gray-600">
-            to {new Date(survey.endDate).toLocaleDateString()}
+            to {new Date(row.endDate).toLocaleDateString()}
           </div>
           <div className="text-xs text-gray-500">
-            {Math.ceil((new Date(survey.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
+            {Math.ceil((new Date(row.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days left
           </div>
         </div>
       ),
     },
     {
       header: 'Responses',
-      accessorKey: 'responses',
-      cell: (survey: Survey) => (
+      accessor: 'responses',
+      cell: ({ row }: { row: Survey }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {survey.totalResponses.toLocaleString()}
+            {row.totalResponses.toLocaleString()}
           </div>
           <div className="text-sm text-green-600">
-            {survey.completionRate}% completion
+            {row.completionRate}% completion
           </div>
-          {survey.avgRating > 0 && (
+          {row.avgRating > 0 && (
             <div className="flex items-center space-x-1">
               <Star className="w-3 h-3 text-yellow-500" />
-              <span className="text-xs text-gray-600">{survey.avgRating}/5.0</span>
+              <span className="text-xs text-gray-600">{row.avgRating}/5.0</span>
             </div>
           )}
-          {survey.npsScore > 0 && (
+          {row.npsScore > 0 && (
             <div className="flex items-center space-x-1">
               <ThumbsUp className="w-3 h-3 text-blue-500" />
-              <span className="text-xs text-blue-600">NPS: {survey.npsScore}</span>
+              <span className="text-xs text-blue-600">NPS: {row.npsScore}</span>
             </div>
           )}
         </div>
@@ -746,32 +743,32 @@ export default function SurveyManagementPage() {
     },
     {
       header: 'Target Audience',
-      accessorKey: 'audience',
-      cell: (survey: Survey) => (
+      accessor: 'audience',
+      cell: ({ row }: { row: Survey }) => (
         <div className="space-y-1">
           <div className="text-sm text-gray-900">
-            {survey.targetAudience.replace('_', ' ').toUpperCase()}
+            {row.targetAudience.replace('_', ' ').toUpperCase()}
           </div>
           <div className="text-xs text-gray-500">
-            {survey.regions.includes('all') ? 'All Regions' : `${survey.regions.length} regions`}
+            {row.regions.includes('all') ? 'All Regions' : `${row.regions.length} regions`}
           </div>
-          {survey.agents.length > 0 && !survey.agents.includes('all') && (
+          {row.agents.length > 0 && !row.agents.includes('all') && (
             <div className="text-xs text-blue-600">
-              {survey.agents.length} specific agents
+              {row.agents.length} specific agents
             </div>
           )}
-          {survey.customers.length > 0 && (
+          {row.customers.length > 0 && (
             <div className="text-xs text-green-600">
-              {survey.customers.length} specific customers
+              {row.customers.length} specific customers
             </div>
           )}
         </div>
       ),
-
+    },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (survey: Survey) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: Survey }) => (
         <div className="flex items-center space-x-1">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -780,27 +777,27 @@ export default function SurveyManagementPage() {
             <BarChart3 className="w-4 h-4" />
           </Button>
           {canEditIn('surveys') && (
-            <Button size="sm" variant="outline" onClick={() => handleEdit(survey)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => handleDuplicate(survey)}>
+          <Button size="sm" variant="outline" onClick={() => handleDuplicate(row)}>
             <Copy className="w-4 h-4" />
           </Button>
-          {survey.status === 'active' ? (
+          {row.status === 'active' ? (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleStatusChange(survey.id, 'paused')}
+              onClick={() => handleStatusChange(row.id, 'paused')}
               className="text-yellow-600 hover:text-yellow-700"
             >
               <Pause className="w-4 h-4" />
             </Button>
-          ) : survey.status === 'paused' ? (
+          ) : row.status === 'paused' ? (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleStatusChange(survey.id, 'active')}
+              onClick={() => handleStatusChange(row.id, 'active')}
               className="text-green-600 hover:text-green-700"
             >
               <Play className="w-4 h-4" />
@@ -810,7 +807,7 @@ export default function SurveyManagementPage() {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleDelete(survey.id)}
+              onClick={() => handleDelete(row.id)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="w-4 h-4" />
@@ -1022,11 +1019,6 @@ export default function SurveyManagementPage() {
             <DataTable
               data={filteredSurveys}
               columns={surveyColumns}
-              selectedRows={selectedSurveys}
-              onSelectionChange={setSelectedSurveys}
-              searchable={false}
-              pagination={true}
-              pageSize={10}
             />
           </Card>
         )}

@@ -1,4 +1,5 @@
 const express = require('express');
+const getDatabase = () => require('../utils/database').getDatabase();
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 // Authentication middleware is applied globally in server.js
@@ -69,20 +70,20 @@ const { v4: uuidv4 } = require('uuid');
  */
 router.get('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     
     const query = `
       SELECT 
         a.*,
         r.name as region_name,
-        u.firstName || ' ' || u.lastName as manager_name,
+        u.first_name || ' ' || u.last_name as manager_name,
         COUNT(DISTINCT rt.id) as route_count,
         COUNT(DISTINCT ag.id) as agent_count
       FROM areas a
       LEFT JOIN regions r ON a.region_id = r.id
       LEFT JOIN users u ON a.manager_id = u.id
       LEFT JOIN routes rt ON a.id = rt.area_id
-      LEFT JOIN users ag ON rt.agent_id = ag.id
+      LEFT JOIN users ag ON rt.salesman_id = ag.id
       WHERE a.tenant_id = ?
       GROUP BY a.id
       ORDER BY a.name
@@ -125,14 +126,14 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     const query = `
       SELECT 
         a.*,
         r.name as region_name,
-        u.firstName || ' ' || u.lastName as manager_name
+        u.first_name || ' ' || u.last_name as manager_name
       FROM areas a
       LEFT JOIN regions r ON a.region_id = r.id
       LEFT JOIN users u ON a.manager_id = u.id
@@ -201,7 +202,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { code, name, region_id, manager_id, description, status = 'active' } = req.body;
     
     // Validate required fields
@@ -239,7 +240,7 @@ router.post('/', async (req, res) => {
       SELECT 
         a.*,
         r.name as region_name,
-        u.firstName || ' ' || u.lastName as manager_name
+        u.first_name || ' ' || u.last_name as manager_name
       FROM areas a
       LEFT JOIN regions r ON a.region_id = r.id
       LEFT JOIN users u ON a.manager_id = u.id
@@ -303,7 +304,7 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     const { code, name, region_id, manager_id, description, status } = req.body;
     
@@ -350,7 +351,7 @@ router.put('/:id', async (req, res) => {
       SELECT 
         a.*,
         r.name as region_name,
-        u.firstName || ' ' || u.lastName as manager_name
+        u.first_name || ' ' || u.last_name as manager_name
       FROM areas a
       LEFT JOIN regions r ON a.region_id = r.id
       LEFT JOIN users u ON a.manager_id = u.id
@@ -396,7 +397,7 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     // Check if area exists

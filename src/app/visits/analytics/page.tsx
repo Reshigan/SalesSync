@@ -655,63 +655,63 @@ export default function VisitAnalyticsPage() {
   const visitColumns = [
     {
       header: 'Visit Details',
-      accessorKey: 'visit',
-      cell: (visit: VisitRecord) => (
+      accessor: 'visit',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <MapPin className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{visit.visitNumber}</div>
-            <div className="text-sm text-gray-500">{visit.actualDate}</div>
-            <div className="text-xs text-gray-400">{visit.startTime} - {visit.endTime}</div>
+            <div className="font-medium text-gray-900">{row.visitNumber}</div>
+            <div className="text-sm text-gray-500">{row.actualDate}</div>
+            <div className="text-xs text-gray-400">{row.startTime} - {row.endTime}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Customer',
-      accessorKey: 'customer',
-      cell: (visit: VisitRecord) => (
+      accessor: 'customer',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">{visit.customerName}</div>
-          <div className="text-xs text-gray-500">{visit.customerCode}</div>
-          <div className="text-xs text-gray-400">{visit.customerType}</div>
+          <div className="text-sm font-medium text-gray-900">{row.customerName}</div>
+          <div className="text-xs text-gray-500">{row.customerCode}</div>
+          <div className="text-xs text-gray-400">{row.customerType}</div>
         </div>
       ),
     },
     {
       header: 'Agent & Route',
-      accessorKey: 'agent',
-      cell: (visit: VisitRecord) => (
+      accessor: 'agent',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
           <div className="flex items-center text-sm text-gray-900">
             <User className="w-4 h-4 mr-2 text-gray-400" />
-            {visit.agentName}
+            {row.agentName}
           </div>
-          <div className="text-xs text-gray-500">{visit.agentCode}</div>
-          <div className="text-xs text-gray-400">{visit.routeName}</div>
+          <div className="text-xs text-gray-500">{row.agentCode}</div>
+          <div className="text-xs text-gray-400">{row.routeName}</div>
         </div>
       ),
     },
     {
       header: 'Status & Duration',
-      accessorKey: 'status',
-      cell: (visit: VisitRecord) => {
-        const StatusIcon = getStatusIcon(visit.status)
+      accessor: 'status',
+      cell: ({ row }: { row: VisitRecord }) => {
+        const StatusIcon = getStatusIcon(row.status)
         return (
           <div className="space-y-1">
             <div className="flex items-center space-x-1">
               <StatusIcon className="w-4 h-4" />
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(visit.status)}`}>
-                {visit.status.toUpperCase()}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
+                {row.status.toUpperCase()}
               </span>
             </div>
             <div className="text-sm text-gray-900">
-              {visit.duration} min
+              {row.duration} min
             </div>
             <div className="text-xs text-gray-500">
-              Planned: {visit.plannedDuration} min
+              Planned: {row.plannedDuration} min
             </div>
           </div>
         )
@@ -719,40 +719,40 @@ export default function VisitAnalyticsPage() {
     },
     {
       header: 'Objectives',
-      accessorKey: 'objectives',
-      cell: (visit: VisitRecord) => (
+      accessor: 'objectives',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {visit.completedObjectives.length}/{visit.objectives.length}
+            {row.completedObjectives.length}/{row.objectives.length}
           </div>
           <div className="text-xs text-green-600">
-            {Math.round((visit.completedObjectives.length / visit.objectives.length) * 100)}% completed
+            {Math.round((row.completedObjectives.length / row.objectives.length) * 100)}% completed
           </div>
           <div className="text-xs text-gray-500">
-            {visit.objectives.slice(0, 2).join(', ')}
-            {visit.objectives.length > 2 && '...'}
+            {row.objectives.slice(0, 2).join(', ')}
+            {row.objectives.length > 2 && '...'}
           </div>
         </div>
       ),
     },
     {
       header: 'Outcomes',
-      accessorKey: 'outcomes',
-      cell: (visit: VisitRecord) => (
+      accessor: 'outcomes',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
-          {visit.outcomes.orderGenerated && (
+          {row.outcomes.orderGenerated && (
             <div className="text-sm text-green-600">
-              Order: {formatCurrency(visit.outcomes.orderValue)}
+              Order: {formatCurrency(row.outcomes.orderValue)}
             </div>
           )}
-          {visit.outcomes.paymentCollected > 0 && (
+          {row.outcomes.paymentCollected > 0 && (
             <div className="text-sm text-blue-600">
-              Payment: {formatCurrency(visit.outcomes.paymentCollected)}
+              Payment: {formatCurrency(row.outcomes.paymentCollected)}
             </div>
           )}
-          {visit.outcomes.issuesResolved > 0 && (
+          {row.outcomes.issuesResolved > 0 && (
             <div className="text-xs text-gray-600">
-              {visit.outcomes.issuesResolved} issues resolved
+              {row.outcomes.issuesResolved} issues resolved
             </div>
           )}
         </div>
@@ -760,24 +760,24 @@ export default function VisitAnalyticsPage() {
     },
     {
       header: 'Customer Feedback',
-      accessorKey: 'feedback',
-      cell: (visit: VisitRecord) => (
+      accessor: 'feedback',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-500" />
-            <span className={`text-sm font-medium ${getSatisfactionColor(visit.customerFeedback.satisfaction)}`}>
-              {visit.customerFeedback.satisfaction}/5.0
+            <span className={`text-sm font-medium ${getSatisfactionColor(row.customerFeedback.satisfaction)}`}>
+              {row.customerFeedback.satisfaction}/5.0
             </span>
           </div>
           <div className="flex items-center space-x-1">
             <ThumbsUp className="w-3 h-3 text-blue-500" />
             <span className="text-sm text-blue-600">
-              NPS: {visit.customerFeedback.npsScore}
+              NPS: {row.customerFeedback.npsScore}
             </span>
           </div>
-          {visit.customerFeedback.concerns.length > 0 && (
+          {row.customerFeedback.concerns.length > 0 && (
             <div className="text-xs text-red-600">
-              {visit.customerFeedback.concerns.length} concerns
+              {row.customerFeedback.concerns.length} concerns
             </div>
           )}
         </div>
@@ -785,21 +785,21 @@ export default function VisitAnalyticsPage() {
     },
     {
       header: 'Quality & Compliance',
-      accessorKey: 'quality',
-      cell: (visit: VisitRecord) => (
+      accessor: 'quality',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Award className="w-3 h-3 text-purple-500" />
-            <span className={`text-sm font-medium ${getQualityColor(visit.qualityScore)}`}>
-              {visit.qualityScore}%
+            <span className={`text-sm font-medium ${getQualityColor(row.qualityScore)}`}>
+              {row.qualityScore}%
             </span>
           </div>
           <div className="text-xs text-gray-600">
-            Compliance: {visit.complianceScore}%
+            Compliance: {row.complianceScore}%
           </div>
-          {visit.riskFlags.length > 0 && (
+          {row.riskFlags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {visit.riskFlags.slice(0, 2).map((flag, index) => (
+              {row.riskFlags.slice(0, 2).map((flag, index) => (
                 <span key={index} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">
                   {flag}
                 </span>
@@ -811,8 +811,8 @@ export default function VisitAnalyticsPage() {
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (visit: VisitRecord) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: VisitRecord }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -990,9 +990,6 @@ export default function VisitAnalyticsPage() {
           <DataTable
             data={visitRecords}
             columns={visitColumns}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
           />
         </Card>
       </div>

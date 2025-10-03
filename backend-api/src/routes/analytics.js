@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
-const getDatabase = () => require('../database/database');
+const getDatabase = () => require('../utils/database').getDatabase();
 
 // Sales Analytics
 router.get('/sales', async (req, res) => {

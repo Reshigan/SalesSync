@@ -117,7 +117,7 @@ export const RealTimeDemo: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
-      alert(`Error sending test notification: ${error.message}`);
+      alert(`Error sending test notification: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

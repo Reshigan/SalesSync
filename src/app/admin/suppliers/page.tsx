@@ -225,7 +225,7 @@ export default function SuppliersPage() {
   }, [])
 
   // Get unique categories for filter
-  const categories = [...new Set(suppliers.map(s => s.category))]
+  const categories = Array.from(new Set(suppliers.map(s => s.category)))
 
   // Filter suppliers
   const filteredSuppliers = suppliers.filter(supplier => {
@@ -348,25 +348,25 @@ export default function SuppliersPage() {
   // Table columns
   const columns = [
     {
-      key: 'code',
-      label: 'Code',
+      header: 'Code',
+      accessor: 'code',
       sortable: true,
-      render: (supplier: Supplier) => (
-        <div className="font-medium text-gray-900">{supplier.code}</div>
+      cell: ({ row }: { row: Supplier }) => (
+        <div className="font-medium text-gray-900">{row.code}</div>
       )
     },
     {
-      key: 'name',
-      label: 'Supplier Name',
+      header: 'Supplier Name',
+      accessor: 'name',
       sortable: true,
-      render: (supplier: Supplier) => (
+      cell: ({ row }: { row: Supplier }) => (
         <div>
-          <div className="font-medium text-gray-900">{supplier.name}</div>
-          <div className="text-sm text-gray-500">{supplier.category}</div>
-          {supplier.website && (
+          <div className="font-medium text-gray-900">{row.name}</div>
+          <div className="text-sm text-gray-500">{row.category}</div>
+          {row.website && (
             <div className="flex items-center text-xs text-blue-600">
               <Globe className="h-3 w-3 mr-1" />
-              <a href={supplier.website} target="_blank" rel="noopener noreferrer">
+              <a href={row.website} target="_blank" rel="noopener noreferrer">
                 Website
               </a>
             </div>
@@ -375,98 +375,98 @@ export default function SuppliersPage() {
       )
     },
     {
-      key: 'type',
-      label: 'Type',
-      render: (supplier: Supplier) => (
-        <Badge className={getTypeColor(supplier.type)}>
-          {supplier.type.replace('_', ' ')}
+      header: 'Type',
+      accessor: 'type',
+      cell: ({ row }: { row: Supplier }) => (
+        <Badge className={getTypeColor(row.type)}>
+          {row.type.replace('_', ' ')}
         </Badge>
       )
     },
     {
-      key: 'contact',
-      label: 'Contact',
-      render: (supplier: Supplier) => (
+      header: 'Contact',
+      accessor: 'contact',
+      cell: ({ row }: { row: Supplier }) => (
         <div className="text-sm">
-          <div className="font-medium">{supplier.contact_person}</div>
+          <div className="font-medium">{row.contact_person}</div>
           <div className="flex items-center text-gray-500">
             <Phone className="h-3 w-3 mr-1" />
-            {supplier.phone}
+            {row.phone}
           </div>
           <div className="flex items-center text-gray-500">
             <Mail className="h-3 w-3 mr-1" />
-            {supplier.email}
+            {row.email}
           </div>
         </div>
       )
     },
     {
-      key: 'location',
-      label: 'Location',
-      render: (supplier: Supplier) => (
+      header: 'Location',
+      accessor: 'location',
+      cell: ({ row }: { row: Supplier }) => (
         <div className="text-sm">
           <div className="flex items-center">
             <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-            <span>{supplier.city}</span>
+            <span>{row.city}</span>
           </div>
-          <div className="text-xs text-gray-500">{supplier.province}</div>
+          <div className="text-xs text-gray-500">{row.province}</div>
         </div>
       )
     },
     {
-      key: 'financial',
-      label: 'Financial',
-      render: (supplier: Supplier) => {
-        const utilization = getCreditUtilization(supplier.current_balance, supplier.credit_limit)
+      header: 'Financial',
+      accessor: 'financial',
+      cell: ({ row }: { row: Supplier }) => {
+        const utilization = getCreditUtilization(row.current_balance, row.credit_limit)
         return (
           <div className="text-sm">
             <div className="flex items-center">
               <DollarSign className="h-3 w-3 mr-1 text-gray-400" />
               <span className="font-medium">
-                R{supplier.current_balance?.toLocaleString() || '0'}
+                R{row.current_balance?.toLocaleString() || '0'}
               </span>
             </div>
             <div className="text-xs text-gray-500">
-              Limit: R{supplier.credit_limit?.toLocaleString() || '0'}
+              Limit: R{row.credit_limit?.toLocaleString() || '0'}
             </div>
             <div className="text-xs text-gray-500">
-              {supplier.payment_terms}
+              {row.payment_terms}
             </div>
           </div>
         )
       }
     },
     {
-      key: 'performance',
-      label: 'Performance',
-      render: (supplier: Supplier) => (
+      header: 'Performance',
+      accessor: 'performance',
+      cell: ({ row }: { row: Supplier }) => (
         <div className="text-sm">
-          {getRatingStars(supplier.rating)}
+          {getRatingStars(row.rating)}
           <div className="text-xs text-gray-500 mt-1">
-            {supplier.total_orders || 0} orders
+            {row.total_orders || 0} orders
           </div>
           <div className="text-xs text-gray-500">
-            YTD: R{supplier.ytd_spend?.toLocaleString() || '0'}
+            YTD: R{row.ytd_spend?.toLocaleString() || '0'}
           </div>
         </div>
       )
     },
     {
-      key: 'contract',
-      label: 'Contract',
-      render: (supplier: Supplier) => (
+      header: 'Contract',
+      accessor: 'contract',
+      cell: ({ row }: { row: Supplier }) => (
         <div className="text-sm">
-          {supplier.contract_start && supplier.contract_end ? (
+          {row.contract_start && row.contract_end ? (
             <>
               <div className="flex items-center">
                 <Calendar className="h-3 w-3 mr-1 text-gray-400" />
                 <span className="text-xs">
-                  {new Date(supplier.contract_start).toLocaleDateString()} - 
-                  {new Date(supplier.contract_end).toLocaleDateString()}
+                  {new Date(row.contract_start).toLocaleDateString()} - 
+                  {new Date(row.contract_end).toLocaleDateString()}
                 </span>
               </div>
               <div className="text-xs text-gray-500">
-                {new Date(supplier.contract_end) > new Date() ? 'Active' : 'Expired'}
+                {new Date(row.contract_end) > new Date() ? 'Active' : 'Expired'}
               </div>
             </>
           ) : (
@@ -476,34 +476,34 @@ export default function SuppliersPage() {
       )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (supplier: Supplier) => (
+      header: 'Status',
+      accessor: 'status',
+      cell: ({ row }: { row: Supplier }) => (
         <Badge variant={
-          supplier.status === 'active' ? 'success' : 
-          supplier.status === 'suspended' ? 'warning' :
-          supplier.status === 'pending' ? 'info' : 'secondary'
+          row.status === 'active' ? 'success' : 
+          row.status === 'suspended' ? 'warning' :
+          row.status === 'pending' ? 'info' : 'secondary'
         }>
-          {supplier.status}
+          {row.status}
         </Badge>
       )
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      render: (supplier: Supplier) => (
+      header: 'Actions',
+      accessor: 'actions',
+      cell: ({ row }: { row: Supplier }) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(supplier)}
+            onClick={() => handleEdit(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(supplier)}
+            onClick={() => handleDelete(row)}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -599,34 +599,33 @@ export default function SuppliersPage() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-              <option value="pending">Pending</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' },
+                { value: 'pending', label: 'Pending' }
+              ]}
+            />
             <Select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="all">All Types</option>
-              <option value="manufacturer">Manufacturer</option>
-              <option value="distributor">Distributor</option>
-              <option value="wholesaler">Wholesaler</option>
-              <option value="service_provider">Service Provider</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Types' },
+                { value: 'manufacturer', label: 'Manufacturer' },
+                { value: 'distributor', label: 'Distributor' },
+                { value: 'wholesaler', label: 'Wholesaler' },
+                { value: 'service_provider', label: 'Service Provider' }
+              ]}
+            />
             <Select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Categories' },
+                ...categories.map(category => ({ value: category, label: category }))
+              ]}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -696,12 +695,13 @@ export default function SuppliersPage() {
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                   required
-                >
-                  <option value="manufacturer">Manufacturer</option>
-                  <option value="distributor">Distributor</option>
-                  <option value="wholesaler">Wholesaler</option>
-                  <option value="service_provider">Service Provider</option>
-                </Select>
+                  options={[
+                    { value: 'manufacturer', label: 'Manufacturer' },
+                    { value: 'distributor', label: 'Distributor' },
+                    { value: 'wholesaler', label: 'Wholesaler' },
+                    { value: 'service_provider', label: 'Service Provider' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -721,13 +721,14 @@ export default function SuppliersPage() {
                 <Select
                   value={formData.rating}
                   onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                >
-                  <option value="1">1 Star</option>
-                  <option value="2">2 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="5">5 Stars</option>
-                </Select>
+                  options={[
+                    { value: '1', label: '1 Star' },
+                    { value: '2', label: '2 Stars' },
+                    { value: '3', label: '3 Stars' },
+                    { value: '4', label: '4 Stars' },
+                    { value: '5', label: '5 Stars' }
+                  ]}
+                />
               </div>
             </div>
 
@@ -813,18 +814,19 @@ export default function SuppliersPage() {
                   value={formData.province}
                   onChange={(e) => setFormData({ ...formData, province: e.target.value })}
                   required
-                >
-                  <option value="">Select Province</option>
-                  <option value="Gauteng">Gauteng</option>
-                  <option value="Western Cape">Western Cape</option>
-                  <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                  <option value="Eastern Cape">Eastern Cape</option>
-                  <option value="Free State">Free State</option>
-                  <option value="Limpopo">Limpopo</option>
-                  <option value="Mpumalanga">Mpumalanga</option>
-                  <option value="North West">North West</option>
-                  <option value="Northern Cape">Northern Cape</option>
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Province' },
+                    { value: 'Gauteng', label: 'Gauteng' },
+                    { value: 'Western Cape', label: 'Western Cape' },
+                    { value: 'KwaZulu-Natal', label: 'KwaZulu-Natal' },
+                    { value: 'Eastern Cape', label: 'Eastern Cape' },
+                    { value: 'Free State', label: 'Free State' },
+                    { value: 'Limpopo', label: 'Limpopo' },
+                    { value: 'Mpumalanga', label: 'Mpumalanga' },
+                    { value: 'North West', label: 'North West' },
+                    { value: 'Northern Cape', label: 'Northern Cape' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -923,12 +925,13 @@ export default function SuppliersPage() {
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-                <option value="pending">Pending</option>
-              </Select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'suspended', label: 'Suspended' },
+                  { value: 'pending', label: 'Pending' }
+                ]}
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

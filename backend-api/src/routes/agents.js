@@ -1,4 +1,5 @@
 const express = require('express');
+const getDatabase = () => require('../utils/database').getDatabase();
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
@@ -99,40 +100,17 @@ const bcrypt = require('bcrypt');
  */
 router.get('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     
     const query = `
       SELECT 
         u.*,
-        a.name as area_name,
-        r.name as route_name,
-        mgr.firstName || ' ' || mgr.lastName as manager_name,
-        COALESCE(sales.ytd_sales, 0) as ytd_sales,
-        COALESCE(perf.performance_rating, 0) as performance_rating,
-        act.last_activity
+        0 as ytd_sales,
+        0 as performance_rating,
+        NULL as last_activity
       FROM users u
-      LEFT JOIN areas a ON u.area_id = a.id
-      LEFT JOIN routes r ON u.route_id = r.id
-      LEFT JOIN users mgr ON u.manager_id = mgr.id
-      LEFT JOIN (
-        SELECT agent_id, SUM(total_amount) as ytd_sales
-        FROM orders 
-        WHERE strftime('%Y', created_at) = strftime('%Y', 'now')
-        GROUP BY agent_id
-      ) sales ON u.id = sales.agent_id
-      LEFT JOIN (
-        SELECT agent_id, AVG(rating) as performance_rating
-        FROM agent_performance
-        WHERE created_at >= date('now', '-12 months')
-        GROUP BY agent_id
-      ) perf ON u.id = perf.agent_id
-      LEFT JOIN (
-        SELECT agent_id, MAX(created_at) as last_activity
-        FROM visits
-        GROUP BY agent_id
-      ) act ON u.id = act.agent_id
       WHERE u.tenant_id = ? AND u.role IN ('sales_agent', 'merchandiser', 'promoter', 'supervisor')
-      ORDER BY u.firstName, u.lastName
+      ORDER BY u.first_name, u.last_name
     `;
     
     const agents = db.prepare(query).all(req.tenantId);
@@ -172,7 +150,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     const query = `
@@ -180,7 +158,7 @@ router.get('/:id', async (req, res) => {
         u.*,
         a.name as area_name,
         r.name as route_name,
-        mgr.firstName || ' ' || mgr.lastName as manager_name
+        mgr.first_name || ' ' || mgr.last_name as manager_name
       FROM users u
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
@@ -268,7 +246,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { 
       employeeId, firstName, lastName, email, phone, role,
       area_id, route_id, manager_id, status = 'active',
@@ -328,7 +306,7 @@ router.post('/', async (req, res) => {
         u.*,
         a.name as area_name,
         r.name as route_name,
-        mgr.firstName || ' ' || mgr.lastName as manager_name
+        mgr.first_name || ' ' || mgr.last_name as manager_name
       FROM users u
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
@@ -411,7 +389,7 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     const { 
       employeeId, firstName, lastName, email, phone, role,
@@ -483,7 +461,7 @@ router.put('/:id', async (req, res) => {
         u.*,
         a.name as area_name,
         r.name as route_name,
-        mgr.firstName || ' ' || mgr.lastName as manager_name
+        mgr.first_name || ' ' || mgr.last_name as manager_name
       FROM users u
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
@@ -533,7 +511,7 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { db } = req;
+    const db = getDatabase();
     const { id } = req.params;
     
     // Check if agent exists

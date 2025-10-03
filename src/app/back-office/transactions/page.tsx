@@ -478,17 +478,17 @@ export default function TransactionsPage() {
   const columns = [
     {
       header: 'Transaction',
-      accessorKey: 'transaction',
-      cell: (transaction: Transaction) => (
+      accessor: 'transaction',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <CreditCard className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{transaction.transactionNumber}</div>
+            <div className="font-medium text-gray-900">{row.transactionNumber}</div>
             <div className="text-sm text-gray-500">
-              {new Date(transaction.transactionDate).toLocaleDateString()} at{' '}
-              {new Date(transaction.transactionDate).toLocaleTimeString()}
+              {new Date(row.transactionDate).toLocaleDateString()} at{' '}
+              {new Date(row.transactionDate).toLocaleTimeString()}
             </div>
           </div>
         </div>
@@ -496,18 +496,18 @@ export default function TransactionsPage() {
     },
     {
       header: 'Type & Status',
-      accessorKey: 'typeStatus',
-      cell: (transaction: Transaction) => {
-        const StatusIcon = getStatusIcon(transaction.status)
+      accessor: 'typeStatus',
+      cell: ({ row }: { row: Transaction }) => {
+        const StatusIcon = getStatusIcon(row.status)
         return (
           <div className="space-y-2">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(transaction.type)}`}>
-              {transaction.type.toUpperCase()}
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(row.type)}`}>
+              {row.type.toUpperCase()}
             </span>
             <div className="flex items-center space-x-1">
               <StatusIcon className="w-4 h-4" />
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                {transaction.status.toUpperCase()}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
+                {row.status.toUpperCase()}
               </span>
             </div>
           </div>
@@ -516,17 +516,17 @@ export default function TransactionsPage() {
     },
     {
       header: 'Amount & Payment',
-      accessorKey: 'amount',
-      cell: (transaction: Transaction) => {
-        const PaymentIcon = getPaymentMethodIcon(transaction.paymentMethod)
+      accessor: 'amount',
+      cell: ({ row }: { row: Transaction }) => {
+        const PaymentIcon = getPaymentMethodIcon(row.paymentMethod)
         return (
           <div className="space-y-1">
-            <div className={`text-sm font-medium ${transaction.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-              {transaction.amount < 0 ? '-' : ''}{formatCurrency(transaction.amount)}
+            <div className={`text-sm font-medium ${row.amount < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+              {row.amount < 0 ? '-' : ''}{formatCurrency(row.amount)}
             </div>
             <div className="flex items-center text-xs text-gray-500">
               <PaymentIcon className="w-3 h-3 mr-1" />
-              {transaction.paymentMethod.replace('_', ' ').toUpperCase()}
+              {row.paymentMethod.replace('_', ' ').toUpperCase()}
             </div>
           </div>
         )
@@ -534,54 +534,54 @@ export default function TransactionsPage() {
     },
     {
       header: 'Customer',
-      accessorKey: 'customer',
-      cell: (transaction: Transaction) => (
+      accessor: 'customer',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">{transaction.customerName}</div>
-          <div className="text-xs text-gray-500">{transaction.customerCode}</div>
+          <div className="text-sm font-medium text-gray-900">{row.customerName}</div>
+          <div className="text-xs text-gray-500">{row.customerCode}</div>
         </div>
       ),
     },
     {
       header: 'Agent & Location',
-      accessorKey: 'agent',
-      cell: (transaction: Transaction) => (
+      accessor: 'agent',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="space-y-1">
           <div className="flex items-center text-sm text-gray-900">
             <User className="w-4 h-4 mr-2 text-gray-400" />
-            {transaction.agentName}
+            {row.agentName}
           </div>
-          <div className="text-xs text-gray-500">{transaction.agentCode}</div>
+          <div className="text-xs text-gray-500">{row.agentCode}</div>
           <div className="flex items-center text-xs text-gray-500">
             <MapPin className="w-3 h-3 mr-1" />
-            {transaction.routeName}
+            {row.routeName}
           </div>
           <div className="text-xs text-gray-400">
-            {transaction.regionName} → {transaction.areaName}
+            {row.regionName} → {row.areaName}
           </div>
         </div>
       ),
     },
     {
       header: 'Risk & Fraud',
-      accessorKey: 'risk',
-      cell: (transaction: Transaction) => (
+      accessor: 'risk',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <Shield className="w-4 h-4 text-gray-400" />
-            <span className={`text-sm font-medium ${getRiskColor(transaction.riskScore)}`}>
-              {transaction.riskScore}%
+            <span className={`text-sm font-medium ${getRiskColor(row.riskScore)}`}>
+              {row.riskScore}%
             </span>
           </div>
-          {transaction.fraudFlags.length > 0 && (
+          {row.fraudFlags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {transaction.fraudFlags.slice(0, 2).map((flag, index) => (
+              {row.fraudFlags.slice(0, 2).map((flag, index) => (
                 <span key={index} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">
                   {flag}
                 </span>
               ))}
-              {transaction.fraudFlags.length > 2 && (
-                <span className="text-xs text-gray-500">+{transaction.fraudFlags.length - 2}</span>
+              {row.fraudFlags.length > 2 && (
+                <span className="text-xs text-gray-500">+{row.fraudFlags.length - 2}</span>
               )}
             </div>
           )}
@@ -590,30 +590,30 @@ export default function TransactionsPage() {
     },
     {
       header: 'Device Info',
-      accessorKey: 'device',
-      cell: (transaction: Transaction) => (
+      accessor: 'device',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="space-y-1">
-          <div className="text-xs text-gray-600">{transaction.deviceInfo.deviceId}</div>
+          <div className="text-xs text-gray-600">{row.deviceInfo.deviceId}</div>
           <div className="text-xs text-gray-500">
-            {transaction.deviceInfo.platform} v{transaction.deviceInfo.appVersion}
+            {row.deviceInfo.platform} v{row.deviceInfo.appVersion}
           </div>
         </div>
       ),
     },
     {
       header: 'Notes & Errors',
-      accessorKey: 'notes',
-      cell: (transaction: Transaction) => (
+      accessor: 'notes',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="max-w-xs space-y-1">
-          {transaction.notes && (
-            <p className="text-xs text-gray-600 truncate" title={transaction.notes}>
-              {transaction.notes}
+          {row.notes && (
+            <p className="text-xs text-gray-600 truncate" title={row.notes}>
+              {row.notes}
             </p>
           )}
-          {transaction.errorMessage && (
-            <p className="text-xs text-red-600 truncate" title={transaction.errorMessage}>
+          {row.errorMessage && (
+            <p className="text-xs text-red-600 truncate" title={row.errorMessage}>
               <AlertTriangle className="w-3 h-3 inline mr-1" />
-              {transaction.errorMessage}
+              {row.errorMessage}
             </p>
           )}
         </div>
@@ -621,45 +621,45 @@ export default function TransactionsPage() {
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (transaction: Transaction) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: Transaction }) => (
         <div className="flex items-center space-x-1">
-          <Button size="sm" variant="outline" onClick={() => handleViewAudit(transaction)}>
+          <Button size="sm" variant="outline" onClick={() => handleViewAudit(row)}>
             <History className="w-4 h-4" />
           </Button>
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
           </Button>
-          {isAdmin() && transaction.canEdit && (
-            <Button size="sm" variant="outline" onClick={() => handleEdit(transaction)}>
+          {isAdmin() && row.canEdit && (
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
-          {isAdmin() && transaction.status === 'failed' && (
+          {isAdmin() && row.status === 'failed' && (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleReprocess(transaction.id)}
+              onClick={() => handleReprocess(row.id)}
               className="text-blue-600 hover:text-blue-700"
             >
               <RotateCcw className="w-4 h-4" />
             </Button>
           )}
-          {isAdmin() && transaction.canCancel && (
+          {isAdmin() && row.canCancel && (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleCancel(transaction.id)}
+              onClick={() => handleCancel(row.id)}
               className="text-red-600 hover:text-red-700"
             >
               <Ban className="w-4 h-4" />
             </Button>
           )}
-          {isAdmin() && transaction.canRefund && (
+          {isAdmin() && row.canRefund && (
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleRefund(transaction.id)}
+              onClick={() => handleRefund(row.id)}
               className="text-orange-600 hover:text-orange-700"
             >
               <RotateCcw className="w-4 h-4" />
@@ -886,11 +886,6 @@ export default function TransactionsPage() {
           <DataTable
             data={filteredTransactions}
             columns={columns}
-            selectedRows={selectedTransactions}
-            onSelectionChange={setSelectedTransactions}
-            searchable={false}
-            pagination={true}
-            pageSize={20}
           />
         </Card>
 

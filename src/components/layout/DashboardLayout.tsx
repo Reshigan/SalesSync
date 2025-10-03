@@ -42,6 +42,13 @@ interface NavigationItem {
   children?: NavigationItem[]
 }
 
+interface Notification {
+  id: string
+  type: string
+  message: string
+  timestamp: string
+}
+
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
@@ -63,7 +70,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   } = usePermissions()
   
   const [collapsed, setCollapsed] = useState(false)
-  const [notifications, setNotifications] = useState([])
+  const [notifications, setNotifications] = useState<Notification[]>([])
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   // Role-based navigation

@@ -34,8 +34,8 @@ interface RouteData {
   area_id: string
   area_name?: string
   region_name?: string
-  agent_id?: string
-  agent_name?: string
+  agent_id?: string | null
+  agent_name?: string | null
   description?: string
   status: 'active' | 'inactive'
   customer_count?: number
@@ -262,115 +262,115 @@ export default function RoutesPage() {
   // Table columns
   const columns = [
     {
-      key: 'code',
-      label: 'Code',
+      header: 'Code',
+      accessor: 'code',
       sortable: true,
-      render: (route: RouteData) => (
-        <div className="font-medium text-gray-900">{route.code}</div>
+      cell: ({ row }: { row: RouteData }) => (
+        <div className="font-medium text-gray-900">{row.code}</div>
       )
     },
     {
-      key: 'name',
-      label: 'Route Name',
+      header: 'Route Name',
+      accessor: 'name',
       sortable: true,
-      render: (route: RouteData) => (
+      cell: ({ row }: { row: RouteData }) => (
         <div>
-          <div className="font-medium text-gray-900">{route.name}</div>
-          {route.description && (
-            <div className="text-sm text-gray-500">{route.description}</div>
+          <div className="font-medium text-gray-900">{row.name}</div>
+          {row.description && (
+            <div className="text-sm text-gray-500">{row.description}</div>
           )}
         </div>
       )
     },
     {
-      key: 'area_name',
-      label: 'Area',
+      header: 'Area',
+      accessor: 'area_name',
       sortable: true,
-      render: (route: RouteData) => (
+      cell: ({ row }: { row: RouteData }) => (
         <div>
           <div className="flex items-center">
             <Building2 className="h-4 w-4 text-gray-400 mr-2" />
-            <span className="font-medium">{route.area_name}</span>
+            <span className="font-medium">{row.area_name}</span>
           </div>
-          <div className="text-sm text-gray-500">{route.region_name}</div>
+          <div className="text-sm text-gray-500">{row.region_name}</div>
         </div>
       )
     },
     {
-      key: 'agent_name',
-      label: 'Assigned Agent',
-      render: (route: RouteData) => (
+      header: 'Assigned Agent',
+      accessor: 'agent_name',
+      cell: ({ row }: { row: RouteData }) => (
         <div className="flex items-center">
           <Users className="h-4 w-4 text-gray-400 mr-2" />
-          <span>{route.agent_name || 'Unassigned'}</span>
+          <span>{row.agent_name || 'Unassigned'}</span>
         </div>
       )
     },
     {
-      key: 'customer_count',
-      label: 'Customers',
-      render: (route: RouteData) => (
+      header: 'Customers',
+      accessor: 'customer_count',
+      cell: ({ row }: { row: RouteData }) => (
         <div className="text-center">
           <Badge variant="secondary">
-            {route.customer_count || 0}
+            {row.customer_count || 0}
           </Badge>
         </div>
       )
     },
     {
-      key: 'visit_frequency',
-      label: 'Frequency',
-      render: (route: RouteData) => (
-        <Badge className={getFrequencyColor(route.visit_frequency)}>
-          {route.visit_frequency}
+      header: 'Frequency',
+      accessor: 'visit_frequency',
+      cell: ({ row }: { row: RouteData }) => (
+        <Badge className={getFrequencyColor(row.visit_frequency)}>
+          {row.visit_frequency}
         </Badge>
       )
     },
     {
-      key: 'estimated_duration',
-      label: 'Duration',
-      render: (route: RouteData) => (
+      header: 'Duration',
+      accessor: 'estimated_duration',
+      cell: ({ row }: { row: RouteData }) => (
         <div className="flex items-center text-sm">
           <Clock className="h-4 w-4 text-gray-400 mr-1" />
-          {route.estimated_duration ? `${Math.floor(route.estimated_duration / 60)}h ${route.estimated_duration % 60}m` : 'N/A'}
+          {row.estimated_duration ? `${Math.floor(row.estimated_duration / 60)}h ${row.estimated_duration % 60}m` : 'N/A'}
         </div>
       )
     },
     {
-      key: 'target_calls',
-      label: 'Target Calls',
-      render: (route: RouteData) => (
+      header: 'Target Calls',
+      accessor: 'target_calls',
+      cell: ({ row }: { row: RouteData }) => (
         <div className="flex items-center text-sm">
           <Target className="h-4 w-4 text-gray-400 mr-1" />
-          {route.target_calls || 'N/A'}
+          {row.target_calls || 'N/A'}
         </div>
       )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (route: RouteData) => (
-        <Badge variant={route.status === 'active' ? 'success' : 'secondary'}>
-          {route.status}
+      header: 'Status',
+      accessor: 'status',
+      cell: ({ row }: { row: RouteData }) => (
+        <Badge variant={row.status === 'active' ? 'success' : 'secondary'}>
+          {row.status}
         </Badge>
       )
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      render: (route: RouteData) => (
+      header: 'Actions',
+      accessor: 'actions',
+      cell: ({ row }: { row: RouteData }) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(route)}
+            onClick={() => handleEdit(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(route)}
+            onClick={() => handleDelete(row)}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -466,32 +466,31 @@ export default function RoutesPage() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' }
+              ]}
+            />
             <Select
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-            >
-              <option value="all">All Areas</option>
-              {areas.map(area => (
-                <option key={area.id} value={area.id}>
-                  {area.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Areas' },
+                ...areas.map(area => ({ value: area.id, label: area.name }))
+              ]}
+            />
             <Select
               value={frequencyFilter}
               onChange={(e) => setFrequencyFilter(e.target.value)}
-            >
-              <option value="all">All Frequencies</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="bi-weekly">Bi-weekly</option>
-              <option value="monthly">Monthly</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Frequencies' },
+                { value: 'daily', label: 'Daily' },
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'bi-weekly', label: 'Bi-weekly' },
+                { value: 'monthly', label: 'Monthly' }
+              ]}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -561,14 +560,11 @@ export default function RoutesPage() {
                   value={formData.area_id}
                   onChange={(e) => setFormData({ ...formData, area_id: e.target.value })}
                   required
-                >
-                  <option value="">Select Area</option>
-                  {areas.map(area => (
-                    <option key={area.id} value={area.id}>
-                      {area.name} ({area.region_name})
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Area' },
+                    ...areas.map(area => ({ value: area.id, label: `${area.name} (${area.region_name})` }))
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -577,14 +573,11 @@ export default function RoutesPage() {
                 <Select
                   value={formData.agent_id}
                   onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
-                >
-                  <option value="">Select Agent</option>
-                  {agents.map(agent => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.firstName} {agent.lastName} ({agent.employeeId})
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Agent' },
+                    ...agents.map(agent => ({ value: agent.id, label: `${agent.firstName} ${agent.lastName} (${agent.employeeId})` }))
+                  ]}
+                />
               </div>
             </div>
 
@@ -597,12 +590,13 @@ export default function RoutesPage() {
                   value={formData.visit_frequency}
                   onChange={(e) => setFormData({ ...formData, visit_frequency: e.target.value as any })}
                   required
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="bi-weekly">Bi-weekly</option>
-                  <option value="monthly">Monthly</option>
-                </Select>
+                  options={[
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: 'bi-weekly', label: 'Bi-weekly' },
+                    { value: 'monthly', label: 'Monthly' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -648,10 +642,11 @@ export default function RoutesPage() {
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </Select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' }
+                ]}
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

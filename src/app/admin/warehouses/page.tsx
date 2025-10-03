@@ -38,19 +38,19 @@ interface WarehouseData {
   city: string
   province: string
   postal_code: string
-  manager_id?: string
-  manager_name?: string
+  manager_id?: string | null
+  manager_name?: string | null
   contact_person: string
   phone: string
   email: string
   capacity: number
-  current_stock?: number
+  current_stock?: number | null
   status: 'active' | 'inactive' | 'maintenance'
   operating_hours: string
   coordinates?: {
     lat: number
     lng: number
-  }
+  } | null
   created_at: string
   updated_at: string
 }
@@ -198,7 +198,7 @@ export default function WarehousesPage() {
   }, [])
 
   // Get unique provinces for filter
-  const provinces = [...new Set(warehouses.map(w => w.province))]
+  const provinces = Array.from(new Set(warehouses.map(w => w.province)))
 
   // Filter warehouses
   const filteredWarehouses = warehouses.filter(warehouse => {
@@ -288,7 +288,7 @@ export default function WarehousesPage() {
   }
 
   // Calculate capacity utilization
-  const getCapacityUtilization = (current?: number, capacity?: number) => {
+  const getCapacityUtilization = (current?: number | null, capacity?: number) => {
     if (!current || !capacity) return 0
     return Math.round((current / capacity) * 100)
   }
@@ -303,66 +303,66 @@ export default function WarehousesPage() {
   // Table columns
   const columns = [
     {
-      key: 'code',
-      label: 'Code',
+      header: 'Code',
+      accessor: 'code',
       sortable: true,
-      render: (warehouse: WarehouseData) => (
-        <div className="font-medium text-gray-900">{warehouse.code}</div>
+      cell: ({ row }: { row: WarehouseData }) => (
+        <div className="font-medium text-gray-900">{row.code}</div>
       )
     },
     {
-      key: 'name',
-      label: 'Warehouse Name',
+      header: 'Warehouse Name',
+      accessor: 'name',
       sortable: true,
-      render: (warehouse: WarehouseData) => (
+      cell: ({ row }: { row: WarehouseData }) => (
         <div>
-          <div className="font-medium text-gray-900">{warehouse.name}</div>
+          <div className="font-medium text-gray-900">{row.name}</div>
           <div className="text-sm text-gray-500">
             <MapPin className="inline h-3 w-3 mr-1" />
-            {warehouse.city}, {warehouse.province}
+            {row.city}, {row.province}
           </div>
         </div>
       )
     },
     {
-      key: 'type',
-      label: 'Type',
-      render: (warehouse: WarehouseData) => (
-        <Badge className={getTypeColor(warehouse.type)}>
-          {warehouse.type.replace('_', ' ')}
+      header: 'Type',
+      accessor: 'type',
+      cell: ({ row }: { row: WarehouseData }) => (
+        <Badge className={getTypeColor(row.type)}>
+          {row.type.replace('_', ' ')}
         </Badge>
       )
     },
     {
-      key: 'contact',
-      label: 'Contact',
-      render: (warehouse: WarehouseData) => (
+      header: 'Contact',
+      accessor: 'contact_person',
+      cell: ({ row }: { row: WarehouseData }) => (
         <div className="text-sm">
-          <div className="font-medium">{warehouse.contact_person}</div>
+          <div className="font-medium">{row.contact_person}</div>
           <div className="flex items-center text-gray-500">
             <Phone className="h-3 w-3 mr-1" />
-            {warehouse.phone}
+            {row.phone}
           </div>
           <div className="flex items-center text-gray-500">
             <Mail className="h-3 w-3 mr-1" />
-            {warehouse.email}
+            {row.email}
           </div>
         </div>
       )
     },
     {
-      key: 'capacity',
-      label: 'Capacity',
-      render: (warehouse: WarehouseData) => {
-        const utilization = getCapacityUtilization(warehouse.current_stock, warehouse.capacity)
+      header: 'Capacity',
+      accessor: 'capacity',
+      cell: ({ row }: { row: WarehouseData }) => {
+        const utilization = getCapacityUtilization(row.current_stock, row.capacity)
         return (
           <div className="text-sm">
             <div className="flex items-center">
               <Package className="h-3 w-3 mr-1 text-gray-400" />
-              <span className="font-medium">{warehouse.capacity.toLocaleString()}</span>
+              <span className="font-medium">{row.capacity.toLocaleString()}</span>
             </div>
             <div className={`text-xs ${getUtilizationColor(utilization)}`}>
-              {warehouse.current_stock?.toLocaleString() || 0} ({utilization}%)
+              {row.current_stock?.toLocaleString() || 0} ({utilization}%)
             </div>
             <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
               <div 
@@ -378,50 +378,50 @@ export default function WarehousesPage() {
       }
     },
     {
-      key: 'manager_name',
-      label: 'Manager',
-      render: (warehouse: WarehouseData) => (
+      header: 'Manager',
+      accessor: 'manager_name',
+      cell: ({ row }: { row: WarehouseData }) => (
         <div className="flex items-center text-sm">
           <Users className="h-3 w-3 mr-1 text-gray-400" />
-          <span>{warehouse.manager_name || 'Unassigned'}</span>
+          <span>{row.manager_name || 'Unassigned'}</span>
         </div>
       )
     },
     {
-      key: 'operating_hours',
-      label: 'Hours',
-      render: (warehouse: WarehouseData) => (
-        <div className="text-sm text-gray-600">{warehouse.operating_hours}</div>
+      header: 'Hours',
+      accessor: 'operating_hours',
+      cell: ({ row }: { row: WarehouseData }) => (
+        <div className="text-sm text-gray-600">{row.operating_hours}</div>
       )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (warehouse: WarehouseData) => (
+      header: 'Status',
+      accessor: 'status',
+      cell: ({ row }: { row: WarehouseData }) => (
         <Badge variant={
-          warehouse.status === 'active' ? 'success' : 
-          warehouse.status === 'maintenance' ? 'warning' : 'secondary'
+          row.status === 'active' ? 'success' : 
+          row.status === 'maintenance' ? 'warning' : 'secondary'
         }>
-          {warehouse.status}
+          {row.status}
         </Badge>
       )
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      render: (warehouse: WarehouseData) => (
+      header: 'Actions',
+      accessor: 'id',
+      cell: ({ row }: { row: WarehouseData }) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(warehouse)}
+            onClick={() => handleEdit(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(warehouse)}
+            onClick={() => handleDelete(row)}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -519,33 +519,32 @@ export default function WarehousesPage() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="maintenance">Maintenance</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'maintenance', label: 'Maintenance' }
+              ]}
+            />
             <Select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-            >
-              <option value="all">All Types</option>
-              <option value="main">Main</option>
-              <option value="regional">Regional</option>
-              <option value="distribution">Distribution</option>
-              <option value="cold_storage">Cold Storage</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Types' },
+                { value: 'main', label: 'Main' },
+                { value: 'regional', label: 'Regional' },
+                { value: 'distribution', label: 'Distribution' },
+                { value: 'cold_storage', label: 'Cold Storage' }
+              ]}
+            />
             <Select
               value={provinceFilter}
               onChange={(e) => setProvinceFilter(e.target.value)}
-            >
-              <option value="all">All Provinces</option>
-              {provinces.map(province => (
-                <option key={province} value={province}>
-                  {province}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Provinces' },
+                ...provinces.map(province => ({ value: province, label: province }))
+              ]}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -615,12 +614,13 @@ export default function WarehousesPage() {
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                   required
-                >
-                  <option value="main">Main</option>
-                  <option value="regional">Regional</option>
-                  <option value="distribution">Distribution</option>
-                  <option value="cold_storage">Cold Storage</option>
-                </Select>
+                  options={[
+                    { value: 'main', label: 'Main' },
+                    { value: 'regional', label: 'Regional' },
+                    { value: 'distribution', label: 'Distribution' },
+                    { value: 'cold_storage', label: 'Cold Storage' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -668,18 +668,19 @@ export default function WarehousesPage() {
                   value={formData.province}
                   onChange={(e) => setFormData({ ...formData, province: e.target.value })}
                   required
-                >
-                  <option value="">Select Province</option>
-                  <option value="Gauteng">Gauteng</option>
-                  <option value="Western Cape">Western Cape</option>
-                  <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                  <option value="Eastern Cape">Eastern Cape</option>
-                  <option value="Free State">Free State</option>
-                  <option value="Limpopo">Limpopo</option>
-                  <option value="Mpumalanga">Mpumalanga</option>
-                  <option value="North West">North West</option>
-                  <option value="Northern Cape">Northern Cape</option>
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Province' },
+                    { value: 'Gauteng', label: 'Gauteng' },
+                    { value: 'Western Cape', label: 'Western Cape' },
+                    { value: 'KwaZulu-Natal', label: 'KwaZulu-Natal' },
+                    { value: 'Eastern Cape', label: 'Eastern Cape' },
+                    { value: 'Free State', label: 'Free State' },
+                    { value: 'Limpopo', label: 'Limpopo' },
+                    { value: 'Mpumalanga', label: 'Mpumalanga' },
+                    { value: 'North West', label: 'North West' },
+                    { value: 'Northern Cape', label: 'Northern Cape' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -713,14 +714,14 @@ export default function WarehousesPage() {
                 <Select
                   value={formData.manager_id}
                   onChange={(e) => setFormData({ ...formData, manager_id: e.target.value })}
-                >
-                  <option value="">Select Manager</option>
-                  {managers.map(manager => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Manager' },
+                    ...managers.map(manager => ({
+                      value: manager.id,
+                      label: `${manager.firstName} ${manager.lastName}`
+                    }))
+                  ]}
+                />
               </div>
             </div>
 
@@ -794,11 +795,12 @@ export default function WarehousesPage() {
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="maintenance">Maintenance</option>
-              </Select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'maintenance', label: 'Maintenance' }
+                ]}
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

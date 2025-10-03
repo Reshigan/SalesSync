@@ -32,31 +32,31 @@ export default function SurveysPage() {
     { accessor: 'title', header: 'Survey Title', sortable: true },
     { accessor: 'campaign', header: 'Campaign' },
     {
-      key: 'responses',
+      accessor: 'responses',
       header: 'Progress',
       cell: ({ row }: { row: Survey }) => (
         <div className="flex items-center gap-2">
           <div className="w-24 bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-600 h-2 rounded-full"
-              style={{ width: `${(.responses / .target) * 100}%` }}
+              style={{ width: `${(row.responses / row.target) * 100}%` }}
             ></div>
           </div>
-          <span className="text-sm">{.responses}/{.target}</span>
+          <span className="text-sm">{row.responses}/{row.target}</span>
         </div>
       )
     },
     {
-      key: 'features',
+      accessor: 'features',
       header: 'Features',
       cell: ({ row }: { row: Survey }) => (
         <div className="flex gap-2">
-          {.hasPhotos && (
+          {row.hasPhotos && (
             <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs flex items-center gap-1">
               <Camera className="h-3 w-3" /> Photos
             </span>
           )}
-          {.hasGeoValidation && (
+          {row.hasGeoValidation && (
             <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs flex items-center gap-1">
               <MapPin className="h-3 w-3" /> Geo
             </span>
@@ -65,15 +65,15 @@ export default function SurveysPage() {
       )
     },
     {
-      key: 'status',
+      accessor: 'status',
       header: 'Status',
       cell: ({ row }: { row: Survey }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
-          .status === 'active' ? 'bg-green-100 text-green-800' :
-          .status === 'completed' ? 'bg-blue-100 text-blue-800' :
+          row.status === 'active' ? 'bg-green-100 text-green-800' :
+          row.status === 'completed' ? 'bg-blue-100 text-blue-800' :
           'bg-gray-100 text-gray-800'
         }`}>
-          {.status}
+          {row.status}
         </span>
       )
     },
@@ -140,8 +140,6 @@ export default function SurveysPage() {
           <DataTable
             data={surveys}
             columns={columns}
-            searchable
-            searchPlaceholder="Search surveys..."
           />
         </Card>
 

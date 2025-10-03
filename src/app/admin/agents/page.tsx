@@ -323,107 +323,107 @@ export default function AgentsPage() {
   // Table columns
   const columns = [
     {
-      key: 'employeeId',
-      label: 'Employee ID',
+      header: 'Employee ID',
+      accessor: 'employeeId',
       sortable: true,
-      render: (agent: Agent) => (
-        <div className="font-medium text-gray-900">{agent.employeeId}</div>
+      cell: ({ row }: { row: Agent; value: any }) => (
+        <div className="font-medium text-gray-900">{row.employeeId}</div>
       )
     },
     {
-      key: 'name',
-      label: 'Agent Name',
+      header: 'Agent Name',
+      accessor: 'firstName',
       sortable: true,
-      render: (agent: Agent) => (
+      cell: ({ row }: { row: Agent; value: any }) => (
         <div>
           <div className="font-medium text-gray-900">
-            {agent.firstName} {agent.lastName}
+            {row.firstName} {row.lastName}
           </div>
           <div className="flex items-center text-sm text-gray-500">
             <Mail className="h-3 w-3 mr-1" />
-            {agent.email}
+            {row.email}
           </div>
           <div className="flex items-center text-sm text-gray-500">
             <Phone className="h-3 w-3 mr-1" />
-            {agent.phone}
+            {row.phone}
           </div>
         </div>
       )
     },
     {
-      key: 'role',
-      label: 'Role',
-      render: (agent: Agent) => (
-        <Badge className={getRoleColor(agent.role)}>
-          {agent.role.replace('_', ' ')}
+      header: 'Role',
+      accessor: 'role',
+      cell: ({ row }: { row: Agent; value: any }) => (
+        <Badge className={getRoleColor(row.role)}>
+          {row.role.replace('_', ' ')}
         </Badge>
       )
     },
     {
-      key: 'area_name',
-      label: 'Area & Route',
-      render: (agent: Agent) => (
+      header: 'Area & Route',
+      accessor: 'area_name',
+      cell: ({ row }: { row: Agent; value: any }) => (
         <div>
           <div className="flex items-center text-sm">
             <MapPin className="h-3 w-3 text-gray-400 mr-1" />
-            {agent.area_name}
+            {row.area_name}
           </div>
-          {agent.route_name && (
-            <div className="text-xs text-gray-500">{agent.route_name}</div>
+          {row.route_name && (
+            <div className="text-xs text-gray-500">{row.route_name}</div>
           )}
         </div>
       )
     },
     {
-      key: 'performance_rating',
-      label: 'Performance',
-      render: (agent: Agent) => getPerformanceStars(agent.performance_rating)
+      header: 'Performance',
+      accessor: 'performance_rating',
+      cell: ({ row }: { row: Agent; value: any }) => getPerformanceStars(row.performance_rating)
     },
     {
-      key: 'targets',
-      label: 'Targets & Sales',
-      render: (agent: Agent) => (
+      header: 'Targets & Sales',
+      accessor: 'ytd_sales',
+      cell: ({ row }: { row: Agent; value: any }) => (
         <div className="text-sm">
           <div className="flex items-center">
             <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
             <span className="font-medium">
-              R{agent.ytd_sales?.toLocaleString() || '0'}
+              R{row.ytd_sales?.toLocaleString() || '0'}
             </span>
           </div>
           <div className="text-xs text-gray-500">
-            Target: R{agent.monthly_target?.toLocaleString() || '0'}/month
+            Target: R{row.monthly_target?.toLocaleString() || '0'}/month
           </div>
         </div>
       )
     },
     {
-      key: 'status',
-      label: 'Status',
-      render: (agent: Agent) => (
+      header: 'Status',
+      accessor: 'status',
+      cell: ({ row }: { row: Agent; value: any }) => (
         <Badge variant={
-          agent.status === 'active' ? 'success' : 
-          agent.status === 'suspended' ? 'warning' : 'secondary'
+          row.status === 'active' ? 'success' : 
+          row.status === 'suspended' ? 'warning' : 'secondary'
         }>
-          {agent.status}
+          {row.status}
         </Badge>
       )
     },
     {
-      key: 'actions',
-      label: 'Actions',
-      render: (agent: Agent) => (
+      header: 'Actions',
+      accessor: 'id',
+      cell: ({ row }: { row: Agent; value: any }) => (
         <div className="flex space-x-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleEdit(agent)}
+            onClick={() => handleEdit(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(agent)}
+            onClick={() => handleDelete(row)}
             className="text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-4 w-4" />
@@ -519,33 +519,32 @@ export default function AgentsPage() {
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+                { value: 'suspended', label: 'Suspended' }
+              ]}
+            />
             <Select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="all">All Roles</option>
-              <option value="sales_agent">Sales Agent</option>
-              <option value="merchandiser">Merchandiser</option>
-              <option value="promoter">Promoter</option>
-              <option value="supervisor">Supervisor</option>
-            </Select>
+              options={[
+                { value: 'all', label: 'All Roles' },
+                { value: 'sales_agent', label: 'Sales Agent' },
+                { value: 'merchandiser', label: 'Merchandiser' },
+                { value: 'promoter', label: 'Promoter' },
+                { value: 'supervisor', label: 'Supervisor' }
+              ]}
+            />
             <Select
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-            >
-              <option value="all">All Areas</option>
-              {areas.map(area => (
-                <option key={area.id} value={area.id}>
-                  {area.name}
-                </option>
-              ))}
-            </Select>
+              options={[
+                { value: 'all', label: 'All Areas' },
+                ...areas.map(area => ({ value: area.id, label: area.name }))
+              ]}
+            />
             <Button
               variant="outline"
               onClick={() => {
@@ -601,12 +600,13 @@ export default function AgentsPage() {
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
                   required
-                >
-                  <option value="sales_agent">Sales Agent</option>
-                  <option value="merchandiser">Merchandiser</option>
-                  <option value="promoter">Promoter</option>
-                  <option value="supervisor">Supervisor</option>
-                </Select>
+                  options={[
+                    { value: 'sales_agent', label: 'Sales Agent' },
+                    { value: 'merchandiser', label: 'Merchandiser' },
+                    { value: 'promoter', label: 'Promoter' },
+                    { value: 'supervisor', label: 'Supervisor' }
+                  ]}
+                />
               </div>
             </div>
 
@@ -669,14 +669,11 @@ export default function AgentsPage() {
                 <Select
                   value={formData.area_id}
                   onChange={(e) => setFormData({ ...formData, area_id: e.target.value, route_id: '' })}
-                >
-                  <option value="">Select Area</option>
-                  {areas.map(area => (
-                    <option key={area.id} value={area.id}>
-                      {area.name}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Area' },
+                    ...areas.map(area => ({ value: area.id, label: area.name }))
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -686,14 +683,11 @@ export default function AgentsPage() {
                   value={formData.route_id}
                   onChange={(e) => setFormData({ ...formData, route_id: e.target.value })}
                   disabled={!formData.area_id}
-                >
-                  <option value="">Select Route</option>
-                  {filteredRoutes.map(route => (
-                    <option key={route.id} value={route.id}>
-                      {route.name}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Route' },
+                    ...filteredRoutes.map(route => ({ value: route.id, label: route.name }))
+                  ]}
+                />
               </div>
             </div>
 
@@ -705,14 +699,11 @@ export default function AgentsPage() {
                 <Select
                   value={formData.manager_id}
                   onChange={(e) => setFormData({ ...formData, manager_id: e.target.value })}
-                >
-                  <option value="">Select Manager</option>
-                  {managers.map(manager => (
-                    <option key={manager.id} value={manager.id}>
-                      {manager.firstName} {manager.lastName}
-                    </option>
-                  ))}
-                </Select>
+                  options={[
+                    { value: '', label: 'Select Manager' },
+                    ...managers.map(manager => ({ value: manager.id, label: `${manager.firstName} ${manager.lastName}` }))
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -745,11 +736,12 @@ export default function AgentsPage() {
               <Select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </Select>
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                  { value: 'suspended', label: 'Suspended' }
+                ]}
+              />
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

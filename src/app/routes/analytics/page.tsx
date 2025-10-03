@@ -510,125 +510,125 @@ export default function RouteAnalyticsPage() {
   const routeColumns = [
     {
       header: 'Route',
-      accessorKey: 'route',
-      cell: (route: RoutePerformance) => (
+      accessor: 'route',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <MapPin className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{route.routeName}</div>
-            <div className="text-sm text-gray-500">{route.routeCode}</div>
-            <div className="text-xs text-gray-400">{route.regionName} → {route.areaName}</div>
+            <div className="font-medium text-gray-900">{row.routeName}</div>
+            <div className="text-sm text-gray-500">{row.routeCode}</div>
+            <div className="text-xs text-gray-400">{row.regionName} → {row.areaName}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Agent',
-      accessorKey: 'agent',
-      cell: (route: RoutePerformance) => (
+      accessor: 'agent',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">{route.agentName}</div>
-          <div className="text-xs text-gray-500">{route.agentCode}</div>
+          <div className="text-sm font-medium text-gray-900">{row.agentName}</div>
+          <div className="text-xs text-gray-500">{row.agentCode}</div>
         </div>
       ),
     },
     {
       header: 'Coverage',
-      accessorKey: 'coverage',
-      cell: (route: RoutePerformance) => (
+      accessor: 'coverage',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {route.customersVisited}/{route.customersAssigned}
+            {row.customersVisited}/{row.customersAssigned}
           </div>
           <div className="text-sm text-blue-600">
-            {route.visitCompletionRate}% completion
+            {row.visitCompletionRate}% completion
           </div>
           <div className="text-xs text-gray-500">
-            {route.ordersGenerated} orders
+            {row.ordersGenerated} orders
           </div>
         </div>
       ),
     },
     {
       header: 'Efficiency',
-      accessorKey: 'efficiency',
-      cell: (route: RoutePerformance) => (
+      accessor: 'efficiency',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {route.distanceEfficiency}% distance
+            {row.distanceEfficiency}% distance
           </div>
           <div className="text-sm text-purple-600">
-            {route.timeEfficiency}% time
+            {row.timeEfficiency}% time
           </div>
           <div className="text-xs text-gray-500">
-            {route.totalDistance}km traveled
+            {row.totalDistance}km traveled
           </div>
         </div>
       ),
     },
     {
       header: 'Performance',
-      accessorKey: 'performance',
-      cell: (route: RoutePerformance) => (
+      accessor: 'performance',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {formatCurrency(route.totalRevenue)}
+            {formatCurrency(row.totalRevenue)}
           </div>
           <div className="text-sm text-green-600">
-            AOV: {formatCurrency(route.avgOrderValue)}
+            AOV: {formatCurrency(row.avgOrderValue)}
           </div>
           <div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-500" />
-            <span className="text-xs text-gray-500">Score: {route.performanceScore}</span>
+            <span className="text-xs text-gray-500">Score: {row.performanceScore}</span>
           </div>
         </div>
       ),
     },
     {
       header: 'Profitability',
-      accessorKey: 'profitability',
-      cell: (route: RoutePerformance) => (
+      accessor: 'profitability',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {route.profitability}% margin
+            {row.profitability}% margin
           </div>
           <div className="text-sm text-red-600">
-            Fuel: {formatCurrency(route.fuelCost)}
+            Fuel: {formatCurrency(row.fuelCost)}
           </div>
           <div className="text-xs text-gray-500">
-            OpEx: {formatCurrency(route.operatingCost)}
+            OpEx: {formatCurrency(row.operatingCost)}
           </div>
         </div>
       ),
     },
     {
       header: 'Risk & Satisfaction',
-      accessorKey: 'risk',
-      cell: (route: RoutePerformance) => (
+      accessor: 'risk',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${
-              route.riskLevel === 'low' ? 'bg-green-500' : 
-              route.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
+              row.riskLevel === 'low' ? 'bg-green-500' : 
+              row.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
             }`} />
-            <span className="text-xs text-gray-500 capitalize">{route.riskLevel} risk</span>
+            <span className="text-xs text-gray-500 capitalize">{row.riskLevel} risk</span>
           </div>
           <div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-500" />
-            <span className="text-xs text-gray-500">{route.customerSatisfaction}/5.0</span>
+            <span className="text-xs text-gray-500">{row.customerSatisfaction}/5.0</span>
           </div>
           <div className="text-xs text-gray-400">
-            Last: {new Date(route.lastVisitDate).toLocaleDateString()}
+            Last: {new Date(row.lastVisitDate).toLocaleDateString()}
           </div>
         </div>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (route: RoutePerformance) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: RoutePerformance }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -809,9 +809,6 @@ export default function RouteAnalyticsPage() {
           <DataTable
             data={routePerformance}
             columns={routeColumns}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
           />
         </Card>
 
