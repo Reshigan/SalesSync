@@ -25,6 +25,14 @@ const refreshSchema = Joi.object({
  *   post:
  *     summary: User login
  *     tags: [Authentication]
+ *     parameters:
+ *       - in: header
+ *         name: X-Tenant-Code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant code (e.g., DEMO)
+ *         example: DEMO
  *     requestBody:
  *       required: true
  *       content:
@@ -38,10 +46,10 @@ const refreshSchema = Joi.object({
  *               email:
  *                 type: string
  *                 format: email
+ *                 example: admin@demo.com
  *               password:
  *                 type: string
- *               tenantCode:
- *                 type: string
+ *                 example: admin123
  *     responses:
  *       200:
  *         description: Login successful
@@ -62,19 +70,19 @@ const refreshSchema = Joi.object({
  *                     refreshToken:
  *                       type: string
  *       400:
- *         description: Invalid credentials
+ *         description: Invalid credentials or missing tenant code
  *       401:
- *         description: Authentication failed
+ *         description: Authentication failed - invalid tenant or credentials
  */
 router.post('/login', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
   const { getOneQuery, runQuery } = require('../database/init');
   
-  // SECURITY FIX: Require X-Tenant-ID header
-  const tenantId = req.headers['x-tenant-id'];
+  // SECURITY FIX: Require X-Tenant-Code header (can also accept X-Tenant-ID for backwards compatibility)
+  const tenantCode = req.headers['x-tenant-code'] || req.headers['x-tenant-id'];
   
-  if (!tenantId) {
-    return next(new AppError('Tenant ID header (X-Tenant-ID) is required', 400, 'TENANT_REQUIRED'));
+  if (!tenantCode) {
+    return next(new AppError('Tenant code header (X-Tenant-Code) is required', 400, 'TENANT_REQUIRED'));
   }
   
   // Validate request
@@ -87,9 +95,10 @@ router.post('/login', asyncHandler(async (req, res, next) => {
   
   try {
     // SECURITY FIX: Validate tenant exists and is active
+    // Accept either tenant code or UUID
     const tenant = await getOneQuery(
-      'SELECT * FROM tenants WHERE code = ? AND status = ?',
-      [tenantId.toUpperCase(), 'active']
+      'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
+      [tenantCode.toUpperCase(), tenantCode, 'active']
     );
     
     if (!tenant) {
