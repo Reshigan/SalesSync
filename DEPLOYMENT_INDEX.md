@@ -1,26 +1,41 @@
 # 📚 SalesSync Deployment Documentation Index
 
 **Last Updated:** 2025-10-03  
-**Version:** 1.0.0  
-**Status:** ✅ Production Ready
+**Version:** 2.0.0  
+**Status:** ✅ Core Features Production Ready | ⚠️ Advanced Features Require Staging
 
 ---
 
 ## 🚀 Quick Start (Choose One)
 
-### For Immediate Deployment
-👉 **START HERE:** [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
+### ⭐ For Current Deployment Status
+👉 **START HERE:** [FINAL_DEPLOYMENT_STATUS.md](FINAL_DEPLOYMENT_STATUS.md)
+- Current deployment readiness (NEW)
+- Phased deployment strategy
+- What's ready vs what needs testing
+- Action items and timeline
+- **READ THIS FIRST**
+
+### For Immediate Deployment (Core Features)
+👉 **THEN GO HERE:** [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)
 - 5-minute quick deployment
 - Common commands reference
 - Troubleshooting guide
 - Perfect for experienced DevOps engineers
 
 ### For Comprehensive Planning
-👉 **START HERE:** [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)
+👉 **REFERENCE:** [DEPLOYMENT_SUMMARY.md](DEPLOYMENT_SUMMARY.md)
 - Executive summary
-- Test results (11/11 passed)
+- Test results (11/11 core tests passed)
 - Deployment options comparison
 - Production readiness assessment
+
+### For Advanced Features Testing Plan
+👉 **REQUIRED NEXT:** [STAGING_TEST_PLAN.md](STAGING_TEST_PLAN.md)
+- 123+ test cases for advanced features
+- 19-day testing timeline
+- Promotional campaigns, surveys, SIM/voucher distribution
+- **MUST COMPLETE BEFORE USING ADVANCED FEATURES**
 
 ---
 
