@@ -226,7 +226,7 @@ router.get('/customers', async (req, res) => {
       db.get(`
         SELECT 
           COUNT(DISTINCT c.id) as total_customers,
-          COUNT(DISTINCT CASE WHEN o.id IS NOT NULL THEN c.id END) as active_customers,
+          COUNT(DISTINCT CASE WHEN customer_orders.order_count IS NOT NULL THEN c.id END) as active_customers,
           AVG(customer_orders.order_count) as avg_orders_per_customer,
           AVG(customer_orders.total_spent) as avg_spent_per_customer
         FROM customers c
@@ -235,8 +235,8 @@ router.get('/customers', async (req, res) => {
             customer_id,
             COUNT(*) as order_count,
             SUM(total_amount) as total_spent
-          FROM orders 
-          WHERE tenant_id = ? ${dateFilter}
+          FROM orders o
+          WHERE o.tenant_id = ? ${dateFilter}
           GROUP BY customer_id
         ) customer_orders ON c.id = customer_orders.customer_id
         WHERE c.tenant_id = ?

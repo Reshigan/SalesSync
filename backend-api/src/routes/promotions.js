@@ -99,13 +99,11 @@ router.get('/campaigns', async (req, res) => {
     
     let query = `
       SELECT pc.*, 
-             b.name as brand_name,
              COUNT(pa.id) as total_activities,
              COUNT(DISTINCT pa.promoter_id) as active_promoters,
              COALESCE(SUM(pa.samples_distributed), 0) as total_samples,
              COALESCE(SUM(pa.contacts_made), 0) as total_contacts
       FROM promotional_campaigns pc
-      LEFT JOIN brands b ON pc.brand_id = b.id
       LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id
       WHERE pc.tenant_id = ?
     `;
@@ -637,7 +635,7 @@ router.get('/dashboard', async (req, res) => {
     
     // Get campaign performance
     const campaignPerformance = await getQuery(`
-      SELECT pc.name, pc.target_activations, pc.target_samples,
+      SELECT pc.name, pc.target_activations,
              COUNT(pa.id) as actual_activities,
              COALESCE(SUM(pa.samples_distributed), 0) as actual_samples,
              ROUND(
@@ -646,18 +644,11 @@ router.get('/dashboard', async (req, res) => {
                  THEN (COUNT(pa.id) * 100.0 / pc.target_activations)
                  ELSE 0 
                END, 2
-             ) as activation_percentage,
-             ROUND(
-               CASE 
-                 WHEN pc.target_samples > 0 
-                 THEN (COALESCE(SUM(pa.samples_distributed), 0) * 100.0 / pc.target_samples)
-                 ELSE 0 
-               END, 2
-             ) as samples_percentage
+             ) as activation_percentage
       FROM promotional_campaigns pc
       LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id
       WHERE pc.tenant_id = ? AND pc.status = 'active'
-      GROUP BY pc.id, pc.name, pc.target_activations, pc.target_samples
+      GROUP BY pc.id, pc.name, pc.target_activations
       ORDER BY activation_percentage DESC
       LIMIT 5
     `, [req.user.tenantId]);
