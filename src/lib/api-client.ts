@@ -85,6 +85,14 @@ class ApiClient {
     })
     return response.data
   }
+
+  async download(url: string, params?: any): Promise<Blob> {
+    const response = await this.client.get(url, {
+      params,
+      responseType: 'blob',
+    })
+    return response.data
+  }
 }
 
 export const apiClient = new ApiClient()
