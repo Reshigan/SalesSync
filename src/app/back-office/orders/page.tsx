@@ -1,103 +1,141 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { DataTable } from '@/components/ui/DataTable'
-import { 
-  ShoppingBag, 
-  FileText, 
+
+import { FormModal } from '@/components/ui/FormModal'
+import { OrderForm } from '@/components/orders/OrderForm'
+import { ordersService, Order } from '@/services/orders.service'
+import {
+  ShoppingBag,
   Clock,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Plus,
-  Filter,
-  Search,
-  Eye,
-  Edit,
-  Printer,
-  Download,
   Truck,
   DollarSign,
-  User,
-  Calendar
+  FileText,
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Trash2,
+  Eye,
+  RefreshCw,
+  Download
 } from 'lucide-react'
-
-interface Order {
-  id: string
-  orderNumber: string
-  customerName: string
-  customerCode: string
-  salesAgent: string
-  orderDate: string
-  deliveryDate: string
-  totalAmount: number
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  paymentStatus: 'pending' | 'partial' | 'paid' | 'overdue'
-  itemCount: number
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-}
+import toast from 'react-hot-toast'
 
 export default function OrdersPage() {
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showOrderForm, setShowOrderForm] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>(undefined)
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPayment, setFilterPayment] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
 
-  // Mock data
-  const orders: Order[] = [
-    {
-      id: '1',
-      orderNumber: 'ORD-2024-001',
-      customerName: 'SuperMart Downtown',
-      customerCode: 'SM-001',
-      salesAgent: 'John Doe',
-      orderDate: '2024-10-01',
-      deliveryDate: '2024-10-03',
-      totalAmount: 2500.00,
-      status: 'confirmed',
-      paymentStatus: 'pending',
-      itemCount: 15,
-      priority: 'high',
-    },
-    {
-      id: '2',
-      orderNumber: 'ORD-2024-002',
-      customerName: 'MegaMall Central',
-      customerCode: 'MM-002',
-      salesAgent: 'Sarah Wilson',
-      orderDate: '2024-10-01',
-      deliveryDate: '2024-10-02',
-      totalAmount: 3200.00,
-      status: 'processing',
-      paymentStatus: 'paid',
-      itemCount: 22,
-      priority: 'medium',
-    },
-  ]
+  useEffect(() => {
+    loadOrders()
+  }, [filterStatus, filterPayment])
 
-  const orderStats = {
-    totalOrders: 156,
-    pendingOrders: 23,
-    processingOrders: 18,
-    shippedOrders: 12,
-    totalValue: 125000,
-    avgOrderValue: 801,
+  const loadOrders = async () => {
+    setLoading(true)
+    try {
+      const filters: any = {}
+      if (filterStatus && filterStatus !== 'all') filters.status = filterStatus
+      if (filterPayment && filterPayment !== 'all') filters.paymentStatus = filterPayment
+      if (searchTerm) filters.search = searchTerm
+
+      const response = await ordersService.getAll(filters)
+      setOrders(response.orders || [])
+      toast.success('Orders loaded successfully')
+    } catch (error: any) {
+      console.error('Error loading orders:', error)
+      toast.error('Failed to load orders. Check console for details.')
+      setOrders([]) // Set empty array on error
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'bg-gray-100 text-gray-800'
-      case 'confirmed': return 'bg-blue-100 text-blue-800'
-      case 'processing': return 'bg-yellow-100 text-yellow-800'
-      case 'shipped': return 'bg-purple-100 text-purple-800'
-      case 'delivered': return 'bg-green-100 text-green-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+  const handleCreateOrder = async (orderData: Order) => {
+    await ordersService.create(orderData)
+    await loadOrders()
+  }
+
+  const handleUpdateOrder = async (orderData: Order) => {
+    if (selectedOrder?.id) {
+      await ordersService.update(selectedOrder.id, orderData)
+      await loadOrders()
     }
+  }
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (confirm('Are you sure you want to delete this order?')) {
+      try {
+        await ordersService.delete(orderId)
+        toast.success('Order deleted successfully')
+        await loadOrders()
+      } catch (error: any) {
+        toast.error('Failed to delete order')
+      }
+    }
+  }
+
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order)
+    setShowOrderForm(true)
+  }
+
+  const handleCloseForm = () => {
+    setShowOrderForm(false)
+    setSelectedOrder(undefined)
+  }
+
+  const handleNewOrder = () => {
+    setSelectedOrder(undefined)
+    setShowOrderForm(true)
+  }
+
+  const orderStats = {
+    totalOrders: orders.length,
+    pendingOrders: orders.filter(o => o.status === 'pending' || o.status === 'draft').length,
+    processingOrders: orders.filter(o => o.status === 'processing' || o.status === 'confirmed').length,
+    shippedOrders: orders.filter(o => o.status === 'shipped' || o.status === 'delivered').length,
+    totalValue: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
+    avgOrderValue: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders.length : 0,
+  }
+
+  const getStatusBadge = (status: Order['status']) => {
+    const colors = {
+      draft: 'bg-gray-100 text-gray-700',
+      pending: 'bg-yellow-100 text-yellow-700',
+      confirmed: 'bg-blue-100 text-blue-700',
+      processing: 'bg-purple-100 text-purple-700',
+      shipped: 'bg-indigo-100 text-indigo-700',
+      delivered: 'bg-green-100 text-green-700',
+      cancelled: 'bg-red-100 text-red-700',
+    }
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    )
+  }
+
+  const getPaymentBadge = (status: Order['paymentStatus']) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-700',
+      partial: 'bg-orange-100 text-orange-700',
+      paid: 'bg-green-100 text-green-700',
+      overdue: 'bg-red-100 text-red-700',
+    }
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    )
   }
 
   return (
@@ -107,14 +145,14 @@ export default function OrdersPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Order Management</h1>
-            <p className="text-gray-600">Process and track customer orders</p>
+            <p className="text-gray-600">Create and manage customer orders</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export Orders
+            <Button variant="outline" onClick={loadOrders}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
             </Button>
-            <Button>
+            <Button onClick={handleNewOrder}>
               <Plus className="w-4 h-4 mr-2" />
               New Order
             </Button>
@@ -122,7 +160,7 @@ export default function OrdersPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -132,7 +170,7 @@ export default function OrdersPage() {
               <ShoppingBag className="w-8 h-8 text-blue-500" />
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -142,7 +180,7 @@ export default function OrdersPage() {
               <Clock className="w-8 h-8 text-yellow-500" />
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -152,7 +190,7 @@ export default function OrdersPage() {
               <FileText className="w-8 h-8 text-blue-500" />
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -162,92 +200,198 @@ export default function OrdersPage() {
               <Truck className="w-8 h-8 text-purple-500" />
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold">${orderStats.totalValue.toLocaleString()}</p>
+                <p className="text-xl font-bold">KES {orderStats.totalValue.toLocaleString()}</p>
               </div>
               <DollarSign className="w-8 h-8 text-green-500" />
             </div>
           </Card>
-          
+
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Avg Order Value</p>
-                <p className="text-2xl font-bold">${orderStats.avgOrderValue}</p>
+                <p className="text-sm text-gray-600">Avg Order</p>
+                <p className="text-xl font-bold">KES {orderStats.avgOrderValue.toFixed(0)}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-indigo-500" />
+              <DollarSign className="w-8 h-8 text-emerald-500" />
             </div>
           </Card>
         </div>
 
+        {/* Filters */}
+        <Card className="p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && loadOrders()}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="draft">Draft</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="processing">Processing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select
+              value={filterPayment}
+              onChange={(e) => setFilterPayment(e.target.value)}
+              className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Payments</option>
+              <option value="pending">Pending</option>
+              <option value="partial">Partial</option>
+              <option value="paid">Paid</option>
+              <option value="overdue">Overdue</option>
+            </select>
+
+            <Button variant="outline" onClick={loadOrders}>
+              <Filter className="w-4 h-4 mr-2" />
+              Apply
+            </Button>
+          </div>
+        </Card>
+
         {/* Orders Table */}
         <Card>
-          <Card.Header>
-            <h3 className="text-lg font-semibold">Recent Orders</h3>
-          </Card.Header>
-          <Card.Content>
-            <DataTable
-              columns={[
-                { 
-                  header: 'Order', 
-                  accessor: 'orderNumber',
-                  cell: ({ row }) => (
-                    <div>
-                      <p className="font-medium text-gray-900">{row.orderNumber}</p>
-                      <p className="text-sm text-gray-500">{row.orderDate}</p>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Customer', 
-                  accessor: 'customerName',
-                  cell: ({ row }) => (
-                    <div>
-                      <p className="font-medium text-gray-900">{row.customerName}</p>
-                      <p className="text-sm text-gray-500">{row.customerCode}</p>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Amount', 
-                  accessor: 'totalAmount',
-                  cell: ({ value }) => (
-                    <span className="font-medium">${value.toFixed(2)}</span>
-                  )
-                },
-                { 
-                  header: 'Status', 
-                  accessor: 'status',
-                  cell: ({ value }) => (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(value)}`}>
-                      {value.charAt(0).toUpperCase() + value.slice(1)}
-                    </span>
-                  )
-                },
-                { 
-                  header: 'Actions', 
-                  accessor: 'id',
-                  cell: ({ row }) => (
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order #
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Delivery Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Payment
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                        Loading orders...
+                      </div>
+                    </td>
+                  </tr>
+                ) : orders.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <ShoppingBag className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p className="text-lg font-medium">No orders found</p>
+                      <p className="text-sm">Create your first order to get started</p>
+                      <Button className="mt-4" onClick={handleNewOrder}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Order
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ),
-                },
-              ]}
-              data={orders}
-            />
-          </Card.Content>
+                    </td>
+                  </tr>
+                ) : (
+                  orders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {order.orderNumber || `ORD-${order.id}`}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
+                        <div className="text-sm text-gray-500">{order.customerCode}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(order.orderDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {new Date(order.deliveryDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        KES {(order.totalAmount || 0).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getPaymentBadge(order.paymentStatus)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleEditOrder(order)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => order.id && handleDeleteOrder(order.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </Card>
       </div>
+
+      {/* Order Form Modal */}
+      <FormModal
+        isOpen={showOrderForm}
+        onClose={handleCloseForm}
+        title={selectedOrder ? 'Edit Order' : 'Create New Order'}
+        size="2xl"
+      >
+        <OrderForm
+          initialData={selectedOrder}
+          onSubmit={selectedOrder ? handleUpdateOrder : handleCreateOrder}
+          onCancel={handleCloseForm}
+        />
+      </FormModal>
     </DashboardLayout>
   )
 }
