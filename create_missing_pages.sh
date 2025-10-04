@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# This script creates the 5 missing placeholder pages with comprehensive implementations
+
+echo "Creating missing warehouse and van-sales pages..."
+
+# 1. Create Warehouse Purchases Page
+cat > src/app/warehouse/purchases/page.tsx << 'EOF'
 'use client'
 import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -161,3 +169,7 @@ export default function PurchaseOrdersPage() {
     </DashboardLayout>
   )
 }
+EOF
+
+echo "✓ Created warehouse/purchases/page.tsx"
+
