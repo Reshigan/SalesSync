@@ -20,12 +20,98 @@ interface Role {
 }
 
 export default function RolesPage() {
+  // 10 Default System Roles for SalesSync
   const [roles, setRoles] = useState<Role[]>([
-    { id: '1', name: 'Admin', code: 'ADMIN', description: 'Full system access', userCount: 3, permissions: 125, status: 'active' },
-    { id: '2', name: 'Manager', code: 'MANAGER', description: 'Manage team and view reports', userCount: 12, permissions: 85, status: 'active' },
-    { id: '3', name: 'Van Sales Agent', code: 'VAN_SALES', description: 'Van sales operations', userCount: 45, permissions: 32, status: 'active' },
-    { id: '4', name: 'Promoter', code: 'PROMOTER', description: 'Promotional activities', userCount: 28, permissions: 25, status: 'active' },
-    { id: '5', name: 'Merchandiser', code: 'MERCHANDISER', description: 'Merchandising and shelf audits', userCount: 19, permissions: 28, status: 'active' },
+    { 
+      id: '1', 
+      name: 'Super Admin', 
+      code: 'SUPER_ADMIN', 
+      description: 'Full system access with tenant management', 
+      userCount: 2, 
+      permissions: 150, 
+      status: 'active' 
+    },
+    { 
+      id: '2', 
+      name: 'Admin', 
+      code: 'ADMIN', 
+      description: 'Full access within tenant organization', 
+      userCount: 5, 
+      permissions: 125, 
+      status: 'active' 
+    },
+    { 
+      id: '3', 
+      name: 'Sales Manager', 
+      code: 'SALES_MANAGER', 
+      description: 'Manage sales team, view all reports, approve orders', 
+      userCount: 8, 
+      permissions: 95, 
+      status: 'active' 
+    },
+    { 
+      id: '4', 
+      name: 'Warehouse Manager', 
+      code: 'WAREHOUSE_MANAGER', 
+      description: 'Manage inventory, warehouse operations, stock movements', 
+      userCount: 6, 
+      permissions: 75, 
+      status: 'active' 
+    },
+    { 
+      id: '5', 
+      name: 'Finance Manager', 
+      code: 'FINANCE_MANAGER', 
+      description: 'Manage invoices, payments, commissions, financial reports', 
+      userCount: 4, 
+      permissions: 68, 
+      status: 'active' 
+    },
+    { 
+      id: '6', 
+      name: 'Van Sales Agent', 
+      code: 'VAN_SALES', 
+      description: 'Route sales, order taking, cash collection, van loading', 
+      userCount: 45, 
+      permissions: 42, 
+      status: 'active' 
+    },
+    { 
+      id: '7', 
+      name: 'Field Sales Agent', 
+      code: 'FIELD_AGENT', 
+      description: 'Customer visits, order taking, basic merchandising', 
+      userCount: 38, 
+      permissions: 35, 
+      status: 'active' 
+    },
+    { 
+      id: '8', 
+      name: 'Merchandiser', 
+      code: 'MERCHANDISER', 
+      description: 'Shelf audits, planogram compliance, stock visibility', 
+      userCount: 25, 
+      permissions: 28, 
+      status: 'active' 
+    },
+    { 
+      id: '9', 
+      name: 'Promoter', 
+      code: 'PROMOTER', 
+      description: 'Promotional activities, sampling, customer engagement', 
+      userCount: 32, 
+      permissions: 22, 
+      status: 'active' 
+    },
+    { 
+      id: '10', 
+      name: 'Data Analyst', 
+      code: 'ANALYST', 
+      description: 'View-only access to reports, analytics, and dashboards', 
+      userCount: 12, 
+      permissions: 18, 
+      status: 'active' 
+    },
   ]);
   
   const [showModal, setShowModal] = useState(false);

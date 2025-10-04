@@ -35,7 +35,8 @@ interface User {
   name: string
   email: string
   phone: string
-  role: string
+  role: string // Primary role for display
+  roles: string[] // Multi-role support
   tenant: string
   location: string
   status: 'active' | 'inactive' | 'suspended'
@@ -54,7 +55,7 @@ export default function UsersPage() {
   const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
-  // Mock data
+  // Mock data with multi-role support
   const users: User[] = [
     {
       id: '1',
@@ -62,6 +63,7 @@ export default function UsersPage() {
       email: 'john.doe@example.com',
       phone: '+234-801-234-5678',
       role: 'Van Sales Agent',
+      roles: ['Van Sales Agent', 'Field Agent'], // Multi-role support
       tenant: 'Coca Cola Nigeria',
       location: 'Lagos, Nigeria',
       status: 'active',
@@ -75,6 +77,7 @@ export default function UsersPage() {
       email: 'sarah.wilson@example.com',
       phone: '+234-802-345-6789',
       role: 'Promoter',
+      roles: ['Promoter', 'Merchandiser'], // Multi-role support
       tenant: 'PepsiCo Nigeria',
       location: 'Abuja, Nigeria',
       status: 'active',
@@ -88,6 +91,7 @@ export default function UsersPage() {
       email: 'mike.johnson@example.com',
       phone: '+234-803-456-7890',
       role: 'Merchandiser',
+      roles: ['Merchandiser'], // Single role
       tenant: 'Unilever Nigeria',
       location: 'Port Harcourt, Nigeria',
       status: 'inactive',
@@ -101,6 +105,7 @@ export default function UsersPage() {
       email: 'david.brown@example.com',
       phone: '+234-804-567-8901',
       role: 'Field Agent',
+      roles: ['Field Agent'], // Single role
       tenant: 'MTN Nigeria',
       location: 'Kano, Nigeria',
       status: 'suspended',
@@ -114,6 +119,7 @@ export default function UsersPage() {
       email: 'lisa.garcia@example.com',
       phone: '+234-805-678-9012',
       role: 'Warehouse Manager',
+      roles: ['Warehouse Manager', 'Finance Manager'], // Multi-role support
       tenant: 'Nestle Nigeria',
       location: 'Lagos, Nigeria',
       status: 'active',
@@ -378,12 +384,24 @@ export default function UsersPage() {
                   )
                 },
                 { 
-                  header: 'Role', 
-                  accessor: 'role',
-                  cell: ({ value }) => (
-                    <div className="flex items-center space-x-2">
-                      <Shield className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium">{value}</span>
+                  header: 'Role(s)', 
+                  accessor: 'roles',
+                  cell: ({ row }: { row: User }) => (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {row.roles.map((role, idx) => (
+                        <span 
+                          key={idx}
+                          className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-indigo-100 text-indigo-800"
+                        >
+                          <Shield className="w-3 h-3 mr-1" />
+                          {role}
+                        </span>
+                      ))}
+                      {row.roles.length > 1 && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          (Multi-role)
+                        </span>
+                      )}
                     </div>
                   )
                 },
