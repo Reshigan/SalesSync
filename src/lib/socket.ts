@@ -78,6 +78,23 @@ class SocketService {
     this.socket.on('chat:message', (data) => {
       this.handleChatMessage(data);
     });
+
+    // New event handlers for real-time features
+    this.socket.on('order:created', (data) => {
+      this.handleOrderCreated(data);
+    });
+
+    this.socket.on('order:updated', (data) => {
+      this.handleOrderUpdate(data);
+    });
+
+    this.socket.on('activity:new', (data) => {
+      this.handleNewActivity(data);
+    });
+
+    this.socket.on('visit:checkin', (data) => {
+      this.handleVisitCheckIn(data);
+    });
   }
 
   private handleReconnect() {
@@ -137,6 +154,29 @@ class SocketService {
   private handleChatMessage(data: any) {
     console.log('💬 Chat message received:', data);
     window.dispatchEvent(new CustomEvent('socket:chat-message', { detail: data }));
+  }
+
+  private handleOrderCreated(data: any) {
+    console.log('📦 New order created:', data);
+    window.dispatchEvent(new CustomEvent('socket:order-created', { detail: data }));
+    
+    // Show notification
+    if (Notification.permission === 'granted') {
+      new Notification('New Order', {
+        body: data.message || `Order #${data.data?.order_number} created`,
+        icon: '/favicon.ico',
+      });
+    }
+  }
+
+  private handleNewActivity(data: any) {
+    console.log('📊 New activity:', data);
+    window.dispatchEvent(new CustomEvent('socket:activity-new', { detail: data }));
+  }
+
+  private handleVisitCheckIn(data: any) {
+    console.log('📍 Visit check-in:', data);
+    window.dispatchEvent(new CustomEvent('socket:visit-checkin', { detail: data }));
   }
 
   // Public methods for emitting events

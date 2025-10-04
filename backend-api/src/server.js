@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
@@ -14,6 +15,7 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 // Routes will be imported after database initialization
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
 
@@ -88,6 +90,53 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Socket.IO setup
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: corsOptions,
+  transports: ['websocket', 'polling'],
+});
+
+// Socket.IO authentication middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+  
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.userId = decoded.userId;
+    socket.tenantId = decoded.tenantId;
+    next();
+  } catch (err) {
+    next(new Error('Authentication error'));
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  logger.info(`Socket connected: ${socket.id} (User: ${socket.userId})`);
+  
+  // Join user to their tenant room
+  socket.join(`tenant:${socket.tenantId}`);
+  socket.join(`user:${socket.userId}`);
+  
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    logger.info(`Socket disconnected: ${socket.id}`);
+  });
+  
+  // Handle errors
+  socket.on('error', (error) => {
+    logger.error(`Socket error for ${socket.id}:`, error);
+  });
+});
+
+// Make io available to routes
+app.set('io', io);
 
 // Request logging
 app.use(expressWinston.logger({
@@ -268,9 +317,10 @@ async function startServer() {
       logger.info('API Documentation configured successfully');
     }
     
-    app.listen(PORT, HOST, () => {
+    server.listen(PORT, HOST, () => {
       logger.info(`SalesSync API server running on http://${HOST}:${PORT}`);
       logger.info(`Environment: ${process.env.NODE_ENV}`);
+      logger.info(`Socket.IO enabled on same port`);
       if (process.env.NODE_ENV !== 'production') {
         logger.info(`API Documentation: http://${HOST}:${PORT}/api-docs`);
       }

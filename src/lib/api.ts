@@ -368,6 +368,214 @@ class ApiService {
     const query = limit ? `?limit=${limit}` : '';
     return this.request(`/dashboard/activities${query}`);
   }
+
+  // Users Management
+  async getUsers(params?: {
+    page?: number;
+    limit?: number;
+    role?: string;
+    status?: string;
+    search?: string;
+  }): Promise<ApiResponse<{
+    users: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.role) query.append('role', params.role);
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+    
+    const queryString = query.toString();
+    return this.request(`/users${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getUser(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/users/${id}`);
+  }
+
+  async createUser(userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+    role: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async updateUser(id: string, userData: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    role?: string;
+    status?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/users/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<ApiResponse<any>> {
+    return this.request(`/users/${userId}/change-password`, {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  }
+
+  // Customers Management
+  async getCustomers(params?: {
+    page?: number;
+    limit?: number;
+    type?: string;
+    status?: string;
+    search?: string;
+  }): Promise<ApiResponse<{
+    customers: any[];
+    pagination: any;
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.type) query.append('type', params.type);
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+    
+    const queryString = query.toString();
+    return this.request(`/customers${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getCustomer(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/customers/${id}`);
+  }
+
+  async createCustomer(customerData: any): Promise<ApiResponse<any>> {
+    return this.request('/customers', {
+      method: 'POST',
+      body: JSON.stringify(customerData),
+    });
+  }
+
+  async updateCustomer(id: string, customerData: any): Promise<ApiResponse<any>> {
+    return this.request(`/customers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(customerData),
+    });
+  }
+
+  async deleteCustomer(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/customers/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Products Management
+  async getProducts(params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    status?: string;
+    search?: string;
+  }): Promise<ApiResponse<{
+    products: any[];
+    pagination: any;
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.category) query.append('category', params.category);
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+    
+    const queryString = query.toString();
+    return this.request(`/products${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getProduct(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/products/${id}`);
+  }
+
+  async createProduct(productData: any): Promise<ApiResponse<any>> {
+    return this.request('/products', {
+      method: 'POST',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async updateProduct(id: string, productData: any): Promise<ApiResponse<any>> {
+    return this.request(`/products/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(productData),
+    });
+  }
+
+  async deleteProduct(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/products/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Orders Management
+  async getOrders(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+  }): Promise<ApiResponse<{
+    orders: any[];
+    pagination: any;
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.status) query.append('status', params.status);
+    if (params?.search) query.append('search', params.search);
+    
+    const queryString = query.toString();
+    return this.request(`/orders${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getOrder(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/orders/${id}`);
+  }
+
+  async createOrder(orderData: any): Promise<ApiResponse<any>> {
+    return this.request('/orders', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+  }
+
+  async updateOrder(id: string, orderData: any): Promise<ApiResponse<any>> {
+    return this.request(`/orders/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(orderData),
+    });
+  }
+
+  async deleteOrder(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/orders/${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create and export a singleton instance

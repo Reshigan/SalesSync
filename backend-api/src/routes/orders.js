@@ -563,6 +563,28 @@ router.post('/', async (req, res) => {
     // Get complete order with items
     const completeOrder = await getOrderWithDetails(newOrder.id, tenantId);
     
+    // Emit Socket.IO event for real-time update
+    const io = req.app.get('io');
+    if (io) {
+      const { emitNewOrder, emitActivityUpdate } = require('../utils/socketEmitter');
+      emitNewOrder(io, tenantId, completeOrder);
+      
+      // Also emit as activity update
+      emitActivityUpdate(io, tenantId, {
+        id: completeOrder.id,
+        type: 'order',
+        reference: completeOrder.order_number,
+        description: 'New order created',
+        customer_name: completeOrder.customer_name,
+        agent_name: completeOrder.salesman_name,
+        amount: completeOrder.total_amount,
+        status: completeOrder.order_status,
+        timestamp: completeOrder.order_date,
+        icon: 'Package',
+        color: 'green'
+      });
+    }
+    
     res.status(201).json({
       success: true,
       data: { order: completeOrder },
