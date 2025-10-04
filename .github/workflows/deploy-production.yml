@@ -1,0 +1,90 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Deploy to Production Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_HOST }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          script: |
+            set -e
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd /home/ubuntu/salessync
+            
+            # Stash any local changes
+            echo "📦 Stashing local changes..."
+            git stash
+            
+            # Pull latest changes
+            echo "⬇️  Pulling latest code from main branch..."
+            git pull origin main
+            
+            # Install backend dependencies if package.json changed
+            echo "📦 Checking backend dependencies..."
+            cd backend-api
+            if git diff --name-only HEAD@{1} HEAD | grep -q "backend-api/package.json"; then
+              echo "Installing backend dependencies..."
+              npm install --production
+            fi
+            
+            # Restart backend with PM2
+            echo "🔄 Restarting backend..."
+            pm2 restart salessync-backend || pm2 start src/server.js --name salessync-backend
+            
+            # Install frontend dependencies if package.json changed
+            echo "📦 Checking frontend dependencies..."
+            cd ..
+            if git diff --name-only HEAD@{1} HEAD | grep -q "package.json"; then
+              echo "Installing frontend dependencies..."
+              npm install
+            fi
+            
+            # Build frontend
+            echo "🏗️  Building frontend..."
+            npm run build
+            
+            # Restart frontend with PM2
+            echo "🔄 Restarting frontend..."
+            pm2 restart salessync-frontend || pm2 start npm --name salessync-frontend -- start
+            
+            # Save PM2 configuration
+            pm2 save
+            
+            # Check deployment status
+            echo "✅ Checking deployment status..."
+            pm2 status
+            
+            # Test health endpoint
+            echo "🏥 Testing health endpoint..."
+            sleep 5
+            curl -s https://ss.gonxt.tech/health | jq '.' || echo "Health check failed"
+            
+            echo "🎉 Deployment complete!"
+      
+      - name: Notify Deployment Success
+        if: success()
+        run: |
+          echo "✅ Deployment to production was successful!"
+          echo "🌐 Application URL: https://ss.gonxt.tech"
+          
+      - name: Notify Deployment Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Please check the logs."
