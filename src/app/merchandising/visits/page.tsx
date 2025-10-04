@@ -1,141 +1,146 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card } from '@/components/ui/Card'
+import { VisitForm } from '@/components/merchandising/VisitForm'
+import { FormModal } from '@/components/ui/FormModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { DataTable } from '@/components/ui/DataTable'
+import { merchandisingService, Visit } from '@/services/merchandising.service'
+import toast from 'react-hot-toast'
 import { 
-  Eye, 
-  Camera, 
-  BarChart3, 
-  AlertTriangle,
-  CheckCircle,
-  MapPin,
-  Clock,
-  TrendingUp,
-  TrendingDown,
+  MapPin, 
   Plus,
-  Filter,
   Search,
-  Star,
-  Package,
-  DollarSign
+  Edit,
+  Trash2,
+  Calendar,
+  CheckCircle,
+  Clock,
+  XCircle,
+  RefreshCw,
+  Filter,
+  Camera
 } from 'lucide-react'
 
-interface StoreVisit {
-  id: string
-  storeName: string
-  storeCode: string
-  location: string
-  visitDate: string
-  visitTime: string
-  shelfShare: number
-  facingsCount: number
-  complianceScore: number
-  issuesFound: number
-  photosCount: number
-  status: 'completed' | 'pending_review' | 'approved'
-  aiScore?: number
-}
-
-export default function MerchandisingVisitsPage() {
-  const [selectedVisit, setSelectedVisit] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState('all')
+export default function VisitsPage() {
+  const [visits, setVisits] = useState<Visit[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [showNewVisitModal, setShowNewVisitModal] = useState(false)
+  const [filterStatus, setFilterStatus] = useState<string>('all')
+  const [filterType, setFilterType] = useState<string>('all')
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null)
 
-  // Mock data
-  const visits: StoreVisit[] = [
-    {
-      id: '1',
-      storeName: 'SuperMart Downtown',
-      storeCode: 'SM-001',
-      location: 'Lagos, Nigeria',
-      visitDate: '2024-10-01',
-      visitTime: '10:30 AM',
-      shelfShare: 35.5,
-      facingsCount: 24,
-      complianceScore: 87,
-      issuesFound: 2,
-      photosCount: 15,
-      status: 'approved',
-      aiScore: 92,
-    },
-    {
-      id: '2',
-      storeName: 'MegaMall Central',
-      storeCode: 'MM-002',
-      location: 'Abuja, Nigeria',
-      visitDate: '2024-10-01',
-      visitTime: '02:15 PM',
-      shelfShare: 28.3,
-      facingsCount: 18,
-      complianceScore: 73,
-      issuesFound: 5,
-      photosCount: 12,
-      status: 'pending_review',
-      aiScore: 78,
-    },
-    {
-      id: '3',
-      storeName: 'City Plaza Store',
-      storeCode: 'CP-003',
-      location: 'Port Harcourt, Nigeria',
-      visitDate: '2024-10-01',
-      visitTime: '04:45 PM',
-      shelfShare: 42.1,
-      facingsCount: 32,
-      complianceScore: 95,
-      issuesFound: 1,
-      photosCount: 18,
-      status: 'completed',
-      aiScore: 96,
-    },
-  ]
-
-  const todayStats = {
-    totalVisits: 8,
-    avgShelfShare: 35.2,
-    avgCompliance: 85.3,
-    totalIssues: 12,
-    storesAudited: 8,
-    avgAiScore: 88.7,
+  // Stats
+  const stats = {
+    total: visits.length,
+    scheduled: visits.filter(v => v.status === 'scheduled').length,
+    inProgress: visits.filter(v => v.status === 'in_progress').length,
+    completed: visits.filter(v => v.status === 'completed').length,
+    avgDuration: visits.filter(v => v.duration).length > 0 
+      ? visits.filter(v => v.duration).reduce((sum, v) => sum + (v.duration || 0), 0) / visits.filter(v => v.duration).length 
+      : 0
   }
 
-  const filteredVisits = visits.filter(visit => {
-    const matchesStatus = filterStatus === 'all' || visit.status === filterStatus
-    const matchesSearch = visit.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         visit.storeCode.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesStatus && matchesSearch
-  })
+  useEffect(() => {
+    loadVisits()
+  }, [filterStatus, filterType])
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800'
-      case 'completed':
-        return 'bg-blue-100 text-blue-800'
-      case 'pending_review':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+  const loadVisits = async () => {
+    try {
+      setLoading(true)
+      const filters: any = {}
+      if (filterStatus !== 'all') filters.status = filterStatus
+      if (filterType !== 'all') filters.visitType = filterType
+      if (searchTerm) filters.search = searchTerm
+      
+      const response = await merchandisingService.getVisits(filters)
+      setVisits(response.visits || [])
+    } catch (error: any) {
+      console.error('Error loading visits:', error)
+      toast.error(error.message || 'Failed to load visits')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getComplianceColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 75) return 'text-yellow-600'
-    return 'text-red-600'
+  const handleSearch = () => {
+    loadVisits()
   }
 
-  const getShelfShareTrend = (share: number) => {
-    const target = 30 // Target shelf share
-    return share >= target ? (
-      <TrendingUp className="w-4 h-4 text-green-500" />
-    ) : (
-      <TrendingDown className="w-4 h-4 text-red-500" />
+  const handleCreateVisit = async (data: Visit) => {
+    try {
+      await merchandisingService.createVisit(data)
+      toast.success('Visit created successfully')
+      setShowCreateModal(false)
+      loadVisits()
+    } catch (error: any) {
+      console.error('Error creating visit:', error)
+      throw error
+    }
+  }
+
+  const handleEditVisit = async (data: Visit) => {
+    if (!editingVisit?.id) return
+    
+    try {
+      await merchandisingService.updateVisit(editingVisit.id, data)
+      toast.success('Visit updated successfully')
+      setShowEditModal(false)
+      setEditingVisit(null)
+      loadVisits()
+    } catch (error: any) {
+      console.error('Error updating visit:', error)
+      throw error
+    }
+  }
+
+  const handleDeleteVisit = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this visit?')) return
+
+    try {
+      await merchandisingService.deleteVisit(id)
+      toast.success('Visit deleted successfully')
+      loadVisits()
+    } catch (error: any) {
+      console.error('Error deleting visit:', error)
+      toast.error(error.message || 'Failed to delete visit')
+    }
+  }
+
+  const openEditModal = (visit: Visit) => {
+    setEditingVisit(visit)
+    setShowEditModal(true)
+  }
+
+  const getStatusBadge = (status: Visit['status']) => {
+    const config = {
+      scheduled: { color: 'bg-blue-100 text-blue-800', icon: Clock },
+      in_progress: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+      completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle }
+    }
+    const { color, icon: Icon } = config[status]
+    return (
+      <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-flex items-center ${color}`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
+      </span>
+    )
+  }
+
+  const getTypeBadge = (type: Visit['visitType']) => {
+    const colors = {
+      planned: 'bg-indigo-100 text-indigo-800',
+      unplanned: 'bg-purple-100 text-purple-800',
+      follow_up: 'bg-teal-100 text-teal-800'
+    }
+    return (
+      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[type]}`}>
+        {type.replace('_', ' ').charAt(0).toUpperCase() + type.replace('_', ' ').slice(1)}
+      </span>
     )
   }
 
@@ -146,305 +151,268 @@ export default function MerchandisingVisitsPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Store Visits</h1>
-            <p className="text-gray-600">Track merchandising audits and shelf compliance</p>
+            <p className="text-gray-600">Manage field visit schedules and tracking</p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              AI Analysis
+            <Button variant="outline" onClick={loadVisits}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
             </Button>
-            <Button onClick={() => setShowNewVisitModal(true)}>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              New Visit
+              Schedule Visit
             </Button>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-6 gap-4">
-          <Card className="p-4">
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Today's Visits</p>
-                <p className="text-2xl font-bold">{todayStats.totalVisits}</p>
+                <p className="text-sm text-gray-600">Total Visits</p>
+                <p className="text-2xl font-bold">{stats.total}</p>
               </div>
-              <Eye className="w-8 h-8 text-blue-500" />
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avg Shelf Share</p>
-                <p className="text-2xl font-bold">{todayStats.avgShelfShare}%</p>
-              </div>
-              <BarChart3 className="w-8 h-8 text-green-500" />
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avg Compliance</p>
-                <p className="text-2xl font-bold">{todayStats.avgCompliance}%</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-purple-500" />
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Issues Found</p>
-                <p className="text-2xl font-bold">{todayStats.totalIssues}</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-orange-500" />
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Stores Audited</p>
-                <p className="text-2xl font-bold">{todayStats.storesAudited}</p>
-              </div>
-              <Package className="w-8 h-8 text-indigo-500" />
-            </div>
-          </Card>
-          
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">AI Score</p>
-                <p className="text-2xl font-bold">{todayStats.avgAiScore}%</p>
-              </div>
-              <Star className="w-8 h-8 text-yellow-500" />
-            </div>
-          </Card>
-        </div>
-
-        {/* Filters and Search */}
-        <Card className="p-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4 text-gray-400" />
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-3 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="completed">Completed</option>
-                  <option value="pending_review">Pending Review</option>
-                  <option value="approved">Approved</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Search className="w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search stores..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-64"
-              />
+              <MapPin className="w-8 h-8 text-blue-500" />
             </div>
           </div>
-        </Card>
 
-        {/* Visits Table */}
-        <Card>
-          <Card.Header>
-            <h3 className="text-lg font-semibold">Recent Store Visits</h3>
-          </Card.Header>
-          <Card.Content>
-            <DataTable
-              columns={[
-                { 
-                  header: 'Store', 
-                  accessor: 'storeName',
-                  cell: ({ row }) => (
-                    <div>
-                      <p className="font-medium text-gray-900">{row.storeName}</p>
-                      <p className="text-sm text-gray-500">{row.storeCode}</p>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Location', 
-                  accessor: 'location',
-                  cell: ({ value }) => (
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{value}</span>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Visit Time', 
-                  accessor: 'visitTime',
-                  cell: ({ row }) => (
-                    <div className="text-sm">
-                      <p>{row.visitDate}</p>
-                      <p className="text-gray-500">{row.visitTime}</p>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Shelf Share', 
-                  accessor: 'shelfShare',
-                  cell: ({ value, row }) => (
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{value}%</span>
-                      {getShelfShareTrend(value)}
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Facings', 
-                  accessor: 'facingsCount',
-                  cell: ({ value }) => (
-                    <div className="text-center">
-                      <span className="font-medium text-blue-600">{value}</span>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Compliance', 
-                  accessor: 'complianceScore',
-                  cell: ({ value }) => (
-                    <div className="text-center">
-                      <span className={`font-medium ${getComplianceColor(value)}`}>
-                        {value}%
-                      </span>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Issues', 
-                  accessor: 'issuesFound',
-                  cell: ({ value }) => (
-                    <div className="text-center">
-                      {value > 0 ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          {value}
-                        </span>
-                      ) : (
-                        <CheckCircle className="w-5 h-5 text-green-500 mx-auto" />
-                      )}
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Photos', 
-                  accessor: 'photosCount',
-                  cell: ({ value }) => (
-                    <div className="flex items-center justify-center space-x-1">
-                      <Camera className="w-4 h-4 text-gray-400" />
-                      <span>{value}</span>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'AI Score', 
-                  accessor: 'aiScore',
-                  cell: ({ value }) => value ? (
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      <span className="font-medium">{value}%</span>
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )
-                },
-                { 
-                  header: 'Status', 
-                  accessor: 'status',
-                  cell: ({ value }) => (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(value)}`}>
-                      {value.replace('_', ' ').charAt(0).toUpperCase() + value.replace('_', ' ').slice(1)}
-                    </span>
-                  )
-                },
-                { 
-                  header: 'Actions', 
-                  accessor: 'id',
-                  cell: ({ row }) => (
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Camera className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ),
-                },
-              ]}
-              data={filteredVisits}
-            />
-          </Card.Content>
-        </Card>
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Scheduled</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.scheduled}</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
 
-        {/* Quick Actions and Insights */}
-        <div className="grid grid-cols-4 gap-6">
-          <Card className="p-6">
-            <div className="text-center">
-              <Eye className="w-12 h-12 mx-auto mb-4 text-primary-600" />
-              <h3 className="text-lg font-semibold mb-2">Start Audit</h3>
-              <p className="text-gray-600 mb-4">Begin new store audit</p>
-              <Button fullWidth>Start Audit</Button>
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">In Progress</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats.inProgress}</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-500" />
             </div>
-          </Card>
-          
-          <Card className="p-6">
-            <div className="text-center">
-              <Camera className="w-12 h-12 mx-auto mb-4 text-green-600" />
-              <h3 className="text-lg font-semibold mb-2">Shelf Photos</h3>
-              <p className="text-gray-600 mb-4">Capture shelf images</p>
-              <Button variant="outline" fullWidth>Take Photos</Button>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
-          </Card>
-          
-          <Card className="p-6">
-            <div className="text-center">
-              <BarChart3 className="w-12 h-12 mx-auto mb-4 text-blue-600" />
-              <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-              <p className="text-gray-600 mb-4">Get AI insights</p>
-              <Button variant="outline" fullWidth>View Analysis</Button>
+          </div>
+
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Avg Duration</p>
+                <p className="text-xl font-bold">{stats.avgDuration.toFixed(0)} min</p>
+              </div>
+              <Clock className="w-8 h-8 text-purple-500" />
             </div>
-          </Card>
-          
-          <Card className="p-6">
-            <div className="text-center">
-              <DollarSign className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-              <h3 className="text-lg font-semibold mb-2">Price Check</h3>
-              <p className="text-gray-600 mb-4">Competitor pricing</p>
-              <Button variant="outline" fullWidth>Check Prices</Button>
-            </div>
-          </Card>
+          </div>
         </div>
 
-        {/* Recent Issues Alert */}
-        <Card className="border-l-4 border-l-orange-500">
-          <Card.Content className="p-4">
-            <div className="flex items-start space-x-3">
-              <AlertTriangle className="w-6 h-6 text-orange-500 mt-1" />
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900">Recent Issues Detected</h4>
-                <p className="text-gray-600 mt-1">
-                  12 issues found across 8 stores today. Most common: Out of stock (5), Incorrect pricing (4), Poor display (3).
-                </p>
-                <div className="mt-3">
-                  <Button size="sm" variant="outline">View All Issues</Button>
-                </div>
+        {/* Filters */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search visits..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pl-10"
+                />
               </div>
             </div>
-          </Card.Content>
-        </Card>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Status</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All Types</option>
+              <option value="planned">Planned</option>
+              <option value="unplanned">Unplanned</option>
+              <option value="follow_up">Follow Up</option>
+            </select>
+
+            <Button onClick={handleSearch}>
+              <Filter className="w-4 h-4 mr-2" />
+              Apply
+            </Button>
+          </div>
+        </div>
+
+        {/* Table */}
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Agent
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Purpose
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Duration
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <RefreshCw className="w-5 h-5 animate-spin mr-2" />
+                        Loading visits...
+                      </div>
+                    </td>
+                  </tr>
+                ) : visits.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <MapPin className="w-12 h-12 text-gray-400 mb-2" />
+                        <p className="text-lg font-medium">No visits found</p>
+                        <p className="text-sm">Schedule your first store visit</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  visits.map((visit) => (
+                    <tr key={visit.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">
+                            {visit.customerName || visit.customerId}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-900">
+                          {visit.agentName || visit.agentId}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center text-sm text-gray-900">
+                          <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+                          {new Date(visit.visitDate).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        {getTypeBadge(visit.visitType)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-900">{visit.purpose}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm text-gray-900">
+                          {visit.duration ? `${visit.duration} min` : '-'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {getStatusBadge(visit.status)}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditModal(visit)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => visit.id && handleDeleteVisit(visit.id)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* Create Modal */}
+      <FormModal
+        isOpen={showCreateModal}
+        title="Schedule Store Visit"
+        onClose={() => setShowCreateModal(false)}
+        size="xl"
+      >
+        <VisitForm
+          onSubmit={handleCreateVisit}
+          onCancel={() => setShowCreateModal(false)}
+        />
+      </FormModal>
+
+      {/* Edit Modal */}
+      <FormModal
+        isOpen={showEditModal}
+        title="Edit Visit"
+        onClose={() => {
+          setShowEditModal(false)
+          setEditingVisit(null)
+        }}
+        size="xl"
+      >
+        {editingVisit && (
+          <VisitForm
+            initialData={editingVisit}
+            onSubmit={handleEditVisit}
+            onCancel={() => {
+              setShowEditModal(false)
+              setEditingVisit(null)
+            }}
+          />
+        )}
+      </FormModal>
     </DashboardLayout>
   )
 }
