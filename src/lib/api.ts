@@ -31,7 +31,7 @@ class ApiService {
     };
 
     // Add tenant code header to all requests
-    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'VANTAX';
+    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'DEMO';
     headers['X-Tenant-Code'] = tenantCode;
 
     if (this.token) {
@@ -75,7 +75,7 @@ class ApiService {
 
   // Authentication methods
   async login(email: string, password: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string; user: any }>> {
-    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'VANTAX';
+    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'DEMO';
     const response = await this.request<{ success: boolean; data: { user: any; token: string; refreshToken: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
