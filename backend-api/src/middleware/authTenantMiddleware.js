@@ -42,7 +42,7 @@ const authTenantMiddleware = async (req, res, next) => {
     }
 
     // SECURITY FIX: Validate X-Tenant-ID header matches JWT token tenant
-    const headerTenantId = req.headers['x-tenant-id'];
+    const headerTenantId = req.headers['x-tenant-code'] || req.headers['x-tenant-id'];
     
     if (headerTenantId) {
       // Compare header tenant with token tenant (case-insensitive)
