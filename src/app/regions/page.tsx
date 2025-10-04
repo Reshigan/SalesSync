@@ -182,93 +182,93 @@ export default function RegionsPage() {
   const columns = [
     {
       header: 'Region',
-      accessorKey: 'region',
-      cell: (region: Region) => (
+      accessor: 'region',
+      cell: ({ row }: { row: Region }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <Globe className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{region.name}</div>
-            <div className="text-sm text-gray-500">{region.code}</div>
+            <div className="font-medium text-gray-900">{row.name}</div>
+            <div className="text-sm text-gray-500">{row.code}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Description',
-      accessorKey: 'description',
-      cell: (region: Region) => (
+      accessor: 'description',
+      cell: ({ row }: { row: Region }) => (
         <div className="max-w-xs">
-          <p className="text-sm text-gray-900 truncate" title={region.description}>
-            {region.description}
+          <p className="text-sm text-gray-900 truncate" title={row.description}>
+            {row.description}
           </p>
         </div>
       ),
     },
     {
       header: 'Hierarchy',
-      accessorKey: 'hierarchy',
-      cell: (region: Region) => (
+      accessor: 'hierarchy',
+      cell: ({ row }: { row: Region }) => (
         <div className="space-y-1">
           <div className="flex items-center text-sm text-gray-900">
             <Building className="w-4 h-4 mr-2 text-gray-400" />
-            {region.areasCount} Areas
+            {row.areasCount} Areas
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <Map className="w-4 h-4 mr-2 text-gray-400" />
-            {region.routesCount} Routes
+            {row.routesCount} Routes
           </div>
         </div>
       ),
     },
     {
       header: 'Coverage',
-      accessorKey: 'coverage',
-      cell: (region: Region) => (
+      accessor: 'coverage',
+      cell: ({ row }: { row: Region }) => (
         <div className="space-y-1">
           <div className="flex items-center text-sm text-gray-900">
             <Users className="w-4 h-4 mr-2 text-gray-400" />
-            {region.customersCount} Customers
+            {row.customersCount} Customers
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-            {region.agentsCount} Agents
+            {row.agentsCount} Agents
           </div>
         </div>
       ),
     },
     {
       header: 'Performance',
-      accessorKey: 'performance',
-      cell: (region: Region) => (
+      accessor: 'performance',
+      cell: ({ row }: { row: Region }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {formatCurrency(region.totalRevenue)}
+            {formatCurrency(row.totalRevenue)}
           </div>
           <div className="text-xs text-gray-500">
-            Last activity: {new Date(region.lastActivity).toLocaleDateString()}
+            Last activity: {new Date(row.lastActivity).toLocaleDateString()}
           </div>
         </div>
       ),
     },
     {
       header: 'Status',
-      accessorKey: 'isActive',
-      cell: (region: Region) => (
+      accessor: 'isActive',
+      cell: ({ row }: { row: Region }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          region.isActive 
+          row.isActive 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {region.isActive ? 'Active' : 'Inactive'}
+          {row.isActive ? 'Active' : 'Inactive'}
         </span>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (region: Region) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: Region }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -276,12 +276,12 @@ export default function RegionsPage() {
           <Button 
             size="sm" 
             variant="outline"
-            onClick={() => window.location.href = `/areas?region=${region.id}`}
+            onClick={() => window.location.href = `/areas?region=${row.id}`}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
           {canEditIn('regions') && (
-            <Button size="sm" variant="outline" onClick={() => handleEdit(region)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
@@ -289,7 +289,7 @@ export default function RegionsPage() {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleDelete(region.id)}
+              onClick={() => handleDelete(row.id)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="w-4 h-4" />
@@ -459,11 +459,6 @@ export default function RegionsPage() {
           <DataTable
             data={filteredRegions}
             columns={columns}
-            selectedRows={selectedRegions}
-            onSelectionChange={setSelectedRegions}
-            searchable={false}
-            pagination={true}
-            pageSize={10}
           />
         </Card>
       </div>

@@ -262,7 +262,7 @@ export default function SalesAnalyticsPage() {
                         labelFormatter={(value) => new Date(value).toLocaleDateString()}
                         formatter={(value, name) => [
                           name === 'revenue' ? formatCurrency(value as number) : value,
-                          name.charAt(0).toUpperCase() + name.slice(1)
+                          typeof name === 'string' ? name.charAt(0).toUpperCase() + name.slice(1) : name
                         ]}
                       />
                       <Line 

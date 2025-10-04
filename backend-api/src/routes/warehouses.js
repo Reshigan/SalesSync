@@ -86,7 +86,10 @@ router.get('/', async (req, res, next) => {
       [req.tenantId]
     );
     
-    res.json(warehouses);
+    res.json({
+      success: true,
+      data: warehouses
+    });
   } catch (error) {
     next(error);
   }

@@ -36,12 +36,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) =>
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    const mockResults: SearchResult[] = [
+    const mockResults = [
       {
         id: '1',
         title: 'John Doe Electronics',
         subtitle: 'Customer • Lagos, Nigeria',
-        type: 'customer',
+        type: 'customer' as const,
         url: '/customers/1',
         icon: Users
       },
@@ -49,7 +49,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) =>
         id: '2',
         title: 'Coca-Cola 500ml',
         subtitle: 'Product • Beverages',
-        type: 'product',
+        type: 'product' as const,
         url: '/products/2',
         icon: Package
       },
@@ -57,7 +57,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) =>
         id: '3',
         title: 'Agent Mike Johnson',
         subtitle: 'Van Sales • Territory A',
-        type: 'agent',
+        type: 'agent' as const,
         url: '/agents/3',
         icon: Truck
       },
@@ -65,14 +65,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ className = '' }) =>
         id: '4',
         title: 'Order #ORD-2024-001',
         subtitle: 'Pending • ₦45,000',
-        type: 'order',
+        type: 'order' as const,
         url: '/orders/4',
         icon: FileText
       }
     ].filter(item => 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ) as SearchResult[];
 
     return mockResults;
   };

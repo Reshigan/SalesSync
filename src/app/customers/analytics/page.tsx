@@ -379,68 +379,68 @@ export default function CustomerAnalyticsPage() {
   const topCustomerColumns = [
     {
       header: 'Customer',
-      accessorKey: 'customer',
-      cell: (customer: TopCustomer) => (
+      accessor: 'customer',
+      cell: ({ row }: { row: TopCustomer }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <Building className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{customer.name}</div>
-            <div className="text-sm text-gray-500">{customer.code}</div>
+            <div className="font-medium text-gray-900">{row.name}</div>
+            <div className="text-sm text-gray-500">{row.code}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Performance',
-      accessorKey: 'performance',
-      cell: (customer: TopCustomer) => (
+      accessor: 'performance',
+      cell: ({ row }: { row: TopCustomer }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {customer.totalOrders} orders
+            {row.totalOrders} orders
           </div>
           <div className="text-sm text-green-600">
-            {formatCurrency(customer.totalRevenue)}
+            {formatCurrency(row.totalRevenue)}
           </div>
           <div className="text-xs text-gray-500">
-            AOV: {formatCurrency(customer.avgOrderValue)}
+            AOV: {formatCurrency(row.avgOrderValue)}
           </div>
         </div>
       ),
     },
     {
       header: 'Growth & Risk',
-      accessorKey: 'growth',
-      cell: (customer: TopCustomer) => (
+      accessor: 'growth',
+      cell: ({ row }: { row: TopCustomer }) => (
         <div className="space-y-1">
-          <div className={`flex items-center space-x-1 ${customer.growthRate > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {customer.growthRate > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-            <span className="text-sm font-medium">{Math.abs(customer.growthRate)}%</span>
+          <div className={`flex items-center space-x-1 ${row.growthRate > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {row.growthRate > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+            <span className="text-sm font-medium">{Math.abs(row.growthRate)}%</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${customer.riskScore < 30 ? 'bg-green-500' : customer.riskScore < 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
-            <span className="text-xs text-gray-500">Risk: {customer.riskScore}%</span>
+            <div className={`w-2 h-2 rounded-full ${row.riskScore < 30 ? 'bg-green-500' : row.riskScore < 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+            <span className="text-xs text-gray-500">Risk: {row.riskScore}%</span>
           </div>
         </div>
       ),
     },
     {
       header: 'Last Activity',
-      accessorKey: 'lastActivity',
-      cell: (customer: TopCustomer) => (
+      accessor: 'lastActivity',
+      cell: ({ row }: { row: TopCustomer }) => (
         <div className="space-y-1">
           <div className="text-sm text-gray-900">
-            {new Date(customer.lastOrderDate).toLocaleDateString()}
+            {new Date(row.lastOrderDate).toLocaleDateString()}
           </div>
-          <div className="text-xs text-gray-500">{customer.location}</div>
+          <div className="text-xs text-gray-500">{row.location}</div>
         </div>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (customer: TopCustomer) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: TopCustomer }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -545,9 +545,6 @@ export default function CustomerAnalyticsPage() {
           <DataTable
             data={topCustomers}
             columns={topCustomerColumns}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
           />
         </Card>
 

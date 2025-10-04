@@ -25,13 +25,13 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+      headers['Authorization'] = `Bearer ${this.token}`;
       console.log('Using token:', this.token.substring(0, 20) + '...');
     } else {
       console.log('No token available for API request');
@@ -94,7 +94,7 @@ class ApiService {
       return { data: transformedData };
     }
 
-    return response as ApiResponse<{ accessToken: string; refreshToken: string; user: any }>;
+    return { error: response.error, message: response.message };
   }
 
   async register(userData: {

@@ -38,7 +38,7 @@ export default function RolesPage() {
     { accessor: 'userCount', header: 'Users', sortable: true },
     { accessor: 'permissions', header: 'Permissions', sortable: true },
     {
-      key: 'status',
+      accessor: 'status',
       header: 'Status',
       cell: ({ row }: { row: Role }) => (
         <span className={`px-2 py-1 rounded-full text-xs ${
@@ -49,7 +49,7 @@ export default function RolesPage() {
       )
     },
     {
-      key: 'actions',
+      accessor: 'id',
       header: 'Actions',
       cell: ({ row }: { row: Role }) => (
         <div className="flex gap-2">
@@ -85,7 +85,7 @@ export default function RolesPage() {
 
   const handleManagePermissions = (role: Role) => {
     // Navigate to permissions page
-    window.location.href = `/admin/roles/${.id}/permissions`;
+    window.location.href = `/admin/roles/${role.id}/permissions`;
   };
 
   const handleDelete = (id: string) => {
@@ -151,8 +151,6 @@ export default function RolesPage() {
           <DataTable
             data={roles}
             columns={columns}
-            searchable
-            searchPlaceholder="Search roles..."
           />
         </Card>
       </div>

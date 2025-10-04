@@ -86,7 +86,7 @@ export function DataTable<T extends Record<string, any>>({
                   const value = getValue(row, column.accessor)
                   return (
                     <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {column.cell ? column.cell({ row, value }) : value}
+                      {column.cell ? column.cell({ row, value }) : (value as ReactNode)}
                     </td>
                   )
                 })}

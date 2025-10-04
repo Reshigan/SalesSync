@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    // Skip type checking for backend folder during build
+    ignoreBuildErrors: false,
+  },
   images: {
     domains: ['localhost', 'work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev'],
   },

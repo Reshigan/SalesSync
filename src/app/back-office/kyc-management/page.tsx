@@ -27,14 +27,13 @@ import {
   Phone,
   Mail,
   MapPin,
-  IdCard,
+  FileText,
   Calendar,
   Camera,
   Smartphone,
   Gamepad2,
   Banknote,
   Package,
-  FileText,
   Clock,
   Star,
   Target,
@@ -501,7 +500,7 @@ export default function KYCManagementPage() {
       phone_number: Phone,
       email: Mail,
       address: MapPin,
-      id_number: IdCard,
+      id_number: FileText,
       date_of_birth: Calendar,
       photo_id: Camera,
       selfie: Camera,
@@ -515,32 +514,32 @@ export default function KYCManagementPage() {
   const productKYCColumns = [
     {
       header: 'Product Details',
-      accessorKey: 'product',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'product',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
             <Shield className="w-5 h-5 text-red-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{kyc.productName}</div>
-            <div className="text-sm text-gray-500">{kyc.productSKU}</div>
-            <div className="text-xs text-gray-400">{kyc.category}</div>
+            <div className="font-medium text-gray-900">{row.productName}</div>
+            <div className="text-sm text-gray-500">{row.productSKU}</div>
+            <div className="text-xs text-gray-400">{row.category}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'KYC Configuration',
-      accessorKey: 'config',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'config',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="space-y-1">
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getKYCLevelColor(kyc.kycLevel)}`}>
-            {kyc.kycLevel.toUpperCase()} KYC
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getKYCLevelColor(row.kycLevel)}`}>
+            {row.kycLevel.toUpperCase()} KYC
           </span>
           <div className="text-sm text-gray-900">
-            {kyc.kycFields.length} fields required
+            {row.kycFields.length} fields required
           </div>
-          {kyc.regulatoryRequirement && (
+          {row.regulatoryRequirement && (
             <div className="flex items-center space-x-1">
               <AlertTriangle className="w-3 h-3 text-orange-500" />
               <span className="text-xs text-orange-600">Regulatory</span>
@@ -551,11 +550,11 @@ export default function KYCManagementPage() {
     },
     {
       header: 'KYC Fields',
-      accessorKey: 'fields',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'fields',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="space-y-1">
           <div className="flex flex-wrap gap-1">
-            {kyc.kycFields.slice(0, 4).map((field, index) => {
+            {row.kycFields.slice(0, 4).map((field, index) => {
               const Icon = getKYCFieldIcon(field.type)
               return (
                 <div key={index} className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded text-xs">
@@ -564,8 +563,8 @@ export default function KYCManagementPage() {
                 </div>
               )
             })}
-            {kyc.kycFields.length > 4 && (
-              <span className="text-xs text-gray-500 px-2 py-1">+{kyc.kycFields.length - 4}</span>
+            {row.kycFields.length > 4 && (
+              <span className="text-xs text-gray-500 px-2 py-1">+{row.kycFields.length - 4}</span>
             )}
           </div>
         </div>
@@ -573,48 +572,48 @@ export default function KYCManagementPage() {
     },
     {
       header: 'Submission Stats',
-      accessorKey: 'stats',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'stats',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {kyc.totalSubmissions.toLocaleString()} total
+            {row.totalSubmissions.toLocaleString()} total
           </div>
           <div className="text-sm text-green-600">
-            {kyc.approvalRate}% approved
+            {row.approvalRate}% approved
           </div>
           <div className="text-xs text-gray-500">
-            Avg: {kyc.avgProcessingTime}h processing
+            Avg: {row.avgProcessingTime}h processing
           </div>
           <div className="flex space-x-2 text-xs">
-            <span className="text-yellow-600">{kyc.pendingSubmissions} pending</span>
-            <span className="text-red-600">{kyc.rejectedSubmissions} rejected</span>
+            <span className="text-yellow-600">{row.pendingSubmissions} pending</span>
+            <span className="text-red-600">{row.rejectedSubmissions} rejected</span>
           </div>
         </div>
       ),
     },
     {
       header: 'Compliance',
-      accessorKey: 'compliance',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'compliance',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="space-y-1">
           <div className="text-sm text-gray-900">
-            {kyc.regulatoryRequirement ? 'Required' : 'Optional'}
+            {row.regulatoryRequirement ? 'Required' : 'Optional'}
           </div>
-          {kyc.complianceNotes && (
-            <div className="text-xs text-gray-500 max-w-xs truncate" title={kyc.complianceNotes}>
-              {kyc.complianceNotes}
+          {row.complianceNotes && (
+            <div className="text-xs text-gray-500 max-w-xs truncate" title={row.complianceNotes}>
+              {row.complianceNotes}
             </div>
           )}
           <div className="text-xs text-gray-400">
-            Updated: {new Date(kyc.updatedAt).toLocaleDateString()}
+            Updated: {new Date(row.updatedAt).toLocaleDateString()}
           </div>
         </div>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (kyc: ProductKYCRequirement) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: ProductKYCRequirement }) => (
         <div className="flex items-center space-x-1">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -640,17 +639,17 @@ export default function KYCManagementPage() {
   const submissionColumns = [
     {
       header: 'Submission Details',
-      accessorKey: 'submission',
-      cell: (submission: KYCSubmission) => (
+      accessor: 'submission',
+      cell: ({ row }: { row: KYCSubmission }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <FileText className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{submission.customerName}</div>
-            <div className="text-sm text-gray-500">{submission.customerCode}</div>
+            <div className="font-medium text-gray-900">{row.customerName}</div>
+            <div className="text-sm text-gray-500">{row.customerCode}</div>
             <div className="text-xs text-gray-400">
-              {new Date(submission.submittedAt).toLocaleDateString()}
+              {new Date(row.submittedAt).toLocaleDateString()}
             </div>
           </div>
         </div>
@@ -658,36 +657,36 @@ export default function KYCManagementPage() {
     },
     {
       header: 'Product & Agent',
-      accessorKey: 'context',
-      cell: (submission: KYCSubmission) => (
+      accessor: 'context',
+      cell: ({ row }: { row: KYCSubmission }) => (
         <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">{submission.productName}</div>
-          <div className="text-xs text-gray-500">{submission.productSKU}</div>
-          <div className="text-xs text-blue-600">Agent: {submission.agentName}</div>
+          <div className="text-sm font-medium text-gray-900">{row.productName}</div>
+          <div className="text-xs text-gray-500">{row.productSKU}</div>
+          <div className="text-xs text-blue-600">Agent: {row.agentName}</div>
         </div>
       ),
     },
     {
       header: 'Status & Review',
-      accessorKey: 'status',
-      cell: (submission: KYCSubmission) => {
-        const StatusIcon = getStatusIcon(submission.status)
+      accessor: 'status',
+      cell: ({ row }: { row: KYCSubmission }) => {
+        const StatusIcon = getStatusIcon(row.status)
         return (
           <div className="space-y-1">
             <div className="flex items-center space-x-1">
               <StatusIcon className="w-4 h-4" />
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(submission.status)}`}>
-                {submission.status.replace('_', ' ').toUpperCase()}
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(row.status)}`}>
+                {row.status.replace('_', ' ').toUpperCase()}
               </span>
             </div>
-            {submission.reviewedBy && (
+            {row.reviewedBy && (
               <div className="text-xs text-gray-500">
-                Reviewed by: {submission.reviewedBy}
+                Reviewed by: {row.reviewedBy}
               </div>
             )}
-            {submission.reviewedAt && (
+            {row.reviewedAt && (
               <div className="text-xs text-gray-400">
-                {new Date(submission.reviewedAt).toLocaleDateString()}
+                {new Date(row.reviewedAt).toLocaleDateString()}
               </div>
             )}
           </div>
@@ -696,30 +695,30 @@ export default function KYCManagementPage() {
     },
     {
       header: 'Verification Scores',
-      accessorKey: 'scores',
-      cell: (submission: KYCSubmission) => (
+      accessor: 'scores',
+      cell: ({ row }: { row: KYCSubmission }) => (
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
             <span className="text-xs text-gray-600">Verification:</span>
             <span className={`text-sm font-medium ${
-              submission.verificationScore >= 90 ? 'text-green-600' :
-              submission.verificationScore >= 70 ? 'text-yellow-600' : 'text-red-600'
+              row.verificationScore >= 90 ? 'text-green-600' :
+              row.verificationScore >= 70 ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {submission.verificationScore}%
+              {row.verificationScore}%
             </span>
           </div>
           <div className="flex items-center space-x-2">
             <span className="text-xs text-gray-600">Risk:</span>
             <span className={`text-sm font-medium ${
-              submission.riskScore <= 20 ? 'text-green-600' :
-              submission.riskScore <= 50 ? 'text-yellow-600' : 'text-red-600'
+              row.riskScore <= 20 ? 'text-green-600' :
+              row.riskScore <= 50 ? 'text-yellow-600' : 'text-red-600'
             }`}>
-              {submission.riskScore}%
+              {row.riskScore}%
             </span>
           </div>
-          {submission.flaggedReasons.length > 0 && (
+          {row.flaggedReasons.length > 0 && (
             <div className="text-xs text-red-600">
-              {submission.flaggedReasons.length} flags
+              {row.flaggedReasons.length} flags
             </div>
           )}
         </div>
@@ -727,20 +726,20 @@ export default function KYCManagementPage() {
     },
     {
       header: 'Documents',
-      accessorKey: 'documents',
-      cell: (submission: KYCSubmission) => (
+      accessor: 'documents',
+      cell: ({ row }: { row: KYCSubmission }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {submission.documents.length} files
+            {row.documents.length} files
           </div>
-          {submission.documents.slice(0, 2).map((doc, index) => (
+          {row.documents.slice(0, 2).map((doc, index) => (
             <div key={index} className="text-xs text-gray-500">
               {doc.fieldType.replace('_', ' ')}: {doc.fileName}
             </div>
           ))}
-          {submission.documents.length > 2 && (
+          {row.documents.length > 2 && (
             <div className="text-xs text-gray-400">
-              +{submission.documents.length - 2} more
+              +{row.documents.length - 2} more
             </div>
           )}
         </div>
@@ -748,13 +747,13 @@ export default function KYCManagementPage() {
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (submission: KYCSubmission) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: KYCSubmission }) => (
         <div className="flex items-center space-x-1">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
           </Button>
-          {submission.status === 'pending' && (
+          {row.status === 'pending' && (
             <>
               <Button size="sm" variant="outline" className="text-green-600 hover:text-green-700">
                 <CheckCircle className="w-4 h-4" />
@@ -955,9 +954,6 @@ export default function KYCManagementPage() {
             <DataTable
               data={filteredProductKYCs}
               columns={productKYCColumns}
-              searchable={false}
-              pagination={true}
-              pageSize={10}
             />
           </Card>
         )}
@@ -967,9 +963,6 @@ export default function KYCManagementPage() {
             <DataTable
               data={filteredSubmissions}
               columns={submissionColumns}
-              searchable={false}
-              pagination={true}
-              pageSize={10}
             />
           </Card>
         )}

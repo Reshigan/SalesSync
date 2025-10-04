@@ -28,6 +28,7 @@ import {
   ArrowDownRight,
   Calendar,
   Filter,
+  User,
   Download,
   RefreshCw,
   Settings,

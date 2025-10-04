@@ -481,95 +481,95 @@ export default function ProductAnalyticsPage() {
   const productColumns = [
     {
       header: 'Product',
-      accessorKey: 'product',
-      cell: (product: ProductPerformance) => (
+      accessor: 'product',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
             <Package className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{product.name}</div>
-            <div className="text-sm text-gray-500">{product.sku}</div>
-            <div className="text-xs text-gray-400">{product.category} • {product.brand}</div>
+            <div className="font-medium text-gray-900">{row.name}</div>
+            <div className="text-sm text-gray-500">{row.sku}</div>
+            <div className="text-xs text-gray-400">{row.category} • {row.brand}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Sales Performance',
-      accessorKey: 'sales',
-      cell: (product: ProductPerformance) => (
+      accessor: 'sales',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {product.unitsSold.toLocaleString()} units
+            {row.unitsSold.toLocaleString()} units
           </div>
           <div className="text-sm text-green-600">
-            {formatCurrency(product.revenue)}
+            {formatCurrency(row.revenue)}
           </div>
           <div className="text-xs text-gray-500">
-            {product.customerCount} customers
+            {row.customerCount} customers
           </div>
         </div>
       ),
     },
     {
       header: 'Profitability',
-      accessorKey: 'profitability',
-      cell: (product: ProductPerformance) => (
+      accessor: 'profitability',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {formatCurrency(product.margin)} margin
+            {formatCurrency(row.margin)} margin
           </div>
           <div className="text-sm text-purple-600">
-            {product.marginPercent}% margin
+            {row.marginPercent}% margin
           </div>
           <div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-500" />
-            <span className="text-xs text-gray-500">Score: {product.profitabilityScore}</span>
+            <span className="text-xs text-gray-500">Score: {row.profitabilityScore}</span>
           </div>
         </div>
       ),
     },
     {
       header: 'Inventory',
-      accessorKey: 'inventory',
-      cell: (product: ProductPerformance) => (
+      accessor: 'inventory',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {product.stockLevel} units
+            {row.stockLevel} units
           </div>
           <div className="text-sm text-blue-600">
-            {product.inventoryTurnover}x turnover
+            {row.inventoryTurnover}x turnover
           </div>
-          <div className={`text-xs ${product.daysOutOfStock > 5 ? 'text-red-600' : 'text-green-600'}`}>
-            {product.daysOutOfStock} days OOS
+          <div className={`text-xs ${row.daysOutOfStock > 5 ? 'text-red-600' : 'text-green-600'}`}>
+            {row.daysOutOfStock} days OOS
           </div>
         </div>
       ),
     },
     {
       header: 'Growth & Risk',
-      accessorKey: 'growth',
-      cell: (product: ProductPerformance) => (
+      accessor: 'growth',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="space-y-1">
-          <div className={`flex items-center space-x-1 ${product.growthRate > 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {product.growthRate > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-            <span className="text-sm font-medium">{Math.abs(product.growthRate)}%</span>
+          <div className={`flex items-center space-x-1 ${row.growthRate > 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {row.growthRate > 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+            <span className="text-sm font-medium">{Math.abs(row.growthRate)}%</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${
-              product.riskLevel === 'low' ? 'bg-green-500' : 
-              product.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
+              row.riskLevel === 'low' ? 'bg-green-500' : 
+              row.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
             }`} />
-            <span className="text-xs text-gray-500 capitalize">{product.riskLevel} risk</span>
+            <span className="text-xs text-gray-500 capitalize">{row.riskLevel} risk</span>
           </div>
         </div>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (product: ProductPerformance) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: ProductPerformance }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -736,9 +736,6 @@ export default function ProductAnalyticsPage() {
           <DataTable
             data={productPerformance}
             columns={productColumns}
-            searchable={true}
-            pagination={true}
-            pageSize={10}
           />
         </Card>
 

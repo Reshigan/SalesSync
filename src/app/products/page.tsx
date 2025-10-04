@@ -203,71 +203,71 @@ export default function ProductsPage() {
   const columns = [
     {
       header: 'Product',
-      accessorKey: 'product',
-      cell: (product: Product) => (
+      accessor: 'product',
+      cell: ({ row }: { row: Product }) => (
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+            {row.imageUrl ? (
+              <img src={row.imageUrl} alt={row.name} className="w-full h-full object-cover" />
             ) : (
               <Package className="w-6 h-6 text-gray-400" />
             )}
           </div>
           <div>
-            <div className="font-medium text-gray-900">{product.name}</div>
-            <div className="text-sm text-gray-500">{product.sku}</div>
-            <div className="text-xs text-gray-400">{product.categoryPath}</div>
+            <div className="font-medium text-gray-900">{row.name}</div>
+            <div className="text-sm text-gray-500">{row.sku}</div>
+            <div className="text-xs text-gray-400">{row.categoryPath}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Brand & Barcode',
-      accessorKey: 'brand',
-      cell: (product: Product) => (
+      accessor: 'brand',
+      cell: ({ row }: { row: Product }) => (
         <div className="space-y-1">
-          <div className="text-sm font-medium text-gray-900">{product.brand}</div>
+          <div className="text-sm font-medium text-gray-900">{row.brand}</div>
           <div className="flex items-center text-xs text-gray-500">
             <Barcode className="w-3 h-3 mr-1" />
-            {product.barcode}
+            {row.barcode}
           </div>
         </div>
       ),
     },
     {
       header: 'Pricing',
-      accessorKey: 'pricing',
-      cell: (product: Product) => (
+      accessor: 'pricing',
+      cell: ({ row }: { row: Product }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {formatCurrency(product.unitPrice)}
+            {formatCurrency(row.unitPrice)}
           </div>
           <div className="text-xs text-gray-500">
-            Cost: {formatCurrency(product.costPrice)}
+            Cost: {formatCurrency(row.costPrice)}
           </div>
           <div className="text-xs text-green-600">
-            Margin: {product.margin}%
+            Margin: {row.margin}%
           </div>
         </div>
       ),
     },
     {
       header: 'Stock Status',
-      accessorKey: 'stock',
-      cell: (product: Product) => {
-        const stockInfo = getStockStatus(product)
+      accessor: 'stock',
+      cell: ({ row }: { row: Product }) => {
+        const stockInfo = getStockStatus(row)
         const Icon = stockInfo.icon
         return (
           <div className="space-y-1">
             <div className="text-sm font-medium text-gray-900">
-              {product.stockLevel} units
+              {row.stockLevel} units
             </div>
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${stockInfo.color}`}>
               <Icon className="w-3 h-3 mr-1" />
               {stockInfo.status}
             </span>
             <div className="text-xs text-gray-500">
-              Reorder: {product.reorderLevel}
+              Reorder: {row.reorderLevel}
             </div>
           </div>
         )
@@ -275,59 +275,59 @@ export default function ProductsPage() {
     },
     {
       header: 'Performance',
-      accessorKey: 'performance',
-      cell: (product: Product) => (
+      accessor: 'performance',
+      cell: ({ row }: { row: Product }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {product.totalSold} sold
+            {row.totalSold} sold
           </div>
           <div className="text-sm text-green-600">
-            {formatCurrency(product.revenue)}
+            {formatCurrency(row.revenue)}
           </div>
           <div className="text-xs text-gray-500">
-            Last: {new Date(product.lastSold).toLocaleDateString()}
+            Last: {new Date(row.lastSold).toLocaleDateString()}
           </div>
         </div>
       ),
     },
     {
       header: 'Specs',
-      accessorKey: 'specs',
-      cell: (product: Product) => (
+      accessor: 'specs',
+      cell: ({ row }: { row: Product }) => (
         <div className="space-y-1">
           <div className="flex items-center text-xs text-gray-600">
             <Weight className="w-3 h-3 mr-1" />
-            {product.weight}kg
+            {row.weight}kg
           </div>
           <div className="text-xs text-gray-500">
-            {product.dimensions}
+            {row.dimensions}
           </div>
         </div>
       ),
     },
     {
       header: 'Status',
-      accessorKey: 'isActive',
-      cell: (product: Product) => (
+      accessor: 'isActive',
+      cell: ({ row }: { row: Product }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          product.isActive 
+          row.isActive 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {product.isActive ? 'Active' : 'Inactive'}
+          {row.isActive ? 'Active' : 'Inactive'}
         </span>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (product: Product) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: Product }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
           </Button>
           {canEditIn('products') && (
-            <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
@@ -335,7 +335,7 @@ export default function ProductsPage() {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleDelete(product.id)}
+              onClick={() => handleDelete(row.id)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="w-4 h-4" />
@@ -490,7 +490,7 @@ export default function ProductsPage() {
               </select>
               <div className="flex border border-gray-300 rounded-md">
                 <Button
-                  variant={viewMode === 'table' ? 'default' : 'outline'}
+                  variant={viewMode === 'table' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('table')}
                   className="rounded-r-none border-r-0"
@@ -498,7 +498,7 @@ export default function ProductsPage() {
                   <List className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  variant={viewMode === 'grid' ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
                   className="rounded-l-none"
@@ -543,11 +543,6 @@ export default function ProductsPage() {
           <DataTable
             data={filteredProducts}
             columns={columns}
-            selectedRows={selectedProducts}
-            onSelectionChange={setSelectedProducts}
-            searchable={false}
-            pagination={true}
-            pageSize={25}
           />
         </Card>
       </div>

@@ -211,97 +211,97 @@ export default function AreasPage() {
   const columns = [
     {
       header: 'Area',
-      accessorKey: 'area',
-      cell: (area: Area) => (
+      accessor: 'area',
+      cell: ({ row }: { row: Area }) => (
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
             <Building className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">{area.name}</div>
-            <div className="text-sm text-gray-500">{area.code}</div>
+            <div className="font-medium text-gray-900">{row.name}</div>
+            <div className="text-sm text-gray-500">{row.code}</div>
           </div>
         </div>
       ),
     },
     {
       header: 'Region',
-      accessorKey: 'region',
-      cell: (area: Area) => (
+      accessor: 'region',
+      cell: ({ row }: { row: Area }) => (
         <div className="flex items-center space-x-2">
           <Globe className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-900">{area.regionName}</span>
+          <span className="text-sm text-gray-900">{row.regionName}</span>
         </div>
       ),
     },
     {
       header: 'Description',
-      accessorKey: 'description',
-      cell: (area: Area) => (
+      accessor: 'description',
+      cell: ({ row }: { row: Area }) => (
         <div className="max-w-xs">
-          <p className="text-sm text-gray-900 truncate" title={area.description}>
-            {area.description}
+          <p className="text-sm text-gray-900 truncate" title={row.description}>
+            {row.description}
           </p>
         </div>
       ),
     },
     {
       header: 'Routes',
-      accessorKey: 'routes',
-      cell: (area: Area) => (
+      accessor: 'routes',
+      cell: ({ row }: { row: Area }) => (
         <div className="flex items-center space-x-2">
           <Map className="w-4 h-4 text-gray-400" />
-          <span className="text-sm font-medium text-gray-900">{area.routesCount}</span>
+          <span className="text-sm font-medium text-gray-900">{row.routesCount}</span>
         </div>
       ),
     },
     {
       header: 'Coverage',
-      accessorKey: 'coverage',
-      cell: (area: Area) => (
+      accessor: 'coverage',
+      cell: ({ row }: { row: Area }) => (
         <div className="space-y-1">
           <div className="flex items-center text-sm text-gray-900">
             <Users className="w-4 h-4 mr-2 text-gray-400" />
-            {area.customersCount} Customers
+            {row.customersCount} Customers
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-            {area.agentsCount} Agents
+            {row.agentsCount} Agents
           </div>
         </div>
       ),
     },
     {
       header: 'Performance',
-      accessorKey: 'performance',
-      cell: (area: Area) => (
+      accessor: 'performance',
+      cell: ({ row }: { row: Area }) => (
         <div className="space-y-1">
           <div className="text-sm font-medium text-gray-900">
-            {formatCurrency(area.totalRevenue)}
+            {formatCurrency(row.totalRevenue)}
           </div>
           <div className="text-xs text-gray-500">
-            Last activity: {new Date(area.lastActivity).toLocaleDateString()}
+            Last activity: {new Date(row.lastActivity).toLocaleDateString()}
           </div>
         </div>
       ),
     },
     {
       header: 'Status',
-      accessorKey: 'isActive',
-      cell: (area: Area) => (
+      accessor: 'isActive',
+      cell: ({ row }: { row: Area }) => (
         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          area.isActive 
+          row.isActive 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {area.isActive ? 'Active' : 'Inactive'}
+          {row.isActive ? 'Active' : 'Inactive'}
         </span>
       ),
     },
     {
       header: 'Actions',
-      accessorKey: 'actions',
-      cell: (area: Area) => (
+      accessor: 'actions',
+      cell: ({ row }: { row: Area }) => (
         <div className="flex items-center space-x-2">
           <Button size="sm" variant="outline">
             <Eye className="w-4 h-4" />
@@ -309,12 +309,12 @@ export default function AreasPage() {
           <Button 
             size="sm" 
             variant="outline"
-            onClick={() => window.location.href = `/routes?area=${area.id}`}
+            onClick={() => window.location.href = `/routes?area=${row.id}`}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
           {canEditIn('areas') && (
-            <Button size="sm" variant="outline" onClick={() => handleEdit(area)}>
+            <Button size="sm" variant="outline" onClick={() => handleEdit(row)}>
               <Edit className="w-4 h-4" />
             </Button>
           )}
@@ -322,7 +322,7 @@ export default function AreasPage() {
             <Button 
               size="sm" 
               variant="outline" 
-              onClick={() => handleDelete(area.id)}
+              onClick={() => handleDelete(row.id)}
               className="text-red-600 hover:text-red-700"
             >
               <Trash2 className="w-4 h-4" />
@@ -515,11 +515,6 @@ export default function AreasPage() {
           <DataTable
             data={filteredAreas}
             columns={columns}
-            selectedRows={selectedAreas}
-            onSelectionChange={setSelectedAreas}
-            searchable={false}
-            pagination={true}
-            pageSize={15}
           />
         </Card>
       </div>
