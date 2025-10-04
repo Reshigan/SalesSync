@@ -5,7 +5,7 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: ['localhost', 'work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev'],
+    domains: ['localhost', 'ss.gonxt.tech', 'work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev'],
   },
   async headers() {
     return [
@@ -21,6 +21,23 @@ const nextConfig = {
             value: 'nosniff',
           },
           {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+          // HTTPS/SSL Enforcement in production
+          ...(process.env.NODE_ENV === 'production' ? [{
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload',
+          }] : []),
+          {
             key: 'Access-Control-Allow-Origin',
             value: '*',
           },
@@ -30,11 +47,31 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
+            value: 'Content-Type, Authorization, X-Tenant-Code',
           },
         ],
       },
     ];
+  },
+  // Redirect HTTP to HTTPS in production
+  async redirects() {
+    if (process.env.NODE_ENV === 'production') {
+      return [
+        {
+          source: '/:path*',
+          has: [
+            {
+              type: 'header',
+              key: 'x-forwarded-proto',
+              value: 'http',
+            },
+          ],
+          destination: 'https://ss.gonxt.tech/:path*',
+          permanent: true,
+        },
+      ];
+    }
+    return [];
   },
 }
 
