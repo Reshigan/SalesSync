@@ -164,6 +164,16 @@ async function startServer() {
     const agentRoutes = require('./routes/agents');
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
+    
+    // New API routes
+    const purchaseOrderRoutes = require('./routes/purchase-orders');
+    const stockMovementRoutes = require('./routes/stock-movements');
+    const stockCountRoutes = require('./routes/stock-counts');
+    const vanSalesOperationsRoutes = require('./routes/van-sales-operations');
+    const cashManagementRoutes = require('./routes/cash-management');
+    const transactionsApiRoutes = require('./routes/transactions-api');
+    const commissionsApiRoutes = require('./routes/commissions-api');
+    const kycApiRoutes = require('./routes/kyc-api');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -199,6 +209,16 @@ async function startServer() {
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
     app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
+    
+    // New API routes
+    app.use('/api/purchase-orders', authTenantMiddleware, purchaseOrderRoutes);
+    app.use('/api/stock-movements', authTenantMiddleware, stockMovementRoutes);
+    app.use('/api/stock-counts', authTenantMiddleware, stockCountRoutes);
+    app.use('/api/van-sales-operations', authTenantMiddleware, vanSalesOperationsRoutes);
+    app.use('/api/cash-management', authTenantMiddleware, cashManagementRoutes);
+    app.use('/api/transactions-api', authTenantMiddleware, transactionsApiRoutes);
+    app.use('/api/commissions-api', authTenantMiddleware, commissionsApiRoutes);
+    app.use('/api/kyc-api', authTenantMiddleware, kycApiRoutes);
 
     logger.info('Routes configured successfully');
 
