@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { api } from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -46,6 +47,10 @@ interface User {
 }
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [totalUsers, setTotalUsers] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [filterRole, setFilterRole] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -55,8 +60,51 @@ export default function UsersPage() {
   const [showEditUserModal, setShowEditUserModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
-  // Mock data with multi-role support
-  const users: User[] = [
+  // Fetch users from API
+  useEffect(() => {
+    fetchUsers()
+  }, [currentPage, filterRole, filterStatus, searchTerm])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await api.getUsers({
+        page: currentPage,
+        limit: 10,
+        role: filterRole !== 'all' ? filterRole : undefined,
+        status: filterStatus !== 'all' ? filterStatus : undefined,
+        search: searchTerm || undefined,
+      })
+
+      if (response.success && response.data) {
+        // Transform backend users to match frontend interface
+        const transformedUsers = response.data.users.map((user: any) => ({
+          id: user.id.toString(),
+          name: `${user.first_name} ${user.last_name}`,
+          email: user.email,
+          phone: user.phone || 'N/A',
+          role: user.role || 'user',
+          roles: [user.role || 'user'],
+          tenant: user.tenant_name || 'N/A',
+          location: user.location || 'N/A',
+          status: user.status || 'active',
+          lastLogin: user.last_login || 'Never',
+          createdAt: user.created_at?.split('T')[0] || 'N/A',
+          permissions: [],
+        }))
+
+        setUsers(transformedUsers)
+        setTotalUsers(response.data.total || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Mock data as fallback (will be replaced by API data)
+  const mockUsers: User[] = [
     {
       id: '1',
       name: 'John Doe',
@@ -129,11 +177,58 @@ export default function UsersPage() {
     },
   ]
 
+  // CRUD operations
+  const handleCreateUser = async (userData: any) => {
+    try {
+      const response = await api.createUser(userData)
+      if (response.success) {
+        await fetchUsers() // Refresh list
+        setShowNewUserModal(false)
+        alert('User created successfully!')
+      }
+    } catch (error) {
+      console.error('Error creating user:', error)
+      alert('Failed to create user')
+    }
+  }
+
+  const handleUpdateUser = async (userId: string, userData: any) => {
+    try {
+      const response = await api.updateUser(userId, userData)
+      if (response.success) {
+        await fetchUsers() // Refresh list
+        setShowEditUserModal(false)
+        setSelectedUser(null)
+        alert('User updated successfully!')
+      }
+    } catch (error) {
+      console.error('Error updating user:', error)
+      alert('Failed to update user')
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user?')) {
+      return
+    }
+
+    try {
+      const response = await api.deleteUser(userId)
+      if (response.success) {
+        await fetchUsers() // Refresh list
+        alert('User deleted successfully!')
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Failed to delete user')
+    }
+  }
+
   const userStats = {
-    totalUsers: 1247,
-    activeUsers: 1156,
-    inactiveUsers: 67,
-    suspendedUsers: 24,
+    totalUsers: totalUsers || 1247,
+    activeUsers: users.filter(u => u.status === 'active').length,
+    inactiveUsers: users.filter(u => u.status === 'inactive').length,
+    suspendedUsers: users.filter(u => u.status === 'suspended').length,
     newUsersThisMonth: 89,
     loginRate: 92.3,
   }
@@ -450,7 +545,7 @@ export default function UsersPage() {
                       <Button size="sm" variant="outline">
                         <Settings className="w-4 h-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleDeleteUser(row.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -459,6 +554,19 @@ export default function UsersPage() {
               ]}
               data={filteredUsers}
             />
+
+            {loading && (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <span className="ml-3 text-gray-600">Loading users...</span>
+              </div>
+            )}
+
+            {!loading && filteredUsers.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No users found. Try adjusting your filters.
+              </div>
+            )}
           </Card.Content>
         </Card>
 
