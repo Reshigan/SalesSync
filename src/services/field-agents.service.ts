@@ -40,23 +40,55 @@ export interface Voucher {
 export interface Board {
   id?: string
   boardNumber: string
+  brandId: string
+  brandName?: string
   type: 'promotional' | 'informational' | 'directional'
   size: string
   location: string
   customerId?: string
   customerName?: string
-  gpsLocation?: {
+  gpsLocation: {
     latitude: number
     longitude: number
   }
-  installationDate?: string
+  installationDate: string
+  agentId: string
+  agentName?: string
+  
+  // Installation Photos (Required)
+  proofPhoto: string // Close-up of the board being installed
+  wideAnglePhoto: string // Wide angle showing all boards on wall
+  
+  // Competitive Analysis
+  competitiveAnalysis?: {
+    totalBoardsVisible: number
+    ourBrandCount: number
+    competitorBoards: Array<{
+      brandName: string
+      count: number
+    }>
+    shareOfVoice: number // Percentage (0-100)
+    analysisMethod: 'manual' | 'ai' | 'pending'
+    analyzedBy?: string
+    analyzedAt?: string
+  }
+  
+  // Maintenance & Condition
   lastInspectionDate?: string
   condition: 'excellent' | 'good' | 'fair' | 'poor' | 'damaged'
-  photos?: string[]
   maintenanceRequired: boolean
   maintenanceNotes?: string
+  maintenanceHistory?: Array<{
+    date: string
+    condition: string
+    notes: string
+    agentId: string
+  }>
+  
   status: 'active' | 'inactive' | 'removed'
   monthlyCost?: number
+  expiryDate?: string
+  notes?: string
   createdAt?: string
 }
 
@@ -162,14 +194,33 @@ class FieldAgentsService {
     return apiClient.delete(`${this.baseUrl}/boards/${id}`)
   }
 
-  async uploadBoardPhoto(boardId: string, file: File) {
+  async uploadBoardPhoto(boardId: string, photoType: 'proof' | 'wide_angle', file: File) {
     const formData = new FormData()
     formData.append('photo', file)
+    formData.append('type', photoType)
     return apiClient.upload<{ photoUrl: string }>(`${this.baseUrl}/boards/${boardId}/photos`, formData)
   }
 
   async recordInspection(boardId: string, inspection: { condition: string; maintenanceRequired: boolean; notes?: string; photos?: string[] }) {
     return apiClient.post(`${this.baseUrl}/boards/${boardId}/inspections`, inspection)
+  }
+
+  async analyzeCompetitiveShare(boardId: string, analysis: Board['competitiveAnalysis']) {
+    return apiClient.post<Board>(`${this.baseUrl}/boards/${boardId}/analyze`, analysis)
+  }
+
+  async getBoardsMap(filters?: any) {
+    return apiClient.get<{ boards: Board[] }>(`${this.baseUrl}/boards/map`, { params: filters })
+  }
+
+  async getBoardStats(filters?: any) {
+    return apiClient.get<{
+      totalBoards: number
+      activeBoards: number
+      averageShareOfVoice: number
+      topLocations: Array<{ location: string; count: number }>
+      competitorPresence: Array<{ brand: string; count: number; percentage: number }>
+    }>(`${this.baseUrl}/boards/stats`, { params: filters })
   }
 
   // Mapping
