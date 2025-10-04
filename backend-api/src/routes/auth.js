@@ -76,7 +76,7 @@ const refreshSchema = Joi.object({
  */
 router.post('/login', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, getQuery, runQuery } = require('../database/init');
   
   // SECURITY FIX: Require X-Tenant-Code header (can also accept X-Tenant-ID for backwards compatibility)
   const tenantCode = req.headers['x-tenant-code'] || req.headers['x-tenant-id'];
@@ -155,6 +155,33 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       tenantData.features = JSON.parse(tenantData.features);
     }
     
+    // Load user permissions
+    const permissions = await getQuery(`
+      SELECT
+        m.code as module,
+        MAX(rp.can_view) as can_view,
+        MAX(rp.can_create) as can_create,
+        MAX(rp.can_edit) as can_edit,
+        MAX(rp.can_delete) as can_delete,
+        MAX(rp.can_approve) as can_approve,
+        MAX(rp.can_export) as can_export
+      FROM role_permissions rp
+      JOIN modules m ON m.id = rp.module_id
+      WHERE rp.tenant_id = ? AND rp.role = ?
+      GROUP BY m.code
+    `, [user.tenant_id, user.role]);
+
+    // Format permissions for frontend
+    const formattedPermissions = permissions.map(p => ({
+      module: p.module,
+      canView: Boolean(p.can_view),
+      canCreate: Boolean(p.can_create),
+      canEdit: Boolean(p.can_edit),
+      canDelete: Boolean(p.can_delete),
+      canApprove: Boolean(p.can_approve),
+      canExport: Boolean(p.can_export)
+    }));
+
     // Return user data and tokens
     const userData = {
       id: user.id,
@@ -173,7 +200,8 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       monthlyTarget: user.monthly_target,
       status: user.status,
       lastLogin: user.last_login,
-      createdAt: user.created_at
+      createdAt: user.created_at,
+      permissions: formattedPermissions
     };
     
     res.json({

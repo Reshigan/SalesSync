@@ -31,7 +31,8 @@ import {
   MapPin,
   Route,
   Building,
-  User
+  User,
+  Zap
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -244,10 +245,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           {!collapsed && (
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">SS</span>
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Zap className="w-5 h-5 text-white" strokeWidth={2.5} />
               </div>
-              <h1 className="text-xl font-bold text-gray-900">SalesSync</h1>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">SalesSync</h1>
+            </div>
+          )}
+          {collapsed && (
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mx-auto">
+              <Zap className="w-5 h-5 text-white" strokeWidth={2.5} />
             </div>
           )}
           <button
