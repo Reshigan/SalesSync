@@ -30,6 +30,10 @@ class ApiService {
       ...(options.headers as Record<string, string>),
     };
 
+    // Add tenant code header to all requests
+    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'VANTAX';
+    headers['X-Tenant-Code'] = tenantCode;
+
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
       console.log('Using token:', this.token.substring(0, 20) + '...');
@@ -71,9 +75,13 @@ class ApiService {
 
   // Authentication methods
   async login(email: string, password: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string; user: any }>> {
+    const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'VANTAX';
     const response = await this.request<{ success: boolean; data: { user: any; token: string; refreshToken: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
+      headers: {
+        'X-Tenant-Code': tenantCode,
+      },
     });
 
     if (response.data && response.data.success && response.data.data) {
