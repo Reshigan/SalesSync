@@ -235,4 +235,162 @@ router.get('/stats', asyncHandler(async (req, res, next) => {
   }
 }));
 
+/**
+ * @swagger
+ * /api/dashboard/activities:
+ *   get:
+ *     summary: Get recent activities feed
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: Recent activities retrieved successfully
+ */
+router.get('/activities', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery } = require('../database/init');
+  
+  const limit = parseInt(req.query.limit) || 20;
+  
+  try {
+    // Get recent activities from multiple sources and combine them
+    
+    // 1. Recent Orders
+    const recentOrders = await getQuery(`
+      SELECT 
+        'order' as type,
+        o.id,
+        o.order_number as reference,
+        'Order ' || o.order_number || ' placed' as description,
+        c.name as customer_name,
+        u.first_name || ' ' || u.last_name as agent_name,
+        o.total_amount as amount,
+        o.order_status as status,
+        o.created_at as timestamp,
+        'Order placed by ' || u.first_name || ' ' || u.last_name || ' for ' || c.name as detail
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      LEFT JOIN agents a ON a.id = o.salesman_id
+      LEFT JOIN users u ON u.id = a.user_id
+      WHERE o.tenant_id = ?
+      ORDER BY o.created_at DESC
+      LIMIT ?
+    `, [req.tenantId, Math.floor(limit / 3)]);
+
+    // 2. Recent Visits
+    const recentVisits = await getQuery(`
+      SELECT 
+        'visit' as type,
+        v.id,
+        'VISIT-' || substr(v.id, 1, 8) as reference,
+        'Customer visit completed' as description,
+        c.name as customer_name,
+        u.first_name || ' ' || u.last_name as agent_name,
+        NULL as amount,
+        v.status,
+        v.created_at as timestamp,
+        u.first_name || ' ' || u.last_name || ' visited ' || c.name || ' (' || v.visit_type || ')' as detail
+      FROM visits v
+      JOIN customers c ON c.id = v.customer_id
+      JOIN agents a ON a.id = v.agent_id
+      JOIN users u ON u.id = a.user_id
+      WHERE v.tenant_id = ?
+      ORDER BY v.created_at DESC
+      LIMIT ?
+    `, [req.tenantId, Math.floor(limit / 3)]);
+
+    // 3. Recent Van Loads
+    const recentVanLoads = await getQuery(`
+      SELECT 
+        'van_load' as type,
+        vl.id,
+        'VL-' || substr(vl.id, 1, 8) as reference,
+        'Van loaded for the day' as description,
+        NULL as customer_name,
+        u.first_name || ' ' || u.last_name as agent_name,
+        vl.cash_float as amount,
+        vl.status,
+        vl.created_at as timestamp,
+        'Van loaded by ' || u.first_name || ' ' || u.last_name || ' on ' || date(vl.load_date) as detail
+      FROM van_loads vl
+      JOIN agents a ON a.id = vl.salesman_id
+      JOIN users u ON u.id = a.user_id
+      WHERE vl.tenant_id = ?
+      ORDER BY vl.created_at DESC
+      LIMIT ?
+    `, [req.tenantId, Math.floor(limit / 3)]);
+
+    // Combine all activities and sort by timestamp
+    const allActivities = [
+      ...recentOrders.map(a => ({
+        ...a,
+        icon: 'package',
+        color: a.status === 'delivered' ? 'green' : a.status === 'pending' ? 'yellow' : 'blue'
+      })),
+      ...recentVisits.map(a => ({
+        ...a,
+        icon: 'map-pin',
+        color: a.status === 'completed' ? 'green' : 'blue'
+      })),
+      ...recentVanLoads.map(a => ({
+        ...a,
+        icon: 'truck',
+        color: a.status === 'loading' ? 'yellow' : a.status === 'loaded' ? 'green' : 'blue'
+      }))
+    ];
+
+    // Sort by timestamp descending
+    allActivities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    // Limit to requested amount
+    const activities = allActivities.slice(0, limit);
+
+    // Calculate time ago for each activity
+    const activitiesWithTimeAgo = activities.map(activity => {
+      const now = new Date();
+      const activityDate = new Date(activity.timestamp);
+      const diffMs = now - activityDate;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      let timeAgo;
+      if (diffMins < 1) {
+        timeAgo = 'Just now';
+      } else if (diffMins < 60) {
+        timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+      } else if (diffHours < 24) {
+        timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      } else {
+        timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      }
+
+      return {
+        ...activity,
+        timeAgo,
+        timestamp: activity.timestamp // Keep original timestamp
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        activities: activitiesWithTimeAgo,
+        total: activitiesWithTimeAgo.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Activities fetch error:', error);
+    next(error);
+  }
+}));
+
 module.exports = router;

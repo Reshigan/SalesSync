@@ -42,7 +42,9 @@ export default function DashboardPage() {
   const { userRole, user } = usePermissions()
   const { _hasHydrated } = useAuthStore()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [recentActivities, setRecentActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Fetch dashboard data when user is authenticated and store is hydrated
@@ -58,6 +60,7 @@ export default function DashboardPage() {
       if (!user || !user.id) {
         console.log('Dashboard: User not authenticated yet, skipping API call', { user })
         setLoading(false)
+        setActivitiesLoading(false)
         return
       }
 
@@ -86,40 +89,36 @@ export default function DashboardPage() {
     fetchDashboardData()
   }, [user, _hasHydrated]) // Depend on user being available and store being hydrated
 
-  const [recentActivities] = useState([
-    {
-      id: '1',
-      type: 'van_load',
-      agent: 'John Doe',
-      description: 'Van loaded with 45 products',
-      time: '2 hours ago',
-      status: 'completed',
-    },
-    {
-      id: '2',
-      type: 'promotion',
-      agent: 'Sarah Wilson',
-      description: 'Campaign activity completed at Store #123',
-      time: '3 hours ago',
-      status: 'pending_review',
-    },
-    {
-      id: '3',
-      type: 'merchandising',
-      agent: 'Mike Johnson',
-      description: 'Shelf audit completed - 85% compliance',
-      time: '4 hours ago',
-      status: 'completed',
-    },
-    {
-      id: '4',
-      type: 'reconciliation',
-      agent: 'David Brown',
-      description: 'Cash reconciliation - $50 variance',
-      time: '5 hours ago',
-      status: 'discrepancy',
-    },
-  ])
+  // Fetch activities separately
+  useEffect(() => {
+    const fetchActivities = async () => {
+      if (!_hasHydrated || !user || !user.id) {
+        return
+      }
+
+      try {
+        setActivitiesLoading(true)
+        console.log('Dashboard: Fetching activities...')
+        
+        const response = await apiService.getDashboardActivities(10)
+        
+        if (response.error) {
+          console.error('Activities API error:', response.error)
+        } else if (response.data && response.data.success !== false) {
+          console.log('Dashboard: Activities loaded:', response.data)
+          // Extract activities from nested response structure
+          const activities = response.data.data?.activities || response.data.activities || []
+          setRecentActivities(activities)
+        }
+      } catch (err) {
+        console.error('Activities fetch error:', err)
+      } finally {
+        setActivitiesLoading(false)
+      }
+    }
+
+    fetchActivities()
+  }, [user, _hasHydrated])
 
   const getGreeting = () => {
     const hour = new Date().getHours()
@@ -301,8 +300,27 @@ export default function DashboardPage() {
         return <Eye className="w-4 h-4" />
       case 'reconciliation':
         return <DollarSign className="w-4 h-4" />
+      case 'order':
+        return <Package className="w-4 h-4" />
+      case 'visit':
+        return <Users className="w-4 h-4" />
       default:
         return <Package className="w-4 h-4" />
+    }
+  }
+
+  const getColorClass = (color: string) => {
+    switch (color) {
+      case 'green':
+        return 'text-green-600 bg-green-50'
+      case 'yellow':
+        return 'text-yellow-600 bg-yellow-50'
+      case 'blue':
+        return 'text-blue-600 bg-blue-50'
+      case 'red':
+        return 'text-red-600 bg-red-50'
+      default:
+        return 'text-gray-600 bg-gray-50'
     }
   }
 
@@ -404,30 +422,50 @@ export default function DashboardPage() {
                 <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
               </Card.Header>
               <Card.Content>
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
-                      <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                          {getActivityIcon(activity.type)}
+                {activitiesLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex items-center space-x-4 p-3 rounded-lg animate-pulse">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                        <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : recentActivities.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p>No recent activities</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentActivities.map((activity) => (
+                      <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
+                        <div className="flex-shrink-0">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                            {getActivityIcon(activity.type)}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {activity.detail || activity.description}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {activity.agent_name} • {activity.timeAgo}
+                          </p>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getColorClass(activity.color)}`}>
+                            {activity.status.replace('_', ' ')}
+                          </span>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {activity.description}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {activity.agent} • {activity.time}
-                        </p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                          {activity.status.replace('_', ' ')}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </Card.Content>
             </Card>
           </div>

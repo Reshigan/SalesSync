@@ -346,6 +346,28 @@ class ApiService {
     const query = period ? `?period=${period}` : '';
     return this.request(`/dashboard/stats${query}`);
   }
+
+  async getDashboardActivities(limit?: number): Promise<ApiResponse<{
+    activities: Array<{
+      id: string;
+      type: string;
+      reference: string;
+      description: string;
+      customer_name: string | null;
+      agent_name: string;
+      amount: number | null;
+      status: string;
+      timestamp: string;
+      timeAgo: string;
+      detail: string;
+      icon: string;
+      color: string;
+    }>;
+    total: number;
+  }>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request(`/dashboard/activities${query}`);
+  }
 }
 
 // Create and export a singleton instance
