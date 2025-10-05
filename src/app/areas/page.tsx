@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
@@ -47,7 +47,7 @@ interface Area {
   lastActivity: string
 }
 
-export default function AreasPage() {
+function AreasPageContent() {
   const searchParams = useSearchParams()
   const regionFilter = searchParams.get('region')
   
@@ -519,5 +519,13 @@ export default function AreasPage() {
         </Card>
       </div>
     </DashboardLayout>
+  )
+}
+
+export default function AreasPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AreasPageContent />
+    </Suspense>
   )
 }

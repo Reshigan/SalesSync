@@ -6,7 +6,20 @@ const nextConfig = {
   },
   images: {
     domains: ['localhost', 'ss.gonxt.tech', 'work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev'],
+    formats: ['image/webp', 'image/avif'],
   },
+  // Enable experimental features for better performance
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns'],
+  },
+  // Optimize bundle
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Enable compression
+  compress: true,
+  // Optimize static generation
+  output: 'standalone',
   async headers() {
     return [
       {
