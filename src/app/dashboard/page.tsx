@@ -104,10 +104,10 @@ export default function DashboardPage() {
         
         if (response.error) {
           console.error('Activities API error:', response.error)
-        } else if (response.data && response.data.success !== false) {
+        } else if (response.data) {
           console.log('Dashboard: Activities loaded:', response.data)
           // Extract activities from nested response structure
-          const activities = response.data.data?.activities || response.data.activities || []
+          const activities = response.data.activities || []
           setRecentActivities(activities)
         }
       } catch (err) {

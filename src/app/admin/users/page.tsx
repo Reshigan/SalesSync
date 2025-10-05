@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { api } from '@/lib/api'
+import api from '@/lib/api'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -76,7 +76,7 @@ export default function UsersPage() {
         search: searchTerm || undefined,
       })
 
-      if (response.success && response.data) {
+      if (response.data && !response.error) {
         // Transform backend users to match frontend interface
         const transformedUsers = response.data.users.map((user: any) => ({
           id: user.id.toString(),
@@ -94,7 +94,7 @@ export default function UsersPage() {
         }))
 
         setUsers(transformedUsers)
-        setTotalUsers(response.data.total || 0)
+        setTotalUsers(response.data.pagination?.total || 0)
       }
     } catch (error) {
       console.error('Error fetching users:', error)
@@ -181,7 +181,7 @@ export default function UsersPage() {
   const handleCreateUser = async (userData: any) => {
     try {
       const response = await api.createUser(userData)
-      if (response.success) {
+      if (response.data && !response.error) {
         await fetchUsers() // Refresh list
         setShowNewUserModal(false)
         alert('User created successfully!')
@@ -195,7 +195,7 @@ export default function UsersPage() {
   const handleUpdateUser = async (userId: string, userData: any) => {
     try {
       const response = await api.updateUser(userId, userData)
-      if (response.success) {
+      if (response.data && !response.error) {
         await fetchUsers() // Refresh list
         setShowEditUserModal(false)
         setSelectedUser(null)
@@ -214,7 +214,7 @@ export default function UsersPage() {
 
     try {
       const response = await api.deleteUser(userId)
-      if (response.success) {
+      if (response.data && !response.error) {
         await fetchUsers() // Refresh list
         alert('User deleted successfully!')
       }

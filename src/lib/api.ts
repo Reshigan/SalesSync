@@ -158,216 +158,9 @@ class ApiService {
     return this.token;
   }
 
-  // User methods
-  async getUsers(params?: { page?: number; limit?: number; role?: string; search?: string }): Promise<ApiResponse<{ users: any[]; total: number; page: number; totalPages: number }>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.role) queryParams.append('role', params.role);
-    if (params?.search) queryParams.append('search', params.search);
 
-    const query = queryParams.toString();
-    return this.request(`/users${query ? `?${query}` : ''}`);
-  }
 
-  async getUser(id: string): Promise<ApiResponse<any>> {
-    return this.request(`/users/${id}`);
-  }
 
-  async createUser(userData: any): Promise<ApiResponse<any>> {
-    return this.request('/users', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
-  }
-
-  async updateUser(id: string, userData: any): Promise<ApiResponse<any>> {
-    return this.request(`/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    });
-  }
-
-  async deleteUser(id: string): Promise<ApiResponse<void>> {
-    return this.request(`/users/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getUserStats(): Promise<ApiResponse<any>> {
-    return this.request('/users/stats');
-  }
-
-  // Product methods
-  async getProducts(params?: { page?: number; limit?: number; category?: string; search?: string }): Promise<ApiResponse<{ products: any[]; total: number; page: number; totalPages: number }>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.category) queryParams.append('category', params.category);
-    if (params?.search) queryParams.append('search', params.search);
-
-    const query = queryParams.toString();
-    return this.request(`/products${query ? `?${query}` : ''}`);
-  }
-
-  async getProduct(id: string): Promise<ApiResponse<any>> {
-    return this.request(`/products/${id}`);
-  }
-
-  async createProduct(productData: any): Promise<ApiResponse<any>> {
-    return this.request('/products', {
-      method: 'POST',
-      body: JSON.stringify(productData),
-    });
-  }
-
-  async updateProduct(id: string, productData: any): Promise<ApiResponse<any>> {
-    return this.request(`/products/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(productData),
-    });
-  }
-
-  async deleteProduct(id: string): Promise<ApiResponse<void>> {
-    return this.request(`/products/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getProductCategories(): Promise<ApiResponse<{ categories: string[] }>> {
-    return this.request('/products/categories');
-  }
-
-  async getProductBrands(): Promise<ApiResponse<{ brands: string[] }>> {
-    return this.request('/products/brands');
-  }
-
-  // Order methods
-  async getOrders(params?: { page?: number; limit?: number; status?: string; search?: string }): Promise<ApiResponse<{ orders: any[]; total: number; page: number; totalPages: number }>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.search) queryParams.append('search', params.search);
-
-    const query = queryParams.toString();
-    return this.request(`/orders${query ? `?${query}` : ''}`);
-  }
-
-  async getOrder(id: string): Promise<ApiResponse<any>> {
-    return this.request(`/orders/${id}`);
-  }
-
-  async createOrder(orderData: any): Promise<ApiResponse<any>> {
-    return this.request('/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    });
-  }
-
-  async updateOrder(id: string, orderData: any): Promise<ApiResponse<any>> {
-    return this.request(`/orders/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(orderData),
-    });
-  }
-
-  async deleteOrder(id: string): Promise<ApiResponse<void>> {
-    return this.request(`/orders/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async getOrderStats(): Promise<ApiResponse<any>> {
-    return this.request('/orders/stats');
-  }
-
-  // Customer methods
-  async getCustomers(params?: { page?: number; limit?: number; search?: string }): Promise<ApiResponse<{ customers: any[]; total: number; page: number; totalPages: number }>> {
-    const queryParams = new URLSearchParams();
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.search) queryParams.append('search', params.search);
-
-    const query = queryParams.toString();
-    return this.request(`/customers${query ? `?${query}` : ''}`);
-  }
-
-  async getCustomer(id: string): Promise<ApiResponse<any>> {
-    return this.request(`/customers/${id}`);
-  }
-
-  async createCustomer(customerData: any): Promise<ApiResponse<any>> {
-    return this.request('/customers', {
-      method: 'POST',
-      body: JSON.stringify(customerData),
-    });
-  }
-
-  async updateCustomer(id: string, customerData: any): Promise<ApiResponse<any>> {
-    return this.request(`/customers/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(customerData),
-    });
-  }
-
-  async deleteCustomer(id: string): Promise<ApiResponse<void>> {
-    return this.request(`/customers/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Dashboard methods
-  async getDashboard(): Promise<ApiResponse<{
-    overview: {
-      totalUsers: number;
-      totalCustomers: number;
-      totalProducts: number;
-      totalOrders: number;
-      todayOrders: number;
-      todayRevenue: number;
-      activeAgents: number;
-    };
-    recentOrders: any[];
-    topCustomers: any[];
-    salesByMonth: any[];
-    agentPerformance: any[];
-  }>> {
-    return this.request('/dashboard');
-  }
-
-  async getDashboardStats(period?: string): Promise<ApiResponse<{
-    period: string;
-    orders: any;
-    revenue: any;
-    visits: any;
-    customers: any;
-  }>> {
-    const query = period ? `?period=${period}` : '';
-    return this.request(`/dashboard/stats${query}`);
-  }
-
-  async getDashboardActivities(limit?: number): Promise<ApiResponse<{
-    activities: Array<{
-      id: string;
-      type: string;
-      reference: string;
-      description: string;
-      customer_name: string | null;
-      agent_name: string;
-      amount: number | null;
-      status: string;
-      timestamp: string;
-      timeAgo: string;
-      detail: string;
-      icon: string;
-      color: string;
-    }>;
-    total: number;
-  }>> {
-    const query = limit ? `?limit=${limit}` : '';
-    return this.request(`/dashboard/activities${query}`);
-  }
 
   // Users Management
   async getUsers(params?: {
@@ -575,6 +368,58 @@ class ApiService {
     return this.request(`/orders/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // Dashboard methods
+  async getDashboard(): Promise<ApiResponse<{
+    overview: {
+      totalUsers: number;
+      totalCustomers: number;
+      totalProducts: number;
+      totalOrders: number;
+      todayOrders: number;
+      todayRevenue: number;
+      activeAgents: number;
+    };
+    recentOrders: any[];
+    topCustomers: any[];
+    salesByMonth: any[];
+    agentPerformance: any[];
+  }>> {
+    return this.request('/dashboard');
+  }
+
+  async getDashboardStats(period?: string): Promise<ApiResponse<{
+    period: string;
+    orders: any;
+    revenue: any;
+    visits: any;
+    customers: any;
+  }>> {
+    const query = period ? `?period=${period}` : '';
+    return this.request(`/dashboard/stats${query}`);
+  }
+
+  async getDashboardActivities(limit?: number): Promise<ApiResponse<{
+    activities: Array<{
+      id: string;
+      type: string;
+      reference: string;
+      description: string;
+      customer_name: string | null;
+      agent_name: string;
+      amount: number | null;
+      status: string;
+      timestamp: string;
+      timeAgo: string;
+      detail: string;
+      icon: string;
+      color: string;
+    }>;
+    total: number;
+  }>> {
+    const query = limit ? `?limit=${limit}` : '';
+    return this.request(`/dashboard/activities${query}`);
   }
 }
 
