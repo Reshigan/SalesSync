@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -274,6 +274,7 @@ model Route {
   // Relations
   userId      String
   user        User       @relation(fields: [userId], references: [id])
+  customers   Customer[]
   stops       RouteStop[]
   loads       VanSalesLoad[]
 
