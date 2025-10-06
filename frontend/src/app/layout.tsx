@@ -1,20 +1,15 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from '@/components/providers/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SalesSync - Advanced Field Force Platform',
-  description: 'Enterprise-grade multi-tenant platform for field operations in emerging markets',
-  keywords: 'field force, sales management, van sales, merchandising, promotions',
+  title: 'SalesSync - Van Sales Management',
+  description: 'Enterprise Field Force Platform for Van Sales Operations',
+  keywords: 'van sales, field force, sales management, enterprise, CRM',
   authors: [{ name: 'SalesSync Team' }],
-}
-
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
+  viewport: 'width=device-width, initial-scale=1',
 }
 
 export default function RootLayout({
@@ -23,11 +18,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="h-full">
-      <body className={`${inter.className} h-full antialiased`}>
-        <Providers>
-          {children}
-        </Providers>
+    <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="theme-color" content="#3b82f6" />
+      </head>
+      <body className={inter.className}>
+        <div id="root">{children}</div>
       </body>
     </html>
   )

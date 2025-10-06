@@ -1,149 +1,196 @@
-# SalesSync - Production-Ready Field Force Management System
+# SalesSync - Van Sales Management System
 
-A comprehensive, enterprise-grade field force management system built with Next.js 14 and modern web technologies. **Now production-ready with complete backend-frontend integration!**
+A comprehensive enterprise-grade van sales management platform built with modern web technologies.
 
-## 🎉 Production Status
+## 🚀 Live Demo
 
-✅ **Complete Backend-Frontend Integration**  
-✅ **All API Endpoints Working**  
-✅ **Authentication Flow Complete**  
-✅ **Production Optimizations**  
-✅ **Deployment Ready**
+**Production URL**: https://ss.gonxt.tech
 
-## 🚀 Features
+### Demo Credentials
+- **Administrator**: admin@demo.com / admin123
+- **Field Agent**: agent@demo.com / agent123
 
-### Core Modules
-- **Van Sales Management** - Mobile sales operations, route planning, cash reconciliation
-- **Promoter Activities** - Brand activation, sampling campaigns, survey management
-- **Merchandising** - Shelf audits, planogram compliance, competitor intelligence
-- **Field Agent Operations** - Digital distribution, SIM card management, board placement
-- **Warehouse Management** - Inventory control, stock movements, purchase orders
-- **Back Office** - Order processing, invoicing, payment tracking
-- **Analytics & AI** - Predictive insights, performance dashboards, image analysis
+## 🏗️ Architecture
 
-### Key Capabilities
-- **Multi-tenant Architecture** - Isolated data and customizable features per client
-- **Role-based Access Control** - Granular permissions for different user types
-- **Offline-first Design** - Works seamlessly without internet connectivity
-- **Real-time Synchronization** - Automatic data sync when connection is restored
-- **AI-powered Insights** - Image recognition, predictive analytics, automated reporting
-- **Commission Management** - Flexible commission structures and automated calculations
-- **Mobile Responsive** - Optimized for field operations on mobile devices
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Nginx Proxy   │────│  React Frontend  │────│  Node.js API    │
+│   Port 80/443   │    │   Port 12000     │    │   Port 3001     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │                         │
+                              │                         │
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │   Next.js 14     │    │  SQLite Database│
+                       │   TypeScript     │    │   Demo Data     │
+                       └──────────────────┘    └─────────────────┘
+```
 
-## 🛠 Technology Stack
+## 📁 Project Structure
+
+```
+SalesSync/
+├── frontend/                 # React/Next.js Frontend
+│   ├── src/app/             # Next.js App Router
+│   ├── src/components/      # Reusable components
+│   ├── src/lib/            # Utilities and configurations
+│   ├── .env.local          # Development environment
+│   ├── .env.production     # Production environment
+│   └── package.json        # Frontend dependencies
+├── backend-api/             # Node.js API Server
+│   ├── src/                # API source code
+│   ├── database.sqlite     # SQLite database
+│   └── package.json        # Backend dependencies
+├── backend/                 # Alternative backend (Prisma)
+└── Dockerfile              # Container configuration
+```
+
+## 🚀 Quick Start
+
+### Frontend Development
+```bash
+cd frontend
+npm install
+npm run dev
+# Runs on http://localhost:12000
+```
+
+### Backend API
+```bash
+cd backend-api
+npm install
+npm start
+# Runs on http://localhost:3001
+```
+
+## 🌐 Environment Configuration
+
+### Development
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_APP_URL=http://localhost:12000
+NODE_ENV=development
+```
+
+### Production
+```bash
+NEXT_PUBLIC_API_URL=https://ss.gonxt.tech/api
+NEXT_PUBLIC_APP_URL=https://ss.gonxt.tech
+NODE_ENV=production
+```
+
+## 🔧 Technology Stack
 
 ### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first styling
-- **React Query** - Server state management
-- **Zustand** - Client state management
-- **Framer Motion** - Animations and transitions
-- **Recharts** - Data visualization
-- **React Hook Form + Zod** - Form handling and validation
+- **Framework**: Next.js 14 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Heroicons
+- **Animations**: Framer Motion
+- **State Management**: React Hooks + localStorage
 
-## 🚦 Getting Started
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: SQLite
+- **Authentication**: JWT with tenant support
+- **Process Manager**: PM2
 
-### Prerequisites
-- Node.js 18+ 
-- npm or yarn
+### Infrastructure
+- **Server**: AWS EC2 Ubuntu 24.04
+- **Reverse Proxy**: Nginx with SSL
+- **SSL Certificate**: Let's Encrypt
+- **Domain**: ss.gonxt.tech
 
-### Installation
+## 🎯 Key Features
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 🚐 Van Sales Management
+- Real-time van tracking and status monitoring
+- Route optimization and planning
+- Driver performance analytics
+- Load management and inventory tracking
 
-2. **Start development server**
-   ```bash
-   npm run dev
-   ```
+### 📊 Dashboard & Analytics
+- Executive dashboard with KPIs
+- Sales performance metrics
+- Customer analytics
+- Revenue tracking and forecasting
 
-3. **Open in browser**
-   ```
-   http://localhost:12000
-   ```
+### 🔐 Security & Authentication
+- Multi-tenant architecture
+- JWT-based authentication
+- Role-based access control
+- Secure API endpoints
 
-### Demo Login
-- **Email:** demo@salessync.com
-- **Password:** demo123
-- **Roles:** Select different roles to experience role-based interfaces
+### 📱 Modern UI/UX
+- Responsive design (mobile-first)
+- Professional enterprise interface
+- Interactive charts and visualizations
+- Real-time updates
 
-## 📱 User Roles & Interfaces
+## 🚀 Deployment
 
-### Van Sales Agent
-- Load management and route planning
-- Cash reconciliation and variance tracking
-- Customer order processing
-- Real-time inventory updates
+### Production Deployment
+The system is deployed using PM2 process manager:
 
-### Promoter
-- Campaign activity tracking
-- Sample distribution logging
-- Survey data collection
-- Photo verification and AI analysis
+```bash
+# Frontend (Development Mode)
+cd frontend
+PORT=12000 pm2 start npm --name "salessync-frontend" -- run dev
 
-### Merchandiser
-- Store visit management
-- Shelf share analysis
-- Planogram compliance checking
-- Competitor intelligence gathering
+# Backend API
+cd backend-api
+pm2 start src/server.js --name "salessync-backend"
+```
 
-### Field Agent
-- SIM card distribution
-- Digital voucher sales
-- Board placement tracking
-- Customer KYC verification
+### Docker Support
+```bash
+docker build -t salessync .
+docker run -p 12000:12000 -p 3001:3001 salessync
+```
 
-### Warehouse Staff
-- Inventory management
-- Stock movement tracking
-- Purchase order processing
-- Physical stock counting
+## 📊 System Status
 
-### Manager/Admin
-- Team performance monitoring
-- Commission management
+- ✅ **Frontend**: Running (HTTP 200 OK)
+- ✅ **Backend**: Running (API endpoints active)
+- ✅ **Database**: Connected (SQLite with demo data)
+- ✅ **Authentication**: Working (JWT tokens)
+- ✅ **SSL**: Active (https://ss.gonxt.tech)
+
+## 🔄 Development Workflow
+
+1. **Local Development**: Use `npm run dev` for hot reloading
+2. **Testing**: Run comprehensive test suites
+3. **Building**: `npm run build` for production builds
+4. **Deployment**: PM2 process management on production server
+
+## 📝 API Documentation
+
+The API provides comprehensive endpoints for:
+- Authentication and user management
+- Van and driver operations
+- Order and inventory management
 - Analytics and reporting
-- System configuration
+- Real-time notifications
 
-## 📊 Key Features Implemented
+## 🤝 Contributing
 
-### ✅ Completed Frontend
-- [x] Project setup and configuration
-- [x] Role-based dashboard layout
-- [x] Van Sales loading and reconciliation
-- [x] Promoter activity management
-- [x] Merchandising store visits
-- [x] Field Agent SIM distribution
-- [x] Warehouse inventory management
-- [x] Sales analytics dashboard
-- [x] Authentication system
-- [x] Responsive UI components
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-### 🚧 Next Steps
-- [ ] Backend API development
-- [ ] Database schema implementation
-- [ ] Mobile application
-- [ ] AI/ML integration
-- [ ] Offline functionality
-- [ ] Real-time synchronization
+## 📄 License
 
-## 🎨 Design System
+This project is proprietary software developed for enterprise van sales management.
 
-### Colors
-- **Primary:** Blue (#3B82F6)
-- **Success:** Green (#10B981)
-- **Warning:** Yellow (#F59E0B)
-- **Danger:** Red (#EF4444)
+## 🆘 Support
 
-### Components
-- Consistent spacing (4px grid)
-- Rounded corners (8px default)
-- Subtle shadows and borders
-- Smooth transitions and animations
+For technical support or questions:
+- Check the documentation in each module
+- Review the deployment guides
+- Contact the development team
 
 ---
 
-**SalesSync** - Empowering field operations with intelligent technology.
+**Built with ❤️ for modern van sales operations**

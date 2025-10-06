@@ -1,579 +1,289 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePermissions } from '@/hooks/usePermissions'
-import { useAuthStore } from '@/store/auth.store'
-import DashboardLayout from '@/components/layout/DashboardLayout'
-import { Card } from '@/components/ui/Card'
-import { RealTimeDemo } from '@/components/ui/RealTimeDemo'
-import { HydrationBoundary } from '@/components/ui/HydrationBoundary'
-import apiService from '@/lib/api'
-import { 
-  Truck, 
-  Package, 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  BarChart3,
-  Eye,
-  Megaphone
-} from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import {
+  ChartBarIcon,
+  UsersIcon,
+  ShoppingBagIcon,
+  CurrencyDollarIcon,
+  TruckIcon,
+  MapPinIcon,
+  BellIcon,
+  Cog6ToothIcon,
+  UserCircleIcon,
+} from '@heroicons/react/24/outline'
 
-interface DashboardData {
-  overview: {
-    totalUsers: number;
-    totalCustomers: number;
-    totalProducts: number;
-    totalOrders: number;
-    todayOrders: number;
-    todayRevenue: number;
-    activeAgents: number;
-  };
-  recentOrders: any[];
-  topCustomers: any[];
-  salesByMonth: any[];
-  agentPerformance: any[];
-}
+export default function VanSalesDashboard() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
 
-export default function DashboardPage() {
-  const { userRole, user } = usePermissions()
-  const { _hasHydrated } = useAuthStore()
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const [recentActivities, setRecentActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activitiesLoading, setActivitiesLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // Fetch dashboard data when user is authenticated and store is hydrated
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      // Wait for store to be hydrated
-      if (!_hasHydrated) {
-        console.log('Dashboard: Store not hydrated yet, waiting...')
-        return
-      }
-
-      // Only fetch if user is authenticated and we have a token
-      if (!user || !user.id) {
-        console.log('Dashboard: User not authenticated yet, skipping API call', { user })
-        setLoading(false)
-        setActivitiesLoading(false)
-        return
-      }
-
-      try {
-        setLoading(true)
-        setError(null)
-        console.log('Dashboard: Fetching data for authenticated user:', user.firstName)
-        
-        const response = await apiService.getDashboard()
-        
-        if (response.error) {
-          console.error('Dashboard API error:', response.error)
-          setError(response.error)
-        } else if (response.data) {
-          console.log('Dashboard: Data loaded successfully:', response.data)
-          setDashboardData(response.data)
-        }
-      } catch (err) {
-        console.error('Dashboard fetch error:', err)
-        setError('Failed to load dashboard data')
-      } finally {
-        setLoading(false)
-      }
+    const userData = localStorage.getItem('user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      router.push('/login')
     }
+  }, [router])
 
-    fetchDashboardData()
-  }, [user, _hasHydrated]) // Depend on user being available and store being hydrated
-
-  // Fetch activities separately
-  useEffect(() => {
-    const fetchActivities = async () => {
-      if (!_hasHydrated || !user || !user.id) {
-        return
-      }
-
-      try {
-        setActivitiesLoading(true)
-        console.log('Dashboard: Fetching activities...')
-        
-        const response = await apiService.getDashboardActivities(10)
-        
-        if (response.error) {
-          console.error('Activities API error:', response.error)
-        } else if (response.data) {
-          console.log('Dashboard: Activities loaded:', response.data)
-          // Extract activities from nested response structure
-          const activities = response.data.activities || []
-          setRecentActivities(activities)
-        }
-      } catch (err) {
-        console.error('Activities fetch error:', err)
-      } finally {
-        setActivitiesLoading(false)
-      }
-    }
-
-    fetchActivities()
-  }, [user, _hasHydrated])
-
-  const getGreeting = () => {
-    const hour = new Date().getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 18) return 'Good afternoon'
-    return 'Good evening'
+  const handleLogout = () => {
+    localStorage.removeItem('authToken')
+    localStorage.removeItem('user')
+    router.push('/login')
   }
 
-  const getRoleSpecificStats = () => {
-    switch (userRole) {
-      case 'van_sales':
-        return [
-          {
-            name: 'Today\'s Sales',
-            value: '$4,250',
-            change: '+12%',
-            icon: DollarSign,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
-          },
-          {
-            name: 'Orders Completed',
-            value: '23',
-            change: '+8%',
-            icon: CheckCircle,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-          },
-          {
-            name: 'Customers Visited',
-            value: '18',
-            change: '+5%',
-            icon: Users,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-          },
-          {
-            name: 'Pending Reconciliation',
-            value: '1',
-            change: '',
-            icon: AlertTriangle,
-            color: 'text-orange-600',
-            bgColor: 'bg-orange-50',
-          },
-        ]
-      
-      case 'promoter':
-        return [
-          {
-            name: 'Activities Today',
-            value: '8',
-            change: '+15%',
-            icon: Megaphone,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
-          },
-          {
-            name: 'Samples Distributed',
-            value: '156',
-            change: '+22%',
-            icon: Package,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-          },
-          {
-            name: 'Surveys Completed',
-            value: '34',
-            change: '+18%',
-            icon: CheckCircle,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-          },
-          {
-            name: 'Pending Approval',
-            value: '3',
-            change: '',
-            icon: Clock,
-            color: 'text-orange-600',
-            bgColor: 'bg-orange-50',
-          },
-        ]
-      
-      case 'merchandiser':
-        return [
-          {
-            name: 'Stores Visited',
-            value: '12',
-            change: '+10%',
-            icon: Eye,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
-          },
-          {
-            name: 'Avg Compliance',
-            value: '87%',
-            change: '+3%',
-            icon: BarChart3,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-          },
-          {
-            name: 'Issues Identified',
-            value: '7',
-            change: '-15%',
-            icon: AlertTriangle,
-            color: 'text-orange-600',
-            bgColor: 'bg-orange-50',
-          },
-          {
-            name: 'Photos Captured',
-            value: '45',
-            change: '+25%',
-            icon: Package,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-          },
-        ]
-      
-      default:
-        return [
-          {
-            name: 'Today\'s Revenue',
-            value: dashboardData?.overview?.todayRevenue ? `$${dashboardData.overview.todayRevenue.toLocaleString()}` : '$0',
-            change: '+12%',
-            icon: DollarSign,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
-          },
-          {
-            name: 'Active Agents',
-            value: dashboardData?.overview?.activeAgents?.toString() || '0',
-            change: '+5%',
-            icon: Users,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-          },
-          {
-            name: 'Total Orders',
-            value: dashboardData?.overview?.totalOrders?.toString() || '0',
-            change: '+8%',
-            icon: Package,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-          },
-          {
-            name: 'Today\'s Orders',
-            value: dashboardData?.overview?.todayOrders?.toString() || '0',
-            change: '',
-            icon: CheckCircle,
-            color: 'text-orange-600',
-            bgColor: 'bg-orange-50',
-          },
-        ]
-    }
-  }
+  const kpiCards = [
+    {
+      title: 'Total Sales',
+      value: '$124,580',
+      change: '+12.5%',
+      icon: CurrencyDollarIcon,
+      bgColor: 'bg-emerald-50',
+      textColor: 'text-emerald-600'
+    },
+    {
+      title: 'Active Vans',
+      value: '24',
+      change: '+2',
+      icon: TruckIcon,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-600'
+    },
+    {
+      title: 'Orders Today',
+      value: '156',
+      change: '+8.3%',
+      icon: ShoppingBagIcon,
+      bgColor: 'bg-purple-50',
+      textColor: 'text-purple-600'
+    },
+    {
+      title: 'Customers',
+      value: '2,847',
+      change: '+15.2%',
+      icon: UsersIcon,
+      bgColor: 'bg-orange-50',
+      textColor: 'text-orange-600'
+    },
+  ]
 
-  const roleStats = getRoleSpecificStats()
+  const vanStatus = [
+    { id: 'VAN-001', driver: 'John Smith', location: 'Downtown', status: 'Active', orders: 12, revenue: '$2,450' },
+    { id: 'VAN-002', driver: 'Sarah Johnson', location: 'Uptown', status: 'Active', orders: 8, revenue: '$1,890' },
+    { id: 'VAN-003', driver: 'Mike Wilson', location: 'Suburbs', status: 'Break', orders: 15, revenue: '$3,200' },
+    { id: 'VAN-004', driver: 'Lisa Brown', location: 'Industrial', status: 'Active', orders: 6, revenue: '$1,340' },
+  ]
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-600 bg-green-50'
-      case 'pending_review':
-        return 'text-yellow-600 bg-yellow-50'
-      case 'discrepancy':
-        return 'text-red-600 bg-red-50'
-      default:
-        return 'text-gray-600 bg-gray-50'
-    }
-  }
+  const recentOrders = [
+    { id: '#ORD-001', customer: 'ABC Store', amount: '$245', status: 'Completed', time: '10:30 AM' },
+    { id: '#ORD-002', customer: 'XYZ Market', amount: '$189', status: 'Pending', time: '11:15 AM' },
+    { id: '#ORD-003', customer: 'Quick Shop', amount: '$567', status: 'Completed', time: '12:00 PM' },
+    { id: '#ORD-004', customer: 'Corner Store', amount: '$123', status: 'Processing', time: '12:30 PM' },
+  ]
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'van_load':
-        return <Truck className="w-4 h-4" />
-      case 'promotion':
-        return <Megaphone className="w-4 h-4" />
-      case 'merchandising':
-        return <Eye className="w-4 h-4" />
-      case 'reconciliation':
-        return <DollarSign className="w-4 h-4" />
-      case 'order':
-        return <Package className="w-4 h-4" />
-      case 'visit':
-        return <Users className="w-4 h-4" />
-      default:
-        return <Package className="w-4 h-4" />
-    }
-  }
-
-  const getColorClass = (color: string) => {
-    switch (color) {
-      case 'green':
-        return 'text-green-600 bg-green-50'
-      case 'yellow':
-        return 'text-yellow-600 bg-yellow-50'
-      case 'blue':
-        return 'text-blue-600 bg-blue-50'
-      case 'red':
-        return 'text-red-600 bg-red-50'
-      default:
-        return 'text-gray-600 bg-gray-50'
-    }
-  }
-
-  // Loading state
-  if (loading) {
+  if (!user) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
-            <h1 className="text-2xl font-bold">Loading Dashboard...</h1>
-            <p className="text-primary-100 mt-1">Please wait while we fetch your data.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="p-6">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h1 className="text-xl font-bold text-red-800">Error Loading Dashboard</h1>
-            <p className="text-red-600 mt-1">{typeof error === 'string' ? error : 'Failed to load dashboard data'}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </DashboardLayout>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <HydrationBoundary fallback={
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
-            <h1 className="text-2xl font-bold">Loading Dashboard...</h1>
-            <p className="text-primary-100 mt-1">Please wait while we initialize your dashboard.</p>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-4">
+                <TruckIcon className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Van Sales Management</h1>
+                <p className="text-sm text-gray-500">Enterprise Dashboard</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <BellIcon className="w-5 h-5" />
+              </button>
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <Cog6ToothIcon className="w-5 h-5" />
+              </button>
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">{user.name || user.email}</p>
+                  <p className="text-xs text-gray-500 capitalize">{user.role || 'User'}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+                >
+                  <UserCircleIcon className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      }>
-        <div className="space-y-6">
-        {/* Welcome Header */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
-          <h1 className="text-2xl font-bold">
-            {getGreeting()}, {user?.firstName}!
-          </h1>
-          <p className="text-primary-100 mt-1">
-            Here's what's happening with your {userRole?.replace('_', ' ')} operations today.
-          </p>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 18 ? 'Afternoon' : 'Evening'}, {user.name?.split(' ')[0] || 'User'}!
+          </h2>
+          <p className="text-gray-600">Here's what's happening with your van sales today.</p>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {roleStats.map((stat, index) => (
-            <Card key={index} className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                  {stat.change && (
-                    <p className="text-sm text-green-600 mt-1">
-                      <TrendingUp className="w-4 h-4 inline mr-1" />
-                      {stat.change} from last week
-                    </p>
-                  )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {kpiCards.map((kpi, index) => (
+            <motion.div
+              key={kpi.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`w-12 h-12 ${kpi.bgColor} rounded-xl flex items-center justify-center`}>
+                  <kpi.icon className={`w-6 h-6 ${kpi.textColor}`} />
                 </div>
-                <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
+                <span className="text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                  {kpi.change}
+                </span>
               </div>
-            </Card>
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">{kpi.value}</h3>
+              <p className="text-sm text-gray-600">{kpi.title}</p>
+            </motion.div>
           ))}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Activities */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card>
-              <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900">Recent Activities</h3>
-              </Card.Header>
-              <Card.Content>
-                {activitiesLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="flex items-center space-x-4 p-3 rounded-lg animate-pulse">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                        <div className="flex-1 space-y-2">
-                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                        </div>
-                        <div className="w-16 h-6 bg-gray-200 rounded-full"></div>
-                      </div>
-                    ))}
-                  </div>
-                ) : recentActivities.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <Package className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p>No recent activities</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {recentActivities.map((activity) => (
-                      <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
-                        <div className="flex-shrink-0">
-                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                            {getActivityIcon(activity.type)}
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            {activity.detail || activity.description}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {activity.agent_name} • {activity.timeAgo}
-                          </p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getColorClass(activity.color)}`}>
-                            {activity.status.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Card.Content>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div>
-            <Card>
-              <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-              </Card.Header>
-              <Card.Content>
-                <div className="space-y-3">
-                  {userRole === 'van_sales' && (
-                    <>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <Truck className="w-5 h-5 text-primary-600" />
-                          <span className="text-sm font-medium">Load Van</span>
-                        </div>
-                      </button>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <DollarSign className="w-5 h-5 text-green-600" />
-                          <span className="text-sm font-medium">Reconcile Cash</span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-                  
-                  {userRole === 'promoter' && (
-                    <>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <Megaphone className="w-5 h-5 text-primary-600" />
-                          <span className="text-sm font-medium">Start Activity</span>
-                        </div>
-                      </button>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <Package className="w-5 h-5 text-green-600" />
-                          <span className="text-sm font-medium">Log Samples</span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-                  
-                  {userRole === 'merchandiser' && (
-                    <>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <Eye className="w-5 h-5 text-primary-600" />
-                          <span className="text-sm font-medium">Start Audit</span>
-                        </div>
-                      </button>
-                      <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center space-x-3">
-                          <BarChart3 className="w-5 h-5 text-green-600" />
-                          <span className="text-sm font-medium">Check Compliance</span>
-                        </div>
-                      </button>
-                    </>
-                  )}
-                  
-                  <button className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center space-x-3">
-                      <BarChart3 className="w-5 h-5 text-purple-600" />
-                      <span className="text-sm font-medium">View Reports</span>
-                    </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Van Status</h3>
+                  <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View All
                   </button>
                 </div>
-              </Card.Content>
-            </Card>
-
-            {/* Alerts */}
-            <Card className="mt-6">
-              <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900">Alerts</h3>
-              </Card.Header>
-              <Card.Content>
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-red-900">Low Stock Alert</p>
-                      <p className="text-sm text-red-700">12 products below minimum level</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-3 p-3 bg-yellow-50 rounded-lg">
-                    <Clock className="w-5 h-5 text-yellow-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-yellow-900">Pending Approvals</p>
-                      <p className="text-sm text-yellow-700">5 activities need review</p>
-                    </div>
-                  </div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {vanStatus.map((van, index) => (
+                    <motion.div
+                      key={van.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <TruckIcon className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{van.id}</p>
+                          <p className="text-sm text-gray-600">{van.driver}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-6">
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-900">{van.location}</p>
+                          <p className="text-xs text-gray-500">Location</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-900">{van.orders}</p>
+                          <p className="text-xs text-gray-500">Orders</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-medium text-gray-900">{van.revenue}</p>
+                          <p className="text-xs text-gray-500">Revenue</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          van.status === 'Active' 
+                            ? 'bg-emerald-100 text-emerald-700' 
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {van.status}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
-              </Card.Content>
-            </Card>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {recentOrders.map((order, index) => (
+                    <motion.div
+                      key={order.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-medium text-gray-900">{order.id}</p>
+                        <p className="text-sm text-gray-600">{order.customer}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">{order.amount}</p>
+                        <div className="flex items-center space-x-2">
+                          <span className={`w-2 h-2 rounded-full ${
+                            order.status === 'Completed' 
+                              ? 'bg-emerald-500' 
+                              : order.status === 'Pending'
+                              ? 'bg-yellow-500'
+                              : 'bg-blue-500'
+                          }`}></span>
+                          <span className="text-xs text-gray-500">{order.time}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mt-6">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-3">
+                  <button className="p-4 bg-blue-50 hover:bg-blue-100 rounded-xl text-center transition-colors">
+                    <ShoppingBagIcon className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-blue-700">New Order</span>
+                  </button>
+                  <button className="p-4 bg-emerald-50 hover:bg-emerald-100 rounded-xl text-center transition-colors">
+                    <UsersIcon className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-emerald-700">Add Customer</span>
+                  </button>
+                  <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-xl text-center transition-colors">
+                    <ChartBarIcon className="w-6 h-6 text-purple-600 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-purple-700">Reports</span>
+                  </button>
+                  <button className="p-4 bg-orange-50 hover:bg-orange-100 rounded-xl text-center transition-colors">
+                    <MapPinIcon className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                    <span className="text-sm font-medium text-orange-700">Routes</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Real-time Demo Section */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Real-time Features Demo</h2>
-          <RealTimeDemo />
-        </div>
-        </div>
-      </HydrationBoundary>
-    </DashboardLayout>
+      </main>
+    </div>
   )
 }
