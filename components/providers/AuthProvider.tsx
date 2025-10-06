@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           isAuthenticated: true,
         })
         // Set default headers for API client
-        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
-        apiClient.defaults.headers.common['X-Tenant-Code'] = user.tenantCode || 'DEMO'
+        // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+        // apiClient.defaults.headers.common['X-Tenant-Code'] = user.tenantCode || 'DEMO'
       } catch (error) {
         console.error('Error parsing stored user data:', error)
         logout()
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         tenantCode,
-      })
+      }) as any
 
       const { token, user } = response.data
       
@@ -66,8 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('user_data', JSON.stringify(user))
       
       // Set API client headers
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      apiClient.defaults.headers.common['X-Tenant-Code'] = tenantCode
+      // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      // apiClient.defaults.headers.common['X-Tenant-Code'] = tenantCode
       
       setState({
         user,
@@ -89,8 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('user_data')
     
     // Clear API client headers
-    delete apiClient.defaults.headers.common['Authorization']
-    delete apiClient.defaults.headers.common['X-Tenant-Code']
+    // delete apiClient.defaults.headers.common['Authorization']
+    // delete apiClient.defaults.headers.common['X-Tenant-Code']
     
     setState({
       user: null,
@@ -104,13 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshToken = async () => {
     try {
-      const response = await apiClient.post('/auth/refresh')
+      const response = await apiClient.post('/auth/refresh') as any
       const { token, user } = response.data
       
       localStorage.setItem('auth_token', token)
       localStorage.setItem('user_data', JSON.stringify(user))
       
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      // apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`
       
       setState(prev => ({
         ...prev,
