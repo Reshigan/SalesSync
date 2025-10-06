@@ -1,14 +1,20 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
+import { Providers } from '@/components/providers/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SalesSync - Advanced Field Force Management',
-  description: 'Complete field force management platform with Van Sales, Promotions, Merchandising, and more',
+  title: 'SalesSync - Advanced Field Force Platform',
+  description: 'Enterprise-grade multi-tenant platform for field operations in emerging markets',
+  keywords: 'field force, sales management, van sales, merchandising, promotions',
+  authors: [{ name: 'SalesSync Team' }],
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({
@@ -17,17 +23,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen bg-gray-100">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
-              {children}
-            </main>
-          </div>
-        </div>
+    <html lang="en" className="h-full">
+      <body className={`${inter.className} h-full antialiased`}>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )

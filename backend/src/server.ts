@@ -8,11 +8,12 @@ import dotenv from 'dotenv';
 // Initialize mock database
 import './database';
 
-import { logger } from './utils/logger';
+import { logger, morganStream } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { authMiddleware } from './middleware/auth';
 import { tenantMiddleware } from './middleware/tenant';
+import { metricsMiddleware, metricsHandler } from './middleware/metrics';
 
 // Route imports
 import authRoutes from './routes/auth';
@@ -41,39 +42,154 @@ const server = createServer(app);
 const PORT = process.env.PORT || 3001;
 
 // Security middleware
-app.use(helmet());
-app.use(cors({
-  origin: [
-    "http://localhost:12000",
-    "https://work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev"
-  ],
-  credentials: true
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
 }));
 
-// Rate limiting
-const limiter = rateLimit({
+// Dynamic CORS configuration based on environment
+const corsOrigins = process.env.NODE_ENV === 'production' 
+  ? [process.env.CORS_ORIGIN || 'https://ss.gonxt.tech']
+  : [
+      "http://localhost:12000",
+      "https://work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev",
+      "https://work-2-sfkketippfatdrdl.prod-runtime.all-hands.dev"
+    ];
+
+app.use(cors({
+  origin: corsOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count']
+}));
+
+// Rate limiting with different limits for different endpoints
+const generalLimiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
-  message: 'Too many requests from this IP, please try again later.',
+  message: {
+    error: 'Too many requests',
+    message: 'Too many requests from this IP, please try again later.',
+    retryAfter: Math.ceil(parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000') / 1000)
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health';
+  }
+});
+
+// Stricter rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: {
+    error: 'Too many authentication attempts',
+    message: 'Too many login attempts from this IP, please try again later.',
+    retryAfter: 900
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', limiter);
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
+app.use('/api/', generalLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// Trust proxy for production deployments behind reverse proxy
+if (process.env.TRUST_PROXY === 'true') {
+  app.set('trust proxy', 1);
+}
+
+// Body parsing middleware with security considerations
+app.use(express.json({ 
+  limit: '10mb',
+  verify: (req, res, buf) => {
+    // Store raw body for webhook verification if needed
+    (req as any).rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging
 app.use(requestLogger);
 
-// Health check endpoint
+// Metrics collection
+app.use(metricsMiddleware);
+
+// Security headers middleware
+app.use((req, res, next) => {
+  // Remove server header
+  res.removeHeader('X-Powered-By');
+  
+  // Add security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Add cache control for API responses
+  if (req.path.startsWith('/api/')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  
+  next();
+});
+
+// Enhanced health check endpoint
 app.get('/health', (req, res) => {
-  res.status(200).json({
+  const healthCheck = {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      external: Math.round(process.memoryUsage().external / 1024 / 1024)
+    },
+    system: {
+      platform: process.platform,
+      nodeVersion: process.version,
+      pid: process.pid
+    }
+  };
+  
+  res.status(200).json(healthCheck);
+});
+
+// Readiness check endpoint
+app.get('/ready', (req, res) => {
+  // Add database connectivity check here if needed
+  res.status(200).json({
+    status: 'READY',
+    timestamp: new Date().toISOString(),
+    services: {
+      database: 'OK', // Add actual database check
+      // redis: 'OK', // Add Redis check if using Redis
+    }
   });
 });
 
@@ -95,6 +211,9 @@ app.use('/api/commissions', authMiddleware, tenantMiddleware, commissionRoutes);
 app.use('/api/analytics', authMiddleware, tenantMiddleware, analyticsRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// Metrics endpoint (no auth required for monitoring)
+app.get('/metrics', metricsHandler);
 
 // 404 handler
 app.use('*', (req, res) => {

@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # SalesSync Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: salessync-backend
+    restart: unless-stopped
+    ports:
+      - "12001:12001"
+    environment:
+      - NODE_ENV=production
+      - PORT=12001
+      - HOST=0.0.0.0
+      - DATABASE_URL=file:./database/salessync_production.db
+      - CORS_ORIGIN=https://ss.gonxt.tech
+      - TRUST_PROXY=true
+    volumes:
+      - backend_data:/app/database
+      - backend_logs:/app/logs
+      - backend_uploads:/app/uploads
+      - backend_backups:/app/backups
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`ss.gonxt.tech`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=12001"
+
+  # SalesSync Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: salessync-frontend
+    restart: unless-stopped
+    ports:
+      - "12000:12000"
+    environment:
+      - NODE_ENV=production
+      - PORT=12000
+      - HOST=0.0.0.0
+      - NEXT_PUBLIC_API_URL=https://ss.gonxt.tech/api
+      - NEXT_PUBLIC_SOCKET_URL=https://ss.gonxt.tech
+      - NEXT_PUBLIC_TENANT_CODE=DEMO
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`ss.gonxt.tech`)"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=12000"
+
+  # Redis for caching and sessions (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: salessync-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  # Reverse Proxy with SSL (Traefik)
+  traefik:
+    image: traefik:v3.0
+    container_name: salessync-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_data:/data
+      - ./traefik:/etc/traefik:ro
+    networks:
+      - salessync-network
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=admin@gonxt.tech
+      - --certificatesresolvers.letsencrypt.acme.storage=/data/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.ss.gonxt.tech`)"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+
+  # Database backup service
+  backup:
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
+    container_name: salessync-backup
+    restart: unless-stopped
+    volumes:
+      - backend_data:/app/database:ro
+      - backup_data:/app/backups
+    networks:
+      - salessync-network
+    environment:
+      - BACKUP_SCHEDULE=0 2 * * *  # Daily at 2 AM
+      - BACKUP_RETENTION_DAYS=30
+    depends_on:
+      - backend
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: salessync-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - salessync-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+
+  # Grafana for monitoring dashboards (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: salessync-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - salessync-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+
+networks:
+  salessync-network:
+    driver: bridge
+    name: salessync-network
+
+volumes:
+  backend_data:
+    name: salessync_backend_data
+  backend_logs:
+    name: salessync_backend_logs
+  backend_uploads:
+    name: salessync_backend_uploads
+  backend_backups:
+    name: salessync_backend_backups
+  redis_data:
+    name: salessync_redis_data
+  traefik_data:
+    name: salessync_traefik_data
+  backup_data:
+    name: salessync_backup_data
+  prometheus_data:
+    name: salessync_prometheus_data
+  grafana_data:
+    name: salessync_grafana_data

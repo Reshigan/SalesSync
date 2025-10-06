@@ -1,0 +1,45 @@
+# SalesSync Backup Service Dockerfile
+FROM alpine:3.18
+
+# Install required packages
+RUN apk add --no-cache \
+    sqlite \
+    gzip \
+    curl \
+    dcron \
+    bash \
+    tzdata
+
+# Create backup user
+RUN addgroup -g 1001 backup && \
+    adduser -D -u 1001 -G backup backup
+
+# Create directories
+RUN mkdir -p /app/database /app/backups /app/scripts
+RUN chown -R backup:backup /app
+
+# Copy backup script
+COPY scripts/backup-database.sh /app/scripts/
+RUN chmod +x /app/scripts/backup-database.sh
+
+# Create cron job script
+RUN echo '#!/bin/bash' > /app/scripts/backup-cron.sh && \
+    echo 'cd /app && ./scripts/backup-database.sh' >> /app/scripts/backup-cron.sh && \
+    chmod +x /app/scripts/backup-cron.sh
+
+# Switch to backup user
+USER backup
+
+# Set working directory
+WORKDIR /app
+
+# Create crontab
+RUN echo "${BACKUP_SCHEDULE:-0 2 * * *} /app/scripts/backup-cron.sh >> /app/backups/cron.log 2>&1" > /tmp/crontab && \
+    crontab /tmp/crontab
+
+# Health check
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
+  CMD test -f /app/backups/backup.log || exit 1
+
+# Start cron daemon
+CMD ["crond", "-f", "-d", "8"]

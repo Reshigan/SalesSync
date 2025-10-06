@@ -1,8 +1,17 @@
 # SalesSync Production Deployment Guide
 
-## 🚀 Quick Start
+This guide provides comprehensive instructions for deploying SalesSync to production environments using Docker containers.
 
-SalesSync is a comprehensive field force management system built with Next.js 14 and Express.js. This guide covers production deployment.
+## 🏗️ Architecture Overview
+
+SalesSync is a multi-tier application consisting of:
+
+- **Frontend**: Next.js application (root directory) - Port 12000
+- **Backend**: Express.js API server (/backend) - Port 12001
+- **Database**: SQLite with Prisma ORM
+- **Monitoring**: Prometheus + Grafana
+- **Reverse Proxy**: Traefik with SSL termination
+- **Caching**: Redis (optional)
 
 ## 📋 Prerequisites
 
