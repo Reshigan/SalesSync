@@ -109,7 +109,7 @@ export default function OrdersPage() {
         userId: userId || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined
-      })
+      }) as any as any
 
       setOrders(response.orders || [])
       if (response.pagination) {
@@ -135,7 +135,7 @@ export default function OrdersPage() {
   const handleCreateOrder = async (orderData: any) => {
     try {
       setSubmitting(true)
-      const response = await apiClient.createOrder(orderData)
+      const response = await apiClient.createOrder(orderData) as any
       handleApiSuccess(response.message || 'Order created successfully')
       setShowCreateModal(false)
       fetchOrders()

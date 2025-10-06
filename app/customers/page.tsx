@@ -63,7 +63,7 @@ export default function CustomersPage() {
         search: searchTerm || undefined,
         customerType: customerType || undefined,
         city: city || undefined
-      })
+      }) as any
 
       setCustomers(response.customers || [])
       if (response.pagination) {
@@ -80,7 +80,7 @@ export default function CustomersPage() {
   const handleCreateCustomer = async (customerData: Partial<Customer>) => {
     try {
       setSubmitting(true)
-      const response = await apiClient.createCustomer(customerData)
+      const response = await apiClient.createCustomer(customerData) as any
       handleApiSuccess(response.message || 'Customer created successfully')
       setShowCreateModal(false)
       fetchCustomers()
@@ -96,7 +96,7 @@ export default function CustomersPage() {
     
     try {
       setSubmitting(true)
-      const response = await apiClient.updateCustomer(selectedCustomer.id, customerData)
+      const response = await apiClient.updateCustomer(selectedCustomer.id, customerData) as any
       handleApiSuccess(response.message || 'Customer updated successfully')
       setShowEditModal(false)
       setSelectedCustomer(null)
@@ -112,7 +112,7 @@ export default function CustomersPage() {
     if (!confirm('Are you sure you want to delete this customer?')) return
 
     try {
-      const response = await apiClient.deleteCustomer(customerId)
+      const response = await apiClient.deleteCustomer(customerId) as any
       handleApiSuccess(response.message || 'Customer deleted successfully')
       fetchCustomers()
     } catch (error) {

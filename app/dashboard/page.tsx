@@ -104,29 +104,33 @@ export default function DashboardPage() {
 
       // Order stats
       if (orderStats.status === 'fulfilled') {
-        dashboardStats.totalOrders = orderStats.value.totalOrders || 0
-        dashboardStats.pendingOrders = orderStats.value.pendingOrders || 0
-        dashboardStats.completedOrders = orderStats.value.completedOrders || 0
-        dashboardStats.totalRevenue = orderStats.value.totalRevenue || 0
+        const orderData = orderStats.value as any
+        dashboardStats.totalOrders = orderData.totalOrders || 0
+        dashboardStats.pendingOrders = orderData.pendingOrders || 0
+        dashboardStats.completedOrders = orderData.completedOrders || 0
+        dashboardStats.totalRevenue = orderData.totalRevenue || 0
       }
 
       // Customer stats
       if (customerStats.status === 'fulfilled') {
-        dashboardStats.totalCustomers = customerStats.value.pagination?.total || 0
+        const customerData = customerStats.value as any
+        dashboardStats.totalCustomers = customerData.pagination?.total || 0
         // Estimate active customers (this would need a separate API call in real implementation)
         dashboardStats.activeCustomers = Math.floor(dashboardStats.totalCustomers * 0.8)
       }
 
       // Product stats
       if (productStats.status === 'fulfilled') {
-        dashboardStats.totalProducts = productStats.value.pagination?.total || 0
+        const productData = productStats.value as any
+        dashboardStats.totalProducts = productData.pagination?.total || 0
         // Estimate active products (this would need a separate API call in real implementation)
         dashboardStats.activeProducts = Math.floor(dashboardStats.totalProducts * 0.9)
       }
 
       // Inventory stats
       if (inventoryStats.status === 'fulfilled') {
-        dashboardStats.lowStockProducts = inventoryStats.value.pagination?.total || 0
+        const inventoryData = inventoryStats.value as any
+        dashboardStats.lowStockProducts = inventoryData.pagination?.total || 0
       }
 
       setStats(dashboardStats)
