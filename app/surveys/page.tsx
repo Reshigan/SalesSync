@@ -1,0 +1,80 @@
+'use client'
+
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { FileText, Plus, BarChart3, Users, CheckCircle } from 'lucide-react'
+
+export default function SurveysPage() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Surveys</h1>
+          <p className="text-gray-600">Customer feedback and market research</p>
+        </div>
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-2" />
+          New Survey
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Surveys</p>
+              <p className="text-2xl font-bold text-gray-900">5</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-full">
+              <FileText className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Responses</p>
+              <p className="text-2xl font-bold text-gray-900">1,247</p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-full">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Completion Rate</p>
+              <p className="text-2xl font-bold text-green-600">87%</p>
+            </div>
+            <div className="p-3 bg-purple-100 rounded-full">
+              <CheckCircle className="w-6 h-6 text-purple-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg Rating</p>
+              <p className="text-2xl font-bold text-gray-900">4.2</p>
+            </div>
+            <div className="p-3 bg-orange-100 rounded-full">
+              <BarChart3 className="w-6 h-6 text-orange-600" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Survey Results</h3>
+        <div className="text-center py-8 text-gray-500">
+          No survey data available. Create and deploy surveys to collect customer feedback.
+        </div>
+      </Card>
+    </div>
+  )
+}

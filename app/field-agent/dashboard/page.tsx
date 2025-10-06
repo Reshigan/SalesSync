@@ -28,6 +28,7 @@ import {
   Play,
   Pause,
   Square,
+  Plus,
   Route,
   Package,
   Calendar,

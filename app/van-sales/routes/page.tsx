@@ -275,6 +275,8 @@ export default function VanSalesRoutesPage() {
     const aValue = a[sortBy as keyof VanRoute]
     const bValue = b[sortBy as keyof VanRoute]
     
+    if (!aValue || !bValue) return 0
+    
     if (sortOrder === 'asc') {
       return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
     } else {

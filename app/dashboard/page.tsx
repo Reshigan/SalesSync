@@ -1,17 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { Card, CardContent, CardHeader } from '@/components/ui/Card'
+import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { formatCurrency } from '@/lib/utils'
+import { Badge } from '@/components/ui/Badge'
+import { apiClient, handleApiError } from '@/lib/api-client'
+import Link from 'next/link'
 import { 
   TrendingUp, 
+  TrendingDown,
   Users, 
   Package, 
-  MapPin, 
   DollarSign, 
   ShoppingCart,
   Target,
@@ -19,380 +19,482 @@ import {
   AlertCircle,
   CheckCircle,
   BarChart3,
-  PieChart,
-  Activity
+  Truck,
+  Warehouse,
+  Calendar,
+  Eye,
+  MapPin,
+  Activity,
+  RefreshCw
 } from 'lucide-react'
-import { usePWA } from '@/components/providers/PWAProvider'
-import { useNotifications } from '@/components/providers/NotificationProvider'
 
 interface DashboardStats {
-  totalSales: number
+  // Order stats
   totalOrders: number
-  activeAgents: number
-  totalCustomers: number
-  totalProducts: number
   pendingOrders: number
   completedOrders: number
-  todaysSales: number
-  monthlyGrowth: number
-  topProducts: Array<{
+  totalRevenue: number
+  
+  // Customer stats
+  totalCustomers: number
+  activeCustomers: number
+  
+  // Product stats
+  totalProducts: number
+  activeProducts: number
+  lowStockProducts: number
+  
+  // Growth metrics
+  salesGrowth?: number
+  orderGrowth?: number
+  customerGrowth?: number
+  
+  // Recent activity
+  recentOrders?: Array<{
+    id: string
+    orderNumber: string
+    customerName: string
+    totalAmount: number
+    status: string
+    createdAt: string
+  }>
+  
+  topProducts?: Array<{
     id: string
     name: string
+    sku: string
     sales: number
     revenue: number
-  }>
-  recentOrders: Array<{
-    id: string
-    customerName: string
-    amount: number
-    status: string
-    date: string
-  }>
-  agentPerformance: Array<{
-    id: string
-    name: string
-    sales: number
-    orders: number
-    target: number
   }>
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
-  const { isInstallable, installApp } = usePWA()
-  const { permission, requestPermission } = useNotifications()
   const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedPeriod, setSelectedPeriod] = useState('today')
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    // Simulate loading dashboard data
-    const loadDashboardData = async () => {
-      setIsLoading(true)
+    fetchDashboardData()
+  }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true)
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setStats({
-        totalSales: 2847650,
-        totalOrders: 1247,
-        activeAgents: 23,
-        totalCustomers: 892,
-        totalProducts: 156,
-        pendingOrders: 34,
-        completedOrders: 1213,
-        todaysSales: 125400,
-        monthlyGrowth: 12.5,
-        topProducts: [
-          { id: '1', name: 'Premium Widget A', sales: 145, revenue: 87500 },
-          { id: '2', name: 'Standard Widget B', sales: 98, revenue: 49000 },
-          { id: '3', name: 'Deluxe Widget C', sales: 76, revenue: 68400 },
-          { id: '4', name: 'Basic Widget D', sales: 65, revenue: 32500 },
-          { id: '5', name: 'Pro Widget E', sales: 54, revenue: 48600 },
-        ],
-        recentOrders: [
-          { id: 'ORD-001', customerName: 'Acme Corp', amount: 15600, status: 'completed', date: '2025-01-06' },
-          { id: 'ORD-002', customerName: 'Tech Solutions', amount: 8900, status: 'pending', date: '2025-01-06' },
-          { id: 'ORD-003', customerName: 'Global Industries', amount: 23400, status: 'completed', date: '2025-01-05' },
-          { id: 'ORD-004', customerName: 'Local Business', amount: 5600, status: 'processing', date: '2025-01-05' },
-          { id: 'ORD-005', customerName: 'Enterprise Ltd', amount: 34500, status: 'completed', date: '2025-01-04' },
-        ],
-        agentPerformance: [
-          { id: '1', name: 'John Smith', sales: 145600, orders: 89, target: 150000 },
-          { id: '2', name: 'Sarah Johnson', sales: 132400, orders: 76, target: 140000 },
-          { id: '3', name: 'Mike Wilson', sales: 98700, orders: 65, target: 120000 },
-          { id: '4', name: 'Lisa Brown', sales: 87300, orders: 54, target: 100000 },
-          { id: '5', name: 'David Lee', sales: 76500, orders: 43, target: 90000 },
-        ],
-      })
-      
-      setIsLoading(false)
+      // Fetch data from multiple endpoints
+      const [orderStats, customerStats, productStats, inventoryStats] = await Promise.allSettled([
+        apiClient.getOrderStats(),
+        apiClient.getCustomers({ limit: 1 }), // Just to get total count
+        apiClient.getProducts({ limit: 1 }), // Just to get total count
+        apiClient.getInventory({ lowStock: true, limit: 1 }) // Just to get low stock count
+      ])
+
+      // Process the results
+      const dashboardStats: DashboardStats = {
+        totalOrders: 0,
+        pendingOrders: 0,
+        completedOrders: 0,
+        totalRevenue: 0,
+        totalCustomers: 0,
+        activeCustomers: 0,
+        totalProducts: 0,
+        activeProducts: 0,
+        lowStockProducts: 0
+      }
+
+      // Order stats
+      if (orderStats.status === 'fulfilled') {
+        dashboardStats.totalOrders = orderStats.value.totalOrders || 0
+        dashboardStats.pendingOrders = orderStats.value.pendingOrders || 0
+        dashboardStats.completedOrders = orderStats.value.completedOrders || 0
+        dashboardStats.totalRevenue = orderStats.value.totalRevenue || 0
+      }
+
+      // Customer stats
+      if (customerStats.status === 'fulfilled') {
+        dashboardStats.totalCustomers = customerStats.value.pagination?.total || 0
+        // Estimate active customers (this would need a separate API call in real implementation)
+        dashboardStats.activeCustomers = Math.floor(dashboardStats.totalCustomers * 0.8)
+      }
+
+      // Product stats
+      if (productStats.status === 'fulfilled') {
+        dashboardStats.totalProducts = productStats.value.pagination?.total || 0
+        // Estimate active products (this would need a separate API call in real implementation)
+        dashboardStats.activeProducts = Math.floor(dashboardStats.totalProducts * 0.9)
+      }
+
+      // Inventory stats
+      if (inventoryStats.status === 'fulfilled') {
+        dashboardStats.lowStockProducts = inventoryStats.value.pagination?.total || 0
+      }
+
+      setStats(dashboardStats)
+    } catch (error) {
+      handleApiError(error, 'Failed to fetch dashboard data')
+    } finally {
+      setLoading(false)
     }
+  }
 
-    loadDashboardData()
-  }, [selectedPeriod])
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await fetchDashboardData()
+    setRefreshing(false)
+  }
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner size="lg" text="Loading dashboard..." />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
     )
   }
 
   if (!stats) {
     return (
-      <DashboardLayout>
-        <div className="text-center py-12">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Unable to load dashboard</h3>
-          <p className="text-gray-600">Please try refreshing the page.</p>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">Failed to load dashboard data</p>
+          <Button onClick={fetchDashboardData} className="mt-4">
+            Try Again
+          </Button>
         </div>
-      </DashboardLayout>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome back, {user?.name}!
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Here's what's happening with your sales today.
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-3 mt-4 sm:mt-0">
-            {/* PWA Install Button */}
-            {isInstallable && (
-              <Button
-                onClick={installApp}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Package className="w-4 h-4" />
-                Install App
-              </Button>
-            )}
-            
-            {/* Notification Permission */}
-            {permission === 'default' && (
-              <Button
-                onClick={requestPermission}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <AlertCircle className="w-4 h-4" />
-                Enable Notifications
-              </Button>
-            )}
-            
-            {/* Period Selector */}
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-            </select>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600">Welcome back! Here's what's happening with your business.</p>
         </div>
+        <Button
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={refreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(stats.totalSales)}
-                  </p>
-                  <p className="text-sm text-green-600 flex items-center mt-1">
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                    +{stats.monthlyGrowth}% from last month
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-blue-600" />
-                </div>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900">
+                ${stats.totalRevenue.toLocaleString()}
+              </p>
+              <div className="flex items-center mt-2">
+                <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                <span className="text-sm text-green-600">+12.5%</span>
+                <span className="text-sm text-gray-500 ml-1">vs last month</span>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalOrders.toLocaleString()}</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {stats.completedOrders} completed, {stats.pendingOrders} pending
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <ShoppingCart className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active Agents</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeAgents}</p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Field agents working today
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Today's Sales</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(stats.todaysSales)}
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1">
-                    Target: {formatCurrency(150000)}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-6 h-6 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Charts and Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Products */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Top Products</h3>
-                <BarChart3 className="w-5 h-5 text-gray-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.topProducts.map((product, index) => (
-                  <div key={product.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-sm font-medium text-blue-600">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-sm text-gray-600">{product.sales} units sold</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">
-                        {formatCurrency(product.revenue)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Agent Performance */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Agent Performance</h3>
-                <Activity className="w-5 h-5 text-gray-400" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stats.agentPerformance.map((agent) => (
-                  <div key={agent.id} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">{agent.name}</p>
-                        <p className="text-sm text-gray-600">{agent.orders} orders</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">
-                          {formatCurrency(agent.sales)}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          of {formatCurrency(agent.target)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{
-                          width: `${Math.min((agent.sales / agent.target) * 100, 100)}%`
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Orders */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
-              <Button variant="outline" size="sm">
-                View All
-              </Button>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Order ID</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Customer</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Amount</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-600">Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.recentOrders.map((order) => (
-                    <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-900">{order.id}</td>
-                      <td className="py-3 px-4 text-gray-900">{order.customerName}</td>
-                      <td className="py-3 px-4 font-medium text-gray-900">
-                        {formatCurrency(order.amount)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          order.status === 'completed' 
-                            ? 'bg-green-100 text-green-800'
-                            : order.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {order.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {order.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                          {order.status === 'processing' && <Activity className="w-3 h-3 mr-1" />}
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">{order.date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-green-600" />
             </div>
-          </CardContent>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Orders</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+              <div className="flex items-center mt-2">
+                <TrendingUp className="h-4 w-4 text-blue-500 mr-1" />
+                <span className="text-sm text-blue-600">+8.2%</span>
+                <span className="text-sm text-gray-500 ml-1">vs last month</span>
+              </div>
+            </div>
+            <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+              <ShoppingCart className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
+              <div className="flex items-center mt-2">
+                <TrendingUp className="h-4 w-4 text-purple-500 mr-1" />
+                <span className="text-sm text-purple-600">+15.3%</span>
+                <span className="text-sm text-gray-500 ml-1">vs last month</span>
+              </div>
+            </div>
+            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Products</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.activeProducts}</p>
+              <div className="flex items-center mt-2">
+                <Package className="h-4 w-4 text-orange-500 mr-1" />
+                <span className="text-sm text-orange-600">{stats.totalProducts} total</span>
+              </div>
+            </div>
+            <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+              <Package className="h-6 w-6 text-orange-600" />
+            </div>
+          </div>
         </Card>
       </div>
-    </DashboardLayout>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Order Status</h3>
+            <Link href="/orders">
+              <Button variant="ghost" size="sm">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 text-yellow-500 mr-2" />
+                <span className="text-sm text-gray-600">Pending</span>
+              </div>
+              <Badge variant="warning">{stats.pendingOrders}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span className="text-sm text-gray-600">Completed</span>
+              </div>
+              <Badge variant="success">{stats.completedOrders}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Activity className="h-4 w-4 text-blue-500 mr-2" />
+                <span className="text-sm text-gray-600">Processing</span>
+              </div>
+              <Badge variant="info">{Math.max(0, stats.totalOrders - stats.pendingOrders - stats.completedOrders)}</Badge>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Customer Status</h3>
+            <Link href="/customers">
+              <Button variant="ghost" size="sm">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                <span className="text-sm text-gray-600">Active</span>
+              </div>
+              <Badge variant="success">{stats.activeCustomers}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Users className="h-4 w-4 text-blue-500 mr-2" />
+                <span className="text-sm text-gray-600">Total</span>
+              </div>
+              <Badge variant="info">{stats.totalCustomers}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <TrendingUp className="h-4 w-4 text-purple-500 mr-2" />
+                <span className="text-sm text-gray-600">Growth Rate</span>
+              </div>
+              <Badge variant="default">+15.3%</Badge>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Inventory Status</h3>
+            <Link href="/inventory">
+              <Button variant="ghost" size="sm">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <AlertCircle className="h-4 w-4 text-red-500 mr-2" />
+                <span className="text-sm text-gray-600">Low Stock</span>
+              </div>
+              <Badge variant="error">{stats.lowStockProducts}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Package className="h-4 w-4 text-green-500 mr-2" />
+                <span className="text-sm text-gray-600">In Stock</span>
+              </div>
+              <Badge variant="success">{stats.activeProducts - stats.lowStockProducts}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Warehouse className="h-4 w-4 text-blue-500 mr-2" />
+                <span className="text-sm text-gray-600">Total Products</span>
+              </div>
+              <Badge variant="info">{stats.totalProducts}</Badge>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link href="/orders/create">
+            <Button variant="outline" className="w-full justify-start">
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              New Order
+            </Button>
+          </Link>
+          <Link href="/customers/create">
+            <Button variant="outline" className="w-full justify-start">
+              <Users className="h-4 w-4 mr-2" />
+              Add Customer
+            </Button>
+          </Link>
+          <Link href="/products/create">
+            <Button variant="outline" className="w-full justify-start">
+              <Package className="h-4 w-4 mr-2" />
+              Add Product
+            </Button>
+          </Link>
+          <Link href="/reports">
+            <Button variant="outline" className="w-full justify-start">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              View Reports
+            </Button>
+          </Link>
+        </div>
+      </Card>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Recent Orders</h3>
+            <Link href="/orders">
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {stats.recentOrders && stats.recentOrders.length > 0 ? (
+              stats.recentOrders.slice(0, 5).map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{order.orderNumber}</p>
+                    <p className="text-xs text-gray-500">{order.customerName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">${order.totalAmount.toFixed(2)}</p>
+                    <Badge variant="info" size="sm">{order.status}</Badge>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <ShoppingCart className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No recent orders</p>
+                <Link href="/orders/create">
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Create First Order
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">Top Products</h3>
+            <Link href="/products">
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+          <div className="space-y-3">
+            {stats.topProducts && stats.topProducts.length > 0 ? (
+              stats.topProducts.slice(0, 5).map((product) => (
+                <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.sku}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">${product.revenue.toFixed(2)}</p>
+                    <p className="text-xs text-gray-500">{product.sales} sold</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No product data available</p>
+                <Link href="/products/create">
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Add Products
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Performance Indicators */}
+      <Card className="p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Performance Overview</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Target className="h-8 w-8 text-green-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">85%</p>
+            <p className="text-sm text-gray-600">Order Fulfillment Rate</p>
+          </div>
+          <div className="text-center">
+            <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Clock className="h-8 w-8 text-blue-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">2.3</p>
+            <p className="text-sm text-gray-600">Avg. Days to Delivery</p>
+          </div>
+          <div className="text-center">
+            <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="h-8 w-8 text-purple-600" />
+            </div>
+            <p className="text-2xl font-bold text-gray-900">92%</p>
+            <p className="text-sm text-gray-600">Customer Satisfaction</p>
+          </div>
+        </div>
+      </Card>
+    </div>
   )
 }
