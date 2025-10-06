@@ -2,26 +2,24 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function HomePage() {
   const router = useRouter()
-  const { user, isLoading } = useAuth()
 
   useEffect(() => {
-    if (!isLoading) {
-      if (user) {
-        router.push('/dashboard')
-      } else {
-        router.push('/login')
-      }
-    }
-  }, [user, isLoading, router])
+    // Redirect to login page
+    router.push('/login')
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <LoadingSpinner size="lg" />
+      <div className="text-center">
+        <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 rounded-xl flex items-center justify-center">
+          <span className="text-white font-bold text-2xl">S</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">SalesSync</h1>
+        <p className="text-gray-600">Loading...</p>
+      </div>
     </div>
   )
 }
