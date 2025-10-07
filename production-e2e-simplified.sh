@@ -85,22 +85,24 @@ CONTENT=$(curl -sk --max-time 10 "$FRONTEND_URL")
 if echo "$CONTENT" | grep -qi "html\|<!DOCTYPE"; then test_pass; else test_fail "No HTML content"; fi
 
 run_test "Backend API Accessible"
-STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/health")
+STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/api/health")
 if [ "$STATUS" = "200" ]; then test_pass; else test_fail "Status: $STATUS"; fi
 
 run_test "HSTS Header Present"
 HEADERS=$(curl -skI --max-time 10 "$FRONTEND_URL")
-if echo "$HEADERS" | grep -qi "strict-transport-security"; then test_pass; else test_fail "No HSTS"; fi
+if echo "$HEADERS" | grep -qi "strict-transport-security"; then test_pass; else test_fail "No HSTS header"; fi
 
 run_test "CSP Header Present"
-if echo "$HEADERS" | grep -qi "content-security-policy"; then test_pass; else test_fail "No CSP"; fi
+HEADERS=$(curl -skI --max-time 10 "$FRONTEND_URL")
+if echo "$HEADERS" | grep -qi "content-security-policy"; then test_pass; else test_fail "No CSP header"; fi
 
 run_test "X-Frame-Options Header"
-if echo "$HEADERS" | grep -qi "x-frame-options"; then test_pass; else test_fail "No X-Frame-Options"; fi
+HEADERS=$(curl -skI --max-time 10 "$FRONTEND_URL")
+if echo "$HEADERS" | grep -qi "x-frame-options"; then test_pass; else test_fail "No X-Frame-Options header"; fi
 
 run_test "CORS Headers Configured"
-CORS=$(curl -sk -H "Origin: https://example.com" -H "Access-Control-Request-Method: POST" -X OPTIONS --max-time 10 "$API_URL/auth/login")
-if echo "$CORS" | grep -qi "access-control"; then test_pass; else test_fail "No CORS"; fi
+CORS=$(curl -skI -H "Origin: https://example.com" -H "Access-Control-Request-Method: POST" -X OPTIONS --max-time 10 "$API_URL/api/auth/login")
+if echo "$CORS" | grep -qi "access-control"; then test_pass; else test_fail "No CORS headers"; fi
 
 run_test "Login Page Accessible"
 STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$FRONTEND_URL/login")
@@ -111,7 +113,7 @@ STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$FRONTEND_URL/cu
 if [ "$STATUS" = "200" ] || [ "$STATUS" = "304" ]; then test_pass; else test_fail "Status: $STATUS"; fi
 
 run_test "Executive Dashboard Accessible"
-STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$FRONTEND_URL/executive")
+STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$FRONTEND_URL/executive-dashboard")
 if [ "$STATUS" = "200" ] || [ "$STATUS" = "304" ]; then test_pass; else test_fail "Status: $STATUS"; fi
 
 # ============================================================================

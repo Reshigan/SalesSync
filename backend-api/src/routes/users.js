@@ -568,4 +568,47 @@ router.get('/roles', asyncHandler(async (req, res) => {
   });
 }));
 
+/**
+ * @swagger
+ * /api/users/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/profile', asyncHandler(async (req, res) => {
+  const { getOneQuery } = require('../database/init');
+  
+  // req.user and req.tenant are already set by authTenantMiddleware
+  const userId = req.user.id;
+  
+  // Get fresh user data from database
+  const user = await getOneQuery(
+    'SELECT id, email, firstName, lastName, phone, role, status, createdAt FROM users WHERE id = ? AND tenantId = ?',
+    [userId, req.tenant.id]
+  );
+  
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+  
+  res.json({
+    success: true,
+    data: {
+      user: user,
+      tenant: {
+        id: req.tenant.id,
+        name: req.tenant.name,
+        code: req.tenant.code
+      }
+    }
+  });
+}));
+
 module.exports = router;
