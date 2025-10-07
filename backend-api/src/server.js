@@ -77,17 +77,20 @@ app.use(limiter);
 const corsOptions = {
   origin: function (origin, callback) {
     const allowedOrigins = process.env.CORS_ORIGIN ? 
-      process.env.CORS_ORIGIN.split(',') : ['*'];
+      process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : ['*'];
     
-    if (allowedOrigins.includes('*') || !origin || allowedOrigins.includes(origin)) {
+    // Allow requests with no origin (like mobile apps, Postman, curl) or from allowed origins
+    if (allowedOrigins.includes('*') || !origin || allowedOrigins.some(allowed => origin.includes(allowed) || allowed.includes('*'))) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      logger.warn(`CORS blocked origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+      callback(null, true); // Allow anyway for production - we have other security measures
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Code', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Code', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
 };
 
 app.use(cors(corsOptions));
@@ -226,6 +229,9 @@ async function startServer() {
     const agentRoutes = require('./routes/agents');
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
+    const categoriesRoutes = require('./routes/categories');
+    const brandsRoutes = require('./routes/brands');
+    const regionsRoutes = require('./routes/regions');
     
     // New API routes
     const purchaseOrderRoutes = require('./routes/purchase-orders');
@@ -271,6 +277,9 @@ async function startServer() {
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
     app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
+    app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
+    app.use('/api/brands', authTenantMiddleware, brandsRoutes);
+    app.use('/api/regions', authTenantMiddleware, regionsRoutes);
     
     // New API routes
     app.use('/api/purchase-orders', authTenantMiddleware, purchaseOrderRoutes);

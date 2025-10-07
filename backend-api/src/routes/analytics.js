@@ -546,4 +546,295 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
+// Revenue Analytics - specific endpoint for tests
+router.get('/revenue', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to } = req.query;
+    
+    const db = getDatabase();
+    
+    let dateFilter = '';
+    const params = [tenantId];
+    
+    if (date_from && date_to) {
+      dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+      params.push(date_from, date_to);
+    } else {
+      dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    }
+    
+    const revenueData = await new Promise((resolve, reject) => {
+      db.get(`
+        SELECT 
+          SUM(o.total_amount) as total_revenue,
+          COUNT(*) as total_orders,
+          AVG(o.total_amount) as avg_order_value,
+          COUNT(DISTINCT o.customer_id) as unique_customers
+        FROM orders o
+        WHERE o.tenant_id = ? ${dateFilter}
+      `, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    
+    const dailyRevenue = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          DATE(o.order_date) as date,
+          SUM(o.total_amount) as revenue,
+          COUNT(*) as orders
+        FROM orders o
+        WHERE o.tenant_id = ? ${dateFilter}
+        GROUP BY DATE(o.order_date)
+        ORDER BY DATE(o.order_date)
+      `, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        summary: revenueData,
+        daily_breakdown: dailyRevenue
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching revenue analytics:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Order Analytics - specific endpoint for tests
+router.get('/orders', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to } = req.query;
+    
+    const db = getDatabase();
+    
+    let dateFilter = '';
+    const params = [tenantId];
+    
+    if (date_from && date_to) {
+      dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+      params.push(date_from, date_to);
+    } else {
+      dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    }
+    
+    const orderStats = await new Promise((resolve, reject) => {
+      db.get(`
+        SELECT 
+          COUNT(*) as total_orders,
+          SUM(CASE WHEN o.order_status = 'completed' THEN 1 ELSE 0 END) as completed_orders,
+          SUM(CASE WHEN o.order_status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
+          SUM(CASE WHEN o.order_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
+          AVG(o.total_amount) as avg_order_value
+        FROM orders o
+        WHERE o.tenant_id = ? ${dateFilter}
+      `, params, (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    
+    const ordersByStatus = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          o.order_status as status,
+          COUNT(*) as count,
+          SUM(o.total_amount) as total_value
+        FROM orders o
+        WHERE o.tenant_id = ? ${dateFilter}
+        GROUP BY o.order_status
+        ORDER BY count DESC
+      `, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        summary: orderStats,
+        by_status: ordersByStatus
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching order analytics:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Top Products - specific endpoint for tests
+router.get('/top-products', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to, limit = 10 } = req.query;
+    
+    const db = getDatabase();
+    
+    let dateFilter = '';
+    const params = [tenantId];
+    
+    if (date_from && date_to) {
+      dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+      params.push(date_from, date_to);
+    } else {
+      dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    }
+    
+    params.push(parseInt(limit));
+    
+    const topProducts = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          p.id,
+          p.name as product_name,
+          p.code as product_code,
+          SUM(oi.quantity) as total_quantity_sold,
+          SUM(oi.line_total) as total_revenue,
+          COUNT(DISTINCT o.customer_id) as unique_customers,
+          AVG(oi.unit_price) as avg_price
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN products p ON oi.product_id = p.id
+        WHERE o.tenant_id = ? ${dateFilter}
+        GROUP BY p.id, p.name, p.code
+        ORDER BY total_revenue DESC
+        LIMIT ?
+      `, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        top_products: topProducts,
+        period: date_from && date_to ? `${date_from} to ${date_to}` : 'Last 30 days'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching top products:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Top Customers - specific endpoint for tests
+router.get('/top-customers', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to, limit = 10 } = req.query;
+    
+    const db = getDatabase();
+    
+    let dateFilter = '';
+    const params = [tenantId];
+    
+    if (date_from && date_to) {
+      dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+      params.push(date_from, date_to);
+    } else {
+      dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    }
+    
+    params.push(parseInt(limit));
+    
+    const topCustomers = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          c.id,
+          c.name as customer_name,
+          c.code as customer_code,
+          COUNT(o.id) as total_orders,
+          SUM(o.total_amount) as total_spent,
+          AVG(o.total_amount) as avg_order_value,
+          MAX(o.order_date) as last_order_date
+        FROM customers c
+        JOIN orders o ON c.id = o.customer_id
+        WHERE c.tenant_id = ? ${dateFilter}
+        GROUP BY c.id, c.name, c.code
+        ORDER BY total_spent DESC
+        LIMIT ?
+      `, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        top_customers: topCustomers,
+        period: date_from && date_to ? `${date_from} to ${date_to}` : 'Last 30 days'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching top customers:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Agent Performance - specific endpoint for tests
+router.get('/agent-performance', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to } = req.query;
+    
+    const db = getDatabase();
+    
+    let dateFilter = '';
+    const params = [tenantId];
+    
+    if (date_from && date_to) {
+      dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+      params.push(date_from, date_to);
+    } else {
+      dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    }
+    
+    const agentPerformance = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          a.id as agent_id,
+          u.first_name || ' ' || u.last_name as agent_name,
+          u.email as agent_email,
+          COUNT(DISTINCT o.id) as total_orders,
+          SUM(o.total_amount) as total_revenue,
+          AVG(o.total_amount) as avg_order_value,
+          COUNT(DISTINCT o.customer_id) as unique_customers,
+          COUNT(DISTINCT v.id) as total_visits
+        FROM agents a
+        JOIN users u ON a.user_id = u.id
+        LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = ? ${dateFilter}
+        LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ? ${dateFilter.replace('o.order_date', 'v.visit_date')}
+        WHERE a.tenant_id = ?
+        GROUP BY a.id, u.first_name, u.last_name, u.email
+        ORDER BY total_revenue DESC
+      `, [...params, ...params, tenantId], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        agent_performance: agentPerformance,
+        period: date_from && date_to ? `${date_from} to ${date_to}` : 'Last 30 days'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching agent performance:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
