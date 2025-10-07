@@ -5,6 +5,7 @@ node_modules/
 
 # Testing
 /coverage
+coverage/
 test-results/
 playwright-report/
 test-coverage-report.txt
@@ -14,9 +15,13 @@ test-reports-*/
 *.db-shm
 *.db-wal
 
-# Next.js
+# Next.js - ALL build artifacts
+.next/
 /.next/
+frontend/.next/
+out/
 /out/
+frontend/out/
 next-env.d.ts
 
 # Production
@@ -60,3 +65,28 @@ backend.log
 
 # TypeScript
 *.tsbuildinfo
+
+# Backup directories
+*.backup/
+src.backup/
+frontend/src.backup/
+
+# Deployment scripts (if they contain sensitive info)
+# deploy-*.sh
+
+# Test results and reports
+*.log
+production-*.log
+test-*.log
+
+# Documentation files (too many generated docs)
+*-SUMMARY.md
+*-GUIDE.md
+*-REPORT.md
+*-CERTIFICATION.md
+*-STATUS.md
+*-MANIFEST.md
+*-COMPLETE.md
+*-RESULTS.md
+!README.md
+!DEPLOYMENT_GUIDE.md
