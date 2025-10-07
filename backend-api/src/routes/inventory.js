@@ -155,9 +155,9 @@ router.get('/', async (req, res) => {
     let inventory;
     
     if (warehouse_id) {
-      inventory = await getQuery('inventory', { warehouse_id }, tenantId);
+      inventory = await getQuery('inventory_stock', { warehouse_id }, tenantId);
     } else {
-      inventory = await getQuery('inventory', {}, tenantId);
+      inventory = await getQuery('inventory_stock', {}, tenantId);
     }
     
     // Filter for low stock if requested
@@ -197,7 +197,7 @@ router.get('/warehouse/:warehouseId', async (req, res) => {
     const tenantId = req.user?.tenant_id;
     const { warehouseId } = req.params;
     
-    const inventory = await getQuery('inventory', { warehouse_id: warehouseId }, tenantId);
+    const inventory = await getQuery('inventory_stock', { warehouse_id: warehouseId }, tenantId);
     
     res.json({ success: true, data: inventory });
   } catch (error) {
@@ -222,7 +222,7 @@ router.get('/low-stock', async (req, res) => {
   try {
     const tenantId = req.user?.tenant_id;
     
-    const inventory = await getQuery('inventory', {}, tenantId);
+    const inventory = await getQuery('inventory_stock', {}, tenantId);
     const lowStock = inventory.filter(item => 
       item.quantity <= (item.reorder_level || 10)
     );
@@ -259,7 +259,7 @@ router.get('/:id', async (req, res) => {
     const tenantId = req.user?.tenant_id;
     const { id } = req.params;
     
-    const item = await getOneQuery('inventory', { id }, tenantId);
+    const item = await getOneQuery('inventory_stock', { id }, tenantId);
     
     if (!item) {
       return res.status(404).json({ success: false, message: 'Inventory item not found' });
@@ -321,7 +321,7 @@ router.post('/', async (req, res) => {
       updated_at: new Date().toISOString()
     };
     
-    const result = await insertQuery('inventory', inventoryData);
+    const result = await insertQuery('inventory_stock', inventoryData);
     
     res.status(201).json({ 
       success: true, 
@@ -369,7 +369,7 @@ router.put('/:id', async (req, res) => {
     delete updateData.tenant_id;
     delete updateData.created_at;
     
-    const result = await updateQuery('inventory', updateData, { id }, tenantId);
+    const result = await updateQuery('inventory_stock', updateData, { id }, tenantId);
     
     if (result.changes === 0) {
       return res.status(404).json({ success: false, message: 'Inventory item not found' });
@@ -423,7 +423,7 @@ router.post('/adjust', async (req, res) => {
     }
     
     // Get current inventory
-    const item = await getOneQuery('inventory', { id: inventory_id }, tenantId);
+    const item = await getOneQuery('inventory_stock', { id: inventory_id }, tenantId);
     
     if (!item) {
       return res.status(404).json({ success: false, message: 'Inventory item not found' });
@@ -440,7 +440,7 @@ router.post('/adjust', async (req, res) => {
     }
     
     // Update inventory
-    await updateQuery('inventory', 
+    await updateQuery('inventory_stock', 
       { quantity: newQuantity, updated_at: new Date().toISOString() }, 
       { id: inventory_id }, 
       tenantId
@@ -495,7 +495,7 @@ router.delete('/:id', async (req, res) => {
     const tenantId = req.user?.tenant_id;
     const { id } = req.params;
     
-    const result = await deleteQuery('inventory', { id }, tenantId);
+    const result = await deleteQuery('inventory_stock', { id }, tenantId);
     
     if (result.changes === 0) {
       return res.status(404).json({ success: false, message: 'Inventory item not found' });
