@@ -262,7 +262,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if employee ID already exists
-    const existingAgent = db.prepare('SELECT id FROM users WHERE employeeId = ? AND tenant_id = ?').get(employeeId, req.tenantId);
+    const existingAgent = db.prepare('SELECT id FROM users WHERE employee_id = ? AND tenant_id = ?').get(employeeId, req.tenantId);
     if (existingAgent) {
       return res.status(400).json({
         success: false,
@@ -288,7 +288,7 @@ router.post('/', async (req, res) => {
     
     const insertQuery = `
       INSERT INTO users (
-        id, tenant_id, employeeId, firstName, lastName, email, phone, password,
+        id, tenant_id, employee_id, first_name, last_name, email, phone, password_hash,
         role, area_id, route_id, manager_id, status, hire_date, monthly_target,
         created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -316,8 +316,8 @@ router.post('/', async (req, res) => {
     
     const agent = db.prepare(query).get(id);
     
-    // Remove password from response
-    delete agent.password;
+    // Remove password hash from response
+    delete agent.password_hash;
     
     res.status(201).json({
       success: true,
