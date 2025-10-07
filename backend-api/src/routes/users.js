@@ -589,11 +589,16 @@ router.get('/profile', asyncHandler(async (req, res) => {
   const userId = req.user.id;
   const tenantId = req.user.tenantId;
   
+  console.log('[PROFILE] userId:', userId, 'tenantId:', tenantId);
+  console.log('[PROFILE] req.user:', JSON.stringify(req.user));
+  
   // Get fresh user data from database (use snake_case column names as per schema)
   const user = await getOneQuery(
     'SELECT id, email, first_name, last_name, phone, role, status, created_at FROM users WHERE id = ? AND tenant_id = ?',
     [userId, tenantId]
   );
+  
+  console.log('[PROFILE] Query result:', user);
   
   if (!user) {
     throw new AppError('User not found', 404, 'USER_NOT_FOUND');
