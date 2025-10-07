@@ -87,6 +87,11 @@ function insertQuery(table, data, tenantId) {
 function updateQuery(table, data, conditions, tenantId) {
   const db = getDatabase();
   return new Promise((resolve, reject) => {
+    // Check if data is empty
+    if (!data || Object.keys(data).length === 0) {
+      return reject(new Error('No data provided for update'));
+    }
+    
     const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
     const setValues = Object.values(data);
     
