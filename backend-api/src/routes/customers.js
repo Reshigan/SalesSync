@@ -285,7 +285,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
  */
 router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../database/init');
   
   const { id } = req.params;
   
