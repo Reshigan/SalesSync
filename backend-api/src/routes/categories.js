@@ -15,11 +15,10 @@ router.get('/', async (req, res) => {
         SELECT 
           id,
           name,
-          description,
-          parent_category_id,
+          code,
+          parent_id,
           status,
-          created_at,
-          updated_at
+          created_at
         FROM categories
         WHERE tenant_id = ? AND status = 'active'
         ORDER BY name ASC

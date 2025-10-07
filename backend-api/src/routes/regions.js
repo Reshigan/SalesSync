@@ -16,12 +16,10 @@ router.get('/', async (req, res) => {
           id,
           name,
           code,
-          description,
-          parent_area_id as parent_region_id,
-          area_type as region_type,
+          region_id,
+          manager_id,
           status,
-          created_at,
-          updated_at
+          created_at
         FROM areas
         WHERE tenant_id = ? AND status = 'active'
         ORDER BY name ASC

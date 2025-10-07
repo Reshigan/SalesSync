@@ -15,10 +15,9 @@ router.get('/', async (req, res) => {
         SELECT 
           id,
           name,
-          description,
+          code,
           status,
-          created_at,
-          updated_at
+          created_at
         FROM brands
         WHERE tenant_id = ? AND status = 'active'
         ORDER BY name ASC

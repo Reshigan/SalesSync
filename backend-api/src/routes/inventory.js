@@ -530,9 +530,10 @@ router.get('/stock', async (req, res) => {
         w.name as warehouse_name,
         i.quantity_on_hand,
         i.quantity_reserved,
-        i.quantity_available,
+        (i.quantity_on_hand - i.quantity_reserved) as quantity_available,
         i.cost_price,
-        i.last_stock_date,
+        i.batch_number,
+        i.expiry_date,
         i.created_at,
         i.updated_at
       FROM inventory_stock i
