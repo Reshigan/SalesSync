@@ -9,16 +9,26 @@ let db = null;
 // Database connection
 function getDatabase() {
   if (!db) {
-    const dbPath = path.join(__dirname, '../../database/salessync.db');
-    db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        console.error('Error opening database:', err);
-      } else {
-        console.log('Connected to SQLite database');
-        // Enable foreign keys
-        db.run('PRAGMA foreign_keys = ON');
+    const dbPath = process.env.DATABASE_PATH 
+      ? path.resolve(process.env.DATABASE_PATH)
+      : path.join(__dirname, '../../database/salessync.db');
+    
+    // Open database in read-write-create mode
+    db = new sqlite3.Database(
+      dbPath,
+      sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,
+      (err) => {
+        if (err) {
+          console.error('Error opening database:', err);
+        } else {
+          console.log('Connected to SQLite database:', dbPath);
+          // Enable foreign keys
+          db.run('PRAGMA foreign_keys = ON');
+          // Enable WAL mode for better concurrency
+          db.run('PRAGMA journal_mode = WAL');
+        }
       }
-    });
+    );
   }
   return db;
 }
@@ -69,7 +79,10 @@ function getOneQuery(sql, params = []) {
 async function initializeDatabase() {
   try {
     // Ensure database directory exists
-    const dbDir = path.join(__dirname, '../../database');
+    const dbPath = process.env.DATABASE_PATH 
+      ? path.resolve(process.env.DATABASE_PATH)
+      : path.join(__dirname, '../../database/salessync.db');
+    const dbDir = path.dirname(dbPath);
     await fs.mkdir(dbDir, { recursive: true });
     
     const database = getDatabase();
@@ -80,7 +93,7 @@ async function initializeDatabase() {
     // Seed initial data
     await seedInitialData();
     
-    console.log('Database initialized successfully');
+    console.log('Database initialized successfully at:', dbPath);
   } catch (error) {
     console.error('Database initialization failed:', error);
     throw error;
@@ -805,10 +818,29 @@ async function seedMasterData(tenantId) {
   }
 }
 
+// Close database connection
+function closeDatabase() {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      db.close((err) => {
+        if (err) {
+          reject(err);
+        } else {
+          db = null;
+          resolve();
+        }
+      });
+    } else {
+      resolve();
+    }
+  });
+}
+
 module.exports = {
   initializeDatabase,
   getDatabase,
   runQuery,
   getQuery,
-  getOneQuery
+  getOneQuery,
+  closeDatabase
 };
