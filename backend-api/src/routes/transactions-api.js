@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const db = getDatabase();
 
-    let sql = `SELECT t.*, c.name as customer_name FROM transactions t
+    let sql = `SELECT t.*, c.name as customer_name FROM cash_transactions t
       LEFT JOIN customers c ON t.customer_id = c.id WHERE t.tenant_id = ?`;
     const params = [tenantId];
 
