@@ -465,7 +465,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
       return next(new AppError('No fields to update', 400, 'NO_UPDATE_FIELDS'));
     }
     
-    updateFields.push('updated_at = CURRENT_TIMESTAMP');
+    // Note: customers table doesn't have updated_at column in schema
     updateValues.push(id, req.tenantId);
     
     await runQuery(`
