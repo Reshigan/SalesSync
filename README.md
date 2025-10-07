@@ -9,7 +9,7 @@ A comprehensive enterprise-grade van sales management platform built with modern
 ![Status](https://img.shields.io/badge/Status-PRODUCTION_READY-brightgreen?style=for-the-badge)
 
 ✅ **100% E2E Test Coverage Achieved** - All 55 tests passing in production environment  
-📊 [View Full Certification](E2E_TEST_CERTIFICATION.md) | 🚀 [Testing Quick Start](TESTING_QUICKSTART.md) | 📋 [Final Summary](FINAL_SUMMARY.md)
+📊 [Full Certification](E2E_TEST_CERTIFICATION.md) | 🚀 [Testing Quick Start](TESTING_QUICKSTART.md) | 📋 [Final Summary](FINAL_SUMMARY.md) | 📝 [Quick Reference](QUICK_REFERENCE.md)
 
 ## 🚀 Live Demo
 
