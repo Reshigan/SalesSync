@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
       SELECT po.*, 
              s.name as supplier_name,
              w.name as warehouse_name,
-             u.name as created_by_name,
+             u.first_name || ' ' || u.last_name as created_by_name,
              COUNT(DISTINCT poi.id) as item_count,
              SUM(poi.quantity * poi.unit_price) as total_amount
       FROM purchase_orders po
@@ -81,7 +81,7 @@ router.get('/:id', async (req, res) => {
       SELECT po.*, 
              s.name as supplier_name, s.email as supplier_email, s.phone as supplier_phone,
              w.name as warehouse_name, w.address as warehouse_address,
-             u.name as created_by_name
+             u.first_name || ' ' || u.last_name as created_by_name
       FROM purchase_orders po
       LEFT JOIN suppliers s ON po.supplier_id = s.id
       LEFT JOIN warehouses w ON po.warehouse_id = w.id

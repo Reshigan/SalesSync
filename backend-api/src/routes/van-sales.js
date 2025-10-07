@@ -50,6 +50,32 @@ router.use(authTenantMiddleware);
 
 /**
  * @swagger
+ * /api/van-sales:
+ *   get:
+ *     summary: Get van sales module info
+ *     tags: [Van Sales]
+ *     responses:
+ *       200:
+ *         description: Van sales module info
+ */
+router.get('/', async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      message: 'Van Sales module active',
+      endpoints: {
+        vans: '/vans',
+        loads: '/loads',
+        dashboard: '/dashboard'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @swagger
  * /api/van-sales/vans:
  *   get:
  *     summary: Get all vans for tenant

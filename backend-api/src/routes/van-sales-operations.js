@@ -7,6 +7,23 @@ const getDatabase = () => require('../utils/database').getDatabase();
  * Route management, van loading, delivery tracking, and sales recording
  */
 
+// GET /api/van-sales-operations - Get module info
+router.get('/', async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      message: 'Van Sales Operations module active',
+      endpoints: {
+        routes: '/routes',
+        loading: '/loading',
+        customerVisit: '/customer-visit'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/van-sales-operations/routes - Get all van sales routes
 router.get('/routes', async (req, res) => {
   try {
@@ -14,7 +31,7 @@ router.get('/routes', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const db = getDatabase();
 
-    let sql = `SELECT vsr.*, u.name as agent_name, v.plate_number FROM van_sales_routes vsr
+    let sql = `SELECT vsr.*, u.first_name || ' ' || u.last_name as agent_name, v.plate_number FROM van_sales_routes vsr
       LEFT JOIN users u ON vsr.agent_id = u.id LEFT JOIN vans v ON vsr.van_id = v.id
       WHERE vsr.tenant_id = ?`;
     const params = [tenantId];

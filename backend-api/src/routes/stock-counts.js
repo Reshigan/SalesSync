@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
     const db = getDatabase();
 
     let sql = `
-      SELECT sc.*, w.name as warehouse_name, u.name as created_by_name,
+      SELECT sc.*, w.name as warehouse_name, u.first_name || ' ' || u.last_name as created_by_name,
              COUNT(DISTINCT sci.id) as item_count
       FROM stock_counts sc
       LEFT JOIN warehouses w ON sc.warehouse_id = w.id

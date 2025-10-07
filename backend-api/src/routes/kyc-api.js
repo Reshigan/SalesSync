@@ -41,7 +41,7 @@ router.get('/:id', async (req, res) => {
     const db = getDatabase();
 
     db.get(`SELECT k.*, c.name as customer_name, c.email, c.phone, c.address,
-      u.name as verified_by_name FROM kyc_documents k
+      u.first_name || ' ' || u.last_name as verified_by_name FROM kyc_documents k
       LEFT JOIN customers c ON k.customer_id = c.id
       LEFT JOIN users u ON k.verified_by = u.id
       WHERE k.id = ? AND k.tenant_id = ?`,

@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
              p.name as product_name, p.sku,
              fw.name as from_warehouse_name,
              tw.name as to_warehouse_name,
-             u.name as created_by_name
+             u.first_name || ' ' || u.last_name as created_by_name
       FROM stock_movements sm
       LEFT JOIN products p ON sm.product_id = p.id
       LEFT JOIN warehouses fw ON sm.from_warehouse_id = fw.id
@@ -96,7 +96,7 @@ router.get('/:id', async (req, res) => {
              p.name as product_name, p.sku, p.unit,
              fw.name as from_warehouse_name, fw.address as from_warehouse_address,
              tw.name as to_warehouse_name, tw.address as to_warehouse_address,
-             u.name as created_by_name,
+             u.first_name || ' ' || u.last_name as created_by_name,
              ua.name as approved_by_name,
              ur.name as received_by_name
       FROM stock_movements sm

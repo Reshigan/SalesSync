@@ -7,6 +7,24 @@ const getDatabase = () => require('../utils/database').getDatabase();
  * Cash recording, reconciliation, banking deposits, and tracking
  */
 
+// GET /api/cash-management - Get module info
+router.get('/', async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      message: 'Cash Management module active',
+      endpoints: {
+        collections: '/collections',
+        reconciliations: '/reconciliations',
+        deposits: '/deposits',
+        summary: '/summary'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/cash-management/collections - Get cash collections
 router.get('/collections', async (req, res) => {
   try {
@@ -14,7 +32,7 @@ router.get('/collections', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const db = getDatabase();
 
-    let sql = `SELECT cc.*, u.name as agent_name, r.route_number FROM cash_collections cc
+    let sql = `SELECT cc.*, u.first_name || ' ' || u.last_name as agent_name, r.route_number FROM cash_collections cc
       LEFT JOIN users u ON cc.agent_id = u.id
       LEFT JOIN van_sales_routes r ON cc.route_id = r.id
       WHERE cc.tenant_id = ?`;

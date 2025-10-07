@@ -59,6 +59,32 @@ router.use(authTenantMiddleware);
 
 /**
  * @swagger
+ * /api/promotions:
+ *   get:
+ *     summary: Get promotions module info
+ *     tags: [Promotions]
+ *     responses:
+ *       200:
+ *         description: Promotions module info
+ */
+router.get('/', async (req, res) => {
+  try {
+    res.json({ 
+      success: true, 
+      message: 'Promotions module active',
+      endpoints: {
+        campaigns: '/campaigns',
+        activities: '/activities',
+        dashboard: '/dashboard'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @swagger
  * /api/promotions/campaigns:
  *   get:
  *     summary: Get all promotional campaigns
