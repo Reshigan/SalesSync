@@ -26,7 +26,7 @@ router.get('/', async (req, res) => {
 
     let sql = `
       SELECT sm.*, 
-             p.name as product_name, p.sku,
+             p.name as product_name, p.code,
              fw.name as from_warehouse_name,
              tw.name as to_warehouse_name,
              u.first_name || ' ' || u.last_name as created_by_name
@@ -93,7 +93,7 @@ router.get('/:id', async (req, res) => {
 
     const sql = `
       SELECT sm.*, 
-             p.name as product_name, p.sku, p.unit,
+             p.name as product_name, p.code, p.unit,
              fw.name as from_warehouse_name, fw.address as from_warehouse_address,
              tw.name as to_warehouse_name, tw.address as to_warehouse_address,
              u.first_name || ' ' || u.last_name as created_by_name,
