@@ -85,7 +85,7 @@ CONTENT=$(curl -sk --max-time 10 "$FRONTEND_URL")
 if echo "$CONTENT" | grep -qi "html\|<!DOCTYPE"; then test_pass; else test_fail "No HTML content"; fi
 
 run_test "Backend API Accessible"
-STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/api/health")
+STATUS=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$API_URL/health")
 if [ "$STATUS" = "200" ]; then test_pass; else test_fail "Status: $STATUS"; fi
 
 run_test "HSTS Header Present"
