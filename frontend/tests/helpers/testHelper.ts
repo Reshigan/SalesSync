@@ -9,7 +9,7 @@ export class TestHelper {
   }
 
   async login(email: string = 'admin@demo.com', password: string = 'admin123') {
-    await this.goto('/auth/login');
+    await this.goto('/login');
     await this.page.fill('input[type="email"], input[name="email"]', email);
     await this.page.fill('input[type="password"], input[name="password"]', password);
     await this.page.click('button[type="submit"]');

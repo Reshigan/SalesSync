@@ -54,6 +54,9 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Trust proxy - required when behind nginx/reverse proxy
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet({
   crossOriginEmbedderPolicy: false,
