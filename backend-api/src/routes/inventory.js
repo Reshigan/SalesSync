@@ -234,6 +234,92 @@ router.get('/low-stock', async (req, res) => {
   }
 });
 
+// Get stock levels (alias for main inventory endpoint)
+router.get('/stock', async (req, res) => {
+  try {
+    const tenantId = req.user?.tenantId;
+    
+    const db = getDatabase();
+    
+    const { warehouse_id, low_stock, product_id } = req.query;
+    
+    let query = `
+      SELECT 
+        i.id,
+        i.product_id,
+        p.name as product_name,
+        p.code as product_code,
+        i.warehouse_id,
+        w.name as warehouse_name,
+        i.quantity_on_hand,
+        i.quantity_reserved,
+        (i.quantity_on_hand - i.quantity_reserved) as quantity_available,
+        i.cost_price,
+        i.batch_number,
+        i.expiry_date,
+        i.created_at,
+        i.updated_at
+      FROM inventory_stock i
+      JOIN products p ON i.product_id = p.id
+      JOIN warehouses w ON i.warehouse_id = w.id
+      WHERE i.tenant_id = ?
+    `;
+    
+    const params = [tenantId];
+    
+    if (warehouse_id) {
+      query += ' AND i.warehouse_id = ?';
+      params.push(warehouse_id);
+    }
+    
+    if (product_id) {
+      query += ' AND i.product_id = ?';
+      params.push(product_id);
+    }
+    
+    if (low_stock === 'true') {
+      query += ' AND i.quantity_on_hand <= 10';
+    }
+    
+    query += ' ORDER BY p.name ASC';
+    
+    const stock = await new Promise((resolve, reject) => {
+      db.all(query, params, (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows);
+      });
+    });
+    
+    // Calculate summary stats
+    const summary = await new Promise((resolve, reject) => {
+      db.get(`
+        SELECT 
+          COUNT(DISTINCT i.product_id) as total_products,
+          SUM(i.quantity_on_hand) as total_units,
+          SUM(i.quantity_on_hand * i.cost_price) as total_value,
+          COUNT(CASE WHEN i.quantity_on_hand <= 10 THEN 1 END) as low_stock_items,
+          COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock_items
+        FROM inventory_stock i
+        WHERE i.tenant_id = ?
+      `, [tenantId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        stock,
+        summary
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stock levels:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 /**
  * @swagger
  * /api/inventory/{id}:
@@ -508,92 +594,6 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     console.error('Error deleting inventory item:', error);
     res.status(500).json({ success: false, message: error.message });
-  }
-});
-
-// Get stock levels (alias for main inventory endpoint)
-router.get('/stock', async (req, res) => {
-  try {
-    const tenantId = req.user?.tenantId;
-    
-    const db = getDatabase();
-    
-    const { warehouse_id, low_stock, product_id } = req.query;
-    
-    let query = `
-      SELECT 
-        i.id,
-        i.product_id,
-        p.name as product_name,
-        p.code as product_code,
-        i.warehouse_id,
-        w.name as warehouse_name,
-        i.quantity_on_hand,
-        i.quantity_reserved,
-        (i.quantity_on_hand - i.quantity_reserved) as quantity_available,
-        i.cost_price,
-        i.batch_number,
-        i.expiry_date,
-        i.created_at,
-        i.updated_at
-      FROM inventory_stock i
-      JOIN products p ON i.product_id = p.id
-      JOIN warehouses w ON i.warehouse_id = w.id
-      WHERE i.tenant_id = ?
-    `;
-    
-    const params = [tenantId];
-    
-    if (warehouse_id) {
-      query += ' AND i.warehouse_id = ?';
-      params.push(warehouse_id);
-    }
-    
-    if (product_id) {
-      query += ' AND i.product_id = ?';
-      params.push(product_id);
-    }
-    
-    if (low_stock === 'true') {
-      query += ' AND i.quantity_on_hand <= 10';
-    }
-    
-    query += ' ORDER BY p.name ASC';
-    
-    const stock = await new Promise((resolve, reject) => {
-      db.all(query, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-    
-    // Calculate summary stats
-    const summary = await new Promise((resolve, reject) => {
-      db.get(`
-        SELECT 
-          COUNT(DISTINCT i.product_id) as total_products,
-          SUM(i.quantity_on_hand) as total_units,
-          SUM(i.quantity_on_hand * i.cost_price) as total_value,
-          COUNT(CASE WHEN i.quantity_on_hand <= 10 THEN 1 END) as low_stock_items,
-          COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock_items
-        FROM inventory_stock i
-        WHERE i.tenant_id = ?
-      `, [tenantId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
-    
-    res.json({
-      success: true,
-      data: {
-        stock,
-        summary
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching stock levels:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
