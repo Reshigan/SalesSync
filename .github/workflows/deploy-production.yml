@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to Production with Testing
 
 on:
   push:
@@ -7,9 +7,73 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-locally:
+    name: Run Local Tests Before Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install backend dependencies
+        run: |
+          cd backend-api
+          npm ci
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps chromium webkit
+      
+      - name: Run backend tests with coverage
+        run: |
+          cd backend-api
+          npm test -- --coverage --ci
+        env:
+          NODE_ENV: test
+      
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend-api/coverage/
+      
+      - name: Run frontend E2E tests
+        run: |
+          cd frontend
+          npx playwright test --project=chromium --project=webkit
+        env:
+          NEXT_PUBLIC_APP_URL: http://localhost:12000
+          NEXT_PUBLIC_API_URL: http://localhost:3001/api
+          PW_TEST_PRODUCTION: 'false'
+          TEST_ADMIN_EMAIL: admin@demo.com
+          TEST_ADMIN_PASSWORD: admin123
+      
+      - name: Upload frontend test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: frontend-test-reports
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+  
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
+    needs: test-locally
     
     steps:
       - name: Checkout code
@@ -83,8 +147,74 @@ jobs:
         run: |
           echo "✅ Deployment to production was successful!"
           echo "🌐 Application URL: https://ss.gonxt.tech"
+  
+  test-production:
+    name: Test Production Deployment
+    runs-on: ubuntu-latest
+    needs: deploy
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Install Playwright browsers
+        run: |
+          cd frontend
+          npx playwright install --with-deps chromium webkit firefox
+      
+      - name: Wait for deployment to stabilize
+        run: |
+          echo "⏳ Waiting 30 seconds for deployment to stabilize..."
+          sleep 30
+      
+      - name: Test production health
+        run: |
+          echo "🏥 Testing production health endpoint..."
+          curl -f https://ss.gonxt.tech/health || exit 1
+      
+      - name: Run comprehensive production tests
+        run: |
+          cd frontend
+          npx playwright test --project=chromium --project=webkit --project=firefox
+        env:
+          NEXT_PUBLIC_APP_URL: https://ss.gonxt.tech
+          NEXT_PUBLIC_API_URL: https://ss.gonxt.tech/api
+          PW_TEST_PRODUCTION: 'true'
+          TEST_ADMIN_EMAIL: ${{ secrets.PROD_ADMIN_EMAIL || 'admin@demo.com' }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.PROD_ADMIN_PASSWORD || 'admin123' }}
+          PW_TEST_TIMEOUT: 60000
+          PW_NAVIGATION_TIMEOUT: 30000
+          PW_RETRIES: 2
+      
+      - name: Upload production test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-test-reports
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+      
+      - name: Notify Production Tests Success
+        if: success()
+        run: |
+          echo "✅ Production tests passed!"
+          echo "🌐 Application verified: https://ss.gonxt.tech"
+          echo "📊 All browsers tested: Chrome, Safari, Firefox"
           
-      - name: Notify Deployment Failure
+      - name: Notify Production Tests Failure
         if: failure()
         run: |
-          echo "❌ Deployment failed. Please check the logs."
+          echo "❌ Production tests failed!"
+          echo "🔍 Check test reports for details"
+          echo "⚠️  Consider rollback if critical issues found"
