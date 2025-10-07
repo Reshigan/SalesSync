@@ -587,11 +587,12 @@ router.get('/profile', asyncHandler(async (req, res) => {
   
   // req.user and req.tenant are already set by authTenantMiddleware
   const userId = req.user.id;
+  const tenantId = req.user.tenantId;
   
   // Get fresh user data from database (use snake_case column names as per schema)
   const user = await getOneQuery(
     'SELECT id, email, first_name, last_name, phone, role, status, created_at FROM users WHERE id = ? AND tenant_id = ?',
-    [userId, req.tenantId]
+    [userId, tenantId]
   );
   
   if (!user) {
