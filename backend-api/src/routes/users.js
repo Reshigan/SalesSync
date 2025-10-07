@@ -224,6 +224,55 @@ router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandl
 
 /**
  * @swagger
+ * /api/users/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/profile', asyncHandler(async (req, res) => {
+  const { getOneQuery } = require('../database/init');
+  
+  // req.user and req.tenant are already set by authTenantMiddleware
+  const userId = req.user.id;
+  const tenantId = req.user.tenantId;
+  
+  console.log('[PROFILE] userId:', userId, 'tenantId:', tenantId);
+  console.log('[PROFILE] req.user:', JSON.stringify(req.user));
+  
+  // Get fresh user data from database (use snake_case column names as per schema)
+  const user = await getOneQuery(
+    'SELECT id, email, first_name, last_name, phone, role, status, created_at FROM users WHERE id = ? AND tenant_id = ?',
+    [userId, tenantId]
+  );
+  
+  console.log('[PROFILE] Query result:', user);
+  
+  if (!user) {
+    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
+  }
+  
+  res.json({
+    success: true,
+    data: {
+      user: user,
+      tenant: {
+        id: req.tenant.id,
+        name: req.tenant.name,
+        code: req.tenant.code
+      }
+    }
+  });
+}));
+
+/**
+ * @swagger
  * /api/users/{id}:
  *   get:
  *     summary: Get user by ID
@@ -564,55 +613,6 @@ router.get('/roles', asyncHandler(async (req, res) => {
     success: true,
     data: {
       roles
-    }
-  });
-}));
-
-/**
- * @swagger
- * /api/users/profile:
- *   get:
- *     summary: Get current user profile
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User profile retrieved successfully
- *       401:
- *         description: Unauthorized
- */
-router.get('/profile', asyncHandler(async (req, res) => {
-  const { getOneQuery } = require('../database/init');
-  
-  // req.user and req.tenant are already set by authTenantMiddleware
-  const userId = req.user.id;
-  const tenantId = req.user.tenantId;
-  
-  console.log('[PROFILE] userId:', userId, 'tenantId:', tenantId);
-  console.log('[PROFILE] req.user:', JSON.stringify(req.user));
-  
-  // Get fresh user data from database (use snake_case column names as per schema)
-  const user = await getOneQuery(
-    'SELECT id, email, first_name, last_name, phone, role, status, created_at FROM users WHERE id = ? AND tenant_id = ?',
-    [userId, tenantId]
-  );
-  
-  console.log('[PROFILE] Query result:', user);
-  
-  if (!user) {
-    throw new AppError('User not found', 404, 'USER_NOT_FOUND');
-  }
-  
-  res.json({
-    success: true,
-    data: {
-      user: user,
-      tenant: {
-        id: req.tenant.id,
-        name: req.tenant.name,
-        code: req.tenant.code
-      }
     }
   });
 }));
