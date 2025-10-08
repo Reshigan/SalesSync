@@ -259,5 +259,10 @@ class MockPrismaClient {
   }
 }
 
-// Use mock database for development
-export const prisma = new MockPrismaClient() as any;
+// Use real Prisma Client for production with PostgreSQL
+// Use mock database only if DATABASE_URL is not set
+const useMockDatabase = !process.env.DATABASE_URL;
+
+export const prisma = useMockDatabase 
+  ? (new MockPrismaClient() as any)
+  : new PrismaClient();
