@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant';
 import express from 'express';
 import { prisma } from '../database';
 import { logger } from '../utils/logger';
@@ -5,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // Get all merchandising visits
-router.get('/visits', async (req, res, next) => {
+router.get('/visits', async (req: TenantRequest, res, next) => {
   try {
     const { storeId, userId, status, startDate, endDate } = req.query;
     
@@ -56,7 +57,7 @@ router.get('/visits', async (req, res, next) => {
 });
 
 // Get single merchandising visit
-router.get('/visits/:id', async (req, res, next) => {
+router.get('/visits/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -100,7 +101,7 @@ router.get('/visits/:id', async (req, res, next) => {
 });
 
 // Create merchandising visit
-router.post('/visits', async (req, res, next) => {
+router.post('/visits', async (req: TenantRequest, res, next) => {
   try {
     const {
       storeId,
@@ -130,7 +131,7 @@ router.post('/visits', async (req, res, next) => {
     const visit = await prisma.merchandisingVisit.create({
       data: {
         storeId,
-        userId: req.user!.userId,
+        userId: req.user!.id,
         visitDate: new Date(visitDate),
         shelfShare: shelfShare ? parseFloat(shelfShare) : null,
         facingsCount: facingsCount ? parseInt(facingsCount) : null,
@@ -160,7 +161,7 @@ router.post('/visits', async (req, res, next) => {
       }
     });
 
-    logger.info(`Merchandising visit created: ${visit.id} by user ${req.user!.userId}`);
+    logger.info(`Merchandising visit created: ${visit.id} by user ${req.user!.id}`);
     res.status(201).json(visit);
   } catch (error) {
     logger.error('Error creating merchandising visit:', error);
@@ -169,7 +170,7 @@ router.post('/visits', async (req, res, next) => {
 });
 
 // Update merchandising visit
-router.put('/visits/:id', async (req, res, next) => {
+router.put('/visits/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -240,7 +241,7 @@ router.put('/visits/:id', async (req, res, next) => {
 });
 
 // Update visit status (approve/reject)
-router.patch('/visits/:id/status', async (req, res, next) => {
+router.patch('/visits/:id/status', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -293,7 +294,7 @@ router.patch('/visits/:id/status', async (req, res, next) => {
 });
 
 // Delete merchandising visit
-router.delete('/visits/:id', async (req, res, next) => {
+router.delete('/visits/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -323,7 +324,7 @@ router.delete('/visits/:id', async (req, res, next) => {
 });
 
 // Get merchandising analytics
-router.get('/analytics', async (req, res, next) => {
+router.get('/analytics', async (req: TenantRequest, res, next) => {
   try {
     const { startDate, endDate, storeId } = req.query;
 
@@ -345,14 +346,14 @@ router.get('/analytics', async (req, res, next) => {
 
     const analytics = {
       totalVisits: visits.length,
-      averageShelfShare: visits.reduce((sum, v) => sum + (v.shelfShare ? parseFloat(v.shelfShare.toString()) : 0), 0) / visits.length || 0,
-      averageComplianceScore: visits.reduce((sum, v) => sum + (v.complianceScore ? parseFloat(v.complianceScore.toString()) : 0), 0) / visits.length || 0,
-      averageAiScore: visits.reduce((sum, v) => sum + (v.aiScore ? parseFloat(v.aiScore.toString()) : 0), 0) / visits.length || 0,
+      averageShelfShare: visits.reduce((sum: number, v: any) => sum + (v.shelfShare ? parseFloat(v.shelfShare.toString()) : 0), 0) / visits.length || 0,
+      averageComplianceScore: visits.reduce((sum: number, v: any) => sum + (v.complianceScore ? parseFloat(v.complianceScore.toString()) : 0), 0) / visits.length || 0,
+      averageAiScore: visits.reduce((sum: number, v: any) => sum + (v.aiScore ? parseFloat(v.aiScore.toString()) : 0), 0) / visits.length || 0,
       statusBreakdown: {
-        completed: visits.filter(v => v.status === 'COMPLETED').length,
-        pendingReview: visits.filter(v => v.status === 'PENDING_REVIEW').length,
-        approved: visits.filter(v => v.status === 'APPROVED').length,
-        rejected: visits.filter(v => v.status === 'REJECTED').length
+        completed: visits.filter((v: any) => v.status === 'COMPLETED').length,
+        pendingReview: visits.filter((v: any) => v.status === 'PENDING_REVIEW').length,
+        approved: visits.filter((v: any) => v.status === 'APPROVED').length,
+        rejected: visits.filter((v: any) => v.status === 'REJECTED').length
       }
     };
 

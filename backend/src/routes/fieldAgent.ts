@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant';
 import express from 'express';
 import { prisma } from '../database';
 import { logger } from '../utils/logger';
@@ -5,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // Get all SIM distributions
-router.get('/sims', async (req, res, next) => {
+router.get('/sims', async (req: TenantRequest, res, next) => {
   try {
     const { userId, kycStatus, activationStatus, startDate, endDate } = req.query;
     
@@ -48,7 +49,7 @@ router.get('/sims', async (req, res, next) => {
 });
 
 // Get single SIM distribution
-router.get('/sims/:id', async (req, res, next) => {
+router.get('/sims/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -84,7 +85,7 @@ router.get('/sims/:id', async (req, res, next) => {
 });
 
 // Create SIM distribution
-router.post('/sims', async (req, res, next) => {
+router.post('/sims', async (req: TenantRequest, res, next) => {
   try {
     const {
       customerName,
@@ -109,7 +110,7 @@ router.post('/sims', async (req, res, next) => {
 
     const sim = await prisma.simDistribution.create({
       data: {
-        userId: req.user!.userId,
+        userId: req.user!.id,
         customerName,
         customerPhone,
         customerType: customerType || 'PREPAID',
@@ -133,7 +134,7 @@ router.post('/sims', async (req, res, next) => {
       }
     });
 
-    logger.info(`SIM distribution created: ${sim.id} by user ${req.user!.userId}`);
+    logger.info(`SIM distribution created: ${sim.id} by user ${req.user!.id}`);
     res.status(201).json(sim);
   } catch (error) {
     logger.error('Error creating SIM distribution:', error);
@@ -142,7 +143,7 @@ router.post('/sims', async (req, res, next) => {
 });
 
 // Update SIM distribution
-router.put('/sims/:id', async (req, res, next) => {
+router.put('/sims/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -208,7 +209,7 @@ router.put('/sims/:id', async (req, res, next) => {
 });
 
 // Update KYC status
-router.patch('/sims/:id/kyc', async (req, res, next) => {
+router.patch('/sims/:id/kyc', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { kycStatus } = req.body;
@@ -254,7 +255,7 @@ router.patch('/sims/:id/kyc', async (req, res, next) => {
 });
 
 // Update activation status
-router.patch('/sims/:id/activation', async (req, res, next) => {
+router.patch('/sims/:id/activation', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { activationStatus } = req.body;
@@ -300,7 +301,7 @@ router.patch('/sims/:id/activation', async (req, res, next) => {
 });
 
 // Delete SIM distribution
-router.delete('/sims/:id', async (req, res, next) => {
+router.delete('/sims/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -330,7 +331,7 @@ router.delete('/sims/:id', async (req, res, next) => {
 });
 
 // Get SIM distribution analytics
-router.get('/analytics', async (req, res, next) => {
+router.get('/analytics', async (req: TenantRequest, res, next) => {
   try {
     const { startDate, endDate, userId } = req.query;
 
@@ -352,16 +353,16 @@ router.get('/analytics', async (req, res, next) => {
 
     const analytics = {
       totalDistributions: sims.length,
-      totalCommission: sims.reduce((sum, s) => sum + parseFloat(s.commission.toString()), 0),
+      totalCommission: sims.reduce((sum: number, s: any) => sum + parseFloat(s.commission.toString()), 0),
       kycBreakdown: {
-        pending: sims.filter(s => s.kycStatus === 'PENDING').length,
-        verified: sims.filter(s => s.kycStatus === 'VERIFIED').length,
-        rejected: sims.filter(s => s.kycStatus === 'REJECTED').length
+        pending: sims.filter((s: any) => s.kycStatus === 'PENDING').length,
+        verified: sims.filter((s: any) => s.kycStatus === 'VERIFIED').length,
+        rejected: sims.filter((s: any) => s.kycStatus === 'REJECTED').length
       },
       activationBreakdown: {
-        pending: sims.filter(s => s.activationStatus === 'PENDING').length,
-        activated: sims.filter(s => s.activationStatus === 'ACTIVATED').length,
-        failed: sims.filter(s => s.activationStatus === 'FAILED').length
+        pending: sims.filter((s: any) => s.activationStatus === 'PENDING').length,
+        activated: sims.filter((s: any) => s.activationStatus === 'ACTIVATED').length,
+        failed: sims.filter((s: any) => s.activationStatus === 'FAILED').length
       }
     };
 

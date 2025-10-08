@@ -1,11 +1,12 @@
 import express from 'express';
 import { prisma } from '../database';
 import { logger } from '../utils/logger';
+import { TenantRequest } from '../middleware/tenant';
 
 const router = express.Router();
 
 // Get all surveys
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: TenantRequest, res, next) => {
   try {
     const { status, type, campaignId, startDate, endDate } = req.query;
     
@@ -59,7 +60,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // Get single survey with questions
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -109,7 +110,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Create survey with questions
-router.post('/', async (req, res, next) => {
+router.post('/', async (req: TenantRequest, res, next) => {
   try {
     const {
       title,
@@ -163,7 +164,7 @@ router.post('/', async (req, res, next) => {
         isAnonymous: isAnonymous === true,
         allowMultiple: allowMultiple === true,
         tenantId: req.tenantId!,
-        createdById: req.user!.userId,
+        createdById: req.user!.id,
         campaignId: campaignId || null,
         questions: questions ? {
           create: questions.map((q: any, index: number) => ({
@@ -197,7 +198,7 @@ router.post('/', async (req, res, next) => {
       }
     });
 
-    logger.info(`Survey created: ${survey.id} by user ${req.user!.userId}`);
+    logger.info(`Survey created: ${survey.id} by user ${req.user!.id}`);
     res.status(201).json(survey);
   } catch (error) {
     logger.error('Error creating survey:', error);
@@ -206,7 +207,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Update survey
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -294,7 +295,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // Delete survey
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -322,7 +323,7 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 // Add question to survey
-router.post('/:id/questions', async (req, res, next) => {
+router.post('/:id/questions', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { questionText, questionType, options, isRequired, order } = req.body;
@@ -377,7 +378,7 @@ router.post('/:id/questions', async (req, res, next) => {
 });
 
 // Update question
-router.put('/questions/:questionId', async (req, res, next) => {
+router.put('/questions/:questionId', async (req: TenantRequest, res, next) => {
   try {
     const { questionId } = req.params;
     const { questionText, questionType, options, isRequired, order } = req.body;
@@ -417,7 +418,7 @@ router.put('/questions/:questionId', async (req, res, next) => {
 });
 
 // Delete question
-router.delete('/questions/:questionId', async (req, res, next) => {
+router.delete('/questions/:questionId', async (req: TenantRequest, res, next) => {
   try {
     const { questionId } = req.params;
 
@@ -448,7 +449,7 @@ router.delete('/questions/:questionId', async (req, res, next) => {
 });
 
 // Submit survey response
-router.post('/:id/submit', async (req, res, next) => {
+router.post('/:id/submit', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { answers, location, deviceInfo } = req.body;
@@ -478,7 +479,7 @@ router.post('/:id/submit', async (req, res, next) => {
       const existingResponse = await prisma.surveyResponse.findFirst({
         where: {
           surveyId: id,
-          respondentId: req.user.userId
+          respondentId: req.user.id
         }
       });
 
@@ -488,14 +489,14 @@ router.post('/:id/submit', async (req, res, next) => {
     }
 
     // Validate required questions
-    const requiredQuestions = survey.questions.filter(q => q.isRequired);
+    const requiredQuestions = survey.questions.filter((q: any) => q.isRequired);
     const answeredQuestionIds = answers.map((a: any) => a.questionId);
-    const missingRequired = requiredQuestions.filter(q => !answeredQuestionIds.includes(q.id));
+    const missingRequired = requiredQuestions.filter((q: any) => !answeredQuestionIds.includes(q.id));
 
     if (missingRequired.length > 0) {
       return res.status(400).json({ 
         error: 'Missing required questions',
-        missingQuestions: missingRequired.map(q => ({ id: q.id, text: q.questionText }))
+        missingQuestions: missingRequired.map((q: any) => ({ id: q.id, text: q.questionText }))
       });
     }
 
@@ -503,7 +504,7 @@ router.post('/:id/submit', async (req, res, next) => {
     const response = await prisma.surveyResponse.create({
       data: {
         surveyId: id,
-        respondentId: survey.isAnonymous ? null : (req.user?.userId || null),
+        respondentId: survey.isAnonymous ? null : (req.user?.id || null),
         location,
         deviceInfo: deviceInfo || null,
         answers: {
@@ -532,7 +533,7 @@ router.post('/:id/submit', async (req, res, next) => {
 });
 
 // Get survey responses
-router.get('/:id/responses', async (req, res, next) => {
+router.get('/:id/responses', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -583,7 +584,7 @@ router.get('/:id/responses', async (req, res, next) => {
 });
 
 // Get survey analytics
-router.get('/:id/analytics', async (req, res, next) => {
+router.get('/:id/analytics', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -622,11 +623,11 @@ router.get('/:id/analytics', async (req, res, next) => {
       },
       totalResponses: responses.length,
       completionRate: survey.questions.length > 0 
-        ? (responses.filter(r => r.answers.length === survey.questions.length).length / responses.length * 100)
+        ? (responses.filter((r: any) => r.answers.length === survey.questions.length).length / responses.length * 100)
         : 0,
-      questions: survey.questions.map(question => {
-        const questionAnswers = responses.flatMap(r => 
-          r.answers.filter(a => a.questionId === question.id)
+      questions: survey.questions.map((question: any) => {
+        const questionAnswers = responses.flatMap((r: any) => 
+          r.answers.filter((a: any) => a.questionId === question.id)
         );
 
         const analytics: any = {
@@ -642,18 +643,18 @@ router.get('/:id/analytics', async (req, res, next) => {
           const options = question.options as string[] || [];
           analytics.optionBreakdown = options.map(option => ({
             option,
-            count: questionAnswers.filter(a => a.answerText === option).length
+            count: questionAnswers.filter((a: any) => a.answerText === option).length
           }));
         } else if (question.questionType === 'RATING' || question.questionType === 'SCALE') {
-          const ratings = questionAnswers.map(a => parseFloat(a.answerText || '0')).filter(r => !isNaN(r));
+          const ratings = questionAnswers.map((a: any) => parseFloat(a.answerText || '0')).filter((r: any) => !isNaN(r));
           analytics.averageRating = ratings.length > 0 
-            ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length 
+            ? ratings.reduce((sum: any, r: any) => sum + r, 0) / ratings.length 
             : 0;
           analytics.minRating = ratings.length > 0 ? Math.min(...ratings) : 0;
           analytics.maxRating = ratings.length > 0 ? Math.max(...ratings) : 0;
         } else if (question.questionType === 'YES_NO') {
-          analytics.yesCount = questionAnswers.filter(a => a.answerText?.toLowerCase() === 'yes').length;
-          analytics.noCount = questionAnswers.filter(a => a.answerText?.toLowerCase() === 'no').length;
+          analytics.yesCount = questionAnswers.filter((a: any) => a.answerText?.toLowerCase() === 'yes').length;
+          analytics.noCount = questionAnswers.filter((a: any) => a.answerText?.toLowerCase() === 'no').length;
         }
 
         return analytics;
@@ -668,7 +669,7 @@ router.get('/:id/analytics', async (req, res, next) => {
 });
 
 // Get overall survey statistics
-router.get('/stats/summary', async (req, res, next) => {
+router.get('/stats/summary', async (req: TenantRequest, res, next) => {
   try {
     const { startDate, endDate } = req.query;
 
@@ -710,20 +711,20 @@ router.get('/stats/summary', async (req, res, next) => {
       totalResponses,
       averageResponsesPerSurvey: surveys.length > 0 ? totalResponses / surveys.length : 0,
       statusBreakdown: {
-        draft: surveys.filter(s => s.status === 'DRAFT').length,
-        active: surveys.filter(s => s.status === 'ACTIVE').length,
-        paused: surveys.filter(s => s.status === 'PAUSED').length,
-        completed: surveys.filter(s => s.status === 'COMPLETED').length,
-        archived: surveys.filter(s => s.status === 'ARCHIVED').length
+        draft: surveys.filter((s: any) => s.status === 'DRAFT').length,
+        active: surveys.filter((s: any) => s.status === 'ACTIVE').length,
+        paused: surveys.filter((s: any) => s.status === 'PAUSED').length,
+        completed: surveys.filter((s: any) => s.status === 'COMPLETED').length,
+        archived: surveys.filter((s: any) => s.status === 'ARCHIVED').length
       },
       typeBreakdown: {
-        customerSatisfaction: surveys.filter(s => s.type === 'CUSTOMER_SATISFACTION').length,
-        marketResearch: surveys.filter(s => s.type === 'MARKET_RESEARCH').length,
-        productFeedback: surveys.filter(s => s.type === 'PRODUCT_FEEDBACK').length,
-        brandAwareness: surveys.filter(s => s.type === 'BRAND_AWARENESS').length,
-        competitorAnalysis: surveys.filter(s => s.type === 'COMPETITOR_ANALYSIS').length,
-        mysteryShopping: surveys.filter(s => s.type === 'MYSTERY_SHOPPING').length,
-        custom: surveys.filter(s => s.type === 'CUSTOM').length
+        customerSatisfaction: surveys.filter((s: any) => s.type === 'CUSTOMER_SATISFACTION').length,
+        marketResearch: surveys.filter((s: any) => s.type === 'MARKET_RESEARCH').length,
+        productFeedback: surveys.filter((s: any) => s.type === 'PRODUCT_FEEDBACK').length,
+        brandAwareness: surveys.filter((s: any) => s.type === 'BRAND_AWARENESS').length,
+        competitorAnalysis: surveys.filter((s: any) => s.type === 'COMPETITOR_ANALYSIS').length,
+        mysteryShopping: surveys.filter((s: any) => s.type === 'MYSTERY_SHOPPING').length,
+        custom: surveys.filter((s: any) => s.type === 'CUSTOM').length
       }
     };
 

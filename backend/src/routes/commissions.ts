@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant';
 import express from 'express';
 import { prisma } from '../database';
 import { logger } from '../utils/logger';
@@ -5,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // Get all commissions
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: TenantRequest, res, next) => {
   try {
     const { userId, period, status, startDate, endDate } = req.query;
     
@@ -49,7 +50,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // Get single commission
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -86,7 +87,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // Get commissions by user
-router.get('/user/:userId', async (req, res, next) => {
+router.get('/user/:userId', async (req: TenantRequest, res, next) => {
   try {
     const { userId } = req.params;
     const { period, status } = req.query;
@@ -114,7 +115,7 @@ router.get('/user/:userId', async (req, res, next) => {
 });
 
 // Create commission
-router.post('/', async (req, res, next) => {
+router.post('/', async (req: TenantRequest, res, next) => {
   try {
     const {
       userId,
@@ -186,7 +187,7 @@ router.post('/', async (req, res, next) => {
 });
 
 // Calculate commission for a user
-router.post('/calculate', async (req, res, next) => {
+router.post('/calculate', async (req: TenantRequest, res, next) => {
   try {
     const {
       userId,
@@ -230,7 +231,7 @@ router.post('/calculate', async (req, res, next) => {
       }
     });
 
-    const salesAmount = orders.reduce((sum, order) => sum + parseFloat(order.totalAmount.toString()), 0);
+    const salesAmount = orders.reduce((sum: number, order: any) => sum + parseFloat(order.totalAmount.toString()), 0);
     const calculatedCommissionRate = commissionRate ? parseFloat(commissionRate) : 0.05; // Default 5%
     const commissionAmount = salesAmount * calculatedCommissionRate;
     const calculatedBaseSalary = baseSalary ? parseFloat(baseSalary) : 0;
@@ -273,7 +274,7 @@ router.post('/calculate', async (req, res, next) => {
 });
 
 // Update commission
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -340,7 +341,7 @@ router.put('/:id', async (req, res, next) => {
 });
 
 // Approve commission
-router.patch('/:id/approve', async (req, res, next) => {
+router.patch('/:id/approve', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -386,7 +387,7 @@ router.patch('/:id/approve', async (req, res, next) => {
 });
 
 // Mark commission as paid
-router.patch('/:id/pay', async (req, res, next) => {
+router.patch('/:id/pay', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { paymentDate } = req.body;
@@ -436,7 +437,7 @@ router.patch('/:id/pay', async (req, res, next) => {
 });
 
 // Dispute commission
-router.patch('/:id/dispute', async (req, res, next) => {
+router.patch('/:id/dispute', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -478,7 +479,7 @@ router.patch('/:id/dispute', async (req, res, next) => {
 });
 
 // Delete commission
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -508,7 +509,7 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 // Get commission analytics
-router.get('/analytics/summary', async (req, res, next) => {
+router.get('/analytics/summary', async (req: TenantRequest, res, next) => {
   try {
     const { startDate, endDate, userId } = req.query;
 
@@ -530,16 +531,16 @@ router.get('/analytics/summary', async (req, res, next) => {
 
     const analytics = {
       totalCommissions: commissions.length,
-      totalSales: commissions.reduce((sum, c) => sum + parseFloat(c.salesAmount.toString()), 0),
-      totalCommissionAmount: commissions.reduce((sum, c) => sum + parseFloat(c.commissionAmount.toString()), 0),
-      totalBonuses: commissions.reduce((sum, c) => sum + parseFloat(c.bonuses.toString()), 0),
-      totalDeductions: commissions.reduce((sum, c) => sum + parseFloat(c.deductions.toString()), 0),
-      totalEarnings: commissions.reduce((sum, c) => sum + parseFloat(c.totalEarnings.toString()), 0),
+      totalSales: commissions.reduce((sum: number, c: any) => sum + parseFloat(c.salesAmount.toString()), 0),
+      totalCommissionAmount: commissions.reduce((sum: number, c: any) => sum + parseFloat(c.commissionAmount.toString()), 0),
+      totalBonuses: commissions.reduce((sum: number, c: any) => sum + parseFloat(c.bonuses.toString()), 0),
+      totalDeductions: commissions.reduce((sum: number, c: any) => sum + parseFloat(c.deductions.toString()), 0),
+      totalEarnings: commissions.reduce((sum: number, c: any) => sum + parseFloat(c.totalEarnings.toString()), 0),
       statusBreakdown: {
-        pending: commissions.filter(c => c.status === 'PENDING').length,
-        approved: commissions.filter(c => c.status === 'APPROVED').length,
-        paid: commissions.filter(c => c.status === 'PAID').length,
-        disputed: commissions.filter(c => c.status === 'DISPUTED').length
+        pending: commissions.filter((c: any) => c.status === 'PENDING').length,
+        approved: commissions.filter((c: any) => c.status === 'APPROVED').length,
+        paid: commissions.filter((c: any) => c.status === 'PAID').length,
+        disputed: commissions.filter((c: any) => c.status === 'DISPUTED').length
       }
     };
 

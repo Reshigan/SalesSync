@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant';
 import express from 'express';
 import { prisma } from '../database';
 import { logger } from '../utils/logger';
@@ -5,7 +6,7 @@ import { logger } from '../utils/logger';
 const router = express.Router();
 
 // Get all promoter activities
-router.get('/activities', async (req, res, next) => {
+router.get('/activities', async (req: TenantRequest, res, next) => {
   try {
     const { userId, campaignId, activityType, status, startDate, endDate } = req.query;
     
@@ -57,7 +58,7 @@ router.get('/activities', async (req, res, next) => {
 });
 
 // Get single promoter activity
-router.get('/activities/:id', async (req, res, next) => {
+router.get('/activities/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -102,7 +103,7 @@ router.get('/activities/:id', async (req, res, next) => {
 });
 
 // Get activities by campaign
-router.get('/campaigns/:campaignId/activities', async (req, res, next) => {
+router.get('/campaigns/:campaignId/activities', async (req: TenantRequest, res, next) => {
   try {
     const { campaignId } = req.params;
     const { userId, status } = req.query;
@@ -140,7 +141,7 @@ router.get('/campaigns/:campaignId/activities', async (req, res, next) => {
 });
 
 // Create promoter activity
-router.post('/activities', async (req, res, next) => {
+router.post('/activities', async (req: TenantRequest, res, next) => {
   try {
     const {
       campaignId,
@@ -181,7 +182,7 @@ router.post('/activities', async (req, res, next) => {
 
     const activity = await prisma.promoterActivity.create({
       data: {
-        userId: req.user!.userId,
+        userId: req.user!.id,
         campaignId: campaignId || null,
         activityType,
         location,
@@ -214,7 +215,7 @@ router.post('/activities', async (req, res, next) => {
       }
     });
 
-    logger.info(`Promoter activity created: ${activity.id} by user ${req.user!.userId}`);
+    logger.info(`Promoter activity created: ${activity.id} by user ${req.user!.id}`);
     res.status(201).json(activity);
   } catch (error) {
     logger.error('Error creating promoter activity:', error);
@@ -223,7 +224,7 @@ router.post('/activities', async (req, res, next) => {
 });
 
 // Update promoter activity
-router.put('/activities/:id', async (req, res, next) => {
+router.put('/activities/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -314,7 +315,7 @@ router.put('/activities/:id', async (req, res, next) => {
 });
 
 // Verify activity
-router.patch('/activities/:id/verify', async (req, res, next) => {
+router.patch('/activities/:id/verify', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
     const { verificationScore, status } = req.body;
@@ -367,7 +368,7 @@ router.patch('/activities/:id/verify', async (req, res, next) => {
 });
 
 // Delete promoter activity
-router.delete('/activities/:id', async (req, res, next) => {
+router.delete('/activities/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
@@ -397,7 +398,7 @@ router.delete('/activities/:id', async (req, res, next) => {
 });
 
 // Get promoter analytics
-router.get('/analytics', async (req, res, next) => {
+router.get('/analytics', async (req: TenantRequest, res, next) => {
   try {
     const { startDate, endDate, userId, campaignId } = req.query;
 
@@ -420,26 +421,26 @@ router.get('/analytics', async (req, res, next) => {
 
     const analytics = {
       totalActivities: activities.length,
-      totalSamplesDistributed: activities.reduce((sum, a) => sum + a.samplesDistributed, 0),
-      totalContactsMade: activities.reduce((sum, a) => sum + a.contactsMade, 0),
-      totalSurveysCompleted: activities.reduce((sum, a) => sum + a.surveysCompleted, 0),
-      averageVerificationScore: activities.filter(a => a.verificationScore !== null)
-        .reduce((sum, a) => sum + parseFloat(a.verificationScore!.toString()), 0) / 
-        activities.filter(a => a.verificationScore !== null).length || 0,
+      totalSamplesDistributed: activities.reduce((sum: number, a: any) => sum + a.samplesDistributed, 0),
+      totalContactsMade: activities.reduce((sum: number, a: any) => sum + a.contactsMade, 0),
+      totalSurveysCompleted: activities.reduce((sum: number, a: any) => sum + a.surveysCompleted, 0),
+      averageVerificationScore: activities.filter((a: any) => a.verificationScore !== null)
+        .reduce((sum: number, a: any) => sum + parseFloat(a.verificationScore!.toString()), 0) / 
+        activities.filter((a: any) => a.verificationScore !== null).length || 0,
       activityTypeBreakdown: {
-        sampling: activities.filter(a => a.activityType === 'SAMPLING').length,
-        demonstration: activities.filter(a => a.activityType === 'DEMONSTRATION').length,
-        survey: activities.filter(a => a.activityType === 'SURVEY').length,
-        brandAwareness: activities.filter(a => a.activityType === 'BRAND_AWARENESS').length,
-        productLaunch: activities.filter(a => a.activityType === 'PRODUCT_LAUNCH').length,
-        event: activities.filter(a => a.activityType === 'EVENT').length,
-        other: activities.filter(a => a.activityType === 'OTHER').length
+        sampling: activities.filter((a: any) => a.activityType === 'SAMPLING').length,
+        demonstration: activities.filter((a: any) => a.activityType === 'DEMONSTRATION').length,
+        survey: activities.filter((a: any) => a.activityType === 'SURVEY').length,
+        brandAwareness: activities.filter((a: any) => a.activityType === 'BRAND_AWARENESS').length,
+        productLaunch: activities.filter((a: any) => a.activityType === 'PRODUCT_LAUNCH').length,
+        event: activities.filter((a: any) => a.activityType === 'EVENT').length,
+        other: activities.filter((a: any) => a.activityType === 'OTHER').length
       },
       statusBreakdown: {
-        completed: activities.filter(a => a.status === 'COMPLETED').length,
-        pendingReview: activities.filter(a => a.status === 'PENDING_REVIEW').length,
-        approved: activities.filter(a => a.status === 'APPROVED').length,
-        rejected: activities.filter(a => a.status === 'REJECTED').length
+        completed: activities.filter((a: any) => a.status === 'COMPLETED').length,
+        pendingReview: activities.filter((a: any) => a.status === 'PENDING_REVIEW').length,
+        approved: activities.filter((a: any) => a.status === 'APPROVED').length,
+        rejected: activities.filter((a: any) => a.status === 'REJECTED').length
       }
     };
 
