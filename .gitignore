@@ -34,9 +34,10 @@ next-env.d.ts
 .env.development.local
 .env.test.local
 .env.production.local
-.env.production
-backend-api/.env.production
-frontend/.env.production
+# Allow .env.production files for deployment
+# .env.production
+# backend-api/.env.production
+# frontend/.env.production
 
 # Logs
 npm-debug.log*
