@@ -31,6 +31,7 @@ import commissionRoutes from './routes/commissions';
 import analyticsRoutes from './routes/analytics';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
+import surveyRoutes from './routes/surveys';
 import { socketService } from './services/socketService';
 
 // Load environment variables
@@ -208,6 +209,7 @@ app.use('/api/merchandising', authMiddleware, tenantMiddleware, merchandisingRou
 app.use('/api/field-agent', authMiddleware, tenantMiddleware, fieldAgentRoutes);
 app.use('/api/inventory', authMiddleware, tenantMiddleware, inventoryRoutes);
 app.use('/api/commissions', authMiddleware, tenantMiddleware, commissionRoutes);
+app.use('/api/surveys', authMiddleware, tenantMiddleware, surveyRoutes);
 app.use('/api/analytics', authMiddleware, tenantMiddleware, analyticsRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
 app.use('/api/notifications', notificationRoutes);

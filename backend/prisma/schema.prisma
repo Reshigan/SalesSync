@@ -33,6 +33,7 @@ model Tenant {
   campaigns   Campaign[]
   stores      Store[]
   inventories Inventory[]
+  surveys     Survey[]
 
   @@map("tenants")
 }
@@ -66,6 +67,8 @@ model User {
   simDistributions SimDistribution[]
   commissions      Commission[]
   auditLogs        AuditLog[]
+  surveysCreated   Survey[] @relation("SurveyCreator")
+  surveyResponses  SurveyResponse[] @relation("SurveyRespondent")
 
   @@map("users")
 }
@@ -468,6 +471,7 @@ model Campaign {
   id          String   @id @default(cuid())
   name        String
   description String?
+  type        String?
   startDate   DateTime
   endDate     DateTime
   budget      Decimal?
@@ -481,6 +485,7 @@ model Campaign {
 
   // Relations
   activities  PromoterActivity[]
+  surveys     Survey[]
 
   @@map("campaigns")
 }
@@ -503,8 +508,8 @@ model PromoterActivity {
 
   userId          String
   user            User     @relation(fields: [userId], references: [id])
-  campaignId      String
-  campaign        Campaign @relation(fields: [campaignId], references: [id])
+  campaignId      String?
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])
 
   @@map("promoter_activities")
 }
@@ -718,4 +723,106 @@ model FileUpload {
   createdAt   DateTime @default(now())
 
   @@map("file_uploads")
+}
+
+// Survey Management
+model Survey {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  type            SurveyType
+  targetAudience  String
+  startDate       DateTime
+  endDate         DateTime?
+  status          SurveyStatus
+  isAnonymous     Boolean @default(false)
+  allowMultiple   Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  campaignId      String?
+  campaign        Campaign? @relation(fields: [campaignId], references: [id])
+  tenantId        String
+  tenant          Tenant @relation(fields: [tenantId], references: [id])
+  createdById     String
+  createdBy       User @relation("SurveyCreator", fields: [createdById], references: [id])
+  
+  questions       SurveyQuestion[]
+  responses       SurveyResponse[]
+  
+  @@map("surveys")
+}
+
+model SurveyQuestion {
+  id              String   @id @default(cuid())
+  surveyId        String
+  survey          Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  questionText    String
+  questionType    QuestionType
+  options         Json? // For multiple choice: ["Option 1", "Option 2"]
+  isRequired      Boolean @default(false)
+  order           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  answers         SurveyAnswer[]
+  
+  @@map("survey_questions")
+}
+
+model SurveyResponse {
+  id              String   @id @default(cuid())
+  surveyId        String
+  survey          Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+  respondentId    String?
+  respondent      User? @relation("SurveyRespondent", fields: [respondentId], references: [id])
+  submittedAt     DateTime @default(now())
+  location        String?
+  deviceInfo      Json? // Browser, OS, etc.
+  
+  answers         SurveyAnswer[]
+  
+  @@map("survey_responses")
+}
+
+model SurveyAnswer {
+  id              String   @id @default(cuid())
+  responseId      String
+  response        SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answerText      String?
+  answerValue     Json? // For complex answers (multi-select, file uploads, etc.)
+  createdAt       DateTime @default(now())
+  
+  @@map("survey_answers")
+}
+
+enum SurveyType {
+  CUSTOMER_SATISFACTION
+  MARKET_RESEARCH
+  PRODUCT_FEEDBACK
+  BRAND_AWARENESS
+  COMPETITOR_ANALYSIS
+  MYSTERY_SHOPPING
+  CUSTOM
+}
+
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SINGLE_CHOICE
+  TEXT
+  RATING
+  YES_NO
+  SCALE
+  DATE
+  FILE_UPLOAD
 }
