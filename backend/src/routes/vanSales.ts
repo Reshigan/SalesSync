@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import { TenantRequest } from '../middleware/tenant';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 
@@ -56,7 +57,7 @@ const prisma = new PrismaClient();
  * - List of loads with summary information
  * - Total value, items count, status
  */
-router.get('/loads', authenticateToken, async (req: Request, res: Response) => {
+router.get('/loads', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const {
@@ -112,7 +113,8 @@ router.get('/loads', authenticateToken, async (req: Request, res: Response) => {
           user: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+            lastName: true,
               email: true
             }
           },
@@ -174,7 +176,7 @@ router.get('/loads', authenticateToken, async (req: Request, res: Response) => {
  * 
  * Purpose: Get complete load details including all items and reconciliation
  */
-router.get('/loads/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/loads/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -184,7 +186,8 @@ router.get('/loads/:id', authenticateToken, async (req: Request, res: Response) 
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true
           }
@@ -273,7 +276,7 @@ router.get('/loads/:id', authenticateToken, async (req: Request, res: Response) 
  * - Validates route if provided
  * - Creates load with LOADED status
  */
-router.post('/loads', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const userId = (req.user as any).userId;
     const {
@@ -328,7 +331,8 @@ router.post('/loads', authenticateToken, async (req: Request, res: Response) => 
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -363,7 +367,7 @@ router.post('/loads', authenticateToken, async (req: Request, res: Response) => 
  * - Cannot update reconciled loads
  * - Status transitions validated
  */
-router.put('/loads/:id', authenticateToken, async (req: Request, res: Response) => {
+router.put('/loads/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -409,7 +413,8 @@ router.put('/loads/:id', authenticateToken, async (req: Request, res: Response) 
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },
@@ -442,7 +447,7 @@ router.put('/loads/:id', authenticateToken, async (req: Request, res: Response) 
  * - Cannot delete reconciled loads
  * - Releases reserved inventory
  */
-router.delete('/loads/:id', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/loads/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -501,7 +506,7 @@ router.delete('/loads/:id', authenticateToken, async (req: Request, res: Respons
  * - Calculates load total value
  * - Supports batch addition
  */
-router.post('/loads/:id/items', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads/:id/items', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { items } = req.body;
@@ -606,7 +611,7 @@ router.post('/loads/:id/items', authenticateToken, async (req: Request, res: Res
  * - Records start time
  * - Prevents further load modifications
  */
-router.post('/loads/:id/start', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads/:id/start', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -682,7 +687,7 @@ router.post('/loads/:id/start', authenticateToken, async (req: Request, res: Res
  * - Calculates commission
  * - Validates sufficient stock in load
  */
-router.post('/loads/:id/sales', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads/:id/sales', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -793,19 +798,20 @@ router.post('/loads/:id/sales', authenticateToken, async (req: Request, res: Res
       }
     });
 
-    // Create payment record if paid
-    if (amountPaid && amountPaid > 0) {
-      await prisma.payment.create({
-        data: {
-          amount: amountPaid,
-          paymentDate: new Date(),
-          paymentMethod: paymentMethod as any,
-          tenantId,
-          customerId,
-          orderId: order.id
-        }
-      });
-    }
+    // Note: Payment model not yet implemented in schema
+    // TODO: Add Payment model and create payment record
+    // if (amountPaid && amountPaid > 0) {
+    //   await prisma.payment.create({
+    //     data: {
+    //       amount: amountPaid,
+    //       paymentDate: new Date(),
+    //       paymentMethod: paymentMethod as any,
+    //       tenantId,
+    //       customerId,
+    //       orderId: order.id
+    //     }
+    //   });
+    // }
 
     res.status(201).json({
       message: 'Sale recorded successfully',
@@ -835,7 +841,7 @@ router.post('/loads/:id/sales', authenticateToken, async (req: Request, res: Res
  * - Adjusts order if applicable
  * - Records return reason
  */
-router.post('/loads/:id/returns', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads/:id/returns', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { orderId, items, notes } = req.body;
@@ -896,7 +902,7 @@ router.post('/loads/:id/returns', authenticateToken, async (req: Request, res: R
  * - Calculates summary
  * - Prepares for reconciliation
  */
-router.post('/loads/:id/end', authenticateToken, async (req: Request, res: Response) => {
+router.post('/loads/:id/end', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -968,7 +974,7 @@ router.post('/loads/:id/end', authenticateToken, async (req: Request, res: Respo
  * - Marks load as RECONCILED
  * - Generates reconciliation report
  */
-router.post('/reconciliation', authenticateToken, async (req: Request, res: Response) => {
+router.post('/reconciliation', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const {
       loadId,
@@ -1052,7 +1058,7 @@ router.post('/reconciliation', authenticateToken, async (req: Request, res: Resp
  * 
  * Purpose: Get complete reconciliation details
  */
-router.get('/reconciliation/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/reconciliation/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -1060,11 +1066,18 @@ router.get('/reconciliation/:id', authenticateToken, async (req: Request, res: R
       where: { id },
       include: {
         load: {
-          include: {
+          select: {
+            id: true,
+            loadNumber: true,
+            loadDate: true,
+            totalValue: true,
+            status: true,
+            notes: true,
             user: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true
               }
             },

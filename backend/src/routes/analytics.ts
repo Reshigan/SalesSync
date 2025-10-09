@@ -1,14 +1,15 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenant';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Dashboard Overview Metrics
-router.get('/dashboard', authenticateToken, async (req: Request, res: Response) => {
+router.get('/dashboard', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = (req.user as any).tenantId;
+    const tenantId = req.user!.tenantId;
     const { startDate, endDate } = req.query;
 
     const dateFilter = startDate && endDate ? {
@@ -25,16 +26,16 @@ router.get('/dashboard', authenticateToken, async (req: Request, res: Response) 
     });
 
     const totalRevenue = orders
-      .filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED')
-      .reduce((sum, order) => sum + order.totalAmount, 0);
+      .filter(o => o.status === 'DELIVERED')
+      .reduce((sum, order) => sum + Number(order.totalAmount), 0);
 
     // Total orders
     const totalOrders = orders.length;
-    const completedOrders = orders.filter(o => o.status === 'DELIVERED' || o.status === 'COMPLETED').length;
+    const completedOrders = orders.filter(o => o.status === 'DELIVERED').length;
 
     // Active customers
     const activeCustomers = await prisma.customer.count({
-      where: { tenantId, status: 'ACTIVE' }
+      where: { tenantId, isActive: true }
     });
 
     // Products count
@@ -61,14 +62,14 @@ router.get('/dashboard', authenticateToken, async (req: Request, res: Response) 
               gte: new Date(date),
               lt: new Date(new Date(date).getTime() + 86400000)
             },
-            status: { in: ['DELIVERED', 'COMPLETED'] }
+            status: 'DELIVERED'
           },
           select: { totalAmount: true }
         });
 
         return {
           date,
-          revenue: dayOrders.reduce((sum, o) => sum + o.totalAmount, 0)
+          revenue: dayOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0)
         };
       })
     );
@@ -90,7 +91,7 @@ router.get('/dashboard', authenticateToken, async (req: Request, res: Response) 
 });
 
 // Sales Analytics
-router.get('/sales', authenticateToken, async (req: Request, res: Response) => {
+router.get('/sales', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { startDate, endDate, groupBy = 'day' } = req.query;
@@ -103,7 +104,7 @@ router.get('/sales', authenticateToken, async (req: Request, res: Response) => {
     } : {};
 
     const orders = await prisma.order.findMany({
-      where: { tenantId, ...dateFilter, status: { in: ['DELIVERED', 'COMPLETED'] } },
+      where: { tenantId, ...dateFilter, status: 'DELIVERED' },
       include: {
         items: {
           include: { product: true }
@@ -114,7 +115,7 @@ router.get('/sales', authenticateToken, async (req: Request, res: Response) => {
     });
 
     // Total sales
-    const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+    const totalSales = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
     const totalQuantity = orders.reduce((sum, o) => 
       sum + o.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
     );
@@ -127,7 +128,7 @@ router.get('/sales', authenticateToken, async (req: Request, res: Response) => {
           acc[productName] = { quantity: 0, revenue: 0 };
         }
         acc[productName].quantity += item.quantity;
-        acc[productName].revenue += item.total;
+        acc[productName].revenue += item.totalPrice;
       });
       return acc;
     }, {});
@@ -179,7 +180,7 @@ router.get('/sales', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Product Performance Analytics
-router.get('/products', authenticateToken, async (req: Request, res: Response) => {
+router.get('/products', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { startDate, endDate } = req.query;
@@ -197,7 +198,7 @@ router.get('/products', authenticateToken, async (req: Request, res: Response) =
         order: {
           tenantId,
           ...dateFilter,
-          status: { in: ['DELIVERED', 'COMPLETED'] }
+          status: 'DELIVERED'
         }
       },
       include: {
@@ -222,7 +223,7 @@ router.get('/products', authenticateToken, async (req: Request, res: Response) =
         };
       }
       acc[productId].quantity += item.quantity;
-      acc[productId].revenue += item.total;
+      acc[productId].revenue += item.totalPrice;
       acc[productId].orders.add(item.orderId);
       return acc;
     }, {});
@@ -267,7 +268,7 @@ router.get('/products', authenticateToken, async (req: Request, res: Response) =
 });
 
 // Customer Analytics
-router.get('/customers', authenticateToken, async (req: Request, res: Response) => {
+router.get('/customers', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { startDate, endDate } = req.query;
@@ -286,20 +287,19 @@ router.get('/customers', authenticateToken, async (req: Request, res: Response) 
         orders: {
           where: {
             ...dateFilter,
-            status: { in: ['DELIVERED', 'COMPLETED'] }
+            status: 'DELIVERED'
           }
         },
-        region: true,
-        area: true
+        route: true
       }
     });
 
     // Calculate customer metrics
     const customerMetrics = customers.map(customer => {
       const orders = customer.orders;
-      const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
+      const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
       const lastOrderDate = orders.length > 0 
-        ? new Date(Math.max(...orders.map(o => o.createdAt.getTime())))
+        ? new Date(Math.max(...orders.map((o: any) => o.createdAt.getTime())))
         : null;
 
       return {
@@ -307,9 +307,10 @@ router.get('/customers', authenticateToken, async (req: Request, res: Response) 
         name: customer.name,
         email: customer.email,
         phone: customer.phone,
-        region: customer.region?.name,
-        area: customer.area?.name,
-        status: customer.status,
+        route: customer.route?.name,
+        city: customer.city,
+        state: customer.state,
+        isActive: customer.isActive,
         totalOrders: orders.length,
         totalRevenue,
         averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
@@ -320,15 +321,15 @@ router.get('/customers', authenticateToken, async (req: Request, res: Response) 
       };
     }).sort((a, b) => b.totalRevenue - a.totalRevenue);
 
-    // Regional analysis
-    const regionalAnalysis = customerMetrics.reduce((acc: any, customer) => {
-      const region = customer.region || 'Unknown';
-      if (!acc[region]) {
-        acc[region] = { customers: 0, orders: 0, revenue: 0 };
+    // Route analysis
+    const routeAnalysis = customerMetrics.reduce((acc: any, customer) => {
+      const route = customer.route || 'Unassigned';
+      if (!acc[route]) {
+        acc[route] = { customers: 0, orders: 0, revenue: 0 };
       }
-      acc[region].customers += 1;
-      acc[region].orders += customer.totalOrders;
-      acc[region].revenue += customer.totalRevenue;
+      acc[route].customers += 1;
+      acc[route].orders += customer.totalOrders;
+      acc[route].revenue += customer.totalRevenue;
       return acc;
     }, {});
 
@@ -343,8 +344,8 @@ router.get('/customers', authenticateToken, async (req: Request, res: Response) 
       atRiskCustomers: atRiskCustomers.length,
       inactiveCustomers: inactiveCustomers.length,
       topCustomers: customerMetrics.slice(0, 20),
-      regionalAnalysis: Object.entries(regionalAnalysis).map(([region, data]: [string, any]) => ({
-        region,
+      routeAnalysis: Object.entries(routeAnalysis).map(([route, data]: [string, any]) => ({
+        route,
         ...data
       })),
       averageOrdersPerCustomer: customerMetrics.reduce((sum, c) => sum + c.totalOrders, 0) / customers.length,
@@ -357,24 +358,35 @@ router.get('/customers', authenticateToken, async (req: Request, res: Response) 
 });
 
 // Commission Analytics
-router.get('/commissions', authenticateToken, async (req: Request, res: Response) => {
+router.get('/commissions', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = (req.user as any).tenantId;
+    const tenantId = req.user!.tenantId;
     const { startDate, endDate } = req.query;
 
-    const dateFilter = startDate && endDate ? {
-      periodStart: {
-        gte: new Date(startDate as string)
-      },
-      periodEnd: {
-        lte: new Date(endDate as string)
+    const where: any = {
+      user: {
+        tenantId
       }
-    } : {};
+    };
+    
+    if (startDate && endDate) {
+      where.createdAt = {
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string)
+      };
+    }
 
     const commissions = await prisma.commission.findMany({
-      where: { tenantId, ...dateFilter },
+      where,
       include: {
-        user: true
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -389,19 +401,19 @@ router.get('/commissions', authenticateToken, async (req: Request, res: Response
           count: 0
         };
       }
-      acc[agentName].totalCommission += commission.commissionAmount;
+      acc[agentName].totalCommission += Number(commission.commissionAmount);
       if (commission.status === 'PAID') {
-        acc[agentName].paidCommission += commission.commissionAmount;
+        acc[agentName].paidCommission += Number(commission.commissionAmount);
       } else {
-        acc[agentName].pendingCommission += commission.commissionAmount;
+        acc[agentName].pendingCommission += Number(commission.commissionAmount);
       }
       acc[agentName].count += 1;
       return acc;
     }, {});
 
-    const totalCommissions = commissions.reduce((sum, c) => sum + c.commissionAmount, 0);
-    const paidCommissions = commissions.filter(c => c.status === 'PAID').reduce((sum, c) => sum + c.commissionAmount, 0);
-    const pendingCommissions = commissions.filter(c => c.status === 'PENDING').reduce((sum, c) => sum + c.commissionAmount, 0);
+    const totalCommissions = commissions.reduce((sum, c) => sum + Number(c.commissionAmount), 0);
+    const paidCommissions = commissions.filter(c => c.status === 'PAID').reduce((sum, c) => sum + Number(c.commissionAmount), 0);
+    const pendingCommissions = commissions.filter(c => c.status === 'PENDING').reduce((sum, c) => sum + Number(c.commissionAmount), 0);
 
     res.json({
       totalCommissions,
@@ -421,26 +433,25 @@ router.get('/commissions', authenticateToken, async (req: Request, res: Response
 });
 
 // Inventory Analytics
-router.get('/inventory', authenticateToken, async (req: Request, res: Response) => {
+router.get('/inventory', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = (req.user as any).tenantId;
+    const tenantId = req.user!.tenantId;
 
     const inventory = await prisma.inventory.findMany({
       where: { tenantId },
       include: {
         product: {
           include: { category: true }
-        },
-        store: true
+        }
       }
     });
 
     // Low stock products
-    const lowStockProducts = inventory.filter(i => i.quantity <= i.reorderPoint);
+    const lowStockProducts = inventory.filter(i => i.currentStock <= i.minStock);
 
-    // Stock value
+    // Stock value (using product price as proxy since inventory doesn't store unit cost)
     const stockValue = inventory.reduce((sum, item) => 
-      sum + (item.quantity * item.unitCost), 0
+      sum + (item.currentStock * Number(item.product.unitPrice)), 0
     );
 
     // By category
@@ -449,35 +460,35 @@ router.get('/inventory', authenticateToken, async (req: Request, res: Response) 
       if (!acc[category]) {
         acc[category] = { quantity: 0, value: 0, products: 0 };
       }
-      acc[category].quantity += item.quantity;
-      acc[category].value += item.quantity * item.unitCost;
+      acc[category].quantity += item.currentStock;
+      acc[category].value += item.currentStock * Number(item.product.unitPrice);
       acc[category].products += 1;
       return acc;
     }, {});
 
     // By location
     const byLocation = inventory.reduce((acc: any, item) => {
-      const location = item.store?.name || 'Unknown';
+      const location = item.location || 'Unknown';
       if (!acc[location]) {
         acc[location] = { quantity: 0, value: 0, products: 0 };
       }
-      acc[location].quantity += item.quantity;
-      acc[location].value += item.quantity * item.unitCost;
+      acc[location].quantity += item.currentStock;
+      acc[location].value += item.currentStock * Number(item.product.unitPrice);
       acc[location].products += 1;
       return acc;
     }, {});
 
     res.json({
       totalProducts: inventory.length,
-      totalQuantity: inventory.reduce((sum, i) => sum + i.quantity, 0),
+      totalQuantity: inventory.reduce((sum, i) => sum + i.currentStock, 0),
       stockValue,
       lowStockCount: lowStockProducts.length,
       lowStockProducts: lowStockProducts.map(i => ({
         product: i.product.name,
         sku: i.product.sku,
-        quantity: i.quantity,
-        reorderPoint: i.reorderPoint,
-        store: i.store?.name
+        currentStock: i.currentStock,
+        minStock: i.minStock,
+        location: i.location
       })),
       byCategory: Object.entries(byCategory).map(([category, data]: [string, any]) => ({
         category,

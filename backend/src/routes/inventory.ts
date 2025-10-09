@@ -1,18 +1,18 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenant';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // List all inventory with pagination and filters
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { 
       page = 1, 
       limit = 20, 
-      storeId, 
       productId, 
       lowStock,
       search 
@@ -23,9 +23,6 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 
     const where: any = { tenantId };
 
-    if (storeId) {
-      where.storeId = storeId;
-    }
 
     if (productId) {
       where.productId = productId;
@@ -78,7 +75,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Get single inventory record
-router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
@@ -107,13 +104,12 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Create inventory record
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const {
       productId,
-      storeId,
-      quantity,
+      currentStock,
       reorderPoint,
       reorderQuantity,
       unitCost,
@@ -151,11 +147,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
       data: {
         tenantId,
         productId,
-        storeId,
-        quantity,
-        reorderPoint: reorderPoint || 10,
-        reorderQuantity: reorderQuantity || 50,
-        unitCost: unitCost || 0,
+        currentStock,
         batchNumber,
         expiryDate: expiryDate ? new Date(expiryDate) : null
       },
@@ -173,12 +165,12 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Update inventory record
-router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
     const {
-      quantity,
+      currentStock,
       reorderPoint,
       reorderQuantity,
       unitCost,
@@ -225,14 +217,14 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
 });
 
 // Record inventory movement (IN/OUT/TRANSFER/ADJUSTMENT)
-router.post('/movements', authenticateToken, async (req: Request, res: Response) => {
+router.post('/movements', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
     const {
       inventoryId,
       type, // IN, OUT, TRANSFER, ADJUSTMENT
-      quantity,
+      currentStock,
       toStoreId, // For transfers
       reason,
       reference,
@@ -269,7 +261,7 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
     }
 
     // Calculate new quantity
-    let newQuantity = inventory.quantity;
+    let newQuantity = inventory.currentStock;
     if (type === 'IN' || type === 'ADJUSTMENT') {
       newQuantity += quantity;
     } else if (type === 'OUT' || type === 'TRANSFER') {
@@ -287,7 +279,7 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
       // Update inventory
       const updatedInventory = await tx.inventory.update({
         where: { id: inventoryId },
-        data: { quantity: newQuantity }
+        data: { currentStock: newQuantity }
       });
 
       // If transfer, update destination inventory
@@ -304,7 +296,7 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
           // Update existing
           await tx.inventory.update({
             where: { id: destInventory.id },
-            data: { quantity: destInventory.quantity + quantity }
+            data: { currentStock: destInventory.quantity + quantity }
           });
         } else {
           // Create new
@@ -313,10 +305,7 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
               tenantId,
               productId: inventory.productId,
               storeId: toStoreId,
-              quantity,
-              reorderPoint: inventory.reorderPoint,
-              reorderQuantity: inventory.reorderQuantity,
-              unitCost: inventory.unitCost
+              currentStock,
             }
           });
         }
@@ -335,8 +324,8 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
           entityId: inventoryId,
           changes: {
             type,
-            quantity,
-            oldQuantity: inventory.quantity,
+            currentStock,
+            oldQuantity: inventory.currentStock,
             newQuantity,
             toStoreId,
             reason,
@@ -361,7 +350,7 @@ router.post('/movements', authenticateToken, async (req: Request, res: Response)
 });
 
 // Transfer stock between locations
-router.post('/transfer', authenticateToken, async (req: Request, res: Response) => {
+router.post('/transfer', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -369,7 +358,7 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
       productId,
       fromStoreId,
       toStoreId,
-      quantity,
+      currentStock,
       reason,
       reference
     } = req.body;
@@ -409,7 +398,7 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
       // Update source inventory
       const updatedSource = await tx.inventory.update({
         where: { id: sourceInventory.id },
-        data: { quantity: sourceInventory.quantity - quantity }
+        data: { currentStock: sourceInventory.quantity - quantity }
       });
 
       // Get or create destination inventory
@@ -421,7 +410,7 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
       if (destInventory) {
         updatedDest = await tx.inventory.update({
           where: { id: destInventory.id },
-          data: { quantity: destInventory.quantity + quantity }
+          data: { currentStock: destInventory.quantity + quantity }
         });
       } else {
         updatedDest = await tx.inventory.create({
@@ -429,10 +418,7 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
             tenantId,
             productId,
             storeId: toStoreId,
-            quantity,
-            reorderPoint: sourceInventory.reorderPoint,
-            reorderQuantity: sourceInventory.reorderQuantity,
-            unitCost: sourceInventory.unitCost
+            currentStock,
           }
         });
       }
@@ -449,7 +435,7 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
             productId,
             fromStoreId,
             toStoreId,
-            quantity,
+            currentStock,
             reason,
             reference
           },
@@ -472,19 +458,16 @@ router.post('/transfer', authenticateToken, async (req: Request, res: Response) 
 });
 
 // Get low stock alerts
-router.get('/alerts/low-stock', authenticateToken, async (req: Request, res: Response) => {
+router.get('/alerts/low-stock', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { storeId } = req.query;
 
     const where: any = {
       tenantId,
-      quantity: { lte: prisma.inventory.fields.reorderPoint }
+      currentStock: { lte: prisma.inventory.fields.minStock }
     };
 
-    if (storeId) {
-      where.storeId = storeId;
-    }
 
     const lowStock = await prisma.inventory.findMany({
       where,
@@ -497,7 +480,7 @@ router.get('/alerts/low-stock', authenticateToken, async (req: Request, res: Res
         store: true
       },
       orderBy: [
-        { quantity: 'asc' }
+        { currentStock: 'asc' }
       ]
     });
 
@@ -516,12 +499,11 @@ router.get('/alerts/low-stock', authenticateToken, async (req: Request, res: Res
 });
 
 // Record stock count/reconciliation
-router.post('/count', authenticateToken, async (req: Request, res: Response) => {
+router.post('/count', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
     const {
-      storeId,
       counts // Array of { productId, countedQuantity, notes }
     } = req.body;
 
@@ -555,11 +537,7 @@ router.post('/count', authenticateToken, async (req: Request, res: Response) => 
             data: {
               tenantId,
               productId,
-              storeId,
-              quantity: countedQuantity,
-              reorderPoint: 10,
-              reorderQuantity: 50,
-              unitCost: 0
+              currentStock: countedQuantity,
             }
           });
 
@@ -572,19 +550,19 @@ router.post('/count', authenticateToken, async (req: Request, res: Response) => 
             notes
           });
         } else {
-          const variance = countedQuantity - inventory.quantity;
+          const variance = countedQuantity - inventory.currentStock;
 
           if (variance !== 0) {
             // Update inventory
             await tx.inventory.update({
               where: { id: inventory.id },
-              data: { quantity: countedQuantity }
+              data: { currentStock: countedQuantity }
             });
 
             adjustments.push({
               productId,
               productName: inventory.product.name,
-              systemQuantity: inventory.quantity,
+              systemQuantity: inventory.currentStock,
               countedQuantity,
               variance,
               notes
@@ -600,8 +578,7 @@ router.post('/count', authenticateToken, async (req: Request, res: Response) => 
                 entityId: inventory.id,
                 changes: {
                   productId,
-                  storeId,
-                  systemQuantity: inventory.quantity,
+                  systemQuantity: inventory.currentStock,
                   countedQuantity,
                   variance,
                   notes
@@ -629,7 +606,7 @@ router.post('/count', authenticateToken, async (req: Request, res: Response) => 
 });
 
 // Delete inventory record (soft delete - set quantity to 0)
-router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
@@ -646,7 +623,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
     // Soft delete by setting quantity to 0
     await prisma.inventory.update({
       where: { id },
-      data: { quantity: 0 }
+      data: { currentStock: 0 }
     });
 
     res.json({ 

@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenant';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -136,7 +137,7 @@ const uploadMultiple = multer({
  * - CDN upload
  * - Watermark application
  */
-router.post('/image', authenticateToken, (req: Request, res: Response) => {
+router.post('/image', authenticateToken, (req: TenantRequest, res: Response) => {
   uploadSingle(req, res, async (err) => {
     try {
       // Handle multer errors
@@ -239,7 +240,7 @@ router.post('/image', authenticateToken, (req: Request, res: Response) => {
  * - File URL
  * - Metadata
  */
-router.post('/document', authenticateToken, (req: Request, res: Response) => {
+router.post('/document', authenticateToken, (req: TenantRequest, res: Response) => {
   uploadSingle(req, res, async (err) => {
     try {
       if (err instanceof multer.MulterError) {
@@ -340,7 +341,7 @@ router.post('/document', authenticateToken, (req: Request, res: Response) => {
  * - failed: Array of failed uploads with reasons
  * - summary: Count statistics
  */
-router.post('/bulk', authenticateToken, (req: Request, res: Response) => {
+router.post('/bulk', authenticateToken, (req: TenantRequest, res: Response) => {
   uploadMultiple(req, res, async (err) => {
     try {
       if (err instanceof multer.MulterError) {
@@ -459,7 +460,7 @@ router.post('/bulk', authenticateToken, (req: Request, res: Response) => {
  * - URL expiration (future)
  * - Download tracking
  */
-router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -511,7 +512,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
  * - Audit logging
  * - Cascade delete handling
  */
-router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = (req.user as any).userId;
@@ -559,7 +560,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
  * GET /api/upload
  * List all uploaded files with pagination
  */
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const { page = 1, limit = 20, type } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -604,7 +605,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  * GET /api/upload/stats
  * Get upload statistics
  */
-router.get('/stats/summary', authenticateToken, async (req: Request, res: Response) => {
+router.get('/stats/summary', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const totalFiles = await prisma.fileUpload.count();
     

@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenant';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -38,7 +39,7 @@ const prisma = new PrismaClient();
  * - areaId: Filter by area
  * - regionId: Filter by region (through area)
  * - userId: Filter by assigned user
- * - status: Filter by status (PLANNED, IN_PROGRESS, COMPLETED, CANCELLED)
+ * - status: Filter by status (PLANNED, IN_PROGRESS, DELIVERED, CANCELLED)
  * - search: Search by route name/description
  * - startDate: Filter routes after this date
  * - endDate: Filter routes before this date
@@ -49,7 +50,7 @@ const prisma = new PrismaClient();
  * 
  * Security: Multi-tenant isolation via tenantId
  */
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const {
@@ -122,7 +123,8 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
           user: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+              lastName: true,
               email: true,
               role: true
             }
@@ -197,7 +199,7 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
  * - Performance analysis
  * - Route editing preparation
  */
-router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
@@ -213,7 +215,8 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             phone: true,
             role: true
@@ -320,7 +323,7 @@ router.get('/:id', authenticateToken, async (req: Request, res: Response) => {
  * 
  * Returns: Created route with full details
  */
-router.post('/', authenticateToken, async (req: Request, res: Response) => {
+router.post('/', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -370,11 +373,11 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
     // Create route
     const route = await prisma.route.create({
       data: {
+        tenantId,
         name,
         description,
         areaId,
         userId: assignedUserId,
-        tenantId,
         startTime: startTime ? new Date(startTime) : null,
         endTime: endTime ? new Date(endTime) : null,
         status: status as any
@@ -388,7 +391,9 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+
+            lastName: true,
             email: true,
             role: true
           }
@@ -403,12 +408,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
         entity: 'Route',
         entityId: route.id,
         userId,
-        tenantId,
-        metadata: {
-          routeName: name,
-          areaId,
-          assignedUserId
-        }
+        // tenantId removed from AuditLog
       }
     });
 
@@ -445,7 +445,7 @@ router.post('/', authenticateToken, async (req: Request, res: Response) => {
  * - Area/User changes validated against tenant
  * - Audit log created for changes
  */
-router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.put('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -525,7 +525,9 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+
+            lastName: true,
             email: true,
             role: true
           }
@@ -540,12 +542,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
         entity: 'Route',
         entityId: route.id,
         userId,
-        tenantId,
-        metadata: {
-          changes: updateData,
-          previousStatus: existingRoute.status,
-          newStatus: status || existingRoute.status
-        }
+        // tenantId removed from AuditLog
       }
     });
 
@@ -571,7 +568,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response) => {
  * - Cannot delete IN_PROGRESS routes
  * - Creates audit log
  */
-router.delete('/:id', authenticateToken, async (req: Request, res: Response) => {
+router.delete('/:id', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -610,8 +607,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
           entity: 'Route',
           entityId: id,
           userId,
-          tenantId,
-          metadata: { reason: 'Route has historical data' }
+          // tenantId removed from AuditLog
         }
       });
 
@@ -632,8 +628,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
         entity: 'Route',
         entityId: id,
         userId,
-        tenantId,
-        metadata: { reason: 'Route had no activity' }
+        // tenantId removed from AuditLog
       }
     });
 
@@ -665,7 +660,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response) => 
  * 
  * Returns: Updated route with new stops
  */
-router.post('/:id/customers', authenticateToken, async (req: Request, res: Response) => {
+router.post('/:id/customers', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const userId = (req.user as any).userId;
@@ -694,7 +689,7 @@ router.post('/:id/customers', authenticateToken, async (req: Request, res: Respo
     const customers = await prisma.customer.findMany({
       where: {
         id: { in: customerIds },
-        tenantId,
+        // tenantId removed from AuditLog
         isActive: true
       }
     });
@@ -784,11 +779,7 @@ router.post('/:id/customers', authenticateToken, async (req: Request, res: Respo
         entity: 'Route',
         entityId: id,
         userId,
-        tenantId,
-        metadata: {
-          customerIds,
-          count: customerIds.length
-        }
+        // tenantId removed from AuditLog
       }
     });
 
@@ -822,7 +813,7 @@ router.post('/:id/customers', authenticateToken, async (req: Request, res: Respo
  * - estimatedDuration: Estimated duration in minutes
  * - savings: Distance/time saved vs current order
  */
-router.get('/:id/optimize', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id/optimize', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
@@ -1003,7 +994,7 @@ router.get('/:id/optimize', authenticateToken, async (req: Request, res: Respons
  * - Customer visit planning
  * - Workload distribution
  */
-router.get('/:id/schedule', authenticateToken, async (req: Request, res: Response) => {
+router.get('/:id/schedule', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
     const { id } = req.params;
@@ -1028,7 +1019,8 @@ router.get('/:id/schedule', authenticateToken, async (req: Request, res: Respons
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         }

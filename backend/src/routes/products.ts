@@ -256,19 +256,22 @@ router.delete('/:id', requireManager, async (req: TenantRequest, res) => {
 // Get product categories
 router.get('/meta/categories', async (req: TenantRequest, res) => {
   try {
-    const categories = await prisma.product.findMany({
+    const categories = await prisma.productCategory.findMany({
       where: {
         tenantId: req.tenantId,
         isActive: true
       },
       select: {
-        category: true
+        id: true,
+        code: true,
+        name: true,
+        description: true
       },
-      distinct: ['category']
+      orderBy: { name: 'asc' }
     });
 
     return res.json({
-      categories: categories.map((p: any) => p.category)
+      categories
     });
   } catch (error) {
     logger.error('Get categories error:', error);

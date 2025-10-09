@@ -76,7 +76,7 @@ class ApiService {
   // Authentication methods
   async login(email: string, password: string): Promise<ApiResponse<{ accessToken: string; refreshToken: string; user: any }>> {
     const tenantCode = process.env.NEXT_PUBLIC_TENANT_CODE || 'DEMO';
-    const response = await this.request<{ success: boolean; data: { user: any; token: string; refreshToken: string } }>('/auth/login', {
+    const response = await this.request<{ message: string; user: any; tokens: { accessToken: string; refreshToken: string } }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
       headers: {
@@ -84,13 +84,12 @@ class ApiService {
       },
     });
 
-    if (response.data && response.data.success && response.data.data) {
+    if (response.data && response.data.user && response.data.tokens) {
       // Transform backend response format to frontend expected format
-      const backendData = response.data.data;
       const transformedData = {
-        accessToken: backendData.token,
-        refreshToken: backendData.refreshToken,
-        user: backendData.user
+        accessToken: response.data.tokens.accessToken,
+        refreshToken: response.data.tokens.refreshToken,
+        user: response.data.user
       };
       
       this.token = transformedData.accessToken;
