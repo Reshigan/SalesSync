@@ -5,47 +5,27 @@ node_modules/
 
 # Testing
 /coverage
-coverage/
 test-results/
 playwright-report/
-test-coverage-report.txt
-test-reports-*/
-*.db
-*.db-journal
-*.db-shm
-*.db-wal
-
-# Next.js - ALL build artifacts
-.next/
-/.next/
-frontend/.next/
-out/
-/out/
-frontend/out/
-next-env.d.ts
+.auth/
 
 # Production
 /build
 /dist
+.next/
+out/
 
-# Environment variables
-.env
-.env*.local
-.env.development.local
-.env.test.local
-.env.production.local
-# Allow .env.production files for deployment
-# .env.production
-# backend-api/.env.production
-# frontend/.env.production
-
-# Logs
+# Misc
+.DS_Store
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
-frontend.log
-backend.log
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # IDE
 .vscode/
@@ -53,41 +33,12 @@ backend.log
 *.swp
 *.swo
 *~
-.DS_Store
 
-# Debug
-.npm
-
-# Misc
+# Certificates and keys
 *.pem
+*.key
+*.crt
 
-# Lock files (keep package-lock.json for reproducibility in frontend)
-# yarn.lock
-
-# TypeScript
-*.tsbuildinfo
-
-# Backup directories
-*.backup/
-src.backup/
-frontend/src.backup/
-
-# Deployment scripts (if they contain sensitive info)
-# deploy-*.sh
-
-# Test results and reports
-*.log
-production-*.log
-test-*.log
-
-# Documentation files (too many generated docs)
-*-SUMMARY.md
-*-GUIDE.md
-*-REPORT.md
-*-CERTIFICATION.md
-*-STATUS.md
-*-MANIFEST.md
-*-COMPLETE.md
-*-RESULTS.md
-!README.md
-!DEPLOYMENT_GUIDE.md
+# Temporary files
+*.tmp
+.cache/

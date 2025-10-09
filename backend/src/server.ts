@@ -17,6 +17,7 @@ import { metricsMiddleware, metricsHandler } from './middleware/metrics';
 
 // Route imports
 import authRoutes from './routes/auth';
+import dashboardRoutes from './routes/dashboard';
 import userRoutes from './routes/users';
 import productRoutes from './routes/products';
 import customerRoutes from './routes/customers';
@@ -198,6 +199,7 @@ app.get('/ready', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Protected routes (require authentication)
+app.use('/api/dashboard', authMiddleware, tenantMiddleware, dashboardRoutes);
 app.use('/api/users', authMiddleware, tenantMiddleware, userRoutes);
 app.use('/api/products', authMiddleware, tenantMiddleware, productRoutes);
 app.use('/api/customers', authMiddleware, tenantMiddleware, customerRoutes);
