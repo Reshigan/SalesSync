@@ -628,7 +628,7 @@ export default function BoardsManagementPage() {
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {placement.coordinates ? 
-                              `${placement.coordinates.latitude.toFixed(4)}, ${placement.coordinates.longitude.toFixed(4)}` : 
+                              `${placement.coordinates.lat.toFixed(4)}, ${placement.coordinates.lng.toFixed(4)}` : 
                               'Not specified'}
                           </div>
                         </td>

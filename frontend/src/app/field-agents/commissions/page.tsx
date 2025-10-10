@@ -108,7 +108,7 @@ export default function CommissionsPage() {
 
   const filteredCommissions = commissions.filter(commission =>
     commission.agentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    commission.activityId.toLowerCase().includes(searchTerm.toLowerCase())
+    commission.activityId?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (status: string) => {
@@ -246,7 +246,7 @@ export default function CommissionsPage() {
                   <MobileListItem
                     key={commission.id}
                     title={`$${commission.amount.toFixed(2)}`}
-                    subtitle={`Agent: ${commission.agent?.name || 'Unknown'}`}
+                    subtitle={`Agent: ${commission.agentId}`}
                     description={`${commission.activityType.replace('_', ' ')} | ${new Date(commission.earnedDate).toLocaleDateString()}`}
                     badge={{
                       text: commission.paymentStatus,
