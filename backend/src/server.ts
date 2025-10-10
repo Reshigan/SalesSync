@@ -1,9 +1,12 @@
+import dotenv from 'dotenv';
+// Load environment variables first
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
-import dotenv from 'dotenv';
 
 // Initialize mock database
 import './database';
@@ -35,8 +38,7 @@ import notificationRoutes from './routes/notifications';
 import surveyRoutes from './routes/surveys';
 import { socketService } from './services/socketService';
 
-// Load environment variables
-dotenv.config();
+
 
 const app = express();
 const server = createServer(app);
@@ -71,15 +73,15 @@ const corsOrigins = process.env.NODE_ENV === 'production'
   ? [process.env.CORS_ORIGIN || 'https://ss.gonxt.tech']
   : [
       "http://localhost:12000",
-      "https://work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev",
-      "https://work-2-sfkketippfatdrdl.prod-runtime.all-hands.dev"
+      "https://work-1-veuhqyphpzgedabx.prod-runtime.all-hands.dev",
+      "https://work-2-veuhqyphpzgedabx.prod-runtime.all-hands.dev"
     ];
 
 app.use(cors({
   origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Code'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count']
 }));
 

@@ -227,7 +227,7 @@ router.post('/calculate', async (req: TenantRequest, res, next) => {
           gte: new Date(startDate),
           lte: new Date(endDate)
         },
-        status: { in: ['DELIVERED', 'COMPLETED'] }
+        status: { in: ['DELIVERED'] }
       }
     });
 

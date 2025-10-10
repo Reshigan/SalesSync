@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,67 +7,577 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Multi-tenancy
 model Tenant {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  domain      String?  @unique
-  settings    Json?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  users       User[]
+  id                String            @id @default(cuid())
+  name              String
+  slug              String            @unique
+  domain            String?           @unique
+  settings          Json?
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  areas             Area[]
+  campaigns         Campaign[]
+  customers         Customer[]
+  inventories       Inventory[]
+  orders            Order[]
   productCategories ProductCategory[]
-  products    Product[]
-  customers   Customer[]
-  orders      Order[]
-  regions     Region[]
-  areas       Area[]
-  routes      Route[]
-  campaigns   Campaign[]
-  stores      Store[]
-  inventories Inventory[]
-  surveys     Survey[]
+  products          Product[]
+  regions           Region[]
+  routes            Route[]
+  stores            Store[]
+  surveys           Survey[]
+  users             User[]
 
   @@map("tenants")
 }
 
-// User Management
 model User {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String
-  firstName   String
-  lastName    String
-  phone       String?
-  avatar      String?
-  role        UserRole
-  status      UserStatus @default(ACTIVE)
-  lastLoginAt DateTime?
-  settings    Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Relations
-  routes           Route[]
-  orders           Order[]
-  vanSalesLoads    VanSalesLoad[]
-  promoterActivities PromoterActivity[]
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  password            String
+  firstName           String
+  lastName            String
+  phone               String?
+  avatar              String?
+  role                UserRole
+  status              UserStatus           @default(ACTIVE)
+  lastLoginAt         DateTime?
+  settings            Json?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  tenantId            String
+  auditLogs           AuditLog[]
+  commissions         Commission[]
   merchandisingVisits MerchandisingVisit[]
-  simDistributions SimDistribution[]
-  commissions      Commission[]
-  auditLogs        AuditLog[]
-  surveysCreated   Survey[] @relation("SurveyCreator")
-  surveyResponses  SurveyResponse[] @relation("SurveyRespondent")
+  orders              Order[]
+  promoterActivities  PromoterActivity[]
+  routes              Route[]
+  simDistributions    SimDistribution[]
+  surveyResponses     SurveyResponse[]     @relation("SurveyRespondent")
+  surveysCreated      Survey[]             @relation("SurveyCreator")
+  tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  vanSalesLoads       VanSalesLoad[]
 
   @@map("users")
+}
+
+model ProductCategory {
+  id          String            @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  tenantId    String
+  parentId    String?
+  parent      ProductCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    ProductCategory[] @relation("CategoryHierarchy")
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([tenantId, code])
+  @@map("product_categories")
+}
+
+model Product {
+  id             String             @id @default(cuid())
+  sku            String
+  name           String
+  description    String?
+  brand          String?
+  categoryId     String
+  unitPrice      Decimal
+  costPrice      Decimal
+  weight         Decimal?
+  dimensions     Json?
+  barcode        String?
+  imageUrl       String?
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  tenantId       String
+  inventories    Inventory[]
+  orderItems     OrderItem[]
+  priceHistories PriceHistory[]
+  category       ProductCategory    @relation(fields: [categoryId], references: [id])
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  loadItems      VanSalesLoadItem[]
+
+  @@unique([tenantId, sku])
+  @@map("products")
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  price     Decimal
+  reason    String?
+  createdAt DateTime @default(now())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("price_histories")
+}
+
+model Customer {
+  id           String       @id @default(cuid())
+  code         String
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  city         String?
+  state        String?
+  country      String?
+  coordinates  Json?
+  customerType CustomerType
+  creditLimit  Decimal?
+  paymentTerms String?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  tenantId     String
+  routeId      String?
+  route        Route?       @relation(fields: [routeId], references: [id])
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders       Order[]
+  routeStops   RouteStop[]
+
+  @@unique([tenantId, code])
+  @@map("customers")
+}
+
+model Region {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenantId    String
+  areas       Area[]
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@map("regions")
+}
+
+model Area {
+  id          String   @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenantId    String
+  regionId    String
+  region      Region   @relation(fields: [regionId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  routes      Route[]
+
+  @@unique([tenantId, code])
+  @@map("areas")
+}
+
+model Route {
+  id                String         @id @default(cuid())
+  name              String
+  description       String?
+  startTime         DateTime?
+  endTime           DateTime?
+  status            RouteStatus    @default(PLANNED)
+  totalDistance     Decimal?
+  estimatedDuration Int?
+  actualDuration    Int?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  tenantId          String
+  areaId            String
+  userId            String
+  customers         Customer[]
+  stops             RouteStop[]
+  area              Area           @relation(fields: [areaId], references: [id])
+  tenant            Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user              User           @relation(fields: [userId], references: [id])
+  loads             VanSalesLoad[]
+
+  @@map("routes")
+}
+
+model RouteStop {
+  id          String     @id @default(cuid())
+  sequence    Int
+  plannedTime DateTime?
+  actualTime  DateTime?
+  status      StopStatus @default(PENDING)
+  notes       String?
+  coordinates Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  routeId     String
+  customerId  String
+  customer    Customer   @relation(fields: [customerId], references: [id])
+  route       Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@map("route_stops")
+}
+
+model VanSalesLoad {
+  id             String                  @id @default(cuid())
+  loadNumber     String
+  loadDate       DateTime
+  totalValue     Decimal
+  status         LoadStatus              @default(LOADED)
+  notes          String?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  userId         String
+  routeId        String?
+  items          VanSalesLoadItem[]
+  route          Route?                  @relation(fields: [routeId], references: [id])
+  user           User                    @relation(fields: [userId], references: [id])
+  reconciliation VanSalesReconciliation?
+
+  @@map("van_sales_loads")
+}
+
+model VanSalesLoadItem {
+  id         String       @id @default(cuid())
+  quantity   Int
+  unitPrice  Decimal
+  totalValue Decimal
+  loadId     String
+  productId  String
+  load       VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  product    Product      @relation(fields: [productId], references: [id])
+
+  @@map("van_sales_load_items")
+}
+
+model VanSalesReconciliation {
+  id                 String       @id @default(cuid())
+  cashCollected      Decimal
+  cashExpected       Decimal
+  cashVariance       Decimal
+  stockReturned      Json
+  stockSold          Json
+  notes              String?
+  reconciliationDate DateTime
+  createdAt          DateTime     @default(now())
+  loadId             String       @unique
+  load               VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
+
+  @@map("van_sales_reconciliations")
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  orderNumber   String
+  orderDate     DateTime
+  deliveryDate  DateTime?
+  totalAmount   Decimal
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING)
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tenantId      String
+  customerId    String
+  userId        String
+  invoices      Invoice[]
+  items         OrderItem[]
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@unique([tenantId, orderNumber])
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  quantity   Int
+  unitPrice  Decimal
+  totalPrice Decimal
+  discount   Decimal @default(0)
+  orderId    String
+  productId  String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String
+  invoiceDate   DateTime
+  dueDate       DateTime
+  totalAmount   Decimal
+  paidAmount    Decimal       @default(0)
+  status        InvoiceStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id])
+
+  @@map("invoices")
+}
+
+model Campaign {
+  id          String             @id @default(cuid())
+  name        String
+  description String?
+  type        String?
+  startDate   DateTime
+  endDate     DateTime
+  budget      Decimal?
+  status      CampaignStatus     @default(ACTIVE)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  tenantId    String
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  activities  PromoterActivity[]
+  surveys     Survey[]
+
+  @@map("campaigns")
+}
+
+model PromoterActivity {
+  id                 String         @id @default(cuid())
+  activityType       String
+  location           String
+  startTime          DateTime
+  endTime            DateTime?
+  samplesDistributed Int            @default(0)
+  contactsMade       Int            @default(0)
+  surveysCompleted   Int            @default(0)
+  photos             Json?
+  notes              String?
+  status             ActivityStatus @default(PENDING)
+  verificationScore  Decimal?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  userId             String
+  campaignId         String?
+  campaign           Campaign?      @relation(fields: [campaignId], references: [id])
+  user               User           @relation(fields: [userId], references: [id])
+
+  @@map("promoter_activities")
+}
+
+model Store {
+  id          String               @id @default(cuid())
+  code        String
+  name        String
+  address     String?
+  city        String?
+  state       String?
+  coordinates Json?
+  storeType   String?
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  tenantId    String
+  visits      MerchandisingVisit[]
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@map("stores")
+}
+
+model MerchandisingVisit {
+  id              String      @id @default(cuid())
+  visitDate       DateTime
+  shelfShare      Decimal?
+  facingsCount    Int?
+  complianceScore Decimal?
+  issuesFound     Json?
+  photos          Json?
+  notes           String?
+  status          VisitStatus @default(COMPLETED)
+  aiScore         Decimal?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  userId          String
+  storeId         String
+  store           Store       @relation(fields: [storeId], references: [id])
+  user            User        @relation(fields: [userId], references: [id])
+
+  @@map("merchandising_visits")
+}
+
+model SimDistribution {
+  id               String           @id @default(cuid())
+  customerName     String
+  customerPhone    String
+  customerType     String
+  simNumber        String
+  activationCode   String
+  location         String
+  distributionDate DateTime
+  kycStatus        KycStatus        @default(PENDING)
+  activationStatus ActivationStatus @default(PENDING)
+  commission       Decimal
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+
+  @@map("sim_distributions")
+}
+
+model Inventory {
+  id           String              @id @default(cuid())
+  currentStock Int
+  minStock     Int
+  maxStock     Int
+  location     String?
+  lastMovement DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  tenantId     String
+  productId    String
+  product      Product             @relation(fields: [productId], references: [id])
+  tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  movements    InventoryMovement[]
+
+  @@unique([tenantId, productId, location])
+  @@map("inventories")
+}
+
+model InventoryMovement {
+  id           String       @id @default(cuid())
+  movementType MovementType
+  quantity     Int
+  reason       String?
+  reference    String?
+  createdAt    DateTime     @default(now())
+  inventoryId  String
+  inventory    Inventory    @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_movements")
+}
+
+model Commission {
+  id               String           @id @default(cuid())
+  period           String
+  baseSalary       Decimal
+  salesAmount      Decimal
+  commissionRate   Decimal
+  commissionAmount Decimal
+  bonuses          Decimal          @default(0)
+  deductions       Decimal          @default(0)
+  totalEarnings    Decimal
+  status           CommissionStatus @default(PENDING)
+  paymentDate      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+
+  @@map("commissions")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  oldValues Json?
+  newValues Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  url          String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@map("file_uploads")
+}
+
+model Survey {
+  id             String           @id @default(cuid())
+  title          String
+  description    String?
+  type           SurveyType
+  targetAudience String
+  startDate      DateTime
+  endDate        DateTime?
+  status         SurveyStatus
+  isAnonymous    Boolean          @default(false)
+  allowMultiple  Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  campaignId     String?
+  tenantId       String
+  createdById    String
+  questions      SurveyQuestion[]
+  responses      SurveyResponse[]
+  campaign       Campaign?        @relation(fields: [campaignId], references: [id])
+  createdBy      User             @relation("SurveyCreator", fields: [createdById], references: [id])
+  tenant         Tenant           @relation(fields: [tenantId], references: [id])
+
+  @@map("surveys")
+}
+
+model SurveyQuestion {
+  id           String         @id @default(cuid())
+  surveyId     String
+  questionText String
+  questionType QuestionType
+  options      Json?
+  isRequired   Boolean        @default(false)
+  order        Int
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  answers      SurveyAnswer[]
+  survey       Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@map("survey_questions")
+}
+
+model SurveyResponse {
+  id           String         @id @default(cuid())
+  surveyId     String
+  respondentId String?
+  submittedAt  DateTime       @default(now())
+  location     String?
+  deviceInfo   Json?
+  answers      SurveyAnswer[]
+  respondent   User?          @relation("SurveyRespondent", fields: [respondentId], references: [id])
+  survey       Survey         @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  @@map("survey_responses")
+}
+
+model SurveyAnswer {
+  id          String         @id @default(cuid())
+  responseId  String
+  questionId  String
+  answerText  String?
+  answerValue Json?
+  createdAt   DateTime       @default(now())
+  question    SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  response    SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+
+  @@map("survey_answers")
 }
 
 enum UserRole {
@@ -92,215 +599,11 @@ enum UserStatus {
   PENDING
 }
 
-// Product Category Hierarchy
-model ProductCategory {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Hierarchy (self-referencing for sub-categories)
-  parentId    String?
-  parent      ProductCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    ProductCategory[] @relation("CategoryHierarchy")
-
-  // Relations
-  products    Product[]
-
-  @@unique([tenantId, code])
-  @@map("product_categories")
-}
-
-// Product Management
-model Product {
-  id          String   @id @default(cuid())
-  sku         String
-  name        String
-  description String?
-  brand       String?
-  
-  // Category relationship
-  categoryId  String
-  category    ProductCategory @relation(fields: [categoryId], references: [id])
-  unitPrice   Decimal
-  costPrice   Decimal
-  weight      Decimal?
-  dimensions  Json?
-  barcode     String?
-  imageUrl    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Relations
-  orderItems     OrderItem[]
-  loadItems      VanSalesLoadItem[]
-  inventories    Inventory[]
-  priceHistories PriceHistory[]
-
-  @@unique([tenantId, sku])
-  @@map("products")
-}
-
-model PriceHistory {
-  id        String   @id @default(cuid())
-  price     Decimal
-  reason    String?
-  createdAt DateTime @default(now())
-
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@map("price_histories")
-}
-
-// Customer Management
-model Customer {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  email       String?
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  country     String?
-  coordinates Json?
-  customerType CustomerType
-  creditLimit Decimal?
-  paymentTerms String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Territory assignment
-  routeId     String?
-  route       Route?   @relation(fields: [routeId], references: [id])
-
-  // Relations
-  orders      Order[]
-  routeStops  RouteStop[]
-
-  @@unique([tenantId, code])
-  @@map("customers")
-}
-
 enum CustomerType {
   RETAIL
   WHOLESALE
   DISTRIBUTOR
   CORPORATE
-}
-
-// Geographic Hierarchy: Region → Area → Route → Customer
-model Region {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Relations
-  areas       Area[]
-
-  @@unique([tenantId, code])
-  @@map("regions")
-}
-
-model Area {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Hierarchy
-  regionId    String
-  region      Region   @relation(fields: [regionId], references: [id])
-
-  // Relations
-  routes      Route[]
-
-  @@unique([tenantId, code])
-  @@map("areas")
-}
-
-// Route Management
-model Route {
-  id          String     @id @default(cuid())
-  name        String
-  description String?
-  startTime   DateTime?
-  endTime     DateTime?
-  status      RouteStatus @default(PLANNED)
-  totalDistance Decimal?
-  estimatedDuration Int?
-  actualDuration Int?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Hierarchy
-  areaId      String
-  area        Area       @relation(fields: [areaId], references: [id])
-
-  // Relations
-  userId      String
-  user        User       @relation(fields: [userId], references: [id])
-  customers   Customer[]
-  stops       RouteStop[]
-  loads       VanSalesLoad[]
-
-  @@map("routes")
-}
-
-model RouteStop {
-  id          String    @id @default(cuid())
-  sequence    Int
-  plannedTime DateTime?
-  actualTime  DateTime?
-  status      StopStatus @default(PENDING)
-  notes       String?
-  coordinates Json?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  routeId     String
-  route       Route     @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  customerId  String
-  customer    Customer  @relation(fields: [customerId], references: [id])
-
-  @@map("route_stops")
 }
 
 enum RouteStatus {
@@ -317,110 +620,11 @@ enum StopStatus {
   FAILED
 }
 
-// Van Sales Management
-model VanSalesLoad {
-  id          String   @id @default(cuid())
-  loadNumber  String
-  loadDate    DateTime
-  totalValue  Decimal
-  status      LoadStatus @default(LOADED)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  routeId     String?
-  route       Route?   @relation(fields: [routeId], references: [id])
-
-  // Relations
-  items       VanSalesLoadItem[]
-  reconciliation VanSalesReconciliation?
-
-  @@map("van_sales_loads")
-}
-
-model VanSalesLoadItem {
-  id          String  @id @default(cuid())
-  quantity    Int
-  unitPrice   Decimal
-  totalValue  Decimal
-
-  loadId      String
-  load        VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product @relation(fields: [productId], references: [id])
-
-  @@map("van_sales_load_items")
-}
-
-model VanSalesReconciliation {
-  id              String   @id @default(cuid())
-  cashCollected   Decimal
-  cashExpected    Decimal
-  cashVariance    Decimal
-  stockReturned   Json
-  stockSold       Json
-  notes           String?
-  reconciliationDate DateTime
-  createdAt       DateTime @default(now())
-
-  loadId          String   @unique
-  load            VanSalesLoad @relation(fields: [loadId], references: [id], onDelete: Cascade)
-
-  @@map("van_sales_reconciliations")
-}
-
 enum LoadStatus {
   LOADED
   IN_TRANSIT
   DELIVERED
   RECONCILED
-}
-
-// Order Management
-model Order {
-  id          String      @id @default(cuid())
-  orderNumber String
-  orderDate   DateTime
-  deliveryDate DateTime?
-  totalAmount Decimal
-  status      OrderStatus @default(PENDING)
-  paymentStatus PaymentStatus @default(PENDING)
-  notes       String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  customerId  String
-  customer    Customer    @relation(fields: [customerId], references: [id])
-  userId      String
-  user        User        @relation(fields: [userId], references: [id])
-
-  // Relations
-  items       OrderItem[]
-  invoices    Invoice[]
-
-  @@unique([tenantId, orderNumber])
-  @@map("orders")
-}
-
-model OrderItem {
-  id          String  @id @default(cuid())
-  quantity    Int
-  unitPrice   Decimal
-  totalPrice  Decimal
-  discount    Decimal @default(0)
-
-  orderId     String
-  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId   String
-  product     Product @relation(fields: [productId], references: [id])
-
-  @@map("order_items")
 }
 
 enum OrderStatus {
@@ -440,78 +644,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
-// Invoice Management
-model Invoice {
-  id          String        @id @default(cuid())
-  invoiceNumber String
-  invoiceDate DateTime
-  dueDate     DateTime
-  totalAmount Decimal
-  paidAmount  Decimal       @default(0)
-  status      InvoiceStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  orderId     String
-  order       Order         @relation(fields: [orderId], references: [id])
-
-  @@map("invoices")
-}
-
 enum InvoiceStatus {
   PENDING
   SENT
   PAID
   OVERDUE
   CANCELLED
-}
-
-// Promoter Activities
-model Campaign {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  type        String?
-  startDate   DateTime
-  endDate     DateTime
-  budget      Decimal?
-  status      CampaignStatus @default(ACTIVE)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Relations
-  activities  PromoterActivity[]
-  surveys     Survey[]
-
-  @@map("campaigns")
-}
-
-model PromoterActivity {
-  id              String   @id @default(cuid())
-  activityType    String
-  location        String
-  startTime       DateTime
-  endTime         DateTime?
-  samplesDistributed Int   @default(0)
-  contactsMade    Int      @default(0)
-  surveysCompleted Int     @default(0)
-  photos          Json?
-  notes           String?
-  status          ActivityStatus @default(PENDING)
-  verificationScore Decimal?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  campaignId      String?
-  campaign        Campaign? @relation(fields: [campaignId], references: [id])
-
-  @@map("promoter_activities")
 }
 
 enum CampaignStatus {
@@ -529,80 +667,11 @@ enum ActivityStatus {
   REJECTED
 }
 
-// Merchandising
-model Store {
-  id          String   @id @default(cuid())
-  code        String
-  name        String
-  address     String?
-  city        String?
-  state       String?
-  coordinates Json?
-  storeType   String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  // Relations
-  visits      MerchandisingVisit[]
-
-  @@unique([tenantId, code])
-  @@map("stores")
-}
-
-model MerchandisingVisit {
-  id              String   @id @default(cuid())
-  visitDate       DateTime
-  shelfShare      Decimal?
-  facingsCount    Int?
-  complianceScore Decimal?
-  issuesFound     Json?
-  photos          Json?
-  notes           String?
-  status          VisitStatus @default(COMPLETED)
-  aiScore         Decimal?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  storeId         String
-  store           Store    @relation(fields: [storeId], references: [id])
-
-  @@map("merchandising_visits")
-}
-
 enum VisitStatus {
   COMPLETED
   PENDING_REVIEW
   APPROVED
   REJECTED
-}
-
-// Field Agent Operations
-model SimDistribution {
-  id              String   @id @default(cuid())
-  customerName    String
-  customerPhone   String
-  customerType    String
-  simNumber       String
-  activationCode  String
-  location        String
-  distributionDate DateTime
-  kycStatus       KycStatus @default(PENDING)
-  activationStatus ActivationStatus @default(PENDING)
-  commission      Decimal
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-
-  @@map("sim_distributions")
 }
 
 enum KycStatus {
@@ -617,45 +686,6 @@ enum ActivationStatus {
   FAILED
 }
 
-// Inventory Management
-model Inventory {
-  id          String   @id @default(cuid())
-  currentStock Int
-  minStock    Int
-  maxStock    Int
-  location    String?
-  lastMovement DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Multi-tenancy
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-
-  // Relations
-  movements   InventoryMovement[]
-
-  @@unique([tenantId, productId, location])
-  @@map("inventories")
-}
-
-model InventoryMovement {
-  id          String     @id @default(cuid())
-  movementType MovementType
-  quantity    Int
-  reason      String?
-  reference   String?
-  createdAt   DateTime   @default(now())
-
-  inventoryId String
-  inventory   Inventory  @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
-
-  @@map("inventory_movements")
-}
-
 enum MovementType {
   IN
   OUT
@@ -663,139 +693,11 @@ enum MovementType {
   TRANSFER
 }
 
-// Commission Management
-model Commission {
-  id              String   @id @default(cuid())
-  period          String
-  baseSalary      Decimal
-  salesAmount     Decimal
-  commissionRate  Decimal
-  commissionAmount Decimal
-  bonuses         Decimal  @default(0)
-  deductions      Decimal  @default(0)
-  totalEarnings   Decimal
-  status          CommissionStatus @default(PENDING)
-  paymentDate     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-
-  @@map("commissions")
-}
-
 enum CommissionStatus {
   PENDING
   APPROVED
   PAID
   DISPUTED
-}
-
-// Audit Logging
-model AuditLog {
-  id          String   @id @default(cuid())
-  action      String
-  entity      String
-  entityId    String
-  oldValues   Json?
-  newValues   Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-
-  @@map("audit_logs")
-}
-
-// File Management
-model FileUpload {
-  id          String   @id @default(cuid())
-  filename    String
-  originalName String
-  mimeType    String
-  size        Int
-  path        String
-  url         String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-
-  @@map("file_uploads")
-}
-
-// Survey Management
-model Survey {
-  id              String   @id @default(cuid())
-  title           String
-  description     String?
-  type            SurveyType
-  targetAudience  String
-  startDate       DateTime
-  endDate         DateTime?
-  status          SurveyStatus
-  isAnonymous     Boolean @default(false)
-  allowMultiple   Boolean @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  campaignId      String?
-  campaign        Campaign? @relation(fields: [campaignId], references: [id])
-  tenantId        String
-  tenant          Tenant @relation(fields: [tenantId], references: [id])
-  createdById     String
-  createdBy       User @relation("SurveyCreator", fields: [createdById], references: [id])
-  
-  questions       SurveyQuestion[]
-  responses       SurveyResponse[]
-  
-  @@map("surveys")
-}
-
-model SurveyQuestion {
-  id              String   @id @default(cuid())
-  surveyId        String
-  survey          Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  questionText    String
-  questionType    QuestionType
-  options         Json? // For multiple choice: ["Option 1", "Option 2"]
-  isRequired      Boolean @default(false)
-  order           Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  answers         SurveyAnswer[]
-  
-  @@map("survey_questions")
-}
-
-model SurveyResponse {
-  id              String   @id @default(cuid())
-  surveyId        String
-  survey          Survey @relation(fields: [surveyId], references: [id], onDelete: Cascade)
-  respondentId    String?
-  respondent      User? @relation("SurveyRespondent", fields: [respondentId], references: [id])
-  submittedAt     DateTime @default(now())
-  location        String?
-  deviceInfo      Json? // Browser, OS, etc.
-  
-  answers         SurveyAnswer[]
-  
-  @@map("survey_responses")
-}
-
-model SurveyAnswer {
-  id              String   @id @default(cuid())
-  responseId      String
-  response        SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  questionId      String
-  question        SurveyQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  answerText      String?
-  answerValue     Json? // For complex answers (multi-select, file uploads, etc.)
-  createdAt       DateTime @default(now())
-  
-  @@map("survey_answers")
 }
 
 enum SurveyType {

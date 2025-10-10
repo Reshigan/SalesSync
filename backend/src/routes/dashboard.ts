@@ -36,7 +36,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
     ] = await Promise.all([
       // Total users
       prisma.user.count({
-        where: { tenantId, isActive: true }
+        where: { tenantId, status: 'ACTIVE' }
       }),
 
       // Total customers
@@ -80,9 +80,9 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
       prisma.user.count({
         where: {
           tenantId,
-          isActive: true,
+          status: 'ACTIVE',
           role: {
-            in: [UserRole.VAN_SALES, UserRole.FIELD_AGENT, UserRole.MERCHANDISER, UserRole.PROMOTER]
+            in: [UserRole.VAN_SALES_AGENT, UserRole.FIELD_AGENT, UserRole.MERCHANDISER, UserRole.PROMOTER]
           }
         }
       }),
@@ -101,7 +101,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
               phone: true
             }
           },
-          agent: {
+          user: {
             select: {
               id: true,
               firstName: true,
@@ -139,7 +139,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
           TO_CHAR("createdAt", 'YYYY-MM') as month,
           SUM("totalAmount")::float as revenue,
           COUNT(*)::int as orders
-        FROM "Order"
+        FROM "orders"
         WHERE "tenantId" = ${tenantId}
           AND "createdAt" >= NOW() - INTERVAL '12 months'
           AND status = 'DELIVERED'
@@ -166,7 +166,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
         name: true,
         email: true,
         phone: true,
-        type: true
+        customerType: true
       }
     });
 
@@ -181,18 +181,15 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
 
     // Get agent performance
     const agentPerformance = await prisma.order.groupBy({
-      by: ['agentId'],
+      by: ['userId'],
       where: {
         tenantId,
-        agentId: { not: null },
         status: OrderStatus.DELIVERED
       },
       _sum: {
         totalAmount: true
       },
-      _count: {
-        id: true
-      },
+      _count: true,
       orderBy: {
         _sum: {
           totalAmount: 'desc'
@@ -202,7 +199,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
     });
 
     // Get agent details
-    const agentIds = agentPerformance.map(ap => ap.agentId).filter((id): id is string => id !== null);
+    const agentIds = agentPerformance.map(ap => ap.userId).filter((id): id is string => id !== null);
     const agentDetails = await prisma.user.findMany({
       where: {
         id: { in: agentIds }
@@ -217,13 +214,13 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
     });
 
     const agentPerformanceWithDetails = agentPerformance.map(ap => {
-      const agent = agentDetails.find(a => a.id === ap.agentId);
+      const agent = agentDetails.find(a => a.id === ap.userId);
       return {
         id: agent?.id,
         name: agent ? `${agent.firstName} ${agent.lastName}` : 'Unknown',
         email: agent?.email,
         role: agent?.role,
-        totalOrders: ap._count.id,
+        totalOrders: ap._count,
         totalRevenue: Number(ap._sum.totalAmount || 0)
       };
     });
@@ -248,15 +245,15 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
           email: order.customer.email,
           phone: order.customer.phone
         } : null,
-        agent: order.agent ? {
-          id: order.agent.id,
-          name: `${order.agent.firstName} ${order.agent.lastName}`,
-          email: order.agent.email
+        agent: order.user ? {
+          id: order.user.id,
+          name: `${order.user.firstName} ${order.user.lastName}`,
+          email: order.user.email
         } : null,
         totalAmount: Number(order.totalAmount),
         status: order.status,
         createdAt: order.createdAt,
-        deliveredAt: order.deliveredAt
+        deliveryDate: order.deliveryDate
       })),
       topCustomers: topCustomersWithDetails,
       salesByMonth: salesByMonth.map(sm => ({
@@ -327,7 +324,9 @@ router.get('/stats', authenticateToken, async (req: TenantRequest, res: Response
       // Visits stats
       prisma.merchandisingVisit.count({
         where: {
-          tenantId,
+          user: {
+            tenantId
+          },
           createdAt: {
             gte: startDate,
             lte: endDate
@@ -402,7 +401,7 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
           customer: {
             select: { name: true }
           },
-          agent: {
+          user: {
             select: { firstName: true, lastName: true }
           }
         }
@@ -410,14 +409,18 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
 
       // Recent merchandising visits
       prisma.merchandisingVisit.findMany({
-        where: { tenantId },
+        where: { 
+          user: {
+            tenantId
+          }
+        },
         take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
-          agent: {
+          user: {
             select: { firstName: true, lastName: true }
           },
-          customer: {
+          store: {
             select: { name: true }
           }
         }
@@ -425,11 +428,15 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
 
       // Recent promoter activities
       prisma.promoterActivity.findMany({
-        where: { tenantId },
+        where: { 
+          user: {
+            tenantId
+          }
+        },
         take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
-          agent: {
+          user: {
             select: { firstName: true, lastName: true }
           },
           campaign: {
@@ -440,15 +447,20 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
 
       // Recent inventory movements
       prisma.inventoryMovement.findMany({
-        where: { tenantId },
+        where: { 
+          inventory: {
+            tenantId
+          }
+        },
         take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
-          product: {
-            select: { name: true }
-          },
-          user: {
-            select: { firstName: true, lastName: true }
+          inventory: {
+            include: {
+              product: {
+                select: { name: true }
+              }
+            }
           }
         }
       })
@@ -479,7 +491,7 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
         reference: order.orderNumber,
         description: `Order ${order.orderNumber}`,
         customer_name: order.customer?.name || null,
-        agent_name: order.agent ? `${order.agent.firstName} ${order.agent.lastName}` : 'System',
+        agent_name: order.user ? `${order.user.firstName} ${order.user.lastName}` : 'System',
         amount: Number(order.totalAmount),
         status: order.status,
         timestamp: order.createdAt,
@@ -497,8 +509,8 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
         type: 'visit',
         reference: `VISIT-${visit.id.substring(0, 8).toUpperCase()}`,
         description: `Store visit`,
-        customer_name: visit.customer?.name || null,
-        agent_name: visit.agent ? `${visit.agent.firstName} ${visit.agent.lastName}` : 'Unknown',
+        customer_name: visit.store?.name || null,
+        agent_name: visit.user ? `${visit.user.firstName} ${visit.user.lastName}` : 'Unknown',
         amount: null,
         status: visit.status,
         timestamp: visit.createdAt,
@@ -517,7 +529,7 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
         reference: `PROMO-${promo.id.substring(0, 8).toUpperCase()}`,
         description: promo.campaign?.name || 'Promotion Activity',
         customer_name: null,
-        agent_name: promo.agent ? `${promo.agent.firstName} ${promo.agent.lastName}` : 'Unknown',
+        agent_name: promo.user ? `${promo.user.firstName} ${promo.user.lastName}` : 'Unknown',
         amount: null,
         status: promo.status,
         timestamp: promo.createdAt,
@@ -534,16 +546,16 @@ router.get('/activities', authenticateToken, async (req: TenantRequest, res: Res
         id: movement.id,
         type: 'inventory',
         reference: `INV-${movement.id.substring(0, 8).toUpperCase()}`,
-        description: `${movement.product?.name || 'Product'} - ${movement.type}`,
+        description: `${movement.inventory?.product?.name || 'Product'} - ${movement.movementType}`,
         customer_name: null,
-        agent_name: movement.user ? `${movement.user.firstName} ${movement.user.lastName}` : 'System',
+        agent_name: 'System',
         amount: null,
-        status: movement.type,
+        status: movement.movementType,
         timestamp: movement.createdAt,
         timeAgo: getTimeAgo(movement.createdAt),
-        detail: `${movement.quantity} units - ${movement.type}`,
+        detail: `${movement.quantity} units - ${movement.movementType}`,
         icon: 'Package',
-        color: getMovementColor(movement.type)
+        color: getMovementColor(movement.movementType)
       });
     });
 

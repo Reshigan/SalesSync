@@ -273,6 +273,278 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
+// Password reset request
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Email is required'
+      });
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { tenant: true }
+    });
+
+    if (!user || user.status !== 'ACTIVE' || !user.tenant.isActive) {
+      // Don't reveal if user exists or not for security
+      return res.json({
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
+    }
+
+    // Generate reset token (in production, you'd send this via email)
+    const resetToken = jwt.sign(
+      { userId: user.id, type: 'password_reset' },
+      process.env.JWT_SECRET!,
+      { expiresIn: '1h' }
+    );
+
+    // In production, you would:
+    // 1. Store the reset token in database with expiration
+    // 2. Send email with reset link
+    // For demo purposes, we'll just return the token
+    logger.info(`Password reset requested for: ${user.email}`);
+
+    return res.json({
+      message: 'If an account with that email exists, a password reset link has been sent.',
+      // Remove this in production - only for demo
+      resetToken: resetToken
+    });
+  } catch (error) {
+    logger.error('Password reset request error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Password reset request failed'
+    });
+  }
+});
+
+// Password reset
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Reset token and new password are required'
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Password must be at least 6 characters long'
+      });
+    }
+
+    // Verify reset token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    
+    if (decoded.type !== 'password_reset') {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid reset token'
+      });
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!user || user.status !== 'ACTIVE') {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid reset token'
+      });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword }
+    });
+
+    logger.info(`Password reset completed for: ${user.email}`);
+
+    return res.json({
+      message: 'Password reset successful'
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    logger.error('Password reset error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Password reset failed'
+    });
+  }
+});
+
+// Get current user profile
+router.get('/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Access token is required'
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isActive: true
+          }
+        }
+      }
+    });
+
+    if (!user || user.status !== 'ACTIVE' || !user.tenant.isActive) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid access token'
+      });
+    }
+
+    return res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        avatar: user.avatar,
+        phone: user.phone,
+        status: user.status,
+        lastLoginAt: user.lastLoginAt,
+        tenant: user.tenant
+      }
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid access token'
+      });
+    }
+
+    logger.error('Get profile error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to get user profile'
+    });
+  }
+});
+
+// Update user profile
+router.put('/me', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Access token is required'
+      });
+    }
+
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const { firstName, lastName, phone, avatar } = req.body;
+
+    // Validate input
+    if (firstName && (firstName.length < 2 || firstName.length > 50)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'First name must be between 2 and 50 characters'
+      });
+    }
+
+    if (lastName && (lastName.length < 2 || lastName.length > 50)) {
+      return res.status(400).json({
+        error: 'Validation Error',
+        message: 'Last name must be between 2 and 50 characters'
+      });
+    }
+
+    const updateData: any = {};
+    if (firstName !== undefined) updateData.firstName = firstName;
+    if (lastName !== undefined) updateData.lastName = lastName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (avatar !== undefined) updateData.avatar = avatar;
+
+    const user = await prisma.user.update({
+      where: { id: decoded.userId },
+      data: updateData,
+      include: {
+        tenant: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            isActive: true
+          }
+        }
+      }
+    });
+
+    logger.info(`Profile updated for: ${user.email}`);
+
+    return res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        avatar: user.avatar,
+        phone: user.phone,
+        status: user.status,
+        tenant: user.tenant
+      }
+    });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Invalid access token'
+      });
+    }
+
+    logger.error('Update profile error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to update profile'
+    });
+  }
+});
+
 // Logout (optional - for token blacklisting in production)
 router.post('/logout', (req, res) => {
   // In a production environment, you might want to blacklist the token

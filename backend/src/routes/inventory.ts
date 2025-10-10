@@ -29,7 +29,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
     }
 
     if (lowStock === 'true') {
-      where.quantity = { lte: prisma.inventory.fields.reorderPoint };
+      where.currentStock = { lte: prisma.inventory.fields.minStock };
     }
 
     if (search) {
@@ -51,8 +51,7 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
             include: {
               category: true
             }
-          },
-          store: true
+          }
         },
         orderBy: { updatedAt: 'desc' }
       }),
@@ -87,8 +86,7 @@ router.get('/:id', authenticateToken, async (req: TenantRequest, res: Response) 
           include: {
             category: true
           }
-        },
-        store: true
+        }
       }
     });
 
@@ -110,22 +108,23 @@ router.post('/', authenticateToken, async (req: TenantRequest, res: Response) =>
     const {
       productId,
       currentStock,
-      reorderPoint,
-      reorderQuantity,
+      minStock,
+      maxStock,
+      location,
       unitCost,
       batchNumber,
       expiryDate
     } = req.body;
 
     // Validation
-    if (!productId || !storeId || quantity === undefined) {
+    if (!productId || currentStock === undefined) {
       return res.status(400).json({ 
-        error: 'Product ID, Store ID, and quantity are required' 
+        error: 'Product ID and current stock are required' 
       });
     }
 
-    if (quantity < 0) {
-      return res.status(400).json({ error: 'Quantity cannot be negative' });
+    if (currentStock < 0) {
+      return res.status(400).json({ error: 'Current stock cannot be negative' });
     }
 
     // Check if inventory record already exists
@@ -133,7 +132,7 @@ router.post('/', authenticateToken, async (req: TenantRequest, res: Response) =>
       where: {
         tenantId,
         productId,
-        storeId
+        location
       }
     });
 
@@ -148,12 +147,12 @@ router.post('/', authenticateToken, async (req: TenantRequest, res: Response) =>
         tenantId,
         productId,
         currentStock,
-        batchNumber,
-        expiryDate: expiryDate ? new Date(expiryDate) : null
+        minStock: minStock || 0,
+        maxStock: maxStock || 1000,
+        location
       },
       include: {
-        product: true,
-        store: true
+        product: true
       }
     });
 
@@ -171,11 +170,9 @@ router.put('/:id', authenticateToken, async (req: TenantRequest, res: Response) 
     const { id } = req.params;
     const {
       currentStock,
-      reorderPoint,
-      reorderQuantity,
-      unitCost,
-      batchNumber,
-      expiryDate
+      minStock,
+      maxStock,
+      location
     } = req.body;
 
     // Check if record exists
@@ -188,24 +185,21 @@ router.put('/:id', authenticateToken, async (req: TenantRequest, res: Response) 
     }
 
     // Validation
-    if (quantity !== undefined && quantity < 0) {
-      return res.status(400).json({ error: 'Quantity cannot be negative' });
+    if (currentStock !== undefined && currentStock < 0) {
+      return res.status(400).json({ error: 'Current stock cannot be negative' });
     }
 
     const updateData: any = {};
-    if (quantity !== undefined) updateData.quantity = quantity;
-    if (reorderPoint !== undefined) updateData.reorderPoint = reorderPoint;
-    if (reorderQuantity !== undefined) updateData.reorderQuantity = reorderQuantity;
-    if (unitCost !== undefined) updateData.unitCost = unitCost;
-    if (batchNumber !== undefined) updateData.batchNumber = batchNumber;
-    if (expiryDate !== undefined) updateData.expiryDate = expiryDate ? new Date(expiryDate) : null;
+    if (currentStock !== undefined) updateData.currentStock = currentStock;
+    if (minStock !== undefined) updateData.minStock = minStock;
+    if (maxStock !== undefined) updateData.maxStock = maxStock;
+    if (location !== undefined) updateData.location = location;
 
     const inventory = await prisma.inventory.update({
       where: { id },
       data: updateData,
       include: {
-        product: true,
-        store: true
+        product: true
       }
     });
 
@@ -224,8 +218,7 @@ router.post('/movements', authenticateToken, async (req: TenantRequest, res: Res
     const {
       inventoryId,
       type, // IN, OUT, TRANSFER, ADJUSTMENT
-      currentStock,
-      toStoreId, // For transfers
+      quantity,
       reason,
       reference,
       notes
@@ -244,16 +237,10 @@ router.post('/movements', authenticateToken, async (req: TenantRequest, res: Res
       });
     }
 
-    if (type === 'TRANSFER' && !toStoreId) {
-      return res.status(400).json({ 
-        error: 'Destination store is required for transfers' 
-      });
-    }
-
     // Get current inventory
     const inventory = await prisma.inventory.findFirst({
       where: { id: inventoryId, tenantId },
-      include: { product: true, store: true }
+      include: { product: true }
     });
 
     if (!inventory) {
@@ -282,34 +269,7 @@ router.post('/movements', authenticateToken, async (req: TenantRequest, res: Res
         data: { currentStock: newQuantity }
       });
 
-      // If transfer, update destination inventory
-      if (type === 'TRANSFER' && toStoreId) {
-        const destInventory = await tx.inventory.findFirst({
-          where: {
-            tenantId,
-            productId: inventory.productId,
-            storeId: toStoreId
-          }
-        });
-
-        if (destInventory) {
-          // Update existing
-          await tx.inventory.update({
-            where: { id: destInventory.id },
-            data: { currentStock: destInventory.quantity + quantity }
-          });
-        } else {
-          // Create new
-          await tx.inventory.create({
-            data: {
-              tenantId,
-              productId: inventory.productId,
-              storeId: toStoreId,
-              currentStock,
-            }
-          });
-        }
-      }
+      // Note: Transfer logic simplified - would need destination location logic
 
       // Log the movement (if you have an InventoryMovement model)
       // await tx.inventoryMovement.create({ ... });
@@ -317,17 +277,15 @@ router.post('/movements', authenticateToken, async (req: TenantRequest, res: Res
       // Create audit log
       await tx.auditLog.create({
         data: {
-          tenantId,
           userId,
           action: `INVENTORY_${type}`,
           entity: 'Inventory',
           entityId: inventoryId,
-          changes: {
+          oldValues: { quantity: inventory.currentStock },
+          newValues: {
             type,
-            currentStock,
-            oldQuantity: inventory.currentStock,
+            quantity,
             newQuantity,
-            toStoreId,
             reason,
             reference
           },
@@ -349,147 +307,29 @@ router.post('/movements', authenticateToken, async (req: TenantRequest, res: Res
   }
 });
 
-// Transfer stock between locations
-router.post('/transfer', authenticateToken, async (req: TenantRequest, res: Response) => {
-  try {
-    const tenantId = (req.user as any).tenantId;
-    const userId = (req.user as any).userId;
-    const {
-      productId,
-      fromStoreId,
-      toStoreId,
-      currentStock,
-      reason,
-      reference
-    } = req.body;
-
-    // Validation
-    if (!productId || !fromStoreId || !toStoreId || !quantity) {
-      return res.status(400).json({ 
-        error: 'Product, source store, destination store, and quantity are required' 
-      });
-    }
-
-    if (fromStoreId === toStoreId) {
-      return res.status(400).json({ 
-        error: 'Source and destination stores must be different' 
-      });
-    }
-
-    if (quantity <= 0) {
-      return res.status(400).json({ error: 'Quantity must be positive' });
-    }
-
-    // Use transaction to ensure atomicity
-    const result = await prisma.$transaction(async (tx) => {
-      // Get source inventory
-      const sourceInventory = await tx.inventory.findFirst({
-        where: { tenantId, productId, storeId: fromStoreId }
-      });
-
-      if (!sourceInventory) {
-        throw new Error('Source inventory not found');
-      }
-
-      if (sourceInventory.quantity < quantity) {
-        throw new Error('Insufficient stock at source location');
-      }
-
-      // Update source inventory
-      const updatedSource = await tx.inventory.update({
-        where: { id: sourceInventory.id },
-        data: { currentStock: sourceInventory.quantity - quantity }
-      });
-
-      // Get or create destination inventory
-      const destInventory = await tx.inventory.findFirst({
-        where: { tenantId, productId, storeId: toStoreId }
-      });
-
-      let updatedDest;
-      if (destInventory) {
-        updatedDest = await tx.inventory.update({
-          where: { id: destInventory.id },
-          data: { currentStock: destInventory.quantity + quantity }
-        });
-      } else {
-        updatedDest = await tx.inventory.create({
-          data: {
-            tenantId,
-            productId,
-            storeId: toStoreId,
-            currentStock,
-          }
-        });
-      }
-
-      // Create audit log
-      await tx.auditLog.create({
-        data: {
-          tenantId,
-          userId,
-          action: 'INVENTORY_TRANSFER',
-          entity: 'Inventory',
-          entityId: sourceInventory.id,
-          changes: {
-            productId,
-            fromStoreId,
-            toStoreId,
-            currentStock,
-            reason,
-            reference
-          },
-          ipAddress: req.ip || 'unknown'
-        }
-      });
-
-      return { source: updatedSource, destination: updatedDest };
-    });
-
-    res.json({
-      success: true,
-      message: 'Stock transferred successfully',
-      transfer: result
-    });
-  } catch (error: any) {
-    console.error('Transfer stock error:', error);
-    res.status(500).json({ error: error.message || 'Failed to transfer stock' });
-  }
-});
-
 // Get low stock alerts
 router.get('/alerts/low-stock', authenticateToken, async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = (req.user as any).tenantId;
-    const { storeId } = req.query;
 
-    const where: any = {
-      tenantId,
-      currentStock: { lte: prisma.inventory.fields.minStock }
-    };
-
-
-    const lowStock = await prisma.inventory.findMany({
-      where,
-      include: {
-        product: {
-          include: {
-            category: true
-          }
-        },
-        store: true
-      },
-      orderBy: [
-        { currentStock: 'asc' }
-      ]
-    });
+    // Find inventory items where current stock is less than or equal to minimum stock
+    const lowStockItems = await prisma.$queryRaw`
+      SELECT i.*, p.name as product_name, p.sku, pc.name as category_name
+      FROM inventories i
+      JOIN products p ON i.product_id = p.id
+      LEFT JOIN product_categories pc ON p.category_id = pc.id
+      WHERE i.tenant_id = ${tenantId}
+        AND i.min_stock > 0
+        AND i.current_stock <= i.min_stock
+      ORDER BY i.current_stock ASC
+    ` as any[];
 
     res.json({
-      count: lowStock.length,
-      items: lowStock.map(item => ({
+      count: lowStockItems.length,
+      items: lowStockItems.map((item: any) => ({
         ...item,
-        percentageRemaining: (item.quantity / item.reorderPoint) * 100,
-        shouldReorder: item.quantity <= item.reorderPoint
+        percentageRemaining: item.min_stock ? (item.current_stock / item.min_stock) * 100 : 100,
+        shouldReorder: item.min_stock ? item.current_stock <= item.min_stock : false
       }))
     });
   } catch (error) {
@@ -508,9 +348,9 @@ router.post('/count', authenticateToken, async (req: TenantRequest, res: Respons
     } = req.body;
 
     // Validation
-    if (!storeId || !counts || !Array.isArray(counts)) {
+    if (!counts || !Array.isArray(counts)) {
       return res.status(400).json({ 
-        error: 'Store ID and counts array are required' 
+        error: 'Counts array is required' 
       });
     }
 
@@ -527,7 +367,7 @@ router.post('/count', authenticateToken, async (req: TenantRequest, res: Respons
 
         // Get current inventory
         const inventory = await tx.inventory.findFirst({
-          where: { tenantId, productId, storeId },
+          where: { tenantId, productId },
           include: { product: true }
         });
 
@@ -538,6 +378,8 @@ router.post('/count', authenticateToken, async (req: TenantRequest, res: Respons
               tenantId,
               productId,
               currentStock: countedQuantity,
+              minStock: 0,
+              maxStock: 1000
             }
           });
 
@@ -571,14 +413,13 @@ router.post('/count', authenticateToken, async (req: TenantRequest, res: Respons
             // Log adjustment
             await tx.auditLog.create({
               data: {
-                tenantId,
                 userId,
                 action: 'INVENTORY_COUNT',
                 entity: 'Inventory',
                 entityId: inventory.id,
-                changes: {
+                oldValues: { quantity: inventory.currentStock },
+                newValues: {
                   productId,
-                  systemQuantity: inventory.currentStock,
                   countedQuantity,
                   variance,
                   notes

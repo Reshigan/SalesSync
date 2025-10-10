@@ -76,14 +76,12 @@ router.get('/:id', async (req: TenantRequest, res) => {
         route: {
           select: {
             id: true,
-            name: true,
-            code: true
+            name: true
           }
         },
         _count: {
           select: {
-            orders: true,
-            visits: true
+            orders: true
           }
         }
       }
@@ -243,7 +241,7 @@ router.get('/stats/overview', async (req: TenantRequest, res) => {
         }
       }),
       prisma.customer.groupBy({
-        by: ['type'],
+        by: ['customerType'],
         where: { tenantId, isActive: true },
         _count: true
       })
@@ -255,7 +253,7 @@ router.get('/stats/overview', async (req: TenantRequest, res) => {
       inactiveCustomers: totalCustomers - activeCustomers,
       newThisMonth,
       byType: customersByType.map(ct => ({
-        type: ct.type,
+        type: ct.customerType,
         count: ct._count
       }))
     });
@@ -297,7 +295,7 @@ router.get('/:id/orders', async (req: TenantRequest, res) => {
         take: Number(limit),
         orderBy: { createdAt: 'desc' },
         include: {
-          agent: {
+          user: {
             select: {
               id: true,
               firstName: true,
@@ -355,14 +353,16 @@ router.get('/:id/visits', async (req: TenantRequest, res) => {
     const [visits, total] = await Promise.all([
       prisma.merchandisingVisit.findMany({
         where: {
-          customerId: id,
-          tenantId: req.tenantId
+          storeId: id,
+          store: {
+            tenantId: req.tenantId
+          }
         },
         skip,
         take: Number(limit),
         orderBy: { createdAt: 'desc' },
         include: {
-          agent: {
+          user: {
             select: {
               id: true,
               firstName: true,
@@ -374,8 +374,10 @@ router.get('/:id/visits', async (req: TenantRequest, res) => {
       }),
       prisma.merchandisingVisit.count({
         where: {
-          customerId: id,
-          tenantId: req.tenantId
+          storeId: id,
+          store: {
+            tenantId: req.tenantId
+          }
         }
       })
     ]);
@@ -429,8 +431,10 @@ router.get('/:id/analytics', async (req: TenantRequest, res) => {
       }),
       prisma.merchandisingVisit.count({
         where: {
-          customerId: id,
-          tenantId: req.tenantId
+          storeId: id,
+          store: {
+            tenantId: req.tenantId
+          }
         }
       }),
       prisma.order.aggregate({

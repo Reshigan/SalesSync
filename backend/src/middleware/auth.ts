@@ -153,3 +153,6 @@ export const requireRole = (roles: string[]) => {
 export const requireSuperAdmin = requireRole(['SUPER_ADMIN']);
 export const requireTenantAdmin = requireRole(['SUPER_ADMIN', 'TENANT_ADMIN']);
 export const requireManager = requireRole(['SUPER_ADMIN', 'TENANT_ADMIN', 'MANAGER']);
+
+// Alias for backward compatibility
+export const authenticateToken = authMiddleware;
