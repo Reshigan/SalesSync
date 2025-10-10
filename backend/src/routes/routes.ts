@@ -181,6 +181,225 @@ router.get('/', authenticateToken, async (req: TenantRequest, res: Response) => 
 // 2. GET SINGLE ROUTE WITH FULL DETAILS
 // ============================================================================
 /**
+ * GET /api/routes/analytics
+ * 
+ * Purpose: Get route performance analytics and metrics
+ * 
+ * Query Parameters:
+ * - routeId: Specific route ID (optional)
+ * - dateFrom: Start date for analytics (optional)
+ * - dateTo: End date for analytics (optional)
+ * - period: Time period (day, week, month, year)
+ * 
+ * Use Cases:
+ * - Route performance monitoring
+ * - Efficiency analysis
+ * - Planning optimization
+ */
+router.get('/analytics', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = (req.user as any).tenantId;
+    const { routeId, dateFrom, dateTo, period = 'month' } = req.query;
+
+    // Date range calculation
+    const endDate = dateTo ? new Date(dateTo as string) : new Date();
+    let startDate: Date;
+    
+    if (dateFrom) {
+      startDate = new Date(dateFrom as string);
+    } else {
+      startDate = new Date();
+      switch (period) {
+        case 'day':
+          startDate.setDate(startDate.getDate() - 1);
+          break;
+        case 'week':
+          startDate.setDate(startDate.getDate() - 7);
+          break;
+        case 'month':
+          startDate.setMonth(startDate.getMonth() - 1);
+          break;
+        case 'year':
+          startDate.setFullYear(startDate.getFullYear() - 1);
+          break;
+      }
+    }
+
+    // Base query conditions
+    const whereConditions: any = {
+      tenantId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate
+      }
+    };
+
+    if (routeId) {
+      whereConditions.id = routeId as string;
+    }
+
+    // Get route statistics
+    const routes = await prisma.route.findMany({
+      where: whereConditions,
+      include: {
+        stops: {
+          include: {
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                code: true
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true
+          }
+        },
+        area: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        }
+      }
+    });
+
+    // Calculate metrics
+    const totalRoutes = routes.length;
+    const totalStops = routes.reduce((sum, route) => sum + route.stops.length, 0);
+    const visitedStops = routes.reduce((sum, route) => 
+      sum + route.stops.filter(stop => stop.status === 'VISITED').length, 0
+    );
+    const pendingStops = routes.reduce((sum, route) => 
+      sum + route.stops.filter(stop => stop.status === 'PENDING').length, 0
+    );
+    const skippedStops = routes.reduce((sum, route) => 
+      sum + route.stops.filter(stop => stop.status === 'SKIPPED').length, 0
+    );
+    const failedStops = routes.reduce((sum, route) => 
+      sum + route.stops.filter(stop => stop.status === 'FAILED').length, 0
+    );
+
+    const completionRate = totalStops > 0 ? (visitedStops / totalStops * 100).toFixed(1) : '0.0';
+
+    // Route status distribution
+    const statusDistribution = {
+      PLANNED: routes.filter(r => r.status === 'PLANNED').length,
+      IN_PROGRESS: routes.filter(r => r.status === 'IN_PROGRESS').length,
+      COMPLETED: routes.filter(r => r.status === 'COMPLETED').length,
+      CANCELLED: routes.filter(r => r.status === 'CANCELLED').length
+    };
+
+    // Performance by user
+    const userPerformance = routes.reduce((acc: any, route) => {
+      const userId = route.userId;
+      const userName = `${route.user.firstName} ${route.user.lastName}`;
+      
+      if (!acc[userId]) {
+        acc[userId] = {
+          userId,
+          userName,
+          role: route.user.role,
+          totalRoutes: 0,
+          totalStops: 0,
+          completedStops: 0,
+          completionRate: '0.0%'
+        };
+      }
+      
+      acc[userId].totalRoutes++;
+      acc[userId].totalStops += route.stops.length;
+      acc[userId].completedStops += route.stops.filter(s => s.status === 'VISITED').length;
+      acc[userId].completionRate = acc[userId].totalStops > 0 
+        ? `${(acc[userId].completedStops / acc[userId].totalStops * 100).toFixed(1)}%`
+        : '0.0%';
+      
+      return acc;
+    }, {});
+
+    // Area performance
+    const areaPerformance = routes.reduce((acc: any, route) => {
+      const areaId = route.areaId;
+      const areaName = route.area?.name || 'Unknown';
+      
+      if (!acc[areaId]) {
+        acc[areaId] = {
+          areaId,
+          areaName,
+          totalRoutes: 0,
+          totalStops: 0,
+          completedStops: 0,
+          completionRate: '0.0%'
+        };
+      }
+      
+      acc[areaId].totalRoutes++;
+      acc[areaId].totalStops += route.stops.length;
+      acc[areaId].completedStops += route.stops.filter(s => s.status === 'VISITED').length;
+      acc[areaId].completionRate = acc[areaId].totalStops > 0 
+        ? `${(acc[areaId].completedStops / acc[areaId].totalStops * 100).toFixed(1)}%`
+        : '0.0%';
+      
+      return acc;
+    }, {});
+
+    // Recent activity
+    const recentRoutes = routes
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 10)
+      .map(route => ({
+        id: route.id,
+        name: route.name,
+        status: route.status,
+        assignedTo: `${route.user.firstName} ${route.user.lastName}`,
+        area: route.area?.name,
+        totalStops: route.stops.length,
+        completedStops: route.stops.filter(s => s.status === 'VISITED').length,
+        updatedAt: route.updatedAt
+      }));
+
+    const analytics = {
+      period: {
+        from: startDate.toISOString(),
+        to: endDate.toISOString(),
+        period
+      },
+      overview: {
+        totalRoutes,
+        totalStops,
+        visitedStops,
+        pendingStops,
+        skippedStops,
+        failedStops,
+        completionRate: `${completionRate}%`
+      },
+      statusDistribution,
+      userPerformance: Object.values(userPerformance),
+      areaPerformance: Object.values(areaPerformance),
+      recentActivity: recentRoutes,
+      trends: {
+        // Can be enhanced with time-series data
+        dailyCompletion: [],
+        weeklyEfficiency: [],
+        monthlyGrowth: []
+      }
+    };
+
+    res.json(analytics);
+  } catch (error) {
+    console.error('Route analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch route analytics' });
+  }
+});
+
+/**
  * GET /api/routes/:id
  * 
  * Purpose: Retrieve complete route details including all stops and customers
@@ -363,7 +582,7 @@ router.post('/', authenticateToken, async (req: TenantRequest, res: Response) =>
     }
 
     // Validate role (should be sales agent, field agent, or van sales)
-    const validRoles = ['SALES_AGENT', 'FIELD_AGENT', 'VAN_SALES', 'ADMIN'];
+    const validRoles = ['VAN_SALES_AGENT', 'FIELD_AGENT', 'PROMOTER', 'MERCHANDISER', 'TENANT_ADMIN', 'MANAGER'];
     if (!validRoles.includes(assignedUser.role)) {
       return res.status(400).json({ 
         error: 'Assigned user does not have a valid role for route assignment' 
@@ -1068,5 +1287,7 @@ router.get('/:id/schedule', authenticateToken, async (req: TenantRequest, res: R
     res.status(500).json({ error: 'Failed to fetch route schedule' });
   }
 });
+
+
 
 export default router;

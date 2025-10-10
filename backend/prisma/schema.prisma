@@ -20,6 +20,7 @@ model Tenant {
   campaigns         Campaign[]
   customers         Customer[]
   inventories       Inventory[]
+  notifications     Notification[]
   orders            Order[]
   productCategories ProductCategory[]
   products          Product[]
@@ -50,6 +51,7 @@ model User {
   auditLogs           AuditLog[]
   commissions         Commission[]
   merchandisingVisits MerchandisingVisit[]
+  notifications       Notification[]
   orders              Order[]
   promoterActivities  PromoterActivity[]
   routes              Route[]
@@ -580,6 +582,32 @@ model SurveyAnswer {
   @@map("survey_answers")
 }
 
+model Notification {
+  id          String            @id @default(cuid())
+  title       String
+  message     String
+  type        NotificationType  @default(INFO)
+  priority    NotificationPriority @default(NORMAL)
+  isRead      Boolean           @default(false)
+  readAt      DateTime?
+  data        Json?             // Additional data payload
+  userId      String?           // Specific user notification
+  tenantId    String?           // Tenant-wide notification
+  roleTarget  UserRole?         // Role-based notification
+  expiresAt   DateTime?         // Optional expiration
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant      Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([tenantId, isRead])
+  @@index([roleTarget, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
 enum UserRole {
   SUPER_ADMIN
   TENANT_ADMIN
@@ -727,4 +755,20 @@ enum QuestionType {
   SCALE
   DATE
   FILE_UPLOAD
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  SYSTEM
+  ALERT
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
