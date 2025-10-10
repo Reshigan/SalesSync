@@ -69,6 +69,43 @@ a {
   .enterprise-card {
     @apply bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200;
   }
+
+  /* Mobile-optimized components */
+  .mobile-btn-primary {
+    @apply bg-blue-600 active:bg-blue-700 text-white font-medium py-4 px-6 rounded-xl transition-colors duration-200 text-lg min-h-[48px] touch-manipulation;
+  }
+  
+  .mobile-btn-secondary {
+    @apply bg-gray-200 active:bg-gray-300 text-gray-800 font-medium py-4 px-6 rounded-xl transition-colors duration-200 text-lg min-h-[48px] touch-manipulation;
+  }
+  
+  .mobile-card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 touch-manipulation;
+  }
+  
+  .mobile-input-field {
+    @apply w-full px-4 py-4 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-lg min-h-[48px] touch-manipulation;
+  }
+  
+  .mobile-nav-item {
+    @apply flex flex-col items-center justify-center p-3 rounded-xl transition-colors duration-200 min-h-[64px] touch-manipulation;
+  }
+  
+  .mobile-action-button {
+    @apply fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-200 z-50 touch-manipulation;
+  }
+  
+  .mobile-header {
+    @apply sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3;
+  }
+  
+  .mobile-content {
+    @apply px-4 py-6 pb-24;
+  }
+  
+  .mobile-bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 z-40;
+  }
 }
 
 /* Loading spinner */
@@ -103,4 +140,88 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Better mobile typography */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Mobile-friendly spacing */
+  .mobile-spacing {
+    padding: 1rem;
+  }
+  
+  /* Swipe gestures */
+  .swipeable {
+    touch-action: pan-x;
+  }
+  
+  /* Pull to refresh */
+  .pull-to-refresh {
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .hover\:bg-blue-700:hover {
+    background-color: rgb(29 78 216);
+  }
+  
+  /* Use active states instead */
+  .touch-active:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Landscape mobile optimizations */
+@media (max-width: 768px) and (orientation: landscape) {
+  .mobile-header {
+    padding: 0.5rem 1rem;
+  }
+  
+  .mobile-content {
+    padding: 1rem;
+    padding-bottom: 5rem;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Crisp icons and images */
+  .icon {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Dark mode support for mobile */
+@media (prefers-color-scheme: dark) {
+  .mobile-card {
+    @apply bg-gray-800 border-gray-700 text-white;
+  }
+  
+  .mobile-header {
+    @apply bg-gray-900/95 border-gray-700;
+  }
+  
+  .mobile-bottom-nav {
+    @apply bg-gray-900 border-gray-700;
+  }
 }

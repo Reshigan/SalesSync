@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 
 import { Order, OrderItem } from '@/services/orders.service'
-import { customersService, Customer } from '@/services/customers.service'
-import { productsService, Product } from '@/services/products.service'
+
+
 import { Plus, Trash2, Search, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 

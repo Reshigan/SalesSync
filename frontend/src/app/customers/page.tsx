@@ -6,7 +6,7 @@ import { CustomerForm } from '@/components/customers/CustomerForm'
 import { FormModal } from '@/components/ui/FormModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { customersService, Customer } from '@/services/customers.service'
+import { Customer } from '@/services/customers.service'
 import toast from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
@@ -332,11 +332,11 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">{customer.name}</span>
-                          {customer.businessName && (
-                            <span className="text-xs text-gray-500">{customer.businessName}</span>
+                          {customer.businessName || customer.name || customer.name && (
+                            <span className="text-xs text-gray-500">{customer.businessName || customer.name || customer.name}</span>
                           )}
-                          {customer.customerCode && (
-                            <span className="text-xs text-gray-400">{customer.customerCode}</span>
+                          {customer.customerCode || customer.code || customer.code && (
+                            <span className="text-xs text-gray-400">{customer.customerCode || customer.code || customer.code}</span>
                           )}
                         </div>
                       </td>
@@ -357,7 +357,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center text-sm text-gray-900">
                           <MapPin className="w-3 h-3 mr-1 text-gray-400" />
-                          {customer.city}{customer.region && `, ${customer.region}`}
+                          {customer.city || ""}{customer.region && `, ${customer.region}`}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -366,9 +366,9 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">
-                            KES {customer.creditLimit.toLocaleString()}
+                            KES {(customer.creditLimit || 0).toLocaleString()}
                           </span>
-                          <span className="text-xs text-gray-500">{customer.paymentTerms}</span>
+                          <span className="text-xs text-gray-500">{customer.paymentTerms || "Net 30"}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">

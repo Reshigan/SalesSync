@@ -12,7 +12,7 @@ export interface ValidationRule {
   email?: boolean;
   phone?: boolean;
   url?: boolean;
-  custom?: (value: any) => string | null;
+  custom?: (value: any, allValues?: any) => string | null;
 }
 
 export interface ValidationSchema {
@@ -80,11 +80,11 @@ export const useFormValidation = <T extends Record<string, any>>(
 
     // Custom validation
     if (rule.custom) {
-      return rule.custom(value);
+      return rule.custom(value, values);
     }
 
     return null;
-  }, [validationSchema]);
+  }, [validationSchema, values]);
 
   const validateForm = useCallback((): boolean => {
     const newErrors: FormErrors = {};

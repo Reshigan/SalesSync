@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input'
 
 import { FormModal } from '@/components/ui/FormModal'
 import { OrderForm } from '@/components/orders/OrderForm'
-import { ordersService, Order } from '@/services/orders.service'
+import { Order } from '@/services/orders.service'
 import {
   ShoppingBag,
   Clock,
@@ -139,9 +139,10 @@ export default function OrdersPage() {
       paid: 'bg-green-100 text-green-700',
       overdue: 'bg-red-100 text-red-700',
     }
+    const statusKey = status || 'pending'
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[statusKey as keyof typeof colors] || colors.pending}`}>
+        {statusKey.charAt(0).toUpperCase() + statusKey.slice(1)}
       </span>
     )
   }
@@ -339,26 +340,26 @@ export default function OrdersPage() {
                   orders.map((order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {order.orderNumber || `ORD-${order.id}`}
+                        {order.orderNumber || order.id || order.id || `ORD-${order.id}`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
-                        <div className="text-sm text-gray-500">{order.customerCode}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.customerName || order.customer_name || order.customer_name}</div>
+                        <div className="text-sm text-gray-500">{order.customerCode || order.customer_id || order.customer_id}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.orderDate).toLocaleDateString()}
+                        {(order.orderDate || order.order_date) ? new Date(order.orderDate || order.order_date || '').toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.deliveryDate).toLocaleDateString()}
+                        {(order.deliveryDate || order.delivery_date) ? new Date(order.deliveryDate || order.delivery_date || '').toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        KES {(order.totalAmount || 0).toLocaleString()}
+                        KES {(order.totalAmount || order.total_amount || order.total_amount || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(order.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getPaymentBadge(order.paymentStatus)}
+                        {getPaymentBadge(order.paymentStatus || order.payment_status || order.payment_status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">

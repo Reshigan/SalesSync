@@ -11,8 +11,8 @@ import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { success, error } = useToast();
+  const [localLoading, setLocalLoading] = useState(false);
+  const { success, error: toastError } = useToast();
   const router = useRouter()
   const { login, isLoading } = useAuthStore()
   const [formData, setFormData] = useState({

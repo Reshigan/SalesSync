@@ -45,9 +45,7 @@ export default function TrackingPage() {
       })));
     }, 5000);
 
-    return (<ErrorBoundary>
-
-</ErrorBoundary>) => clearInterval(interval);
+    return () => clearInterval(interval);
   }, [autoRefresh]);
 
   const onlineAgents = agents.filter(a => a.status !== 'offline').length;

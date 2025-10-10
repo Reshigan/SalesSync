@@ -488,4 +488,141 @@ router.get('/:id/analytics', async (req: TenantRequest, res) => {
   }
 });
 
+// Search customers
+router.get('/search', async (req: TenantRequest, res) => {
+  try {
+    const { searchTerm, searchType = 'name', page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    if (!searchTerm) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Search term is required'
+      });
+    }
+
+    let where: any = {
+      tenantId: req.tenantId,
+      isActive: true
+    };
+
+    switch (searchType) {
+      case 'name':
+        where.name = { contains: searchTerm as string, mode: 'insensitive' };
+        break;
+      case 'phone':
+        where.phone = { contains: searchTerm as string, mode: 'insensitive' };
+        break;
+      case 'code':
+        where.code = { contains: searchTerm as string, mode: 'insensitive' };
+        break;
+      default:
+        where.OR = [
+          { name: { contains: searchTerm as string, mode: 'insensitive' } },
+          { phone: { contains: searchTerm as string, mode: 'insensitive' } },
+          { code: { contains: searchTerm as string, mode: 'insensitive' } }
+        ];
+    }
+
+    const [customers, total] = await Promise.all([
+      prisma.customer.findMany({
+        where,
+        skip,
+        take: Number(limit),
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.customer.count({ where })
+    ]);
+
+    return res.json({
+      data: customers,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
+  } catch (error) {
+    logger.error('Search customers error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to search customers'
+    });
+  }
+});
+
+// Get nearby customers
+router.get('/nearby', async (req: TenantRequest, res) => {
+  try {
+    const { latitude, longitude, radius = 5, page = 1, limit = 10 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Latitude and longitude are required'
+      });
+    }
+
+    // Using Haversine formula to calculate distance
+    // This is a simplified version - in production, you might want to use PostGIS or similar
+    const customers = await prisma.$queryRaw`
+      SELECT *,
+        (
+          6371 * acos(
+            cos(radians(${Number(latitude)})) * 
+            cos(radians(latitude)) * 
+            cos(radians(longitude) - radians(${Number(longitude)})) + 
+            sin(radians(${Number(latitude)})) * 
+            sin(radians(latitude))
+          )
+        ) AS distance
+      FROM "Customer"
+      WHERE "tenantId" = ${req.tenantId}
+        AND "isActive" = true
+        AND latitude IS NOT NULL
+        AND longitude IS NOT NULL
+      HAVING distance <= ${Number(radius)}
+      ORDER BY distance
+      LIMIT ${Number(limit)}
+      OFFSET ${skip}
+    `;
+
+    const total = await prisma.$queryRaw`
+      SELECT COUNT(*) as count
+      FROM "Customer"
+      WHERE "tenantId" = ${req.tenantId}
+        AND "isActive" = true
+        AND latitude IS NOT NULL
+        AND longitude IS NOT NULL
+        AND (
+          6371 * acos(
+            cos(radians(${Number(latitude)})) * 
+            cos(radians(latitude)) * 
+            cos(radians(longitude) - radians(${Number(longitude)})) + 
+            sin(radians(${Number(latitude)})) * 
+            sin(radians(latitude))
+          )
+        ) <= ${Number(radius)}
+    `;
+
+    return res.json({
+      data: customers,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: Number((total as any)[0]?.count || 0),
+        pages: Math.ceil(Number((total as any)[0]?.count || 0) / Number(limit))
+      }
+    });
+  } catch (error) {
+    logger.error('Get nearby customers error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch nearby customers'
+    });
+  }
+});
+
 export default router;

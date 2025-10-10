@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import authService from '@/services/auth.service';
+import authService from '../services/auth.service';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
   roles?: string[];
   permissions?: string[];
@@ -16,10 +18,13 @@ interface AuthState {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  _hasHydrated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
   checkAuth: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
+  hasRole: (role: string | string[]) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -29,22 +34,23 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      _hasHydrated: false,
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
         try {
-          const response = await authService.login(email, password);
-          const { user, accessToken } = response.data;
+          const response = await authService.login({ email, password });
+          const { user, token } = response;
           
           set({
             user,
-            token: accessToken,
+            token,
             isAuthenticated: true,
             isLoading: false
           });
 
           // Store token in localStorage for API calls
-          localStorage.setItem('token', accessToken);
+          localStorage.setItem('token', token);
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -67,15 +73,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       refreshToken: async () => {
-        const { token } = get();
-        if (!token) return;
+        const refreshToken = authService.getRefreshToken();
+        if (!refreshToken) return;
 
         try {
-          const response = await authService.refreshToken(token);
-          const { accessToken } = response.data;
+          const response = await authService.refreshToken(refreshToken);
+          const { token } = response;
           
-          set({ token: accessToken });
-          localStorage.setItem('token', accessToken);
+          set({ token });
+          localStorage.setItem('token', token);
         } catch (error) {
           // If refresh fails, logout user
           get().logout();
@@ -92,8 +98,7 @@ export const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true });
         try {
-          const response = await authService.getProfile();
-          const user = response.data;
+          const user = await authService.getProfile();
           
           set({
             user,
@@ -104,6 +109,19 @@ export const useAuthStore = create<AuthState>()(
           // Token is invalid, logout
           get().logout();
         }
+      },
+
+      hasPermission: (permission: string) => {
+        const { user } = get();
+        return user?.permissions?.includes(permission) || false;
+      },
+
+      hasRole: (role: string | string[]) => {
+        const { user } = get();
+        if (Array.isArray(role)) {
+          return role.includes(user?.role || '');
+        }
+        return user?.role === role;
       }
     }),
     {

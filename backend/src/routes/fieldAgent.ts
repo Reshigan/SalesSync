@@ -5,55 +5,74 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
-// Get all SIM distributions
-router.get('/sims', async (req: TenantRequest, res, next) => {
+// Field Agent CRUD Operations
+
+// Get all field agents
+router.get('/', async (req: TenantRequest, res, next) => {
   try {
-    const { userId, kycStatus, activationStatus, startDate, endDate } = req.query;
-    
+    const { status, territoryId, page = '1', limit = '10' } = req.query;
+    const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+
     const where: any = {
       user: {
         tenantId: req.tenantId
       }
     };
 
-    if (userId) where.userId = userId;
-    if (kycStatus) where.kycStatus = kycStatus;
-    if (activationStatus) where.activationStatus = activationStatus;
-    if (startDate || endDate) {
-      where.distributionDate = {};
-      if (startDate) where.distributionDate.gte = new Date(startDate as string);
-      if (endDate) where.distributionDate.lte = new Date(endDate as string);
-    }
+    if (status) where.status = status;
+    if (territoryId) where.territoryIds = { has: territoryId };
 
-    const sims = await prisma.simDistribution.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            avatar: true
+    const [fieldAgents, total] = await Promise.all([
+      prisma.fieldAgent.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+              avatar: true
+            }
+          },
+          _count: {
+            select: {
+              boardPlacements: true,
+              productDistributions: true,
+              visitLists: true,
+              commissions: true
+            }
           }
-        }
-      },
-      orderBy: { distributionDate: 'desc' }
-    });
+        },
+        skip,
+        take: parseInt(limit as string),
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.fieldAgent.count({ where })
+    ]);
 
-    res.json(sims);
+    res.json({
+      fieldAgents,
+      pagination: {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string),
+        total,
+        pages: Math.ceil(total / parseInt(limit as string))
+      }
+    });
   } catch (error) {
-    logger.error('Error fetching SIM distributions:', error);
+    logger.error('Error fetching field agents:', error);
     next(error);
   }
 });
 
-// Get single SIM distribution
-router.get('/sims/:id', async (req: TenantRequest, res, next) => {
+// Get single field agent
+router.get('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
 
-    const sim = await prisma.simDistribution.findFirst({
+    const fieldAgent = await prisma.fieldAgent.findFirst({
       where: {
         id,
         user: {
@@ -64,103 +83,156 @@ router.get('/sims/:id', async (req: TenantRequest, res, next) => {
         user: {
           select: {
             id: true,
-            email: true,
             firstName: true,
             lastName: true,
+            email: true,
+            phone: true,
             avatar: true
           }
+        },
+        boardPlacements: {
+          include: {
+            board: true,
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                code: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        },
+        productDistributions: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                sku: true
+              }
+            },
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                code: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        },
+        visitLists: {
+          include: {
+            customer: {
+              select: {
+                id: true,
+                name: true,
+                code: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        },
+        commissions: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
         }
       }
     });
 
-    if (!sim) {
-      return res.status(404).json({ error: 'SIM distribution not found' });
+    if (!fieldAgent) {
+      return res.status(404).json({ error: 'Field agent not found' });
     }
 
-    res.json(sim);
+    res.json(fieldAgent);
   } catch (error) {
-    logger.error('Error fetching SIM distribution:', error);
+    logger.error('Error fetching field agent:', error);
     next(error);
   }
 });
 
-// Create SIM distribution
-router.post('/sims', async (req: TenantRequest, res, next) => {
+// Create field agent
+router.post('/', async (req: TenantRequest, res, next) => {
   try {
-    const {
-      customerName,
-      customerPhone,
-      customerType,
-      simNumber,
-      activationCode,
-      location,
-      distributionDate,
-      kycStatus,
-      activationStatus,
-      commission
-    } = req.body;
+    const { userId, agentCode, territoryIds, commissionRate } = req.body;
 
     // Validation
-    if (!customerName || !customerPhone || !simNumber || !activationCode) {
+    if (!userId || !agentCode) {
       return res.status(400).json({ 
         error: 'Missing required fields',
-        required: ['customerName', 'customerPhone', 'simNumber', 'activationCode']
+        required: ['userId', 'agentCode']
       });
     }
 
-    const sim = await prisma.simDistribution.create({
+    // Check if user exists and has FIELD_AGENT role
+    const user = await prisma.user.findFirst({
+      where: { 
+        id: userId,
+        tenantId: req.tenantId
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.role !== 'FIELD_AGENT') {
+      return res.status(400).json({ error: 'User must have FIELD_AGENT role' });
+    }
+
+    // Check if field agent already exists for this user
+    const existingAgent = await prisma.fieldAgent.findUnique({
+      where: { userId }
+    });
+
+    if (existingAgent) {
+      return res.status(400).json({ error: 'Field agent already exists for this user' });
+    }
+
+    const fieldAgent = await prisma.fieldAgent.create({
       data: {
-        userId: req.user!.id,
-        customerName,
-        customerPhone,
-        customerType: customerType || 'PREPAID',
-        simNumber,
-        activationCode,
-        location: location || '',
-        distributionDate: distributionDate ? new Date(distributionDate) : new Date(),
-        kycStatus: kycStatus || 'PENDING',
-        activationStatus: activationStatus || 'PENDING',
-        commission: commission ? parseFloat(commission) : 0
+        userId,
+        agentCode,
+        territoryIds: territoryIds || [],
+        commissionRate: commissionRate || 0,
+        status: 'ACTIVE'
       },
       include: {
         user: {
           select: {
             id: true,
-            email: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            email: true,
+            phone: true
           }
         }
       }
     });
 
-    logger.info(`SIM distribution created: ${sim.id} by user ${req.user!.id}`);
-    res.status(201).json(sim);
-  } catch (error) {
-    logger.error('Error creating SIM distribution:', error);
+    logger.info(`Field agent created: ${fieldAgent.id} for user ${userId}`);
+    res.status(201).json(fieldAgent);
+  } catch (error: any) {
+    logger.error('Error creating field agent:', error);
+    if (error.code === 'P2002') {
+      return res.status(400).json({ error: 'Agent code already exists' });
+    }
     next(error);
   }
 });
 
-// Update SIM distribution
-router.put('/sims/:id', async (req: TenantRequest, res, next) => {
+// Update field agent
+router.put('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
-    const {
-      customerName,
-      customerPhone,
-      customerType,
-      simNumber,
-      activationCode,
-      location,
-      distributionDate,
-      kycStatus,
-      activationStatus,
-      commission
-    } = req.body;
+    const { territoryIds, commissionRate, status } = req.body;
 
-    // Verify SIM distribution belongs to tenant
-    const existingSim = await prisma.simDistribution.findFirst({
+    // Verify field agent belongs to tenant
+    const existingAgent = await prisma.fieldAgent.findFirst({
       where: {
         id,
         user: {
@@ -169,56 +241,45 @@ router.put('/sims/:id', async (req: TenantRequest, res, next) => {
       }
     });
 
-    if (!existingSim) {
-      return res.status(404).json({ error: 'SIM distribution not found' });
+    if (!existingAgent) {
+      return res.status(404).json({ error: 'Field agent not found' });
     }
 
     const updateData: any = {};
-    if (customerName) updateData.customerName = customerName;
-    if (customerPhone) updateData.customerPhone = customerPhone;
-    if (customerType) updateData.customerType = customerType;
-    if (simNumber) updateData.simNumber = simNumber;
-    if (activationCode) updateData.activationCode = activationCode;
-    if (location !== undefined) updateData.location = location;
-    if (distributionDate) updateData.distributionDate = new Date(distributionDate);
-    if (kycStatus) updateData.kycStatus = kycStatus;
-    if (activationStatus) updateData.activationStatus = activationStatus;
-    if (commission !== undefined) updateData.commission = parseFloat(commission);
+    if (territoryIds !== undefined) updateData.territoryIds = territoryIds;
+    if (commissionRate !== undefined) updateData.commissionRate = commissionRate;
+    if (status !== undefined) updateData.status = status;
 
-    const sim = await prisma.simDistribution.update({
+    const fieldAgent = await prisma.fieldAgent.update({
       where: { id },
       data: updateData,
       include: {
         user: {
           select: {
             id: true,
-            email: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            email: true,
+            phone: true
           }
         }
       }
     });
 
-    logger.info(`SIM distribution updated: ${id}`);
-    res.json(sim);
+    logger.info(`Field agent updated: ${id}`);
+    res.json(fieldAgent);
   } catch (error) {
-    logger.error('Error updating SIM distribution:', error);
+    logger.error('Error updating field agent:', error);
     next(error);
   }
 });
 
-// Update KYC status
-router.patch('/sims/:id/kyc', async (req: TenantRequest, res, next) => {
+// Delete field agent
+router.delete('/:id', async (req: TenantRequest, res, next) => {
   try {
     const { id } = req.params;
-    const { kycStatus } = req.body;
 
-    if (!['PENDING', 'VERIFIED', 'REJECTED'].includes(kycStatus)) {
-      return res.status(400).json({ error: 'Invalid KYC status' });
-    }
-
-    const existingSim = await prisma.simDistribution.findFirst({
+    const existingAgent = await prisma.fieldAgent.findFirst({
       where: {
         id,
         user: {
@@ -227,148 +288,120 @@ router.patch('/sims/:id/kyc', async (req: TenantRequest, res, next) => {
       }
     });
 
-    if (!existingSim) {
-      return res.status(404).json({ error: 'SIM distribution not found' });
+    if (!existingAgent) {
+      return res.status(404).json({ error: 'Field agent not found' });
     }
 
-    const sim = await prisma.simDistribution.update({
-      where: { id },
-      data: { kycStatus },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      }
-    });
-
-    logger.info(`SIM distribution KYC status updated: ${id} to ${kycStatus}`);
-    res.json(sim);
-  } catch (error) {
-    logger.error('Error updating KYC status:', error);
-    next(error);
-  }
-});
-
-// Update activation status
-router.patch('/sims/:id/activation', async (req: TenantRequest, res, next) => {
-  try {
-    const { id } = req.params;
-    const { activationStatus } = req.body;
-
-    if (!['PENDING', 'ACTIVATED', 'FAILED'].includes(activationStatus)) {
-      return res.status(400).json({ error: 'Invalid activation status' });
-    }
-
-    const existingSim = await prisma.simDistribution.findFirst({
-      where: {
-        id,
-        user: {
-          tenantId: req.tenantId
-        }
-      }
-    });
-
-    if (!existingSim) {
-      return res.status(404).json({ error: 'SIM distribution not found' });
-    }
-
-    const sim = await prisma.simDistribution.update({
-      where: { id },
-      data: { activationStatus },
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true
-          }
-        }
-      }
-    });
-
-    logger.info(`SIM distribution activation status updated: ${id} to ${activationStatus}`);
-    res.json(sim);
-  } catch (error) {
-    logger.error('Error updating activation status:', error);
-    next(error);
-  }
-});
-
-// Delete SIM distribution
-router.delete('/sims/:id', async (req: TenantRequest, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const existingSim = await prisma.simDistribution.findFirst({
-      where: {
-        id,
-        user: {
-          tenantId: req.tenantId
-        }
-      }
-    });
-
-    if (!existingSim) {
-      return res.status(404).json({ error: 'SIM distribution not found' });
-    }
-
-    await prisma.simDistribution.delete({
+    await prisma.fieldAgent.delete({
       where: { id }
     });
 
-    logger.info(`SIM distribution deleted: ${id}`);
-    res.json({ message: 'SIM distribution deleted successfully' });
+    logger.info(`Field agent deleted: ${id}`);
+    res.json({ message: 'Field agent deleted successfully' });
   } catch (error) {
-    logger.error('Error deleting SIM distribution:', error);
+    logger.error('Error deleting field agent:', error);
     next(error);
   }
 });
 
-// Get SIM distribution analytics
-router.get('/analytics', async (req: TenantRequest, res, next) => {
+// Get field agent performance analytics
+router.get('/:id/performance', async (req: TenantRequest, res, next) => {
   try {
-    const { startDate, endDate, userId } = req.query;
+    const { id } = req.params;
+    const { startDate, endDate } = req.query;
 
-    const where: any = {
-      user: {
-        tenantId: req.tenantId
+    // Verify field agent belongs to tenant
+    const fieldAgent = await prisma.fieldAgent.findFirst({
+      where: {
+        id,
+        user: {
+          tenantId: req.tenantId
+        }
       }
-    };
+    });
 
-    if (startDate || endDate) {
-      where.distributionDate = {};
-      if (startDate) where.distributionDate.gte = new Date(startDate as string);
-      if (endDate) where.distributionDate.lte = new Date(endDate as string);
+    if (!fieldAgent) {
+      return res.status(404).json({ error: 'Field agent not found' });
     }
 
-    if (userId) where.userId = userId;
+    const dateFilter: any = {};
+    if (startDate) dateFilter.gte = new Date(startDate as string);
+    if (endDate) dateFilter.lte = new Date(endDate as string);
 
-    const sims = await prisma.simDistribution.findMany({ where });
+    const whereClause: any = { fieldAgentId: id };
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.createdAt = dateFilter;
+    }
 
-    const analytics = {
-      totalDistributions: sims.length,
-      totalCommission: sims.reduce((sum: number, s: any) => sum + parseFloat(s.commission.toString()), 0),
-      kycBreakdown: {
-        pending: sims.filter((s: any) => s.kycStatus === 'PENDING').length,
-        verified: sims.filter((s: any) => s.kycStatus === 'VERIFIED').length,
-        rejected: sims.filter((s: any) => s.kycStatus === 'REJECTED').length
+    const [
+      boardPlacements,
+      productDistributions,
+      visitLists,
+      commissions
+    ] = await Promise.all([
+      prisma.boardPlacement.findMany({
+        where: whereClause,
+        include: {
+          board: true,
+          customer: {
+            select: { name: true, code: true }
+          }
+        }
+      }),
+      prisma.productDistribution.findMany({
+        where: whereClause,
+        include: {
+          product: {
+            select: { name: true, sku: true }
+          },
+          customer: {
+            select: { name: true, code: true }
+          }
+        }
+      }),
+      prisma.visitList.findMany({
+        where: whereClause,
+        include: {
+          customer: {
+            select: { name: true, code: true }
+          }
+        }
+      }),
+      prisma.agentCommission.aggregate({
+        where: {
+          fieldAgentId: id,
+          ...(Object.keys(dateFilter).length > 0 && { earnedDate: dateFilter })
+        },
+        _sum: { amount: true },
+        _count: true
+      })
+    ]);
+
+    const performance = {
+      summary: {
+        totalBoardPlacements: boardPlacements.length,
+        totalProductDistributions: productDistributions.length,
+        totalVisits: visitLists.length,
+        totalCommissionEarned: commissions._sum.amount || 0,
+        totalCommissionTransactions: commissions._count
       },
-      activationBreakdown: {
-        pending: sims.filter((s: any) => s.activationStatus === 'PENDING').length,
-        activated: sims.filter((s: any) => s.activationStatus === 'ACTIVATED').length,
-        failed: sims.filter((s: any) => s.activationStatus === 'FAILED').length
-      }
+      boardPlacements,
+      productDistributions,
+      visitLists,
+      commissionBreakdown: await prisma.agentCommission.groupBy({
+        by: ['activityType'],
+        where: {
+          fieldAgentId: id,
+          ...(Object.keys(dateFilter).length > 0 && { earnedDate: dateFilter })
+        },
+        _sum: { amount: true },
+        _count: true
+      })
     };
 
-    res.json(analytics);
+    res.json(performance);
   } catch (error) {
-    logger.error('Error fetching SIM distribution analytics:', error);
+    logger.error('Error fetching field agent performance:', error);
     next(error);
   }
 });

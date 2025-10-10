@@ -43,7 +43,7 @@ interface DashboardData {
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { success, error } = useToast();
+  const { success, error: toastError } = useToast();
   const { userRole, user } = usePermissions()
   const { _hasHydrated } = useAuthStore()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)

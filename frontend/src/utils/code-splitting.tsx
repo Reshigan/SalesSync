@@ -1,10 +1,10 @@
-import { lazy, Suspense, ComponentType } from 'react';
+import React, { useEffect, lazy, Suspense, ComponentType } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading';
 
 // Dynamic import with error boundary
 export const lazyWithRetry = <T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
-  fallback: React.ComponentType = LoadingSpinner
+  fallback: ComponentType = LoadingSpinner
 ) => {
   const LazyComponent = lazy(() =>
     importFunc().catch(error => {
@@ -18,8 +18,9 @@ export const lazyWithRetry = <T extends ComponentType<any>>(
     })
   );
 
+  const FallbackComponent = fallback;
   return (props: React.ComponentProps<T>) => (
-    <Suspense fallback={<fallback />}>
+    <Suspense fallback={<FallbackComponent />}>
       <LazyComponent {...props} />
     </Suspense>
   );
@@ -49,7 +50,8 @@ export const bundleAnalyzer = {
       
       console.group('Bundle Analysis');
       jsFiles.forEach(file => {
-        console.log(`${file.name}: ${(file.transferSize / 1024).toFixed(2)}KB`);
+        const resourceEntry = file as PerformanceResourceTiming;
+        console.log(`${file.name}: ${(resourceEntry.transferSize / 1024).toFixed(2)}KB`);
       });
       console.groupEnd();
     }
@@ -60,7 +62,7 @@ export const bundleAnalyzer = {
       return (props: any) => {
         const startTime = performance.now();
         
-        React.useEffect(() => {
+        useEffect(() => {
           const endTime = performance.now();
           console.log(`${componentName} render time: ${(endTime - startTime).toFixed(2)}ms`);
         });

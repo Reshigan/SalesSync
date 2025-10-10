@@ -1,23 +1,46 @@
 
-import apiService from '@/lib/api';
+import { apiClient } from '../lib/api-client'
+
+export interface VanRoute {
+  id: string;
+  name: string;
+  driver_id: string;
+  status: 'active' | 'inactive';
+  customers: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VanDriver {
+  id: string;
+  name: string;
+  license_number: string;
+  phone: string;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VanLocation {
+  van_id: string;
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+}
 
 export const vanSalesService = {
 
-  getRoutes: async () => {
-    const response = await apiService.get('/van-sales/routes');
-    return response.data;
+  getRoutes: async (): Promise<VanRoute[]> => {
+    return await apiClient.get<VanRoute[]>('/van-sales/routes');
   },
-  getDrivers: async () => {
-    const response = await apiService.get('/van-sales/drivers');
-    return response.data;
+  getDrivers: async (): Promise<VanDriver[]> => {
+    return await apiClient.get<VanDriver[]>('/van-sales/drivers');
   },
-  trackVan: async (vanId: string) => {
-    const response = await apiService.get('/van-sales/tracking');
-    return response.data;
+  trackVan: async (vanId: string): Promise<VanLocation> => {
+    return await apiClient.get<VanLocation>(`/van-sales/tracking/${vanId}`);
   },
-  updateLocation: async (data: any) => {
-    const response = await apiService.post('/van-sales/location', data);
-    return response.data;
+  updateLocation: async (data: VanLocation): Promise<VanLocation> => {
+    return await apiClient.post<VanLocation>('/van-sales/location', data);
   },
 };
 

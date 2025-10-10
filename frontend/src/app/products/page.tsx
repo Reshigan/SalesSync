@@ -6,7 +6,7 @@ import { ProductForm } from '@/components/products/ProductForm'
 import { FormModal } from '@/components/ui/FormModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { productsService, Product } from '@/services/products.service'
+import { Product } from '@/services/products.service'
 import toast from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';

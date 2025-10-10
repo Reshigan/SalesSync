@@ -60,6 +60,12 @@ model User {
   surveysCreated      Survey[]             @relation("SurveyCreator")
   tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   vanSalesLoads       VanSalesLoad[]
+  fieldAgent          FieldAgent?
+  boardPlacements     BoardPlacement[]
+  productDistributions ProductDistribution[]
+  visitLists          VisitList[]
+  agentCommissions    AgentCommission[]
+  boardsCreated       Board[]              @relation("BoardCreator")
 
   @@map("users")
 }
@@ -106,6 +112,7 @@ model Product {
   category       ProductCategory    @relation(fields: [categoryId], references: [id])
   tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   loadItems      VanSalesLoadItem[]
+  productDistributions ProductDistribution[]
 
   @@unique([tenantId, sku])
   @@map("products")
@@ -145,6 +152,9 @@ model Customer {
   tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orders       Order[]
   routeStops   RouteStop[]
+  boardPlacements BoardPlacement[]
+  productDistributions ProductDistribution[]
+  visitLists   VisitList[]
 
   @@unique([tenantId, code])
   @@map("customers")
@@ -608,6 +618,131 @@ model Notification {
   @@map("notifications")
 }
 
+// Field Marketing Agent Models
+model FieldAgent {
+  id             String            @id @default(cuid())
+  userId         String            @unique
+  agentCode      String            @unique
+  territoryIds   String[]          // Array of territory/area IDs
+  commissionRate Decimal           @default(0)
+  status         AgentStatus       @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  boardPlacements BoardPlacement[] @relation("FieldAgentBoardPlacements")
+  productDistributions ProductDistribution[] @relation("FieldAgentProductDistributions")
+  visitLists     VisitList[]       @relation("FieldAgentVisitLists")
+  commissions    AgentCommission[] @relation("FieldAgentCommissions")
+
+  @@map("field_agents")
+}
+
+model Board {
+  id             String           @id @default(cuid())
+  brandId        String?          // Optional brand association
+  boardType      String
+  dimensions     Json             // {width: number, height: number}
+  material       String
+  commissionRate Decimal
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  createdById    String
+  createdBy      User             @relation("BoardCreator", fields: [createdById], references: [id])
+  placements     BoardPlacement[]
+
+  @@map("boards")
+}
+
+model BoardPlacement {
+  id                 String          @id @default(cuid())
+  boardId            String
+  customerId         String
+  agentId            String
+  fieldAgentId       String?         // Optional direct relation to FieldAgent
+  gpsLocation        Json            // {lat: number, lng: number, accuracy: number}
+  placementPhoto     String          // Base64 or file path
+  storefrontPhoto    String          // Base64 or file path
+  coveragePercentage Decimal?        // Calculated by image analytics
+  qualityScore       Decimal?        // Image quality assessment
+  commission         Decimal         @default(0)
+  placementDate      DateTime        @default(now())
+  status             PlacementStatus @default(ACTIVE)
+  notes              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  board              Board           @relation(fields: [boardId], references: [id])
+  customer           Customer        @relation(fields: [customerId], references: [id])
+  agent              User            @relation(fields: [agentId], references: [id])
+  fieldAgent         FieldAgent?     @relation("FieldAgentBoardPlacements", fields: [fieldAgentId], references: [id])
+
+  @@map("board_placements")
+}
+
+model ProductDistribution {
+  id               String             @id @default(cuid())
+  productId        String
+  agentId          String
+  fieldAgentId     String?            // Optional direct relation to FieldAgent
+  customerId       String?            // Optional - can be distributed to non-customers
+  recipientDetails Json               // {name, phone, idNumber, signature, photo}
+  distributionForm Json               // Product-specific form data
+  gpsLocation      Json               // {lat: number, lng: number, accuracy: number}
+  commission       Decimal            @default(0)
+  distributionDate DateTime           @default(now())
+  status           DistributionStatus @default(DISTRIBUTED)
+  notes            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  product          Product            @relation(fields: [productId], references: [id])
+  agent            User               @relation(fields: [agentId], references: [id])
+  customer         Customer?          @relation(fields: [customerId], references: [id])
+  fieldAgent       FieldAgent?        @relation("FieldAgentProductDistributions", fields: [fieldAgentId], references: [id])
+
+  @@map("product_distributions")
+}
+
+model VisitList {
+  id           String      @id @default(cuid())
+  customerId   String
+  agentId      String
+  fieldAgentId String?     // Optional direct relation to FieldAgent
+  brands       String[]    // Array of brand IDs
+  activities   Json        // Array of activity objects
+  surveys      Json        // Array of survey objects
+  startTime    DateTime?
+  endTime      DateTime?
+  status       VisitStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  customer     Customer    @relation(fields: [customerId], references: [id])
+  agent        User        @relation(fields: [agentId], references: [id])
+  fieldAgent   FieldAgent? @relation("FieldAgentVisitLists", fields: [fieldAgentId], references: [id])
+
+  @@map("visit_lists")
+}
+
+model AgentCommission {
+  id                 String            @id @default(cuid())
+  agentId            String
+  fieldAgentId       String?           // Optional direct relation to FieldAgent
+  activityType       CommissionType
+  activityId         String            // ID of the activity (board placement, product distribution, etc.)
+  amount             Decimal
+  calculationDetails Json              // Details of how commission was calculated
+  paymentStatus      PaymentStatus     @default(PENDING)
+  earnedDate         DateTime          @default(now())
+  paidDate           DateTime?
+  notes              String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  agent              User              @relation(fields: [agentId], references: [id])
+  fieldAgent         FieldAgent?       @relation("FieldAgentCommissions", fields: [fieldAgentId], references: [id])
+
+  @@map("agent_commissions")
+}
+
 enum UserRole {
   SUPER_ADMIN
   TENANT_ADMIN
@@ -696,6 +831,8 @@ enum ActivityStatus {
 }
 
 enum VisitStatus {
+  PENDING
+  IN_PROGRESS
   COMPLETED
   PENDING_REVIEW
   APPROVED
@@ -771,4 +908,34 @@ enum NotificationPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+// Field Marketing Agent Enums
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum PlacementStatus {
+  ACTIVE
+  REMOVED
+  DAMAGED
+  REPLACED
+}
+
+enum DistributionStatus {
+  DISTRIBUTED
+  RETURNED
+  DAMAGED
+  LOST
+}
+
+enum CommissionType {
+  BOARD_PLACEMENT
+  PRODUCT_DISTRIBUTION
+  SURVEY_COMPLETION
+  VISIT_COMPLETION
+  BONUS
 }
