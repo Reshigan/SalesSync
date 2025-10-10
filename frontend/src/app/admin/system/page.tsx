@@ -4,9 +4,15 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Database, Server, Activity, HardDrive, Cpu, Clock, AlertTriangle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SystemPage() {
-  return (
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -160,5 +166,6 @@ export default function SystemPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

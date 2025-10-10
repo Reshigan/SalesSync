@@ -3,15 +3,21 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { TrendingUp, TrendingDown, Target, Brain } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PredictionsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const predictions = [
     { product: 'Product A', predicted: 5200, confidence: 0.92, trend: 'up', change: '+12%' },
     { product: 'Product B', predicted: 3800, confidence: 0.88, trend: 'down', change: '-5%' },
     { product: 'Product C', predicted: 6500, confidence: 0.95, trend: 'up', change: '+18%' },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div>
@@ -97,5 +103,6 @@ export default function PredictionsPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

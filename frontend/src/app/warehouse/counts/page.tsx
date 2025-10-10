@@ -3,6 +3,9 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { ClipboardCheck, Plus, Search, Download, Eye, Edit, Trash2, Clock, CheckCircle, AlertTriangle, TrendingDown, TrendingUp, Package } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface StockCount {
   id: string
@@ -19,6 +22,8 @@ interface StockCount {
 }
 
 export default function StockCountsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -51,7 +56,8 @@ export default function StockCountsPage() {
     return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${colors[status]}`}>{status.replace('_', ' ')}</span>
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -159,5 +165,6 @@ export default function StockCountsPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

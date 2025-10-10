@@ -25,8 +25,14 @@ import {
   Download
 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import ordersService from '@/services/orders.service';
 
 export default function OrdersPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [showOrderForm, setShowOrderForm] = useState(false)
@@ -117,11 +123,13 @@ export default function OrdersPage() {
       delivered: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
-    return (
+    return (<ErrorBoundary>
+
       <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   const getPaymentBadge = (status: Order['paymentStatus']) => {

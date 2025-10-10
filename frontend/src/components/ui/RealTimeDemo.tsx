@@ -5,6 +5,7 @@ import { useSocket } from '@/hooks/useSocket';
 import { useAuthStore } from '@/store/auth.store';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import apiService from '@/lib/api';
 import { 
   Bell, 
   AlertTriangle, 
@@ -42,6 +43,31 @@ export const RealTimeDemo: React.FC = () => {
   } = useSocket();
 
   const [testMessage, setTestMessage] = useState('');
+  const [fetchedNotifications, setFetchedNotifications] = useState<any[]>([]);
+  const [notificationStats, setNotificationStats] = useState({ total: 0, unread: 0 });
+
+  // Fetch notifications from API
+  const fetchNotifications = async () => {
+    try {
+      const response = await apiService.getNotifications({ limit: 10 });
+      if (response.data) {
+        setFetchedNotifications(response.data.data || []);
+        setNotificationStats({
+          total: response.data.pagination?.total || 0,
+          unread: response.data.data?.filter((n: any) => !n.isRead).length || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  // Fetch notifications on component mount and when user changes
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      fetchNotifications();
+    }
+  }, [isAuthenticated, user?.id]);
 
   const simulateEvents = async () => {
     try {
@@ -84,9 +110,9 @@ export const RealTimeDemo: React.FC = () => {
       console.log('🔔 Using token:', token ? `${token.substring(0, 20)}...` : 'null');
       console.log('API URL:', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api');
       
-      if (!token) {
-        console.error('❌ No authentication token available');
-        alert('No authentication token available. Please login again.');
+      if (!token || !user?.id) {
+        console.error('❌ No authentication token or user ID available');
+        alert('No authentication token or user ID available. Please login again.');
         return;
       }
       
@@ -94,10 +120,11 @@ export const RealTimeDemo: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': process.env.NEXT_PUBLIC_TENANT_CODE || 'DEMO'
         },
         body: JSON.stringify({
-          userId: 'user_1', // Demo user ID
+          userId: user.id, // Use actual authenticated user ID
           title: 'Test Notification',
           message: 'This is a test notification from the real-time system!',
           type: 'info'
@@ -111,6 +138,8 @@ export const RealTimeDemo: React.FC = () => {
       if (response.ok) {
         console.log('✅ Test notification sent successfully!');
         alert('Test notification sent successfully!');
+        // Refresh notifications after sending
+        await fetchNotifications();
       } else {
         console.error('❌ Failed to send notification:', responseData);
         alert(`Failed to send notification: ${responseData.message || 'Unknown error'}`);
@@ -294,17 +323,40 @@ export const RealTimeDemo: React.FC = () => {
             <Bell className="w-5 h-5 text-blue-500" />
             <h4 className="font-medium">Notifications</h4>
             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-              {notifications.length}
+              {notificationStats.total}
             </span>
+            {notificationStats.unread > 0 && (
+              <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                {notificationStats.unread} unread
+              </span>
+            )}
           </div>
           <div className="space-y-2 max-h-32 overflow-y-auto">
-            {notifications.slice(0, 3).map((notif, index) => (
-              <div key={index} className="text-sm p-2 bg-gray-50 rounded">
-                <div className="font-medium">{notif.title}</div>
+            {/* Show real-time socket notifications first */}
+            {notifications.slice(0, 2).map((notif, index) => (
+              <div key={`socket-${index}`} className="text-sm p-2 bg-blue-50 rounded border-l-2 border-blue-400">
+                <div className="font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                  {notif.title}
+                </div>
                 <div className="text-gray-600 text-xs">{notif.message}</div>
+                <div className="text-gray-400 text-xs">Real-time</div>
               </div>
             ))}
-            {notifications.length === 0 && (
+            {/* Show fetched API notifications */}
+            {fetchedNotifications.slice(0, 3).map((notif, index) => (
+              <div key={`api-${notif.id}`} className={`text-sm p-2 rounded ${notif.isRead ? 'bg-gray-50' : 'bg-yellow-50 border-l-2 border-yellow-400'}`}>
+                <div className="font-medium flex items-center gap-1">
+                  {!notif.isRead && <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>}
+                  {notif.title}
+                </div>
+                <div className="text-gray-600 text-xs">{notif.message}</div>
+                <div className="text-gray-400 text-xs">
+                  {new Date(notif.createdAt).toLocaleTimeString()} • {notif.type}
+                </div>
+              </div>
+            ))}
+            {notifications.length === 0 && fetchedNotifications.length === 0 && (
               <div className="text-sm text-gray-500">No notifications</div>
             )}
           </div>

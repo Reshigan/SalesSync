@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import {
   RotateCcw,
   Plus,
@@ -39,6 +42,8 @@ interface Return {
 }
 
 export default function ReturnsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [reasonFilter, setReasonFilter] = useState<string>('all')
@@ -147,12 +152,14 @@ export default function ReturnsPage() {
     }
     const badge = badges[status]
     const Icon = badge.icon
-    return (
+    return (<ErrorBoundary>
+
       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
         <Icon className="w-3 h-3 mr-1" />
         {badge.label}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   const getReasonBadge = (reason: Return['reason']) => {

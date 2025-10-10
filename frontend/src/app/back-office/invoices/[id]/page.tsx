@@ -7,6 +7,9 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   FileText, 
   Download, 
@@ -25,6 +28,8 @@ import {
 } from 'lucide-react';
 
 export default function InvoiceDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const invoiceId = params.id;
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -84,7 +89,8 @@ export default function InvoiceDetailPage() {
     }
   };
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -390,5 +396,6 @@ export default function InvoiceDetailPage() {
         </form>
       </Modal>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

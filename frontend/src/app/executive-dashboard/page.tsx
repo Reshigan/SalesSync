@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   TrendingUp, 
   Users, 
@@ -77,6 +80,8 @@ interface TopPerformer {
 }
 
 export default function ExecutiveDashboardPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [selectedRegion, setSelectedRegion] = useState('all')
@@ -396,7 +401,8 @@ export default function ExecutiveDashboardPage() {
   }
 
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -405,7 +411,8 @@ export default function ExecutiveDashboardPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

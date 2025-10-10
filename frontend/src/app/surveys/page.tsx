@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/Input'
 import { surveysService } from '@/services/surveys.service'
 import { getAllAgentTypes } from '@/config/agent-types'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ClipboardList,
   Plus,
@@ -26,6 +29,8 @@ import {
 } from 'lucide-react'
 
 export default function SurveysPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -146,11 +151,13 @@ export default function SurveysPage() {
       market_research: 'bg-orange-100 text-orange-800',
       other: 'bg-gray-100 text-gray-800'
     }
-    return (
+    return (<ErrorBoundary>
+
       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[category]}`}>
         {category.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

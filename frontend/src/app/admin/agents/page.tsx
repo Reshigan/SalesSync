@@ -11,6 +11,9 @@ import { Modal } from '@/components/ui/Modal'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge } from '@/components/ui/Badge'
 import apiService from '@/lib/api'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Edit, 
@@ -74,6 +77,8 @@ interface Manager {
 }
 
 export default function AgentsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const { hasPermission } = usePermissions()
   const [agents, setAgents] = useState<Agent[]>([])
   const [areas, setAreas] = useState<Area[]>([])
@@ -307,7 +312,8 @@ export default function AgentsPage() {
   const getPerformanceStars = (rating?: number) => {
     if (!rating) return null
     const stars = Math.round(rating)
-    return (
+    return (<ErrorBoundary>
+
       <div className="flex items-center">
         {[...Array(5)].map((_, i) => (
           <Star
@@ -317,7 +323,8 @@ export default function AgentsPage() {
         ))}
         <span className="ml-1 text-xs text-gray-600">{rating.toFixed(1)}</span>
       </div>
-    )
+    
+</ErrorBoundary>)
   }
 
   // Table columns

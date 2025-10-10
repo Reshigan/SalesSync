@@ -1,11 +1,10 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { TenantRequest, tenantMiddleware } from '../middleware/tenant';
 import { logger } from '../utils/logger';
+import { prisma } from '../services/database';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // List all inventory with pagination and filters
 router.get('/', authenticateToken, tenantMiddleware, async (req: TenantRequest, res: Response) => {

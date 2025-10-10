@@ -1,26 +1,25 @@
-'use client'
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import authService from '@/services/auth.service';
 
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { User, Permission } from '@/types'
-import apiService from '@/lib/api'
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  roles?: string[];
+  permissions?: string[];
+}
 
 interface AuthState {
-  user: User | null
-  token: string | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  permissions: Permission[]
-  _hasHydrated: boolean
-  
-  // Actions
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => void
-  setUser: (user: User) => void
-  setLoading: (loading: boolean) => void
-  hasPermission: (module: string, action: string) => boolean
-  hasRole: (roles: string | string[]) => boolean
-  setHasHydrated: (hasHydrated: boolean) => void
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -30,120 +29,90 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
-      permissions: [],
-      _hasHydrated: false,
 
       login: async (email: string, password: string) => {
-        set({ isLoading: true })
-        
+        set({ isLoading: true });
         try {
-          const response = await apiService.login(email, password)
+          const response = await authService.login(email, password);
+          const { user, accessToken } = response.data;
           
-          if (response.error) {
-            set({ isLoading: false })
-            return { success: false, error: response.message || response.error }
-          }
+          set({
+            user,
+            token: accessToken,
+            isAuthenticated: true,
+            isLoading: false
+          });
 
-          if (response.data) {
-            const token = response.data.accessToken;
-            
-            // Set token in API service
-            apiService.setToken(token);
-            
-            set({
-              user: response.data.user,
-              token: token,
-              isAuthenticated: true,
-              permissions: (response.data.user && response.data.user.permissions) || [],
-              isLoading: false,
-            })
-            
-            return { success: true }
-          }
-
-          set({ isLoading: false })
-          return { success: false, error: 'Login failed' }
+          // Store token in localStorage for API calls
+          localStorage.setItem('token', accessToken);
         } catch (error) {
-          console.error('Auth store login error:', error);
-          set({ isLoading: false })
-          return { success: false, error: 'Network error' }
+          set({ isLoading: false });
+          throw error;
         }
       },
 
       logout: () => {
-        apiService.logout()
         set({
           user: null,
           token: null,
           isAuthenticated: false,
-          permissions: [],
-        })
-      },
-
-      setUser: (user: User) => {
-        set({
-          user,
-          permissions: (user && user.permissions) || [],
-        })
-      },
-
-      setLoading: (loading: boolean) => {
-        set({ isLoading: loading })
-      },
-
-      hasPermission: (module: string, action: string) => {
-        const { permissions } = get()
-        const permission = permissions.find(p => p.module === module)
+          isLoading: false
+        });
         
-        if (!permission) return false
+        // Clear token from localStorage
+        localStorage.removeItem('token');
         
-        switch (action) {
-          case 'view':
-            return permission.canView
-          case 'create':
-            return permission.canCreate
-          case 'edit':
-            return permission.canEdit
-          case 'delete':
-            return permission.canDelete
-          case 'approve':
-            return permission.canApprove
-          case 'export':
-            return permission.canExport
-          default:
-            return false
+        // Clear any other auth-related data
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      },
+
+      refreshToken: async () => {
+        const { token } = get();
+        if (!token) return;
+
+        try {
+          const response = await authService.refreshToken(token);
+          const { accessToken } = response.data;
+          
+          set({ token: accessToken });
+          localStorage.setItem('token', accessToken);
+        } catch (error) {
+          // If refresh fails, logout user
+          get().logout();
+          throw error;
         }
       },
 
-      hasRole: (roles: string | string[]) => {
-        const { user } = get()
-        if (!user) return false
-        
-        const roleArray = Array.isArray(roles) ? roles : [roles]
-        return roleArray.includes(user.role)
-      },
-      
-      setHasHydrated: (hasHydrated: boolean) => {
-        set({ _hasHydrated: hasHydrated })
-      },
+      checkAuth: async () => {
+        const { token } = get();
+        if (!token) {
+          set({ isAuthenticated: false, isLoading: false });
+          return;
+        }
+
+        set({ isLoading: true });
+        try {
+          const response = await authService.getProfile();
+          const user = response.data;
+          
+          set({
+            user,
+            isAuthenticated: true,
+            isLoading: false
+          });
+        } catch (error) {
+          // Token is invalid, logout
+          get().logout();
+        }
+      }
     }),
     {
       name: 'auth-storage',
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        isAuthenticated: state.isAuthenticated,
-        permissions: state.permissions,
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Sync token to API service after rehydration
-          if (state.token) {
-            apiService.setToken(state.token);
-          }
-          state.setHasHydrated(true);
-        }
-      },
+        isAuthenticated: state.isAuthenticated
+      })
     }
   )
-)
+);

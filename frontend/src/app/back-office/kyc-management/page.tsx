@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Shield, 
   Plus,
@@ -127,6 +130,8 @@ interface KYCSubmission {
 }
 
 export default function KYCManagementPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [productKYCs, setProductKYCs] = useState<ProductKYCRequirement[]>([])
   const [kycSubmissions, setKYCSubmissions] = useState<KYCSubmission[]>([])
   const [loading, setLoading] = useState(true)
@@ -556,12 +561,14 @@ export default function KYCManagementPage() {
           <div className="flex flex-wrap gap-1">
             {row.kycFields.slice(0, 4).map((field, index) => {
               const Icon = getKYCFieldIcon(field.type)
-              return (
+              return (<ErrorBoundary>
+
                 <div key={index} className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded text-xs">
                   <Icon className="w-3 h-3 text-gray-600" />
                   <span className="text-gray-700">{field.type.replace('_', ' ')}</span>
                 </div>
-              )
+              
+</ErrorBoundary>)
             })}
             {row.kycFields.length > 4 && (
               <span className="text-xs text-gray-500 px-2 py-1">+{row.kycFields.length - 4}</span>

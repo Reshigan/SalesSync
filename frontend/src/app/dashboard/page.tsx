@@ -8,6 +8,9 @@ import { Card } from '@/components/ui/Card'
 import { RealTimeDemo } from '@/components/ui/RealTimeDemo'
 import { HydrationBoundary } from '@/components/ui/HydrationBoundary'
 import apiService from '@/lib/api'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Truck, 
   Package, 
@@ -39,6 +42,8 @@ interface DashboardData {
 }
 
 export default function DashboardPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const { userRole, user } = usePermissions()
   const { _hasHydrated } = useAuthStore()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
@@ -326,7 +331,8 @@ export default function DashboardPage() {
 
   // Loading state
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 text-white">
@@ -346,7 +352,8 @@ export default function DashboardPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   // Error state

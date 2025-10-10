@@ -20,8 +20,13 @@ import {
   MapPin
 } from 'lucide-react'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SalesAnalyticsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [dateRange, setDateRange] = useState('7d')
   const [selectedMetric, setSelectedMetric] = useState('revenue')
 
@@ -99,7 +104,8 @@ export default function SalesAnalyticsPage() {
     return growth > 0 ? 'text-green-600' : 'text-red-600'
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -428,5 +434,6 @@ export default function SalesAnalyticsPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

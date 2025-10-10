@@ -6,8 +6,13 @@ import { useAuthStore } from '@/store/auth.store'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Eye, EyeOff, Layers, Shield, TrendingUp, Users } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const router = useRouter()
   const { login, isLoading } = useAuthStore()
   const [formData, setFormData] = useState({
@@ -30,7 +35,8 @@ export default function LoginPage() {
     }
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo & Branding */}
@@ -164,5 +170,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  
+</ErrorBoundary>)
 }

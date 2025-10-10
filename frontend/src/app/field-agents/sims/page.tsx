@@ -6,6 +6,9 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Smartphone, 
   MapPin, 
@@ -41,6 +44,8 @@ interface SimDistribution {
 }
 
 export default function SimDistributionPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [selectedDistribution, setSelectedDistribution] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -157,7 +162,8 @@ export default function SimDistributionPage() {
     )
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -451,5 +457,6 @@ export default function SimDistributionPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

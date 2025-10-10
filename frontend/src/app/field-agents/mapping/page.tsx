@@ -2,9 +2,15 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Map } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TerritoryMappingPage() {
-  return (
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Territory Mapping</h1>
@@ -18,5 +24,6 @@ export default function TerritoryMappingPage() {
         </div>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

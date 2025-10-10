@@ -5,6 +5,9 @@ import { useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Warehouse, 
   Package, 
@@ -21,6 +24,8 @@ import {
 } from 'lucide-react';
 
 export default function WarehouseDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const warehouseId = params.id;
 
@@ -75,7 +80,8 @@ export default function WarehouseDetailPage() {
     { name: 'James Wilson', role: 'Stock Keeper', status: 'active' },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -355,5 +361,6 @@ export default function WarehouseDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

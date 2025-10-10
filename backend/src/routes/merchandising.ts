@@ -5,6 +5,50 @@ import { logger } from '../utils/logger';
 
 const router = express.Router();
 
+// Get all stores
+router.get('/stores', async (req: TenantRequest, res, next) => {
+  try {
+    const { search, isActive } = req.query;
+    
+    const where: any = {
+      tenantId: req.tenantId
+    };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { code: { contains: search as string, mode: 'insensitive' } },
+        { address: { contains: search as string, mode: 'insensitive' } }
+      ];
+    }
+
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
+    }
+
+    const stores = await prisma.store.findMany({
+      where,
+      include: {
+        visits: {
+          select: {
+            id: true,
+            visitDate: true,
+            status: true
+          },
+          orderBy: { visitDate: 'desc' },
+          take: 5
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+
+    res.json({ stores });
+  } catch (error) {
+    logger.error('Error fetching stores:', error);
+    res.status(500).json({ error: 'Failed to fetch stores' });
+  }
+});
+
 // Get all merchandising visits
 router.get('/visits', async (req: TenantRequest, res, next) => {
   try {

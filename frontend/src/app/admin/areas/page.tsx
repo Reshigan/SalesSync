@@ -11,6 +11,9 @@ import { Modal } from '@/components/ui/Modal'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge } from '@/components/ui/Badge'
 import apiService from '@/lib/api'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Edit, 
@@ -54,6 +57,8 @@ interface Manager {
 }
 
 export default function AreasPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const { hasPermission } = usePermissions()
   const [areas, setAreas] = useState<Area[]>([])
   const [regions, setRegions] = useState<Region[]>([])
@@ -300,7 +305,8 @@ export default function AreasPage() {
     }
   ]
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -535,5 +541,6 @@ export default function AreasPage() {
         </Modal>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

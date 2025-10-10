@@ -5,8 +5,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { User, Mail, Phone, MapPin, Shield, Activity, Calendar, Clock, CheckCircle, Package, DollarSign, TrendingUp } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function UserDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const userId = params.id;
 
@@ -45,7 +50,8 @@ export default function UserDetailPage() {
     { date: '2024-09-29 09:00 AM', device: 'Web - Chrome', ip: '192.168.1.2', location: 'Lagos, Nigeria' },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
@@ -125,5 +131,6 @@ export default function UserDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

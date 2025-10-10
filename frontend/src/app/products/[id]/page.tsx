@@ -5,6 +5,10 @@ import { useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import productsService from '@/services/products.service';
 import { 
   Package, 
   DollarSign, 
@@ -21,6 +25,8 @@ import {
 } from 'lucide-react';
 
 export default function ProductDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const productId = params.id;
 
@@ -75,7 +81,8 @@ export default function ProductDetailPage() {
     { date: '2024-07-01', price: 240, change: 0 },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -387,5 +394,6 @@ export default function ProductDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   CreditCard, 
   Plus,
@@ -103,6 +106,8 @@ interface TransactionSummary {
 }
 
 export default function TransactionsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([])
@@ -499,7 +504,8 @@ export default function TransactionsPage() {
       accessor: 'typeStatus',
       cell: ({ row }: { row: Transaction }) => {
         const StatusIcon = getStatusIcon(row.status)
-        return (
+        return (<ErrorBoundary>
+
           <div className="space-y-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(row.type)}`}>
               {row.type.toUpperCase()}
@@ -511,7 +517,8 @@ export default function TransactionsPage() {
               </span>
             </div>
           </div>
-        )
+        
+</ErrorBoundary>)
       },
     },
     {

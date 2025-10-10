@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://work-2-veuhqyphpzgedabx.prod-runtime.all-hands.dev/api'
 
 class ApiClient {
   private client: AxiosInstance

@@ -1,10 +1,9 @@
 import express, { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { TenantRequest } from '../middleware/tenant';
+import { prisma } from '../services/database';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Dashboard Overview Metrics
 router.get('/dashboard', authenticateToken, async (req: TenantRequest, res: Response) => {
@@ -502,6 +501,91 @@ router.get('/inventory', authenticateToken, async (req: TenantRequest, res: Resp
   } catch (error) {
     console.error('Inventory analytics error:', error);
     res.status(500).json({ error: 'Failed to fetch inventory analytics' });
+  }
+});
+
+// Performance Analytics
+router.get('/performance', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    const { startDate, endDate, userId } = req.query;
+
+    const dateFilter = startDate && endDate ? {
+      createdAt: {
+        gte: new Date(startDate as string),
+        lte: new Date(endDate as string)
+      }
+    } : {};
+
+    const userFilter = userId ? { userId: userId as string } : {};
+
+    // Get user performance data
+    const users = await prisma.user.findMany({
+      where: { 
+        tenantId,
+        ...userFilter
+      },
+      include: {
+        orders: {
+          where: {
+            ...dateFilter,
+            status: 'DELIVERED'
+          }
+        },
+        vanSalesLoads: {
+          where: dateFilter
+        },
+        merchandisingVisits: {
+          where: dateFilter
+        },
+        promoterActivities: {
+          where: dateFilter
+        }
+      }
+    });
+
+    const performanceData = users.map(user => {
+      const orders = user.orders;
+      const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
+      
+      return {
+        id: user.id,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+        role: user.role,
+        totalOrders: orders.length,
+        totalRevenue,
+        averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
+        vanSalesLoads: user.vanSalesLoads.length,
+        merchandisingVisits: user.merchandisingVisits.length,
+        promoterActivities: user.promoterActivities.length,
+        lastActivity: Math.max(
+          ...orders.map((o: any) => o.createdAt.getTime()),
+          ...user.vanSalesLoads.map((v: any) => v.createdAt.getTime()),
+          ...user.merchandisingVisits.map((v: any) => v.createdAt.getTime()),
+          ...user.promoterActivities.map((a: any) => a.createdAt.getTime())
+        )
+      };
+    }).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    // Team performance summary
+    const teamSummary = {
+      totalUsers: users.length,
+      totalRevenue: performanceData.reduce((sum, u) => sum + u.totalRevenue, 0),
+      totalOrders: performanceData.reduce((sum, u) => sum + u.totalOrders, 0),
+      totalVanSalesLoads: performanceData.reduce((sum, u) => sum + u.vanSalesLoads, 0),
+      totalMerchandisingVisits: performanceData.reduce((sum, u) => sum + u.merchandisingVisits, 0),
+      totalPromoterActivities: performanceData.reduce((sum, u) => sum + u.promoterActivities, 0)
+    };
+
+    res.json({
+      teamSummary,
+      userPerformance: performanceData,
+      topPerformers: performanceData.slice(0, 10)
+    });
+  } catch (error) {
+    console.error('Performance analytics error:', error);
+    res.status(500).json({ error: 'Failed to fetch performance analytics' });
   }
 });
 

@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { DataTable } from '@/components/ui/DataTable';
 import { ClipboardList, Plus, Camera, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface Survey {
   id: string;
@@ -20,6 +23,8 @@ interface Survey {
 }
 
 export default function SurveysPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [surveys, setSurveys] = useState<Survey[]>([
     { id: '1', title: 'Product Feedback Q3', campaign: 'Summer Launch', responses: 245, target: 300, hasPhotos: true, hasGeoValidation: true, status: 'active', createdAt: '2024-09-01' },
     { id: '2', title: 'Brand Awareness', campaign: 'Market Expansion', responses: 189, target: 200, hasPhotos: true, hasGeoValidation: true, status: 'active', createdAt: '2024-09-10' },
@@ -83,7 +88,8 @@ export default function SurveysPage() {
   const totalResponses = surveys.reduce((sum, s) => sum + s.responses, 0);
   const avgCompletion = surveys.reduce((sum, s) => sum + (s.responses / s.target * 100), 0) / surveys.length;
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -251,5 +257,6 @@ export default function SurveysPage() {
         </form>
       </Modal>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

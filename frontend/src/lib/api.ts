@@ -1,5 +1,5 @@
 // API service for connecting to SalesSync backend
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://work-2-veuhqyphpzgedabx.prod-runtime.all-hands.dev/api';
 console.log('API_BASE_URL:', API_BASE_URL);
 
 interface ApiResponse<T = any> {
@@ -419,6 +419,260 @@ class ApiService {
   }>> {
     const query = limit ? `?limit=${limit}` : '';
     return this.request(`/dashboard/activities${query}`);
+  }
+
+  // Notifications Management
+  async getNotifications(params?: {
+    page?: number;
+    limit?: number;
+    unreadOnly?: boolean;
+  }): Promise<ApiResponse<{
+    data: Array<{
+      id: string;
+      title: string;
+      message: string;
+      type: string;
+      priority: string;
+      isRead: boolean;
+      readAt: string | null;
+      data: any;
+      userId: string | null;
+      tenantId: string | null;
+      roleTarget: string | null;
+      expiresAt: string | null;
+      createdAt: string;
+      updatedAt: string;
+      user?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        avatar: string | null;
+      };
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.unreadOnly) query.append('unreadOnly', params.unreadOnly.toString());
+    
+    const queryString = query.toString();
+    return this.request(`/notifications${queryString ? '?' + queryString : ''}`);
+  }
+
+  async sendNotification(data: {
+    userId: string;
+    title: string;
+    message: string;
+    type?: string;
+    priority?: string;
+    data?: any;
+    expiresAt?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/notifications/send', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async sendRoleNotification(data: {
+    role: string;
+    title: string;
+    message: string;
+    type?: string;
+    priority?: string;
+    data?: any;
+    expiresAt?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/notifications/send-role', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async markNotificationAsRead(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsAsRead(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/read-all', {
+      method: 'PATCH',
+    });
+  }
+
+  async deleteNotification(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getNotificationStats(): Promise<ApiResponse<{
+    total: number;
+    unread: number;
+    byType: Record<string, number>;
+    byPriority: Record<string, number>;
+  }>> {
+    return this.request('/notifications/stats');
+  }
+
+  // Inventory Management
+  async getInventory(params?: {
+    page?: number;
+    limit?: number;
+    productId?: string;
+    lowStock?: boolean;
+    search?: string;
+  }): Promise<ApiResponse<{
+    data: Array<{
+      id: string;
+      productId: string;
+      currentStock: number;
+      minStock: number;
+      maxStock: number;
+      location: string;
+      createdAt: string;
+      updatedAt: string;
+      product: {
+        id: string;
+        name: string;
+        sku: string;
+        category?: {
+          id: string;
+          name: string;
+        };
+      };
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.productId) query.append('productId', params.productId);
+    if (params?.lowStock) query.append('lowStock', params.lowStock.toString());
+    if (params?.search) query.append('search', params.search);
+    
+    const queryString = query.toString();
+    return this.request(`/inventory${queryString ? '?' + queryString : ''}`);
+  }
+
+  async getInventoryItem(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/inventory/${id}`);
+  }
+
+  async createInventoryItem(data: {
+    productId: string;
+    currentStock: number;
+    minStock?: number;
+    maxStock?: number;
+    location?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/inventory', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateInventoryItem(id: string, data: {
+    currentStock?: number;
+    minStock?: number;
+    maxStock?: number;
+    location?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request(`/inventory/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async recordInventoryMovement(data: {
+    inventoryId: string;
+    type: 'IN' | 'OUT' | 'TRANSFER' | 'ADJUSTMENT';
+    quantity: number;
+    reason?: string;
+    reference?: string;
+    notes?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/inventory/movements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getLowStockAlerts(): Promise<ApiResponse<{
+    count: number;
+    items: Array<{
+      id: string;
+      currentStock: number;
+      minStock: number;
+      percentageRemaining: number;
+      shouldReorder: boolean;
+      stockStatus: string;
+      product: {
+        id: string;
+        name: string;
+        sku: string;
+        category?: {
+          id: string;
+          name: string;
+        };
+      };
+    }>;
+  }>> {
+    return this.request('/inventory/alerts/low-stock');
+  }
+
+  async getInventoryStats(): Promise<ApiResponse<{
+    totalProducts: number;
+    lowStockCount: number;
+    outOfStockCount: number;
+    totalStockUnits: number;
+    stockStatus: {
+      healthy: number;
+      lowStock: number;
+      outOfStock: number;
+    };
+  }>> {
+    return this.request('/inventory/stats/overview');
+  }
+
+  async recordStockCount(counts: Array<{
+    productId: string;
+    countedQuantity: number;
+    notes?: string;
+  }>): Promise<ApiResponse<{
+    message: string;
+    adjustments: Array<{
+      productId: string;
+      productName: string;
+      systemQuantity: number;
+      countedQuantity: number;
+      variance: number;
+      notes?: string;
+    }>;
+    totalAdjustments: number;
+  }>> {
+    return this.request('/inventory/count', {
+      method: 'POST',
+      body: JSON.stringify({ counts }),
+    });
+  }
+
+  async deleteInventoryItem(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/inventory/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

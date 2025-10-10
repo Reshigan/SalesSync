@@ -5,8 +5,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Building2, Users, DollarSign, TrendingUp, Mail, Phone, MapPin, Calendar, Settings, CheckCircle, XCircle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TenantDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const tenantId = params.id;
 
@@ -40,7 +45,8 @@ export default function TenantDetailPage() {
     { id: 'INV-003', date: '2024-08-01', amount: 15000, status: 'paid' },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
@@ -124,5 +130,6 @@ export default function TenantDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

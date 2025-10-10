@@ -8,7 +8,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 
-// Initialize mock database
+// Initialize database
 import './database';
 
 import { logger, morganStream } from './utils/logger';
@@ -18,7 +18,7 @@ import { authMiddleware } from './middleware/auth';
 import { tenantMiddleware } from './middleware/tenant';
 import { metricsMiddleware, metricsHandler } from './middleware/metrics';
 
-// Route imports
+// Route imports - testing without routes.ts
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboard';
 import userRoutes from './routes/users';
@@ -42,6 +42,9 @@ import { socketService } from './services/socketService';
 
 const app = express();
 const server = createServer(app);
+
+// Trust proxy for rate limiting and IP detection
+app.set('trust proxy', true);
 
 const PORT = process.env.PORT || 3001;
 
@@ -197,10 +200,10 @@ app.get('/ready', (req, res) => {
   });
 });
 
-// API routes
+// API routes - restoring one by one
 app.use('/api/auth', authRoutes);
 
-// Protected routes (require authentication)
+// Protected routes (require authentication) - restoring one by one
 app.use('/api/dashboard', authMiddleware, tenantMiddleware, dashboardRoutes);
 app.use('/api/users', authMiddleware, tenantMiddleware, userRoutes);
 app.use('/api/products', authMiddleware, tenantMiddleware, productRoutes);
@@ -216,7 +219,7 @@ app.use('/api/commissions', authMiddleware, tenantMiddleware, commissionRoutes);
 app.use('/api/surveys', authMiddleware, tenantMiddleware, surveyRoutes);
 app.use('/api/analytics', authMiddleware, tenantMiddleware, analyticsRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api/notifications', authMiddleware, tenantMiddleware, notificationRoutes);
 
 // Metrics endpoint (no auth required for monitoring)
 app.get('/metrics', metricsHandler);

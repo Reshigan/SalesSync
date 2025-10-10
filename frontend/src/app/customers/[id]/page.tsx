@@ -5,6 +5,10 @@ import { useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import customersService from '@/services/customers.service';
 import { 
   User, 
   Mail, 
@@ -25,6 +29,8 @@ import {
 } from 'lucide-react';
 
 export default function CustomerDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const customerId = params.id;
 
@@ -70,7 +76,8 @@ export default function CustomerDetailPage() {
 
   const creditUtilization = (customer.creditUsed / customer.creditLimit) * 100;
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -329,5 +336,6 @@ export default function CustomerDetailPage() {
         </div>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

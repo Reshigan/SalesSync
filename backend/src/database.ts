@@ -1,10 +1,5 @@
-import { PrismaClient } from '@prisma/client';
 import { logger } from './utils/logger';
-
-// Initialize Prisma Client with real PostgreSQL database
-export const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-});
+import { prisma } from './services/database';
 
 // Connect to database on startup
 prisma.$connect()
@@ -21,3 +16,6 @@ process.on('beforeExit', async () => {
   await prisma.$disconnect();
   logger.info('Disconnected from database');
 });
+
+// Export the shared prisma instance for backward compatibility
+export { prisma };

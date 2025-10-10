@@ -5,8 +5,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Megaphone, Calendar, DollarSign, TrendingUp, Users, Package, Target, CheckCircle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CampaignDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const campaignId = params.id;
 
@@ -46,7 +51,8 @@ export default function CampaignDetailPage() {
     { name: 'Sprite 500ml', sold: 750, revenue: 172500 },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
@@ -122,5 +128,6 @@ export default function CampaignDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

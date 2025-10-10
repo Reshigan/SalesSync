@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { TenantRequest } from '../middleware/tenant';
+import { prisma } from '../services/database';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -9,7 +9,6 @@ import { promisify } from 'util';
 import crypto from 'crypto';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const unlinkAsync = promisify(fs.unlink);
 
 /**

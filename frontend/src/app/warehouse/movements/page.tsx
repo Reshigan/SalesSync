@@ -3,6 +3,9 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Truck, Plus, Search, Download, Eye, Edit, Trash2, ArrowRightLeft, Clock, CheckCircle, Package, TrendingUp, AlertTriangle } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface StockMovement {
   id: string
@@ -18,6 +21,8 @@ interface StockMovement {
 }
 
 export default function StockMovementsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -65,7 +70,8 @@ export default function StockMovementsPage() {
     return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${badges[status].color}`}>{badges[status].label}</span>
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -177,5 +183,6 @@ export default function StockMovementsPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

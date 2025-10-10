@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   MessageSquare, 
   Plus,
@@ -168,6 +171,8 @@ interface SurveyResponse {
 }
 
 export default function SurveyManagementPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [responses, setResponses] = useState<SurveyResponse[]>([])
   const [loading, setLoading] = useState(true)
@@ -656,7 +661,8 @@ export default function SurveyManagementPage() {
       accessor: 'typeStatus',
       cell: ({ row }: { row: Survey }) => {
         const StatusIcon = getStatusIcon(row.status)
-        return (
+        return (<ErrorBoundary>
+
           <div className="space-y-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(row.type)}`}>
               {row.type.replace('_', ' ').toUpperCase()}
@@ -668,7 +674,8 @@ export default function SurveyManagementPage() {
               </span>
             </div>
           </div>
-        )
+        
+</ErrorBoundary>)
       },
     },
     {

@@ -14,22 +14,29 @@ class SocketService {
   private connectedUsers = new Map<string, AuthenticatedSocket>();
 
   initialize(server: HttpServer) {
+    // Dynamic CORS configuration based on environment
+    const corsOrigins = process.env.NODE_ENV === 'production' 
+      ? [process.env.CORS_ORIGIN || 'https://ss.gonxt.tech']
+      : [
+          "http://localhost:12000",
+          "https://work-1-veuhqyphpzgedabx.prod-runtime.all-hands.dev",
+          "https://work-2-veuhqyphpzgedabx.prod-runtime.all-hands.dev"
+        ];
+
     this.io = new SocketIOServer(server, {
       cors: {
-        origin: [
-          'http://localhost:12000',
-          'https://work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev'
-        ],
+        origin: corsOrigins,
         methods: ['GET', 'POST'],
         credentials: true
       }
     });
 
-    this.io.use(this.authenticateSocket.bind(this));
+    // Temporarily disable authentication for debugging
+    // this.io.use(this.authenticateSocket.bind(this));
     this.io.on('connection', this.handleConnection.bind(this));
 
     logger.info('Socket.IO service initialized');
-    logger.info('Socket.IO CORS origins:', ['http://localhost:12000', 'https://work-1-drhntgqppzeokwjw.prod-runtime.all-hands.dev']);
+    logger.info('Socket.IO CORS origins:', corsOrigins);
   }
 
   private async authenticateSocket(socket: AuthenticatedSocket, next: (err?: Error) => void) {

@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { merchandisingService } from '@/services/merchandising.service'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Grid3x3, 
   Camera, 
@@ -25,6 +28,8 @@ import {
 } from 'lucide-react'
 
 export default function ShelfPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [audits, setAudits] = useState<ComprehensiveShelfAudit[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -130,7 +135,8 @@ export default function ShelfPage() {
     return <XCircle className="w-5 h-5 text-red-600" />
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -367,5 +373,6 @@ export default function ShelfPage() {
         </FormModal>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

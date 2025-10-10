@@ -5,8 +5,13 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Layout, Plus, Search, Edit, Trash2, RefreshCw, Image as ImageIcon, CheckCircle } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PlanogramsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   
   // Mock data - replace with actual API
@@ -31,7 +36,8 @@ export default function PlanogramsPage() {
     }
   ]
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -179,5 +185,6 @@ export default function PlanogramsPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

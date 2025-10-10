@@ -6,6 +6,9 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   DollarSign, 
   TrendingUp,
@@ -43,6 +46,8 @@ interface Commission {
 }
 
 export default function CommissionsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [selectedCommissions, setSelectedCommissions] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPeriod, setFilterPeriod] = useState('current')
@@ -165,7 +170,8 @@ export default function CommissionsPage() {
     }).format(amount)
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -511,5 +517,6 @@ export default function CommissionsPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

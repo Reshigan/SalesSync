@@ -25,8 +25,13 @@ import {
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function DemoPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [activeDemo, setActiveDemo] = useState<string | null>(null)
 
   const demoSections = [
@@ -83,7 +88,8 @@ export default function DemoPage() {
     }
   ]
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-8">
         {/* Hero Section */}
@@ -215,5 +221,6 @@ export default function DemoPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

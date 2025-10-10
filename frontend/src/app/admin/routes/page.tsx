@@ -11,6 +11,9 @@ import { Modal } from '@/components/ui/Modal'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge } from '@/components/ui/Badge'
 import apiService from '@/lib/api'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Edit, 
@@ -62,6 +65,8 @@ interface Agent {
 }
 
 export default function RoutesPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const { hasPermission } = usePermissions()
   const [routes, setRoutes] = useState<RouteData[]>([])
   const [areas, setAreas] = useState<Area[]>([])
@@ -380,7 +385,8 @@ export default function RoutesPage() {
     }
   ]
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -668,5 +674,6 @@ export default function RoutesPage() {
         </Modal>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

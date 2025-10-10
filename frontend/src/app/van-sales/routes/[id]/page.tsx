@@ -5,8 +5,14 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Truck, MapPin, DollarSign, Package, Clock, CheckCircle, User, Navigation } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import vanSalesService from '@/services/van-sales.service';
 
 export default function RouteDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const routeId = params.id;
 
@@ -37,7 +43,8 @@ export default function RouteDetailPage() {
     { name: 'Mega Plaza', status: 'pending', order: 0, time: '', sequence: 7 },
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-start">
@@ -119,5 +126,6 @@ export default function RouteDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

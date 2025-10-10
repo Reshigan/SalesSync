@@ -6,6 +6,9 @@ import ReportingDashboard from '@/components/reporting/ReportingDashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   MapPin, 
   Clock, 
@@ -145,6 +148,8 @@ interface CustomerVisitInsights {
 }
 
 export default function VisitAnalyticsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({ start: '2024-07-01', end: '2024-09-30' })
   const [selectedRegion, setSelectedRegion] = useState('all')
@@ -699,7 +704,8 @@ export default function VisitAnalyticsPage() {
       accessor: 'status',
       cell: ({ row }: { row: VisitRecord }) => {
         const StatusIcon = getStatusIcon(row.status)
-        return (
+        return (<ErrorBoundary>
+
           <div className="space-y-1">
             <div className="flex items-center space-x-1">
               <StatusIcon className="w-4 h-4" />
@@ -714,7 +720,8 @@ export default function VisitAnalyticsPage() {
               Planned: {row.plannedDuration} min
             </div>
           </div>
-        )
+        
+</ErrorBoundary>)
       },
     },
     {

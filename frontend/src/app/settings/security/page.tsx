@@ -2,9 +2,15 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Shield } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SecuritySettingsPage() {
-  return (
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Security Settings</h1>
@@ -18,5 +24,6 @@ export default function SecuritySettingsPage() {
         </div>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

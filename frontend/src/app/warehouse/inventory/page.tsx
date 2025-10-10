@@ -1,11 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import apiService from '@/lib/api'
+import { useAuthStore } from '@/store/auth.store'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import inventoryService from '@/services/inventory.service';
 import { 
   Package, 
   AlertTriangle, 
@@ -27,112 +33,117 @@ import {
 
 interface InventoryItem {
   id: string
-  sku: string
-  productName: string
-  category: string
+  productId: string
   currentStock: number
   minStock: number
   maxStock: number
-  unitCost: number
-  unitPrice: number
-  totalValue: number
-  lastMovement: string
-  status: 'in_stock' | 'low_stock' | 'out_of_stock' | 'overstock'
   location: string
-  supplier: string
+  createdAt: string
+  updatedAt: string
+  product: {
+    id: string
+    name: string
+    sku: string
+    category?: {
+      id: string
+      name: string
+    }
+  }
+}
+
+interface InventoryStats {
+  totalProducts: number
+  lowStockCount: number
+  outOfStockCount: number
+  totalStockUnits: number
+  stockStatus: {
+    healthy: number
+    lowStock: number
+    outOfStock: number
+  }
 }
 
 export default function InventoryPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
+  const { _hasHydrated, isAuthenticated } = useAuthStore()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false)
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [stats, setStats] = useState<InventoryStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  // Mock data
-  const inventory: InventoryItem[] = [
-    {
-      id: '1',
-      sku: 'CC-500',
-      productName: 'Coca Cola 500ml',
-      category: 'Beverages',
-      currentStock: 150,
-      minStock: 50,
-      maxStock: 500,
-      unitCost: 1.80,
-      unitPrice: 2.50,
-      totalValue: 270,
-      lastMovement: '2 hours ago',
-      status: 'in_stock',
-      location: 'A-01-01',
-      supplier: 'Coca Cola Company',
-    },
-    {
-      id: '2',
-      sku: 'PP-500',
-      productName: 'Pepsi 500ml',
-      category: 'Beverages',
-      currentStock: 25,
-      minStock: 50,
-      maxStock: 400,
-      unitCost: 1.75,
-      unitPrice: 2.45,
-      totalValue: 43.75,
-      lastMovement: '4 hours ago',
-      status: 'low_stock',
-      location: 'A-01-02',
-      supplier: 'PepsiCo',
-    },
-    {
-      id: '3',
-      sku: 'SP-500',
-      productName: 'Sprite 500ml',
-      category: 'Beverages',
-      currentStock: 0,
-      minStock: 40,
-      maxStock: 300,
-      unitCost: 1.70,
-      unitPrice: 2.40,
-      totalValue: 0,
-      lastMovement: '1 day ago',
-      status: 'out_of_stock',
-      location: 'A-01-03',
-      supplier: 'Coca Cola Company',
-    },
-    {
-      id: '4',
-      sku: 'FO-500',
-      productName: 'Fanta Orange 500ml',
-      category: 'Beverages',
-      currentStock: 520,
-      minStock: 60,
-      maxStock: 350,
-      unitCost: 1.70,
-      unitPrice: 2.40,
-      totalValue: 884,
-      lastMovement: '6 hours ago',
-      status: 'overstock',
-      location: 'A-01-04',
-      supplier: 'Coca Cola Company',
-    },
-  ]
+  // Load inventory data
+  useEffect(() => {
+    // Only load data after hydration is complete and user is authenticated
+    if (_hasHydrated && isAuthenticated) {
+      loadInventoryData()
+      loadInventoryStats()
+    } else if (_hasHydrated && !isAuthenticated) {
+      // Redirect to login if not authenticated
+      window.location.href = '/auth/login'
+    }
+  }, [_hasHydrated, isAuthenticated, page, filterStatus, filterCategory, searchTerm])
 
-  const warehouseStats = {
-    totalItems: 1247,
-    totalValue: 125000,
-    lowStockItems: 23,
-    outOfStockItems: 8,
-    overstockItems: 12,
-    reorderRequired: 31,
+  const loadInventoryData = async () => {
+    try {
+      setLoading(true)
+      const params: any = { page, limit: 20 }
+      
+      if (filterStatus === 'low_stock') {
+        params.lowStock = true
+      }
+      if (searchTerm) {
+        params.search = searchTerm
+      }
+      
+      const response = await apiService.getInventory(params)
+      if (response.success) {
+        setInventory(response.data.data)
+        setTotalPages(response.data.pagination.totalPages)
+      } else {
+        setError('Failed to load inventory data')
+      }
+    } catch (err) {
+      setError('Failed to load inventory data')
+      console.error('Inventory load error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadInventoryStats = async () => {
+    try {
+      const response = await apiService.getInventoryStats()
+      if (response.success) {
+        setStats(response.data)
+      }
+    } catch (err) {
+      console.error('Stats load error:', err)
+    }
   }
 
   const categories = ['All Categories', 'Beverages', 'Snacks', 'Personal Care', 'Household']
 
+  const getItemStatus = (item: InventoryItem) => {
+    if (item.currentStock === 0) return 'out_of_stock'
+    if (item.currentStock <= item.minStock) return 'low_stock'
+    if (item.currentStock >= item.maxStock) return 'overstock'
+    return 'in_stock'
+  }
+
   const filteredInventory = inventory.filter(item => {
-    const matchesStatus = filterStatus === 'all' || item.status === filterStatus
-    const matchesCategory = filterCategory === 'all' || item.category === filterCategory
-    const matchesSearch = item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    const status = getItemStatus(item)
+    const matchesStatus = filterStatus === 'all' || status === filterStatus
+    const matchesCategory = filterCategory === 'all' || item.product.category?.name === filterCategory
+    const matchesSearch = item.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.product.sku.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesStatus && matchesCategory && matchesSearch
   })
 
@@ -174,13 +185,29 @@ export default function InventoryPage() {
     else if (current <= min) color = 'bg-yellow-500'
     else if (current >= max) color = 'bg-blue-500'
     
-    return (
+    return (<ErrorBoundary>
+
       <div className="w-full bg-gray-200 rounded-full h-2">
         <div
           className={`h-2 rounded-full ${color}`}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
       </div>
+    
+</ErrorBoundary>)
+  }
+
+  // Show loading while waiting for hydration
+  if (!_hasHydrated) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </DashboardLayout>
     )
   }
 
@@ -215,7 +242,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Items</p>
-                <p className="text-2xl font-bold">{warehouseStats.totalItems.toLocaleString()}</p>
+                <p className="text-2xl font-bold">{stats?.totalProducts.toLocaleString() || '0'}</p>
               </div>
               <Package className="w-8 h-8 text-blue-500" />
             </div>
@@ -224,8 +251,8 @@ export default function InventoryPage() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold">${warehouseStats.totalValue.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Total Stock Units</p>
+                <p className="text-2xl font-bold">{stats?.totalStockUnits.toLocaleString() || '0'}</p>
               </div>
               <BarChart3 className="w-8 h-8 text-green-500" />
             </div>
@@ -235,7 +262,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-yellow-600">{warehouseStats.lowStockItems}</p>
+                <p className="text-2xl font-bold text-yellow-600">{stats?.lowStockCount || '0'}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-yellow-500" />
             </div>
@@ -245,7 +272,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-red-600">{warehouseStats.outOfStockItems}</p>
+                <p className="text-2xl font-bold text-red-600">{stats?.outOfStockCount || '0'}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-500" />
             </div>
@@ -254,10 +281,10 @@ export default function InventoryPage() {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Overstock</p>
-                <p className="text-2xl font-bold text-blue-600">{warehouseStats.overstockItems}</p>
+                <p className="text-sm text-gray-600">Healthy Stock</p>
+                <p className="text-2xl font-bold text-green-600">{stats?.stockStatus.healthy || '0'}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-blue-500" />
+              <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
           </Card>
           
@@ -265,7 +292,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Reorder Required</p>
-                <p className="text-2xl font-bold text-orange-600">{warehouseStats.reorderRequired}</p>
+                <p className="text-2xl font-bold text-orange-600">{(stats?.lowStockCount || 0) + (stats?.outOfStockCount || 0)}</p>
               </div>
               <Truck className="w-8 h-8 text-orange-500" />
             </div>
@@ -319,27 +346,66 @@ export default function InventoryPage() {
         {/* Inventory Table */}
         <Card>
           <Card.Header>
-            <h3 className="text-lg font-semibold">Inventory Items</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Inventory Items</h3>
+              {loading && (
+                <div className="flex items-center space-x-2">
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-gray-500">Loading...</span>
+                </div>
+              )}
+            </div>
           </Card.Header>
           <Card.Content>
-            <DataTable
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800">{error}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => {
+                    setError(null)
+                    loadInventoryData()
+                  }}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </Button>
+              </div>
+            )}
+            
+            {!loading && !error && inventory.length === 0 && (
+              <div className="text-center py-8">
+                <Package className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No inventory items found</h3>
+                <p className="text-gray-500 mb-4">Get started by adding your first inventory item.</p>
+                <Button onClick={() => setShowAdjustmentModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Inventory Item
+                </Button>
+              </div>
+            )}
+            
+            {!loading && !error && inventory.length > 0 && (
+              <DataTable
               columns={[
                 { 
                   header: 'Product', 
-                  accessor: 'productName',
+                  accessor: 'product',
                   cell: ({ row }) => (
                     <div>
-                      <p className="font-medium text-gray-900">{row.productName}</p>
-                      <p className="text-sm text-gray-500">SKU: {row.sku}</p>
+                      <p className="font-medium text-gray-900">{row.product.name}</p>
+                      <p className="text-sm text-gray-500">SKU: {row.product.sku}</p>
                     </div>
                   )
                 },
                 { 
                   header: 'Category', 
-                  accessor: 'category',
-                  cell: ({ value }) => (
+                  accessor: 'product',
+                  cell: ({ row }) => (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {value}
+                      {row.product.category?.name || 'Uncategorized'}
                     </span>
                   )
                 },
@@ -353,77 +419,70 @@ export default function InventoryPage() {
                 { 
                   header: 'Current Stock', 
                   accessor: 'currentStock',
-                  cell: ({ row }) => (
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{row.currentStock}</span>
-                        {getStatusIcon(row.status)}
+                  cell: ({ row }) => {
+                    const status = getItemStatus(row)
+                    return (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{row.currentStock}</span>
+                          {getStatusIcon(status)}
+                        </div>
+                        {getStockLevel(row.currentStock, row.minStock, row.maxStock)}
+                        <div className="text-xs text-gray-500">
+                          Min: {row.minStock} | Max: {row.maxStock}
+                        </div>
                       </div>
-                      {getStockLevel(row.currentStock, row.minStock, row.maxStock)}
-                      <div className="text-xs text-gray-500">
-                        Min: {row.minStock} | Max: {row.maxStock}
-                      </div>
-                    </div>
-                  )
-                },
-                { 
-                  header: 'Unit Cost', 
-                  accessor: 'unitCost',
-                  cell: ({ value }) => `$${value.toFixed(2)}`
-                },
-                { 
-                  header: 'Unit Price', 
-                  accessor: 'unitPrice',
-                  cell: ({ value }) => `$${value.toFixed(2)}`
-                },
-                { 
-                  header: 'Total Value', 
-                  accessor: 'totalValue',
-                  cell: ({ value }) => (
-                    <span className="font-medium">${value.toFixed(2)}</span>
-                  )
+                    )
+                  }
                 },
                 { 
                   header: 'Status', 
-                  accessor: 'status',
-                  cell: ({ value }) => (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(value)}`}>
-                      {value.replace('_', ' ').charAt(0).toUpperCase() + value.replace('_', ' ').slice(1)}
-                    </span>
-                  )
+                  accessor: 'currentStock',
+                  cell: ({ row }) => {
+                    const status = getItemStatus(row)
+                    return (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+                        {status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}
+                      </span>
+                    )
+                  }
                 },
                 { 
-                  header: 'Last Movement', 
-                  accessor: 'lastMovement',
+                  header: 'Last Updated', 
+                  accessor: 'updatedAt',
                   cell: ({ value }) => (
                     <div className="flex items-center space-x-1">
                       <Clock className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm">{value}</span>
+                      <span className="text-sm">{new Date(value).toLocaleDateString()}</span>
                     </div>
                   )
                 },
                 { 
                   header: 'Actions', 
                   accessor: 'id',
-                  cell: ({ row }) => (
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      {(row.status === 'low_stock' || row.status === 'out_of_stock') && (
+                  cell: ({ row }) => {
+                    const status = getItemStatus(row)
+                    return (
+                      <div className="flex space-x-2">
                         <Button size="sm" variant="outline">
-                          <Plus className="w-4 h-4" />
+                          <Eye className="w-4 h-4" />
                         </Button>
-                      )}
-                    </div>
-                  ),
+                        <Button size="sm" variant="outline">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {(status === 'low_stock' || status === 'out_of_stock') && (
+                          <Button size="sm" variant="outline">
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )
+                  },
                 },
               ]}
               data={filteredInventory}
             />
+            )}
           </Card.Content>
         </Card>
 

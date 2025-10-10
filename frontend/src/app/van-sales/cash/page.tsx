@@ -3,6 +3,10 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Banknote, Plus, Search, Download, Eye, CheckCircle, Clock, DollarSign, TrendingUp, AlertTriangle } from 'lucide-react'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import vanSalesService from '@/services/van-sales.service';
 
 interface CashCollection {
   id: string
@@ -17,6 +21,8 @@ interface CashCollection {
 }
 
 export default function VanCashPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -51,7 +57,8 @@ export default function VanCashPage() {
 
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -153,5 +160,6 @@ export default function VanCashPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

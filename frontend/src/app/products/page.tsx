@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { productsService, Product } from '@/services/products.service'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import productsService from '@/services/products.service';
 import { 
   Package, 
   Plus,
@@ -22,6 +26,8 @@ import {
 } from 'lucide-react'
 
 export default function ProductsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -120,11 +126,13 @@ export default function ProductsPage() {
       inactive: 'bg-gray-100 text-gray-800',
       discontinued: 'bg-red-100 text-red-800'
     }
-    return (
+    return (<ErrorBoundary>
+
       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[status]}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

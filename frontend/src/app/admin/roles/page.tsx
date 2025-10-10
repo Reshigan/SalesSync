@@ -8,6 +8,9 @@ import { DataTable } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Shield, Plus, Edit2, Trash2, CheckSquare } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface Role {
   id: string;
@@ -20,6 +23,8 @@ interface Role {
 }
 
 export default function RolesPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   // 10 Default System Roles for SalesSync
   const [roles, setRoles] = useState<Role[]>([
     { 
@@ -180,7 +185,8 @@ export default function RolesPage() {
     }
   };
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -276,5 +282,6 @@ export default function RolesPage() {
         </form>
       </Modal>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

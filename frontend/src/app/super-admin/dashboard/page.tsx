@@ -4,6 +4,9 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Shield, 
   Users, 
@@ -30,6 +33,8 @@ interface TenantStats {
 }
 
 export default function SuperAdminDashboard() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [tenants] = useState<TenantStats[]>([
     { id: '1', name: 'Coca Cola Nigeria', plan: 'Enterprise', users: 234, revenue: 15000, status: 'active', lastActive: '2 min ago' },
     { id: '2', name: 'PepsiCo Nigeria', plan: 'Enterprise', users: 198, revenue: 12000, status: 'active', lastActive: '5 min ago' },
@@ -58,7 +63,8 @@ export default function SuperAdminDashboard() {
     cpuUsage: 32,
   };
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -297,5 +303,6 @@ export default function SuperAdminDashboard() {
         </div>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

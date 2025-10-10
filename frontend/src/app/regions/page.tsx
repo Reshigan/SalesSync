@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Globe, 
   Plus,
@@ -45,6 +48,8 @@ interface Region {
 }
 
 export default function RegionsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [regions, setRegions] = useState<Region[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRegions, setSelectedRegions] = useState<string[]>([])
@@ -301,7 +306,8 @@ export default function RegionsPage() {
   ]
 
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -310,7 +316,8 @@ export default function RegionsPage() {
           <SkeletonTable rows={5} cols={7} />
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

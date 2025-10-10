@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/auth.store';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   User, 
   Bell, 
@@ -13,6 +16,8 @@ import {
 } from 'lucide-react';
 
 export default function SettingsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
@@ -52,7 +57,8 @@ export default function SettingsPage() {
     }
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -126,5 +132,6 @@ export default function SettingsPage() {
         </div>
       </div>
     </div>
-  );
+  
+</ErrorBoundary>);
 }

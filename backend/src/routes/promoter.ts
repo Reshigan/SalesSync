@@ -193,7 +193,7 @@ router.post('/activities', async (req: TenantRequest, res, next) => {
         surveysCompleted: surveysCompleted ? parseInt(surveysCompleted) : 0,
         photos: photos || [],
         notes,
-        status: status || 'COMPLETED',
+        status: status || 'PENDING',
         verificationScore: verificationScore ? parseFloat(verificationScore) : null
       },
       include: {
@@ -437,7 +437,7 @@ router.get('/analytics', async (req: TenantRequest, res, next) => {
         other: activities.filter((a: any) => a.activityType === 'OTHER').length
       },
       statusBreakdown: {
-        completed: activities.filter((a: any) => a.status === 'COMPLETED').length,
+        completed: activities.filter((a: any) => a.status === 'APPROVED').length,
         pendingReview: activities.filter((a: any) => a.status === 'PENDING_REVIEW').length,
         approved: activities.filter((a: any) => a.status === 'APPROVED').length,
         rejected: activities.filter((a: any) => a.status === 'REJECTED').length

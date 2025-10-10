@@ -5,6 +5,10 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import vanSalesService from '@/services/van-sales.service';
 import { 
   Package, 
   DollarSign, 
@@ -36,6 +40,8 @@ interface CashReconciliation {
 }
 
 export default function ReconciliationPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [selectedLoad, setSelectedLoad] = useState('load1')
   const [actualCash, setActualCash] = useState(7250)
   const [expenses, setExpenses] = useState([
@@ -132,7 +138,8 @@ export default function ReconciliationPage() {
     }
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -436,5 +443,6 @@ export default function ReconciliationPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

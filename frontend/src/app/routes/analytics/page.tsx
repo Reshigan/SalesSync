@@ -6,6 +6,9 @@ import ReportingDashboard from '@/components/reporting/ReportingDashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   MapPin, 
   TrendingUp, 
@@ -110,6 +113,8 @@ interface RouteOptimization {
 }
 
 export default function RouteAnalyticsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({ start: '2024-07-01', end: '2024-09-30' })
   const [selectedRegion, setSelectedRegion] = useState('all')
@@ -645,7 +650,8 @@ export default function RouteAnalyticsPage() {
   ]
 
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -654,7 +660,8 @@ export default function RouteAnalyticsPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

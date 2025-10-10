@@ -4,6 +4,9 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Campaign } from '@/types/promotions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import {
   Megaphone,
   Plus,
@@ -27,6 +30,8 @@ import {
 } from 'lucide-react'
 
 export default function CampaignsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
@@ -207,12 +212,14 @@ export default function CampaignsPage() {
     }
     const badge = badges[status]
     const Icon = badge.icon
-    return (
+    return (<ErrorBoundary>
+
       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   const getTypeBadge = (type: Campaign['type']) => {

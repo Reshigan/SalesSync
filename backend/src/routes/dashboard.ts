@@ -1,10 +1,10 @@
 import express, { Response } from 'express';
-import { PrismaClient, OrderStatus, UserRole } from '@prisma/client';
+import { OrderStatus, UserRole } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
 import { TenantRequest } from '../middleware/tenant';
+import { prisma } from '../services/database';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * GET /api/dashboard
@@ -611,5 +611,198 @@ function getMovementColor(type: string): string {
   };
   return movementColors[type] || 'gray';
 }
+
+// Alias for recent-activities (same as activities)
+router.get('/recent-activities', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    const { limit = '10' } = req.query;
+    const limitNum = parseInt(limit as string, 10);
+
+    // Fetch recent activities from multiple sources
+    const [recentOrders, recentVisits, recentPromotions, recentInventoryMovements] = await Promise.all([
+      // Recent orders
+      prisma.order.findMany({
+        where: { tenantId },
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: {
+            select: { name: true }
+          },
+          user: {
+            select: { firstName: true, lastName: true }
+          }
+        }
+      }),
+
+      // Recent merchandising visits
+      prisma.merchandisingVisit.findMany({
+        where: { 
+          user: {
+            tenantId
+          }
+        },
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { firstName: true, lastName: true }
+          },
+          store: {
+            select: { name: true }
+          }
+        }
+      }),
+
+      // Recent promoter activities
+      prisma.promoterActivity.findMany({
+        where: { 
+          user: {
+            tenantId
+          }
+        },
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { firstName: true, lastName: true }
+          },
+          campaign: {
+            select: { name: true }
+          }
+        }
+      }),
+
+      // Recent inventory movements
+      prisma.inventoryMovement.findMany({
+        where: { 
+          inventory: {
+            tenantId
+          }
+        },
+        take: limitNum,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          inventory: {
+            include: {
+              product: {
+                select: { name: true }
+              }
+            }
+          }
+        }
+      })
+    ]);
+
+    // Combine and format activities
+    const activities: Array<{
+      id: string;
+      type: string;
+      reference: string;
+      description: string;
+      customer_name: string | null;
+      agent_name: string;
+      amount: number | null;
+      status: string;
+      timestamp: Date;
+      timeAgo: string;
+      detail: string;
+      icon: string;
+      color: string;
+    }> = [];
+
+    // Add order activities
+    recentOrders.forEach(order => {
+      activities.push({
+        id: order.id,
+        type: 'order',
+        reference: order.orderNumber,
+        description: `Order ${order.orderNumber}`,
+        customer_name: order.customer?.name || null,
+        agent_name: order.user ? `${order.user.firstName} ${order.user.lastName}` : 'System',
+        amount: Number(order.totalAmount),
+        status: order.status,
+        timestamp: order.createdAt,
+        timeAgo: getTimeAgo(order.createdAt),
+        detail: `${order.status} - $${Number(order.totalAmount).toFixed(2)}`,
+        icon: 'ShoppingCart',
+        color: getStatusColor(order.status)
+      });
+    });
+
+    // Add visit activities
+    recentVisits.forEach(visit => {
+      activities.push({
+        id: visit.id,
+        type: 'visit',
+        reference: `VISIT-${visit.id.substring(0, 8).toUpperCase()}`,
+        description: `Store visit`,
+        customer_name: visit.store?.name || null,
+        agent_name: visit.user ? `${visit.user.firstName} ${visit.user.lastName}` : 'Unknown',
+        amount: null,
+        status: visit.status,
+        timestamp: visit.createdAt,
+        timeAgo: getTimeAgo(visit.createdAt),
+        detail: `${visit.status} visit`,
+        icon: 'MapPin',
+        color: getStatusColor(visit.status)
+      });
+    });
+
+    // Add promotion activities
+    recentPromotions.forEach(promo => {
+      activities.push({
+        id: promo.id,
+        type: 'promotion',
+        reference: `PROMO-${promo.id.substring(0, 8).toUpperCase()}`,
+        description: promo.campaign?.name || 'Promotion Activity',
+        customer_name: null,
+        agent_name: promo.user ? `${promo.user.firstName} ${promo.user.lastName}` : 'Unknown',
+        amount: null,
+        status: promo.status,
+        timestamp: promo.createdAt,
+        timeAgo: getTimeAgo(promo.createdAt),
+        detail: `${promo.activityType} - ${promo.status}`,
+        icon: 'Megaphone',
+        color: getStatusColor(promo.status)
+      });
+    });
+
+    // Add inventory activities
+    recentInventoryMovements.forEach(movement => {
+      activities.push({
+        id: movement.id,
+        type: 'inventory',
+        reference: `INV-${movement.id.substring(0, 8).toUpperCase()}`,
+        description: `${movement.inventory?.product?.name || 'Product'} - ${movement.movementType}`,
+        customer_name: null,
+        agent_name: 'System',
+        amount: null,
+        status: movement.movementType,
+        timestamp: movement.createdAt,
+        timeAgo: getTimeAgo(movement.createdAt),
+        detail: `${movement.quantity} units - ${movement.movementType}`,
+        icon: 'Package',
+        color: getMovementColor(movement.movementType)
+      });
+    });
+
+    // Sort by timestamp descending and limit
+    activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    const limitedActivities = activities.slice(0, limitNum);
+
+    res.json({
+      activities: limitedActivities,
+      total: activities.length
+    });
+  } catch (error) {
+    console.error('Dashboard recent activities error:', error);
+    res.status(500).json({
+      error: 'Failed to fetch dashboard recent activities',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 export default router;

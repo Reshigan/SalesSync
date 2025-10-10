@@ -2,6 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 import { 
   FileText, 
@@ -16,6 +19,8 @@ import {
 } from 'lucide-react'
 
 export default function BackOfficePage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const router = useRouter()
 
   const sections = [
@@ -85,7 +90,8 @@ export default function BackOfficePage() {
     }
   ]
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="p-6 space-y-6">
         <div>
@@ -124,5 +130,6 @@ export default function BackOfficePage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

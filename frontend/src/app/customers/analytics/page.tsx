@@ -6,6 +6,10 @@ import ReportingDashboard from '@/components/reporting/ReportingDashboard'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import customersService from '@/services/customers.service';
 import { 
   Users, 
   TrendingUp, 
@@ -69,6 +73,8 @@ interface TopCustomer {
 }
 
 export default function CustomerAnalyticsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({ start: '2024-07-01', end: '2024-09-30' })
   const [selectedRegion, setSelectedRegion] = useState('all')
@@ -457,7 +463,8 @@ export default function CustomerAnalyticsPage() {
   ]
 
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
@@ -466,7 +473,8 @@ export default function CustomerAnalyticsPage() {
           </div>
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

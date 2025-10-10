@@ -4,6 +4,9 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Plus, 
@@ -17,6 +20,8 @@ import {
 } from 'lucide-react'
 
 export default function CompetitorAnalysisPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   
   // Mock data
@@ -70,7 +75,8 @@ export default function CompetitorAnalysisPage() {
     }
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -201,5 +207,6 @@ export default function CompetitorAnalysisPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

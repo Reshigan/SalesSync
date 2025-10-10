@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { MapPin, Navigation, Clock, User, Phone, CheckCircle, AlertCircle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface Agent {
   id: string;
@@ -19,6 +22,8 @@ interface Agent {
 }
 
 export default function TrackingPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [agents, setAgents] = useState<Agent[]>([
     { id: '1', name: 'John Doe', role: 'Van Sales', status: 'active', location: 'Zone A - Downtown', lat: 40.7128, lng: -74.0060, lastUpdate: '2 mins ago', currentActivity: 'At customer ABC Store', todayVisits: 12, todaySales: 4250 },
     { id: '2', name: 'Sarah Wilson', role: 'Promoter', status: 'active', location: 'Zone B - Uptown', lat: 40.7589, lng: -73.9851, lastUpdate: '5 mins ago', currentActivity: 'Campaign activity', todayVisits: 8, todaySales: 0 },
@@ -40,7 +45,9 @@ export default function TrackingPage() {
       })));
     }, 5000);
 
-    return () => clearInterval(interval);
+    return (<ErrorBoundary>
+
+</ErrorBoundary>) => clearInterval(interval);
   }, [autoRefresh]);
 
   const onlineAgents = agents.filter(a => a.status !== 'offline').length;

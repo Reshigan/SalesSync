@@ -6,6 +6,10 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
+import vanSalesService from '@/services/van-sales.service';
 import { 
   Truck, 
   Package, 
@@ -39,6 +43,8 @@ interface ActiveLoad {
 }
 
 export default function VanLoadingPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [selectedVan, setSelectedVan] = useState('')
   const [loadItems, setLoadItems] = useState<LoadItem[]>([])
   const [cashFloat, setCashFloat] = useState(5000)
@@ -149,7 +155,8 @@ export default function VanLoadingPage() {
     }
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -438,5 +445,6 @@ export default function VanLoadingPage() {
         </Card>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

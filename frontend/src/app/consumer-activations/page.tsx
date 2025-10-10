@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { consumerActivationService, ConsumerActivation } from '@/services/consumer-activation.service'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Plus,
@@ -24,6 +27,8 @@ import {
 } from 'lucide-react'
 
 export default function ConsumerActivationsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [activations, setActivations] = useState<ConsumerActivation[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -127,12 +132,14 @@ export default function ConsumerActivationsPage() {
       cancelled: { color: 'bg-gray-100 text-gray-800', icon: User }
     }
     const { color, icon: Icon } = config[status]
-    return (
+    return (<ErrorBoundary>
+
       <span className={`px-2 py-1 text-xs font-semibold rounded-full inline-flex items-center ${color}`}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   const getTypeBadge = (type: ConsumerActivation['activationType']) => {

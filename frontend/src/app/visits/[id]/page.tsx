@@ -5,6 +5,9 @@ import { useParams } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   MapPin, 
   User, 
@@ -21,6 +24,8 @@ import {
 } from 'lucide-react';
 
 export default function VisitDetailPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const params = useParams();
   const visitId = params.id;
 
@@ -78,7 +83,8 @@ export default function VisitDetailPage() {
     notes: 'Customer requested faster delivery times. Competitor running aggressive promotion. Need to increase visibility on main shelf.',
   };
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -401,5 +407,6 @@ export default function VisitDetailPage() {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

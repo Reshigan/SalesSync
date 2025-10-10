@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/Input'
 import { brandsService, Brand } from '@/services/brands.service'
 import { getAllAgentTypes } from '@/config/agent-types'
 import toast from 'react-hot-toast'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Award,
   Plus,
@@ -31,6 +34,8 @@ interface AgentAssignment {
 }
 
 export default function BrandsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -131,11 +136,13 @@ export default function BrandsPage() {
       beverage: 'bg-purple-100 text-purple-800',
       other: 'bg-gray-100 text-gray-800'
     }
-    return (
+    return (<ErrorBoundary>
+
       <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[category]}`}>
         {category.toUpperCase()}
       </span>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (

@@ -4,6 +4,9 @@ import { useState } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Material } from '@/types/promotions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import {
   Package,
   Plus,
@@ -21,6 +24,8 @@ import {
 } from 'lucide-react'
 
 export default function MarketingMaterialsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [searchTerm, setSearchTerm] = useState('')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
@@ -204,7 +209,8 @@ export default function MarketingMaterialsPage() {
     return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount)
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -438,5 +444,6 @@ export default function MarketingMaterialsPage() {
         )}
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

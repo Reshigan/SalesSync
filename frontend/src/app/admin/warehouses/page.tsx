@@ -11,6 +11,9 @@ import { Modal } from '@/components/ui/Modal'
 import { DataTable } from '@/components/ui/DataTable'
 import { Badge } from '@/components/ui/Badge'
 import apiService from '@/lib/api'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Edit, 
@@ -63,6 +66,8 @@ interface Manager {
 }
 
 export default function WarehousesPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const { hasPermission } = usePermissions()
   const [warehouses, setWarehouses] = useState<WarehouseData[]>([])
   const [managers, setManagers] = useState<Manager[]>([])
@@ -355,7 +360,8 @@ export default function WarehousesPage() {
       accessor: 'capacity',
       cell: ({ row }: { row: WarehouseData }) => {
         const utilization = getCapacityUtilization(row.current_stock, row.capacity)
-        return (
+        return (<ErrorBoundary>
+
           <div className="text-sm">
             <div className="flex items-center">
               <Package className="h-3 w-3 mr-1 text-gray-400" />
@@ -374,7 +380,8 @@ export default function WarehousesPage() {
               />
             </div>
           </div>
-        )
+        
+</ErrorBoundary>)
       }
     },
     {

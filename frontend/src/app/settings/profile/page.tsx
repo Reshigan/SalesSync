@@ -5,6 +5,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { FormField, FormInput, FormSelect, FormTextarea, FormFileUpload } from '@/components/ui/Form'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   User, 
   Mail, 
@@ -22,6 +25,8 @@ import {
 } from 'lucide-react'
 
 export default function ProfilePage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
     firstName: 'John',
@@ -78,7 +83,8 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -388,5 +394,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

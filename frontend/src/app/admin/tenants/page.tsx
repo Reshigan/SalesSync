@@ -8,6 +8,9 @@ import { DataTable } from '@/components/ui/DataTable';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
 import { Building2, Plus, Edit2, Settings, Users } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 
 interface Tenant {
   id: string;
@@ -21,6 +24,8 @@ interface Tenant {
 }
 
 export default function TenantsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [tenants, setTenants] = useState<Tenant[]>([
     { id: '1', name: 'Demo Company', code: 'DEMO', industry: 'FMCG', users: 107, status: 'active', plan: 'Enterprise', createdAt: '2024-01-15' },
     { id: '2', name: 'Beverage Corp', code: 'BEV', industry: 'Beverages', users: 245, status: 'active', plan: 'Professional', createdAt: '2024-02-01' },
@@ -77,7 +82,8 @@ export default function TenantsPage() {
     }
   ];
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -171,5 +177,6 @@ export default function TenantsPage() {
         </form>
       </Modal>
     </DashboardLayout>
-  );
+  
+</ErrorBoundary>);
 }

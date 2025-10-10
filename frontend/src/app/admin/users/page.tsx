@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { Modal } from '@/components/ui/Modal'
 import { FormField, FormInput, FormSelect } from '@/components/ui/Form'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   UserPlus,
@@ -47,6 +50,8 @@ interface User {
 }
 
 export default function UsersPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [totalUsers, setTotalUsers] = useState(0)
@@ -293,7 +298,8 @@ export default function UsersPage() {
     setShowEditUserModal(true)
   }
 
-  return (
+  return (<ErrorBoundary>
+
     <DashboardLayout>
       <div className="space-y-6">
         {/* Header */}
@@ -672,5 +678,6 @@ export default function UsersPage() {
         </Modal>
       </div>
     </DashboardLayout>
-  )
+  
+</ErrorBoundary>)
 }

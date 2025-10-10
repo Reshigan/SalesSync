@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
 import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Building, 
   Plus,
@@ -334,7 +337,8 @@ function AreasPageContent() {
   ]
 
   if (loading) {
-    return (
+    return (<ErrorBoundary>
+
       <DashboardLayout>
         <div className="space-y-6">
           <div className="flex justify-between items-center">
@@ -343,7 +347,8 @@ function AreasPageContent() {
           <SkeletonTable rows={6} cols={8} />
         </div>
       </DashboardLayout>
-    )
+    
+</ErrorBoundary>)
   }
 
   return (
@@ -523,6 +528,8 @@ function AreasPageContent() {
 }
 
 export default function AreasPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { success, error } = useToast();
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AreasPageContent />

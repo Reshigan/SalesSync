@@ -1,10 +1,9 @@
 import express, { Request, Response } from 'express';
 import { TenantRequest } from '../middleware/tenant';
-import { PrismaClient } from '@prisma/client';
 import { authenticateToken } from '../middleware/auth';
+import { prisma } from '../services/database';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 /**
  * VAN SALES MANAGEMENT SYSTEM
