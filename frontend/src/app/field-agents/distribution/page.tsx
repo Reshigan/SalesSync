@@ -91,9 +91,9 @@ export default function ProductDistributionPage() {
   }
 
   const filteredDistributions = distributions.filter(distribution =>
-    distribution.recipientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    distribution.recipientPhone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    distribution.productId.toLowerCase().includes(searchTerm.toLowerCase())
+    distribution.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    distribution.productId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    distribution.customerId.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (status: string) => {
@@ -355,12 +355,12 @@ export default function ProductDistributionPage() {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                {distribution.recipientName}
+                                Customer: {distribution.customerId}
                               </div>
-                              {distribution.recipientPhone && (
+                              {distribution.location && (
                                 <div className="text-sm text-gray-500 flex items-center gap-1">
-                                  <Phone className="h-3 w-3" />
-                                  {distribution.recipientPhone}
+                                  <MapPin className="h-3 w-3" />
+                                  {distribution.location}
                                 </div>
                               )}
                             </div>

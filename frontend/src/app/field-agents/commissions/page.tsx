@@ -247,11 +247,11 @@ export default function CommissionsPage() {
                     key={commission.id}
                     title={`$${commission.amount.toFixed(2)}`}
                     subtitle={`Agent: ${commission.agentId}`}
-                    description={`${commission.activityType.replace('_', ' ')} | ${new Date(commission.earnedDate).toLocaleDateString()}`}
+                    description={`${commission.activityType?.replace('_', ' ') || 'Unknown Activity'} | ${new Date(commission.earnedDate || commission.createdAt).toLocaleDateString()}`}
                     badge={{
                       text: commission.paymentStatus,
                       color: commission.paymentStatus === 'PAID' ? 'green' : 
-                             commission.paymentStatus === 'CANCELLED' ? 'red' : 'yellow'
+                             commission.paymentStatus === 'REFUNDED' ? 'red' : 'yellow'
                     }}
                     rightText={commission.paymentDate ? `💰 ${new Date(commission.paymentDate).toLocaleDateString()}` : '⏳'}
                     onClick={() => router.push(`/field-agents/commissions/${commission.id}`)}
@@ -489,17 +489,13 @@ export default function CommissionsPage() {
                               <div className="text-sm font-medium text-gray-900">
                                 Agent {commission.agentId}
                               </div>
-                              {commission.fieldAgentId && (
-                                <div className="text-sm text-gray-500">
-                                  Field Agent {commission.fieldAgentId}
-                                </div>
-                              )}
+
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActivityTypeColor(commission.activityType)}`}>
-                            {commission.activityType.replace('_', ' ')}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getActivityTypeColor(commission.activityType || 'SALES')}`}>
+                            {commission.activityType?.replace('_', ' ') || 'Unknown'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -516,7 +512,7 @@ export default function CommissionsPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {new Date(commission.earnedDate).toLocaleDateString()}
+                            {new Date(commission.earnedDate || commission.createdAt).toLocaleDateString()}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

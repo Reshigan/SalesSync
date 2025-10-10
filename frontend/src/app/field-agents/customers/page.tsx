@@ -81,11 +81,11 @@ export default function CustomersPage() {
         },
         (error) => {
           console.error('Error getting location:', error)
-          error('Unable to get current location')
+          alert('Unable to get current location')
         }
       )
     } else {
-      error('Geolocation is not supported by this browser')
+      alert('Geolocation is not supported by this browser')
     }
   }
 
@@ -143,7 +143,8 @@ export default function CustomersPage() {
     try {
       // Add current location if available
       if (currentLocation) {
-        customerData.coordinates = currentLocation
+        (customerData as any).latitude = currentLocation.latitude
+        ;(customerData as any).longitude = currentLocation.longitude
       }
       
       await fieldAgentsService.createCustomer(customerData)
@@ -312,7 +313,7 @@ export default function CustomersPage() {
                       text: `${customer.distance.toFixed(1)}km`,
                       color: 'blue'
                     } : undefined}
-                    rightText={customer.coordinates ? '📍' : ''}
+                    rightText={customer.latitude && customer.longitude ? '📍' : ''}
                     onClick={() => router.push(`/field-agents/customers/${customer.id}`)}
                   />
                 ))}
@@ -633,8 +634,8 @@ export default function CustomersPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {customer.coordinates ? 
-                              `${customer.coordinates.latitude.toFixed(4)}, ${customer.coordinates.longitude.toFixed(4)}` : 
+                            {customer.latitude && customer.longitude ? 
+                              `${customer.latitude.toFixed(4)}, ${customer.longitude.toFixed(4)}` : 
                               customer.address || 'Not specified'}
                           </div>
                         </td>
