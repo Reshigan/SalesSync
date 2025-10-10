@@ -58,7 +58,7 @@ export default function VisitsManagementPage() {
       setIsLoading(true)
       const filters = statusFilter !== 'all' ? { status: statusFilter } : {}
       const response = await fieldAgentsService.getVisits(filters)
-      setVisits(response.data.data || [])
+      setVisits(response || [])
     } catch (err) {
       error('Failed to load visits')
       console.error('Error loading visits:', err)

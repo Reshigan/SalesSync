@@ -65,14 +65,14 @@ export default function BoardsManagementPage() {
       if (activeTab === 'boards') {
         const filters = statusFilter !== 'all' ? { status: statusFilter } : {}
         const response = await fieldAgentsService.getBoards(filters)
-        setBoards(response.data?.data || response.boards || [])
+        setBoards(response.data || [])
       } else {
         const filters: any = {}
         if (statusFilter !== 'all') filters.status = statusFilter
         if (typeFilter !== 'all') filters.type = typeFilter
         
         const response = await fieldAgentsService.getBoardPlacements(filters)
-        setPlacements(response.data?.data || response.placements || [])
+        setPlacements(response.data || [])
       }
     } catch (err) {
       error(`Failed to load ${activeTab}`)
@@ -250,7 +250,7 @@ export default function BoardsManagementPage() {
                   filteredBoards.map((board) => (
                     <MobileListItem
                       key={board.id}
-                      title={board.title}
+                      title={board.title || board.name || `Board ${board.boardNumber}`}
                       subtitle={board.type}
                       description={`Size: ${board.size} | ${board.location || 'No location'}`}
                       badge={{

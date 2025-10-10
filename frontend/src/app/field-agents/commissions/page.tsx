@@ -63,7 +63,7 @@ export default function CommissionsPage() {
       if (activityTypeFilter !== 'all') filters.activityType = activityTypeFilter
       
       const response = await fieldAgentsService.getCommissions(filters)
-      setCommissions(response.data.data || [])
+      setCommissions(response.data || [])
     } catch (err) {
       error('Failed to load commissions')
       console.error('Error loading commissions:', err)

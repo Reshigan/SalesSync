@@ -324,4 +324,43 @@ router.get('/analytics', async (req: TenantRequest, res, next) => {
   }
 });
 
+// Process commission payments
+router.post('/process-payment', async (req: TenantRequest, res, next) => {
+  try {
+    const { commissionIds, paymentDetails } = req.body;
+
+    if (!commissionIds || !Array.isArray(commissionIds) || commissionIds.length === 0) {
+      return res.status(400).json({ error: 'Commission IDs are required' });
+    }
+
+    if (!paymentDetails || !paymentDetails.method || !paymentDetails.amount) {
+      return res.status(400).json({ error: 'Payment details are required' });
+    }
+
+    // Update all selected commissions
+    const updatedCommissions = await prisma.agentCommission.updateMany({
+      where: {
+        id: { in: commissionIds },
+        paymentStatus: { not: 'PAID' }
+      },
+      data: {
+        paymentStatus: 'PAID',
+        paidDate: new Date(),
+        paymentMethod: paymentDetails.method,
+        paymentReference: paymentDetails.reference || null,
+        notes: paymentDetails.notes || null
+      }
+    });
+
+    logger.info(`Processed payment for ${updatedCommissions.count} commissions`);
+    res.json({ 
+      message: `Successfully processed payment for ${updatedCommissions.count} commissions`,
+      processedCount: updatedCommissions.count
+    });
+  } catch (error: any) {
+    logger.error('Error processing commission payments:', error);
+    next(error);
+  }
+});
+
 export default router;

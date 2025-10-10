@@ -58,7 +58,7 @@ export default function ProductDistributionPage() {
       setIsLoading(true)
       const filters = statusFilter !== 'all' ? { status: statusFilter } : {}
       const response = await fieldAgentsService.getProductDistributions(filters)
-      setDistributions(response.data.data || [])
+      setDistributions(response.data || [])
     } catch (err) {
       error('Failed to load product distributions')
       console.error('Error loading distributions:', err)

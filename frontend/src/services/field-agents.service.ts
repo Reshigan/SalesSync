@@ -74,15 +74,20 @@ export interface BoardPlacement {
   id: string
   boardId: string
   agentId: string
+  fieldAgentId: string
   placementDate: string
   removalDate?: string
-  status: 'ACTIVE' | 'REMOVED'
+  verifiedAt?: string
+  status: 'ACTIVE' | 'REMOVED' | 'VERIFIED' | 'PENDING'
   location?: string
   latitude?: number
   longitude?: number
+  coordinates?: { lat: number; lng: number }
   imageUrl?: string
   coveragePercentage?: number
   notes?: string
+  board?: Board
+  agent?: FieldAgent
   createdAt: string
   updatedAt: string
 }
@@ -468,6 +473,21 @@ class FieldAgentsService {
   async getCommissionAnalytics(agentId?: string, startDate?: string, endDate?: string) {
     return apiClient.get('/commissions/analytics', {
       params: { agentId, startDate, endDate }
+    })
+  }
+
+  // ============================================================================
+  // COMMISSION MANAGEMENT
+  // ============================================================================
+
+  async updateCommissionStatus(id: string, status: string, notes?: string) {
+    return apiClient.patch(`/commissions/${id}/status`, { status, notes })
+  }
+
+  async processCommissionPayment(commissionIds: string[], paymentDetails: any) {
+    return apiClient.post('/commissions/process-payment', {
+      commissionIds,
+      paymentDetails
     })
   }
 }

@@ -54,7 +54,7 @@ export default function OrdersPage() {
       if (searchTerm) filters.search = searchTerm
 
       const response = await ordersService.getAll(filters)
-      setOrders(response.orders || [])
+      setOrders(response || [])
       toast.success('Orders loaded successfully')
     } catch (error: any) {
       console.error('Error loading orders:', error)

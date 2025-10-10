@@ -93,7 +93,7 @@ export default function CustomersPage() {
     try {
       setIsLoading(true)
       const response = await fieldAgentsService.getCustomers()
-      setCustomers(response.data?.data || response.customers || [])
+      setCustomers(response.data || [])
     } catch (err) {
       error('Failed to load customers')
       console.error('Error loading customers:', err)
@@ -112,7 +112,7 @@ export default function CustomersPage() {
         currentLocation.longitude,
         searchRadius
       )
-      setNearbyCustomers(response.data?.data || response.customers || [])
+      setNearbyCustomers(response || [])
     } catch (err) {
       error('Failed to load nearby customers')
       console.error('Error loading nearby customers:', err)
@@ -129,8 +129,8 @@ export default function CustomersPage() {
 
     try {
       setIsLoading(true)
-      const response = await fieldAgentsService.searchCustomers(searchTerm, searchType)
-      setCustomers(response.data?.data || response.customers || [])
+      const response = await fieldAgentsService.searchCustomers(searchTerm)
+      setCustomers(response.data || [])
     } catch (err) {
       error('Failed to search customers')
       console.error('Error searching customers:', err)
