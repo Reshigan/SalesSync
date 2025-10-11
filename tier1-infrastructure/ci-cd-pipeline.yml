@@ -1,0 +1,353 @@
+# SalesSync Tier-1 Enterprise CI/CD Pipeline
+# GitLab CI/CD configuration for automated testing, security scanning, and deployment
+
+stages:
+  - validate
+  - test
+  - security
+  - build
+  - deploy-staging
+  - integration-test
+  - deploy-production
+  - post-deploy
+
+variables:
+  DOCKER_REGISTRY: "registry.salessync.com"
+  APP_NAME: "salessync-tier1"
+  POSTGRES_DB: "salessync_tier1"
+  POSTGRES_USER: "salessync_admin"
+  POSTGRES_PASSWORD: "SalesSync2024!"
+  NODE_VERSION: "18.20.8"
+
+# Validate stage
+validate-code:
+  stage: validate
+  image: node:${NODE_VERSION}
+  script:
+    - npm ci
+    - npm run lint
+    - npm run format:check
+    - npm run type-check
+  cache:
+    paths:
+      - node_modules/
+  only:
+    - merge_requests
+    - main
+    - develop
+
+validate-database:
+  stage: validate
+  image: postgres:15
+  services:
+    - postgres:15
+  variables:
+    POSTGRES_DB: test_db
+  script:
+    - psql -h postgres -U $POSTGRES_USER -d $POSTGRES_DB -f tier1-infrastructure/postgresql-setup.sql
+    - psql -h postgres -U $POSTGRES_USER -d $POSTGRES_DB -f tier1-infrastructure/trade-marketing-schema-extension.sql
+  only:
+    - merge_requests
+    - main
+
+# Test stage
+unit-tests:
+  stage: test
+  image: node:${NODE_VERSION}
+  services:
+    - postgres:15
+    - redis:7
+  script:
+    - npm ci
+    - npm run test:unit
+    - npm run test:coverage
+  coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+    paths:
+      - coverage/
+  cache:
+    paths:
+      - node_modules/
+
+integration-tests:
+  stage: test
+  image: node:${NODE_VERSION}
+  services:
+    - postgres:15
+    - redis:7
+  script:
+    - npm ci
+    - npm run test:integration
+  artifacts:
+    reports:
+      junit: test-results.xml
+  cache:
+    paths:
+      - node_modules/
+
+api-tests:
+  stage: test
+  image: postman/newman
+  script:
+    - newman run postman/SalesSync-API-Tests.json
+      --environment postman/test-environment.json
+      --reporters junit,cli
+      --reporter-junit-export test-results.xml
+  artifacts:
+    reports:
+      junit: test-results.xml
+
+# Security stage
+security-scan:
+  stage: security
+  image: node:${NODE_VERSION}
+  script:
+    - npm ci
+    - npm audit --audit-level high
+    - npx snyk test --severity-threshold=high
+  allow_failure: true
+
+sast-scan:
+  stage: security
+  image: securecodewarrior/gitlab-sast
+  script:
+    - /analyzer run
+  artifacts:
+    reports:
+      sast: gl-sast-report.json
+  allow_failure: true
+
+dependency-scan:
+  stage: security
+  image: owasp/dependency-check
+  script:
+    - dependency-check.sh --project "SalesSync" --scan . --format JSON --out dependency-check-report.json
+  artifacts:
+    paths:
+      - dependency-check-report.json
+  allow_failure: true
+
+# Build stage
+build-backend:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME-backend:$CI_COMMIT_SHA -f Dockerfile.backend .
+    - docker push $DOCKER_REGISTRY/$APP_NAME-backend:$CI_COMMIT_SHA
+    - docker tag $DOCKER_REGISTRY/$APP_NAME-backend:$CI_COMMIT_SHA $DOCKER_REGISTRY/$APP_NAME-backend:latest
+    - docker push $DOCKER_REGISTRY/$APP_NAME-backend:latest
+  only:
+    - main
+    - develop
+
+build-frontend:
+  stage: build
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $DOCKER_REGISTRY/$APP_NAME-frontend:$CI_COMMIT_SHA -f Dockerfile.frontend .
+    - docker push $DOCKER_REGISTRY/$APP_NAME-frontend:$CI_COMMIT_SHA
+    - docker tag $DOCKER_REGISTRY/$APP_NAME-frontend:$CI_COMMIT_SHA $DOCKER_REGISTRY/$APP_NAME-frontend:latest
+    - docker push $DOCKER_REGISTRY/$APP_NAME-frontend:latest
+  only:
+    - main
+    - develop
+
+# Deploy to staging
+deploy-staging:
+  stage: deploy-staging
+  image: alpine/helm:3.10.0
+  script:
+    - helm upgrade --install $APP_NAME-staging ./helm-chart
+      --namespace staging
+      --set image.backend.tag=$CI_COMMIT_SHA
+      --set image.frontend.tag=$CI_COMMIT_SHA
+      --set environment=staging
+      --set database.host=$STAGING_DB_HOST
+      --set redis.host=$STAGING_REDIS_HOST
+  environment:
+    name: staging
+    url: https://staging.salessync.com
+  only:
+    - develop
+
+# Integration tests on staging
+staging-integration-tests:
+  stage: integration-test
+  image: postman/newman
+  script:
+    - newman run postman/SalesSync-API-Tests.json
+      --environment postman/staging-environment.json
+      --reporters junit,cli
+      --reporter-junit-export staging-test-results.xml
+  artifacts:
+    reports:
+      junit: staging-test-results.xml
+  dependencies:
+    - deploy-staging
+  only:
+    - develop
+
+load-testing:
+  stage: integration-test
+  image: loadimpact/k6
+  script:
+    - k6 run --vus 100 --duration 5m load-tests/api-load-test.js
+  artifacts:
+    paths:
+      - load-test-results.json
+  dependencies:
+    - deploy-staging
+  only:
+    - develop
+
+# Deploy to production
+deploy-production:
+  stage: deploy-production
+  image: alpine/helm:3.10.0
+  script:
+    - helm upgrade --install $APP_NAME-production ./helm-chart
+      --namespace production
+      --set image.backend.tag=$CI_COMMIT_SHA
+      --set image.frontend.tag=$CI_COMMIT_SHA
+      --set environment=production
+      --set database.host=$PRODUCTION_DB_HOST
+      --set redis.host=$PRODUCTION_REDIS_HOST
+      --set replicas.backend=3
+      --set replicas.frontend=2
+  environment:
+    name: production
+    url: https://app.salessync.com
+  when: manual
+  only:
+    - main
+
+# Post-deployment tasks
+smoke-tests:
+  stage: post-deploy
+  image: postman/newman
+  script:
+    - newman run postman/SalesSync-Smoke-Tests.json
+      --environment postman/production-environment.json
+      --reporters junit,cli
+      --reporter-junit-export smoke-test-results.xml
+  artifacts:
+    reports:
+      junit: smoke-test-results.xml
+  dependencies:
+    - deploy-production
+  only:
+    - main
+
+performance-monitoring:
+  stage: post-deploy
+  image: curlimages/curl
+  script:
+    - curl -X POST "$GRAFANA_WEBHOOK_URL" 
+      -H "Content-Type: application/json"
+      -d '{"text":"SalesSync Tier-1 deployed to production - monitoring active"}'
+  dependencies:
+    - deploy-production
+  only:
+    - main
+
+database-migration:
+  stage: post-deploy
+  image: postgres:15
+  script:
+    - psql -h $PRODUCTION_DB_HOST -U $POSTGRES_USER -d $POSTGRES_DB -c "SELECT version();"
+    - psql -h $PRODUCTION_DB_HOST -U $POSTGRES_USER -d $POSTGRES_DB -f migrations/latest.sql
+  when: manual
+  dependencies:
+    - deploy-production
+  only:
+    - main
+
+# Rollback job (manual trigger)
+rollback-production:
+  stage: deploy-production
+  image: alpine/helm:3.10.0
+  script:
+    - helm rollback $APP_NAME-production --namespace production
+  when: manual
+  environment:
+    name: production
+    url: https://app.salessync.com
+  only:
+    - main
+
+# Cleanup old images
+cleanup-registry:
+  stage: post-deploy
+  image: docker:20.10.16
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker system prune -f
+    - docker image prune -a -f --filter "until=168h" # Remove images older than 7 days
+  when: manual
+  only:
+    - main
+
+# Notification jobs
+notify-success:
+  stage: post-deploy
+  image: curlimages/curl
+  script:
+    - curl -X POST "$SLACK_WEBHOOK_URL"
+      -H "Content-Type: application/json"
+      -d '{
+        "text": "✅ SalesSync Tier-1 deployment successful!",
+        "attachments": [{
+          "color": "good",
+          "fields": [
+            {"title": "Environment", "value": "'$CI_ENVIRONMENT_NAME'", "short": true},
+            {"title": "Commit", "value": "'$CI_COMMIT_SHA'", "short": true},
+            {"title": "Branch", "value": "'$CI_COMMIT_REF_NAME'", "short": true},
+            {"title": "Pipeline", "value": "'$CI_PIPELINE_URL'", "short": true}
+          ]
+        }]
+      }'
+  when: on_success
+  dependencies:
+    - deploy-production
+
+notify-failure:
+  stage: post-deploy
+  image: curlimages/curl
+  script:
+    - curl -X POST "$SLACK_WEBHOOK_URL"
+      -H "Content-Type: application/json"
+      -d '{
+        "text": "❌ SalesSync Tier-1 deployment failed!",
+        "attachments": [{
+          "color": "danger",
+          "fields": [
+            {"title": "Environment", "value": "'$CI_ENVIRONMENT_NAME'", "short": true},
+            {"title": "Commit", "value": "'$CI_COMMIT_SHA'", "short": true},
+            {"title": "Branch", "value": "'$CI_COMMIT_REF_NAME'", "short": true},
+            {"title": "Pipeline", "value": "'$CI_PIPELINE_URL'", "short": true}
+          ]
+        }]
+      }'
+  when: on_failure
+
+# Cache configuration
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - node_modules/
+    - .npm/
+
+# Artifacts retention
+default:
+  artifacts:
+    expire_in: 1 week
