@@ -346,8 +346,6 @@ router.post('/process-payment', async (req: TenantRequest, res, next) => {
       data: {
         paymentStatus: 'PAID',
         paidDate: new Date(),
-        paymentMethod: paymentDetails.method,
-        paymentReference: paymentDetails.reference || null,
         notes: paymentDetails.notes || null
       }
     });

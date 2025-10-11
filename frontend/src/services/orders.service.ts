@@ -3,35 +3,47 @@ import { apiClient } from '../lib/api-client'
 
 export interface Order {
   id: string;
-  orderNumber?: string;
-  customer_id: string;
-  customer_name: string;
-  customerName?: string;
-  customerCode?: string;
-  total_amount: number;
-  totalAmount?: number;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'draft' | 'processing';
-  order_date: string;
-  orderDate?: string;
-  delivery_date?: string;
-  deliveryDate?: string;
-  items: OrderItem[];
-  payment_status: 'pending' | 'paid' | 'failed' | 'partial' | 'overdue';
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'partial' | 'overdue';
-  delivery_address: string;
+  orderNumber: string;
+  orderDate: Date;
+  deliveryDate?: Date;
+  totalAmount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'PARTIAL' | 'OVERDUE';
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  tenantId: string;
+  customerId: string;
+  userId: string;
+  items: OrderItem[];
+  customer?: {
+    id: string;
+    name: string;
+    code: string;
+    customerType: string;
+  };
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+  };
 }
 
 export interface OrderItem {
   id: string;
-  product_id: string;
-  product_name: string;
   quantity: number;
-  unit_price: number;
   unitPrice: number;
-  total_price: number;
+  totalPrice: number;
   discount: number;
-  tax: number;
+  orderId: string;
+  productId: string;
+  product?: {
+    id: string;
+    name: string;
+    sku: string;
+    unitPrice: number;
+  };
 }
 
 export const ordersService = {

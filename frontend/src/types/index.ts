@@ -313,16 +313,20 @@ export interface Customer {
   tenantId: string
   code: string
   name: string
-  type: CustomerType
-  contactPerson?: string
+  customerType: CustomerType
   phone?: string
   email?: string
-  address: Address
-  location: GeoLocation
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  coordinates?: any
   creditLimit?: number
   paymentTerms?: string
   isActive: boolean
   createdAt: Date
+  updatedAt: Date
+  routeId?: string
 }
 
 export type CustomerType = 'retail' | 'wholesale' | 'distributor' | 'institution'
