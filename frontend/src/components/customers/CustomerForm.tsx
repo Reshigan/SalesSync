@@ -53,13 +53,13 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
     if (!formData.phone?.trim()) {
       newErrors.phone = 'Phone number is required'
     }
-    if (!formData.address?.trim()) {
-      newErrors.address = 'Address is required'
+    if (!formData.address?.street?.trim()) {
+      newErrors.address = 'Street address is required'
     }
-    if (!formData.city?.trim()) {
+    if (!formData.address?.city?.trim()) {
       newErrors.city = 'City is required'
     }
-    if (formData.creditLimit < 0) {
+    if (formData.creditLimit && formData.creditLimit < 0) {
       newErrors.creditLimit = 'Credit limit cannot be negative'
     }
 

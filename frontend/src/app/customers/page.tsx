@@ -6,7 +6,7 @@ import { CustomerForm } from '@/components/customers/CustomerForm'
 import { FormModal } from '@/components/ui/FormModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Customer } from '@/services/customers.service'
+import { Customer } from '@/types'
 import toast from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
@@ -41,7 +41,7 @@ export default function CustomersPage() {
   // Stats
   const stats = {
     total: customers.length,
-    active: customers.filter(c => c.status === 'active').length,
+    active: customers.filter(c => c.isActive).length,
     retail: customers.filter(c => c.type === 'retail').length,
     wholesale: customers.filter(c => c.type === 'wholesale').length,
     totalCreditLimit: customers.reduce((sum, c) => sum + (c.creditLimit || 0), 0),
@@ -57,7 +57,7 @@ export default function CustomersPage() {
       setLoading(true)
       const filters: any = {}
       if (filterType !== 'all') filters.type = filterType
-      if (filterStatus !== 'all') filters.status = filterStatus
+      if (filterStatus !== 'all') filters.isActive = filterStatus === 'active'
       if (searchTerm) filters.search = searchTerm
       
       const response = await customersService.getAll(filters)
@@ -119,16 +119,15 @@ export default function CustomersPage() {
     setShowEditModal(true)
   }
 
-  const getStatusBadge = (status: Customer['status']) => {
-    const colors = {
-      active: 'bg-green-100 text-green-800',
-      inactive: 'bg-gray-100 text-gray-800',
-      blocked: 'bg-red-100 text-red-800'
-    }
+  const getStatusBadge = (isActive: boolean) => {
+    const colors = isActive 
+      ? 'bg-green-100 text-green-800'
+      : 'bg-gray-100 text-gray-800'
+    const text = isActive ? 'Active' : 'Inactive'
     return (<ErrorBoundary>
 
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[status]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors}`}>
+        {text}
       </span>
     
 </ErrorBoundary>)
@@ -138,10 +137,11 @@ export default function CustomersPage() {
     const colors = {
       retail: 'bg-blue-100 text-blue-800',
       wholesale: 'bg-purple-100 text-purple-800',
-      distributor: 'bg-indigo-100 text-indigo-800'
+      distributor: 'bg-indigo-100 text-indigo-800',
+      institution: 'bg-orange-100 text-orange-800'
     }
     return (
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[type]}`}>
+      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[type as keyof typeof colors] || 'bg-gray-100 text-gray-800'}`}>
         {type.charAt(0).toUpperCase() + type.slice(1)}
       </span>
     )
@@ -332,11 +332,11 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">{customer.name}</span>
-                          {customer.businessName || customer.name || customer.name && (
-                            <span className="text-xs text-gray-500">{customer.businessName || customer.name || customer.name}</span>
+                          {customer.contactPerson && (
+                            <span className="text-xs text-gray-500">{customer.contactPerson}</span>
                           )}
-                          {customer.customerCode || customer.code || customer.code && (
-                            <span className="text-xs text-gray-400">{customer.customerCode || customer.code || customer.code}</span>
+                          {customer.code && (
+                            <span className="text-xs text-gray-400">{customer.code}</span>
                           )}
                         </div>
                       </td>
@@ -357,7 +357,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center text-sm text-gray-900">
                           <MapPin className="w-3 h-3 mr-1 text-gray-400" />
-                          {customer.city || ""}{customer.region && `, ${customer.region}`}
+                          {customer.address?.city || ""}{customer.address?.state && `, ${customer.address.state}`}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -372,7 +372,7 @@ export default function CustomersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(customer.status)}
+                        {getStatusBadge(customer.isActive)}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">

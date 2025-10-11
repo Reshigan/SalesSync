@@ -1,24 +1,6 @@
 
 import { apiClient } from '../lib/api-client'
-
-export interface Customer {
-  id: string;
-  name: string;
-  businessName?: string;
-  code: string;
-  customerCode?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  region?: string;
-  type: 'retail' | 'wholesale' | 'distributor';
-  status: 'active' | 'inactive' | 'blocked';
-  creditLimit?: number;
-  paymentTerms?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Customer } from '../types'
 
 export const customersService = {
 
