@@ -7,7 +7,7 @@ import { MobileLayout, MobileCard, MobileList, MobileListItem, MobileButton, Mob
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { useToast } from '@/hooks/use-toast'
-import { fieldAgentsService, Customer } from '@/services/field-agents.service'
+import customerService, { Customer, CustomerSearchParams } from '@/services/customer.service'
 
 import { 
   Plus,
@@ -92,8 +92,13 @@ export default function CustomersPage() {
   const loadCustomers = async () => {
     try {
       setIsLoading(true)
-      const response = await fieldAgentsService.getCustomers()
-      setCustomers(response.data || [])
+      const params: CustomerSearchParams = {
+        limit: 100,
+        query: searchTerm || undefined,
+        status: 'ACTIVE'
+      }
+      const response = await customerService.getCustomers(params)
+      setCustomers(response.customers || [])
     } catch (err) {
       error('Failed to load customers')
       console.error('Error loading customers:', err)
@@ -107,11 +112,13 @@ export default function CustomersPage() {
     
     try {
       setIsLoading(true)
-      const response = await fieldAgentsService.getNearbyCustomers(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        searchRadius
-      )
+      const response = await customerService.getNearbyCustomers({
+        latitude: currentLocation.latitude,
+        longitude: currentLocation.longitude,
+        radius: searchRadius,
+        status: 'ACTIVE',
+        limit: 50
+      })
       setNearbyCustomers(response || [])
     } catch (err) {
       error('Failed to load nearby customers')

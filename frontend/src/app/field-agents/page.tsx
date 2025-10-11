@@ -7,7 +7,11 @@ import { MobileLayout, MobileCard, MobileList, MobileListItem } from '@/componen
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
-import { fieldAgentsService } from '@/services/field-agents.service';
+import visitService from '@/services/visit.service';
+import customerService from '@/services/customer.service';
+import boardService from '@/services/board.service';
+import productService from '@/services/product.service';
+import commissionService from '@/services/commission.service';
 
 import { 
   Map, 
@@ -29,7 +33,11 @@ export default function FieldAgentsPage() {
     activeAgents: 0,
     visitsToday: 0,
     totalVisits: 0,
-    completedVisits: 0
+    completedVisits: 0,
+    totalCustomers: 0,
+    boardPlacements: 0,
+    productDistributions: 0,
+    totalCommissions: 0
   });
   const { success, error } = useToast();
   const router = useRouter()
@@ -55,35 +63,101 @@ export default function FieldAgentsPage() {
     try {
       setIsLoading(true);
       
-      // Fetch field agents
-      const agentsResponse = await fieldAgentsService.getFieldAgents();
-      const agents = agentsResponse?.data || [];
+      // Get today's date range
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
       
-      // Fetch visits
-      const visitsResponse = await fieldAgentsService.getVisits();
-      const visits = visitsResponse?.data || [];
+      // Fetch data in parallel for better performance
+      const [
+        visitsResponse,
+        customerStats,
+        boardStats,
+        productStats,
+        commissionStats
+      ] = await Promise.all([
+        visitService.getVisits({
+          dateFrom: todayStart,
+          dateTo: todayEnd,
+          limit: 1000
+        }).catch(() => ({ visits: [], total: 0 })),
+        
+        customerService.getCustomerStats().catch(() => ({
+          totalCustomers: 0,
+          activeCustomers: 0
+        })),
+        
+        boardService.getBoardPlacementStats({
+          dateFrom: todayStart,
+          dateTo: todayEnd
+        }).catch(() => ({
+          totalPlacements: 0,
+          activePlacements: 0
+        })),
+        
+        productService.getProductDistributionStats({
+          dateFrom: todayStart,
+          dateTo: todayEnd
+        }).catch(() => ({
+          totalDistributions: 0,
+          completedDistributions: 0
+        })),
+        
+        commissionService.getCommissionStats({
+          dateFrom: todayStart,
+          dateTo: todayEnd
+        }).catch(() => ({
+          totalCommissions: 0,
+          totalAmount: 0
+        }))
+      ]);
       
-      // Calculate today's visits
-      const today = new Date().toDateString();
-      const visitsToday = visits.filter(visit => 
-        new Date(visit.visitDate).toDateString() === today
-      ).length;
+      // Get all visits for broader statistics
+      const allVisitsResponse = await visitService.getVisits({
+        limit: 1000
+      }).catch(() => ({ visits: [], total: 0 }));
       
-      // Calculate completed visits
-      const completedVisits = visits.filter(visit => 
+      const allVisits = allVisitsResponse.visits || [];
+      const todayVisits = visitsResponse.visits || [];
+      
+      // Calculate statistics
+      const completedVisits = allVisits.filter(visit => 
         visit.status === 'COMPLETED'
       ).length;
       
+      // Estimate active agents based on recent activity (visits in last 7 days)
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const recentVisits = allVisits.filter(visit => 
+        new Date(visit.createdAt) >= new Date(weekAgo)
+      );
+      const activeAgents = new Set(recentVisits.map(visit => visit.agentId)).size;
+      
       setStats({
-        activeAgents: agents.filter(agent => agent.status === 'ACTIVE').length,
-        visitsToday,
-        totalVisits: visits.length,
-        completedVisits
+        activeAgents,
+        visitsToday: todayVisits.length,
+        totalVisits: allVisitsResponse.total,
+        completedVisits,
+        totalCustomers: customerStats.totalCustomers || 0,
+        boardPlacements: boardStats.totalPlacements || 0,
+        productDistributions: productStats.totalDistributions || 0,
+        totalCommissions: commissionStats.totalAmount || 0
       });
       
     } catch (err) {
       console.error('Error loading dashboard stats:', err);
       error('Failed to load dashboard statistics');
+      
+      // Set default stats on error
+      setStats({
+        activeAgents: 0,
+        visitsToday: 0,
+        totalVisits: 0,
+        completedVisits: 0,
+        totalCustomers: 0,
+        boardPlacements: 0,
+        productDistributions: 0,
+        totalCommissions: 0
+      });
     } finally {
       setIsLoading(false);
     }
@@ -192,6 +266,14 @@ export default function FieldAgentsPage() {
                 <div className="text-2xl font-bold text-green-600">{stats.visitsToday}</div>
                 <div className="text-sm text-gray-600">Visits Today</div>
               </MobileCard>
+              <MobileCard className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{stats.totalCustomers}</div>
+                <div className="text-sm text-gray-600">Total Customers</div>
+              </MobileCard>
+              <MobileCard className="text-center">
+                <div className="text-2xl font-bold text-emerald-600">${stats.totalCommissions.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">Commissions</div>
+              </MobileCard>
             </div>
 
             {/* Main Sections */}
@@ -246,7 +328,7 @@ export default function FieldAgentsPage() {
         </div>
 
         {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-lg bg-blue-50">
@@ -274,11 +356,35 @@ export default function FieldAgentsPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-lg bg-purple-50">
-                <MapPin className="h-6 w-6 text-purple-600" />
+                <Users className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <div className="text-2xl font-bold text-gray-900">{stats.totalVisits}</div>
-                <div className="text-sm text-gray-600">Total Visits</div>
+                <div className="text-2xl font-bold text-gray-900">{stats.totalCustomers.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">Total Customers</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-orange-50">
+                <MapPin className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.boardPlacements}</div>
+                <div className="text-sm text-gray-600">Board Placements</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-cyan-50">
+                <Package className="h-6 w-6 text-cyan-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.productDistributions}</div>
+                <div className="text-sm text-gray-600">Product Distributions</div>
               </div>
             </div>
           </div>
@@ -289,8 +395,8 @@ export default function FieldAgentsPage() {
                 <DollarSign className="h-6 w-6 text-emerald-600" />
               </div>
               <div className="ml-4">
-                <div className="text-2xl font-bold text-gray-900">{stats.completedVisits}</div>
-                <div className="text-sm text-gray-600">Completed Visits</div>
+                <div className="text-2xl font-bold text-gray-900">${stats.totalCommissions.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">Total Commissions</div>
               </div>
             </div>
           </div>
