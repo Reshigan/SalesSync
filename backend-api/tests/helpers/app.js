@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '../../.env.test') });
 
-const { initializeDatabase, closeDatabase } = require('../../src/database/init');
+const { initializeDatabase, closeDatabase, resetTestDatabase } = require('../../src/database/init');
 const { errorHandler, notFoundHandler } = require('../../src/middleware/errorHandler');
 
 // Import all routes
@@ -52,7 +52,7 @@ async function createTestApp() {
 
   // Initialize database
   if (!dbInitialized) {
-    await initializeDatabase();
+    await resetTestDatabase();
     dbInitialized = true;
   }
 

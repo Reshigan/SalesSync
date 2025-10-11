@@ -1,9 +1,6 @@
 const express = require('express');
 const http = require('http');
 const cors = require('cors');
-const helmet = require('helmet');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const winston = require('winston');
 const expressWinston = require('express-winston');
 require('dotenv').config();
@@ -11,6 +8,25 @@ require('dotenv').config();
 const config = require('./config/database');
 const { initializeDatabase } = require('./database/init');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+
+// Import enhanced middleware
+const {
+  authRateLimit,
+  apiRateLimit,
+  securityHeaders,
+  sanitizeInput,
+  preventSQLInjection,
+  securityLogger,
+  ipFilter
+} = require('./middleware/security');
+
+const {
+  compressionMiddleware,
+  optimizeRequests,
+  monitorMemory,
+  trackResponseTime,
+  optimizeDatabase
+} = require('./middleware/performance');
 
 // Routes will be imported after database initialization
 
@@ -43,35 +59,18 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
-  message: {
-    error: 'Too many requests from this IP, please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
 // Trust proxy - required when behind nginx/reverse proxy
 app.set('trust proxy', 1);
 
-// Middleware
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
-
-app.use(compression());
-app.use(limiter);
+// Apply enhanced security and performance middleware
+app.use(securityHeaders);
+app.use(compressionMiddleware);
+app.use(ipFilter);
+app.use(securityLogger);
+app.use(trackResponseTime);
+app.use(monitorMemory);
+app.use(optimizeRequests);
+app.use(apiRateLimit);
 
 // CORS configuration
 const corsOptions = {
@@ -96,6 +95,10 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Apply input sanitization and SQL injection prevention after parsing
+app.use(sanitizeInput);
+app.use(preventSQLInjection);
 
 // Socket.IO setup
 const { Server } = require('socket.io');
@@ -199,6 +202,11 @@ async function startServer() {
   try {
     await initializeDatabase();
     logger.info('Database initialized successfully');
+    
+    // Optimize database performance
+    const { getDatabase } = require('./database/init');
+    optimizeDatabase(getDatabase());
+    logger.info('Database optimized for performance');
 
     // Import routes after database initialization
     logger.info('Importing middleware...');
@@ -250,7 +258,7 @@ async function startServer() {
     
     // Public routes (no authentication required)
     logger.info('Registering auth routes...');
-    app.use('/api/auth', authRoutes);
+    app.use('/api/auth', authRateLimit, authRoutes);
     logger.info('Registering tenant routes...');
     app.use('/api/tenants', tenantRoutes);
 

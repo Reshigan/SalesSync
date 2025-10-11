@@ -5,10 +5,21 @@ import authService from '@/services/auth.service';
 interface User {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   role: string;
-  roles?: string[];
-  permissions?: string[];
+  tenantId: string;
+  tenantCode: string;
+  tenantName: string;
+  permissions?: Array<{
+    module: string;
+    canView: boolean;
+    canCreate: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
+    canApprove: boolean;
+    canExport: boolean;
+  }>;
 }
 
 interface AuthState {
@@ -34,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const response = await authService.login(email, password);
-          const { user, accessToken } = response.data;
+          const { user, token: accessToken } = response.data;
           
           set({
             user,
@@ -72,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
 
         try {
           const response = await authService.refreshToken(token);
-          const { accessToken } = response.data;
+          const { token: accessToken } = response.data;
           
           set({ token: accessToken });
           localStorage.setItem('token', accessToken);
@@ -93,7 +104,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           const response = await authService.getProfile();
-          const user = response.data;
+          const { user } = response.data;
           
           set({
             user,

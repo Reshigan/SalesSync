@@ -11,7 +11,7 @@ class TestHelper {
     this.adminToken = null;
     this.userToken = null;
     this.agentToken = null;
-    this.tenantCode = process.env.DEFAULT_TENANT || 'TEST';
+    this.tenantCode = process.env.DEFAULT_TENANT || 'DEMO';
   }
 
   /**
@@ -56,8 +56,8 @@ class TestHelper {
   async loginAsAdmin() {
     const response = await this.addCommonHeaders(this.getRequest().post('/api/auth/login'))
       .send({
-        email: process.env.TEST_ADMIN_EMAIL || 'admin@test.com',
-        password: process.env.TEST_ADMIN_PASSWORD || 'AdminPass123!',
+        email: process.env.TEST_ADMIN_EMAIL || 'admin@demo.com',
+        password: process.env.TEST_ADMIN_PASSWORD || 'admin123',
       });
 
     if (response.status === 200 && response.body.data && response.body.data.token) {
@@ -255,4 +255,21 @@ class TestHelper {
   }
 }
 
+/**
+ * Reset test database - standalone function for compatibility
+ */
+async function resetTestDatabase() {
+  const { initializeDatabase } = require('../../src/database/init');
+  
+  try {
+    // Initialize database with test data
+    await initializeDatabase();
+    return true;
+  } catch (error) {
+    console.error('Failed to reset test database:', error);
+    throw error;
+  }
+}
+
 module.exports = TestHelper;
+module.exports.resetTestDatabase = resetTestDatabase;

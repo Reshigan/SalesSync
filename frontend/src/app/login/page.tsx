@@ -11,10 +11,8 @@ import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { success, error } = useToast();
   const router = useRouter()
-  const { login, isLoading } = useAuthStore()
+  const { login, isLoading: authLoading } = useAuthStore()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -26,12 +24,11 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    const result = await login(formData.email, formData.password)
-    
-    if (result.success) {
+    try {
+      await login(formData.email, formData.password)
       router.push('/dashboard')
-    } else {
-      setError(result.error || 'Login failed')
+    } catch (err: any) {
+      setError(err.message || 'Login failed')
     }
   }
 
@@ -114,10 +111,10 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={authLoading}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {authLoading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

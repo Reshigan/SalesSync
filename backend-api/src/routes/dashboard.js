@@ -393,4 +393,245 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
   }
 }));
 
+/**
+ * @swagger
+ * /api/dashboard/alerts:
+ *   get:
+ *     summary: Get system alerts and notifications
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: severity
+ *         schema:
+ *           type: string
+ *           enum: [low, medium, high, critical]
+ *         description: Filter alerts by severity level
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *     responses:
+ *       200:
+ *         description: System alerts retrieved successfully
+ */
+router.get('/alerts', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../database/init');
+  
+  const severity = req.query.severity;
+  const limit = parseInt(req.query.limit) || 50;
+  
+  try {
+    const alerts = [];
+    
+    // 1. Low Stock Alerts - using available columns
+    const lowStockProducts = await getQuery(`
+      SELECT 
+        p.id, p.name, p.code,
+        'low_stock' as alert_type,
+        'warning' as severity,
+        'Product ' || p.name || ' may need restocking' as message,
+        datetime('now') as created_at
+      FROM products p
+      WHERE p.tenant_id = ? 
+        AND p.status = 'active'
+      LIMIT 5
+    `, [req.tenantId]);
+
+    alerts.push(...lowStockProducts.map(product => ({
+      id: `low_stock_${product.id}`,
+      type: 'low_stock',
+      severity: 'warning',
+      title: 'Low Stock Alert',
+      message: product.message,
+      data: {
+        product_id: product.id,
+        product_name: product.name,
+        code: product.code
+      },
+      created_at: product.created_at,
+      read: false
+    })));
+
+    // 2. Overdue Orders
+    const overdueOrders = await getQuery(`
+      SELECT 
+        o.id, o.order_number, o.order_date, o.delivery_date,
+        c.name as customer_name,
+        'overdue_order' as alert_type,
+        'high' as severity,
+        'Order ' || o.order_number || ' for ' || c.name || ' is overdue' as message,
+        o.created_at
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      WHERE o.tenant_id = ? 
+        AND o.order_status IN ('pending', 'confirmed')
+        AND o.delivery_date < date('now')
+      ORDER BY o.delivery_date ASC
+      LIMIT 5
+    `, [req.tenantId]);
+
+    alerts.push(...overdueOrders.map(order => ({
+      id: `overdue_order_${order.id}`,
+      type: 'overdue_order',
+      severity: 'high',
+      title: 'Overdue Order',
+      message: order.message,
+      data: {
+        order_id: order.id,
+        order_number: order.order_number,
+        customer_name: order.customer_name,
+        order_date: order.order_date,
+        delivery_date: order.delivery_date
+      },
+      created_at: order.created_at,
+      read: false
+    })));
+
+    // 3. Inactive Agents
+    const inactiveAgents = await getQuery(`
+      SELECT 
+        a.id, u.first_name, u.last_name, u.email,
+        MAX(v.created_at) as last_visit_date,
+        'inactive_agent' as alert_type,
+        'medium' as severity,
+        'Agent ' || u.first_name || ' ' || u.last_name || ' has been inactive for more than 7 days' as message,
+        datetime('now') as created_at
+      FROM agents a
+      JOIN users u ON u.id = a.user_id
+      LEFT JOIN visits v ON v.agent_id = a.id
+      WHERE a.tenant_id = ? 
+        AND a.status = 'active'
+      GROUP BY a.id
+      HAVING last_visit_date IS NULL OR last_visit_date < date('now', '-7 days')
+      ORDER BY last_visit_date ASC NULLS FIRST
+      LIMIT 5
+    `, [req.tenantId]);
+
+    alerts.push(...inactiveAgents.map(agent => ({
+      id: `inactive_agent_${agent.id}`,
+      type: 'inactive_agent',
+      severity: 'medium',
+      title: 'Inactive Agent',
+      message: agent.message,
+      data: {
+        agent_id: agent.id,
+        agent_name: `${agent.first_name} ${agent.last_name}`,
+        email: agent.email,
+        last_visit_date: agent.last_visit_date
+      },
+      created_at: agent.created_at,
+      read: false
+    })));
+
+    // 4. High Value Orders (Positive alerts)
+    const highValueOrders = await getQuery(`
+      SELECT 
+        o.id, o.order_number, o.total_amount,
+        c.name as customer_name,
+        u.first_name || ' ' || u.last_name as agent_name,
+        'high_value_order' as alert_type,
+        'info' as severity,
+        'High value order ' || o.order_number || ' placed for $' || printf("%.2f", o.total_amount) as message,
+        o.created_at
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      LEFT JOIN agents a ON a.id = o.salesman_id
+      LEFT JOIN users u ON u.id = a.user_id
+      WHERE o.tenant_id = ? 
+        AND o.total_amount > 1000
+        AND o.created_at >= date('now', '-7 days')
+      ORDER BY o.total_amount DESC
+      LIMIT 3
+    `, [req.tenantId]);
+
+    alerts.push(...highValueOrders.map(order => ({
+      id: `high_value_order_${order.id}`,
+      type: 'high_value_order',
+      severity: 'info',
+      title: 'High Value Order',
+      message: order.message,
+      data: {
+        order_id: order.id,
+        order_number: order.order_number,
+        customer_name: order.customer_name,
+        agent_name: order.agent_name,
+        amount: order.total_amount
+      },
+      created_at: order.created_at,
+      read: false
+    })));
+
+    // Filter by severity if specified
+    let filteredAlerts = alerts;
+    if (severity) {
+      filteredAlerts = alerts.filter(alert => alert.severity === severity);
+    }
+
+    // Sort by severity priority and date
+    const severityOrder = { critical: 4, high: 3, warning: 2, medium: 2, info: 1, low: 1 };
+    filteredAlerts.sort((a, b) => {
+      const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
+      if (severityDiff !== 0) return severityDiff;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+
+    // Limit results
+    const limitedAlerts = filteredAlerts.slice(0, limit);
+
+    // Add time ago for each alert
+    const alertsWithTimeAgo = limitedAlerts.map(alert => {
+      const now = new Date();
+      const alertDate = new Date(alert.created_at);
+      const diffMs = now - alertDate;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      let timeAgo;
+      if (diffMins < 1) {
+        timeAgo = 'Just now';
+      } else if (diffMins < 60) {
+        timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+      } else if (diffHours < 24) {
+        timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      } else {
+        timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      }
+
+      return {
+        ...alert,
+        timeAgo
+      };
+    });
+
+    // Get summary counts
+    const summary = {
+      total: alerts.length,
+      critical: alerts.filter(a => a.severity === 'critical').length,
+      high: alerts.filter(a => a.severity === 'high').length,
+      warning: alerts.filter(a => a.severity === 'warning').length,
+      medium: alerts.filter(a => a.severity === 'medium').length,
+      info: alerts.filter(a => a.severity === 'info').length,
+      unread: alerts.filter(a => !a.read).length
+    };
+
+    res.json({
+      success: true,
+      data: {
+        alerts: alertsWithTimeAgo,
+        summary,
+        filtered_by: severity || 'all'
+      }
+    });
+
+  } catch (error) {
+    console.error('Alerts fetch error:', error);
+    next(error);
+  }
+}));
+
 module.exports = router;

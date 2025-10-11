@@ -9,9 +9,20 @@ let db = null;
 // Database connection
 function getDatabase() {
   if (!db) {
-    const dbPath = process.env.DATABASE_PATH 
-      ? path.resolve(process.env.DATABASE_PATH)
-      : path.join(__dirname, '../../database/salessync.db');
+    let dbPath;
+    
+    // Use different database for testing
+    if (process.env.NODE_ENV === 'test') {
+      dbPath = path.join(__dirname, '../../database/salessync_test.db');
+    } else {
+      dbPath = process.env.DATABASE_PATH 
+        ? path.resolve(process.env.DATABASE_PATH)
+        : path.join(__dirname, '../../database/salessync.db');
+    }
+    
+    // Ensure directory exists
+    const dbDir = path.dirname(dbPath);
+    require('fs').mkdirSync(dbDir, { recursive: true });
     
     // Open database in read-write-create mode
     db = new sqlite3.Database(
@@ -26,6 +37,8 @@ function getDatabase() {
           db.run('PRAGMA foreign_keys = ON');
           // Enable WAL mode for better concurrency
           db.run('PRAGMA journal_mode = WAL');
+          // Set timeout for busy database
+          db.run('PRAGMA busy_timeout = 30000');
         }
       }
     );
@@ -136,6 +149,8 @@ async function createTables() {
       ytd_sales DECIMAL(12,2) DEFAULT 0,
       status TEXT DEFAULT 'active',
       last_login DATETIME,
+      reset_token TEXT,
+      reset_token_expiry DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id)
@@ -1114,11 +1129,41 @@ function closeDatabase() {
   });
 }
 
+// Reset database for testing
+async function resetTestDatabase() {
+  if (process.env.NODE_ENV !== 'test') {
+    throw new Error('resetTestDatabase can only be called in test environment');
+  }
+  
+  // Close existing connection
+  await closeDatabase();
+  
+  // Remove test database file
+  const testDbPath = path.join(__dirname, '../../database/salessync_test.db');
+  try {
+    await fs.unlink(testDbPath);
+  } catch (error) {
+    // File doesn't exist, that's fine
+  }
+  
+  // Remove WAL and SHM files
+  try {
+    await fs.unlink(testDbPath + '-wal');
+    await fs.unlink(testDbPath + '-shm');
+  } catch (error) {
+    // Files don't exist, that's fine
+  }
+  
+  // Reinitialize database
+  await initializeDatabase();
+}
+
 module.exports = {
   initializeDatabase,
   getDatabase,
   runQuery,
   getQuery,
   getOneQuery,
-  closeDatabase
+  closeDatabase,
+  resetTestDatabase
 };

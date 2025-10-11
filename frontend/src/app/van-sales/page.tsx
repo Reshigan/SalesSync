@@ -1,11 +1,12 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
-import vanSalesService from '@/services/van-sales.service';
 
 import { 
   Truck, 
@@ -19,6 +20,28 @@ export default function VanSalesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const router = useRouter()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // If mobile, show mobile-optimized interface
+  if (isMobile) {
+    const MobileVanSales = dynamic(() => import('@/components/van-sales/MobileVanSales'), {
+      ssr: false,
+      loading: () => <LoadingPage />
+    })
+    
+    return <MobileVanSales />
+  }
 
   const sections = [
     {

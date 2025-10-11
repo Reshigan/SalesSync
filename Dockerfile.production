@@ -1,0 +1,180 @@
+# Multi-stage Dockerfile for SalesSync Production Deployment
+
+# Stage 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
+
+# Stage 2: Build Backend
+FROM node:18-alpine AS backend-builder
+
+WORKDIR /app/backend
+
+# Copy backend package files
+COPY backend-api/package*.json ./
+
+# Install dependencies including dev dependencies for build
+RUN npm ci && npm cache clean --force
+
+# Copy backend source
+COPY backend-api/ ./
+
+# Run any build steps if needed
+RUN npm run build 2>/dev/null || echo "No build script found"
+
+# Remove dev dependencies
+RUN npm prune --production
+
+# Stage 3: Production Runtime
+FROM node:18-alpine AS production
+
+# Install system dependencies
+RUN apk add --no-cache \
+    sqlite \
+    curl \
+    bash \
+    tzdata \
+    && rm -rf /var/cache/apk/*
+
+# Create app user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S salessync -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy backend from builder
+COPY --from=backend-builder --chown=salessync:nodejs /app/backend ./backend-api
+
+# Copy frontend build from builder
+COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/.next ./frontend/.next
+COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/public ./frontend/public
+COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/package*.json ./frontend/
+
+# Install frontend production dependencies
+WORKDIR /app/frontend
+RUN npm ci --only=production && npm cache clean --force
+
+# Switch back to app directory
+WORKDIR /app
+
+# Create necessary directories
+RUN mkdir -p logs uploads backups database && \
+    chown -R salessync:nodejs logs uploads backups database
+
+# Copy configuration files
+COPY --chown=salessync:nodejs ecosystem.config.js ./
+COPY --chown=salessync:nodejs deploy-production.sh ./
+
+# Install PM2 globally
+RUN npm install -g pm2
+
+# Create startup script
+RUN cat > start.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Starting SalesSync Production Environment..."
+
+# Initialize database if it doesn't exist
+if [ ! -f "/app/database/salessync.db" ]; then
+    echo "Initializing database..."
+    cd /app/backend-api
+    node -e "
+        const { initializeDatabase } = require('./src/database/init');
+        initializeDatabase().then(() => {
+            console.log('Database initialized successfully');
+            process.exit(0);
+        }).catch(err => {
+            console.error('Database initialization failed:', err);
+            process.exit(1);
+        });
+    "
+fi
+
+# Start services with PM2
+echo "Starting services..."
+pm2-runtime start ecosystem.config.js
+EOF
+
+RUN chmod +x start.sh && chown salessync:nodejs start.sh
+
+# Create ecosystem config for container
+RUN cat > ecosystem.config.js << 'EOF'
+module.exports = {
+  apps: [
+    {
+      name: 'salessync-backend',
+      script: './backend-api/src/server.js',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+        HOST: '0.0.0.0'
+      },
+      error_file: './logs/backend-error.log',
+      out_file: './logs/backend-out.log',
+      log_file: './logs/backend-combined.log',
+      time: true,
+      max_memory_restart: '512M',
+      node_args: '--max-old-space-size=512'
+    },
+    {
+      name: 'salessync-frontend',
+      script: 'npm',
+      args: 'start',
+      cwd: './frontend',
+      instances: 1,
+      env: {
+        NODE_ENV: 'production',
+        PORT: 12000,
+        HOST: '0.0.0.0'
+      },
+      error_file: './logs/frontend-error.log',
+      out_file: './logs/frontend-out.log',
+      log_file: './logs/frontend-combined.log',
+      time: true,
+      max_memory_restart: '256M'
+    }
+  ]
+};
+EOF
+
+# Switch to non-root user
+USER salessync
+
+# Expose ports
+EXPOSE 3001 12000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3001/health && curl -f http://localhost:12000 || exit 1
+
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=3001
+ENV FRONTEND_PORT=12000
+
+# Start the application
+CMD ["./start.sh"]
+
+# Labels for metadata
+LABEL maintainer="SalesSync Team"
+LABEL version="1.0.0"
+LABEL description="SalesSync Van Sales Management System"
+LABEL org.opencontainers.image.source="https://github.com/Reshigan/SalesSync"
