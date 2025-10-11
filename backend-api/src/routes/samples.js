@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get all sample distributions
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', requireFunction("general", "view"), async (req, res) => {
   try {
     const { page = 1, limit = 10, status, agent_id, product_id } = req.query;
     const offset = (page - 1) * limit;
@@ -78,7 +78,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get sample distribution by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', requireFunction("general", "view"), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -105,7 +105,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new sample distribution
-router.post('/', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
   try {
     const {
       product_id,
@@ -175,7 +175,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'manager']), async (re
 });
 
 // Update sample distribution status
-router.patch('/:id/status', authenticateToken, async (req, res) => {
+router.patch('/:id/status', requireFunction("general", "view"), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, notes, feedback } = req.body;
@@ -222,7 +222,7 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
 });
 
 // Get sample distribution analytics
-router.get('/analytics/summary', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/analytics/summary', requireFunction("campaigns", "view"), async (req, res) => {
   try {
     const { start_date, end_date, agent_id, product_id } = req.query;
     
@@ -303,7 +303,7 @@ router.get('/analytics/summary', authenticateToken, requireRole(['admin', 'manag
 });
 
 // Bulk allocate samples
-router.post('/bulk-allocate', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/bulk-allocate', requireFunction("campaigns", "view"), async (req, res) => {
   try {
     const { allocations } = req.body; // Array of allocation objects
     

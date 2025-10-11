@@ -1144,6 +1144,130 @@ async function createTables() {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id),
       FOREIGN KEY (event_id) REFERENCES events(id),
       UNIQUE(event_id)
+    )`,
+
+    // Customer Activation Tracking System
+    `CREATE TABLE IF NOT EXISTS customer_activations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      customer_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      activation_type TEXT NOT NULL,
+      product_id TEXT,
+      target_date TEXT,
+      priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+      status TEXT DEFAULT 'initiated' CHECK (status IN ('initiated', 'in_progress', 'completed', 'failed', 'cancelled')),
+      notes TEXT,
+      completion_notes TEXT,
+      campaign_id TEXT,
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      completed_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS activation_steps (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      activation_id INTEGER NOT NULL,
+      step_name TEXT NOT NULL,
+      step_description TEXT,
+      step_order INTEGER NOT NULL,
+      is_mandatory BOOLEAN DEFAULT 0,
+      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'skipped')),
+      completion_notes TEXT,
+      completion_date TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (activation_id) REFERENCES customer_activations(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS activation_metrics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      activation_id INTEGER NOT NULL,
+      success_score DECIMAL(3,2),
+      engagement_level INTEGER,
+      conversion_rate DECIMAL(5,2),
+      time_to_activation INTEGER,
+      follow_up_required BOOLEAN DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (activation_id) REFERENCES customer_activations(id),
+      UNIQUE(activation_id)
+    )`,
+
+    // Advanced Survey System
+    `CREATE TABLE IF NOT EXISTS surveys (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL,
+      category TEXT,
+      start_date TEXT,
+      end_date TEXT,
+      is_mandatory BOOLEAN DEFAULT 0,
+      target_audience TEXT,
+      status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'completed', 'cancelled')),
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS survey_questions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      survey_id INTEGER NOT NULL,
+      question_text TEXT NOT NULL,
+      question_type TEXT NOT NULL,
+      is_required BOOLEAN DEFAULT 0,
+      question_order INTEGER NOT NULL,
+      options TEXT,
+      validation_rules TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (survey_id) REFERENCES surveys(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS survey_assignments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      survey_id INTEGER NOT NULL,
+      assignee_id TEXT NOT NULL,
+      due_date TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'in_progress', 'completed', 'overdue')),
+      assigned_at TEXT NOT NULL DEFAULT (datetime('now')),
+      completed_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (survey_id) REFERENCES surveys(id),
+      FOREIGN KEY (assignee_id) REFERENCES users(id),
+      UNIQUE(survey_id, assignee_id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS survey_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      survey_id INTEGER NOT NULL,
+      respondent_id TEXT NOT NULL,
+      responses TEXT NOT NULL,
+      completion_time_minutes INTEGER,
+      status TEXT DEFAULT 'completed' CHECK (status IN ('in_progress', 'completed')),
+      submitted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (survey_id) REFERENCES surveys(id),
+      FOREIGN KEY (respondent_id) REFERENCES users(id),
+      UNIQUE(survey_id, respondent_id)
     )`
   ];
   

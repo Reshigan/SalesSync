@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireFunction } = require('../middleware/authMiddleware');
 
 // Get campaign analytics overview
-router.get('/overview', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/overview', requireFunction('campaigns', 'view'), async (req, res) => {
   try {
     const { start_date, end_date, campaign_id } = req.query;
     
@@ -75,7 +75,7 @@ router.get('/overview', authenticateToken, requireRole(['admin', 'manager']), as
 });
 
 // Get detailed campaign performance
-router.get('/performance/:campaignId', authenticateToken, async (req, res) => {
+router.get('/performance/:campaignId', requireFunction, async (req, res) => {
   try {
     const { campaignId } = req.params;
     
@@ -171,7 +171,7 @@ router.get('/performance/:campaignId', authenticateToken, async (req, res) => {
 });
 
 // Get ROI analysis
-router.get('/roi-analysis', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/roi-analysis', requireFunction, async (req, res) => {
   try {
     const { start_date, end_date, campaign_type } = req.query;
     
@@ -257,7 +257,7 @@ router.get('/roi-analysis', authenticateToken, requireRole(['admin', 'manager'])
 });
 
 // Get budget tracking
-router.get('/budget-tracking', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/budget-tracking', requireFunction, async (req, res) => {
   try {
     const { campaign_id } = req.query;
     
@@ -328,7 +328,7 @@ router.get('/budget-tracking', authenticateToken, requireRole(['admin', 'manager
 });
 
 // Create campaign expense
-router.post('/expenses', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/expenses', requireFunction, async (req, res) => {
   try {
     const {
       campaign_id,
@@ -388,7 +388,7 @@ router.post('/expenses', authenticateToken, requireRole(['admin', 'manager']), a
 });
 
 // Get campaign comparison
-router.get('/comparison', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/comparison', requireFunction, async (req, res) => {
   try {
     const { campaign_ids } = req.query; // Comma-separated campaign IDs
     

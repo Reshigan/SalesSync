@@ -250,6 +250,16 @@ async function startServer() {
     const transactionsApiRoutes = require('./routes/transactions-api');
     const commissionsApiRoutes = require('./routes/commissions-api');
     const kycApiRoutes = require('./routes/kyc-api');
+    const customerActivationRoutes = require('./routes/customer-activation-simple');
+    const surveysSimpleRoutes = require('./routes/surveys-simple');
+    const samplesRoutes = require('./routes/samples');
+    const eventsRoutes = require('./routes/events');
+    const campaignAnalyticsRoutes = require('./routes/campaign-analytics');
+    const campaignExecutionRoutes = require('./routes/campaign-execution');
+    const aiAnalyticsRoutes = require('./routes/ai-analytics');
+    const advancedReportingRoutes = require('./routes/advanced-reporting');
+    const integrationsRoutes = require('./routes/integrations');
+    const mobileRoutes = require('./routes/mobile');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -298,6 +308,16 @@ async function startServer() {
     app.use('/api/transactions-api', authTenantMiddleware, transactionsApiRoutes);
     app.use('/api/commissions-api', authTenantMiddleware, commissionsApiRoutes);
     app.use('/api/kyc-api', authTenantMiddleware, kycApiRoutes);
+    app.use('/api/customer-activation', authTenantMiddleware, customerActivationRoutes);
+    app.use('/api/surveys', authTenantMiddleware, surveysSimpleRoutes);
+    app.use('/api/samples', authTenantMiddleware, samplesRoutes);
+    app.use('/api/events', authTenantMiddleware, eventsRoutes);
+    app.use('/api/campaign-analytics', authTenantMiddleware, campaignAnalyticsRoutes);
+    app.use('/api/campaigns', authTenantMiddleware, campaignExecutionRoutes);
+    app.use('/api/ai-analytics', authTenantMiddleware, aiAnalyticsRoutes);
+    app.use('/api/advanced-reporting', authTenantMiddleware, advancedReportingRoutes);
+    app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
+    app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
 
     logger.info('Routes configured successfully');
 

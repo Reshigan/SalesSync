@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get all events
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', requireFunction, async (req, res) => {
   try {
     const { page = 1, limit = 10, status, type, start_date, end_date } = req.query;
     const offset = (page - 1) * limit;
@@ -79,7 +79,7 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Get event by ID
-router.get('/:id', authenticateToken, async (req, res) => {
+router.get('/:id', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -128,7 +128,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 });
 
 // Create new event
-router.post('/', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/', requireFunction, async (req, res) => {
   try {
     const {
       title,
@@ -179,7 +179,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'manager']), async (re
 });
 
 // Update event
-router.put('/:id', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.put('/:id', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -235,7 +235,7 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'manager']), async (
 });
 
 // Add participant to event
-router.post('/:id/participants', authenticateToken, async (req, res) => {
+router.post('/:id/participants', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     const { participant_id, role = 'attendee', notes } = req.body;
@@ -294,7 +294,7 @@ router.post('/:id/participants', authenticateToken, async (req, res) => {
 });
 
 // Update participant attendance
-router.patch('/:id/participants/:participantId/attendance', authenticateToken, async (req, res) => {
+router.patch('/:id/participants/:participantId/attendance', requireFunction, async (req, res) => {
   try {
     const { id, participantId } = req.params;
     const { attendance_status, check_in_time, check_out_time, notes } = req.body;
@@ -326,7 +326,7 @@ router.patch('/:id/participants/:participantId/attendance', authenticateToken, a
 });
 
 // Allocate resource to event
-router.post('/:id/resources', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/:id/resources', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     const { resource_id, quantity = 1, notes } = req.body;
@@ -359,7 +359,7 @@ router.post('/:id/resources', authenticateToken, requireRole(['admin', 'manager'
 });
 
 // Get event analytics
-router.get('/analytics/summary', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.get('/analytics/summary', requireFunction, async (req, res) => {
   try {
     const { start_date, end_date, type } = req.query;
     
@@ -428,7 +428,7 @@ router.get('/analytics/summary', authenticateToken, requireRole(['admin', 'manag
 });
 
 // Record event performance
-router.post('/:id/performance', authenticateToken, requireRole(['admin', 'manager']), async (req, res) => {
+router.post('/:id/performance', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     const {
