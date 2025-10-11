@@ -122,9 +122,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/', generalLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+// Temporarily disable all rate limiting for testing
+// app.use('/api/', generalLimiter);
+// app.use('/api/auth/login', authLimiter);
+// app.use('/api/auth/register', authLimiter);
 
 // Trust proxy for production deployments behind reverse proxy
 if (process.env.TRUST_PROXY === 'true') {
