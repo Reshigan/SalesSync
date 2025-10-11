@@ -128,6 +128,48 @@ export interface PredictionsResponse {
   generatedAt: string
 }
 
+export interface CustomReport {
+  id: string
+  name: string
+  description: string
+  category: string
+  type: 'summary' | 'detailed' | 'analysis' | 'operational'
+  parameters: string[]
+  createdAt: string
+  isTemplate: boolean
+}
+
+export interface CustomReportsResponse {
+  reports: CustomReport[]
+  categories: string[]
+  totalReports: number
+}
+
+export interface ReportParameters {
+  dateRange?: {
+    start: string
+    end: string
+  }
+  groupBy?: 'day' | 'week' | 'month'
+  categoryFilter?: string
+  agentFilter?: string
+  locationFilter?: string
+  includeProducts?: boolean
+  includeInventory?: boolean
+  includeCommissions?: boolean
+  includeInactive?: boolean
+  lowStockOnly?: boolean
+  segmentBy?: 'revenue' | 'activity' | 'route'
+}
+
+export interface GeneratedReport {
+  reportId: string
+  reportName: string
+  generatedAt: string
+  parameters: ReportParameters
+  data: any
+}
+
 class AnalyticsService {
   private baseUrl = '/analytics'
 
@@ -221,6 +263,41 @@ class AnalyticsService {
     return response.data
   }
 
+  // Custom Reports Methods
+  async getCustomReports(): Promise<CustomReportsResponse> {
+    const response = await apiClient.get(`${this.baseUrl}/custom-reports`) as { data: CustomReportsResponse }
+    return response.data
+  }
+
+  async generateCustomReport(reportId: string, parameters: ReportParameters = {}): Promise<GeneratedReport> {
+    const response = await apiClient.post(`${this.baseUrl}/custom-reports/generate`, {
+      reportId,
+      parameters
+    }) as { data: GeneratedReport }
+    return response.data
+  }
+
+  async exportCustomReport(reportId: string, parameters: ReportParameters = {}, format: 'csv' | 'json' = 'csv'): Promise<Blob> {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analytics/custom-reports/export`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        reportId,
+        parameters,
+        format
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to export report')
+    }
+
+    return response.blob()
+  }
+
   // Helper method to get date range presets
   getDateRangePreset(preset: 'today' | 'yesterday' | '7d' | '30d' | '90d' | 'ytd'): AnalyticsFilters {
     const now = new Date()
@@ -260,6 +337,26 @@ class AnalyticsService {
         }
       default:
         return {}
+    }
+  }
+
+  // Helper method to get report parameter defaults
+  getReportParameterDefaults(): ReportParameters {
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    
+    return {
+      dateRange: {
+        start: thirtyDaysAgo.toISOString(),
+        end: now.toISOString()
+      },
+      groupBy: 'day',
+      includeProducts: true,
+      includeInventory: false,
+      includeCommissions: false,
+      includeInactive: false,
+      lowStockOnly: false,
+      segmentBy: 'revenue'
     }
   }
 }

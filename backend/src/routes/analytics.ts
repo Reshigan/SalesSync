@@ -955,4 +955,508 @@ router.get('/predictions', authenticateToken, async (req: TenantRequest, res: Re
   }
 });
 
+// Custom Reports Management
+router.get('/custom-reports', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    
+    // For now, return predefined report templates
+    // In a full implementation, these would be stored in database
+    const reportTemplates = [
+      {
+        id: 'sales-summary',
+        name: 'Sales Summary Report',
+        description: 'Comprehensive sales overview with revenue, orders, and trends',
+        category: 'Sales',
+        type: 'summary',
+        parameters: ['dateRange', 'groupBy', 'includeProducts'],
+        createdAt: new Date(),
+        isTemplate: true
+      },
+      {
+        id: 'product-performance',
+        name: 'Product Performance Report',
+        description: 'Detailed analysis of product sales and inventory',
+        category: 'Products',
+        type: 'detailed',
+        parameters: ['dateRange', 'categoryFilter', 'includeInventory'],
+        createdAt: new Date(),
+        isTemplate: true
+      },
+      {
+        id: 'customer-analysis',
+        name: 'Customer Analysis Report',
+        description: 'Customer behavior, segmentation, and lifetime value',
+        category: 'Customers',
+        type: 'analysis',
+        parameters: ['dateRange', 'segmentBy', 'includeInactive'],
+        createdAt: new Date(),
+        isTemplate: true
+      },
+      {
+        id: 'agent-performance',
+        name: 'Agent Performance Report',
+        description: 'Sales agent productivity and commission analysis',
+        category: 'Performance',
+        type: 'detailed',
+        parameters: ['dateRange', 'agentFilter', 'includeCommissions'],
+        createdAt: new Date(),
+        isTemplate: true
+      },
+      {
+        id: 'inventory-status',
+        name: 'Inventory Status Report',
+        description: 'Stock levels, movements, and reorder recommendations',
+        category: 'Inventory',
+        type: 'operational',
+        parameters: ['locationFilter', 'includeMovements', 'lowStockOnly'],
+        createdAt: new Date(),
+        isTemplate: true
+      }
+    ];
+
+    res.json({
+      reports: reportTemplates,
+      categories: ['Sales', 'Products', 'Customers', 'Performance', 'Inventory'],
+      totalReports: reportTemplates.length
+    });
+  } catch (error) {
+    console.error('Custom reports error:', error);
+    res.status(500).json({ error: 'Failed to fetch custom reports' });
+  }
+});
+
+// Generate Custom Report
+router.post('/custom-reports/generate', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = req.user!.tenantId;
+    const { reportId, parameters = {} } = req.body;
+
+    const {
+      dateRange = { start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), end: new Date() },
+      groupBy = 'day',
+      categoryFilter,
+      agentFilter,
+      locationFilter,
+      includeProducts = true,
+      includeInventory = false,
+      includeCommissions = false,
+      includeInactive = false,
+      lowStockOnly = false,
+      segmentBy = 'revenue'
+    } = parameters;
+
+    const dateFilter = {
+      createdAt: {
+        gte: new Date(dateRange.start),
+        lte: new Date(dateRange.end)
+      }
+    };
+
+    let reportData: any = {};
+
+    switch (reportId) {
+      case 'sales-summary':
+        // Sales Summary Report
+        const orders = await prisma.order.findMany({
+          where: { tenantId, ...dateFilter, status: 'DELIVERED' },
+          include: {
+            items: { include: { product: { include: { category: true } } } },
+            customer: true,
+            user: true
+          }
+        });
+
+        const totalRevenue = orders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
+        const totalOrders = orders.length;
+        const totalQuantity = orders.reduce((sum, o) => 
+          sum + o.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
+        );
+
+        // Group by time period
+        const salesByPeriod = orders.reduce((acc: any, order) => {
+          const date = new Date(order.createdAt);
+          let key: string;
+          
+          if (groupBy === 'month') {
+            key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          } else if (groupBy === 'week') {
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay());
+            key = weekStart.toISOString().split('T')[0];
+          } else {
+            key = date.toISOString().split('T')[0];
+          }
+
+          if (!acc[key]) {
+            acc[key] = { revenue: 0, orders: 0, quantity: 0 };
+          }
+          acc[key].revenue += Number(order.totalAmount);
+          acc[key].orders += 1;
+          acc[key].quantity += order.items.reduce((sum, item) => sum + item.quantity, 0);
+          return acc;
+        }, {});
+
+        reportData = {
+          summary: {
+            totalRevenue,
+            totalOrders,
+            totalQuantity,
+            averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+            period: `${dateRange.start} to ${dateRange.end}`
+          },
+          salesByPeriod: Object.entries(salesByPeriod).map(([period, data]) => ({
+            period,
+            ...data
+          })),
+          topProducts: includeProducts ? orders.reduce((acc: any, order) => {
+            order.items.forEach(item => {
+              const productName = item.product.name;
+              if (!acc[productName]) {
+                acc[productName] = { quantity: 0, revenue: 0 };
+              }
+              acc[productName].quantity += item.quantity;
+              acc[productName].revenue += item.totalPrice;
+            });
+            return acc;
+          }, {}) : null
+        };
+        break;
+
+      case 'product-performance':
+        // Product Performance Report
+        const productOrders = await prisma.order.findMany({
+          where: { tenantId, ...dateFilter, status: 'DELIVERED' },
+          include: {
+            items: {
+              include: {
+                product: {
+                  include: { 
+                    category: true,
+                    inventories: includeInventory ? true : false
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        const productPerformance = productOrders.reduce((acc: any, order) => {
+          order.items.forEach(item => {
+            const product = item.product;
+            if (categoryFilter && product.category.name !== categoryFilter) return;
+
+            const productId = product.id;
+            if (!acc[productId]) {
+              acc[productId] = {
+                id: productId,
+                name: product.name,
+                sku: product.sku,
+                category: product.category.name,
+                unitPrice: product.unitPrice,
+                quantity: 0,
+                revenue: 0,
+                orders: new Set(),
+                inventory: includeInventory ? product.inventories : null
+              };
+            }
+            acc[productId].quantity += item.quantity;
+            acc[productId].revenue += item.totalPrice;
+            acc[productId].orders.add(order.id);
+          });
+          return acc;
+        }, {});
+
+        reportData = {
+          products: Object.values(productPerformance).map((p: any) => ({
+            ...p,
+            orderCount: p.orders.size,
+            averageQuantityPerOrder: p.quantity / p.orders.size,
+            orders: undefined // Remove Set object
+          })).sort((a: any, b: any) => b.revenue - a.revenue),
+          summary: {
+            totalProducts: Object.keys(productPerformance).length,
+            totalRevenue: Object.values(productPerformance).reduce((sum: number, p: any) => sum + p.revenue, 0),
+            totalQuantity: Object.values(productPerformance).reduce((sum: number, p: any) => sum + p.quantity, 0)
+          }
+        };
+        break;
+
+      case 'customer-analysis':
+        // Customer Analysis Report
+        const customers = await prisma.customer.findMany({
+          where: { 
+            tenantId,
+            ...(includeInactive ? {} : { isActive: true })
+          },
+          include: {
+            orders: {
+              where: { ...dateFilter, status: 'DELIVERED' }
+            },
+            route: true
+          }
+        });
+
+        const customerAnalysis = customers.map(customer => {
+          const orders = customer.orders;
+          const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
+          const lastOrderDate = orders.length > 0 
+            ? new Date(Math.max(...orders.map((o: any) => o.createdAt.getTime())))
+            : null;
+
+          return {
+            id: customer.id,
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            city: customer.city,
+            state: customer.state,
+            route: customer.route?.name,
+            isActive: customer.isActive,
+            totalOrders: orders.length,
+            totalRevenue,
+            averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
+            lastOrderDate,
+            daysSinceLastOrder: lastOrderDate 
+              ? Math.floor((Date.now() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24))
+              : null,
+            segment: totalRevenue > 10000 ? 'High Value' : 
+                    totalRevenue > 5000 ? 'Medium Value' : 'Low Value'
+          };
+        });
+
+        // Segment customers
+        const segments = customerAnalysis.reduce((acc: any, customer) => {
+          const segment = segmentBy === 'revenue' ? customer.segment : 
+                         segmentBy === 'activity' ? 
+                           (customer.daysSinceLastOrder === null ? 'Never Ordered' :
+                            customer.daysSinceLastOrder <= 30 ? 'Active' :
+                            customer.daysSinceLastOrder <= 90 ? 'At Risk' : 'Inactive') :
+                         customer.route || 'Unassigned';
+          
+          if (!acc[segment]) {
+            acc[segment] = { customers: 0, revenue: 0, orders: 0 };
+          }
+          acc[segment].customers += 1;
+          acc[segment].revenue += customer.totalRevenue;
+          acc[segment].orders += customer.totalOrders;
+          return acc;
+        }, {});
+
+        reportData = {
+          customers: customerAnalysis.sort((a, b) => b.totalRevenue - a.totalRevenue),
+          segments: Object.entries(segments).map(([name, data]) => ({
+            segment: name,
+            ...data
+          })),
+          summary: {
+            totalCustomers: customers.length,
+            activeCustomers: customerAnalysis.filter(c => c.isActive).length,
+            totalRevenue: customerAnalysis.reduce((sum, c) => sum + c.totalRevenue, 0),
+            averageRevenuePerCustomer: customerAnalysis.reduce((sum, c) => sum + c.totalRevenue, 0) / customers.length
+          }
+        };
+        break;
+
+      case 'agent-performance':
+        // Agent Performance Report
+        const agents = await prisma.user.findMany({
+          where: { 
+            tenantId,
+            ...(agentFilter ? { id: agentFilter } : {})
+          },
+          include: {
+            orders: {
+              where: { ...dateFilter, status: 'DELIVERED' }
+            },
+            commissions: includeCommissions ? {
+              where: dateFilter
+            } : false
+          }
+        });
+
+        const agentPerformance = agents.map(agent => {
+          const orders = agent.orders;
+          const totalRevenue = orders.reduce((sum: number, o: any) => sum + Number(o.totalAmount), 0);
+          const commissions = includeCommissions ? agent.commissions : [];
+          const totalCommissions = commissions.reduce((sum: number, c: any) => sum + Number(c.commissionAmount), 0);
+
+          return {
+            id: agent.id,
+            name: `${agent.firstName} ${agent.lastName}`,
+            email: agent.email,
+            role: agent.role,
+            totalOrders: orders.length,
+            totalRevenue,
+            averageOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
+            totalCommissions: includeCommissions ? totalCommissions : null,
+            commissionRate: includeCommissions && totalRevenue > 0 ? (totalCommissions / totalRevenue) * 100 : null
+          };
+        });
+
+        reportData = {
+          agents: agentPerformance.sort((a, b) => b.totalRevenue - a.totalRevenue),
+          summary: {
+            totalAgents: agents.length,
+            totalRevenue: agentPerformance.reduce((sum, a) => sum + a.totalRevenue, 0),
+            totalOrders: agentPerformance.reduce((sum, a) => sum + a.totalOrders, 0),
+            totalCommissions: includeCommissions ? agentPerformance.reduce((sum, a) => sum + (a.totalCommissions || 0), 0) : null
+          }
+        };
+        break;
+
+      case 'inventory-status':
+        // Inventory Status Report
+        const inventory = await prisma.inventory.findMany({
+          where: { 
+            tenantId,
+            ...(locationFilter ? { location: locationFilter } : {}),
+            ...(lowStockOnly ? { currentStock: { lte: prisma.inventory.fields.minStock } } : {})
+          },
+          include: {
+            product: {
+              include: { category: true }
+            }
+          }
+        });
+
+        const inventoryAnalysis = inventory.map(item => ({
+          id: item.id,
+          productId: item.product.id,
+          productName: item.product.name,
+          sku: item.product.sku,
+          category: item.product.category.name,
+          location: item.location,
+          currentStock: item.currentStock,
+          minStock: item.minStock,
+          maxStock: item.maxStock,
+          unitPrice: item.product.unitPrice,
+          stockValue: item.currentStock * Number(item.product.unitPrice),
+          stockStatus: item.currentStock <= item.minStock ? 'Low Stock' :
+                      item.currentStock >= item.maxStock ? 'Overstock' : 'Normal',
+          reorderQuantity: Math.max(0, item.maxStock - item.currentStock)
+        }));
+
+        const locationSummary = inventoryAnalysis.reduce((acc: any, item) => {
+          const location = item.location || 'Unknown';
+          if (!acc[location]) {
+            acc[location] = { products: 0, totalValue: 0, lowStock: 0 };
+          }
+          acc[location].products += 1;
+          acc[location].totalValue += item.stockValue;
+          if (item.stockStatus === 'Low Stock') acc[location].lowStock += 1;
+          return acc;
+        }, {});
+
+        reportData = {
+          inventory: inventoryAnalysis,
+          locationSummary: Object.entries(locationSummary).map(([location, data]) => ({
+            location,
+            ...data
+          })),
+          summary: {
+            totalProducts: inventory.length,
+            totalValue: inventoryAnalysis.reduce((sum, item) => sum + item.stockValue, 0),
+            lowStockItems: inventoryAnalysis.filter(item => item.stockStatus === 'Low Stock').length,
+            overstockItems: inventoryAnalysis.filter(item => item.stockStatus === 'Overstock').length
+          }
+        };
+        break;
+
+      default:
+        return res.status(400).json({ error: 'Invalid report ID' });
+    }
+
+    res.json({
+      reportId,
+      reportName: reportId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      generatedAt: new Date().toISOString(),
+      parameters,
+      data: reportData
+    });
+
+  } catch (error) {
+    console.error('Generate custom report error:', error);
+    res.status(500).json({ error: 'Failed to generate custom report' });
+  }
+});
+
+// Export Custom Report
+router.post('/custom-reports/export', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const { reportId, parameters, format = 'csv' } = req.body;
+    
+    // Generate the report data first
+    const reportResponse = await fetch(`${req.protocol}://${req.get('host')}/api/analytics/custom-reports/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': req.headers.authorization || ''
+      },
+      body: JSON.stringify({ reportId, parameters })
+    });
+
+    if (!reportResponse.ok) {
+      return res.status(500).json({ error: 'Failed to generate report for export' });
+    }
+
+    const reportData = await reportResponse.json();
+
+    if (format === 'csv') {
+      // Convert to CSV format
+      let csvContent = '';
+      const data = reportData.data;
+
+      // Add summary information
+      csvContent += `Report: ${reportData.reportName}\n`;
+      csvContent += `Generated: ${reportData.generatedAt}\n\n`;
+
+      // Add main data based on report type
+      if (data.summary) {
+        csvContent += 'SUMMARY\n';
+        Object.entries(data.summary).forEach(([key, value]) => {
+          csvContent += `${key},${value}\n`;
+        });
+        csvContent += '\n';
+      }
+
+      // Add detailed data
+      const mainDataKey = Object.keys(data).find(key => 
+        Array.isArray(data[key]) && key !== 'segments' && key !== 'locationSummary'
+      );
+
+      if (mainDataKey && data[mainDataKey]) {
+        const items = data[mainDataKey];
+        if (items.length > 0) {
+          // Headers
+          const headers = Object.keys(items[0]);
+          csvContent += headers.join(',') + '\n';
+          
+          // Data rows
+          items.forEach((item: any) => {
+            const row = headers.map(header => {
+              const value = item[header];
+              return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+            });
+            csvContent += row.join(',') + '\n';
+          });
+        }
+      }
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${reportId}-${Date.now()}.csv"`);
+      res.send(csvContent);
+    } else {
+      // JSON format
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${reportId}-${Date.now()}.json"`);
+      res.json(reportData);
+    }
+
+  } catch (error) {
+    console.error('Export custom report error:', error);
+    res.status(500).json({ error: 'Failed to export custom report' });
+  }
+});
+
 export default router;
