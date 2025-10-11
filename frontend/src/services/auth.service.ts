@@ -21,8 +21,10 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   user: User
-  token: string
-  refreshToken: string
+  tokens: {
+    accessToken: string
+    refreshToken: string
+  }
 }
 
 export interface RegisterRequest {
@@ -49,8 +51,8 @@ class AuthService {
     await apiClient.post(`${this.baseUrl}/logout`)
   }
 
-  async refreshToken(refreshToken: string): Promise<{ token: string; refreshToken: string }> {
-    return await apiClient.post<{ token: string; refreshToken: string }>(`${this.baseUrl}/refresh`, {
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+    return await apiClient.post<{ accessToken: string }>(`${this.baseUrl}/refresh`, {
       refreshToken
     })
   }

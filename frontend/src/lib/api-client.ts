@@ -20,7 +20,7 @@ class ApiClient {
     // Request interceptor - add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token')
+        const token = localStorage.getItem('auth_token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
@@ -31,16 +31,48 @@ class ApiClient {
       }
     )
 
-    // Response interceptor - handle errors globally
+    // Response interceptor - handle errors globally and token refresh
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
+      async (error) => {
+        const originalRequest = error.config
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true
+
+          try {
+            const refreshToken = localStorage.getItem('refresh_token')
+            if (refreshToken) {
+              // Try to refresh the token
+              const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                refreshToken
+              })
+              
+              const { accessToken } = response.data
+              localStorage.setItem('auth_token', accessToken)
+              
+              // Retry the original request with new token
+              originalRequest.headers.Authorization = `Bearer ${accessToken}`
+              return this.client(originalRequest)
+            }
+          } catch (refreshError) {
+            // Refresh failed, redirect to login
+            localStorage.removeItem('auth_token')
+            localStorage.removeItem('refresh_token')
+            localStorage.removeItem('user')
+            window.location.href = '/login'
+            return Promise.reject(refreshError)
+          }
+        }
+
         if (error.response?.status === 401) {
           // Unauthorized - redirect to login
-          localStorage.removeItem('token')
+          localStorage.removeItem('auth_token')
+          localStorage.removeItem('refresh_token')
           localStorage.removeItem('user')
           window.location.href = '/login'
         }
+        
         return Promise.reject(error)
       }
     )
