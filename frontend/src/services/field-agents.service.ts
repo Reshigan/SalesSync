@@ -195,7 +195,7 @@ export interface SurveyResponse {
 // ============================================================================
 
 class FieldAgentsService {
-  private baseUrl = '/field-agents'
+  private baseUrl = '/field-agent'
 
   // ============================================================================
   // FIELD AGENTS MANAGEMENT
@@ -284,23 +284,23 @@ class FieldAgentsService {
   // ============================================================================
 
   async getBoardPlacements(filters?: any) {
-    return apiClient.get<{ data: BoardPlacement[]; pagination: any }>('/board-placements', { params: filters })
+    return apiClient.get<{ data: BoardPlacement[]; pagination: any }>('/boards/placements', { params: filters })
   }
 
   async getBoardPlacementById(id: string) {
-    return apiClient.get<BoardPlacement>(`/board-placements/${id}`)
+    return apiClient.get<BoardPlacement>(`/boards/placements/${id}`)
   }
 
   async createBoardPlacement(placement: Partial<BoardPlacement>) {
-    return apiClient.post<BoardPlacement>('/board-placements', placement)
+    return apiClient.post<BoardPlacement>('/boards/placements', placement)
   }
 
   async updateBoardPlacement(id: string, placement: Partial<BoardPlacement>) {
-    return apiClient.put<BoardPlacement>(`/board-placements/${id}`, placement)
+    return apiClient.put<BoardPlacement>(`/boards/placements/${id}`, placement)
   }
 
   async deleteBoardPlacement(id: string) {
-    return apiClient.delete(`/board-placements/${id}`)
+    return apiClient.delete(`/boards/placements/${id}`)
   }
 
   // ============================================================================
@@ -340,23 +340,23 @@ class FieldAgentsService {
   // ============================================================================
 
   async getProductDistributions(filters?: any) {
-    return apiClient.get<{ data: ProductDistribution[]; pagination: any }>('/product-distributions', { params: filters })
+    return apiClient.get<{ data: ProductDistribution[]; pagination: any }>('/product-distribution', { params: filters })
   }
 
   async getProductDistributionById(id: string) {
-    return apiClient.get<ProductDistribution>(`/product-distributions/${id}`)
+    return apiClient.get<ProductDistribution>(`/product-distribution/${id}`)
   }
 
   async createProductDistribution(distribution: Partial<ProductDistribution>) {
-    return apiClient.post<ProductDistribution>('/product-distributions', distribution)
+    return apiClient.post<ProductDistribution>('/product-distribution', distribution)
   }
 
   async updateProductDistribution(id: string, distribution: Partial<ProductDistribution>) {
-    return apiClient.put<ProductDistribution>(`/product-distributions/${id}`, distribution)
+    return apiClient.put<ProductDistribution>(`/product-distribution/${id}`, distribution)
   }
 
   async deleteProductDistribution(id: string) {
-    return apiClient.delete(`/product-distributions/${id}`)
+    return apiClient.delete(`/product-distribution/${id}`)
   }
 
   // ============================================================================

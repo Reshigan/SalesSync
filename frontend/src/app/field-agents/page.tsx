@@ -7,6 +7,7 @@ import { MobileLayout, MobileCard, MobileList, MobileListItem } from '@/componen
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { fieldAgentsService } from '@/services/field-agents.service';
 
 import { 
   Map, 
@@ -22,8 +23,14 @@ import {
 } from 'lucide-react'
 
 export default function FieldAgentsPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [stats, setStats] = useState({
+    activeAgents: 0,
+    visitsToday: 0,
+    totalVisits: 0,
+    completedVisits: 0
+  });
   const { success, error } = useToast();
   const router = useRouter()
 
@@ -38,6 +45,49 @@ export default function FieldAgentsPage() {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Load dashboard statistics
+  useEffect(() => {
+    loadDashboardStats();
+  }, []);
+
+  const loadDashboardStats = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch field agents
+      const agentsResponse = await fieldAgentsService.getFieldAgents();
+      const agents = agentsResponse?.data || [];
+      
+      // Fetch visits
+      const visitsResponse = await fieldAgentsService.getVisits();
+      const visits = visitsResponse?.data || [];
+      
+      // Calculate today's visits
+      const today = new Date().toDateString();
+      const visitsToday = visits.filter(visit => 
+        new Date(visit.visitDate).toDateString() === today
+      ).length;
+      
+      // Calculate completed visits
+      const completedVisits = visits.filter(visit => 
+        visit.status === 'COMPLETED'
+      ).length;
+      
+      setStats({
+        activeAgents: agents.filter(agent => agent.status === 'ACTIVE').length,
+        visitsToday,
+        totalVisits: visits.length,
+        completedVisits
+      });
+      
+    } catch (err) {
+      console.error('Error loading dashboard stats:', err);
+      error('Failed to load dashboard statistics');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const sections = [
     {
@@ -116,6 +166,18 @@ export default function FieldAgentsPage() {
 
   // Mobile version
   if (isMobile) {
+    if (isLoading) {
+      return (
+        <ErrorBoundary>
+          <MobileLayout title="Field Agents">
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner />
+            </div>
+          </MobileLayout>
+        </ErrorBoundary>
+      );
+    }
+
     return (
       <ErrorBoundary>
         <MobileLayout title="Field Agents">
@@ -123,11 +185,11 @@ export default function FieldAgentsPage() {
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
               <MobileCard className="text-center">
-                <div className="text-2xl font-bold text-blue-600">24</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.activeAgents}</div>
                 <div className="text-sm text-gray-600">Active Agents</div>
               </MobileCard>
               <MobileCard className="text-center">
-                <div className="text-2xl font-bold text-green-600">156</div>
+                <div className="text-2xl font-bold text-green-600">{stats.visitsToday}</div>
                 <div className="text-sm text-gray-600">Visits Today</div>
               </MobileCard>
             </div>
@@ -158,6 +220,20 @@ export default function FieldAgentsPage() {
   }
 
   // Desktop version
+  if (isLoading) {
+    return (
+      <ErrorBoundary>
+        <DashboardLayout>
+          <div className="p-6">
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner />
+            </div>
+          </div>
+        </DashboardLayout>
+      </ErrorBoundary>
+    );
+  }
+
   return (<ErrorBoundary>
 
     <DashboardLayout>
@@ -167,6 +243,57 @@ export default function FieldAgentsPage() {
           <p className="mt-2 text-gray-600">
             Monitor agent locations, performance, connectivity, and manage vouchers
           </p>
+        </div>
+
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-blue-50">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.activeAgents}</div>
+                <div className="text-sm text-gray-600">Active Agents</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-green-50">
+                <Calendar className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.visitsToday}</div>
+                <div className="text-sm text-gray-600">Visits Today</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-purple-50">
+                <MapPin className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.totalVisits}</div>
+                <div className="text-sm text-gray-600">Total Visits</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center">
+              <div className="p-3 rounded-lg bg-emerald-50">
+                <DollarSign className="h-6 w-6 text-emerald-600" />
+              </div>
+              <div className="ml-4">
+                <div className="text-2xl font-bold text-gray-900">{stats.completedVisits}</div>
+                <div className="text-sm text-gray-600">Completed Visits</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
