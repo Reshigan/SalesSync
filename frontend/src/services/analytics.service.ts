@@ -139,7 +139,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/dashboard${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: DashboardMetrics }
     return response.data
   }
 
@@ -152,7 +152,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/sales${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: SalesAnalytics }
     return response.data
   }
 
@@ -164,7 +164,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/products${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: any }
     return response.data
   }
 
@@ -176,7 +176,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/customers${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: any }
     return response.data
   }
 
@@ -188,7 +188,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/agents${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: any }
     return response.data
   }
 
@@ -200,12 +200,12 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/field-agents${queryString ? `?${queryString}` : ''}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: any }
     return response.data
   }
 
   async getAIInsights(): Promise<AIInsightsResponse> {
-    const response = await apiClient.get(`${this.baseUrl}/ai-insights`)
+    const response = await apiClient.get(`${this.baseUrl}/ai-insights`) as { data: AIInsightsResponse }
     return response.data
   }
 
@@ -217,7 +217,7 @@ class AnalyticsService {
     const queryString = params.toString()
     const url = `${this.baseUrl}/predictions?${queryString}`
     
-    const response = await apiClient.get(url)
+    const response = await apiClient.get(url) as { data: any }
     return response.data
   }
 

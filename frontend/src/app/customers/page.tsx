@@ -332,9 +332,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">{customer.name}</span>
-                          {customer.contactPerson && (
-                            <span className="text-xs text-gray-500">{customer.contactPerson}</span>
-                          )}
+
                           {customer.code && (
                             <span className="text-xs text-gray-400">{customer.code}</span>
                           )}
@@ -357,7 +355,7 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center text-sm text-gray-900">
                           <MapPin className="w-3 h-3 mr-1 text-gray-400" />
-                          {customer.address?.city || ""}{customer.address?.state && `, ${customer.address.state}`}
+                          {customer.city || ""}{customer.state && `, ${customer.state}`}
                         </div>
                       </td>
                       <td className="px-6 py-4">

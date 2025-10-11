@@ -6,17 +6,22 @@ export const lazyWithRetry = <T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   fallback: ComponentType = LoadingSpinner
 ) => {
-  const LazyComponent = lazy(() =>
-    importFunc().catch(error => {
+  const LazyComponent = lazy(async () => {
+    try {
+      return await importFunc();
+    } catch (error) {
       console.error('Failed to load component:', error);
       // Retry once after 1 second
-      return new Promise(resolve => {
-        setTimeout(() => {
-          resolve(importFunc());
-        }, 1000);
-      });
-    })
-  );
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        return await importFunc();
+      } catch (retryError) {
+        console.error('Retry failed:', retryError);
+        // Return fallback component
+        return { default: fallback as T };
+      }
+    }
+  });
 
   const FallbackComponent = fallback;
   return (props: React.ComponentProps<T>) => (

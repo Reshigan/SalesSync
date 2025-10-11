@@ -23,16 +23,19 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   
   const [formData, setFormData] = useState<Order>({
     id: initialData?.id || '',
-    customer_id: initialData?.customer_id || '',
-    customer_name: initialData?.customer_name || '',
-    total_amount: initialData?.total_amount || 0,
-    status: initialData?.status || 'draft',
-    order_date: initialData?.order_date || new Date().toISOString().split('T')[0],
-    delivery_date: initialData?.delivery_date || '',
-    items: initialData?.items || [],
-    payment_status: initialData?.payment_status || 'pending',
-    delivery_address: initialData?.delivery_address || '',
+    orderNumber: initialData?.orderNumber || '',
+    orderDate: initialData?.orderDate || new Date(),
+    deliveryDate: initialData?.deliveryDate,
+    totalAmount: initialData?.totalAmount || 0,
+    status: initialData?.status || 'PENDING',
+    paymentStatus: initialData?.paymentStatus || 'PENDING',
     notes: initialData?.notes || '',
+    createdAt: initialData?.createdAt || new Date(),
+    updatedAt: initialData?.updatedAt || new Date(),
+    tenantId: initialData?.tenantId || '',
+    customerId: initialData?.customerId || '',
+    userId: initialData?.userId || '',
+    items: initialData?.items || [],
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -55,7 +58,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const loadProducts = async () => {
     try {
       const response = await productsService.getAll({ status: 'active' })
-      setProducts(response || [])
+      setProducts(response.products || [])
     } catch (error: any) {
       console.error('Error loading products:', error)
       toast.error('Failed to load products')
@@ -65,14 +68,11 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.customer_id) {
-      newErrors.customer_id = 'Customer is required'
+    if (!formData.customerId) {
+      newErrors.customerId = 'Customer is required'
     }
-    if (!formData.order_date) {
-      newErrors.order_date = 'Order date is required'
-    }
-    if (!formData.delivery_address?.trim()) {
-      newErrors.delivery_address = 'Delivery address is required'
+    if (!formData.orderDate) {
+      newErrors.orderDate = 'Order date is required'
     }
 
     setErrors(newErrors)
@@ -82,11 +82,12 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const addLineItem = () => {
     const newItem: OrderItem = {
       id: `temp-${Date.now()}`,
-      product_id: '',
-      product_name: '',
+      productId: '',
+      orderId: '',
       quantity: 1,
-      unit_price: 0,
-      total_price: 0
+      unitPrice: 0,
+      totalPrice: 0,
+      discount: 0
     }
     setFormData(prev => ({
       ...prev,
@@ -119,14 +120,13 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
               Customer *
             </label>
             <select
-              value={formData.customer_id}
+              value={formData.customerId}
               onChange={(e) => {
                 const customerId = e.target.value
                 const customer = customers.find(c => c.id === customerId)
                 setFormData(prev => ({
                   ...prev,
-                  customer_id: customerId,
-                  customer_name: customer?.contactPerson || ''
+                  customerId: customerId,
                 }))
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -134,12 +134,12 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
               <option value="">Select Customer</option>
               {customers.map(customer => (
                 <option key={customer.id} value={customer.id}>
-                  {customer.contactPerson} - {customer.code}
+                  {customer.name} - {customer.code}
                 </option>
               ))}
             </select>
-            {errors.customer_id && (
-              <p className="text-red-500 text-sm mt-1">{errors.customer_id}</p>
+            {errors.customerId && (
+              <p className="text-red-500 text-sm mt-1">{errors.customerId}</p>
             )}
           </div>
 
@@ -149,26 +149,24 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
             </label>
             <Input
               type="date"
-              value={formData.order_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, order_date: e.target.value }))}
-              error={errors.order_date}
+              value={formData.orderDate instanceof Date ? formData.orderDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, orderDate: new Date(e.target.value) }))}
+              error={errors.orderDate}
             />
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Delivery Address *
+            Notes
           </label>
           <textarea
-            value={formData.delivery_address}
-            onChange={(e) => setFormData(prev => ({ ...prev, delivery_address: e.target.value }))}
+            value={formData.notes || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={3}
           />
-          {errors.delivery_address && (
-            <p className="text-red-500 text-sm mt-1">{errors.delivery_address}</p>
-          )}
+
         </div>
 
         <div className="flex justify-between items-center mb-4">
@@ -182,6 +180,108 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
             Add Item
           </Button>
         </div>
+
+        {formData.items.map((item, index) => (
+          <div key={item.id} className="grid grid-cols-5 gap-4 mb-4 p-4 border border-gray-200 rounded-lg">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product
+              </label>
+              <select
+                value={item.productId}
+                onChange={(e) => {
+                  const productId = e.target.value
+                  const product = products.find(p => p.id === productId)
+                  const updatedItems = [...formData.items]
+                  updatedItems[index] = {
+                    ...item,
+                    productId,
+                    unitPrice: product?.unitPrice || 0,
+                    totalPrice: (product?.unitPrice || 0) * item.quantity
+                  }
+                  setFormData(prev => ({ ...prev, items: updatedItems }))
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select Product</option>
+                {products.map(product => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} - ${product.unitPrice}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quantity
+              </label>
+              <Input
+                type="number"
+                min="1"
+                value={item.quantity}
+                onChange={(e) => {
+                  const quantity = parseInt(e.target.value) || 1
+                  const updatedItems = [...formData.items]
+                  updatedItems[index] = {
+                    ...item,
+                    quantity,
+                    totalPrice: item.unitPrice * quantity
+                  }
+                  setFormData(prev => ({ ...prev, items: updatedItems }))
+                }}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Unit Price
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                value={item.unitPrice}
+                onChange={(e) => {
+                  const unitPrice = parseFloat(e.target.value) || 0
+                  const updatedItems = [...formData.items]
+                  updatedItems[index] = {
+                    ...item,
+                    unitPrice,
+                    totalPrice: unitPrice * item.quantity
+                  }
+                  setFormData(prev => ({ ...prev, items: updatedItems }))
+                }}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Total
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                value={item.totalPrice}
+                readOnly
+                className="bg-gray-50"
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <Button
+                type="button"
+                onClick={() => {
+                  const updatedItems = formData.items.filter((_, i) => i !== index)
+                  setFormData(prev => ({ ...prev, items: updatedItems }))
+                }}
+                variant="outline"
+                className="text-red-600 hover:text-red-700"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
 
         <div className="flex justify-end gap-4">
           <Button

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Customer, Address } from '@/types'
+import { Customer, CustomerType } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { MapPin, CreditCard, Building, User, Phone, Mail } from 'lucide-react'
@@ -20,25 +20,19 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
     tenantId: '',
     code: '',
     name: '',
-    type: 'retail',
-    contactPerson: '',
+    customerType: 'retail',
     phone: '',
     email: '',
-    address: {
-      street: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      country: ''
-    },
-    location: {
-      latitude: 0,
-      longitude: 0
-    },
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    coordinates: null,
     creditLimit: 0,
     paymentTerms: 'Cash',
     isActive: true,
     createdAt: new Date(),
+    updatedAt: new Date(),
     ...initialData
   })
 
@@ -53,10 +47,10 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
     if (!formData.phone?.trim()) {
       newErrors.phone = 'Phone number is required'
     }
-    if (!formData.address?.street?.trim()) {
-      newErrors.address = 'Street address is required'
+    if (!formData.address?.trim()) {
+      newErrors.address = 'Address is required'
     }
-    if (!formData.address?.city?.trim()) {
+    if (!formData.city?.trim()) {
       newErrors.city = 'City is required'
     }
     if (formData.creditLimit && formData.creditLimit < 0) {
@@ -95,15 +89,7 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
     }
   }
 
-  const handleAddressChange = (field: keyof Address, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      address: { ...prev.address, [field]: value }
-    }))
-    if (errors[`address.${field}`]) {
-      setErrors(prev => ({ ...prev, [`address.${field}`]: '' }))
-    }
-  }
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -127,24 +113,15 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Contact Person
-            </label>
-            <Input
-              value={formData.contactPerson || ''}
-              onChange={(e) => handleChange('contactPerson', e.target.value)}
-              placeholder="e.g., John Doe"
-            />
-          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Customer Type <span className="text-red-500">*</span>
             </label>
             <select
-              value={formData.type}
-              onChange={(e) => handleChange('type', e.target.value as Customer['type'])}
+              value={formData.customerType}
+              onChange={(e) => handleChange('customerType', e.target.value as CustomerType)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="retail">Retail</option>
@@ -212,13 +189,13 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Street Address <span className="text-red-500">*</span>
+              Address <span className="text-red-500">*</span>
             </label>
             <Input
-              value={formData.address.street}
-              onChange={(e) => handleAddressChange('street', e.target.value)}
+              value={formData.address || ''}
+              onChange={(e) => handleChange('address', e.target.value)}
               placeholder="Street address"
-              error={errors['address.street']}
+              error={errors.address}
             />
           </div>
 
@@ -228,10 +205,10 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
                 City <span className="text-red-500">*</span>
               </label>
               <Input
-                value={formData.address.city}
-                onChange={(e) => handleAddressChange('city', e.target.value)}
+                value={formData.city || ''}
+                onChange={(e) => handleChange('city', e.target.value)}
                 placeholder="e.g., Lagos"
-                error={errors['address.city']}
+                error={errors.city}
               />
             </div>
 
@@ -240,20 +217,20 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
                 State
               </label>
               <Input
-                value={formData.address.state}
-                onChange={(e) => handleAddressChange('state', e.target.value)}
+                value={formData.state || ''}
+                onChange={(e) => handleChange('state', e.target.value)}
                 placeholder="e.g., Lagos State"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Postal Code
+                Country
               </label>
               <Input
-                value={formData.address.postalCode}
-                onChange={(e) => handleAddressChange('postalCode', e.target.value)}
-                placeholder="e.g., 100001"
+                value={formData.country || ''}
+                onChange={(e) => handleChange('country', e.target.value)}
+                placeholder="e.g., Nigeria"
               />
             </div>
           </div>

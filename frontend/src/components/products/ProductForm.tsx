@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Product } from '@/services/products.service'
+import { Product } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Package, DollarSign, BarChart3, Tag } from 'lucide-react'
@@ -9,30 +9,23 @@ import toast from 'react-hot-toast'
 
 interface ProductFormProps {
   initialData?: Product
-  onSubmit: (data: Product) => Promise<void>
+  onSubmit: (data: Partial<Product>) => Promise<void>
   onCancel: () => void
 }
 
 export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProps) {
   const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState<Product>({
+  const [formData, setFormData] = useState<Partial<Product>>({
     sku: '',
     name: '',
     description: '',
-    category: '',
+    categoryId: '',
     brand: '',
-    unitOfMeasure: 'PCS',
-    basePrice: 0,
+    unitPrice: 0,
     costPrice: 0,
-    wholesalePrice: 0,
-    retailPrice: 0,
-    taxRate: 0,
     barcode: '',
     weight: 0,
-    volume: 0,
-    reorderLevel: 0,
-    maxStockLevel: 0,
-    status: 'active',
+    isActive: true,
     ...initialData
   })
 
@@ -47,11 +40,8 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
     if (!formData.name?.trim()) {
       newErrors.name = 'Product name is required'
     }
-    if (!formData.unitOfMeasure?.trim()) {
-      newErrors.unitOfMeasure = 'Unit of measure is required'
-    }
-    if (formData.basePrice <= 0) {
-      newErrors.basePrice = 'Base price must be greater than 0'
+    if (!formData.unitPrice || formData.unitPrice <= 0) {
+      newErrors.unitPrice = 'Unit price must be greater than 0'
     }
 
     setErrors(newErrors)
@@ -135,12 +125,12 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Category ID
             </label>
             <Input
-              value={formData.category || ''}
-              onChange={(e) => handleChange('category', e.target.value)}
-              placeholder="e.g., Beverages"
+              value={formData.categoryId || ''}
+              onChange={(e) => handleChange('categoryId', e.target.value)}
+              placeholder="e.g., cat-001"
             />
           </div>
 
@@ -155,23 +145,7 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Unit of Measure <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.unitOfMeasure}
-              onChange={(e) => handleChange('unitOfMeasure', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="PCS">Pieces (PCS)</option>
-              <option value="BOX">Box</option>
-              <option value="CASE">Case</option>
-              <option value="KG">Kilogram (KG)</option>
-              <option value="LITER">Liter</option>
-              <option value="PACK">Pack</option>
-            </select>
-          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -196,16 +170,16 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Base Price (KES) <span className="text-red-500">*</span>
+              Unit Price (KES) <span className="text-red-500">*</span>
             </label>
             <Input
               type="number"
-              value={formData.basePrice}
-              onChange={(e) => handleChange('basePrice', parseFloat(e.target.value) || 0)}
+              value={formData.unitPrice || 0}
+              onChange={(e) => handleChange('unitPrice', parseFloat(e.target.value) || 0)}
               placeholder="0.00"
               min="0"
               step="0.01"
-              error={errors.basePrice}
+              error={errors.unitPrice}
             />
           </div>
 
@@ -223,48 +197,7 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Wholesale Price (KES)
-            </label>
-            <Input
-              type="number"
-              value={formData.wholesalePrice || 0}
-              onChange={(e) => handleChange('wholesalePrice', parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Retail Price (KES)
-            </label>
-            <Input
-              type="number"
-              value={formData.retailPrice || 0}
-              onChange={(e) => handleChange('retailPrice', parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tax Rate (%)
-            </label>
-            <Input
-              type="number"
-              value={formData.taxRate}
-              onChange={(e) => handleChange('taxRate', parseFloat(e.target.value) || 0)}
-              placeholder="0"
-              min="0"
-              max="100"
-              step="0.01"
-            />
-          </div>
         </div>
       </div>
 
@@ -290,72 +223,33 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Volume (Liters)
-            </label>
-            <Input
-              type="number"
-              value={formData.volume || 0}
-              onChange={(e) => handleChange('volume', parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-            />
-          </div>
+
         </div>
       </div>
 
-      {/* Inventory Settings */}
+      {/* Status */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
           <BarChart3 className="w-5 h-5 mr-2" />
-          Inventory Settings
+          Status
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Reorder Level
-            </label>
-            <Input
-              type="number"
-              value={formData.reorderLevel || 0}
-              onChange={(e) => handleChange('reorderLevel', parseInt(e.target.value) || 0)}
-              placeholder="0"
-              min="0"
-            />
-            <p className="text-xs text-gray-500 mt-1">Alert when stock falls below this level</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Max Stock Level
-            </label>
-            <Input
-              type="number"
-              value={formData.maxStockLevel || 0}
-              onChange={(e) => handleChange('maxStockLevel', parseInt(e.target.value) || 0)}
-              placeholder="0"
-              min="0"
-            />
-            <p className="text-xs text-gray-500 mt-1">Maximum stock to maintain</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Status
+              Active Status
             </label>
             <select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as Product['status'])}
+              value={formData.isActive ? 'true' : 'false'}
+              onChange={(e) => handleChange('isActive', e.target.value === 'true')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="discontinued">Discontinued</option>
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
             </select>
           </div>
+
+
         </div>
       </div>
 

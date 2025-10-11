@@ -75,7 +75,7 @@ export default function ProductsPage() {
     loadProducts()
   }
 
-  const handleCreateProduct = async (data: Product) => {
+  const handleCreateProduct = async (data: Partial<Product>) => {
     try {
       await productsService.create(data)
       toast.success('Product created successfully')
@@ -87,7 +87,7 @@ export default function ProductsPage() {
     }
   }
 
-  const handleEditProduct = async (data: Product) => {
+  const handleEditProduct = async (data: Partial<Product>) => {
     if (!editingProduct?.id) return
     
     try {
