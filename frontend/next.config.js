@@ -4,9 +4,7 @@ const path = require('path')
 const nextConfig = {
   // Performance optimizations for Team X2 speed
   experimental: {
-    swcMinify: true,
     optimizeCss: true,
-    serverComponents: true,
     turbo: {
       loaders: {
         '.svg': ['@svgr/webpack'],
@@ -60,7 +58,7 @@ const nextConfig = {
       '@/types': path.resolve(__dirname, 'src/types'),
     }
 
-    config.optimization.usedExports = true
+    // Tree shaking optimizations (removed usedExports due to conflict)
     config.optimization.sideEffects = false
 
     return config
