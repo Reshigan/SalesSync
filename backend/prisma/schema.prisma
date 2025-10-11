@@ -113,6 +113,7 @@ model Product {
   tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   loadItems      VanSalesLoadItem[]
   productDistributions ProductDistribution[]
+  invoiceItems   InvoiceItem[]
 
   @@unique([tenantId, sku])
   @@map("products")
@@ -155,6 +156,7 @@ model Customer {
   boardPlacements BoardPlacement[]
   productDistributions ProductDistribution[]
   visitLists   VisitList[]
+  invoices     Invoice[]
 
   @@unique([tenantId, code])
   @@map("customers")
@@ -324,19 +326,43 @@ model OrderItem {
 }
 
 model Invoice {
-  id            String        @id @default(cuid())
-  invoiceNumber String
-  invoiceDate   DateTime
-  dueDate       DateTime
-  totalAmount   Decimal
-  paidAmount    Decimal       @default(0)
-  status        InvoiceStatus @default(PENDING)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  orderId       String
-  order         Order         @relation(fields: [orderId], references: [id])
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  customerId     String
+  invoiceDate    DateTime
+  dueDate        DateTime?
+  subtotal       Decimal
+  taxRate        Decimal       @default(0)
+  taxAmount      Decimal       @default(0)
+  discountAmount Decimal       @default(0)
+  totalAmount    Decimal
+  paidAmount     Decimal       @default(0)
+  status         InvoiceStatus @default(PENDING)
+  notes          String?
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  orderId        String?
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  order          Order?        @relation(fields: [orderId], references: [id])
+  items          InvoiceItem[]
 
   @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  productId   String
+  quantity    Int
+  unitPrice   Decimal
+  totalPrice  Decimal
+  description String?
+  createdAt   DateTime @default(now())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@map("invoice_items")
 }
 
 model Campaign {
@@ -493,6 +519,8 @@ model Commission {
 
   @@map("commissions")
 }
+
+
 
 model AuditLog {
   id        String   @id @default(cuid())

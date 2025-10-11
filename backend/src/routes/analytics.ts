@@ -1107,7 +1107,7 @@ router.post('/custom-reports/generate', authenticateToken, async (req: TenantReq
           },
           salesByPeriod: Object.entries(salesByPeriod).map(([period, data]) => ({
             period,
-            ...data
+            ...(data as any)
           })),
           topProducts: includeProducts ? orders.reduce((acc: any, order) => {
             order.items.forEach(item => {
@@ -1247,7 +1247,7 @@ router.post('/custom-reports/generate', authenticateToken, async (req: TenantReq
           customers: customerAnalysis.sort((a, b) => b.totalRevenue - a.totalRevenue),
           segments: Object.entries(segments).map(([name, data]) => ({
             segment: name,
-            ...data
+            ...(data as any)
           })),
           summary: {
             totalCustomers: customers.length,
@@ -1352,7 +1352,7 @@ router.post('/custom-reports/generate', authenticateToken, async (req: TenantReq
           inventory: inventoryAnalysis,
           locationSummary: Object.entries(locationSummary).map(([location, data]) => ({
             location,
-            ...data
+            ...(data as any)
           })),
           summary: {
             totalProducts: inventory.length,
@@ -1369,7 +1369,7 @@ router.post('/custom-reports/generate', authenticateToken, async (req: TenantReq
 
     res.json({
       reportId,
-      reportName: reportId.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      reportName: reportId.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
       generatedAt: new Date().toISOString(),
       parameters,
       data: reportData
@@ -1400,7 +1400,7 @@ router.post('/custom-reports/export', authenticateToken, async (req: TenantReque
       return res.status(500).json({ error: 'Failed to generate report for export' });
     }
 
-    const reportData = await reportResponse.json();
+    const reportData: any = await reportResponse.json();
 
     if (format === 'csv') {
       // Convert to CSV format

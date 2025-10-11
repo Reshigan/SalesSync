@@ -39,6 +39,7 @@ import analyticsRoutes from './routes/analytics';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
 import surveyRoutes from './routes/surveys';
+import invoiceRoutes from './routes/invoices';
 import { socketService } from './services/socketService';
 
 
@@ -226,6 +227,7 @@ app.use('/api/surveys', authMiddleware, tenantMiddleware, surveyRoutes);
 app.use('/api/analytics', authMiddleware, tenantMiddleware, analyticsRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
 app.use('/api/notifications', authMiddleware, tenantMiddleware, notificationRoutes);
+app.use('/api/invoices', authMiddleware, tenantMiddleware, invoiceRoutes);
 
 // Metrics endpoint (no auth required for monitoring)
 app.get('/metrics', metricsHandler);
