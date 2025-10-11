@@ -58,7 +58,7 @@ export default function VisitsManagementPage() {
       setIsLoading(true)
       const filters = statusFilter !== 'all' ? { status: statusFilter } : {}
       const response = await fieldAgentsService.getVisits(filters)
-      setVisits(response || [])
+      setVisits(response?.data || [])
     } catch (err) {
       error('Failed to load visits')
       console.error('Error loading visits:', err)
@@ -88,17 +88,17 @@ export default function VisitsManagementPage() {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           }
-          await fieldAgentsService.startVisit(id, coordinates)
+          await fieldAgentsService.checkInVisit(id, coordinates.latitude, coordinates.longitude)
           success('Visit started successfully')
           loadVisits()
         }, async () => {
           // Start without coordinates if location access denied
-          await fieldAgentsService.startVisit(id)
+          await fieldAgentsService.checkInVisit(id, 0, 0)
           success('Visit started successfully')
           loadVisits()
         })
       } else {
-        await fieldAgentsService.startVisit(id)
+        await fieldAgentsService.checkInVisit(id, 0, 0)
         success('Visit started successfully')
         loadVisits()
       }
@@ -117,17 +117,17 @@ export default function VisitsManagementPage() {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           }
-          await fieldAgentsService.completeVisit(id, { coordinates })
+          await fieldAgentsService.checkOutVisit(id, 'Visit completed', 'COMPLETED')
           success('Visit completed successfully')
           loadVisits()
         }, async () => {
           // Complete without coordinates if location access denied
-          await fieldAgentsService.completeVisit(id, {})
+          await fieldAgentsService.checkOutVisit(id, 'Visit completed', 'COMPLETED')
           success('Visit completed successfully')
           loadVisits()
         })
       } else {
-        await fieldAgentsService.completeVisit(id, {})
+        await fieldAgentsService.checkOutVisit(id, 'Visit completed', 'COMPLETED')
         success('Visit completed successfully')
         loadVisits()
       }
@@ -139,7 +139,7 @@ export default function VisitsManagementPage() {
 
   const filteredVisits = visits.filter(visit =>
     visit.customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    visit.fieldAgentId.toLowerCase().includes(searchTerm.toLowerCase())
+    visit.agentId.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (status: string) => {
@@ -240,7 +240,7 @@ export default function VisitsManagementPage() {
                              visit.status === 'IN_PROGRESS' ? 'yellow' :
                              visit.status === 'CANCELLED' ? 'red' : 'blue'
                     }}
-                    rightText={visit.location ? `📍 ${visit.location}` : ''}
+                    rightText={visit.customer?.address ? `📍 ${visit.customer.address}` : ''}
                     onClick={() => router.push(`/field-agents/visits/${visit.id}`)}
                   />
                 ))}
@@ -407,26 +407,26 @@ export default function VisitsManagementPage() {
                               <div className="text-sm font-medium text-gray-900">
                                 Customer {visit.customerId}
                               </div>
-                              {visit.coordinates && (
+                              {visit.latitude && visit.longitude && (
                                 <div className="text-sm text-gray-500 flex items-center gap-1">
                                   <MapPin className="h-3 w-3" />
-                                  {visit.coordinates.latitude.toFixed(4)}, {visit.coordinates.longitude.toFixed(4)}
+                                  {visit.latitude.toFixed(4)}, {visit.longitude.toFixed(4)}
                                 </div>
                               )}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">Agent {visit.fieldAgentId}</div>
+                          <div className="text-sm font-medium text-gray-900">Agent {visit.agent?.firstName} {visit.agent?.lastName}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {new Date(visit.visitDate).toLocaleDateString()}
                           </div>
-                          {visit.startTime && (
+                          {visit.duration && (
                             <div className="text-sm text-gray-500">
-                              {visit.startTime} - {visit.endTime || 'Ongoing'}
+                              Duration: {visit.duration} minutes
                             </div>
                           )}
                         </td>
@@ -438,17 +438,17 @@ export default function VisitsManagementPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {visit.activities.length} activities
+                            {visit.purpose}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {visit.activities.filter(a => a.completed).length} completed
+                            {visit.notes || 'No notes'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {visit.startTime && visit.endTime ? 
-                              `${Math.round((new Date(visit.endTime).getTime() - new Date(visit.startTime).getTime()) / (1000 * 60))} min`
-                              : visit.startTime ? 'In progress' : 'Not started'
+                            {visit.duration ? 
+                              `${visit.duration} min`
+                              : visit.status === 'IN_PROGRESS' ? 'In progress' : 'Not started'
                             }
                           </div>
                         </td>

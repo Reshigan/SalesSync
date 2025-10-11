@@ -273,15 +273,32 @@ export interface Product {
   sku: string
   name: string
   description?: string
-  category: string
-  brand: string
+  categoryId: string
+  category?: ProductCategory
+  brand?: string
   unitPrice: number
   costPrice: number
   barcode?: string
   weight?: number
   dimensions?: ProductDimensions
+  imageUrl?: string
   isActive: boolean
   createdAt: Date
+  updatedAt: Date
+}
+
+export interface ProductCategory {
+  id: string
+  code: string
+  name: string
+  description?: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+  tenantId: string
+  parentId?: string
+  parent?: ProductCategory
+  children?: ProductCategory[]
 }
 
 export interface ProductDimensions {

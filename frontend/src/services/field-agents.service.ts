@@ -97,6 +97,7 @@ export interface Visit {
   customerId: string
   agentId: string
   visitDate: string
+  scheduledDate: string
   purpose: 'SALES' | 'COLLECTION' | 'SURVEY' | 'DELIVERY' | 'OTHER'
   status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   latitude?: number
@@ -106,6 +107,20 @@ export interface Visit {
   outcome?: string
   createdAt: string
   updatedAt: string
+  customer?: {
+    id: string
+    name: string
+    code: string
+    address: string
+    coordinates: string
+  }
+  agent?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    name?: string
+  }
 }
 
 export interface ProductDistribution {

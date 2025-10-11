@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Customer } from '@/services/customers.service'
+import { Customer, Address } from '@/types'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { MapPin, CreditCard, Building, User, Phone, Mail } from 'lucide-react'
@@ -16,19 +16,29 @@ interface CustomerFormProps {
 export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<Customer>({
+    id: '',
+    tenantId: '',
+    code: '',
     name: '',
-    businessName: '',
     type: 'retail',
+    contactPerson: '',
     phone: '',
     email: '',
-    address: '',
-    city: '',
-    region: '',
-    area: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: ''
+    },
+    location: {
+      latitude: 0,
+      longitude: 0
+    },
     creditLimit: 0,
     paymentTerms: 'Cash',
-    status: 'active',
-    notes: '',
+    isActive: true,
+    createdAt: new Date(),
     ...initialData
   })
 
@@ -85,6 +95,16 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
     }
   }
 
+  const handleAddressChange = (field: keyof Address, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      address: { ...prev.address, [field]: value }
+    }))
+    if (errors[`address.${field}`]) {
+      setErrors(prev => ({ ...prev, [`address.${field}`]: '' }))
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Basic Information */}
@@ -109,12 +129,12 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Business Name
+              Contact Person
             </label>
             <Input
-              value={formData.businessName || ''}
-              onChange={(e) => handleChange('businessName', e.target.value)}
-              placeholder="e.g., John's General Store Ltd"
+              value={formData.contactPerson || ''}
+              onChange={(e) => handleChange('contactPerson', e.target.value)}
+              placeholder="e.g., John Doe"
             />
           </div>
 
@@ -130,17 +150,18 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
               <option value="retail">Retail</option>
               <option value="wholesale">Wholesale</option>
               <option value="distributor">Distributor</option>
+              <option value="institution">Institution</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+              Customer Code
             </label>
             <Input
-              value={formData.category || ''}
-              onChange={(e) => handleChange('category', e.target.value)}
-              placeholder="e.g., Supermarket, Pharmacy"
+              value={formData.code}
+              onChange={(e) => handleChange('code', e.target.value)}
+              placeholder="e.g., CUST001"
             />
           </div>
         </div>
@@ -191,13 +212,13 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
         <div className="grid grid-cols-1 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address <span className="text-red-500">*</span>
+              Street Address <span className="text-red-500">*</span>
             </label>
             <Input
-              value={formData.address}
-              onChange={(e) => handleChange('address', e.target.value)}
+              value={formData.address.street}
+              onChange={(e) => handleAddressChange('street', e.target.value)}
               placeholder="Street address"
-              error={errors.address}
+              error={errors['address.street']}
             />
           </div>
 
@@ -207,32 +228,32 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
                 City <span className="text-red-500">*</span>
               </label>
               <Input
-                value={formData.city}
-                onChange={(e) => handleChange('city', e.target.value)}
+                value={formData.address.city}
+                onChange={(e) => handleAddressChange('city', e.target.value)}
                 placeholder="e.g., Lagos"
-                error={errors.city}
+                error={errors['address.city']}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Region
+                State
               </label>
               <Input
-                value={formData.region || ''}
-                onChange={(e) => handleChange('region', e.target.value)}
-                placeholder="e.g., South West"
+                value={formData.address.state}
+                onChange={(e) => handleAddressChange('state', e.target.value)}
+                placeholder="e.g., Lagos State"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Area
+                Postal Code
               </label>
               <Input
-                value={formData.area || ''}
-                onChange={(e) => handleChange('area', e.target.value)}
-                placeholder="e.g., Victoria Island"
+                value={formData.address.postalCode}
+                onChange={(e) => handleAddressChange('postalCode', e.target.value)}
+                placeholder="e.g., 100001"
               />
             </div>
           </div>
@@ -282,52 +303,21 @@ export function CustomerForm({ initialData, onSubmit, onCancel }: CustomerFormPr
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tax Number
-            </label>
-            <Input
-              value={formData.taxNumber || ''}
-              onChange={(e) => handleChange('taxNumber', e.target.value)}
-              placeholder="VAT/Tax ID"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Status
             </label>
             <select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as Customer['status'])}
+              value={formData.isActive ? 'active' : 'inactive'}
+              onChange={(e) => handleChange('isActive', e.target.value === 'active')}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="blocked">Blocked</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Additional Information */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <Building className="w-5 h-5 mr-2" />
-          Additional Information
-        </h3>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Notes
-          </label>
-          <textarea
-            value={formData.notes || ''}
-            onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="Any additional notes about this customer..."
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
+
 
       {/* Form Actions */}
       <div className="flex justify-end space-x-3 pt-6 border-t">

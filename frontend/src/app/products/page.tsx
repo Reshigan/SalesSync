@@ -6,7 +6,7 @@ import { ProductForm } from '@/components/products/ProductForm'
 import { FormModal } from '@/components/ui/FormModal'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Product } from '@/services/products.service'
+import { Product } from '@/types'
 import toast from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
@@ -38,15 +38,15 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   // Get unique categories from products
-  const categories = Array.from(new Set(products.map(p => p.category).filter(Boolean)))
+  const categories = Array.from(new Set(products.map(p => p.category?.name || p.brand).filter(Boolean)))
 
   // Stats
   const stats = {
     total: products.length,
-    active: products.filter(p => p.status === 'active').length,
-    lowStock: products.filter(p => p.reorderLevel && p.reorderLevel > 0).length,
-    totalValue: products.reduce((sum, p) => sum + (p.basePrice * (p.reorderLevel || 0)), 0),
-    avgPrice: products.length > 0 ? products.reduce((sum, p) => sum + p.basePrice, 0) / products.length : 0
+    active: products.filter(p => p.isActive).length,
+    lowStock: products.filter(p => p.weight && Number(p.weight) > 0).length,
+    totalValue: products.reduce((sum, p) => sum + (Number(p.unitPrice) * (Number(p.weight) || 1)), 0),
+    avgPrice: products.length > 0 ? products.reduce((sum, p) => sum + Number(p.unitPrice), 0) / products.length : 0
   }
 
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function ProductsPage() {
     setShowEditModal(true)
   }
 
-  const getStatusBadge = (status: Product['status']) => {
+  const getStatusBadge = (status: 'active' | 'inactive' | 'discontinued') => {
     const colors = {
       active: 'bg-green-100 text-green-800',
       inactive: 'bg-gray-100 text-gray-800',
@@ -318,42 +318,37 @@ export default function ProductsPage() {
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm text-gray-900">{product.sku}</span>
-                          {product.barcode && (
-                            <span className="text-xs text-gray-500">{product.barcode}</span>
+                          {product.description && (
+                            <span className="text-xs text-gray-500">{product.description}</span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-900">{product.category || 'N/A'}</span>
+                        <span className="text-sm text-gray-900">{product.category?.name || product.brand || 'N/A'}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-medium text-gray-900">
-                            KES {product.basePrice.toLocaleString()}
+                            KES {Number(product.unitPrice).toLocaleString()}
                           </span>
-                          {product.retailPrice && product.retailPrice > 0 && (
+                          {product.costPrice && Number(product.costPrice) > 0 && (
                             <span className="text-xs text-gray-500">
-                              Retail: KES {product.retailPrice.toLocaleString()}
+                              Cost: KES {Number(product.costPrice).toLocaleString()}
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          {product.reorderLevel && product.reorderLevel > 0 ? (
-                            <>
-                              <span className="text-sm text-gray-900">Reorder: {product.reorderLevel}</span>
-                              {product.maxStockLevel && product.maxStockLevel > 0 && (
-                                <span className="text-xs text-gray-500">Max: {product.maxStockLevel}</span>
-                              )}
-                            </>
+                          {product.weight && Number(product.weight) > 0 ? (
+                            <span className="text-sm text-gray-900">Weight: {Number(product.weight)}kg</span>
                           ) : (
-                            <span className="text-sm text-gray-500">Not set</span>
+                            <span className="text-sm text-gray-500">No weight specified</span>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {getStatusBadge(product.status)}
+                        {getStatusBadge(product.isActive ? 'active' : 'inactive')}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">

@@ -26,12 +26,11 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
 
-    const result = await login(formData.email, formData.password)
-    
-    if (result.success) {
+    try {
+      await login(formData.email, formData.password)
       router.push('/dashboard')
-    } else {
-      setError(result.error || 'Login failed')
+    } catch (error: any) {
+      setError(error.message || 'Login failed')
     }
   }
 

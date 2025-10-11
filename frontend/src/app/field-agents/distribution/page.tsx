@@ -98,8 +98,8 @@ export default function ProductDistributionPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'DISTRIBUTED': return 'bg-blue-100 text-blue-800'
-      case 'VERIFIED': return 'bg-green-100 text-green-800'
+      case 'PENDING': return 'bg-blue-100 text-blue-800'
+      case 'DISTRIBUTED': return 'bg-green-100 text-green-800'
       case 'RETURNED': return 'bg-red-100 text-red-800'
       default: return 'bg-gray-100 text-gray-800'
     }
@@ -107,16 +107,16 @@ export default function ProductDistributionPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'DISTRIBUTED': return <Clock className="h-4 w-4" />
-      case 'VERIFIED': return <CheckCircle className="h-4 w-4" />
+      case 'PENDING': return <Clock className="h-4 w-4" />
+      case 'DISTRIBUTED': return <CheckCircle className="h-4 w-4" />
       case 'RETURNED': return <XCircle className="h-4 w-4" />
       default: return <Clock className="h-4 w-4" />
     }
   }
 
   const totalDistributions = distributions.length
-  const verifiedDistributions = distributions.filter(d => d.status === 'VERIFIED').length
-  const pendingDistributions = distributions.filter(d => d.status === 'DISTRIBUTED').length
+  const distributedCount = distributions.filter(d => d.status === 'DISTRIBUTED').length
+  const pendingDistributions = distributions.filter(d => d.status === 'PENDING').length
   const totalQuantity = distributions.reduce((sum, d) => sum + d.quantity, 0)
 
   // Mobile version
@@ -132,7 +132,7 @@ export default function ProductDistributionPage() {
                 <div className="text-sm text-gray-600">Total Items</div>
               </MobileCard>
               <MobileCard className="text-center">
-                <div className="text-2xl font-bold text-green-600">{verifiedDistributions}</div>
+                <div className="text-2xl font-bold text-green-600">{distributedCount}</div>
                 <div className="text-sm text-gray-600">Verified</div>
               </MobileCard>
             </div>
@@ -158,7 +158,7 @@ export default function ProductDistributionPage() {
 
             {/* Status Filter */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {['all', 'DISTRIBUTED', 'VERIFIED', 'RETURNED'].map((status) => (
+              {['all', 'PENDING', 'DISTRIBUTED', 'RETURNED'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
@@ -183,12 +183,12 @@ export default function ProductDistributionPage() {
                 {filteredDistributions.map((distribution) => (
                   <MobileListItem
                     key={distribution.id}
-                    title={distribution.productName}
-                    subtitle={`Agent: ${distribution.agent?.name || 'Unassigned'}`}
+                    title={distribution.productName || distribution.productId}
+                    subtitle={`Agent ID: ${distribution.agentId}`}
                     description={`Qty: ${distribution.quantity} | ${new Date(distribution.distributionDate).toLocaleDateString()}`}
                     badge={{
                       text: distribution.status,
-                      color: distribution.status === 'VERIFIED' ? 'green' : 
+                      color: distribution.status === 'DISTRIBUTED' ? 'green' : 
                              distribution.status === 'RETURNED' ? 'red' : 'blue'
                     }}
                     rightText={distribution.location ? `📍 ${distribution.location}` : ''}
@@ -254,7 +254,7 @@ export default function ProductDistributionPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Verified</p>
-                  <p className="text-2xl font-bold text-green-600">{verifiedDistributions}</p>
+                  <p className="text-2xl font-bold text-green-600">{distributedCount}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -301,8 +301,8 @@ export default function ProductDistributionPage() {
                   className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Status</option>
+                  <option value="PENDING">Pending</option>
                   <option value="DISTRIBUTED">Distributed</option>
-                  <option value="VERIFIED">Verified</option>
                   <option value="RETURNED">Returned</option>
                 </select>
               </div>
@@ -387,7 +387,7 @@ export default function ProductDistributionPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900 flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {distribution.coordinates.latitude.toFixed(4)}, {distribution.coordinates.longitude.toFixed(4)}
+                            {distribution.latitude?.toFixed(4) || 'N/A'}, {distribution.longitude?.toFixed(4) || 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -406,9 +406,9 @@ export default function ProductDistributionPage() {
                             </button>
                             {distribution.status === 'DISTRIBUTED' && (
                               <button
-                                onClick={() => handleUpdateDistribution(distribution.id, { status: 'VERIFIED', verifiedAt: new Date().toISOString() })}
+                                onClick={() => handleUpdateDistribution(distribution.id, { status: 'RETURNED' })}
                                 className="text-green-600 hover:text-green-900"
-                                title="Mark as Verified"
+                                title="Mark as Returned"
                               >
                                 <CheckCircle className="h-4 w-4" />
                               </button>

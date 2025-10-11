@@ -104,7 +104,7 @@ export default function InventoryPage() {
       }
       
       const response = await apiService.getInventory(params)
-      if (response.success) {
+      if (response.data) {
         setInventory(response.data.data)
         setTotalPages(response.data.pagination.totalPages)
       } else {
@@ -121,7 +121,7 @@ export default function InventoryPage() {
   const loadInventoryStats = async () => {
     try {
       const response = await apiService.getInventoryStats()
-      if (response.success) {
+      if (response.data) {
         setStats(response.data)
       }
     } catch (err) {

@@ -22,33 +22,29 @@ export function BoardInstallationForm({
 }: BoardInstallationFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<Board>({
+    id: '',
     boardNumber: '',
     brandId: '',
-    type: 'promotional',
+    type: 'BILLBOARD',
     size: '',
     location: '',
     agentId: '',
     installationDate: new Date().toISOString().split('T')[0],
-    gpsLocation: { latitude: 0, longitude: 0 },
-    proofPhoto: '',
-    wideAnglePhoto: '',
-    condition: 'excellent',
+    coordinates: { latitude: 0, longitude: 0 },
     maintenanceRequired: false,
-    status: 'active',
+    status: 'ACTIVE',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     ...initialData
   })
 
-  const [proofPhotoPreview, setProofPhotoPreview] = useState<string>(initialData?.proofPhoto || '')
-  const [wideAnglePhotoPreview, setWideAnglePhotoPreview] = useState<string>(initialData?.wideAnglePhoto || '')
+  const [proofPhotoPreview, setProofPhotoPreview] = useState<string>('')
+  const [wideAnglePhotoPreview, setWideAnglePhotoPreview] = useState<string>('')
   const [proofPhotoFile, setProofPhotoFile] = useState<File | null>(null)
   const [wideAnglePhotoFile, setWideAnglePhotoFile] = useState<File | null>(null)
   
-  const [competitorCount, setCompetitorCount] = useState(
-    formData.competitiveAnalysis?.competitorBoards?.length || 0
-  )
-  const [competitors, setCompetitors] = useState(
-    formData.competitiveAnalysis?.competitorBoards || []
-  )
+  const [competitorCount, setCompetitorCount] = useState(0)
+  const [competitors, setCompetitors] = useState<any[]>([])
 
   const proofPhotoInputRef = useRef<HTMLInputElement>(null)
   const wideAnglePhotoInputRef = useRef<HTMLInputElement>(null)
@@ -63,7 +59,7 @@ export function BoardInstallationForm({
     if (!formData.size?.trim()) newErrors.size = 'Size is required'
     if (!formData.location?.trim()) newErrors.location = 'Location is required'
     if (!formData.agentId?.trim()) newErrors.agentId = 'Agent is required'
-    if (!formData.gpsLocation || formData.gpsLocation.latitude === 0) {
+    if (!formData.coordinates || formData.coordinates.latitude === 0) {
       newErrors.gpsLocation = 'GPS location is required'
     }
     
@@ -136,7 +132,7 @@ export function BoardInstallationForm({
       toast.loading('Capturing GPS location...')
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          handleChange('gpsLocation', {
+          handleChange('coordinates', {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
           })
@@ -167,16 +163,12 @@ export function BoardInstallationForm({
     
     // Calculate share of voice
     const totalCompetitorCount = updated.reduce((sum, c) => sum + (c.count || 0), 0)
-    const ourCount = formData.competitiveAnalysis?.ourBrandCount || 1
+    const ourCount = 1
     const total = totalCompetitorCount + ourCount
     const shareOfVoice = (ourCount / total) * 100
 
     handleChange('competitiveAnalysis', {
-      totalBoardsVisible: total,
-      ourBrandCount: ourCount,
-      competitorBoards: updated,
-      shareOfVoice: Math.round(shareOfVoice * 10) / 10,
-      analysisMethod: 'manual' as const
+      shareOfVoice: Math.round(shareOfVoice * 10) / 10
     })
   }
 
@@ -272,18 +264,7 @@ export function BoardInstallationForm({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Monthly Cost
-            </label>
-            <Input
-              type="number"
-              value={formData.monthlyCost || ''}
-              onChange={(e) => handleChange('monthlyCost', parseFloat(e.target.value) || undefined)}
-              placeholder="0.00"
-              step="0.01"
-            />
-          </div>
+
         </div>
       </div>
 
@@ -299,9 +280,9 @@ export function BoardInstallationForm({
             <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
             <Input
               type="number"
-              value={formData.gpsLocation.latitude}
-              onChange={(e) => handleChange('gpsLocation', {
-                ...formData.gpsLocation,
+              value={formData.coordinates?.latitude || 0}
+              onChange={(e) => handleChange('coordinates', {
+                ...formData.coordinates,
                 latitude: parseFloat(e.target.value) || 0
               })}
               step="any"
@@ -313,9 +294,9 @@ export function BoardInstallationForm({
             <label className="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
             <Input
               type="number"
-              value={formData.gpsLocation.longitude}
-              onChange={(e) => handleChange('gpsLocation', {
-                ...formData.gpsLocation,
+              value={formData.coordinates?.longitude || 0}
+              onChange={(e) => handleChange('coordinates', {
+                ...formData.coordinates,
                 longitude: parseFloat(e.target.value) || 0
               })}
               step="any"
@@ -414,32 +395,7 @@ export function BoardInstallationForm({
         <p className="text-sm text-gray-600">Based on the wide-angle photo, record competitor boards visible</p>
         
         <div className="space-y-3">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Our Brand Boards Count
-              </label>
-              <Input
-                type="number"
-                value={formData.competitiveAnalysis?.ourBrandCount || 1}
-                onChange={(e) => {
-                  const ourCount = parseInt(e.target.value) || 1
-                  const totalCompetitorCount = competitors.reduce((sum, c) => sum + (c.count || 0), 0)
-                  const total = totalCompetitorCount + ourCount
-                  const shareOfVoice = (ourCount / total) * 100
-                  
-                  handleChange('competitiveAnalysis', {
-                    ...formData.competitiveAnalysis,
-                    totalBoardsVisible: total,
-                    ourBrandCount: ourCount,
-                    competitorBoards: competitors,
-                    shareOfVoice: Math.round(shareOfVoice * 10) / 10,
-                    analysisMethod: 'manual' as const
-                  })
-                }}
-                min="1"
-              />
-            </div>
+          <div className="flex justify-end">
             <Button type="button" onClick={addCompetitor} variant="outline">
               Add Competitor
             </Button>
@@ -472,21 +428,13 @@ export function BoardInstallationForm({
             </div>
           ))}
 
-          {formData.competitiveAnalysis && formData.competitiveAnalysis.totalBoardsVisible > 0 && (
+          {formData.competitiveAnalysis && formData.competitiveAnalysis.shareOfVoice > 0 && (
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Share of Voice</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {formData.competitiveAnalysis.shareOfVoice}%
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">
-                    Our Boards: {formData.competitiveAnalysis.ourBrandCount}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    Total Visible: {formData.competitiveAnalysis.totalBoardsVisible}
                   </p>
                 </div>
               </div>
