@@ -95,6 +95,39 @@ export interface AIInsightsResponse {
   }
 }
 
+export interface Prediction {
+  productId: string
+  productName: string
+  productSku: string
+  category: string
+  predictedSales: number
+  confidence: number
+  trend: 'up' | 'down' | 'stable'
+  changePercent: number
+  change: string
+  historicalAverage: number
+  dataPoints: number
+}
+
+export interface PredictionsResponse {
+  predictions: Prediction[]
+  summary: {
+    totalPredictions: number
+    avgAccuracy: number
+    upTrends: number
+    downTrends: number
+    stableTrends: number
+  }
+  model: {
+    version: string
+    algorithm: string
+    lastTrained: string
+    dataPoints: number
+    predictionPeriod: string
+  }
+  generatedAt: string
+}
+
 class AnalyticsService {
   private baseUrl = '/analytics'
 
@@ -173,6 +206,18 @@ class AnalyticsService {
 
   async getAIInsights(): Promise<AIInsightsResponse> {
     const response = await apiClient.get(`${this.baseUrl}/ai-insights`)
+    return response.data
+  }
+
+  async getPredictions(period: string = '7', type: string = 'sales'): Promise<PredictionsResponse> {
+    const params = new URLSearchParams()
+    params.append('period', period)
+    params.append('type', type)
+    
+    const queryString = params.toString()
+    const url = `${this.baseUrl}/predictions?${queryString}`
+    
+    const response = await apiClient.get(url)
     return response.data
   }
 

@@ -42,8 +42,8 @@ export default function CustomersPage() {
   const stats = {
     total: customers.length,
     active: customers.filter(c => c.isActive).length,
-    retail: customers.filter(c => c.type === 'retail').length,
-    wholesale: customers.filter(c => c.type === 'wholesale').length,
+    retail: customers.filter(c => c.customerType === 'retail').length,
+    wholesale: customers.filter(c => c.customerType === 'wholesale').length,
     totalCreditLimit: customers.reduce((sum, c) => sum + (c.creditLimit || 0), 0),
     avgCreditLimit: customers.length > 0 ? customers.reduce((sum, c) => sum + (c.creditLimit || 0), 0) / customers.length : 0
   }
@@ -56,7 +56,7 @@ export default function CustomersPage() {
     try {
       setLoading(true)
       const filters: any = {}
-      if (filterType !== 'all') filters.type = filterType
+      if (filterType !== 'all') filters.customerType = filterType
       if (filterStatus !== 'all') filters.isActive = filterStatus === 'active'
       if (searchTerm) filters.search = searchTerm
       
@@ -133,7 +133,7 @@ export default function CustomersPage() {
 </ErrorBoundary>)
   }
 
-  const getTypeBadge = (type: Customer['type']) => {
+  const getTypeBadge = (type: Customer['customerType']) => {
     const colors = {
       retail: 'bg-blue-100 text-blue-800',
       wholesale: 'bg-purple-100 text-purple-800',
@@ -361,7 +361,7 @@ export default function CustomersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {getTypeBadge(customer.type)}
+                        {getTypeBadge(customer.customerType)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
