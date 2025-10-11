@@ -589,4 +589,214 @@ router.get('/performance', authenticateToken, async (req: TenantRequest, res: Re
   }
 });
 
+// AI Insights
+router.get('/ai-insights', authenticateToken, async (req: TenantRequest, res: Response) => {
+  try {
+    const tenantId = (req.user as any).tenantId;
+    const insights: any[] = [];
+
+    // Low stock alerts
+    const lowStockProducts = await prisma.product.findMany({
+      where: { 
+        tenantId, 
+        isActive: true,
+        inventories: {
+          some: {
+            currentStock: { lt: 10 }
+          }
+        }
+      },
+      include: {
+        inventories: {
+          where: {
+            currentStock: { lt: 10 }
+          }
+        }
+      }
+    });
+
+    lowStockProducts.forEach(product => {
+      product.inventories.forEach(inventory => {
+        insights.push({
+          id: `low-stock-${product.sku}-${inventory.id}`,
+          type: 'warning',
+          category: 'inventory',
+          title: 'Low Stock Alert',
+          message: `${product.name} is running low (${inventory.currentStock} units remaining)`,
+          action: 'Restock',
+          priority: 'high',
+          createdAt: new Date()
+        });
+      });
+    });
+
+    // Sales opportunity insights
+    const recentOrders = await prisma.order.findMany({
+      where: {
+        tenantId,
+        createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+        status: 'DELIVERED'
+      },
+      include: { customer: true },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Find customers with increasing order frequency
+    const customerOrderCounts = recentOrders.reduce((acc: any, order) => {
+      const customerId = order.customerId;
+      if (!acc[customerId]) {
+        acc[customerId] = { 
+          customer: order.customer, 
+          orders: 0, 
+          totalAmount: 0 
+        };
+      }
+      acc[customerId].orders += 1;
+      acc[customerId].totalAmount += Number(order.totalAmount);
+      return acc;
+    }, {});
+
+    Object.values(customerOrderCounts).forEach((data: any) => {
+      if (data.orders >= 3) {
+        insights.push({
+          id: `opportunity-${data.customer.id}`,
+          type: 'success',
+          category: 'sales',
+          title: 'Sales Opportunity',
+          message: `${data.customer.name} has placed ${data.orders} orders this month (${data.totalAmount.toLocaleString()} total)`,
+          action: 'Upsell',
+          priority: 'medium',
+          createdAt: new Date()
+        });
+      }
+    });
+
+    // Performance drop alerts
+    const last30Days = await prisma.order.findMany({
+      where: {
+        tenantId,
+        createdAt: { 
+          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+          lte: new Date()
+        },
+        status: 'DELIVERED'
+      },
+      include: { user: true }
+    });
+
+    const previous30Days = await prisma.order.findMany({
+      where: {
+        tenantId,
+        createdAt: { 
+          gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        },
+        status: 'DELIVERED'
+      },
+      include: { user: true }
+    });
+
+    const currentPerformance = last30Days.reduce((acc: any, order) => {
+      const userId = order.userId;
+      if (!acc[userId]) {
+        acc[userId] = { user: order.user, revenue: 0, orders: 0 };
+      }
+      acc[userId].revenue += Number(order.totalAmount);
+      acc[userId].orders += 1;
+      return acc;
+    }, {});
+
+    const previousPerformance = previous30Days.reduce((acc: any, order) => {
+      const userId = order.userId;
+      if (!acc[userId]) {
+        acc[userId] = { revenue: 0, orders: 0 };
+      }
+      acc[userId].revenue += Number(order.totalAmount);
+      acc[userId].orders += 1;
+      return acc;
+    }, {});
+
+    Object.entries(currentPerformance).forEach(([userId, current]: [string, any]) => {
+      const previous = previousPerformance[userId];
+      if (previous && current.revenue < previous.revenue * 0.85) {
+        const dropPercentage = ((previous.revenue - current.revenue) / previous.revenue * 100).toFixed(1);
+        insights.push({
+          id: `performance-drop-${userId}`,
+          type: 'danger',
+          category: 'performance',
+          title: 'Performance Drop',
+          message: `${current.user.firstName} ${current.user.lastName} sales down ${dropPercentage}% this month`,
+          action: 'Investigate',
+          priority: 'high',
+          createdAt: new Date()
+        });
+      }
+    });
+
+    // Inactive customer alerts
+    const inactiveCustomers = await prisma.customer.findMany({
+      where: {
+        tenantId,
+        isActive: true,
+        orders: {
+          none: {
+            createdAt: { gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000) }
+          }
+        }
+      },
+      include: {
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    inactiveCustomers.slice(0, 5).forEach(customer => {
+      const lastOrder = customer.orders[0];
+      const daysSinceLastOrder = lastOrder 
+        ? Math.floor((Date.now() - lastOrder.createdAt.getTime()) / (1000 * 60 * 60 * 24))
+        : 'Never';
+      
+      insights.push({
+        id: `inactive-${customer.id}`,
+        type: 'warning',
+        category: 'customer',
+        title: 'Inactive Customer',
+        message: `${customer.name} hasn't ordered in ${daysSinceLastOrder} days`,
+        action: 'Re-engage',
+        priority: 'medium',
+        createdAt: new Date()
+      });
+    });
+
+    // Sort insights by priority and date
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    insights.sort((a, b) => {
+      const priorityDiff = (priorityOrder as any)[b.priority] - (priorityOrder as any)[a.priority];
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    res.json({
+      insights: insights.slice(0, 20), // Limit to top 20 insights
+      summary: {
+        total: insights.length,
+        high: insights.filter(i => i.priority === 'high').length,
+        medium: insights.filter(i => i.priority === 'medium').length,
+        low: insights.filter(i => i.priority === 'low').length,
+        categories: {
+          inventory: insights.filter(i => i.category === 'inventory').length,
+          sales: insights.filter(i => i.category === 'sales').length,
+          performance: insights.filter(i => i.category === 'performance').length,
+          customer: insights.filter(i => i.category === 'customer').length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('AI insights error:', error);
+    res.status(500).json({ error: 'Failed to fetch AI insights' });
+  }
+});
+
 export default router;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -23,31 +23,54 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import analyticsService, { SalesAnalytics, ProductPerformanceResponse } from '@/services/analytics.service'
 
 export default function SalesAnalyticsPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { success, error } = useToast();
   const [dateRange, setDateRange] = useState('7d')
   const [selectedMetric, setSelectedMetric] = useState('revenue')
+  const [salesData, setSalesData] = useState<SalesAnalytics | null>(null)
+  const [productData, setProductData] = useState<ProductPerformanceResponse | null>(null)
 
-  // Mock data for charts
-  const salesTrendData = [
-    { date: '2024-09-25', revenue: 12500, orders: 45, customers: 32 },
-    { date: '2024-09-26', revenue: 15200, orders: 52, customers: 38 },
-    { date: '2024-09-27', revenue: 11800, orders: 41, customers: 29 },
-    { date: '2024-09-28', revenue: 18900, orders: 67, customers: 48 },
-    { date: '2024-09-29', revenue: 16400, orders: 58, customers: 42 },
-    { date: '2024-09-30', revenue: 21300, orders: 73, customers: 55 },
-    { date: '2024-10-01', revenue: 19800, orders: 69, customers: 51 },
-  ]
+  useEffect(() => {
+    loadAnalyticsData()
+  }, [dateRange])
 
-  const productPerformanceData = [
-    { product: 'Coca Cola 500ml', sales: 2500, units: 1250, margin: 875 },
-    { product: 'Pepsi 500ml', sales: 2100, units: 1050, margin: 735 },
-    { product: 'Sprite 500ml', sales: 1800, units: 900, margin: 630 },
-    { product: 'Fanta Orange 500ml', sales: 1600, units: 800, margin: 560 },
-    { product: 'Water 1L', sales: 1200, units: 800, margin: 360 },
-  ]
+  const loadAnalyticsData = async () => {
+    try {
+      setIsLoading(true)
+      const filters = analyticsService.getDateRangePreset(dateRange as any)
+      
+      const [salesResponse, productResponse] = await Promise.all([
+        analyticsService.getSalesAnalytics(filters),
+        analyticsService.getProductPerformance(filters)
+      ])
+      
+      setSalesData(salesResponse)
+      setProductData(productResponse)
+    } catch (err) {
+      console.error('Error loading analytics data:', err)
+      error('Failed to load analytics data')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Transform data for charts
+  const salesTrendData = salesData?.salesByAgent?.map((agent, index) => ({
+    date: `Agent ${index + 1}`,
+    revenue: agent.revenue,
+    orders: agent.orders,
+    customers: Math.floor(agent.revenue / 500) // Estimate customers
+  })) || []
+
+  const productPerformanceData = productData?.products?.slice(0, 5).map(product => ({
+    product: product.name,
+    sales: product.revenue,
+    units: product.quantitySold,
+    margin: product.revenue * 0.35 // Estimate 35% margin
+  })) || []
 
   const regionPerformanceData = [
     { name: 'Lagos', value: 35, sales: 45000, color: '#3B82F6' },
@@ -57,27 +80,27 @@ export default function SalesAnalyticsPage() {
     { name: 'Others', value: 8, sales: 10000, color: '#8B5CF6' },
   ]
 
-  const agentPerformanceData = [
-    { agent: 'John Doe', sales: 25000, orders: 89, efficiency: 95, commission: 2500 },
-    { agent: 'Sarah Wilson', sales: 22000, orders: 78, efficiency: 92, commission: 2200 },
-    { agent: 'Mike Johnson', sales: 19500, orders: 67, efficiency: 88, commission: 1950 },
-    { agent: 'David Brown', sales: 18200, orders: 62, efficiency: 85, commission: 1820 },
-    { agent: 'Lisa Garcia', sales: 16800, orders: 58, efficiency: 82, commission: 1680 },
-  ]
+  const agentPerformanceData = salesData?.salesByAgent?.slice(0, 5).map(agent => ({
+    agent: agent.agent,
+    sales: agent.revenue,
+    orders: agent.orders,
+    efficiency: Math.min(95, Math.floor((agent.revenue / agent.orders) / 10)), // Estimate efficiency
+    commission: agent.revenue * 0.1 // Estimate 10% commission
+  })) || []
 
   const kpiData = {
-    totalRevenue: 125000,
-    revenueGrowth: 12.5,
-    totalOrders: 342,
-    ordersGrowth: 8.3,
-    avgOrderValue: 365,
-    avgOrderGrowth: 4.2,
-    customerAcquisition: 89,
-    acquisitionGrowth: 15.7,
-    conversionRate: 73.2,
-    conversionGrowth: -2.1,
-    agentEfficiency: 88.5,
-    efficiencyGrowth: 3.8,
+    totalRevenue: salesData?.totalSales || 0,
+    revenueGrowth: 12.5, // Would need historical data to calculate
+    totalOrders: salesData?.totalOrders || 0,
+    ordersGrowth: 8.3, // Would need historical data to calculate
+    avgOrderValue: salesData?.averageOrderValue || 0,
+    avgOrderGrowth: 4.2, // Would need historical data to calculate
+    customerAcquisition: salesData?.salesByCustomer?.length || 0,
+    acquisitionGrowth: 15.7, // Would need historical data to calculate
+    conversionRate: 73.2, // Would need additional data to calculate
+    conversionGrowth: -2.1, // Would need historical data to calculate
+    agentEfficiency: 88.5, // Would need additional data to calculate
+    efficiencyGrowth: 3.8, // Would need historical data to calculate
   }
 
   const formatCurrency = (value: number) => {
@@ -104,6 +127,16 @@ export default function SalesAnalyticsPage() {
     return growth > 0 ? 'text-green-600' : 'text-red-600'
   }
 
+  if (isLoading) {
+    return (
+      <ErrorBoundary>
+        <DashboardLayout>
+          <LoadingPage />
+        </DashboardLayout>
+      </ErrorBoundary>
+    )
+  }
+
   return (<ErrorBoundary>
 
     <DashboardLayout>
@@ -125,8 +158,8 @@ export default function SalesAnalyticsPage() {
               <option value="90d">Last 90 Days</option>
               <option value="1y">Last Year</option>
             </select>
-            <Button variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
+            <Button variant="outline" onClick={loadAnalyticsData} disabled={isLoading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
             <Button variant="outline">

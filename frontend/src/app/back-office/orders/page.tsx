@@ -106,22 +106,20 @@ export default function OrdersPage() {
 
   const orderStats = {
     totalOrders: orders.length,
-    pendingOrders: orders.filter(o => o.status === 'pending' || o.status === 'draft').length,
-    processingOrders: orders.filter(o => o.status === 'processing' || o.status === 'confirmed').length,
-    shippedOrders: orders.filter(o => o.status === 'shipped' || o.status === 'delivered').length,
+    pendingOrders: orders.filter(o => o.status === 'PENDING').length,
+    processingOrders: orders.filter(o => o.status === 'CONFIRMED').length,
+    shippedOrders: orders.filter(o => o.status === 'SHIPPED' || o.status === 'DELIVERED').length,
     totalValue: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
     avgOrderValue: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders.length : 0,
   }
 
   const getStatusBadge = (status: Order['status']) => {
     const colors = {
-      draft: 'bg-gray-100 text-gray-700',
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      processing: 'bg-purple-100 text-purple-700',
-      shipped: 'bg-indigo-100 text-indigo-700',
-      delivered: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700',
+      PENDING: 'bg-yellow-100 text-yellow-700',
+      CONFIRMED: 'bg-blue-100 text-blue-700',
+      SHIPPED: 'bg-indigo-100 text-indigo-700',
+      DELIVERED: 'bg-green-100 text-green-700',
+      CANCELLED: 'bg-red-100 text-red-700',
     }
     return (<ErrorBoundary>
 
@@ -343,23 +341,23 @@ export default function OrdersPage() {
                         {order.orderNumber || order.id || order.id || `ORD-${order.id}`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{order.customerName || order.customer_name || order.customer_name}</div>
-                        <div className="text-sm text-gray-500">{order.customerCode || order.customer_id || order.customer_id}</div>
+                        <div className="text-sm font-medium text-gray-900">{order.customer?.name || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{order.customer?.code || order.customerId}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {(order.orderDate || order.order_date) ? new Date(order.orderDate || order.order_date || '').toLocaleDateString() : 'N/A'}
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {(order.deliveryDate || order.delivery_date) ? new Date(order.deliveryDate || order.delivery_date || '').toLocaleDateString() : 'N/A'}
+                        {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        KES {(order.totalAmount || order.total_amount || order.total_amount || 0).toLocaleString()}
+                        KES {(order.totalAmount || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(order.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getPaymentBadge(order.paymentStatus || order.payment_status || order.payment_status)}
+                        {getPaymentBadge(order.paymentStatus)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex items-center justify-end space-x-2">
