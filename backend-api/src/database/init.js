@@ -906,8 +906,251 @@ async function createTables() {
       FOREIGN KEY (agent_id) REFERENCES agents(id),
       FOREIGN KEY (commission_structure_id) REFERENCES commission_structures(id),
       FOREIGN KEY (order_id) REFERENCES orders(id)
+    )`,
+
+    // Campaign Execution System Tables
+    `CREATE TABLE IF NOT EXISTS campaign_promoter_assignments (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      campaign_id TEXT NOT NULL,
+      promoter_id TEXT NOT NULL,
+      territories TEXT, -- JSON array of territory IDs
+      target_activities INTEGER DEFAULT 0,
+      assigned_date DATETIME NOT NULL,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (campaign_id) REFERENCES promotional_campaigns(id),
+      FOREIGN KEY (promoter_id) REFERENCES agents(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS campaign_performance (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      campaign_id TEXT NOT NULL,
+      tracking_date DATE NOT NULL,
+      metrics TEXT NOT NULL, -- JSON object with performance metrics
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (campaign_id) REFERENCES promotional_campaigns(id),
+      UNIQUE(tenant_id, campaign_id, tracking_date)
+    )`,
+
+    // Field Agent Visit System Tables
+    `CREATE TABLE IF NOT EXISTS field_agent_visits (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      customer_id TEXT,
+      visit_type TEXT NOT NULL,
+      visit_date DATE NOT NULL,
+      start_time DATETIME,
+      end_time DATETIME,
+      location_lat REAL,
+      location_lng REAL,
+      location_accuracy REAL,
+      brands TEXT, -- JSON array of brand objects
+      activities TEXT, -- JSON array of activity objects
+      validations TEXT, -- JSON object with validation results
+      state TEXT DEFAULT 'initiated',
+      total_commission REAL DEFAULT 0,
+      completion_data TEXT, -- JSON object
+      metadata TEXT, -- JSON object
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS field_agent_activities (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      visit_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      activity_type TEXT NOT NULL,
+      brand_id TEXT,
+      title TEXT NOT NULL,
+      description TEXT,
+      mandatory BOOLEAN DEFAULT 0,
+      status TEXT DEFAULT 'pending',
+      estimated_duration INTEGER DEFAULT 5, -- minutes
+      commission REAL DEFAULT 0,
+      requirements TEXT, -- JSON array
+      activity_data TEXT, -- JSON object
+      start_time DATETIME,
+      end_time DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (visit_id) REFERENCES field_agent_visits(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id)
+    )`,
+
+    // Image Analytics Tables
+    `CREATE TABLE IF NOT EXISTS image_analytics (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      activity_id TEXT,
+      visit_id TEXT,
+      image_path TEXT NOT NULL,
+      image_type TEXT NOT NULL, -- 'board_placement', 'store_front', 'product_display', etc.
+      analysis_results TEXT NOT NULL, -- JSON object with analysis results
+      board_coverage REAL DEFAULT 0,
+      quality_score REAL DEFAULT 0,
+      brand_compliance TEXT, -- JSON object
+      processed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (activity_id) REFERENCES field_agent_activities(id),
+      FOREIGN KEY (visit_id) REFERENCES field_agent_visits(id)
+    )`,
+
+    // Commission Calculation Tables
+    `CREATE TABLE IF NOT EXISTS agent_commission_calculations (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      visit_id TEXT,
+      activity_id TEXT,
+      calculation_date DATE NOT NULL,
+      commission_type TEXT NOT NULL,
+      base_amount REAL NOT NULL,
+      adjustments REAL DEFAULT 0,
+      bonuses REAL DEFAULT 0,
+      penalties REAL DEFAULT 0,
+      final_amount REAL NOT NULL,
+      calculation_details TEXT, -- JSON object
+      payment_status TEXT DEFAULT 'pending',
+      payment_date DATE,
+      payment_reference TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id),
+      FOREIGN KEY (visit_id) REFERENCES field_agent_visits(id),
+      FOREIGN KEY (activity_id) REFERENCES field_agent_activities(id)
+    )`,
+
+    // Sample Distribution Management
+    `CREATE TABLE IF NOT EXISTS sample_distributions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      customer_id TEXT,
+      quantity INTEGER NOT NULL,
+      distribution_date TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'allocated' CHECK (status IN ('allocated', 'distributed', 'completed', 'cancelled')),
+      notes TEXT,
+      feedback TEXT,
+      campaign_id TEXT,
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    // Campaign Expenses for Budget Tracking
+    `CREATE TABLE IF NOT EXISTS campaign_expenses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      campaign_id TEXT NOT NULL,
+      expense_type TEXT NOT NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      description TEXT,
+      expense_date TEXT NOT NULL,
+      receipt_url TEXT,
+      created_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    // Event Management System
+    `CREATE TABLE IF NOT EXISTS events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      location TEXT,
+      latitude DECIMAL(10,8),
+      longitude DECIMAL(11,8),
+      max_participants INTEGER,
+      budget DECIMAL(10,2),
+      objectives TEXT,
+      target_audience TEXT,
+      organizer_id TEXT NOT NULL,
+      status TEXT DEFAULT 'planning' CHECK (status IN ('planning', 'active', 'completed', 'cancelled')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (organizer_id) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS event_participants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      event_id INTEGER NOT NULL,
+      participant_id TEXT NOT NULL,
+      role TEXT DEFAULT 'attendee',
+      attendance_status TEXT DEFAULT 'registered' CHECK (attendance_status IN ('registered', 'checked_in', 'checked_out', 'no_show')),
+      check_in_time TEXT,
+      check_out_time TEXT,
+      notes TEXT,
+      registered_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (event_id) REFERENCES events(id),
+      FOREIGN KEY (participant_id) REFERENCES users(id),
+      UNIQUE(event_id, participant_id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS event_resources (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      event_id INTEGER NOT NULL,
+      resource_id TEXT,
+      resource_name TEXT,
+      resource_type TEXT,
+      quantity INTEGER DEFAULT 1,
+      notes TEXT,
+      allocated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (event_id) REFERENCES events(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS event_performance (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL,
+      event_id INTEGER NOT NULL,
+      attendance_count INTEGER,
+      satisfaction_score DECIMAL(3,2),
+      objectives_met INTEGER,
+      feedback_summary TEXT,
+      roi_score DECIMAL(5,2),
+      follow_up_actions TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (event_id) REFERENCES events(id),
+      UNIQUE(event_id)
     )`
   ];
+  
+  // Add sample_inventory column to products table
+  await runQuery(`ALTER TABLE products ADD COLUMN sample_inventory INTEGER DEFAULT 0`).catch(() => {
+    // Column might already exist, ignore error
+  });
   
   for (const table of tables) {
     await runQuery(table);

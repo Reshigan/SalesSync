@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { authTenantMiddleware } = require('../middleware/authTenantMiddleware');
 
+// Apply authentication middleware
+router.use(authTenantMiddleware);
+
 /**
  * @swagger
  * components:

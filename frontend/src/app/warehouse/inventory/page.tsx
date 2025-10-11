@@ -65,7 +65,7 @@ interface InventoryStats {
 
 export default function InventoryPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const { success, error } = useToast();
+  const { success, error: toastError } = useToast();
   const { _hasHydrated, isAuthenticated } = useAuthStore()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState('all')

@@ -61,6 +61,12 @@ async function initializeApp() {
     const routeRoutes = require('./routes/routes');
     const agentRoutes = require('./routes/agents');
     const tenantRoutes = require('./routes/tenants');
+    const fieldAgentRoutes = require('./routes/fieldAgents');
+    const campaignExecutionRoutes = require('./routes/campaign-execution');
+    const campaignAnalyticsRoutes = require('./routes/campaign-analytics');
+    const promotionRoutes = require('./routes/promotions');
+    const samplesRoutes = require('./routes/samples');
+    const eventsRoutes = require('./routes/events');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -75,6 +81,12 @@ async function initializeApp() {
     app.use('/api/routes', routeRoutes);
     app.use('/api/agents', agentRoutes);
     app.use('/api/tenants', tenantRoutes);
+    app.use('/api/field-agents', fieldAgentRoutes);
+    app.use('/api/campaigns', campaignExecutionRoutes);
+    app.use('/api/campaign-analytics', campaignAnalyticsRoutes);
+    app.use('/api/promotions', promotionRoutes);
+    app.use('/api/samples', samplesRoutes);
+    app.use('/api/events', eventsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

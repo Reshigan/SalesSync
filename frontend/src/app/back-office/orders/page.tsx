@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input'
 
 import { FormModal } from '@/components/ui/FormModal'
 import { OrderForm } from '@/components/orders/OrderForm'
-import { ordersService, Order } from '@/services/orders.service'
+import { Order } from '@/services/orders.service'
 import {
   ShoppingBag,
   Clock,

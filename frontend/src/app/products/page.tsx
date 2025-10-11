@@ -11,7 +11,6 @@ import toast from 'react-hot-toast'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
-import productsService from '@/services/products.service';
 import { 
   Package, 
   Plus,

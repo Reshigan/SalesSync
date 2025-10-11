@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { DataTable } from '@/components/ui/DataTable'
-import { LoadingSpinner, SkeletonTable } from '@/components/LoadingSpinner'
+import { SkeletonTable } from '@/components/LoadingSpinner'
 import { usePermissions } from '@/hooks/usePermissions'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
