@@ -33,6 +33,10 @@ export const ordersService = {
     const response = await apiService.put(`/orders/${id}`, { status });
     return response.data;
   },
+  delete: async (id: string) => {
+    const response = await apiService.delete(`/orders/${id}`);
+    return response.data;
+  },
 };
 
 export default ordersService;
