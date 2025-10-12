@@ -78,7 +78,7 @@ async function createTables() {
   const tables = [
     // Core tenant and user tables
     `CREATE TABLE IF NOT EXISTS tenants (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) UNIQUE NOT NULL,
       domain VARCHAR(255),
@@ -92,7 +92,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS users (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL,
       password_hash VARCHAR(255) NOT NULL,
@@ -119,7 +119,7 @@ async function createTables() {
     
     // Licensing and billing
     `CREATE TABLE IF NOT EXISTS tenant_licenses (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       license_type VARCHAR(50) NOT NULL,
       user_count INTEGER NOT NULL,
@@ -132,7 +132,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS billing_records (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       license_id UUID NOT NULL,
       billing_period_start DATE NOT NULL,
@@ -148,7 +148,7 @@ async function createTables() {
     
     // Master data tables
     `CREATE TABLE IF NOT EXISTS regions (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -160,7 +160,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS areas (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       region_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -174,7 +174,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS routes (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       area_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
@@ -189,7 +189,7 @@ async function createTables() {
     
     // Product and inventory
     `CREATE TABLE IF NOT EXISTS categories (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -201,7 +201,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS brands (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -211,7 +211,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS products (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -231,7 +231,7 @@ async function createTables() {
     
     // Warehouses and inventory
     `CREATE TABLE IF NOT EXISTS warehouses (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -247,7 +247,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS inventory_stock (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       warehouse_id UUID NOT NULL,
       product_id UUID NOT NULL,
@@ -265,7 +265,7 @@ async function createTables() {
     
     // Customers
     `CREATE TABLE IF NOT EXISTS customers (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       name VARCHAR(255) NOT NULL,
       code VARCHAR(100) NOT NULL,
@@ -286,7 +286,7 @@ async function createTables() {
     
     // Orders and transactions
     `CREATE TABLE IF NOT EXISTS orders (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       tenant_id UUID NOT NULL,
       order_number VARCHAR(100) NOT NULL,
       customer_id UUID NOT NULL,
@@ -307,7 +307,7 @@ async function createTables() {
     )`,
     
     `CREATE TABLE IF NOT EXISTS order_items (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       order_id UUID NOT NULL,
       product_id UUID NOT NULL,
       quantity INTEGER NOT NULL,
