@@ -350,7 +350,7 @@ export default function OrdersPage() {
                         {new Date(order.deliveryDate).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        KES {(order.totalAmount || 0).toLocaleString()}
+                        KES {(order.total || 0).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {getStatusBadge(order.status)}
