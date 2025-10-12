@@ -45,7 +45,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error: toastError } = useToast();
   const { userRole, user } = usePermissions()
-  const { _hasHydrated } = useAuthStore()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [recentActivities, setRecentActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
