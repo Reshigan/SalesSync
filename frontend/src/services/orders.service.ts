@@ -13,8 +13,8 @@ export interface Order {
 
 export const ordersService = {
 
-  getAll: async () => {
-    const response = await apiService.get('/orders');
+  getAll: async (filters?: any) => {
+    const response = await apiService.get('/orders', { params: filters });
     return response.data;
   },
   getById: async (id: string) => {
