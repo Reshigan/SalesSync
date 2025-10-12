@@ -5,11 +5,15 @@ export interface Order {
   id: string;
   orderNumber: string;
   customer: string;
+  customerName: string;
+  customerCode: string;
   items: number;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   paymentStatus: 'pending' | 'partial' | 'paid' | 'overdue';
   date: string;
+  orderDate: string;
+  deliveryDate: string;
 }
 
 export const ordersService = {
