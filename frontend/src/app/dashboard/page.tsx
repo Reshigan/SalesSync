@@ -54,12 +54,6 @@ export default function DashboardPage() {
   // Fetch dashboard data when user is authenticated and store is hydrated
   useEffect(() => {
     const fetchDashboardData = async () => {
-      // Wait for store to be hydrated
-      if (!_hasHydrated) {
-        console.log('Dashboard: Store not hydrated yet, waiting...')
-        return
-      }
-
       // Only fetch if user is authenticated and we have a token
       if (!user || !user.id) {
         console.log('Dashboard: User not authenticated yet, skipping API call', { user })
