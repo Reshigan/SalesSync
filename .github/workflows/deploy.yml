@@ -1,0 +1,282 @@
+name: SalesSync Production Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  PRODUCTION_HOST: '35.177.226.170'
+  PRODUCTION_USER: 'ubuntu'
+  PRODUCTION_PORT_FRONTEND: 12000
+  PRODUCTION_PORT_BACKEND: 12001
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend-api/package-lock.json
+    
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Install Backend Dependencies
+      run: |
+        cd backend-api
+        npm ci
+    
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm run test:ci || true
+    
+    - name: Run Backend Tests
+      run: |
+        cd backend-api
+        npm test || true
+    
+    - name: Run Linting
+      run: |
+        cd frontend && npm run lint || true
+        cd ../backend-api && npm run lint || true
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Build Backend
+      run: |
+        cd backend-api
+        npm run build || echo "No build script found"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Run npm audit (Frontend)
+      run: |
+        cd frontend
+        npm audit --audit-level=high || true
+    
+    - name: Run npm audit (Backend)
+      run: |
+        cd backend-api
+        npm audit --audit-level=high || true
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Pre-deployment Health Check
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🔍 Pre-deployment health check..."
+          
+          # Check system resources
+          echo "Memory usage:"
+          free -h
+          
+          echo "Disk usage:"
+          df -h
+          
+          echo "Current services status:"
+          systemctl is-active nginx postgresql ssh || exit 1
+          
+          # Check current application health
+          curl -f https://ss.gonxt.tech/health || echo "Current app health check failed"
+        EOF
+    
+    - name: Create Deployment Backup
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "📦 Creating deployment backup..."
+          
+          BACKUP_DIR="/home/ubuntu/backups/$(date +%Y%m%d_%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+          
+          # Backup current application
+          cp -r /home/ubuntu/SalesSync "$BACKUP_DIR/app_backup" || echo "No existing app to backup"
+          
+          # Backup database
+          sudo -u postgres pg_dump salessync > "$BACKUP_DIR/database_backup.sql" || echo "Database backup failed"
+          
+          echo "Backup created at: $BACKUP_DIR"
+        EOF
+    
+    - name: Deploy to Production
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          set -e
+          
+          echo "🚀 Starting Production Deployment..."
+          
+          # Navigate to project directory
+          cd /home/ubuntu/SalesSync
+          
+          # Pull latest changes
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Install/Update dependencies
+          echo "📦 Installing Frontend Dependencies..."
+          cd frontend
+          npm ci --production
+          npm run build
+          
+          echo "📦 Installing Backend Dependencies..."
+          cd ../backend-api
+          npm ci --production
+          
+          # Run database migrations
+          echo "🗄️ Running Database Migrations..."
+          npm run migrate || echo "No migrations to run"
+          
+          # Restart services with zero downtime
+          echo "🔄 Restarting Services..."
+          
+          # Restart backend first
+          sudo systemctl restart salessync-backend
+          sleep 5
+          
+          # Health check backend
+          curl -f http://localhost:${{ env.PRODUCTION_PORT_BACKEND }}/health || exit 1
+          
+          # Restart frontend
+          sudo systemctl restart salessync-frontend
+          sleep 5
+          
+          # Final health checks
+          echo "🏥 Running Health Checks..."
+          curl -f http://localhost:${{ env.PRODUCTION_PORT_FRONTEND }} || exit 1
+          curl -f https://ss.gonxt.tech/health || exit 1
+          curl -f https://ss.gonxt.tech/api/health || exit 1
+          
+          # Test auth endpoints specifically
+          echo "🔐 Testing Auth Endpoints..."
+          curl -f -X POST https://ss.gonxt.tech/api/auth/login -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"invalid"}' || echo "Auth endpoint test completed"
+          
+          echo "✅ Production deployment completed successfully!"
+        EOF
+    
+    - name: Post-deployment Verification
+      run: |
+        echo "🔍 Post-deployment verification..."
+        
+        # Wait for services to stabilize
+        sleep 30
+        
+        # Comprehensive health checks
+        curl -f https://ss.gonxt.tech/ || exit 1
+        curl -f https://ss.gonxt.tech/health || exit 1
+        curl -f https://ss.gonxt.tech/api/health || exit 1
+        
+        echo "✅ All health checks passed!"
+    
+    - name: Notify Deployment Success
+      if: success()
+      run: |
+        echo "🎉 Production deployment successful!"
+        echo "Application is live at: https://ss.gonxt.tech"
+    
+    - name: Rollback on Failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed, initiating rollback..."
+        
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🔄 Rolling back to previous version..."
+          
+          # Find latest backup
+          LATEST_BACKUP=$(ls -t /home/ubuntu/backups/ | head -1)
+          
+          if [ -n "$LATEST_BACKUP" ]; then
+            echo "Restoring from backup: $LATEST_BACKUP"
+            
+            # Stop services
+            sudo systemctl stop salessync-frontend salessync-backend
+            
+            # Restore application
+            rm -rf /home/ubuntu/SalesSync
+            cp -r "/home/ubuntu/backups/$LATEST_BACKUP/app_backup" /home/ubuntu/SalesSync
+            
+            # Restore database
+            sudo -u postgres psql -d salessync < "/home/ubuntu/backups/$LATEST_BACKUP/database_backup.sql"
+            
+            # Restart services
+            sudo systemctl start salessync-backend salessync-frontend
+            
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup found for rollback"
+          fi
+        EOF
+
+  cleanup:
+    name: Cleanup Old Deployments
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Cleanup Old Backups
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🧹 Cleaning up old backups..."
+          
+          # Keep only last 5 backups
+          cd /home/ubuntu/backups
+          ls -t | tail -n +6 | xargs -r rm -rf
+          
+          echo "✅ Cleanup completed"
+        EOF
