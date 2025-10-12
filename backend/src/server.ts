@@ -36,6 +36,7 @@ import analyticsRoutes from './routes/analytics';
 import uploadRoutes from './routes/upload';
 import notificationRoutes from './routes/notifications';
 import surveyRoutes from './routes/surveys';
+import aiAnalyticsRoutes from './routes/aiAnalytics';
 import { socketService } from './services/socketService';
 
 
@@ -76,8 +77,8 @@ const corsOrigins = process.env.NODE_ENV === 'production'
   ? [process.env.CORS_ORIGIN || 'https://ss.gonxt.tech']
   : [
       "http://localhost:12000",
-      "https://work-1-veuhqyphpzgedabx.prod-runtime.all-hands.dev",
-      "https://work-2-veuhqyphpzgedabx.prod-runtime.all-hands.dev"
+      "https://work-1-ifgxvhjrlkroyxsp.prod-runtime.all-hands.dev",
+      "https://work-2-ifgxvhjrlkroyxsp.prod-runtime.all-hands.dev"
     ];
 
 app.use(cors({
@@ -108,7 +109,7 @@ const generalLimiter = rateLimit({
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: process.env.NODE_ENV === 'production' ? 5 : 100, // More lenient for development
   message: {
     error: 'Too many authentication attempts',
     message: 'Too many login attempts from this IP, please try again later.',
@@ -118,9 +119,12 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/', generalLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+// Temporarily disable rate limiting for development
+if (process.env.NODE_ENV === 'production') {
+  app.use('/api/', generalLimiter);
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
+}
 
 // Trust proxy for production deployments behind reverse proxy
 if (process.env.TRUST_PROXY === 'true') {
@@ -218,6 +222,7 @@ app.use('/api/inventory', authMiddleware, tenantMiddleware, inventoryRoutes);
 app.use('/api/commissions', authMiddleware, tenantMiddleware, commissionRoutes);
 app.use('/api/surveys', authMiddleware, tenantMiddleware, surveyRoutes);
 app.use('/api/analytics', authMiddleware, tenantMiddleware, analyticsRoutes);
+app.use('/api/ai-analytics', authMiddleware, tenantMiddleware, aiAnalyticsRoutes);
 app.use('/api/upload', authMiddleware, uploadRoutes);
 app.use('/api/notifications', authMiddleware, tenantMiddleware, notificationRoutes);
 

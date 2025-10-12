@@ -14,20 +14,28 @@ export default function LoginPage() {
   const router = useRouter()
   const { login, isLoading: authLoading } = useAuthStore()
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: 'admin@demo.com',
+    password: 'demo123',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
+    console.log('handleLogin called')
+    alert('Form submitted!')
     e.preventDefault()
     setError('')
 
+    console.log('Login attempt:', formData.email)
+    console.log('Form data:', formData)
+    
     try {
+      console.log('Calling login function...')
       await login(formData.email, formData.password)
+      console.log('Login successful, redirecting to dashboard')
       router.push('/dashboard')
     } catch (err: any) {
+      console.error('Login error:', err)
       setError(err.message || 'Login failed')
     }
   }
@@ -112,6 +120,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={authLoading}
+              onClick={() => console.log('Button clicked!')}
               className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {authLoading ? (

@@ -68,16 +68,23 @@ export interface ProfileResponse {
 }
 
 class AuthService {
-  async login(email: string, password: string, tenantCode: string = 'DEMO'): Promise<LoginData> {
-    const response = await apiClient.post<LoginResponse>('/auth/login', 
-      { email, password },
-      {
-        headers: {
-          'X-Tenant-Code': tenantCode
+  async login(email: string, password: string, tenantCode: string = 'DEMO'): Promise<any> {
+    console.log('AuthService.login called with:', { email, tenantCode });
+    try {
+      const response = await apiClient.post('/auth/login', 
+        { email, password },
+        {
+          headers: {
+            'X-Tenant-Code': tenantCode
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      console.log('AuthService.login response:', response);
+      return response;
+    } catch (error) {
+      console.error('AuthService.login error:', error);
+      throw error;
+    }
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenData> {

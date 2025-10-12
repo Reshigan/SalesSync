@@ -6,6 +6,7 @@ class ApiClient {
   private client: AxiosInstance
 
   constructor() {
+    console.log('API Client initialized with base URL:', API_BASE_URL);
     this.client = axios.create({
       baseURL: API_BASE_URL,
       headers: {
@@ -52,7 +53,9 @@ class ApiClient {
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    console.log('Making POST request to:', `${API_BASE_URL}${url}`, 'with data:', data);
     const response = await this.client.post<T>(url, data, config)
+    console.log('POST response:', response.data);
     return response.data
   }
 
