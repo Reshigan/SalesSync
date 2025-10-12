@@ -1,6 +1,18 @@
 
 import apiService from '@/lib/api';
 
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string;
+  address?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const customersService = {
 
   getAll: async () => {
