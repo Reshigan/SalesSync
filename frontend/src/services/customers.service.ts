@@ -8,6 +8,8 @@ export interface Customer {
   phone: string;
   company?: string;
   address?: string;
+  city?: string;
+  region?: string;
   status: 'active' | 'inactive';
   type: 'retail' | 'wholesale';
   creditLimit?: number;
