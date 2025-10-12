@@ -1,6 +1,16 @@
 
 import apiService from '@/lib/api';
 
+export interface Order {
+  id: string;
+  orderNumber: string;
+  customer: string;
+  items: number;
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  date: string;
+}
+
 export const ordersService = {
 
   getAll: async () => {
