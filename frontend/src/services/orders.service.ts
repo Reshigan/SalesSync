@@ -8,6 +8,7 @@ export interface Order {
   items: number;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'partial' | 'paid' | 'overdue';
   date: string;
 }
 
