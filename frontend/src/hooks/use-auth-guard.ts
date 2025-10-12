@@ -28,19 +28,20 @@ export const useRoleGuard = (requiredRoles: string[] = []) => {
     if (requiredRoles.length === 0) return true;
     
     return requiredRoles.some(role => 
-      user.roles?.includes(role) || user.role === role
+      user.role === role
     );
   };
 
-  const hasPermission = (permission: string) => {
+  const hasPermission = (module: string, action: string = 'canView') => {
     if (!isAuthenticated || !user) return false;
-    return user.permissions?.includes(permission) || false;
+    const modulePermission = user.permissions?.find(p => p.module === module);
+    return modulePermission?.[action as keyof typeof modulePermission] || false;
   };
 
   return {
     hasRequiredRole: hasRequiredRole(),
     hasPermission,
     userRole: user?.role,
-    userRoles: user?.roles || []
+    userRoles: user?.role ? [user.role] : []
   };
 };

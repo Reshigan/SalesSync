@@ -66,7 +66,7 @@ interface InventoryStats {
 export default function InventoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error: toastError } = useToast();
-  const { _hasHydrated, isAuthenticated } = useAuthStore()
+  const { isAuthenticated } = useAuthStore()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
@@ -81,15 +81,15 @@ export default function InventoryPage() {
 
   // Load inventory data
   useEffect(() => {
-    // Only load data after hydration is complete and user is authenticated
-    if (_hasHydrated && isAuthenticated) {
+    // Only load data if user is authenticated
+    if (isAuthenticated) {
       loadInventoryData()
       loadInventoryStats()
-    } else if (_hasHydrated && !isAuthenticated) {
+    } else {
       // Redirect to login if not authenticated
       window.location.href = '/auth/login'
     }
-  }, [_hasHydrated, isAuthenticated, page, filterStatus, filterCategory, searchTerm])
+  }, [isAuthenticated, page, filterStatus, filterCategory, searchTerm])
 
   const loadInventoryData = async () => {
     try {
@@ -104,11 +104,11 @@ export default function InventoryPage() {
       }
       
       const response = await apiService.getInventory(params)
-      if (response.success) {
+      if (response.data) {
         setInventory(response.data.data)
         setTotalPages(response.data.pagination.totalPages)
       } else {
-        setError('Failed to load inventory data')
+        setError(response.error || 'Failed to load inventory data')
       }
     } catch (err) {
       setError('Failed to load inventory data')
@@ -121,7 +121,7 @@ export default function InventoryPage() {
   const loadInventoryStats = async () => {
     try {
       const response = await apiService.getInventoryStats()
-      if (response.success) {
+      if (response.data) {
         setStats(response.data)
       }
     } catch (err) {
@@ -197,8 +197,8 @@ export default function InventoryPage() {
 </ErrorBoundary>)
   }
 
-  // Show loading while waiting for hydration
-  if (!_hasHydrated) {
+  // Show loading while checking authentication
+  if (loading) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">

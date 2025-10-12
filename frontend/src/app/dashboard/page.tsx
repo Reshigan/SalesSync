@@ -90,7 +90,7 @@ export default function DashboardPage() {
   // Fetch activities separately
   useEffect(() => {
     const fetchActivities = async () => {
-      if (!_hasHydrated || !user || !user.id) {
+      if (!user || !user.id) {
         return
       }
 
@@ -116,7 +116,7 @@ export default function DashboardPage() {
     }
 
     fetchActivities()
-  }, [user, _hasHydrated])
+  }, [user])
 
   const getGreeting = () => {
     const hour = new Date().getHours()

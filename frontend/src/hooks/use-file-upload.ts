@@ -65,7 +65,7 @@ export const useFileUpload = (options: UseFileUploadOptions = {}) => {
         id: Math.random().toString(36).substr(2, 9),
         progress: 0,
         status: error ? 'error' : 'pending',
-        error
+        error: error || undefined
       });
     });
 

@@ -33,6 +33,7 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
     reorderLevel: 0,
     maxStockLevel: 0,
     status: 'active',
+    isActive: true,
     ...initialData
   })
 

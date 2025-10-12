@@ -54,7 +54,7 @@ export default function OrdersPage() {
       if (searchTerm) filters.search = searchTerm
 
       const response = await ordersService.getAll(filters)
-      setOrders(response.orders || [])
+      setOrders(response?.orders || [])
       toast.success('Orders loaded successfully')
     } catch (error: any) {
       console.error('Error loading orders:', error)
@@ -115,19 +115,21 @@ export default function OrdersPage() {
 
   const getStatusBadge = (status: Order['status']) => {
     const colors = {
+      draft: 'bg-gray-100 text-gray-700',
       pending: 'bg-yellow-100 text-yellow-700',
       processing: 'bg-purple-100 text-purple-700',
       shipped: 'bg-indigo-100 text-indigo-700',
       delivered: 'bg-green-100 text-green-700',
       cancelled: 'bg-red-100 text-red-700',
     }
+    
+    if (!status) return null;
+    
     return (<ErrorBoundary>
-
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
-    
-</ErrorBoundary>)
+    </ErrorBoundary>)
   }
 
   const getPaymentBadge = (status: Order['paymentStatus']) => {
@@ -137,8 +139,11 @@ export default function OrdersPage() {
       paid: 'bg-green-100 text-green-700',
       overdue: 'bg-red-100 text-red-700',
     }
+    
+    if (!status) return null;
+    
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status]}`}>
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-700'}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     )
@@ -344,10 +349,10 @@ export default function OrdersPage() {
                         <div className="text-sm text-gray-500">{order.customerCode}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.orderDate).toLocaleDateString()}
+                        {order.orderDate ? new Date(order.orderDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(order.deliveryDate).toLocaleDateString()}
+                        {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         KES {(order.total || 0).toLocaleString()}

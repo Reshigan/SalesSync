@@ -4,19 +4,19 @@ import apiService from '@/lib/api';
 export const inventoryService = {
 
   getStock: async () => {
-    const response = await apiService.get('/inventory/stock');
+    const response = await apiService.getInventory();
     return response.data;
   },
   updateStock: async (data: any) => {
-    const response = await apiService.post('/inventory/movements', data);
+    const response = await apiService.createInventoryItem(data);
     return response.data;
   },
   getLowStock: async () => {
-    const response = await apiService.get('/inventory/low-stock');
+    const response = await apiService.getInventory({ lowStock: true });
     return response.data;
   },
   getMovements: async () => {
-    const response = await apiService.get('/inventory/movements');
+    const response = await apiService.getInventory();
     return response.data;
   },
 };

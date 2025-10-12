@@ -6,58 +6,70 @@ export interface LoginRequest {
   tenantCode?: string;
 }
 
+export interface LoginData {
+  user: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    role: string;
+    tenantId: string;
+    tenantCode: string;
+    tenantName: string;
+    areaId?: string;
+    routeId?: string;
+    monthlyTarget?: number;
+    status: string;
+    lastLogin?: string;
+    createdAt: string;
+    permissions: Array<{
+      module: string;
+      canView: boolean;
+      canCreate: boolean;
+      canEdit: boolean;
+      canDelete: boolean;
+      canApprove: boolean;
+      canExport: boolean;
+    }>;
+  };
+  tenant: {
+    id: string;
+    name: string;
+    code: string;
+    features: any;
+  };
+  token: string;
+  refreshToken: string;
+}
+
 export interface LoginResponse {
   success: boolean;
-  data: {
-    user: {
-      id: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      role: string;
-      tenantId: string;
-      tenantCode: string;
-      tenantName: string;
-      permissions: Array<{
-        module: string;
-        canView: boolean;
-        canCreate: boolean;
-        canEdit: boolean;
-        canDelete: boolean;
-        canApprove: boolean;
-        canExport: boolean;
-      }>;
-    };
-    tenant: {
-      id: string;
-      name: string;
-      code: string;
-      features: any;
-    };
-    token: string;
-    refreshToken: string;
-  };
+  data: LoginData;
+}
+
+export interface RefreshTokenData {
+  token: string;
 }
 
 export interface RefreshTokenResponse {
   success: boolean;
-  data: {
-    token: string;
-  };
+  data: RefreshTokenData;
+}
+
+export interface ProfileData {
+  user: any;
+  tenant: any;
+  permissions: any[];
 }
 
 export interface ProfileResponse {
   success: boolean;
-  data: {
-    user: any;
-    tenant: any;
-    permissions: any[];
-  };
+  data: ProfileData;
 }
 
 class AuthService {
-  async login(email: string, password: string, tenantCode: string = 'DEMO'): Promise<LoginResponse> {
-    const response = await apiClient.post('/auth/login', 
+  async login(email: string, password: string, tenantCode: string = 'DEMO'): Promise<LoginData> {
+    const response = await apiClient.post<LoginResponse>('/auth/login', 
       { email, password },
       {
         headers: {
@@ -68,15 +80,15 @@ class AuthService {
     return response.data;
   }
 
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    const response = await apiClient.post('/auth/refresh', {
+  async refreshToken(refreshToken: string): Promise<RefreshTokenData> {
+    const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh', {
       refreshToken
     });
     return response.data;
   }
 
-  async getProfile(): Promise<ProfileResponse> {
-    const response = await apiClient.get('/auth/me');
+  async getProfile(): Promise<ProfileData> {
+    const response = await apiClient.get<ProfileResponse>('/auth/me');
     return response.data;
   }
 

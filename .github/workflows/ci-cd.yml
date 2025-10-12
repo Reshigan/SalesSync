@@ -45,6 +45,11 @@ jobs:
     - name: Run frontend type checking
       run: npm run type-check
     
+    - name: Frontend Build Check
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_URL: http://localhost:3001/api
+    
     - name: Run backend linting
       run: |
         cd backend
@@ -54,6 +59,11 @@ jobs:
       run: |
         cd backend
         npm run type-check
+    
+    - name: Backend Build Check
+      run: |
+        cd backend
+        npm run build
     
     - name: Run frontend tests
       run: npm test -- --watchAll=false --coverage

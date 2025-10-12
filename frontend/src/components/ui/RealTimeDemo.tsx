@@ -19,11 +19,11 @@ import {
 } from 'lucide-react';
 
 export const RealTimeDemo: React.FC = () => {
-  const { token, isAuthenticated, user, _hasHydrated } = useAuthStore();
+  const { token, isAuthenticated, user } = useAuthStore();
   
-  // Wait for Zustand to hydrate before rendering
-  if (!_hasHydrated) {
-    return <div className="p-4">Loading auth state...</div>;
+  // Wait for authentication before rendering
+  if (!isAuthenticated) {
+    return <div className="p-4">Please log in to use real-time features...</div>;
   }
   
   const {
@@ -257,7 +257,7 @@ export const RealTimeDemo: React.FC = () => {
             <div>Auth Status: {isAuthenticated ? '✅ Authenticated' : '❌ Not Authenticated'}</div>
             <div>Token: {token ? `✅ Available (${token.substring(0, 20)}...)` : '❌ Missing'}</div>
             <div>User: {user ? `✅ ${user.firstName} ${user.lastName} (${user.role})` : '❌ No User'}</div>
-            <div>Hydrated: {_hasHydrated ? '✅ Yes' : '❌ No'}</div>
+            <div>Ready: {isAuthenticated && user ? '✅ Yes' : '❌ No'}</div>
           </div>
         </div>
       </Card>

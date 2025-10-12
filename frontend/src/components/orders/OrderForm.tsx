@@ -58,7 +58,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const loadCustomers = async () => {
     try {
       const response = await customersService.getAll({ status: 'active' })
-      setCustomers(response.customers || [])
+      setCustomers(response?.customers || [])
     } catch (error: any) {
       console.error('Error loading customers:', error)
       toast.error('Failed to load customers')
@@ -70,7 +70,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const loadProducts = async () => {
     try {
       const response = await productsService.getAll({ status: 'active' })
-      setProducts(response.products || [])
+      setProducts(response?.products || [])
     } catch (error: any) {
       console.error('Error loading products:', error)
       toast.error('Failed to load products')
@@ -80,13 +80,15 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   }
 
   const calculateTotals = () => {
-    const subtotal = formData.items.reduce((sum, item) => {
+    const items = Array.isArray(formData.items) ? formData.items : [];
+    
+    const subtotal = items.reduce((sum, item) => {
       const itemTotal = item.quantity * item.unitPrice
       const discountAmount = itemTotal * (item.discount / 100)
       return sum + (itemTotal - discountAmount)
     }, 0)
 
-    const tax = formData.items.reduce((sum, item) => {
+    const tax = items.reduce((sum, item) => {
       const itemTotal = item.quantity * item.unitPrice
       const discountAmount = itemTotal * (item.discount / 100)
       return sum + ((itemTotal - discountAmount) * (item.tax / 100))
@@ -104,13 +106,16 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     setFormData(prev => ({
       ...prev,
       items: [
-        ...prev.items,
+        ...(Array.isArray(prev.items) ? prev.items : []),
         {
           productId: '',
+          productName: '',
           quantity: 1,
+          price: 0,
           unitPrice: 0,
           discount: 0,
           tax: 0,
+          total: 0,
         }
       ]
     }))
@@ -119,14 +124,14 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const removeLineItem = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.filter((_, i) => i !== index)
+      items: Array.isArray(prev.items) ? prev.items.filter((_, i) => i !== index) : []
     }))
   }
 
   const updateLineItem = (index: number, field: keyof OrderItem, value: any) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.map((item, i) => {
+      items: Array.isArray(prev.items) ? prev.items.map((item, i) => {
         if (i === index) {
           const updatedItem = { ...item, [field]: value }
           
@@ -144,7 +149,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
           return updatedItem
         }
         return item
-      })
+      }) : []
     }))
   }
 
@@ -159,11 +164,12 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       newErrors.deliveryDate = 'Delivery date is required'
     }
 
-    if (formData.items.length === 0) {
+    if (!Array.isArray(formData.items) || formData.items.length === 0) {
       newErrors.items = 'At least one item is required'
     }
 
-    formData.items.forEach((item, index) => {
+    if (Array.isArray(formData.items)) {
+      formData.items.forEach((item, index) => {
       if (!item.productId) {
         newErrors[`item_${index}_product`] = 'Product is required'
       }
@@ -173,7 +179,8 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       if (item.unitPrice <= 0) {
         newErrors[`item_${index}_price`] = 'Price must be greater than 0'
       }
-    })
+      })
+    }
 
     // Credit limit check
     if (selectedCustomer && formData.totalAmount) {
@@ -355,7 +362,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
         )}
 
         <div className="space-y-3">
-          {formData.items.map((item, index) => (
+          {Array.isArray(formData.items) && formData.items.map((item, index) => (
             <div key={index} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
               <div className="grid grid-cols-12 gap-3">
                 <div className="col-span-12 md:col-span-4">
@@ -457,7 +464,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
           ))}
         </div>
 
-        {formData.items.length === 0 && (
+        {(!Array.isArray(formData.items) || formData.items.length === 0) && (
           <div className="text-center py-8 text-gray-500">
             <p>No items added yet. Click "Add Item" to get started.</p>
           </div>
@@ -465,7 +472,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       </div>
 
       {/* Order Totals */}
-      {formData.items.length > 0 && (
+      {Array.isArray(formData.items) && formData.items.length > 0 && (
         <div className="border-t border-gray-200 pt-4">
           <div className="max-w-xs ml-auto space-y-2">
             <div className="flex justify-between text-sm">

@@ -3,7 +3,19 @@
 import { useAuthStore } from '@/store/auth.store'
 
 export function usePermissions() {
-  const { user, hasPermission, hasRole } = useAuthStore()
+  const { user } = useAuthStore()
+
+  const hasPermission = (module: string, action: string = 'canView') => {
+    if (!user) return false;
+    const modulePermission = user.permissions?.find(p => p.module === module);
+    return modulePermission?.[action as keyof typeof modulePermission] || false;
+  };
+
+  const hasRole = (roles: string | string[]) => {
+    if (!user) return false;
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    return roleArray.includes(user.role);
+  };
 
   return {
     user,

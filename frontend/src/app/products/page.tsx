@@ -61,7 +61,7 @@ export default function ProductsPage() {
       if (searchTerm) filters.search = searchTerm
       
       const response = await productsService.getAll(filters)
-      setProducts(response.products || [])
+      setProducts(response?.products || [])
     } catch (error: any) {
       console.error('Error loading products:', error)
       toast.error(error.message || 'Failed to load products')
@@ -120,15 +120,16 @@ export default function ProductsPage() {
   }
 
   const getStatusBadge = (status: Product['status']) => {
-    const colors = {
+    const colors: Record<string, string> = {
       active: 'bg-green-100 text-green-800',
       inactive: 'bg-gray-100 text-gray-800',
       discontinued: 'bg-red-100 text-red-800'
     }
+    const statusValue = status || 'inactive'
     return (<ErrorBoundary>
 
-      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[status]}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`px-2 py-1 text-xs font-semibold rounded-full ${colors[statusValue] || colors.inactive}`}>
+        {statusValue.charAt(0).toUpperCase() + statusValue.slice(1)}
       </span>
     
 </ErrorBoundary>)

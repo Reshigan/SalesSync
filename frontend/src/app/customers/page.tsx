@@ -60,7 +60,7 @@ export default function CustomersPage() {
       if (searchTerm) filters.search = searchTerm
       
       const response = await customersService.getAll(filters)
-      setCustomers(response.customers || [])
+      setCustomers(response?.customers || [])
     } catch (error: any) {
       console.error('Error loading customers:', error)
       toast.error(error.message || 'Failed to load customers')

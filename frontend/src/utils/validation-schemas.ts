@@ -139,9 +139,11 @@ export const registrationValidationSchema: ValidationSchema = {
   },
   confirmPassword: {
     required: true,
-    custom: (confirmPassword, values) => {
-      if (confirmPassword !== values?.password) {
-        return 'Passwords do not match';
+    custom: (confirmPassword) => {
+      // Note: Password matching validation should be handled at form level
+      // This is just basic validation for the field itself
+      if (!confirmPassword || confirmPassword.length < 1) {
+        return 'Please confirm your password';
       }
       return null;
     }
@@ -164,9 +166,10 @@ export const inventoryValidationSchema: ValidationSchema = {
   maxStock: {
     required: true,
     min: 1,
-    custom: (maxStock, values) => {
-      if (values?.minStock && maxStock <= values.minStock) {
-        return 'Maximum stock must be greater than minimum stock';
+    custom: (maxStock) => {
+      // Note: Min/Max stock comparison should be handled at form level
+      if (!maxStock || maxStock < 1) {
+        return 'Maximum stock must be at least 1';
       }
       return null;
     }

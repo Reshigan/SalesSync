@@ -1,4 +1,4 @@
-import { lazy, Suspense, ComponentType } from 'react';
+import React, { lazy, Suspense, ComponentType } from 'react';
 import { LoadingSpinner } from '@/components/ui/loading';
 
 // Dynamic import with error boundary
@@ -10,19 +10,22 @@ export const lazyWithRetry = <T extends ComponentType<any>>(
     importFunc().catch(error => {
       console.error('Failed to load component:', error);
       // Retry once after 1 second
-      return new Promise(resolve => {
+      return new Promise<{ default: T }>((resolve, reject) => {
         setTimeout(() => {
-          resolve(importFunc());
+          importFunc().then(resolve).catch(reject);
         }, 1000);
       });
     })
   );
 
-  return (props: React.ComponentProps<T>) => (
-    <Suspense fallback={<fallback />}>
-      <LazyComponent {...props} />
-    </Suspense>
-  );
+  return (props: React.ComponentProps<T>) => {
+    const FallbackComponent = fallback;
+    return (
+      <Suspense fallback={<FallbackComponent />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  };
 };
 
 // Preload component
@@ -42,7 +45,7 @@ export const createAsyncRoute = (
 export const bundleAnalyzer = {
   logBundleSize: () => {
     if (typeof window !== 'undefined' && 'performance' in window) {
-      const entries = performance.getEntriesByType('resource');
+      const entries = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
       const jsFiles = entries.filter(entry => 
         entry.name.includes('.js') && !entry.name.includes('node_modules')
       );
