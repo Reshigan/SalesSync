@@ -1,0 +1,31 @@
+[Unit]
+Description=SalesSync Backend API Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/SalesSync/backend-api
+Environment=NODE_ENV=production
+Environment=PORT=12001
+Environment=DATABASE_URL=postgresql://salessync_user:your_secure_password@localhost:5432/salessync
+Environment=JWT_SECRET=your_jwt_secret_key_here
+Environment=CORS_ORIGIN=https://ss.gonxt.tech
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=salessync-backend
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ubuntu/SalesSync/backend-api/logs /home/ubuntu/SalesSync/backend-api/uploads
+
+[Install]
+WantedBy=multi-user.target

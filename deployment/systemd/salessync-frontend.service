@@ -1,0 +1,30 @@
+[Unit]
+Description=SalesSync Frontend Service
+After=network.target salessync-backend.service
+Wants=salessync-backend.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/SalesSync/frontend
+Environment=NODE_ENV=production
+Environment=PORT=12000
+Environment=NEXT_PUBLIC_API_URL=https://ss.gonxt.tech/api
+Environment=NEXT_PUBLIC_APP_URL=https://ss.gonxt.tech
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=salessync-frontend
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/ubuntu/SalesSync/frontend/.next
+
+[Install]
+WantedBy=multi-user.target
