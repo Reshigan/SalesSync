@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { Bell, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { useWebSocket, useRealTimeNotifications } from '@/lib/websocket';
 

@@ -1,4 +1,5 @@
 import React, { memo, useMemo, useCallback } from 'react';
+import { useState } from 'react';
 import { useLazyLoad, useOptimizedImage } from '@/hooks/use-performance';
 
 // Optimized image component
