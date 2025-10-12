@@ -25,8 +25,12 @@ export const ordersService = {
     const response = await apiService.post('/orders', data);
     return response.data;
   },
+  update: async (id: string, data: any) => {
+    const response = await apiService.put(`/orders/${id}`, data);
+    return response.data;
+  },
   updateStatus: async (id: string, status: string) => {
-    const response = await apiService.put('/orders', { status });
+    const response = await apiService.put(`/orders/${id}`, { status });
     return response.data;
   },
 };
