@@ -12,9 +12,10 @@ export interface Customer {
   region?: string;
   status: 'active' | 'inactive';
   type: 'retail' | 'wholesale';
-  creditLimit?: number;
+  creditLimit: number;
   businessName?: string;
   customerCode?: string;
+  paymentTerms?: string;
   createdAt: string;
   updatedAt: string;
 }
