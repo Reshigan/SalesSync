@@ -6,7 +6,18 @@ const expressWinston = require('express-winston');
 require('dotenv').config();
 
 const config = require('./config/database');
-const { initializeDatabase } = require('./database/init');
+
+// Use PostgreSQL initialization in production, SQLite for development
+let initializeDatabase, getDatabase;
+if (process.env.NODE_ENV === 'production' && config.type === 'postgres') {
+  const pgInit = require('./database/postgres-init');
+  initializeDatabase = pgInit.initializeDatabase;
+  getDatabase = pgInit.getDatabase;
+} else {
+  const sqliteInit = require('./database/init');
+  initializeDatabase = sqliteInit.initializeDatabase;
+  getDatabase = sqliteInit.getDatabase;
+}
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 // Import enhanced middleware
@@ -203,8 +214,7 @@ async function startServer() {
     await initializeDatabase();
     logger.info('Database initialized successfully');
     
-    // Optimize database performance
-    const { getDatabase } = require('./database/init');
+    // Optimize database performance (getDatabase already imported above)
     optimizeDatabase(getDatabase());
     logger.info('Database optimized for performance');
 
