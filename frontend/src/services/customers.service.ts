@@ -17,8 +17,8 @@ export interface Customer {
 
 export const customersService = {
 
-  getAll: async () => {
-    const response = await apiService.get('/customers');
+  getAll: async (filters?: any) => {
+    const response = await apiService.get('/customers', { params: filters });
     return response.data;
   },
   getById: async (id: string) => {
