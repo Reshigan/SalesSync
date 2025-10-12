@@ -85,7 +85,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
-  }, [user, _hasHydrated]) // Depend on user being available and store being hydrated
+  }, [user]) // Depend on user being available
 
   // Fetch activities separately
   useEffect(() => {
