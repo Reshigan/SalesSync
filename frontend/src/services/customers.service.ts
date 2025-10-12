@@ -9,6 +9,8 @@ export interface Customer {
   company?: string;
   address?: string;
   status: 'active' | 'inactive';
+  type: 'retail' | 'wholesale';
+  creditLimit?: number;
   createdAt: string;
   updatedAt: string;
 }
