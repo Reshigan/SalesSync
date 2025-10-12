@@ -106,18 +106,16 @@ export default function OrdersPage() {
 
   const orderStats = {
     totalOrders: orders.length,
-    pendingOrders: orders.filter(o => o.status === 'pending' || o.status === 'draft').length,
-    processingOrders: orders.filter(o => o.status === 'processing' || o.status === 'confirmed').length,
+    pendingOrders: orders.filter(o => o.status === 'pending').length,
+    processingOrders: orders.filter(o => o.status === 'processing').length,
     shippedOrders: orders.filter(o => o.status === 'shipped' || o.status === 'delivered').length,
-    totalValue: orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0),
-    avgOrderValue: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / orders.length : 0,
+    totalValue: orders.reduce((sum, o) => sum + (o.total || 0), 0),
+    avgOrderValue: orders.length > 0 ? orders.reduce((sum, o) => sum + (o.total || 0), 0) / orders.length : 0,
   }
 
   const getStatusBadge = (status: Order['status']) => {
     const colors = {
-      draft: 'bg-gray-100 text-gray-700',
       pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
       processing: 'bg-purple-100 text-purple-700',
       shipped: 'bg-indigo-100 text-indigo-700',
       delivered: 'bg-green-100 text-green-700',
