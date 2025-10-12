@@ -11,6 +11,8 @@ export interface Customer {
   status: 'active' | 'inactive';
   type: 'retail' | 'wholesale';
   creditLimit?: number;
+  businessName?: string;
+  customerCode?: string;
   createdAt: string;
   updatedAt: string;
 }
