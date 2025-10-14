@@ -48,9 +48,11 @@ const PORT = process.env.PORT || 3001;
 
 // Configure trust proxy properly for production behind nginx
 if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1); // Trust first proxy (nginx)
+  // Trust only the first proxy (nginx) for production security
+  app.set('trust proxy', 1);
 } else {
-  app.set('trust proxy', true); // Trust all proxies in development
+  // More permissive for development
+  app.set('trust proxy', true);
 }
 
 // Security middleware
@@ -104,6 +106,7 @@ const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : true,
   keyGenerator: (req) => {
     // Use X-Forwarded-For header in production, fallback to connection IP
     return req.ip || req.connection.remoteAddress || 'unknown';
@@ -125,14 +128,15 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  trustProxy: process.env.NODE_ENV === 'production' ? 1 : true,
   keyGenerator: (req) => {
     // Use X-Forwarded-For header in production, fallback to connection IP
     return req.ip || req.connection.remoteAddress || 'unknown';
   },
 });
 
-// Temporarily disable rate limiting to fix trust proxy issues
-// TODO: Re-enable after fixing trust proxy configuration
+// Rate limiting temporarily disabled due to trust proxy configuration issues
+// TODO: Re-enable after resolving express-rate-limit trust proxy validation
 // if (process.env.NODE_ENV === 'production') {
 //   app.use('/api/', generalLimiter);
 //   app.use('/api/auth/login', authLimiter);

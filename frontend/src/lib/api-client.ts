@@ -21,7 +21,8 @@ class ApiClient {
     // Request interceptor - add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('token')
+        // Try both 'accessToken' (new format) and 'token' (legacy format)
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
@@ -38,6 +39,8 @@ class ApiClient {
       (error) => {
         if (error.response?.status === 401) {
           // Unauthorized - redirect to login
+          localStorage.removeItem('accessToken')
+          localStorage.removeItem('refreshToken')
           localStorage.removeItem('token')
           localStorage.removeItem('user')
           window.location.href = '/login'
