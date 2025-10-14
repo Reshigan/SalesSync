@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   BarChart3, 
   Users, 
@@ -13,7 +14,7 @@ import {
 } from 'lucide-react';
 
 // Enhanced Dashboard with Tier 1 Features Toggle
-export default function DashboardPage() {
+function DashboardContent() {
   const [enhancedMode, setEnhancedMode] = useState(false);
 
   // Mock data for enhanced features
@@ -310,5 +311,13 @@ export default function DashboardPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <DashboardLayout>
+      <DashboardContent />
+    </DashboardLayout>
   );
 }

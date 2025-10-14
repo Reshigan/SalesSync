@@ -32,7 +32,12 @@ import {
   Route,
   Building,
   User,
-  Layers
+  Layers,
+  Target,
+  Calendar,
+  Gift,
+  TrendingUp,
+  Zap
 } from 'lucide-react'
 
 interface NavigationItem {
@@ -86,8 +91,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: LayoutDashboard,
     })
 
-    // Van Sales module
-    if (canAccessVanSales()) {
+    // Van Sales module - temporarily show for all users for testing
+    if (true || canAccessVanSales()) {
       items.push({
         name: 'Van Sales',
         href: '/van-sales',
@@ -102,8 +107,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Promoter module
-    if (canAccessPromotions()) {
+    // Promoter module - temporarily show for all users for testing
+    if (true || canAccessPromotions()) {
       items.push({
         name: 'Promotions',
         href: '/promotions',
@@ -118,8 +123,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Merchandiser module
-    if (canAccessMerchandising()) {
+    // Merchandiser module - temporarily show for all users for testing
+    if (true || canAccessMerchandising()) {
       items.push({
         name: 'Merchandising',
         href: '/merchandising',
@@ -133,8 +138,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Field Agent module
-    if (canAccessFieldAgents()) {
+    // Field Agent module - temporarily show for all users for testing
+    if (true || canAccessFieldAgents()) {
       items.push({
         name: 'Field Agents',
         href: '/field-agents',
@@ -148,8 +153,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Warehouse module
-    if (canAccessWarehouse()) {
+    // Warehouse module - temporarily show for all users for testing
+    if (true || canAccessWarehouse()) {
       items.push({
         name: 'Warehouse',
         href: '/warehouse',
@@ -164,8 +169,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Back Office
-    if (canAccessBackOffice()) {
+    // Back Office - temporarily show for all users for testing
+    if (true || canAccessBackOffice()) {
       items.push({
         name: 'Back Office',
         href: '/back-office',
@@ -179,8 +184,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
     }
 
-    // Analytics
-    if (canAccessAnalytics()) {
+    // Trade Marketing module - NEW MODULE - temporarily show for all users for testing
+    if (true || canAccessPromotions()) {
+      items.push({
+        name: 'Trade Marketing',
+        href: '/trade-marketing',
+        icon: Target,
+        badge: '5 active',
+        children: [
+          { name: 'Campaign Management', href: '/trade-marketing/campaigns', icon: Megaphone },
+          { name: 'Trade Promotions', href: '/trade-marketing/promotions', icon: Gift },
+          { name: 'Brand Activations', href: '/trade-marketing/activations', icon: Zap },
+          { name: 'Market Intelligence', href: '/trade-marketing/intelligence', icon: TrendingUp },
+          { name: 'ROI Analytics', href: '/trade-marketing/roi', icon: BarChart3 },
+        ],
+      })
+    }
+
+    // Promotions & Events module - temporarily show for all users for testing
+    if (true || canAccessPromotions()) {
+      items.push({
+        name: 'Promotions & Events',
+        href: '/promotions',
+        icon: Calendar,
+        badge: '3 upcoming',
+        children: [
+          { name: 'Event Planning', href: '/promotions/events', icon: Calendar },
+          { name: 'Promotional Campaigns', href: '/promotions/campaigns', icon: Gift },
+          { name: 'Contest Management', href: '/promotions/contests', icon: Target },
+          { name: 'Loyalty Programs', href: '/promotions/loyalty', icon: Users },
+          { name: 'Event Analytics', href: '/promotions/analytics', icon: BarChart3 },
+        ],
+      })
+    }
+
+    // Analytics - temporarily show for all users for testing
+    if (true || canAccessAnalytics()) {
       items.push({
         name: 'Analytics',
         href: '/analytics',
