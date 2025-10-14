@@ -1,11 +1,11 @@
 {
-  "name": "salessync-frontend",
+  "name": "salessync-frontend-tier1",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 12000 -H 0.0.0.0",
+    "dev": "next dev -p 3000 -H 0.0.0.0",
     "build": "next build",
-    "start": "next start -p 12000 -H 0.0.0.0",
+    "start": "next start -p 3000 -H 0.0.0.0",
     "lint": "next lint --fix",
     "lint:check": "next lint",
     "type-check": "tsc --noEmit",
@@ -32,7 +32,13 @@
     "recharts": "^2.10.3",
     "socket.io-client": "^4.5.4",
     "tailwind-merge": "^2.0.0",
-    "zustand": "^4.4.7"
+    "zustand": "^4.4.7",
+    "@mui/material": "^5.14.20",
+    "@mui/icons-material": "^5.14.19",
+    "@mui/x-date-pickers": "^6.18.3",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@react-google-maps/api": "^2.19.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.0",
