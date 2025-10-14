@@ -44,10 +44,14 @@ import { socketService } from './services/socketService';
 const app = express();
 const server = createServer(app);
 
-// Trust proxy for rate limiting and IP detection
-app.set('trust proxy', true);
-
 const PORT = process.env.PORT || 3001;
+
+// Configure trust proxy properly for production behind nginx
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy (nginx)
+} else {
+  app.set('trust proxy', true); // Trust all proxies in development
+}
 
 // Security middleware
 app.use(helmet({
@@ -100,6 +104,10 @@ const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For header in production, fallback to connection IP
+    return req.ip || req.connection.remoteAddress || 'unknown';
+  },
   skip: (req) => {
     // Skip rate limiting for health checks
     return req.path === '/health';
@@ -109,7 +117,7 @@ const generalLimiter = rateLimit({
 // Stricter rate limiting for authentication endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 5 : 100, // More lenient for development
+  max: process.env.NODE_ENV === 'production' ? 10 : 100, // More lenient for development and testing
   message: {
     error: 'Too many authentication attempts',
     message: 'Too many login attempts from this IP, please try again later.',
@@ -117,18 +125,17 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => {
+    // Use X-Forwarded-For header in production, fallback to connection IP
+    return req.ip || req.connection.remoteAddress || 'unknown';
+  },
 });
 
-// Temporarily disable rate limiting for development
+// Apply rate limiting in production
 if (process.env.NODE_ENV === 'production') {
   app.use('/api/', generalLimiter);
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
-}
-
-// Trust proxy for production deployments behind reverse proxy
-if (process.env.TRUST_PROXY === 'true') {
-  app.set('trust proxy', 1);
 }
 
 // Body parsing middleware with security considerations

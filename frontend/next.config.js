@@ -11,10 +11,11 @@ const nextConfig = {
     // Allow warnings during build, only fail on errors
     ignoreBuildErrors: false,
   },
-  // Allow cross-origin requests for development
+  // Allow cross-origin requests for development and production
   allowedDevOrigins: [
     'work-1-ifgxvhjrlkroyxsp.prod-runtime.all-hands.dev',
-    'work-2-ifgxvhjrlkroyxsp.prod-runtime.all-hands.dev'
+    'work-2-ifgxvhjrlkroyxsp.prod-runtime.all-hands.dev',
+    'ss.gonxt.tech'
   ],
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
