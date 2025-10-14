@@ -1,0 +1,32 @@
+module.exports = {
+  apps: [
+    {
+      name: 'salessync-backend',
+      cwd: '/home/ubuntu/SalesSync/backend',
+      script: 'npm',
+      args: 'start',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      }
+    },
+    {
+      name: 'salessync-frontend',
+      cwd: '/home/ubuntu/SalesSync/frontend',
+      script: 'npm',
+      args: 'start',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      }
+    }
+  ]
+};
