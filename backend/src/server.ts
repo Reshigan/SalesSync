@@ -131,12 +131,13 @@ const authLimiter = rateLimit({
   },
 });
 
-// Apply rate limiting in production
-if (process.env.NODE_ENV === 'production') {
-  app.use('/api/', generalLimiter);
-  app.use('/api/auth/login', authLimiter);
-  app.use('/api/auth/register', authLimiter);
-}
+// Temporarily disable rate limiting to fix trust proxy issues
+// TODO: Re-enable after fixing trust proxy configuration
+// if (process.env.NODE_ENV === 'production') {
+//   app.use('/api/', generalLimiter);
+//   app.use('/api/auth/login', authLimiter);
+//   app.use('/api/auth/register', authLimiter);
+// }
 
 // Body parsing middleware with security considerations
 app.use(express.json({ 
