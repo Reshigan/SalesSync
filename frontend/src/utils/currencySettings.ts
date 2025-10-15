@@ -3,7 +3,7 @@
  * Manages currency configuration and provides consistent currency formatting
  */
 
-import apiService from '../lib/api';
+import { apiClient } from '../lib/api-client';
 
 interface CurrencyOption {
   code: string;
@@ -23,8 +23,8 @@ const DEFAULT_CURRENCY_SETTINGS: CurrencySettings = {
 };
 
 // Cache for currency settings
-let currencyCache = null;
-let cacheTimestamp = null;
+let currencyCache: CurrencySettings | null = null;
+let cacheTimestamp: number | null = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
@@ -47,12 +47,12 @@ export const getCurrencySettings = () => {
  */
 export const fetchCurrencySettings = async () => {
   try {
-    const response = await apiService.get('/settings/currency');
+    const response: any = await apiClient.get('/settings/currency');
     
-    if (response.data && response.data.success) {
+    if (response && response.success) {
       const settings = {
-        currency: response.data.data.currency || DEFAULT_CURRENCY_SETTINGS.currency,
-        currencySymbol: response.data.data.currencySymbol || DEFAULT_CURRENCY_SETTINGS.currencySymbol
+        currency: response.data.currency || DEFAULT_CURRENCY_SETTINGS.currency,
+        currencySymbol: response.data.currencySymbol || DEFAULT_CURRENCY_SETTINGS.currencySymbol
       };
       
       // Update cache
@@ -74,14 +74,14 @@ export const fetchCurrencySettings = async () => {
  * @param {string} currencySymbol - Currency symbol (e.g., '$', '£', '€')
  * @returns {Promise<boolean>} Success status
  */
-export const saveCurrencySettings = async (currency, currencySymbol) => {
+export const saveCurrencySettings = async (currency: string, currencySymbol: string) => {
   try {
-    const response = await apiService.post('/settings/currency', {
+    const response: any = await apiClient.post('/settings/currency', {
       currency,
       currencySymbol
     });
     
-    if (response.data && response.data.success) {
+    if (response && response.success) {
       // Update cache
       currencyCache = { currency, currencySymbol };
       cacheTimestamp = Date.now();
@@ -142,7 +142,7 @@ export const formatCurrencyAmount = (amount: number, options: any = {}) => {
     return `${settings.currencySymbol}0.00`;
   }
 
-  const numericAmount = parseFloat(amount);
+  const numericAmount = Number(amount);
   
   try {
     const formatter = new Intl.NumberFormat('en-US', {
@@ -156,7 +156,7 @@ export const formatCurrencyAmount = (amount: number, options: any = {}) => {
     const formatted = formatter.format(numericAmount);
     
     // Replace the default currency symbol with our custom one if different
-    const currencySymbols = {
+    const currencySymbols: Record<string, string> = {
       'USD': '$',
       'GBP': '£',
       'EUR': '€',
