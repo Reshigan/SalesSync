@@ -8,65 +8,43 @@ import { Database, Server, Activity, HardDrive, Cpu, Clock, AlertTriangle, Dolla
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
+import { getCurrencyOptions } from '@/utils/currencySettings';
 
 export default function SystemPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [currency, setCurrency] = useState('USD');
-  const [currencySymbol, setCurrencySymbol] = useState('$');
   const { success, error } = useToast();
+  const {
+    currencySettings,
+    loading: currencyLoading,
+    error: currencyError,
+    updateCurrencySettings
+  } = useCurrency();
 
-  const currencyOptions = [
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-    { code: 'EUR', symbol: '€', name: 'Euro' },
-    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-  ];
+  const [localCurrency, setLocalCurrency] = useState(currencySettings.currency);
+  const [localCurrencySymbol, setLocalCurrencySymbol] = useState(currencySettings.currencySymbol);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const currencyOptions = getCurrencyOptions();
+
+  // Update local state when currency settings change
+  useEffect(() => {
+    setLocalCurrency(currencySettings.currency);
+    setLocalCurrencySymbol(currencySettings.currencySymbol);
+  }, [currencySettings]);
 
   const handleCurrencyChange = (currencyCode: string) => {
     const selectedCurrency = currencyOptions.find(c => c.code === currencyCode);
     if (selectedCurrency) {
-      setCurrency(currencyCode);
-      setCurrencySymbol(selectedCurrency.symbol);
+      setLocalCurrency(currencyCode);
+      setLocalCurrencySymbol(selectedCurrency.symbol);
     }
   };
-
-  useEffect(() => {
-    // Load existing currency settings
-    const loadCurrencySettings = async () => {
-      try {
-        const response = await fetch('/api/settings/currency');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.data) {
-            setCurrency(data.data.currency || 'USD');
-            setCurrencySymbol(data.data.currencySymbol || '$');
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load currency settings:', err);
-      }
-    };
-
-    loadCurrencySettings();
-  }, []);
 
   const saveCurrencySettings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/settings/currency', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currency,
-          currencySymbol,
-        }),
-      });
-
-      if (response.ok) {
+      const success_result = await updateCurrencySettings(localCurrency, localCurrencySymbol);
+      if (success_result) {
         success('Currency settings saved successfully');
       } else {
         error('Failed to save currency settings');
@@ -244,7 +222,7 @@ export default function SystemPage() {
                 Default Currency
               </label>
               <select 
-                value={currency}
+                value={localCurrency}
                 onChange={(e) => handleCurrencyChange(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               >
@@ -261,8 +239,8 @@ export default function SystemPage() {
               </label>
               <input
                 type="text"
-                value={currencySymbol}
-                onChange={(e) => setCurrencySymbol(e.target.value)}
+                value={localCurrencySymbol}
+                onChange={(e) => setLocalCurrencySymbol(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
                 placeholder="$"
               />
@@ -271,17 +249,17 @@ export default function SystemPage() {
           
           <div className="mt-4 p-4 bg-blue-50 rounded-md">
             <p className="text-sm text-blue-800">
-              <strong>Preview:</strong> Prices will be displayed as: {currencySymbol}99.99
+              <strong>Preview:</strong> Prices will be displayed as: {localCurrencySymbol}99.99
             </p>
           </div>
           
           <div className="mt-6">
             <Button 
               onClick={saveCurrencySettings}
-              disabled={isLoading}
+              disabled={isLoading || currencyLoading}
               className="flex items-center"
             >
-              {isLoading && <LoadingSpinner className="mr-2" />}
+              {(isLoading || currencyLoading) && <LoadingSpinner className="mr-2" />}
               Save Currency Settings
             </Button>
           </div>
