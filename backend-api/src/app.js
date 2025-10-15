@@ -71,6 +71,7 @@ async function initializeApp() {
     const customerActivationRoutes = require('./routes/customer-activation-simple');
     console.log('Loading surveys routes...');
     const surveysRoutes = require('./routes/surveys-simple');
+    const settingsRoutes = require('./routes/settings');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -95,6 +96,7 @@ async function initializeApp() {
     app.use('/api/customer-activation', customerActivationRoutes);
     console.log('Mounting surveys routes...');
     app.use('/api/surveys', surveysRoutes);
+    app.use('/api/settings', settingsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);
