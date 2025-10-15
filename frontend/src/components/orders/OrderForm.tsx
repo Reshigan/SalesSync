@@ -71,15 +71,44 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const loadCustomers = async () => {
     try {
       console.log('🔍 OrderForm: Starting to load customers...')
+      // Add temporary debugging - this will show in browser console
+      if (typeof window !== 'undefined') {
+        console.log('🔍 BROWSER: loadCustomers called')
+      }
+      
       const response = await customersService.getAll({ status: 'active' })
       console.log('🔍 OrderForm: Raw response from customersService:', response)
       console.log('🔍 OrderForm: response?.customers:', response?.customers)
       console.log('🔍 OrderForm: Array.isArray(response?.customers):', Array.isArray(response?.customers))
-      setCustomers(response?.customers || [])
+      
+      // Force an error if no customers to see if this code is reached
+      if (!response || !response.customers || response.customers.length === 0) {
+        console.error('🔍 CRITICAL: No customers found in response!', response)
+        // Temporarily set a fake customer to test if the issue is with the API or the UI
+        setCustomers([{
+          id: 'test-1',
+          name: 'TEST CUSTOMER',
+          customerCode: 'TEST001',
+          email: 'test@test.com',
+          phone: '123456789',
+          status: 'active'
+        }])
+      } else {
+        setCustomers(response?.customers || [])
+      }
       console.log('🔍 OrderForm: Customers set to state:', response?.customers || [])
     } catch (error: any) {
       console.error('🔍 OrderForm: Error loading customers:', error)
-      toast.error('Failed to load customers')
+      toast.error('Failed to load customers: ' + error.message)
+      // Set a test customer even on error to see if UI works
+      setCustomers([{
+        id: 'error-test',
+        name: 'ERROR TEST CUSTOMER',
+        customerCode: 'ERR001',
+        email: 'error@test.com',
+        phone: '987654321',
+        status: 'active'
+      }])
     } finally {
       setLoadingCustomers(false)
     }
