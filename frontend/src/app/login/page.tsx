@@ -16,7 +16,7 @@ export default function LoginPage() {
   const { login, isLoading: authLoading } = useAuthStore()
   const [formData, setFormData] = useState({
     email: 'admin@demo.com',
-    password: 'demo123',
+    password: 'admin123',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')

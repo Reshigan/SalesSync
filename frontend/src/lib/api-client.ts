@@ -18,7 +18,7 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - add auth token
+    // Request interceptor - add auth token and tenant header
     this.client.interceptors.request.use(
       (config) => {
         // Try both 'accessToken' (new format) and 'token' (legacy format)
@@ -26,6 +26,12 @@ class ApiClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
         }
+        
+        // Add tenant header for all requests
+        if (!config.headers['X-Tenant-Code']) {
+          config.headers['X-Tenant-Code'] = 'DEMO'
+        }
+        
         return config
       },
       (error) => {
