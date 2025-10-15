@@ -9,6 +9,7 @@ import { customersService, Customer } from '@/services/customers.service'
 import { productsService, Product } from '@/services/products.service'
 import { Plus, Trash2, Search, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '@/store/auth.store'
 
 interface OrderFormProps {
   initialData?: Order
@@ -18,6 +19,7 @@ interface OrderFormProps {
 
 export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   console.log('🔍 OrderForm: Component mounting/rendering')
+  const { isAuthenticated, token } = useAuthStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -27,6 +29,8 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   // DEBUGGING: Add visual indicator
   console.log('🔍 OrderForm: customers state:', customers)
   console.log('🔍 OrderForm: loadingCustomers state:', loadingCustomers)
+  console.log('🔍 OrderForm: isAuthenticated:', isAuthenticated)
+  console.log('🔍 OrderForm: token available:', !!token)
   
   const [formData, setFormData] = useState<Order>({
     customerId: initialData?.customerId || '',
@@ -45,10 +49,17 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   useEffect(() => {
-    console.log('🔍 OrderForm: useEffect running - about to load customers and products')
-    loadCustomers()
-    loadProducts()
-  }, [])
+    console.log('🔍 OrderForm: useEffect running - checking authentication')
+    console.log('🔍 OrderForm: isAuthenticated:', isAuthenticated, 'token:', !!token)
+    
+    if (isAuthenticated && token) {
+      console.log('🔍 OrderForm: User is authenticated, loading customers and products')
+      loadCustomers()
+      loadProducts()
+    } else {
+      console.log('🔍 OrderForm: User not authenticated or no token, skipping API calls')
+    }
+  }, [isAuthenticated, token])
 
   useEffect(() => {
     calculateTotals()
