@@ -17,6 +17,7 @@ interface OrderFormProps {
 }
 
 export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
+  console.log('🔍 OrderForm: Component mounting/rendering')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [customers, setCustomers] = useState<Customer[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -40,6 +41,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
   useEffect(() => {
+    console.log('🔍 OrderForm: useEffect running - about to load customers and products')
     loadCustomers()
     loadProducts()
   }, [])
