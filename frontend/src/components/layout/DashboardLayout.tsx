@@ -39,6 +39,7 @@ import {
   TrendingUp,
   Zap
 } from 'lucide-react'
+import { CompactAnimatedLogo } from '@/components/ui/AnimatedLogo'
 
 interface NavigationItem {
   name: string
@@ -296,16 +297,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           {!collapsed && (
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md">
-                <Layers className="w-5 h-5 text-white" strokeWidth={2} />
-              </div>
-              <h1 className="text-xl font-bold text-slate-900">SalesSync</h1>
+            <div className="flex items-center space-x-3">
+              <CompactAnimatedLogo />
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 bg-clip-text text-transparent">SalesSync</h1>
             </div>
           )}
           {collapsed && (
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-md mx-auto">
-              <Layers className="w-5 h-5 text-white" strokeWidth={2} />
+            <div className="mx-auto">
+              <CompactAnimatedLogo />
             </div>
           )}
           <button

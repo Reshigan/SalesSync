@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Eye, EyeOff, Layers, Shield, TrendingUp, Users } from 'lucide-react'
+import { AnimatedLogo } from '@/components/ui/AnimatedLogo'
+import { Eye, EyeOff, Shield, TrendingUp, Users, Sparkles, Zap, Globe, Lock } from 'lucide-react'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,12 @@ export default function LoginPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [mounted, setMounted] = useState(false)
+  const [isFormFocused, setIsFormFocused] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     console.log('handleLogin called')
@@ -40,142 +47,188 @@ export default function LoginPage() {
     }
   }
 
-  return (<ErrorBoundary>
+  if (!mounted) {
+    return <LoadingPage />
+  }
 
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo & Branding */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mb-4 shadow-lg">
-            <Layers className="w-8 h-8 text-white" strokeWidth={2} />
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">SalesSync</h1>
-          <p className="text-slate-600">Enterprise Field Force Platform</p>
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+          {/* Floating Orbs */}
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+          <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+          
+          {/* Grid Pattern */}
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Ccircle cx="30" cy="30" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Error Message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                <p className="text-sm font-medium">{error}</p>
+        {/* Main Content */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            {/* Logo & Branding */}
+            <div className={`text-center mb-8 transition-all duration-1000 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
+              <div className="mb-6">
+                <AnimatedLogo size="xl" showText={true} className="justify-center" />
               </div>
-            )}
-
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700">Email Address</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="you@company.com"
-                required
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              />
+              <p className="text-slate-300 text-lg font-medium">Welcome back to the future of sales</p>
             </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-700">Password</label>
-                <a href="#" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                  Forgot password?
-                </a>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Enter your password"
-                  required
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
+            {/* Login Card */}
+            <div className={`bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 transition-all duration-1000 ${
+              mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+            } ${isFormFocused ? 'scale-105 shadow-3xl' : ''}`}
+            style={{ animationDelay: '0.2s' }}>
+              <form onSubmit={handleLogin} className="space-y-6">
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-red-500/20 backdrop-blur border border-red-400/30 text-red-200 px-4 py-3 rounded-xl animate-shake">
+                    <p className="text-sm font-medium flex items-center">
+                      <Zap className="w-4 h-4 mr-2" />
+                      {error}
+                    </p>
+                  </div>
+                )}
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-white/90 flex items-center">
+                    <Globe className="w-4 h-4 mr-2" />
+                    Email Address
+                  </label>
+                  <div className="relative group">
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onFocus={() => setIsFormFocused(true)}
+                      onBlur={() => setIsFormFocused(false)}
+                      placeholder="you@company.com"
+                      required
+                      className="w-full px-4 py-4 bg-white/10 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 group-hover:bg-white/15"
+                    />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400/0 via-blue-400/5 to-purple-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-white/90 flex items-center">
+                      <Lock className="w-4 h-4 mr-2" />
+                      Password
+                    </label>
+                    <a href="#" className="text-xs text-blue-300 hover:text-blue-200 font-medium transition-colors">
+                      Forgot password?
+                    </a>
+                  </div>
+                  <div className="relative group">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      onFocus={() => setIsFormFocused(true)}
+                      onBlur={() => setIsFormFocused(false)}
+                      placeholder="Enter your password"
+                      required
+                      className="w-full px-4 py-4 bg-white/10 backdrop-blur border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 transition-all duration-300 group-hover:bg-white/15"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white/90 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400/0 via-purple-400/5 to-blue-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  </div>
+                </div>
+
+                {/* Remember Me */}
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-400 focus:ring-blue-400/50 border-white/30 rounded bg-white/10 backdrop-blur"
+                  />
+                  <label htmlFor="remember-me" className="ml-2 block text-sm text-white/80">
+                    Remember me for 30 days
+                  </label>
+                </div>
+
+                {/* Login Button */}
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  type="submit"
+                  disabled={authLoading}
+                  onClick={() => console.log('Button clicked!')}
+                  className="w-full py-4 px-4 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 hover:from-blue-600 hover:via-purple-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 relative overflow-hidden group"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  {authLoading ? (
+                    <span className="flex items-center justify-center relative z-10">
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white mr-3"></div>
+                      Signing in...
+                    </span>
+                  ) : (
+                    <span className="relative z-10 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Sign In
+                    </span>
+                  )}
                 </button>
+              </form>
+
+              {/* Divider */}
+              <div className="mt-8 relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-3 bg-white/10 backdrop-blur text-white/70 rounded-full">Trusted by enterprises worldwide</span>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div className="mt-8 grid grid-cols-3 gap-4">
+                <div className="text-center group cursor-pointer">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500/20 backdrop-blur rounded-xl mb-3 group-hover:bg-blue-500/30 transition-all duration-300 group-hover:scale-110">
+                    <Shield className="w-6 h-6 text-blue-300" />
+                  </div>
+                  <p className="text-xs text-white/80 font-medium">Bank-Grade Security</p>
+                </div>
+                <div className="text-center group cursor-pointer">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-emerald-500/20 backdrop-blur rounded-xl mb-3 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110">
+                    <TrendingUp className="w-6 h-6 text-emerald-300" />
+                  </div>
+                  <p className="text-xs text-white/80 font-medium">Real-time Analytics</p>
+                </div>
+                <div className="text-center group cursor-pointer">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-500/20 backdrop-blur rounded-xl mb-3 group-hover:bg-purple-500/30 transition-all duration-300 group-hover:scale-110">
+                    <Users className="w-6 h-6 text-purple-300" />
+                  </div>
+                  <p className="text-xs text-white/80 font-medium">Global Scale</p>
+                </div>
               </div>
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
-                Remember me for 30 days
-              </label>
-            </div>
-
-            {/* Login Button */}
-            <button
-              type="submit"
-              disabled={authLoading}
-              onClick={() => console.log('Button clicked!')}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {authLoading ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing in...
-                </span>
-              ) : (
-                'Sign In'
-              )}
-            </button>
-          </form>
-
-          {/* Divider */}
-          <div className="mt-6 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-white text-slate-500">Trusted by enterprises worldwide</span>
-            </div>
-          </div>
-
-          {/* Features */}
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg mb-2">
-                <Shield className="w-5 h-5 text-blue-600" />
-              </div>
-              <p className="text-xs text-slate-600 font-medium">Secure</p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 bg-emerald-50 rounded-lg mb-2">
-                <TrendingUp className="w-5 h-5 text-emerald-600" />
-              </div>
-              <p className="text-xs text-slate-600 font-medium">Analytics</p>
-            </div>
-            <div className="text-center">
-              <div className="inline-flex items-center justify-center w-10 h-10 bg-amber-50 rounded-lg mb-2">
-                <Users className="w-5 h-5 text-amber-600" />
-              </div>
-              <p className="text-xs text-slate-600 font-medium">Scalable</p>
+            {/* Footer */}
+            <div className={`mt-8 text-center text-sm text-white/60 transition-all duration-1000 ${
+              mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+            }`} style={{ animationDelay: '0.4s' }}>
+              <p>© 2025 SalesSync. Enterprise-grade field force management.</p>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 text-center text-sm text-slate-600">
-          <p>© 2025 SalesSync. Enterprise-grade field force management.</p>
-        </div>
+        {/* Floating Elements */}
+        <div className="absolute top-10 left-10 w-2 h-2 bg-blue-400 rounded-full animate-ping"></div>
+        <div className="absolute top-20 right-20 w-1 h-1 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-20 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute bottom-10 right-10 w-1 h-1 bg-blue-300 rounded-full animate-ping" style={{ animationDelay: '3s' }}></div>
       </div>
-    </div>
-  
-</ErrorBoundary>)
+    </ErrorBoundary>
+  )
 }
