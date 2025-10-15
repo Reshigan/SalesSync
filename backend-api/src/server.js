@@ -270,6 +270,7 @@ async function startServer() {
     const advancedReportingRoutes = require('./routes/advanced-reporting');
     const integrationsRoutes = require('./routes/integrations');
     const mobileRoutes = require('./routes/mobile');
+    const settingsRoutes = require('./routes/settings');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -328,6 +329,7 @@ async function startServer() {
     app.use('/api/advanced-reporting', authTenantMiddleware, advancedReportingRoutes);
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
+    app.use('/api/settings', authTenantMiddleware, settingsRoutes);
 
     logger.info('Routes configured successfully');
 
