@@ -52,7 +52,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <>
+      <div className="min-h-screen relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
           {/* Floating Orbs */}
@@ -227,6 +228,7 @@ export default function LoginPage() {
         <div className="absolute top-20 right-20 w-1 h-1 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-20 left-20 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '2s' }}></div>
         <div className="absolute bottom-10 right-10 w-1 h-1 bg-blue-300 rounded-full animate-ping" style={{ animationDelay: '3s' }}></div>
-    </div>
+      </div>
+    </>
   )
 }
