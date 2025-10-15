@@ -153,11 +153,64 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
 
   const loadProducts = async () => {
     try {
+      console.log('🔍 OrderForm: Starting to load products...')
+      console.log('🔍 OrderForm: productsService:', productsService)
+      
+      // DIRECT API TEST - Let's bypass the products service and call the API directly
+      console.log('🔍 OrderForm: Making DIRECT API call to test products...')
+      const apiService = (await import('@/lib/api')).default
+      console.log('🔍 OrderForm: API service imported for products:', apiService)
+      
+      // Test direct API call for products
+      const directResponse = await apiService.getProducts({ status: 'active' })
+      console.log('🔍 OrderForm: DIRECT PRODUCTS API response:', directResponse)
+      console.log('🔍 OrderForm: DIRECT PRODUCTS API response.data:', directResponse.data)
+      console.log('🔍 OrderForm: DIRECT PRODUCTS API response.error:', directResponse.error)
+      
+      // Now test the products service
+      console.log('🔍 OrderForm: Calling productsService.getAll with params:', { status: 'active' })
       const response = await productsService.getAll({ status: 'active' })
-      setProducts(response?.products || [])
+      console.log('🔍 OrderForm: Raw response from productsService:', response)
+      console.log('🔍 OrderForm: response type:', typeof response)
+      console.log('🔍 OrderForm: response?.products:', response?.products)
+      console.log('🔍 OrderForm: Array.isArray(response?.products):', Array.isArray(response?.products))
+      
+      if (response && response.products && Array.isArray(response.products) && response.products.length > 0) {
+        console.log('🔍 OrderForm: Setting products from service:', response.products)
+        setProducts(response.products)
+        console.log(`✅ PRODUCTS SUCCESS: Found ${response.products.length} products`)
+      } else {
+        console.error('🔍 CRITICAL: No products found in service response!', {
+          response,
+          hasResponse: !!response,
+          hasProducts: !!(response?.products),
+          isArray: Array.isArray(response?.products),
+          length: response?.products?.length
+        })
+        
+        // FALLBACK: Try to use direct API response
+        if (directResponse && directResponse.data && directResponse.data.data && directResponse.data.data.products) {
+          console.log('🔍 OrderForm: Using DIRECT PRODUCTS API response as fallback')
+          setProducts(directResponse.data.data.products)
+          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${directResponse.data.data.products.length} products from direct API`)
+        } else if (directResponse && directResponse.data && directResponse.data.products) {
+          console.log('🔍 OrderForm: Using DIRECT PRODUCTS API response (alternative structure) as fallback')
+          setProducts(directResponse.data.products)
+          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${directResponse.data.products.length} products from direct API`)
+        } else {
+          setProducts([])
+          console.log('❌ PRODUCTS FAILED: No products found in either service or direct API')
+        }
+      }
     } catch (error: any) {
-      console.error('Error loading products:', error)
-      toast.error('Failed to load products')
+      console.error('🔍 OrderForm: Error loading products:', error)
+      console.error('🔍 OrderForm: Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
+      toast.error('Failed to load products: ' + error.message)
+      setProducts([])
     } finally {
       setLoadingProducts(false)
     }

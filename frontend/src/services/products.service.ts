@@ -29,23 +29,28 @@ export const productsService = {
 
   getAll: async (filters?: any) => {
     const response = await apiService.getProducts(filters);
-    return response.data;
+    // Handle nested response structure: {success: true, data: {products: [...], pagination: {...}}}
+    return response.data?.data || response.data;
   },
   getById: async (id: string) => {
     const response = await apiService.getProduct(id);
-    return response.data;
+    // Handle nested response structure
+    return response.data?.data || response.data;
   },
   create: async (data: any) => {
     const response = await apiService.createProduct(data);
-    return response.data;
+    // Handle nested response structure
+    return response.data?.data || response.data;
   },
   update: async (id: string, data: any) => {
     const response = await apiService.updateProduct(id, data);
-    return response.data;
+    // Handle nested response structure
+    return response.data?.data || response.data;
   },
   delete: async (id: string) => {
     const response = await apiService.deleteProduct(id);
-    return response.data;
+    // Handle nested response structure
+    return response.data?.data || response.data;
   },
 };
 
