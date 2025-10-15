@@ -289,7 +289,7 @@ class ApiService {
     
     const result = await this.request(endpoint);
     console.log('🔍 ApiService.getCustomers: Request result:', result)
-    return result;
+    return result as ApiResponse<{ customers: any[]; pagination: any; }>;
   }
 
   async getCustomer(id: string): Promise<ApiResponse<any>> {
@@ -335,7 +335,7 @@ class ApiService {
     if (params?.search) query.append('search', params.search);
     
     const queryString = query.toString();
-    return this.request(`/products${queryString ? '?' + queryString : ''}`);
+    return this.request(`/products${queryString ? '?' + queryString : ''}`) as Promise<ApiResponse<{ products: any[]; pagination: any; }>>;
   }
 
   async getProduct(id: string): Promise<ApiResponse<any>> {
