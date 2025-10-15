@@ -64,10 +64,15 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
 
   const loadCustomers = async () => {
     try {
+      console.log('🔍 OrderForm: Starting to load customers...')
       const response = await customersService.getAll({ status: 'active' })
+      console.log('🔍 OrderForm: Raw response from customersService:', response)
+      console.log('🔍 OrderForm: response?.customers:', response?.customers)
+      console.log('🔍 OrderForm: Array.isArray(response?.customers):', Array.isArray(response?.customers))
       setCustomers(response?.customers || [])
+      console.log('🔍 OrderForm: Customers set to state:', response?.customers || [])
     } catch (error: any) {
-      console.error('Error loading customers:', error)
+      console.error('🔍 OrderForm: Error loading customers:', error)
       toast.error('Failed to load customers')
     } finally {
       setLoadingCustomers(false)

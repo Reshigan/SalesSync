@@ -28,8 +28,14 @@ export interface Customer {
 export const customersService = {
 
   getAll: async (filters?: any) => {
+    console.log('🔍 CustomersService: getAll called with filters:', filters)
     const response = await apiService.getCustomers(filters);
-    return response.data?.data || response.data;
+    console.log('🔍 CustomersService: Raw API response:', response)
+    console.log('🔍 CustomersService: response.data:', response.data)
+    console.log('🔍 CustomersService: response.data?.data:', response.data?.data)
+    const result = response.data?.data || response.data;
+    console.log('🔍 CustomersService: Final result:', result)
+    return result;
   },
   getById: async (id: string) => {
     const response = await apiService.getCustomer(id);
