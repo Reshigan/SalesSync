@@ -32,9 +32,11 @@ export const customersService = {
     const response = await apiService.getCustomers(filters);
     console.log('🔍 CustomersService: Raw API response:', response)
     console.log('🔍 CustomersService: response.data:', response.data)
-    console.log('🔍 CustomersService: response.data?.data:', response.data?.data)
-    const result = response.data?.data || response.data;
-    console.log('🔍 CustomersService: Final result:', result)
+    console.log('🔍 CustomersService: response.data?.customers:', response.data?.customers)
+    
+    // Backend returns: { success: true, data: { customers: [...], pagination: {...} } }
+    const result = response.data?.customers || response.data?.data?.customers || response.data;
+    console.log('🔍 CustomersService: Final result (customers array):', result)
     return result;
   },
   getById: async (id: string) => {
