@@ -379,9 +379,9 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
               <div className="text-sm">
                 <p className="text-blue-900 font-medium">Credit Information</p>
                 <p className="text-blue-700">
-                  Credit Limit: KES {selectedCustomer.creditLimit.toLocaleString()} | 
+                  Credit Limit: KES {(selectedCustomer.creditLimit || 0).toLocaleString()} | 
                   Used: KES {(selectedCustomer.creditBalance || 0).toLocaleString()} | 
-                  Available: KES {(selectedCustomer.creditLimit - (selectedCustomer.creditBalance || 0)).toLocaleString()}
+                  Available: KES {((selectedCustomer.creditLimit || 0) - (selectedCustomer.creditBalance || 0)).toLocaleString()}
                 </p>
               </div>
             </div>
