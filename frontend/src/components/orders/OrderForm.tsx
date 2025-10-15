@@ -24,6 +24,10 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const [loadingCustomers, setLoadingCustomers] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
   
+  // DEBUGGING: Add visual indicator
+  console.log('🔍 OrderForm: customers state:', customers)
+  console.log('🔍 OrderForm: loadingCustomers state:', loadingCustomers)
+  
   const [formData, setFormData] = useState<Order>({
     customerId: initialData?.customerId || '',
     salesAgentId: initialData?.salesAgentId || '',
@@ -307,7 +311,9 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
               className={errors.customerId ? 'border-red-500' : ''}
               disabled={loadingCustomers}
             >
-              <option value="">Select Customer</option>
+              <option value="">
+                {loadingCustomers ? 'Loading customers...' : `Select Customer (${customers.length} available)`}
+              </option>
               {customers.map(customer => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name} ({customer.customerCode})
