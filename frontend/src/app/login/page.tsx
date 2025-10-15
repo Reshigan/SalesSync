@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo'
 import { Eye, EyeOff, Shield, TrendingUp, Users, Sparkles, Zap, Globe, Lock } from 'lucide-react'
-import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 
