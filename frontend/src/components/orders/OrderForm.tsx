@@ -474,13 +474,29 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
                       const discount = Number(item.discount) || 0
                       const taxRate = Number(item.tax) || 0
                       
+                      console.log('Line item calculation debug:', {
+                        item,
+                        quantity,
+                        unitPrice,
+                        discount,
+                        taxRate
+                      })
+                      
                       const itemTotal = quantity * unitPrice
                       const discountAmount = itemTotal * (discount / 100)
                       const afterDiscount = itemTotal - discountAmount
                       const taxAmount = afterDiscount * (taxRate / 100)
                       const finalTotal = afterDiscount + taxAmount
                       
-                      return finalTotal.toFixed(2)
+                      console.log('Line item totals:', {
+                        itemTotal,
+                        discountAmount,
+                        afterDiscount,
+                        taxAmount,
+                        finalTotal
+                      })
+                      
+                      return isNaN(finalTotal) ? '0.00' : finalTotal.toFixed(2)
                     })()}
                   </div>
                 </div>
