@@ -68,12 +68,13 @@ export const useAuthStore = create<AuthState>()(
           const response = await authService.login(email, password);
           console.log('🔐 Auth Store: Auth service response:', response);
           
-          // Backend returns { message, user, tokens }
-          const { user, tokens } = response;
+          // Backend returns { success: true, data: { user, tenant, token, refreshToken } }
+          const { user, token, refreshToken } = response.data;
           console.log('🔐 Auth Store: Extracted user:', user);
-          console.log('🔐 Auth Store: Extracted tokens:', tokens);
+          console.log('🔐 Auth Store: Extracted token:', token);
+          console.log('🔐 Auth Store: Extracted refreshToken:', refreshToken);
           
-          const accessToken = tokens.accessToken;
+          const accessToken = token;
           console.log('🔐 Auth Store: Access token:', accessToken);
 
           set({
@@ -85,7 +86,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Store tokens in localStorage for API calls
           localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', tokens.refreshToken);
+          localStorage.setItem('refreshToken', refreshToken);
           localStorage.setItem('user', JSON.stringify(user));
           
           // Store token in cookies for middleware
