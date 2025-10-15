@@ -83,22 +83,46 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     const items = Array.isArray(formData.items) ? formData.items : [];
     
     const subtotal = items.reduce((sum, item) => {
-      const itemTotal = item.quantity * item.unitPrice
-      const discountAmount = itemTotal * (item.discount / 100)
+      // Ensure all values are numbers
+      const quantity = Number(item.quantity) || 0
+      const unitPrice = Number(item.unitPrice) || 0
+      const discount = Number(item.discount) || 0
+      
+      const itemTotal = quantity * unitPrice
+      const discountAmount = itemTotal * (discount / 100)
       return sum + (itemTotal - discountAmount)
     }, 0)
 
     const tax = items.reduce((sum, item) => {
-      const itemTotal = item.quantity * item.unitPrice
-      const discountAmount = itemTotal * (item.discount / 100)
-      return sum + ((itemTotal - discountAmount) * (item.tax / 100))
+      // Ensure all values are numbers
+      const quantity = Number(item.quantity) || 0
+      const unitPrice = Number(item.unitPrice) || 0
+      const discount = Number(item.discount) || 0
+      const taxRate = Number(item.tax) || 0
+      
+      const itemTotal = quantity * unitPrice
+      const discountAmount = itemTotal * (discount / 100)
+      return sum + ((itemTotal - discountAmount) * (taxRate / 100))
     }, 0)
+
+    // Ensure final values are numbers
+    const finalSubtotal = Number(subtotal) || 0
+    const finalTax = Number(tax) || 0
+    const finalTotal = finalSubtotal + finalTax
+
+    console.log('Order calculation debug:', {
+      items: items.length,
+      subtotal: finalSubtotal,
+      tax: finalTax,
+      totalAmount: finalTotal,
+      itemsData: items
+    })
 
     setFormData(prev => ({
       ...prev,
-      subtotal,
-      tax,
-      totalAmount: subtotal + tax
+      subtotal: finalSubtotal,
+      tax: finalTax,
+      totalAmount: finalTotal
     }))
   }
 
@@ -444,7 +468,20 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
                     Total
                   </label>
                   <div className="h-10 flex items-center px-3 bg-gray-100 border border-gray-300 rounded-md text-sm font-medium">
-                    {((item.quantity * item.unitPrice) * (1 - item.discount / 100) * (1 + item.tax / 100)).toFixed(2)}
+                    {(() => {
+                      const quantity = Number(item.quantity) || 0
+                      const unitPrice = Number(item.unitPrice) || 0
+                      const discount = Number(item.discount) || 0
+                      const taxRate = Number(item.tax) || 0
+                      
+                      const itemTotal = quantity * unitPrice
+                      const discountAmount = itemTotal * (discount / 100)
+                      const afterDiscount = itemTotal - discountAmount
+                      const taxAmount = afterDiscount * (taxRate / 100)
+                      const finalTotal = afterDiscount + taxAmount
+                      
+                      return finalTotal.toFixed(2)
+                    })()}
                   </div>
                 </div>
 
