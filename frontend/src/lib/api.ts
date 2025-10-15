@@ -37,8 +37,10 @@ class ApiService {
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
       console.log('Using token:', this.token.substring(0, 20) + '...');
+      console.log('Full token for debugging:', this.token);
     } else {
       console.log('No token available for API request');
+      console.log('Checking localStorage for token:', localStorage.getItem('accessToken'));
     }
 
     try {
