@@ -1,17 +1,82 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Database, Server, Activity, HardDrive, Cpu, Clock, AlertTriangle } from 'lucide-react';
+import { Database, Server, Activity, HardDrive, Cpu, Clock, AlertTriangle, DollarSign } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SystemPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [currency, setCurrency] = useState('USD');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
   const { success, error } = useToast();
+
+  const currencyOptions = [
+    { code: 'USD', symbol: '$', name: 'US Dollar' },
+    { code: 'GBP', symbol: '£', name: 'British Pound' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+    { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+    { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  ];
+
+  const handleCurrencyChange = (currencyCode: string) => {
+    const selectedCurrency = currencyOptions.find(c => c.code === currencyCode);
+    if (selectedCurrency) {
+      setCurrency(currencyCode);
+      setCurrencySymbol(selectedCurrency.symbol);
+    }
+  };
+
+  useEffect(() => {
+    // Load existing currency settings
+    const loadCurrencySettings = async () => {
+      try {
+        const response = await fetch('/api/settings/currency');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data) {
+            setCurrency(data.data.currency || 'USD');
+            setCurrencySymbol(data.data.currencySymbol || '$');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load currency settings:', err);
+      }
+    };
+
+    loadCurrencySettings();
+  }, []);
+
+  const saveCurrencySettings = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/settings/currency', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currency,
+          currencySymbol,
+        }),
+      });
+
+      if (response.ok) {
+        success('Currency settings saved successfully');
+      } else {
+        error('Failed to save currency settings');
+      }
+    } catch (err) {
+      error('Failed to save currency settings');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (<ErrorBoundary>
 
     <DashboardLayout>
@@ -163,6 +228,62 @@ export default function SystemPage() {
           </div>
           <div className="mt-6">
             <Button>Save Configuration</Button>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <DollarSign className="h-5 w-5 mr-2" />
+            Currency Settings
+          </h3>
+          <p className="text-gray-600 mb-6">Configure the default currency for the system</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Default Currency
+              </label>
+              <select 
+                value={currency}
+                onChange={(e) => handleCurrencyChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                {currencyOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.code} - {option.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Currency Symbol
+              </label>
+              <input
+                type="text"
+                value={currencySymbol}
+                onChange={(e) => setCurrencySymbol(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="$"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-4 p-4 bg-blue-50 rounded-md">
+            <p className="text-sm text-blue-800">
+              <strong>Preview:</strong> Prices will be displayed as: {currencySymbol}99.99
+            </p>
+          </div>
+          
+          <div className="mt-6">
+            <Button 
+              onClick={saveCurrencySettings}
+              disabled={isLoading}
+              className="flex items-center"
+            >
+              {isLoading && <LoadingSpinner className="mr-2" />}
+              Save Currency Settings
+            </Button>
           </div>
         </Card>
       </div>
