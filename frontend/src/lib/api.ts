@@ -59,6 +59,33 @@ class ApiService {
       console.log('Response data:', data);
 
       if (!response.ok) {
+        // Handle token expiration (401 Unauthorized)
+        if (response.status === 401 && this.token) {
+          console.log('🔄 Token expired, attempting refresh...');
+          try {
+            const refreshResult = await this.refreshToken();
+            if (refreshResult.data) {
+              console.log('🔄 Token refreshed successfully, retrying request...');
+              // Retry the original request with new token
+              const retryHeaders = { ...headers };
+              retryHeaders['Authorization'] = `Bearer ${this.token}`;
+              
+              const retryResponse = await fetch(url, {
+                ...options,
+                headers: retryHeaders,
+              });
+              
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json();
+                console.log('🔄 Retry successful:', retryData);
+                return { data: retryData };
+              }
+            }
+          } catch (refreshError) {
+            console.error('🔄 Token refresh failed:', refreshError);
+          }
+        }
+        
         return {
           error: data.error || 'Request failed',
           message: data.message || `HTTP ${response.status}`,
