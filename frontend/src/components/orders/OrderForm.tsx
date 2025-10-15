@@ -53,7 +53,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     if (Array.isArray(formData.items) && formData.items.length > 0) {
       calculateTotals()
     }
-  }, [formData.items.map(item => `${item.quantity}-${item.unitPrice}-${item.discount}-${item.tax}`).join('|')])
+  }, [Array.isArray(formData.items) ? formData.items.map(item => `${item.quantity}-${item.unitPrice}-${item.discount}-${item.tax}`).join('|') : ''])
 
   useEffect(() => {
     if (formData.customerId && customers.length > 0) {
