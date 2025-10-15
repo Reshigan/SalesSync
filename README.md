@@ -8,6 +8,8 @@ A modern, full-stack field sales management system designed for enterprise-level
 - **Admin Dashboard**: https://ss.gonxt.tech/admin
 - **API Documentation**: https://ss.gonxt.tech/api/docs
 
+> **Status**: ✅ Production system fully operational with SSL certificate and automated CI/CD deployment
+
 ### Demo Credentials
 - **Administrator**: admin@demo.com / admin123
 - **Field Agent**: agent@demo.com / agent123
