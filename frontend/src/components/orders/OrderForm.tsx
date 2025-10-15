@@ -189,14 +189,14 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
         })
         
         // FALLBACK: Try to use direct API response
-        if (directResponse && directResponse.data && directResponse.data.data && directResponse.data.data.products) {
+        if (directResponse && (directResponse as any).data && (directResponse as any).data.data && (directResponse as any).data.data.products) {
           console.log('🔍 OrderForm: Using DIRECT PRODUCTS API response as fallback')
-          setProducts(directResponse.data.data.products)
-          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${directResponse.data.data.products.length} products from direct API`)
-        } else if (directResponse && directResponse.data && directResponse.data.products) {
+          setProducts((directResponse as any).data.data.products)
+          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${(directResponse as any).data.data.products.length} products from direct API`)
+        } else if (directResponse && (directResponse as any).data && (directResponse as any).data.products) {
           console.log('🔍 OrderForm: Using DIRECT PRODUCTS API response (alternative structure) as fallback')
-          setProducts(directResponse.data.products)
-          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${directResponse.data.products.length} products from direct API`)
+          setProducts((directResponse as any).data.products)
+          console.log(`✅ PRODUCTS FALLBACK SUCCESS: Found ${(directResponse as any).data.products.length} products from direct API`)
         } else {
           setProducts([])
           console.log('❌ PRODUCTS FAILED: No products found in either service or direct API')
