@@ -69,7 +69,7 @@ export const useCurrency = () => {
       return `${currencySettings.currencySymbol}0.00`;
     }
 
-    const numericAmount = parseFloat(amount);
+    const numericAmount = Number(amount);
     
     try {
       const formatter = new Intl.NumberFormat('en-US', {
@@ -83,7 +83,7 @@ export const useCurrency = () => {
       const formatted = formatter.format(numericAmount);
       
       // Replace the default currency symbol with our custom one if different
-      const currencySymbols = {
+      const currencySymbols: Record<string, string> = {
         'USD': '$',
         'GBP': '£',
         'EUR': '€',
@@ -106,7 +106,7 @@ export const useCurrency = () => {
 
   // Listen for currency settings changes from other parts of the app
   useEffect(() => {
-    const handleCurrencyChange = (event) => {
+    const handleCurrencyChange = (event: any) => {
       setCurrencySettings(event.detail);
     };
 

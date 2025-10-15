@@ -26,7 +26,7 @@ export const formatCurrency = (amount: number, options: FormatOptions = {}) => {
     return `${currencySymbol}0.00`;
   }
 
-  const numericAmount = parseFloat(amount);
+  const numericAmount = Number(amount);
   
   // Use Intl.NumberFormat for proper currency formatting
   try {
@@ -35,7 +35,7 @@ export const formatCurrency = (amount: number, options: FormatOptions = {}) => {
       currency: currency,
       minimumFractionDigits: options.minimumFractionDigits || 2,
       maximumFractionDigits: options.maximumFractionDigits || 2,
-      ...options
+      useGrouping: options.useGrouping !== false
     });
     
     // Replace the default currency symbol with our custom one if different
@@ -66,13 +66,13 @@ export const formatNumber = (number: number, options: FormatOptions = {}) => {
     return '0';
   }
 
-  const numericValue = parseFloat(number);
+  const numericValue = Number(number);
   
   try {
     const formatter = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: options.minimumFractionDigits || 0,
       maximumFractionDigits: options.maximumFractionDigits || 0,
-      ...options
+      useGrouping: options.useGrouping !== false
     });
     
     return formatter.format(numericValue);
@@ -92,14 +92,14 @@ export const formatPercentage = (number: number, options: FormatOptions = {}) =>
     return '0%';
   }
 
-  const numericValue = parseFloat(number);
+  const numericValue = Number(number);
   
   try {
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: options.minimumFractionDigits || 1,
       maximumFractionDigits: options.maximumFractionDigits || 1,
-      ...options
+      useGrouping: options.useGrouping !== false
     });
     
     // If the number is already in percentage form (e.g., 15 for 15%), divide by 100
@@ -116,12 +116,12 @@ export const formatPercentage = (number: number, options: FormatOptions = {}) =>
  * @param {number} number - The number to format
  * @returns {string} Formatted compact number string
  */
-export const formatCompactNumber = (number) => {
+export const formatCompactNumber = (number: number) => {
   if (number === null || number === undefined || isNaN(number)) {
     return '0';
   }
 
-  const numericValue = parseFloat(number);
+  const numericValue = Number(number);
   
   try {
     const formatter = new Intl.NumberFormat('en-US', {
@@ -147,7 +147,7 @@ export const formatCompactNumber = (number) => {
  * @param {Object} options - Formatting options
  * @returns {string} Formatted date string
  */
-export const formatDate = (date, options = {}) => {
+export const formatDate = (date: string | Date, options: any = {}) => {
   if (!date) return '';
   
   const dateObj = date instanceof Date ? date : new Date(date);
@@ -176,7 +176,7 @@ export const formatDate = (date, options = {}) => {
  * @param {Object} options - Formatting options
  * @returns {string} Formatted time string
  */
-export const formatTime = (time, options = {}) => {
+export const formatTime = (time: string | Date, options: any = {}) => {
   if (!time) return '';
   
   const timeObj = time instanceof Date ? time : new Date(time);
