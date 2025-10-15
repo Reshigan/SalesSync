@@ -25,6 +25,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loadingCustomers, setLoadingCustomers] = useState(true)
   const [loadingProducts, setLoadingProducts] = useState(true)
+  const [debugInfo, setDebugInfo] = useState<string>('')
   
   // DEBUGGING: Add visual indicator
   console.log('🔍 OrderForm: customers state:', customers)
@@ -81,22 +82,28 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
 
   const loadCustomers = async () => {
     try {
+      setDebugInfo('🔍 Starting to load customers...')
       console.log('🔍 OrderForm: Starting to load customers...')
       console.log('🔍 OrderForm: customersService:', customersService)
       
       // DIRECT API TEST - Let's bypass the customers service and call the API directly
+      setDebugInfo('🔍 Making DIRECT API call to test...')
       console.log('🔍 OrderForm: Making DIRECT API call to test...')
       const apiService = (await import('@/lib/api')).default
       console.log('🔍 OrderForm: API service imported:', apiService)
       console.log('🔍 OrderForm: API service token:', apiService.getToken())
       
       // Test direct API call
+      setDebugInfo('🔍 Calling direct API...')
       const directResponse = await apiService.getCustomers({ status: 'active' })
       console.log('🔍 OrderForm: DIRECT API response:', directResponse)
       console.log('🔍 OrderForm: DIRECT API response.data:', directResponse.data)
       console.log('🔍 OrderForm: DIRECT API response.error:', directResponse.error)
       
+      setDebugInfo(`🔍 Direct API response: ${JSON.stringify(directResponse, null, 2)}`)
+      
       // Now test the customers service
+      setDebugInfo('🔍 Calling customersService.getAll...')
       console.log('🔍 OrderForm: Calling customersService.getAll with params:', { status: 'active' })
       const response = await customersService.getAll({ status: 'active' })
       console.log('🔍 OrderForm: Raw response from customersService:', response)
@@ -104,9 +111,12 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       console.log('🔍 OrderForm: response?.customers:', response?.customers)
       console.log('🔍 OrderForm: Array.isArray(response?.customers):', Array.isArray(response?.customers))
       
+      setDebugInfo(`🔍 CustomersService response: ${JSON.stringify(response, null, 2)}`)
+      
       if (response && response.customers && Array.isArray(response.customers) && response.customers.length > 0) {
         console.log('🔍 OrderForm: Setting customers from API:', response.customers)
         setCustomers(response.customers)
+        setDebugInfo(`✅ SUCCESS: Found ${response.customers.length} customers`)
       } else {
         console.error('🔍 CRITICAL: No customers found in response!', {
           response,
@@ -120,8 +130,10 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
         if (directResponse && directResponse.data && directResponse.data.data && directResponse.data.data.customers) {
           console.log('🔍 OrderForm: Using DIRECT API response as fallback')
           setCustomers(directResponse.data.data.customers)
+          setDebugInfo(`✅ FALLBACK SUCCESS: Found ${directResponse.data.data.customers.length} customers from direct API`)
         } else {
           setCustomers([])
+          setDebugInfo('❌ FAILED: No customers found in either service or direct API')
         }
       }
     } catch (error: any) {
@@ -131,6 +143,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
         stack: error.stack,
         name: error.name
       })
+      setDebugInfo(`❌ ERROR: ${error.message}`)
       toast.error('Failed to load customers: ' + error.message)
       setCustomers([])
     } finally {
@@ -359,6 +372,12 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
           <div>Loading Customers: {loadingCustomers ? '⏳ Yes' : '✅ No'}</div>
           <div>Customers Count: {customers.length}</div>
           <div>Customers Data: {JSON.stringify(customers.slice(0, 2))}</div>
+          {debugInfo && (
+            <div className="mt-2 p-2 bg-white border border-yellow-300 rounded text-xs">
+              <strong>API Debug:</strong><br />
+              <pre className="whitespace-pre-wrap">{debugInfo}</pre>
+            </div>
+          )}
         </div>
       </div>
 
