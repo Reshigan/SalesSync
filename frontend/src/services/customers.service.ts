@@ -33,10 +33,23 @@ export const customersService = {
     console.log('🔍 CustomersService: Raw API response:', response)
     console.log('🔍 CustomersService: response.data:', response.data)
     console.log('🔍 CustomersService: response.data?.customers:', response.data?.customers)
+    console.log('🔍 CustomersService: response.data?.data:', response.data?.data)
+    console.log('🔍 CustomersService: response.data?.data?.customers:', response.data?.data?.customers)
     
     // Backend returns: { success: true, data: { customers: [...], pagination: {...} } }
-    const result = response.data?.customers || response.data?.data?.customers || response.data;
-    console.log('🔍 CustomersService: Final result (customers array):', result)
+    // API service wraps it as: { data: { success: true, data: { customers: [...], pagination: {...} } } }
+    let result;
+    if (response.data?.data?.customers) {
+      result = { customers: response.data.data.customers, pagination: response.data.data.pagination };
+    } else if (response.data?.customers) {
+      result = { customers: response.data.customers, pagination: response.data.pagination };
+    } else {
+      result = { customers: [], pagination: null };
+    }
+    
+    console.log('🔍 CustomersService: Final result:', result)
+    console.log('🔍 CustomersService: Customers array:', result.customers)
+    console.log('🔍 CustomersService: Customers count:', result.customers?.length || 0)
     return result;
   },
   getById: async (id: string) => {
