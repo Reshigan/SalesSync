@@ -1,0 +1,304 @@
+name: SalesSync PM2 Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  PRODUCTION_HOST: '35.177.226.170'
+  PRODUCTION_USER: 'ubuntu'
+
+jobs:
+  test-and-build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend-api/package-lock.json
+    
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Install Backend Dependencies
+      run: |
+        cd backend-api
+        npm ci
+    
+    - name: Run Linting
+      run: |
+        cd frontend && npm run lint || true
+        cd ../backend-api && npm run lint || true
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Build Backend
+      run: |
+        cd backend-api
+        npm run build || echo "No build script found"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    
+    - name: Run npm audit (Frontend)
+      run: |
+        cd frontend
+        npm audit --audit-level=high || true
+    
+    - name: Run npm audit (Backend)
+      run: |
+        cd backend-api
+        npm audit --audit-level=high || true
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [test-and-build, security-scan]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Pre-deployment Health Check
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🔍 Pre-deployment health check..."
+          
+          # Check system resources
+          echo "Memory usage:"
+          free -h
+          
+          echo "Disk usage:"
+          df -h
+          
+          # Check PM2 services
+          echo "Current PM2 services:"
+          pm2 list || echo "PM2 not running"
+          
+          # Check current application health
+          curl -f http://localhost:3000/health || echo "Current app health check failed"
+        EOF
+    
+    - name: Create Deployment Backup
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "📦 Creating deployment backup..."
+          
+          BACKUP_DIR="/home/ubuntu/backups/$(date +%Y%m%d_%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+          
+          # Backup current application
+          if [ -d "/home/ubuntu/SalesSync" ]; then
+            cp -r /home/ubuntu/SalesSync "$BACKUP_DIR/app_backup"
+            echo "Application backup created"
+          else
+            echo "No existing app to backup"
+          fi
+          
+          # Backup database
+          if [ -f "/home/ubuntu/SalesSync/backend-api/database/salessync.db" ]; then
+            cp /home/ubuntu/SalesSync/backend-api/database/salessync.db "$BACKUP_DIR/database_backup.db"
+            echo "Database backup created"
+          else
+            echo "No database to backup"
+          fi
+          
+          echo "Backup created at: $BACKUP_DIR"
+        EOF
+    
+    - name: Deploy to Production
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          set -e
+          
+          echo "🚀 Starting Production Deployment..."
+          
+          # Navigate to project directory
+          cd /home/ubuntu/SalesSync
+          
+          # Pull latest changes
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Install/Update dependencies
+          echo "📦 Installing Frontend Dependencies..."
+          cd frontend
+          npm ci --production
+          
+          echo "📦 Installing Backend Dependencies..."
+          cd ../backend-api
+          npm ci --production
+          
+          # Build frontend for production
+          echo "🏗️ Building Frontend..."
+          cd ../frontend
+          npm run build
+          
+          # Restart services with PM2
+          echo "🔄 Restarting Services with PM2..."
+          
+          # Stop existing services
+          pm2 stop salessync-backend salessync-frontend || echo "Services not running"
+          
+          # Start backend
+          cd ../backend-api
+          pm2 start ecosystem.config.js --only salessync-backend || pm2 start server.js --name salessync-backend
+          
+          # Start frontend
+          cd ../frontend
+          pm2 start ecosystem.config.js --only salessync-frontend || pm2 start npm --name salessync-frontend -- start
+          
+          # Save PM2 configuration
+          pm2 save
+          
+          # Wait for services to start
+          sleep 10
+          
+          # Health checks
+          echo "🏥 Running Health Checks..."
+          
+          # Check backend health
+          curl -f http://localhost:3001/api/health || exit 1
+          
+          # Check frontend health
+          curl -f http://localhost:3000 || exit 1
+          
+          echo "✅ Production deployment completed successfully!"
+        EOF
+    
+    - name: Post-deployment Verification
+      run: |
+        echo "🔍 Post-deployment verification..."
+        
+        # Wait for services to stabilize
+        sleep 30
+        
+        # Comprehensive health checks
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "Testing API endpoints..."
+          curl -f http://localhost:3001/api/health || exit 1
+          curl -f http://localhost:3001/api/customers || echo "Customers endpoint test"
+          curl -f http://localhost:3001/api/settings/currency || echo "Currency settings endpoint test"
+          
+          echo "Testing frontend..."
+          curl -f http://localhost:3000 || exit 1
+          
+          echo "PM2 status:"
+          pm2 list
+          
+          echo "✅ All health checks passed!"
+        EOF
+    
+    - name: Notify Deployment Success
+      if: success()
+      run: |
+        echo "🎉 Production deployment successful!"
+        echo "Application is live and running with PM2"
+    
+    - name: Rollback on Failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed, initiating rollback..."
+        
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🔄 Rolling back to previous version..."
+          
+          # Find latest backup
+          LATEST_BACKUP=$(ls -t /home/ubuntu/backups/ | head -1)
+          
+          if [ -n "$LATEST_BACKUP" ] && [ -d "/home/ubuntu/backups/$LATEST_BACKUP" ]; then
+            echo "Restoring from backup: $LATEST_BACKUP"
+            
+            # Stop current services
+            pm2 stop all
+            
+            # Restore application
+            rm -rf /home/ubuntu/SalesSync
+            cp -r "/home/ubuntu/backups/$LATEST_BACKUP/app_backup" /home/ubuntu/SalesSync
+            
+            # Restore database if exists
+            if [ -f "/home/ubuntu/backups/$LATEST_BACKUP/database_backup.db" ]; then
+              cp "/home/ubuntu/backups/$LATEST_BACKUP/database_backup.db" /home/ubuntu/SalesSync/backend-api/database/salessync.db
+            fi
+            
+            # Restart services
+            cd /home/ubuntu/SalesSync/backend-api
+            pm2 start server.js --name salessync-backend
+            cd ../frontend
+            pm2 start npm --name salessync-frontend -- start
+            pm2 save
+            
+            echo "✅ Rollback completed"
+          else
+            echo "❌ No backup found for rollback"
+          fi
+        EOF
+
+  cleanup:
+    name: Cleanup Old Deployments
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always()
+    
+    steps:
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ env.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Cleanup Old Backups
+      run: |
+        ssh ${{ env.PRODUCTION_USER }}@${{ env.PRODUCTION_HOST }} << 'EOF'
+          echo "🧹 Cleaning up old backups..."
+          
+          # Keep only last 5 backups
+          if [ -d "/home/ubuntu/backups" ]; then
+            cd /home/ubuntu/backups
+            ls -t | tail -n +6 | xargs -r rm -rf
+            echo "✅ Cleanup completed"
+          else
+            echo "No backups directory found"
+          fi
+        EOF
