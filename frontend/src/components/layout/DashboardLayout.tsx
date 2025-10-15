@@ -316,34 +316,45 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-4rem)]">
           {navigation.map((item) => (
             <div key={item.name}>
               {item.children ? (
-                // Menu item with children - make it clickable to toggle
-                <button
-                  onClick={() => toggleMenu(item.name)}
-                  className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group ${
-                    isActiveRoute(item.href) || hasActiveChild(item)
-                      ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                >
-                  <item.icon className={`${collapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3'} flex-shrink-0`} />
-                  {!collapsed && (
-                    <>
-                      <span className="flex-1 truncate text-left">{item.name}</span>
-                      {item.badge && (
-                        <span className="px-2 py-0.5 text-xs bg-primary-100 text-primary-600 rounded-full ml-2">
-                          {item.badge}
-                        </span>
+                // Menu item with children - split into link and toggle button
+                <div>
+                  <div className="flex items-center">
+                    <Link
+                      href={item.href}
+                      className={`flex-1 flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors group ${
+                        isActiveRoute(item.href) || hasActiveChild(item)
+                          ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <item.icon className={`${collapsed ? 'w-5 h-5' : 'w-5 h-5 mr-3'} flex-shrink-0`} />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 truncate text-left">{item.name}</span>
+                          {item.badge && (
+                            <span className="px-2 py-0.5 text-xs bg-primary-100 text-primary-600 rounded-full ml-2">
+                              {item.badge}
+                            </span>
+                          )}
+                        </>
                       )}
-                      <ChevronDown className={`w-4 h-4 ml-2 transition-transform ${
-                        isMenuOpen(item.name) ? 'rotate-180' : ''
-                      }`} />
-                    </>
-                  )}
-                </button>
+                    </Link>
+                    {!collapsed && (
+                      <button
+                        onClick={() => toggleMenu(item.name)}
+                        className="p-1 ml-1 rounded hover:bg-gray-100 transition-colors"
+                      >
+                        <ChevronDown className={`w-4 h-4 transition-transform ${
+                          isMenuOpen(item.name) ? 'rotate-180' : ''
+                        }`} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ) : (
                 // Regular menu item without children
                 <Link
