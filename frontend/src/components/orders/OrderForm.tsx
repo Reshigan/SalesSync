@@ -331,6 +331,18 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* TEMPORARY DEBUG INFO */}
+      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <h4 className="font-semibold text-yellow-800 mb-2">🔍 DEBUG INFO</h4>
+        <div className="text-sm text-yellow-700 space-y-1">
+          <div>Auth Status: {isAuthenticated ? '✅ Authenticated' : '❌ Not Authenticated'}</div>
+          <div>Token Available: {token ? '✅ Yes' : '❌ No'}</div>
+          <div>Loading Customers: {loadingCustomers ? '⏳ Yes' : '✅ No'}</div>
+          <div>Customers Count: {customers.length}</div>
+          <div>Customers Data: {JSON.stringify(customers.slice(0, 2))}</div>
+        </div>
+      </div>
+
       {/* Customer Information */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
