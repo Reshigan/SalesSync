@@ -48,6 +48,13 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     calculateTotals()
   }, [formData.items])
 
+  // Also recalculate when any item property changes
+  useEffect(() => {
+    if (Array.isArray(formData.items) && formData.items.length > 0) {
+      calculateTotals()
+    }
+  }, [formData.items.map(item => `${item.quantity}-${item.unitPrice}-${item.discount}-${item.tax}`).join('|')])
+
   useEffect(() => {
     if (formData.customerId && customers.length > 0) {
       const customer = customers.find(c => c.id === formData.customerId)
@@ -77,6 +84,37 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
     } finally {
       setLoadingProducts(false)
     }
+  }
+
+  const calculateLineItemTotal = (item: any) => {
+    const quantity = Number(item.quantity) || 0
+    const unitPrice = Number(item.unitPrice) || 0
+    const discount = Number(item.discount) || 0
+    const taxRate = Number(item.tax) || 0
+    
+    console.log('calculateLineItemTotal debug:', {
+      item,
+      quantity,
+      unitPrice,
+      discount,
+      taxRate
+    })
+    
+    const itemTotal = quantity * unitPrice
+    const discountAmount = itemTotal * (discount / 100)
+    const afterDiscount = itemTotal - discountAmount
+    const taxAmount = afterDiscount * (taxRate / 100)
+    const finalTotal = afterDiscount + taxAmount
+    
+    console.log('calculateLineItemTotal result:', {
+      itemTotal,
+      discountAmount,
+      afterDiscount,
+      taxAmount,
+      finalTotal
+    })
+    
+    return isNaN(finalTotal) ? 0 : finalTotal
   }
 
   const calculateTotals = () => {
@@ -468,36 +506,7 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
                     Total
                   </label>
                   <div className="h-10 flex items-center px-3 bg-gray-100 border border-gray-300 rounded-md text-sm font-medium">
-                    {(() => {
-                      const quantity = Number(item.quantity) || 0
-                      const unitPrice = Number(item.unitPrice) || 0
-                      const discount = Number(item.discount) || 0
-                      const taxRate = Number(item.tax) || 0
-                      
-                      console.log('Line item calculation debug:', {
-                        item,
-                        quantity,
-                        unitPrice,
-                        discount,
-                        taxRate
-                      })
-                      
-                      const itemTotal = quantity * unitPrice
-                      const discountAmount = itemTotal * (discount / 100)
-                      const afterDiscount = itemTotal - discountAmount
-                      const taxAmount = afterDiscount * (taxRate / 100)
-                      const finalTotal = afterDiscount + taxAmount
-                      
-                      console.log('Line item totals:', {
-                        itemTotal,
-                        discountAmount,
-                        afterDiscount,
-                        taxAmount,
-                        finalTotal
-                      })
-                      
-                      return isNaN(finalTotal) ? '0.00' : finalTotal.toFixed(2)
-                    })()}
+                    {calculateLineItemTotal(item).toFixed(2)}
                   </div>
                 </div>
 
