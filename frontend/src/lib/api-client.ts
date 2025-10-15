@@ -36,9 +36,44 @@ class ApiClient {
     // Response interceptor - handle errors globally
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Unauthorized - redirect to login
+      async (error) => {
+        const originalRequest = error.config
+        
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          originalRequest._retry = true
+          
+          try {
+            // Try to refresh the token
+            const refreshToken = localStorage.getItem('refreshToken')
+            if (refreshToken) {
+              console.log('🔄 Token expired, attempting refresh...')
+              const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+                refreshToken
+              }, {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Tenant-Code': 'DEMO'
+                }
+              })
+              
+              if (refreshResponse.data.success) {
+                const newToken = refreshResponse.data.data.token
+                console.log('✅ Token refreshed successfully')
+                
+                // Update stored tokens
+                localStorage.setItem('accessToken', newToken)
+                originalRequest.headers.Authorization = `Bearer ${newToken}`
+                
+                // Retry the original request
+                return this.client(originalRequest)
+              }
+            }
+          } catch (refreshError) {
+            console.error('❌ Token refresh failed:', refreshError)
+          }
+          
+          // If refresh fails, redirect to login
+          console.log('🚪 Redirecting to login...')
           localStorage.removeItem('accessToken')
           localStorage.removeItem('refreshToken')
           localStorage.removeItem('token')
