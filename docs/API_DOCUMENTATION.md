@@ -1,35 +1,37 @@
 # SalesSync API Documentation
 
-## Overview
+Comprehensive API documentation for the SalesSync field sales management system.
 
-The SalesSync API is a comprehensive RESTful API designed for van sales management systems. It provides endpoints for managing customers, products, orders, inventory, analytics, and more.
+## 📋 Overview
 
-**Base URL:** `https://ss.gonxt.tech/api`  
-**Version:** 1.0.0  
-**Authentication:** JWT Bearer Token
+The SalesSync API provides RESTful endpoints for managing field sales operations, including user management, customer relationships, order processing, and inventory tracking.
 
-## Table of Contents
+### Base URLs
+- **Development**: `http://localhost:3001/api`
+- **Production**: `https://ss.gonxt.tech/api`
+- **API Documentation**: `https://ss.gonxt.tech/api/docs`
 
-1. [Authentication](#authentication)
-2. [Core Endpoints](#core-endpoints)
-3. [Van Sales Operations](#van-sales-operations)
-4. [Analytics & Reporting](#analytics--reporting)
-5. [Real-time Features](#real-time-features)
-6. [Error Handling](#error-handling)
-7. [Rate Limiting](#rate-limiting)
-8. [Security](#security)
+### API Version
+Current API version: `v1`
 
-## Authentication
+## 🔐 Authentication
 
-### Login
+All API endpoints require authentication using JWT (JSON Web Tokens).
+
+### Authentication Flow
+1. **Login**: Obtain JWT token using credentials
+2. **Authorization**: Include token in `Authorization` header
+3. **Refresh**: Use refresh token to obtain new access token
+4. **Logout**: Invalidate tokens on logout
+
+### Login Endpoint
 ```http
 POST /api/auth/login
 Content-Type: application/json
 
 {
   "email": "user@example.com",
-  "password": "password123",
-  "tenantCode": "DEMO"
+  "password": "password123"
 }
 ```
 
@@ -38,20 +40,21 @@ Content-Type: application/json
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": 1,
+      "id": "uuid-string",
       "email": "user@example.com",
-      "name": "John Doe",
-      "role": "sales_rep",
-      "tenantId": 1
+      "fullName": "John Doe",
+      "role": "Field Agent",
+      "tenant": "Company Name",
+      "permissions": ["read:orders", "create:orders"]
     }
   }
 }
 ```
 
-### Refresh Token
+### Token Refresh
 ```http
 POST /api/auth/refresh
 Content-Type: application/json
@@ -64,25 +67,112 @@ Content-Type: application/json
 ### Logout
 ```http
 POST /api/auth/logout
+Authorization: Bearer <access_token>
+```
+
+### Authorization Header
+Include the JWT token in all authenticated requests:
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+## 👥 User Management
+
+### Get Current User
+```http
+GET /api/auth/me
 Authorization: Bearer <token>
 ```
 
-## Core Endpoints
+### Get All Users
+```http
+GET /api/users
+Authorization: Bearer <token>
+Query Parameters:
+  - page: number (default: 1)
+  - limit: number (default: 10)
+  - search: string
+  - role: string
+  - tenant: string
+```
 
-### Customers
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "uuid",
+        "email": "user@example.com",
+        "fullName": "John Doe",
+        "role": "Field Agent",
+        "tenant": "Company Name",
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 177,
+      "pages": 18
+    }
+  }
+}
+```
 
-#### Get All Customers
+### Create User
+```http
+POST /api/users
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "email": "newuser@example.com",
+  "fullName": "New User",
+  "password": "securePassword123",
+  "role": "Field Agent",
+  "tenant": "Company Name",
+  "phone": "+1234567890",
+  "location": "Lagos, Nigeria"
+}
+```
+
+### Update User
+```http
+PUT /api/users/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "fullName": "Updated Name",
+  "role": "Sales Manager",
+  "phone": "+1234567891",
+  "isActive": true
+}
+```
+
+### Delete User
+```http
+DELETE /api/users/:id
+Authorization: Bearer <token>
+```
+
+## 🏢 Customer Management
+
+### Get All Customers
 ```http
 GET /api/customers
 Authorization: Bearer <token>
-X-Tenant-Code: DEMO
-
 Query Parameters:
-- page: number (default: 1)
-- limit: number (default: 20)
-- search: string
-- status: active|inactive
-- area: string
+  - page: number
+  - limit: number
+  - search: string
+  - customerType: string (Retail|Wholesale)
+  - city: string
+  - state: string
 ```
 
 **Response:**
@@ -92,45 +182,48 @@ Query Parameters:
   "data": {
     "customers": [
       {
-        "id": 1,
+        "id": "uuid",
         "name": "ABC Store",
         "email": "abc@store.com",
-        "phone": "+1234567890",
-        "address": "123 Main St",
-        "area": "Downtown",
-        "status": "active",
-        "creditLimit": 5000.00,
-        "outstandingBalance": 1250.50,
+        "phone": "+234123456789",
+        "address": "123 Main Street",
+        "city": "Lagos",
+        "state": "Lagos",
+        "country": "Nigeria",
+        "customerType": "Retail",
+        "isActive": true,
         "createdAt": "2024-01-01T00:00:00Z"
       }
     ],
     "pagination": {
       "page": 1,
-      "limit": 20,
-      "total": 150,
-      "pages": 8
+      "limit": 10,
+      "total": 89,
+      "pages": 9
     }
   }
 }
 ```
 
-#### Create Customer
+### Create Customer
 ```http
 POST /api/customers
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "name": "New Store",
-  "email": "new@store.com",
-  "phone": "+1234567890",
-  "address": "456 Oak Ave",
-  "area": "Uptown",
-  "creditLimit": 3000.00
+  "name": "New Customer Store",
+  "email": "customer@example.com",
+  "phone": "+234123456789",
+  "address": "456 Business Avenue",
+  "city": "Abuja",
+  "state": "FCT",
+  "country": "Nigeria",
+  "customerType": "Wholesale"
 }
 ```
 
-#### Update Customer
+### Update Customer
 ```http
 PUT /api/customers/:id
 Authorization: Bearer <token>
@@ -138,94 +231,115 @@ Content-Type: application/json
 
 {
   "name": "Updated Store Name",
-  "creditLimit": 4000.00
+  "phone": "+234987654321",
+  "address": "New Address"
 }
 ```
 
-#### Delete Customer
+### Get Customer Details
 ```http
-DELETE /api/customers/:id
+GET /api/customers/:id
 Authorization: Bearer <token>
 ```
 
-### Products
-
-#### Get All Products
+### Get Customer Orders
 ```http
-GET /api/products
+GET /api/customers/:id/orders
 Authorization: Bearer <token>
-
-Query Parameters:
-- page: number
-- limit: number
-- search: string
-- category: string
-- brand: string
-- status: active|inactive
 ```
 
-#### Create Product
-```http
-POST /api/products
-Authorization: Bearer <token>
-Content-Type: application/json
+## 🛒 Order Management
 
-{
-  "name": "Product Name",
-  "description": "Product description",
-  "sku": "SKU001",
-  "barcode": "1234567890123",
-  "categoryId": 1,
-  "brandId": 1,
-  "unitPrice": 25.99,
-  "costPrice": 15.00,
-  "unitOfMeasure": "piece",
-  "minStockLevel": 10,
-  "maxStockLevel": 100
-}
-```
-
-### Orders
-
-#### Get All Orders
+### Get All Orders
 ```http
 GET /api/orders
 Authorization: Bearer <token>
-
 Query Parameters:
-- page: number
-- limit: number
-- status: pending|confirmed|delivered|cancelled
-- customerId: number
-- dateFrom: YYYY-MM-DD
-- dateTo: YYYY-MM-DD
+  - page: number
+  - limit: number
+  - status: string (pending|confirmed|processing|shipped|delivered|cancelled)
+  - customerId: string
+  - salesAgentId: string
+  - dateFrom: string (ISO date)
+  - dateTo: string (ISO date)
 ```
 
-#### Create Order
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "orders": [
+      {
+        "id": "uuid",
+        "orderNumber": "ORD-001",
+        "customerId": "uuid",
+        "customer": {
+          "id": "uuid",
+          "name": "ABC Store",
+          "email": "abc@store.com"
+        },
+        "salesAgentId": "uuid",
+        "salesAgent": {
+          "id": "uuid",
+          "fullName": "John Doe"
+        },
+        "items": [
+          {
+            "id": "uuid",
+            "productId": "uuid",
+            "product": {
+              "name": "Product Name",
+              "sku": "PROD-001"
+            },
+            "quantity": 2,
+            "unitPrice": 1500,
+            "totalPrice": 3000
+          }
+        ],
+        "totalAmount": 15000,
+        "status": "pending",
+        "orderDate": "2024-01-15",
+        "createdAt": "2024-01-15T10:30:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 156,
+      "pages": 16
+    }
+  }
+}
+```
+
+### Create Order
 ```http
 POST /api/orders
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "customerId": 1,
-  "orderDate": "2024-01-15",
-  "deliveryDate": "2024-01-16",
+  "customerId": "uuid",
   "items": [
     {
-      "productId": 1,
-      "quantity": 10,
-      "unitPrice": 25.99,
-      "discount": 0.00
+      "productId": "uuid",
+      "quantity": 2,
+      "unitPrice": 1500
+    },
+    {
+      "productId": "uuid",
+      "quantity": 1,
+      "unitPrice": 2500
     }
   ],
   "notes": "Special delivery instructions"
 }
 ```
 
-#### Update Order Status
+### Update Order Status
 ```http
-PATCH /api/orders/:id/status
+PUT /api/orders/:id/status
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -235,101 +349,35 @@ Content-Type: application/json
 }
 ```
 
-### Inventory
-
-#### Get Inventory
+### Get Order Details
 ```http
-GET /api/inventory
+GET /api/orders/:id
 Authorization: Bearer <token>
-
-Query Parameters:
-- warehouseId: number
-- productId: number
-- lowStock: boolean
 ```
 
-#### Update Stock
+### Cancel Order
 ```http
-POST /api/inventory/stock-movement
+DELETE /api/orders/:id
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "productId": 1,
-  "warehouseId": 1,
-  "movementType": "in|out|adjustment",
-  "quantity": 50,
-  "reason": "Stock replenishment",
-  "referenceNumber": "PO-001"
+  "reason": "Customer requested cancellation"
 }
 ```
 
-## Van Sales Operations
+## 📦 Product & Inventory Management
 
-### Van Sales Dashboard
+### Get All Products
 ```http
-GET /api/van-sales/dashboard
+GET /api/products
 Authorization: Bearer <token>
-
-Response includes:
-- Today's sales summary
-- Route information
-- Customer visits
-- Inventory status
-- Performance metrics
-```
-
-### Route Management
-```http
-GET /api/routes
-POST /api/routes
-PUT /api/routes/:id
-DELETE /api/routes/:id
-```
-
-### Customer Visits
-```http
-POST /api/visits
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "customerId": 1,
-  "visitDate": "2024-01-15T10:30:00Z",
-  "location": {
-    "latitude": 40.7128,
-    "longitude": -74.0060
-  },
-  "visitType": "sales|delivery|collection",
-  "notes": "Customer feedback",
-  "orders": [
-    {
-      "productId": 1,
-      "quantity": 5,
-      "unitPrice": 25.99
-    }
-  ]
-}
-```
-
-### Cash Management
-```http
-GET /api/cash-management/summary
-POST /api/cash-management/transaction
-```
-
-## Analytics & Reporting
-
-### Sales Analytics
-```http
-GET /api/analytics/sales
-Authorization: Bearer <token>
-
 Query Parameters:
-- period: daily|weekly|monthly|yearly
-- dateFrom: YYYY-MM-DD
-- dateTo: YYYY-MM-DD
-- groupBy: product|customer|area|rep
+  - page: number
+  - limit: number
+  - search: string
+  - category: string
+  - inStock: boolean
 ```
 
 **Response:**
@@ -337,94 +385,194 @@ Query Parameters:
 {
   "success": true,
   "data": {
-    "summary": {
-      "totalSales": 125000.00,
-      "totalOrders": 450,
-      "averageOrderValue": 277.78,
-      "growth": 15.5
-    },
-    "breakdown": [
+    "products": [
       {
-        "period": "2024-01-01",
-        "sales": 5000.00,
-        "orders": 20,
-        "customers": 15
+        "id": "uuid",
+        "name": "Premium Product",
+        "description": "High-quality product description",
+        "sku": "PROD-001",
+        "category": "Electronics",
+        "price": 2500,
+        "stockQuantity": 150,
+        "minStockLevel": 10,
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 45,
+      "pages": 5
+    }
+  }
+}
+```
+
+### Create Product
+```http
+POST /api/products
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "New Product",
+  "description": "Product description",
+  "sku": "PROD-002",
+  "category": "Electronics",
+  "price": 3000,
+  "stockQuantity": 100,
+  "minStockLevel": 15
+}
+```
+
+### Update Product
+```http
+PUT /api/products/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Updated Product Name",
+  "price": 3500,
+  "stockQuantity": 120
+}
+```
+
+### Update Stock Level
+```http
+PUT /api/products/:id/stock
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "quantity": 50,
+  "type": "adjustment", // "adjustment" | "restock" | "sale"
+  "notes": "Stock adjustment reason"
+}
+```
+
+## 📊 Analytics & Reporting
+
+### Dashboard Statistics
+```http
+GET /api/analytics/dashboard
+Authorization: Bearer <token>
+Query Parameters:
+  - period: string (today|week|month|year)
+  - salesAgentId: string (optional)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalOrders": 156,
+    "todayOrders": 12,
+    "totalCustomers": 89,
+    "totalRevenue": 4560000,
+    "pendingOrders": 8,
+    "topProducts": [
+      {
+        "productId": "uuid",
+        "name": "Product Name",
+        "totalSold": 45,
+        "revenue": 112500
+      }
+    ],
+    "salesTrend": [
+      {
+        "date": "2024-01-01",
+        "orders": 5,
+        "revenue": 75000
       }
     ]
   }
 }
 ```
 
-### Performance Metrics
+### Sales Report
 ```http
-GET /api/analytics/performance
+GET /api/analytics/sales
 Authorization: Bearer <token>
-
-Includes:
-- Sales rep performance
-- Product performance
-- Customer analysis
-- Route efficiency
+Query Parameters:
+  - dateFrom: string (ISO date)
+  - dateTo: string (ISO date)
+  - salesAgentId: string
+  - customerId: string
+  - format: string (json|csv|pdf)
 ```
 
-### Custom Reports
+### Customer Analytics
 ```http
-POST /api/reports/generate
+GET /api/analytics/customers
 Authorization: Bearer <token>
-Content-Type: application/json
+Query Parameters:
+  - period: string
+  - customerType: string
+```
 
+## 🔧 System Management
+
+### Health Check
+```http
+GET /api/health
+```
+
+**Response:**
+```json
 {
-  "reportType": "sales|inventory|customer|performance",
-  "parameters": {
-    "dateFrom": "2024-01-01",
-    "dateTo": "2024-01-31",
-    "format": "pdf|excel|csv"
+  "status": "healthy",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "services": {
+    "database": "connected",
+    "cache": "connected",
+    "external_apis": "connected"
   }
 }
 ```
 
-## Real-time Features
-
-### WebSocket Connection
-```javascript
-const socket = io('https://ss.gonxt.tech', {
-  auth: {
-    token: 'your-jwt-token'
-  }
-});
-
-// Listen for real-time updates
-socket.on('order_update', (data) => {
-  console.log('Order updated:', data);
-});
-
-socket.on('inventory_alert', (data) => {
-  console.log('Inventory alert:', data);
-});
-
-socket.on('new_customer', (data) => {
-  console.log('New customer added:', data);
-});
+### System Information
+```http
+GET /api/system/info
+Authorization: Bearer <token>
 ```
 
-### Push Notifications
+## 📱 Mobile API Endpoints
+
+### Sync Data
 ```http
-POST /api/notifications/send
+POST /api/mobile/sync
 Authorization: Bearer <token>
 Content-Type: application/json
 
 {
-  "userId": 1,
-  "title": "New Order",
-  "message": "You have a new order from ABC Store",
-  "type": "order",
-  "data": {
-    "orderId": 123
+  "lastSyncTimestamp": "2024-01-15T10:00:00Z",
+  "deviceId": "device-uuid",
+  "offlineData": {
+    "orders": [],
+    "customers": [],
+    "products": []
   }
 }
 ```
 
-## Error Handling
+### Upload Location
+```http
+POST /api/mobile/location
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "latitude": 6.5244,
+  "longitude": 3.3792,
+  "timestamp": "2024-01-15T10:30:00Z",
+  "accuracy": 10
+}
+```
+
+## 🚨 Error Handling
 
 ### Error Response Format
 ```json
@@ -433,150 +581,94 @@ Content-Type: application/json
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Invalid input data",
-    "details": [
-      {
-        "field": "email",
-        "message": "Email is required"
-      }
-    ]
-  }
+    "details": {
+      "field": "email",
+      "message": "Email is required"
+    }
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
+### HTTP Status Codes
+- `200` - OK: Request successful
+- `201` - Created: Resource created successfully
+- `400` - Bad Request: Invalid request data
+- `401` - Unauthorized: Authentication required
+- `403` - Forbidden: Insufficient permissions
+- `404` - Not Found: Resource not found
+- `409` - Conflict: Resource already exists
+- `422` - Unprocessable Entity: Validation error
+- `429` - Too Many Requests: Rate limit exceeded
+- `500` - Internal Server Error: Server error
+
 ### Common Error Codes
-- `AUTHENTICATION_REQUIRED` (401)
-- `INSUFFICIENT_PERMISSIONS` (403)
-- `RESOURCE_NOT_FOUND` (404)
-- `VALIDATION_ERROR` (400)
-- `RATE_LIMIT_EXCEEDED` (429)
-- `INTERNAL_SERVER_ERROR` (500)
+- `AUTHENTICATION_REQUIRED`: Missing or invalid authentication
+- `INSUFFICIENT_PERMISSIONS`: User lacks required permissions
+- `VALIDATION_ERROR`: Request data validation failed
+- `RESOURCE_NOT_FOUND`: Requested resource doesn't exist
+- `DUPLICATE_RESOURCE`: Resource already exists
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `SERVER_ERROR`: Internal server error
 
-## Rate Limiting
+## 🔒 Security
 
-### Limits
-- **General API**: 100 requests per 15 minutes per IP
-- **Authentication**: 5 requests per 15 minutes per IP
-- **File Upload**: 10 requests per hour per user
+### Rate Limiting
+- **Authentication endpoints**: 5 requests per minute
+- **General API endpoints**: 100 requests per minute
+- **Bulk operations**: 10 requests per minute
 
-### Headers
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1640995200
+### Input Validation
+- All inputs are validated and sanitized
+- SQL injection protection
+- XSS prevention
+- CSRF protection for web requests
+
+### Security Headers
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Strict-Transport-Security: max-age=31536000`
+
+## 📋 API Testing
+
+### Postman Collection
+Import the Postman collection for easy API testing:
+```
+https://ss.gonxt.tech/api/postman-collection.json
 ```
 
-## Security
+### cURL Examples
 
-### Headers Required
-```http
-Authorization: Bearer <jwt-token>
-X-Tenant-Code: <tenant-code>
-Content-Type: application/json
+**Login:**
+```bash
+curl -X POST https://ss.gonxt.tech/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@demo.com","password":"admin123"}'
 ```
 
-### Security Features
-- JWT authentication with refresh tokens
-- Rate limiting per IP and user
-- Input sanitization and validation
-- SQL injection prevention
-- XSS protection
-- CSRF protection
-- HTTPS enforcement
-- Security headers (HSTS, CSP, etc.)
-
-### Data Encryption
-- All data in transit encrypted with TLS 1.3
-- Sensitive data encrypted at rest
-- Password hashing with bcrypt
-- JWT tokens with secure signing
-
-## SDK Examples
-
-### JavaScript/Node.js
-```javascript
-const SalesSyncAPI = require('@salessync/api-client');
-
-const client = new SalesSyncAPI({
-  baseURL: 'https://ss.gonxt.tech/api',
-  tenantCode: 'DEMO'
-});
-
-// Authenticate
-await client.auth.login('user@example.com', 'password');
-
-// Get customers
-const customers = await client.customers.list({
-  page: 1,
-  limit: 20,
-  search: 'ABC'
-});
-
-// Create order
-const order = await client.orders.create({
-  customerId: 1,
-  items: [
-    { productId: 1, quantity: 10, unitPrice: 25.99 }
-  ]
-});
+**Get Users:**
+```bash
+curl -X GET https://ss.gonxt.tech/api/users \
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
-### Python
-```python
-from salessync import SalesSyncClient
-
-client = SalesSyncClient(
-    base_url='https://ss.gonxt.tech/api',
-    tenant_code='DEMO'
-)
-
-# Authenticate
-client.auth.login('user@example.com', 'password')
-
-# Get customers
-customers = client.customers.list(page=1, limit=20)
-
-# Create order
-order = client.orders.create({
-    'customerId': 1,
-    'items': [
-        {'productId': 1, 'quantity': 10, 'unitPrice': 25.99}
-    ]
-})
+**Create Order:**
+```bash
+curl -X POST https://ss.gonxt.tech/api/orders \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"customerId":"uuid","items":[{"productId":"uuid","quantity":2,"unitPrice":1500}]}'
 ```
 
-## Testing
+## 📞 Support
 
-### Health Check
-```http
-GET /health
-```
+For API support:
+- **Documentation**: This comprehensive guide
+- **Postman Collection**: Test endpoints interactively
+- **Error Logs**: Check application logs for debugging
+- **Contact**: development team for technical issues
 
-### API Status
-```http
-GET /api/health
-Authorization: Bearer <token>
-```
+---
 
-### Test Endpoints (Development Only)
-```http
-GET /api/test
-POST /api/test/data
-```
-
-## Support
-
-For API support and questions:
-- Email: api-support@salessync.com
-- Documentation: https://docs.salessync.com
-- Status Page: https://status.salessync.com
-
-## Changelog
-
-### Version 1.0.0 (2024-01-15)
-- Initial API release
-- Core CRUD operations
-- Authentication system
-- Real-time features
-- Analytics endpoints
-- Mobile-first design
-- Comprehensive security features
+**SalesSync API** - Powering field sales operations 🚀

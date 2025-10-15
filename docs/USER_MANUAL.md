@@ -1,666 +1,401 @@
 # SalesSync User Manual
 
-## Table of Contents
+Complete user guide for the SalesSync field sales management system.
+
+## 📋 Table of Contents
 
 1. [Getting Started](#getting-started)
 2. [Dashboard Overview](#dashboard-overview)
-3. [Customer Management](#customer-management)
-4. [Product Management](#product-management)
+3. [User Management](#user-management)
+4. [Customer Management](#customer-management)
 5. [Order Management](#order-management)
-6. [Van Sales Operations](#van-sales-operations)
-7. [Inventory Management](#inventory-management)
-8. [Analytics & Reports](#analytics--reports)
-9. [Mobile Features](#mobile-features)
-10. [Settings & Configuration](#settings--configuration)
-11. [Troubleshooting](#troubleshooting)
+6. [Inventory Management](#inventory-management)
+7. [Analytics & Reports](#analytics--reports)
+8. [Mobile App Guide](#mobile-app-guide)
+9. [Settings & Configuration](#settings--configuration)
+10. [Troubleshooting](#troubleshooting)
 
-## Getting Started
+## 🚀 Getting Started
 
-### System Access
+### System Requirements
+- **Web Browser**: Chrome, Firefox, Safari, or Edge (latest versions)
+- **Internet Connection**: Stable internet for real-time features
+- **Mobile Device**: iOS 12+ or Android 8+ for mobile app
+- **Screen Resolution**: Minimum 1024x768 for optimal experience
 
-**Web Application:** https://ss.gonxt.tech  
-**Mobile App:** Available as Progressive Web App (PWA)
+### Accessing SalesSync
 
-### Login Process
+#### Web Application
+1. Open your web browser
+2. Navigate to: https://ss.gonxt.tech
+3. Enter your login credentials
+4. Click "Sign In"
 
-1. Navigate to the SalesSync login page
-2. Enter your credentials:
-   - **Email:** Your registered email address
-   - **Password:** Your secure password
-   - **Tenant Code:** Your organization code (e.g., DEMO)
-3. Click "Sign In"
+#### Mobile Application
+1. Download SalesSync from App Store or Google Play
+2. Open the app
+3. Enter your login credentials
+4. Tap "Sign In"
 
-### First Time Setup
+### Demo Credentials
+For testing purposes, use these demo accounts:
 
-After logging in for the first time:
-1. Complete your profile information
-2. Set up your preferences
-3. Review the dashboard tour
-4. Configure notification settings
+**Administrator Account:**
+- Email: `admin@demo.com`
+- Password: `admin123`
 
-### User Roles
+**Field Agent Account:**
+- Email: `agent@demo.com`
+- Password: `agent123`
 
-**Administrator**
+## 🏠 Dashboard Overview
+
+The dashboard is your central hub for monitoring sales activities and key metrics.
+
+### Key Metrics Cards
+- **Total Orders**: Complete count of all orders in the system
+- **Today's Orders**: Orders created today
+- **Total Customers**: Active customer count
+- **Total Revenue**: Cumulative revenue across all orders
+
+### Quick Actions
+- **New Order**: Create a new customer order
+- **Add Customer**: Register a new customer
+- **View Reports**: Access analytics and reports
+- **Manage Inventory**: Update product stock levels
+
+### Recent Activity Feed
+Monitor recent system activities including:
+- New orders created
+- Customer registrations
+- Inventory updates
+- User actions
+
+## 👥 User Management
+
+### Accessing User Management
+1. Navigate to **Admin** → **Users** from the main menu
+2. View the complete list of system users
+3. Use search and filters to find specific users
+
+### User Roles & Permissions
+
+#### Super Admin
 - Full system access
-- User management
+- User management capabilities
 - System configuration
-- All reports and analytics
+- All reporting features
 
-**Sales Manager**
-- Team oversight
-- Performance reports
-- Customer management
+#### Sales Manager
+- Team management
+- Sales reporting
+- Customer oversight
 - Order approval
 
-**Sales Representative**
-- Customer visits
+#### Field Agent
+- Customer management
 - Order creation
-- Inventory management
-- Personal performance tracking
+- Inventory viewing
+- Basic reporting
 
-**Warehouse Staff**
-- Inventory management
-- Stock movements
-- Order fulfillment
-- Warehouse operations
+#### Van Sales Agent
+- Mobile-optimized interface
+- Route management
+- Customer visits
+- Order processing
 
-## Dashboard Overview
+### Creating New Users
+1. Click **"Add User"** button
+2. Fill in required information:
+   - **Full Name**: User's complete name
+   - **Email**: Login email address
+   - **Phone**: Contact number
+   - **Role**: Select appropriate role
+   - **Tenant**: Organization assignment
+   - **Location**: Geographic assignment
+3. Click **"Create User"**
+4. User will receive login credentials via email
 
-### Main Dashboard
+### Managing Existing Users
+- **Edit**: Click the edit icon to modify user details
+- **Deactivate**: Temporarily disable user access
+- **Delete**: Permanently remove user (use with caution)
+- **Reset Password**: Generate new password for user
 
-The dashboard provides a comprehensive overview of your sales operations:
+## 🏢 Customer Management
 
-#### Key Metrics Cards
-- **Today's Sales:** Total sales amount for the current day
-- **Orders:** Number of orders (pending, confirmed, delivered)
-- **Customers:** Active customer count and new customers
-- **Inventory:** Stock levels and low stock alerts
+### Customer Overview
+Access customer management through **Customers** in the main menu.
 
-#### Quick Actions
-- Create New Order
-- Add Customer
-- Record Visit
-- Update Inventory
-- Generate Report
-
-#### Recent Activities
-- Latest orders
-- Recent customer visits
-- Inventory movements
-- System notifications
-
-### Analytics Dashboard
-
-Advanced analytics with interactive charts:
-- Sales trends and forecasting
-- Customer behavior analysis
-- Product performance metrics
-- Territory and route analysis
-- Commission tracking
-
-## Customer Management
-
-### Customer List
-
-Access the customer list from the main navigation:
-1. Click "Customers" in the sidebar
-2. View all customers with filtering options
-3. Use search to find specific customers
-4. Sort by name, area, or last visit date
+### Customer Information
+Each customer record includes:
+- **Basic Details**: Name, email, phone
+- **Address**: Complete address information
+- **Customer Type**: Retail or Wholesale
+- **Status**: Active or inactive
+- **Order History**: Complete purchase history
 
 ### Adding New Customers
+1. Click **"Add Customer"** button
+2. Complete the customer form:
+   - **Name**: Business or individual name
+   - **Email**: Primary contact email
+   - **Phone**: Contact number
+   - **Address**: Complete address
+   - **City/State**: Location information
+   - **Customer Type**: Select Retail or Wholesale
+3. Click **"Save Customer"**
 
-1. Click "Add Customer" button
-2. Fill in required information:
-   - **Name:** Customer business name
-   - **Contact Person:** Primary contact
-   - **Email:** Business email address
-   - **Phone:** Contact number
-   - **Address:** Full business address
-   - **Area/Territory:** Sales territory
-   - **Credit Limit:** Maximum credit allowed
-3. Click "Save Customer"
+### Customer Search & Filtering
+- **Search Bar**: Find customers by name, email, or phone
+- **Filter by Type**: Retail or Wholesale customers
+- **Filter by Location**: City or state-based filtering
+- **Status Filter**: Active or inactive customers
 
-### Customer Details
+### Customer Details View
+Click on any customer to view:
+- Complete customer information
+- Order history and statistics
+- Contact information
+- Edit customer details
 
-Click on any customer to view detailed information:
-- **Profile:** Basic information and contact details
-- **Orders:** Order history and status
-- **Visits:** Sales visit records
-- **Payments:** Payment history and outstanding balance
-- **Notes:** Customer-specific notes and preferences
+## 🛒 Order Management
 
-### Customer Management Features
+### Order Lifecycle
+Orders progress through these stages:
+1. **Pending**: Newly created, awaiting confirmation
+2. **Confirmed**: Customer has confirmed the order
+3. **Processing**: Order is being prepared
+4. **Shipped**: Order has been dispatched
+5. **Delivered**: Order completed successfully
+6. **Cancelled**: Order was cancelled
 
-**Credit Management**
-- Set credit limits
-- Monitor outstanding balances
-- Payment tracking
-- Credit alerts
+### Creating New Orders
+1. Navigate to **Orders** → **Create Order**
+2. Select customer from dropdown or create new
+3. Add products to the order:
+   - Search and select products
+   - Specify quantities
+   - Verify pricing
+4. Review order total
+5. Add any special notes
+6. Click **"Create Order"**
 
-**Territory Assignment**
-- Assign customers to sales territories
-- Route optimization
-- Territory performance tracking
+### Order Management Features
+- **Order Search**: Find orders by number, customer, or date
+- **Status Filtering**: Filter by order status
+- **Bulk Actions**: Update multiple orders simultaneously
+- **Export Options**: Download order data as CSV or PDF
 
-**Customer Categories**
-- Classify customers by type
-- Set pricing tiers
-- Apply specific promotions
+### Order Details
+Each order displays:
+- Order number and date
+- Customer information
+- Product line items with quantities and prices
+- Order total and status
+- Delivery information
+- Order history and notes
 
-## Product Management
+## 📦 Inventory Management
 
 ### Product Catalog
+Access inventory through **Inventory** in the main menu.
 
-View and manage your product inventory:
-1. Navigate to "Products" section
-2. Browse products by category or brand
-3. Use filters to find specific products
-4. View stock levels and pricing
+### Product Information
+Each product includes:
+- **Basic Details**: Name, description, SKU
+- **Pricing**: Unit price and cost information
+- **Stock Levels**: Current quantity and minimum levels
+- **Category**: Product classification
+- **Status**: Active or inactive
 
-### Adding Products
+### Stock Management
+- **Stock Alerts**: Automatic notifications for low stock
+- **Stock Adjustments**: Manual inventory corrections
+- **Restock Orders**: Track incoming inventory
+- **Stock History**: Complete inventory movement history
 
-1. Click "Add Product" button
-2. Enter product details:
-   - **Name:** Product name
-   - **SKU:** Stock keeping unit code
-   - **Barcode:** Product barcode (optional)
-   - **Category:** Product category
-   - **Brand:** Product brand
-   - **Description:** Detailed description
-   - **Unit Price:** Selling price
-   - **Cost Price:** Purchase cost
-   - **Unit of Measure:** Piece, kg, liter, etc.
-   - **Stock Levels:** Minimum and maximum stock
+### Adding New Products
+1. Click **"Add Product"** button
+2. Complete product information:
+   - **Name**: Product name
+   - **Description**: Detailed description
+   - **SKU**: Unique product identifier
+   - **Category**: Product category
+   - **Price**: Selling price
+   - **Stock Quantity**: Initial stock level
+   - **Minimum Level**: Reorder threshold
+3. Click **"Save Product"**
 
-### Product Features
+## 📊 Analytics & Reports
 
-**Pricing Management**
-- Set different price tiers
-- Volume discounts
-- Promotional pricing
-- Customer-specific pricing
+### Dashboard Analytics
+The main dashboard provides key performance indicators:
+- Sales trends and patterns
+- Top-performing products
+- Customer activity metrics
+- Revenue analysis
 
-**Inventory Tracking**
-- Real-time stock levels
-- Low stock alerts
-- Automatic reorder points
-- Stock movement history
+### Available Reports
+1. **Sales Reports**
+   - Daily, weekly, monthly sales summaries
+   - Sales by agent or territory
+   - Product performance analysis
 
-**Product Analytics**
-- Sales performance
-- Profit margins
-- Demand forecasting
-- Seasonal trends
+2. **Customer Reports**
+   - Customer acquisition trends
+   - Customer lifetime value
+   - Purchase behavior analysis
 
-## Order Management
+3. **Inventory Reports**
+   - Stock level reports
+   - Product movement analysis
+   - Reorder recommendations
 
-### Creating Orders
+4. **Financial Reports**
+   - Revenue summaries
+   - Profit margin analysis
+   - Payment status reports
 
-#### Quick Order Creation
-1. Click "New Order" from dashboard
-2. Select customer
-3. Add products:
-   - Search or scan barcode
-   - Enter quantity
-   - Apply discounts if applicable
-4. Review order total
-5. Save as draft or confirm order
+### Generating Reports
+1. Navigate to **Reports** section
+2. Select report type
+3. Choose date range and filters
+4. Click **"Generate Report"**
+5. View online or download as PDF/Excel
 
-#### Detailed Order Process
-1. Navigate to "Orders" → "Create Order"
-2. **Customer Selection:**
-   - Choose existing customer
-   - Or create new customer
-3. **Order Details:**
-   - Order date
-   - Delivery date
-   - Payment terms
-   - Special instructions
-4. **Product Selection:**
-   - Browse catalog or search
-   - Add multiple products
-   - Set quantities and prices
-   - Apply line-item discounts
-5. **Order Review:**
-   - Verify all details
-   - Check customer credit limit
-   - Confirm availability
-6. **Order Confirmation:**
-   - Save as draft for later
-   - Confirm and process
-   - Print order confirmation
+## 📱 Mobile App Guide
 
-### Order Status Management
+### Mobile App Features
+- **Offline Capability**: Work without internet connection
+- **GPS Tracking**: Location-based features
+- **Barcode Scanning**: Quick product identification
+- **Customer Management**: On-the-go customer updates
+- **Order Creation**: Create orders in the field
 
-**Order Statuses:**
-- **Draft:** Order being prepared
-- **Pending:** Awaiting confirmation
-- **Confirmed:** Order confirmed by customer
-- **Processing:** Being prepared for delivery
-- **Delivered:** Successfully delivered
-- **Cancelled:** Order cancelled
+### Getting Started with Mobile
+1. Download SalesSync mobile app
+2. Log in with your credentials
+3. Allow location permissions
+4. Sync data for offline use
 
-**Status Updates:**
-1. Open order details
-2. Click "Update Status"
-3. Select new status
-4. Add notes if required
-5. Save changes
+### Mobile Workflows
 
-### Order Features
-
-**Payment Processing**
-- Cash payments
-- Credit card processing
-- Bank transfers
-- Credit account management
-
-**Delivery Management**
-- Delivery scheduling
-- Route optimization
-- Delivery confirmation
-- Proof of delivery
-
-**Order Modifications**
-- Edit pending orders
-- Add/remove items
-- Update quantities
-- Apply additional discounts
-
-## Van Sales Operations
-
-### Mobile Van Sales Interface
-
-The mobile-optimized interface provides:
-- GPS-enabled customer location
-- Offline order creation
-- Real-time inventory sync
-- Route optimization
-- Customer visit tracking
-
-### Route Management
-
-#### Daily Route Planning
-1. Access "Routes" section
-2. View assigned route for the day
-3. Optimize route order
-4. Start route navigation
+#### Creating Orders on Mobile
+1. Open the mobile app
+2. Tap **"New Order"**
+3. Select or create customer
+4. Add products using search or barcode scan
+5. Review and confirm order
+6. Submit order (syncs when online)
 
 #### Customer Visits
 1. Navigate to customer location
-2. Check in at customer site
-3. Record visit details:
-   - Visit purpose
-   - Customer feedback
-   - Orders placed
-   - Payment collected
-   - Next visit scheduled
+2. Check in using GPS
+3. Update customer information
+4. Create orders or collect payments
+5. Add visit notes
+6. Check out and move to next customer
 
-### Van Inventory Management
+## ⚙️ Settings & Configuration
 
-**Stock Loading**
-- Load van with products
-- Record initial inventory
-- Set par levels for products
-- Track product locations in van
-
-**Real-time Stock Updates**
-- Automatic stock deduction on sales
-- Manual stock adjustments
-- Low stock alerts
-- Restock notifications
-
-**End-of-Day Reconciliation**
-- Count remaining inventory
-- Record any damages or losses
-- Update system inventory
-- Generate daily sales report
-
-### GPS and Location Features
-
-**Location Tracking**
-- Real-time GPS tracking
-- Customer location mapping
-- Route optimization
-- Mileage tracking
-
-**Geofencing**
-- Customer location verification
-- Automatic check-in/check-out
-- Territory boundary alerts
-- Location-based promotions
-
-## Inventory Management
-
-### Stock Overview
-
-Monitor inventory levels across all locations:
-- Current stock quantities
-- Stock values
-- Low stock alerts
-- Overstock notifications
-
-### Stock Movements
-
-**Inbound Stock**
-- Purchase orders
-- Stock transfers
-- Returns processing
-- Adjustments
-
-**Outbound Stock**
-- Sales orders
-- Transfers to vans
-- Waste/damage recording
-- Sample distributions
-
-### Warehouse Operations
-
-**Stock Counts**
-- Scheduled cycle counts
-- Full inventory counts
-- Variance reporting
-- Count adjustments
-
-**Stock Transfers**
-- Warehouse to van transfers
-- Inter-warehouse transfers
-- Return processing
-- Emergency stock moves
-
-### Inventory Analytics
-
-**Stock Reports**
-- Stock aging analysis
-- Fast/slow moving items
-- Stock turnover rates
-- Carrying cost analysis
-
-**Demand Planning**
-- Sales forecasting
-- Seasonal demand patterns
-- Reorder point optimization
-- Safety stock calculations
-
-## Analytics & Reports
-
-### Sales Analytics
-
-**Performance Dashboards**
-- Sales trends and growth
-- Target vs. actual performance
-- Product performance analysis
-- Customer analysis
-
-**Sales Reports**
-- Daily sales summary
-- Weekly/monthly reports
-- Sales by territory
-- Sales by product category
-- Customer sales history
-
-### Financial Reports
-
-**Revenue Analysis**
-- Gross sales
-- Net sales (after returns/discounts)
-- Profit margins
-- Commission calculations
-
-**Payment Reports**
-- Cash collection
-- Outstanding receivables
-- Payment trends
-- Credit analysis
-
-### Operational Reports
-
-**Inventory Reports**
-- Stock levels
-- Stock movements
-- Inventory valuation
-- Waste and damage reports
-
-**Route Reports**
-- Route efficiency
-- Customer visit frequency
-- Territory coverage
-- Mileage reports
-
-### Custom Reports
-
-**Report Builder**
-1. Select report type
-2. Choose date range
-3. Apply filters
-4. Select columns to include
-5. Generate and export
-
-**Export Options**
-- PDF format
-- Excel spreadsheet
-- CSV data
-- Email delivery
-
-## Mobile Features
-
-### Progressive Web App (PWA)
-
-SalesSync works as a mobile app:
-- Install on mobile device
-- Offline functionality
-- Push notifications
-- Mobile-optimized interface
-
-### Offline Capabilities
-
-**Offline Operations**
-- Create orders offline
-- Record customer visits
-- Update inventory
-- Sync when connection restored
-
-**Data Synchronization**
-- Automatic sync when online
-- Conflict resolution
-- Data integrity checks
-- Sync status indicators
-
-### Mobile-Specific Features
-
-**Camera Integration**
-- Barcode scanning
-- Photo capture for orders
-- Proof of delivery photos
-- Damage documentation
-
-**GPS Integration**
-- Location-based check-ins
-- Route navigation
-- Customer location mapping
-- Mileage tracking
-
-**Touch Optimization**
-- Large touch targets
-- Swipe gestures
-- Mobile-friendly forms
-- Responsive design
-
-## Settings & Configuration
-
-### User Profile
-
-**Personal Information**
-- Name and contact details
-- Profile photo
-- Language preferences
-- Time zone settings
-
-**Security Settings**
+### Profile Settings
+Access through **Settings** → **Profile**:
+- Update personal information
 - Change password
-- Two-factor authentication
-- Login history
-- Active sessions
+- Set notification preferences
+- Configure language and timezone
 
-### System Preferences
+### System Settings (Admin Only)
+- **Company Information**: Update organization details
+- **User Roles**: Configure role permissions
+- **Email Templates**: Customize system emails
+- **Integration Settings**: Configure third-party integrations
 
-**Display Settings**
-- Theme selection
-- Dashboard layout
-- Default views
-- Data refresh intervals
+### Notification Settings
+Configure notifications for:
+- New orders
+- Low stock alerts
+- Customer updates
+- System announcements
 
-**Notification Settings**
-- Email notifications
-- Push notifications
-- Alert preferences
-- Notification schedule
-
-### Business Configuration
-
-**Company Settings**
-- Company information
-- Logo and branding
-- Business hours
-- Currency settings
-
-**Sales Settings**
-- Tax rates
-- Discount policies
-- Credit terms
-- Pricing rules
-
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
 
 #### Login Problems
-**Issue:** Cannot log in
-**Solutions:**
-1. Verify email and password
-2. Check tenant code
-3. Clear browser cache
-4. Try incognito/private mode
-5. Contact administrator
+**Issue**: Cannot log in to the system
+**Solutions**:
+1. Verify email and password are correct
+2. Check if account is active
+3. Clear browser cache and cookies
+4. Try different browser
+5. Contact administrator for password reset
 
-#### Sync Issues
-**Issue:** Data not syncing
-**Solutions:**
+#### Slow Performance
+**Issue**: System is running slowly
+**Solutions**:
 1. Check internet connection
-2. Force sync from settings
-3. Clear app cache
-4. Restart application
-5. Contact support
-
-#### Performance Issues
-**Issue:** App running slowly
-**Solutions:**
-1. Close other browser tabs
 2. Clear browser cache
-3. Check internet speed
-4. Update browser
-5. Restart device
+3. Close unnecessary browser tabs
+4. Try different browser
+5. Contact support if issues persist
 
-### Error Messages
+#### Mobile App Issues
+**Issue**: Mobile app not syncing
+**Solutions**:
+1. Check internet connection
+2. Force close and restart app
+3. Log out and log back in
+4. Update app to latest version
+5. Clear app cache
 
-**"Session Expired"**
-- Log out and log back in
-- Check system time settings
-- Contact administrator if persistent
-
-**"Network Error"**
-- Check internet connection
-- Try again in a few minutes
-- Switch to mobile data if on WiFi
-
-**"Permission Denied"**
-- Contact administrator
-- Verify user role permissions
-- Check feature access rights
+#### Data Not Loading
+**Issue**: Data not displaying correctly
+**Solutions**:
+1. Refresh the page
+2. Check internet connection
+3. Clear browser cache
+4. Try different browser
+5. Contact support
 
 ### Getting Help
 
-**In-App Help**
-- Help button in top navigation
-- Contextual help tooltips
-- Video tutorials
-- FAQ section
+#### Support Channels
+- **Email Support**: support@salessync.com
+- **Documentation**: Review this user manual
+- **System Status**: Check system status page
+- **Training Videos**: Access video tutorials
 
-**Support Channels**
-- Email: support@salessync.com
-- Phone: Available during business hours
-- Live chat: Available in application
-- Knowledge base: Online documentation
+#### Reporting Issues
+When reporting issues, include:
+1. Description of the problem
+2. Steps to reproduce the issue
+3. Browser and version information
+4. Screenshots if applicable
+5. Error messages received
 
-**Training Resources**
-- User training videos
-- Webinar sessions
-- Best practices guide
-- Feature update notifications
+## 📞 Contact & Support
 
-### Data Backup and Recovery
+### Support Hours
+- **Business Hours**: Monday - Friday, 9 AM - 6 PM
+- **Emergency Support**: Available 24/7 for critical issues
+- **Response Time**: Within 4 hours during business hours
 
-**Automatic Backups**
-- Daily system backups
-- Real-time data replication
-- Point-in-time recovery
-- Disaster recovery procedures
+### Training & Onboarding
+- **New User Training**: Available for new team members
+- **Feature Updates**: Regular training on new features
+- **Best Practices**: Guidance on optimal system usage
+- **Custom Training**: Tailored training for specific needs
 
-**Data Export**
-- Export customer data
-- Export order history
-- Export inventory data
-- Export reports and analytics
+### System Updates
+- **Regular Updates**: Monthly feature releases
+- **Security Updates**: Applied automatically
+- **Maintenance Windows**: Scheduled during off-peak hours
+- **Update Notifications**: Advance notice of major changes
 
-## Best Practices
+---
 
-### Daily Operations
+**SalesSync** - Empowering your field sales team with modern technology 🚀
 
-1. **Start of Day**
-   - Check dashboard for alerts
-   - Review daily route
-   - Verify van inventory
-   - Check pending orders
-
-2. **During Sales Visits**
-   - Use GPS check-in
-   - Record visit details
-   - Take order photos
-   - Collect payments promptly
-
-3. **End of Day**
-   - Reconcile inventory
-   - Submit daily reports
-   - Plan next day's route
-   - Sync all data
-
-### Data Management
-
-1. **Regular Updates**
-   - Keep customer information current
-   - Update product prices regularly
-   - Maintain accurate inventory
-   - Review and clean old data
-
-2. **Security Practices**
-   - Use strong passwords
-   - Log out when finished
-   - Don't share login credentials
-   - Report security concerns
-
-### Performance Optimization
-
-1. **System Performance**
-   - Close unused browser tabs
-   - Clear cache regularly
-   - Use latest browser version
-   - Maintain good internet connection
-
-2. **Business Performance**
-   - Review analytics regularly
-   - Set and track KPIs
-   - Use reports for decision making
-   - Continuously improve processes
-
-This user manual provides comprehensive guidance for using SalesSync effectively. For additional support or training, please contact your system administrator or the SalesSync support team.
+*For additional support or questions not covered in this manual, please contact our support team.*

@@ -1,205 +1,525 @@
-# SalesSync Production Deployment Guide
+# SalesSync Deployment Guide
 
-## Overview
+Comprehensive deployment guide for the SalesSync field sales management system.
 
-This guide provides comprehensive instructions for deploying SalesSync to production environments. SalesSync is a modern van sales management system built with Node.js, Next.js, and SQLite/PostgreSQL.
+## 📋 Overview
 
-## Table of Contents
+This guide covers the complete deployment process for SalesSync, including server setup, application deployment, security configuration, and maintenance procedures.
 
-1. [Prerequisites](#prerequisites)
-2. [System Requirements](#system-requirements)
-3. [Deployment Options](#deployment-options)
-4. [Quick Deployment](#quick-deployment)
-5. [Manual Deployment](#manual-deployment)
-6. [Docker Deployment](#docker-deployment)
-7. [Configuration](#configuration)
-8. [Security Setup](#security-setup)
-9. [Monitoring & Maintenance](#monitoring--maintenance)
-10. [Troubleshooting](#troubleshooting)
+### Deployment Architecture
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Load Balancer │────│     Nginx        │────│   Application   │
+│   (Optional)    │    │   Reverse Proxy  │    │     Servers     │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                              │                         │
+                              │                         │
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │   SSL/TLS        │    │   PostgreSQL    │
+                       │   Certificates   │    │   Database      │
+                       └──────────────────┘    └─────────────────┘
+```
 
-## Prerequisites
+## 🔧 Prerequisites
+
+### System Requirements
+- **Operating System**: Ubuntu 20.04 LTS or higher
+- **Memory**: Minimum 4GB RAM (8GB recommended)
+- **Storage**: Minimum 50GB SSD
+- **CPU**: 2+ cores recommended
+- **Network**: Stable internet connection
 
 ### Required Software
 - **Node.js**: Version 18.x or higher
-- **npm**: Version 8.x or higher
-- **Git**: For version control
-- **PM2**: For process management (recommended)
-- **Nginx**: For reverse proxy (recommended)
-- **SSL Certificate**: For HTTPS (required for production)
+- **PostgreSQL**: Version 14 or higher
+- **Nginx**: Latest stable version
+- **PM2**: Process manager for Node.js
+- **Git**: Version control
+- **Certbot**: SSL certificate management
 
-### Optional Software
-- **Docker**: For containerized deployment
-- **Redis**: For caching and session management
-- **PostgreSQL**: For production database (alternative to SQLite)
+## 🚀 Server Setup
 
-### System Access
-- Root or sudo access to the server
-- Domain name configured to point to your server
-- Firewall configured to allow HTTP (80) and HTTPS (443) traffic
+### 1. Initial Server Configuration
 
-## System Requirements
-
-### Minimum Requirements
-- **CPU**: 2 cores
-- **RAM**: 4GB
-- **Storage**: 20GB SSD
-- **Network**: 100 Mbps
-- **OS**: Ubuntu 20.04+ / CentOS 8+ / RHEL 8+
-
-### Recommended Requirements
-- **CPU**: 4 cores
-- **RAM**: 8GB
-- **Storage**: 50GB SSD
-- **Network**: 1 Gbps
-- **OS**: Ubuntu 22.04 LTS
-
-### Production Requirements
-- **CPU**: 8+ cores
-- **RAM**: 16GB+
-- **Storage**: 100GB+ SSD with backup
-- **Network**: 1 Gbps with redundancy
-- **Load Balancer**: For high availability
-
-## Deployment Options
-
-### Option 1: Automated Deployment (Recommended)
-Use the provided deployment script for quick setup:
-```bash
-./deploy-production.sh
-```
-
-### Option 2: Manual Deployment
-Step-by-step manual deployment for custom configurations.
-
-### Option 3: Docker Deployment
-Containerized deployment using Docker Compose.
-
-### Option 4: Cloud Deployment
-Deploy to AWS, Google Cloud, Azure, or other cloud providers.
-
-## Quick Deployment
-
-### 1. Clone Repository
-```bash
-git clone https://github.com/Reshigan/SalesSync.git
-cd SalesSync
-```
-
-### 2. Run Deployment Script
-```bash
-chmod +x deploy-production.sh
-./deploy-production.sh
-```
-
-### 3. Configure Domain
-Update your DNS settings to point to your server IP address.
-
-### 4. Setup SSL
-```bash
-# Using Let's Encrypt (recommended)
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-```
-
-### 5. Verify Deployment
-```bash
-curl -f https://yourdomain.com/health
-```
-
-## Manual Deployment
-
-### Step 1: System Preparation
-
-#### Update System
+#### Update System Packages
 ```bash
 sudo apt update && sudo apt upgrade -y
+sudo apt install curl wget git unzip software-properties-common -y
 ```
 
-#### Install Node.js
+#### Create Application User
+```bash
+sudo adduser salessync
+sudo usermod -aG sudo salessync
+sudo su - salessync
+```
+
+### 2. Install Node.js
+
+#### Using NodeSource Repository
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt-get install -y nodejs
+
+# Verify installation
+node --version
+npm --version
 ```
 
-#### Install PM2
+#### Install Global Packages
 ```bash
-sudo npm install -g pm2
+sudo npm install -g pm2 @nestjs/cli typescript
 ```
 
-#### Install Nginx
+### 3. Install PostgreSQL
+
+#### Install PostgreSQL Server
+```bash
+sudo apt install postgresql postgresql-contrib -y
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+#### Configure PostgreSQL
+```bash
+sudo -u postgres psql
+```
+
+```sql
+-- Create database and user
+CREATE DATABASE salessync;
+CREATE USER salessync WITH ENCRYPTED PASSWORD 'your_secure_password';
+GRANT ALL PRIVILEGES ON DATABASE salessync TO salessync;
+ALTER USER salessync CREATEDB;
+\q
+```
+
+#### Configure PostgreSQL Settings
+```bash
+sudo nano /etc/postgresql/14/main/postgresql.conf
+```
+
+```conf
+# Performance tuning
+shared_buffers = 256MB
+effective_cache_size = 1GB
+maintenance_work_mem = 64MB
+checkpoint_completion_target = 0.9
+wal_buffers = 16MB
+default_statistics_target = 100
+random_page_cost = 1.1
+effective_io_concurrency = 200
+```
+
+### 4. Install Nginx
+
+#### Install and Configure Nginx
 ```bash
 sudo apt install nginx -y
-sudo systemctl enable nginx
 sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# Remove default site
+sudo rm /etc/nginx/sites-enabled/default
 ```
 
-### Step 2: Application Setup
-
-#### Clone and Setup Backend
+#### Configure Nginx Security
 ```bash
-cd /opt
+sudo nano /etc/nginx/nginx.conf
+```
+
+```nginx
+http {
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    
+    # Hide Nginx version
+    server_tokens off;
+    
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+    limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
+}
+```
+
+## 📦 Application Deployment
+
+### 1. Clone Repository
+
+#### Clone from GitHub
+```bash
+cd /var/www
 sudo git clone https://github.com/Reshigan/SalesSync.git
-sudo chown -R $USER:$USER SalesSync
-cd SalesSync/backend-api
-
-# Install dependencies
-npm ci --production
-
-# Setup environment
-cp .env.production .env
-nano .env  # Edit configuration
+sudo chown -R salessync:salessync SalesSync
+cd SalesSync
 ```
 
-#### Setup Frontend
+### 2. Backend Deployment
+
+#### Install Dependencies
 ```bash
-cd ../frontend
-npm ci
+cd backend-api
+npm install --production
+```
+
+#### Environment Configuration
+```bash
+cp .env.example .env
+nano .env
+```
+
+```env
+# Database Configuration
+DATABASE_URL="postgresql://salessync:your_secure_password@localhost:5432/salessync"
+
+# JWT Configuration
+JWT_SECRET="your-super-secure-jwt-secret-key-min-32-chars"
+JWT_REFRESH_SECRET="your-super-secure-refresh-secret-key-min-32-chars"
+JWT_EXPIRES_IN="15m"
+JWT_REFRESH_EXPIRES_IN="7d"
+
+# Server Configuration
+PORT=3001
+NODE_ENV=production
+API_VERSION=v1
+
+# Security Configuration
+BCRYPT_ROUNDS=12
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Email Configuration (Optional)
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+
+# File Upload Configuration
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH="/var/www/SalesSync/uploads"
+
+# Logging Configuration
+LOG_LEVEL="info"
+LOG_FILE="/var/www/SalesSync/logs/app.log"
+```
+
+#### Database Migration and Seeding
+```bash
+# Run database migrations
+npx prisma migrate deploy
+
+# Seed initial data
+npx prisma db seed
+
+# Generate Prisma client
+npx prisma generate
+```
+
+#### Build Application
+```bash
 npm run build
 ```
 
-### Step 3: Database Setup
+### 3. Frontend Deployment
 
-#### Initialize Database
+#### Install Dependencies
 ```bash
-cd ../backend-api
-npm run db:init
+cd ../frontend
+npm install --production
 ```
 
-#### Create Sample Data (Optional)
+#### Environment Configuration
 ```bash
-npm run db:seed
+cp .env.local.example .env.local
+nano .env.local
 ```
 
-### Step 4: Process Management
+```env
+# API Configuration
+NEXT_PUBLIC_API_URL=https://your-domain.com/api
+NEXT_PUBLIC_APP_URL=https://your-domain.com
 
-#### Create PM2 Ecosystem
-```bash
-cd ..
-cp ecosystem.config.js.example ecosystem.config.js
-nano ecosystem.config.js  # Edit configuration
+# Environment
+NODE_ENV=production
+
+# Analytics (Optional)
+NEXT_PUBLIC_GA_ID="GA_MEASUREMENT_ID"
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+NEXT_PUBLIC_ENABLE_NOTIFICATIONS=true
 ```
 
-#### Start Services
+#### Build Application
 ```bash
+npm run build
+```
+
+### 4. Mobile App Preparation
+
+#### Install Dependencies
+```bash
+cd ../mobile-app
+npm install
+```
+
+#### Configure for Production
+```bash
+nano app.json
+```
+
+```json
+{
+  "expo": {
+    "name": "SalesSync",
+    "slug": "salessync",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#007AFF"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.salessync.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.salessync.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "https://your-domain.com/api"
+    }
+  }
+}
+```
+
+## 🔄 Process Management with PM2
+
+### 1. PM2 Configuration
+
+#### Create PM2 Ecosystem File
+```bash
+nano ecosystem.config.js
+```
+
+```javascript
+module.exports = {
+  apps: [
+    {
+      name: 'salessync-backend',
+      script: './backend-api/dist/server.js',
+      cwd: '/var/www/SalesSync',
+      instances: 2,
+      exec_mode: 'cluster',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001
+      },
+      error_file: './logs/backend-error.log',
+      out_file: './logs/backend-out.log',
+      log_file: './logs/backend-combined.log',
+      time: true,
+      max_memory_restart: '1G',
+      node_args: '--max-old-space-size=1024'
+    },
+    {
+      name: 'salessync-frontend',
+      script: 'npm',
+      args: 'start',
+      cwd: '/var/www/SalesSync/frontend',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      },
+      error_file: './logs/frontend-error.log',
+      out_file: './logs/frontend-out.log',
+      log_file: './logs/frontend-combined.log',
+      time: true,
+      max_memory_restart: '512M'
+    }
+  ]
+}
+```
+
+#### Start Applications
+```bash
+# Create logs directory
+mkdir -p /var/www/SalesSync/logs
+
+# Start applications
 pm2 start ecosystem.config.js
+
+# Save PM2 configuration
 pm2 save
+
+# Setup PM2 startup script
 pm2 startup
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u salessync --hp /home/salessync
 ```
 
-### Step 5: Reverse Proxy Setup
+### 2. PM2 Monitoring
 
-#### Configure Nginx
+#### Useful PM2 Commands
+```bash
+# Check application status
+pm2 status
+
+# View logs
+pm2 logs
+pm2 logs salessync-backend
+pm2 logs salessync-frontend
+
+# Monitor resources
+pm2 monit
+
+# Restart applications
+pm2 restart all
+pm2 restart salessync-backend
+
+# Reload applications (zero-downtime)
+pm2 reload all
+
+# Stop applications
+pm2 stop all
+pm2 delete all
+```
+
+## 🌐 Nginx Configuration
+
+### 1. Create Nginx Site Configuration
+
 ```bash
 sudo nano /etc/nginx/sites-available/salessync
 ```
 
 ```nginx
+# Rate limiting zones
+limit_req_zone $binary_remote_addr zone=login:10m rate=5r/m;
+limit_req_zone $binary_remote_addr zone=api:10m rate=100r/m;
+
+# Upstream servers
+upstream backend {
+    server 127.0.0.1:3001;
+    keepalive 32;
+}
+
+upstream frontend {
+    server 127.0.0.1:3000;
+    keepalive 32;
+}
+
+# HTTP to HTTPS redirect
 server {
     listen 80;
-    server_name yourdomain.com;
-    
+    server_name your-domain.com www.your-domain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# Main server block
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com www.your-domain.com;
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:MozTLS:10m;
+    ssl_session_tickets off;
+
+    # SSL Security
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # HSTS
+    add_header Strict-Transport-Security "max-age=63072000" always;
+
+    # Security Headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+    add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline' 'unsafe-eval'" always;
+
+    # Gzip Compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/json
+        application/javascript
+        application/xml+rss
+        application/atom+xml
+        image/svg+xml;
+
+    # API Routes
+    location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Auth endpoints with stricter rate limiting
+    location /api/auth/login {
+        limit_req zone=login burst=3 nodelay;
+        
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Static files
+    location /_next/static/ {
+        proxy_pass http://frontend;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Frontend routes
     location / {
-        proxy_pass http://localhost:12000;
+        proxy_pass http://frontend;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -209,396 +529,499 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
     }
-    
-    location /api {
-        proxy_pass http://localhost:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+
+    # File uploads
+    location /uploads/ {
+        alias /var/www/SalesSync/uploads/;
+        expires 1y;
+        add_header Cache-Control "public";
+    }
+
+    # Health check
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
     }
 }
 ```
 
-#### Enable Site
+### 2. Enable Site and Test Configuration
+
 ```bash
+# Enable site
 sudo ln -s /etc/nginx/sites-available/salessync /etc/nginx/sites-enabled/
+
+# Test configuration
 sudo nginx -t
+
+# Reload Nginx
 sudo systemctl reload nginx
 ```
 
-## Docker Deployment
+## 🔒 SSL/TLS Configuration
 
-### Prerequisites
+### 1. Install Certbot
+
 ```bash
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.20.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo apt install certbot python3-certbot-nginx -y
 ```
 
-### Deployment Steps
+### 2. Obtain SSL Certificate
 
-#### 1. Clone Repository
 ```bash
-git clone https://github.com/Reshigan/SalesSync.git
-cd SalesSync
+# Obtain certificate
+sudo certbot --nginx -d your-domain.com -d www.your-domain.com
+
+# Test automatic renewal
+sudo certbot renew --dry-run
 ```
 
-#### 2. Configure Environment
+### 3. Setup Auto-renewal
+
 ```bash
-cp .env.example .env
-nano .env  # Edit configuration
+# Add to crontab
+sudo crontab -e
 ```
 
-#### 3. Build and Start
-```bash
-docker-compose -f docker-compose.production.yml up -d
+```cron
+# Renew SSL certificates twice daily
+0 12 * * * /usr/bin/certbot renew --quiet
 ```
 
-#### 4. Verify Deployment
+## 🛡️ Security Hardening
+
+### 1. Firewall Configuration
+
 ```bash
-docker-compose -f docker-compose.production.yml ps
-docker-compose -f docker-compose.production.yml logs
-```
-
-## Configuration
-
-### Environment Variables
-
-#### Backend Configuration (.env)
-```bash
-# Server
-NODE_ENV=production
-PORT=3001
-HOST=0.0.0.0
-
-# Database
-DATABASE_URL=sqlite:./database/salessync.db
-# Or for PostgreSQL:
-# DATABASE_URL=postgresql://user:password@localhost:5432/salessync
-
-# Security
-JWT_SECRET=your-super-secure-jwt-secret-change-this
-CORS_ORIGIN=https://yourdomain.com
-
-# Features
-REDIS_URL=redis://localhost:6379
-ENABLE_ANALYTICS=true
-ENABLE_REAL_TIME_SYNC=true
-```
-
-#### Frontend Configuration (.env.local)
-```bash
-NEXT_PUBLIC_API_URL=https://yourdomain.com/api
-NEXT_PUBLIC_SOCKET_URL=https://yourdomain.com
-NODE_ENV=production
-```
-
-### Database Configuration
-
-#### SQLite (Default)
-```bash
-# Automatic setup - no additional configuration needed
-# Database file: ./backend-api/database/salessync.db
-```
-
-#### PostgreSQL (Recommended for Production)
-```bash
-# Install PostgreSQL
-sudo apt install postgresql postgresql-contrib
-
-# Create database and user
-sudo -u postgres psql
-CREATE DATABASE salessync;
-CREATE USER salessync WITH PASSWORD 'secure_password';
-GRANT ALL PRIVILEGES ON DATABASE salessync TO salessync;
-\q
-
-# Update .env
-DATABASE_URL=postgresql://salessync:secure_password@localhost:5432/salessync
-```
-
-## Security Setup
-
-### SSL Certificate
-
-#### Using Let's Encrypt (Free)
-```bash
-sudo apt install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-sudo certbot renew --dry-run  # Test renewal
-```
-
-#### Using Custom Certificate
-```bash
-# Copy certificate files
-sudo mkdir -p /etc/nginx/ssl
-sudo cp your-cert.pem /etc/nginx/ssl/cert.pem
-sudo cp your-key.pem /etc/nginx/ssl/key.pem
-sudo chmod 600 /etc/nginx/ssl/*
-```
-
-### Firewall Configuration
-```bash
-# UFW (Ubuntu)
+# Install and configure UFW
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
 sudo ufw allow ssh
 sudo ufw allow 'Nginx Full'
 sudo ufw enable
-
-# Or iptables
-sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
 ```
 
-### Security Headers
-The application includes comprehensive security headers:
-- HSTS (HTTP Strict Transport Security)
-- CSP (Content Security Policy)
-- X-Frame-Options
-- X-Content-Type-Options
-- X-XSS-Protection
+### 2. Fail2Ban Setup
 
-### Rate Limiting
-Built-in rate limiting:
-- API endpoints: 100 requests/15 minutes
-- Authentication: 5 requests/15 minutes
-- Configurable per endpoint
-
-## Monitoring & Maintenance
-
-### Health Checks
 ```bash
-# Application health
-curl -f https://yourdomain.com/health
+# Install Fail2Ban
+sudo apt install fail2ban -y
 
-# API health
-curl -f https://yourdomain.com/api/health
-
-# Database health
-curl -f https://yourdomain.com/api/health/database
+# Configure Fail2Ban
+sudo nano /etc/fail2ban/jail.local
 ```
 
-### Log Management
-```bash
-# PM2 logs
-pm2 logs
+```ini
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
 
-# Application logs
-tail -f backend-api/logs/combined.log
+[sshd]
+enabled = true
 
-# Nginx logs
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
+[nginx-http-auth]
+enabled = true
+
+[nginx-limit-req]
+enabled = true
+filter = nginx-limit-req
+action = iptables-multiport[name=ReqLimit, port="http,https", protocol=tcp]
+logpath = /var/log/nginx/error.log
+findtime = 600
+bantime = 7200
+maxretry = 10
 ```
 
-### Backup Strategy
-
-#### Automated Backups
 ```bash
-# Setup cron job for daily backups
-crontab -e
-
-# Add this line for daily backup at 2 AM
-0 2 * * * /opt/SalesSync/scripts/backup.sh
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
 ```
 
-#### Manual Backup
-```bash
-# Run backup script
-./scripts/backup.sh
+### 3. System Security
 
-# Verify backup
-./scripts/backup.sh --verify backup_name
+#### Disable Root Login
+```bash
+sudo nano /etc/ssh/sshd_config
 ```
 
-### Performance Monitoring
-
-#### System Monitoring
-```bash
-# Install monitoring tools
-sudo apt install htop iotop nethogs
-
-# Monitor resources
-htop
-iotop
-nethogs
+```conf
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
 ```
 
-#### Application Monitoring
 ```bash
-# PM2 monitoring
-pm2 monit
-
-# Custom metrics endpoint
-curl https://yourdomain.com/api/metrics
+sudo systemctl restart ssh
 ```
 
-### Updates and Maintenance
-
-#### Application Updates
+#### Setup Automatic Security Updates
 ```bash
+sudo apt install unattended-upgrades -y
+sudo dpkg-reconfigure -plow unattended-upgrades
+```
+
+## 📊 Monitoring and Logging
+
+### 1. Application Monitoring
+
+#### Install PM2 Plus (Optional)
+```bash
+pm2 install pm2-server-monit
+```
+
+#### Setup Log Rotation
+```bash
+sudo nano /etc/logrotate.d/salessync
+```
+
+```
+/var/www/SalesSync/logs/*.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 644 salessync salessync
+    postrotate
+        pm2 reload all
+    endscript
+}
+```
+
+### 2. System Monitoring
+
+#### Install htop and iotop
+```bash
+sudo apt install htop iotop nethogs -y
+```
+
+#### Setup System Monitoring Script
+```bash
+nano /home/salessync/monitor.sh
+```
+
+```bash
+#!/bin/bash
+# System monitoring script
+
+echo "=== System Status $(date) ==="
+echo "CPU Usage:"
+top -bn1 | grep "Cpu(s)" | awk '{print $2 $3 $4 $5}'
+
+echo "Memory Usage:"
+free -h
+
+echo "Disk Usage:"
+df -h
+
+echo "PM2 Status:"
+pm2 status
+
+echo "Nginx Status:"
+sudo systemctl status nginx --no-pager -l
+
+echo "PostgreSQL Status:"
+sudo systemctl status postgresql --no-pager -l
+```
+
+```bash
+chmod +x /home/salessync/monitor.sh
+```
+
+## 💾 Backup and Recovery
+
+### 1. Database Backup
+
+#### Create Backup Script
+```bash
+sudo nano /usr/local/bin/backup-salessync.sh
+```
+
+```bash
+#!/bin/bash
+
+# Configuration
+BACKUP_DIR="/var/backups/salessync"
+DB_NAME="salessync"
+DB_USER="salessync"
+DATE=$(date +%Y%m%d_%H%M%S)
+RETENTION_DAYS=30
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
+# Database backup
+echo "Starting database backup..."
+pg_dump -U $DB_USER -h localhost $DB_NAME | gzip > $BACKUP_DIR/db_backup_$DATE.sql.gz
+
+# Application files backup
+echo "Starting application files backup..."
+tar -czf $BACKUP_DIR/app_backup_$DATE.tar.gz -C /var/www SalesSync --exclude=node_modules --exclude=.git
+
+# Upload logs backup
+tar -czf $BACKUP_DIR/uploads_backup_$DATE.tar.gz -C /var/www/SalesSync uploads
+
+# Clean old backups
+find $BACKUP_DIR -name "*.gz" -mtime +$RETENTION_DAYS -delete
+
+echo "Backup completed: $DATE"
+```
+
+```bash
+sudo chmod +x /usr/local/bin/backup-salessync.sh
+```
+
+#### Schedule Backups
+```bash
+sudo crontab -e
+```
+
+```cron
+# Daily backup at 2 AM
+0 2 * * * /usr/local/bin/backup-salessync.sh >> /var/log/backup.log 2>&1
+```
+
+### 2. Recovery Procedures
+
+#### Database Recovery
+```bash
+# Stop applications
+pm2 stop all
+
+# Restore database
+gunzip -c /var/backups/salessync/db_backup_YYYYMMDD_HHMMSS.sql.gz | psql -U salessync -d salessync
+
+# Start applications
+pm2 start all
+```
+
+#### Application Recovery
+```bash
+# Stop applications
+pm2 stop all
+
+# Restore application files
+cd /var/www
+sudo rm -rf SalesSync
+sudo tar -xzf /var/backups/salessync/app_backup_YYYYMMDD_HHMMSS.tar.gz
+
+# Restore uploads
+sudo tar -xzf /var/backups/salessync/uploads_backup_YYYYMMDD_HHMMSS.tar.gz -C /var/www/SalesSync/
+
+# Fix permissions
+sudo chown -R salessync:salessync SalesSync
+
+# Start applications
+pm2 start all
+```
+
+## 🔄 Updates and Maintenance
+
+### 1. Application Updates
+
+#### Create Update Script
+```bash
+nano /home/salessync/update-app.sh
+```
+
+```bash
+#!/bin/bash
+
+echo "Starting SalesSync update..."
+
+# Navigate to application directory
+cd /var/www/SalesSync
+
+# Backup current version
+sudo tar -czf /var/backups/salessync/pre_update_backup_$(date +%Y%m%d_%H%M%S).tar.gz .
+
 # Pull latest changes
 git pull origin main
 
-# Update dependencies
-cd backend-api && npm ci --production
-cd ../frontend && npm ci && npm run build
+# Update backend
+cd backend-api
+npm install --production
+npm run build
+
+# Update frontend
+cd ../frontend
+npm install --production
+npm run build
+
+# Run database migrations
+cd ../backend-api
+npx prisma migrate deploy
+
+# Restart applications
+pm2 reload all
+
+echo "Update completed successfully!"
+```
+
+```bash
+chmod +x /home/salessync/update-app.sh
+```
+
+### 2. System Maintenance
+
+#### Create Maintenance Script
+```bash
+sudo nano /usr/local/bin/system-maintenance.sh
+```
+
+```bash
+#!/bin/bash
+
+echo "Starting system maintenance..."
+
+# Update system packages
+apt update && apt upgrade -y
+
+# Update Node.js packages
+npm update -g
+
+# Clean package cache
+apt autoremove -y
+apt autoclean
+
+# Update PM2
+pm2 update
 
 # Restart services
-pm2 restart all
+systemctl restart nginx
+systemctl restart postgresql
+
+# Clean logs older than 30 days
+find /var/log -name "*.log" -mtime +30 -delete
+find /var/www/SalesSync/logs -name "*.log" -mtime +30 -delete
+
+echo "System maintenance completed!"
 ```
 
-#### System Updates
 ```bash
-# Update system packages
-sudo apt update && sudo apt upgrade -y
-
-# Update Node.js (if needed)
-sudo npm install -g n
-sudo n stable
+sudo chmod +x /usr/local/bin/system-maintenance.sh
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-#### Application Won't Start
+#### Schedule Maintenance
 ```bash
+sudo crontab -e
+```
+
+```cron
+# Weekly maintenance on Sunday at 3 AM
+0 3 * * 0 /usr/local/bin/system-maintenance.sh >> /var/log/maintenance.log 2>&1
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. Application Won't Start
+```bash
+# Check PM2 status
+pm2 status
+
 # Check logs
 pm2 logs
 
-# Check configuration
-pm2 show salessync-backend
-pm2 show salessync-frontend
+# Check port availability
+sudo netstat -tlnp | grep :3001
+sudo netstat -tlnp | grep :3000
 
-# Restart services
+# Restart applications
 pm2 restart all
 ```
 
-#### Database Connection Issues
+#### 2. Database Connection Issues
 ```bash
-# Check database file permissions
-ls -la backend-api/database/
+# Check PostgreSQL status
+sudo systemctl status postgresql
 
 # Test database connection
-cd backend-api
-node -e "const db = require('./src/database/init'); db.testConnection();"
+psql -U salessync -d salessync -h localhost
+
+# Check database logs
+sudo tail -f /var/log/postgresql/postgresql-14-main.log
 ```
 
-#### SSL Certificate Issues
+#### 3. Nginx Issues
+```bash
+# Check Nginx status
+sudo systemctl status nginx
+
+# Test configuration
+sudo nginx -t
+
+# Check error logs
+sudo tail -f /var/log/nginx/error.log
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
+#### 4. SSL Certificate Issues
 ```bash
 # Check certificate status
 sudo certbot certificates
 
-# Renew certificate
-sudo certbot renew
+# Test renewal
+sudo certbot renew --dry-run
 
-# Test SSL configuration
-openssl s_client -connect yourdomain.com:443
+# Force renewal
+sudo certbot renew --force-renewal
 ```
 
-#### Performance Issues
+### Performance Optimization
+
+#### 1. Database Optimization
+```sql
+-- Analyze database performance
+ANALYZE;
+
+-- Check slow queries
+SELECT query, mean_time, calls 
+FROM pg_stat_statements 
+ORDER BY mean_time DESC 
+LIMIT 10;
+
+-- Update statistics
+VACUUM ANALYZE;
+```
+
+#### 2. Application Optimization
 ```bash
-# Check system resources
+# Monitor application performance
+pm2 monit
+
+# Check memory usage
 free -h
-df -h
-top
+htop
 
-# Check application metrics
-curl https://yourdomain.com/api/metrics
+# Monitor disk I/O
+iotop
 
-# Analyze logs
-grep "ERROR" backend-api/logs/combined.log
+# Check network usage
+nethogs
 ```
 
-### Debug Mode
+## 📞 Support and Maintenance
 
-#### Enable Debug Logging
-```bash
-# Update .env
-LOG_LEVEL=debug
-DEBUG_MODE=true
+### Support Contacts
+- **Technical Support**: support@salessync.com
+- **Emergency Contact**: +1-XXX-XXX-XXXX
+- **Documentation**: https://docs.salessync.com
 
-# Restart application
-pm2 restart all
-```
+### Maintenance Schedule
+- **Daily**: Automated backups
+- **Weekly**: System updates and maintenance
+- **Monthly**: Security patches and performance review
+- **Quarterly**: Full system audit and optimization
 
-#### Database Debug
-```bash
-# Enable SQL logging
-DB_LOGGING=true
+---
 
-# Restart application
-pm2 restart all
-```
+**SalesSync Deployment** - Production-ready deployment guide 🚀
 
-### Support Channels
-
-#### Documentation
-- API Documentation: `/docs/API_DOCUMENTATION.md`
-- User Manual: `/docs/USER_MANUAL.md`
-- Architecture Guide: `/docs/ARCHITECTURE.md`
-
-#### Community Support
-- GitHub Issues: https://github.com/Reshigan/SalesSync/issues
-- Discussions: https://github.com/Reshigan/SalesSync/discussions
-
-#### Professional Support
-- Email: support@salessync.com
-- Priority Support: Available for enterprise customers
-
-## Deployment Checklist
-
-### Pre-Deployment
-- [ ] Server meets system requirements
-- [ ] Domain name configured
-- [ ] SSL certificate obtained
-- [ ] Firewall configured
-- [ ] Backup strategy planned
-
-### Deployment
-- [ ] Application deployed successfully
-- [ ] Database initialized
-- [ ] Services started with PM2
-- [ ] Nginx configured and running
-- [ ] SSL certificate installed
-
-### Post-Deployment
-- [ ] Health checks passing
-- [ ] Monitoring configured
-- [ ] Backups scheduled
-- [ ] Performance baseline established
-- [ ] Documentation updated
-
-### Security Verification
-- [ ] HTTPS enforced
-- [ ] Security headers configured
-- [ ] Rate limiting active
-- [ ] Input validation working
-- [ ] Authentication system secure
-
-### Performance Verification
-- [ ] Response times acceptable
-- [ ] Database queries optimized
-- [ ] Caching configured
-- [ ] Static assets compressed
-- [ ] CDN configured (if applicable)
-
-## Conclusion
-
-This deployment guide provides comprehensive instructions for deploying SalesSync to production. For additional support or custom deployment requirements, please refer to the documentation or contact the support team.
-
-Remember to:
-1. Always test deployments in a staging environment first
-2. Keep regular backups of your data
-3. Monitor system performance and logs
-4. Keep the application and system updated
-5. Follow security best practices
-
-For the latest updates and additional resources, visit the official SalesSync repository and documentation.
+*This guide ensures a secure, scalable, and maintainable deployment of the SalesSync system.*
