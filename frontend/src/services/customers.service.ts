@@ -29,23 +29,23 @@ export const customersService = {
 
   getAll: async (filters?: any) => {
     const response = await apiService.getCustomers(filters);
-    return response.data;
+    return response.data?.data || response.data;
   },
   getById: async (id: string) => {
     const response = await apiService.getCustomer(id);
-    return response.data;
+    return response.data?.data || response.data;
   },
   create: async (data: any) => {
     const response = await apiService.createCustomer(data);
-    return response.data;
+    return response.data?.data || response.data;
   },
   update: async (id: string, data: any) => {
     const response = await apiService.updateCustomer(id, data);
-    return response.data;
+    return response.data?.data || response.data;
   },
   delete: async (id: string) => {
     const response = await apiService.deleteCustomer(id);
-    return response.data;
+    return response.data?.data || response.data;
   },
 };
 
