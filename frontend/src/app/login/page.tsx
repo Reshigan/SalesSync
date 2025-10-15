@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { Eye, EyeOff } from 'lucide-react'
+import { AnimatedLogo } from '@/components/ui/AnimatedLogo'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -48,9 +49,8 @@ export default function LoginPage() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             {/* Logo */}
             <div className="text-center mb-8">
-              <div className="flex items-center justify-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg"></div>
-                <span className="text-2xl font-bold text-slate-800">SalesSync</span>
+              <div className="flex items-center justify-center mb-4">
+                <AnimatedLogo size="lg" showText={true} animate={true} />
               </div>
               <p className="text-slate-600">Sign in to your account</p>
             </div>
