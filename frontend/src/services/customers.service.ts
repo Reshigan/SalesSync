@@ -33,14 +33,14 @@ export const customersService = {
     console.log('🔍 CustomersService: Raw API response:', response)
     console.log('🔍 CustomersService: response.data:', response.data)
     console.log('🔍 CustomersService: response.data?.customers:', response.data?.customers)
-    console.log('🔍 CustomersService: response.data?.data:', response.data?.data)
-    console.log('🔍 CustomersService: response.data?.data?.customers:', response.data?.data?.customers)
+    console.log('🔍 CustomersService: response.data?.data:', (response.data as any)?.data)
+    console.log('🔍 CustomersService: response.data?.data?.customers:', (response.data as any)?.data?.customers)
     
     // Backend returns: { success: true, data: { customers: [...], pagination: {...} } }
     // API service wraps it as: { data: { success: true, data: { customers: [...], pagination: {...} } } }
     let result;
-    if (response.data?.data?.customers) {
-      result = { customers: response.data.data.customers, pagination: response.data.data.pagination };
+    if ((response.data as any)?.data?.customers) {
+      result = { customers: (response.data as any).data.customers, pagination: (response.data as any).data.pagination };
     } else if (response.data?.customers) {
       result = { customers: response.data.customers, pagination: response.data.pagination };
     } else {
