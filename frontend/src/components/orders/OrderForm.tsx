@@ -84,7 +84,19 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
       console.log('🔍 OrderForm: Starting to load customers...')
       console.log('🔍 OrderForm: customersService:', customersService)
       
-      // Debug the API service call
+      // DIRECT API TEST - Let's bypass the customers service and call the API directly
+      console.log('🔍 OrderForm: Making DIRECT API call to test...')
+      const apiService = (await import('@/lib/api')).default
+      console.log('🔍 OrderForm: API service imported:', apiService)
+      console.log('🔍 OrderForm: API service token:', apiService.getToken())
+      
+      // Test direct API call
+      const directResponse = await apiService.getCustomers({ status: 'active' })
+      console.log('🔍 OrderForm: DIRECT API response:', directResponse)
+      console.log('🔍 OrderForm: DIRECT API response.data:', directResponse.data)
+      console.log('🔍 OrderForm: DIRECT API response.error:', directResponse.error)
+      
+      // Now test the customers service
       console.log('🔍 OrderForm: Calling customersService.getAll with params:', { status: 'active' })
       const response = await customersService.getAll({ status: 'active' })
       console.log('🔍 OrderForm: Raw response from customersService:', response)
@@ -103,7 +115,14 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
           isArray: Array.isArray(response?.customers),
           length: response?.customers?.length
         })
-        setCustomers([])
+        
+        // FALLBACK: Try to use direct API response
+        if (directResponse && directResponse.data && directResponse.data.data && directResponse.data.data.customers) {
+          console.log('🔍 OrderForm: Using DIRECT API response as fallback')
+          setCustomers(directResponse.data.data.customers)
+        } else {
+          setCustomers([])
+        }
       }
     } catch (error: any) {
       console.error('🔍 OrderForm: Error loading customers:', error)
