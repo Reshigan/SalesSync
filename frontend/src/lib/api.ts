@@ -244,6 +244,9 @@ class ApiService {
     customers: any[];
     pagination: any;
   }>> {
+    console.log('🔍 ApiService.getCustomers: Called with params:', params)
+    console.log('🔍 ApiService.getCustomers: Current token:', this.token ? this.token.substring(0, 20) + '...' : 'NO TOKEN')
+    
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.limit) query.append('limit', params.limit.toString());
@@ -252,7 +255,12 @@ class ApiService {
     if (params?.search) query.append('search', params.search);
     
     const queryString = query.toString();
-    return this.request(`/customers${queryString ? '?' + queryString : ''}`);
+    const endpoint = `/customers${queryString ? '?' + queryString : ''}`;
+    console.log('🔍 ApiService.getCustomers: Making request to endpoint:', endpoint)
+    
+    const result = await this.request(endpoint);
+    console.log('🔍 ApiService.getCustomers: Request result:', result)
+    return result;
   }
 
   async getCustomer(id: string): Promise<ApiResponse<any>> {
