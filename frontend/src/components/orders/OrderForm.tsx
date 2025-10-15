@@ -127,10 +127,10 @@ export function OrderForm({ initialData, onSubmit, onCancel }: OrderFormProps) {
         })
         
         // FALLBACK: Try to use direct API response
-        if (directResponse && directResponse.data && directResponse.data.data && directResponse.data.data.customers) {
+        if (directResponse && (directResponse as any).data && (directResponse as any).data.data && (directResponse as any).data.data.customers) {
           console.log('🔍 OrderForm: Using DIRECT API response as fallback')
-          setCustomers(directResponse.data.data.customers)
-          setDebugInfo(`✅ FALLBACK SUCCESS: Found ${directResponse.data.data.customers.length} customers from direct API`)
+          setCustomers((directResponse as any).data.data.customers)
+          setDebugInfo(`✅ FALLBACK SUCCESS: Found ${(directResponse as any).data.data.customers.length} customers from direct API`)
         } else {
           setCustomers([])
           setDebugInfo('❌ FAILED: No customers found in either service or direct API')
