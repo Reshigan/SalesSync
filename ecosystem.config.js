@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'salessync-backend',
-      cwd: '/home/ubuntu/SalesSync/backend',
+      cwd: '/home/ubuntu/SalesSync/backend-api',
       script: 'npm',
       args: 'start',
       instances: 1,
