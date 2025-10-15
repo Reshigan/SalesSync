@@ -16,7 +16,7 @@ export default function LoginPage() {
   const { login, isLoading: authLoading } = useAuthStore()
   const [formData, setFormData] = useState({
     email: 'admin@demo.com',
-    password: 'demo123',
+    password: 'admin123',
   })
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
@@ -28,18 +28,11 @@ export default function LoginPage() {
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
-    console.log('handleLogin called')
-    alert('Form submitted!')
     e.preventDefault()
     setError('')
-
-    console.log('Login attempt:', formData.email)
-    console.log('Form data:', formData)
     
     try {
-      console.log('Calling login function...')
       await login(formData.email, formData.password)
-      console.log('Login successful, redirecting to dashboard')
       router.push('/dashboard')
     } catch (err: any) {
       console.error('Login error:', err)
@@ -165,7 +158,6 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  onClick={() => console.log('Button clicked!')}
                   className="w-full py-4 px-4 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-600 hover:from-blue-600 hover:via-purple-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 relative overflow-hidden group"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
