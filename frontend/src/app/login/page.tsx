@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth.store'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { AnimatedLogo } from '@/components/ui/AnimatedLogo'
 import { Eye, EyeOff, Shield, TrendingUp, Users, Sparkles, Zap, Globe, Lock } from 'lucide-react'
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 
@@ -52,7 +52,6 @@ export default function LoginPage() {
   }
 
   return (
-    <ErrorBoundary>
       <div className="min-h-screen relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
@@ -229,6 +228,5 @@ export default function LoginPage() {
         <div className="absolute bottom-20 left-20 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '2s' }}></div>
         <div className="absolute bottom-10 right-10 w-1 h-1 bg-blue-300 rounded-full animate-ping" style={{ animationDelay: '3s' }}></div>
       </div>
-    </ErrorBoundary>
   )
 }
