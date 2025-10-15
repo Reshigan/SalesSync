@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import authService from '@/services/auth.service';
+import api from '@/lib/api';
 
 interface User {
   id: string;
@@ -90,6 +91,9 @@ export const useAuthStore = create<AuthState>()(
           // Store token in cookies for middleware
           setCookie('token', accessToken, 7);
           
+          // Set token on api service
+          api.setToken(accessToken);
+          
           console.log('🔐 Auth Store: Login successful, tokens stored in localStorage and cookies');
         } catch (error) {
           console.error('🔐 Auth Store: Login error:', error);
@@ -114,6 +118,9 @@ export const useAuthStore = create<AuthState>()(
         
         // Clear cookies
         deleteCookie('token');
+        
+        // Clear token from api service
+        api.setToken(null);
       },
 
       refreshToken: async () => {
@@ -129,6 +136,9 @@ export const useAuthStore = create<AuthState>()(
           set({ token: newToken });
           localStorage.setItem('accessToken', newToken);
           setCookie('token', newToken, 7);
+          
+          // Set token on api service
+          api.setToken(newToken);
         } catch (error) {
           console.error('Token refresh failed:', error);
           // If refresh fails, logout user
@@ -156,6 +166,9 @@ export const useAuthStore = create<AuthState>()(
           
           // Ensure cookie is set
           setCookie('token', token, 7);
+          
+          // Set token on api service
+          api.setToken(token);
         } catch (error) {
           console.error('Auth check failed:', error);
           // Token is invalid, logout
@@ -169,7 +182,13 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         token: state.token,
         isAuthenticated: state.isAuthenticated
-      })
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Set token on api service when rehydrating from localStorage
+        if (state?.token) {
+          api.setToken(state.token);
+        }
+      }
     }
   )
 );
