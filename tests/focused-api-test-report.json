@@ -1,0 +1,214 @@
+{
+  "timestamp": "2025-10-16T03:46:56.069Z",
+  "success": false,
+  "summary": {
+    "total": 17,
+    "passed": 12,
+    "failed": 5,
+    "successRate": "70.59%"
+  },
+  "performance": {
+    "avgDuration": 383,
+    "slowestTest": {
+      "test": "Response Time Check",
+      "duration": 892
+    },
+    "fastestTest": {
+      "test": "Get Dashboard Data",
+      "duration": 295
+    }
+  },
+  "tests": [
+    {
+      "test": "Login with Valid Credentials",
+      "status": "PASSED",
+      "duration": 692,
+      "result": {
+        "hasToken": true,
+        "tokenLength": 279,
+        "hasUser": false
+      },
+      "timestamp": "2025-10-16T03:46:50.655Z"
+    },
+    {
+      "test": "Get User Profile",
+      "status": "PASSED",
+      "duration": 298,
+      "result": {
+        "hasProfile": true
+      },
+      "timestamp": "2025-10-16T03:46:50.954Z"
+    },
+    {
+      "test": "Get Dashboard Data",
+      "status": "PASSED",
+      "duration": 295,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 851
+      },
+      "timestamp": "2025-10-16T03:46:51.250Z"
+    },
+    {
+      "test": "Get Van Sales Routes",
+      "status": "PASSED",
+      "duration": 299,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 26
+      },
+      "timestamp": "2025-10-16T03:46:51.549Z"
+    },
+    {
+      "test": "Get Promotion Campaigns",
+      "status": "PASSED",
+      "duration": 301,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 144
+      },
+      "timestamp": "2025-10-16T03:46:51.850Z"
+    },
+    {
+      "test": "Get Warehouse Inventory",
+      "status": "PASSED",
+      "duration": 305,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 8,
+        "responseSize": 3020
+      },
+      "timestamp": "2025-10-16T03:46:52.155Z"
+    },
+    {
+      "test": "Get Back Office Orders",
+      "status": "PASSED",
+      "duration": 297,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 773
+      },
+      "timestamp": "2025-10-16T03:46:52.452Z"
+    },
+    {
+      "test": "Get Field Agents",
+      "status": "PASSED",
+      "duration": 295,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 26
+      },
+      "timestamp": "2025-10-16T03:46:52.747Z"
+    },
+    {
+      "test": "Get Admin Users",
+      "status": "PASSED",
+      "duration": 299,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 364
+      },
+      "timestamp": "2025-10-16T03:46:53.046Z"
+    },
+    {
+      "test": "Get Products",
+      "status": "PASSED",
+      "duration": 301,
+      "result": {
+        "status": 200,
+        "hasData": true,
+        "recordCount": 1,
+        "responseSize": 2026
+      },
+      "timestamp": "2025-10-16T03:46:53.347Z"
+    },
+    {
+      "test": "Get Analytics Dashboard",
+      "status": "FAILED",
+      "duration": 297,
+      "error": "Request failed with status code 404",
+      "timestamp": "2025-10-16T03:46:53.644Z"
+    },
+    {
+      "test": "Create Van Sales Loading",
+      "status": "FAILED",
+      "duration": 298,
+      "error": "Request failed with status code 404",
+      "timestamp": "2025-10-16T03:46:53.942Z"
+    },
+    {
+      "test": "Create Promotion Campaign",
+      "status": "FAILED",
+      "duration": 302,
+      "error": "Request failed with status code 400",
+      "timestamp": "2025-10-16T03:46:54.244Z"
+    },
+    {
+      "test": "Create Stock Movement",
+      "status": "FAILED",
+      "duration": 298,
+      "error": "Request failed with status code 400",
+      "timestamp": "2025-10-16T03:46:54.542Z"
+    },
+    {
+      "test": "Create Payment",
+      "status": "FAILED",
+      "duration": 314,
+      "error": "Request failed with status code 400",
+      "timestamp": "2025-10-16T03:46:54.856Z"
+    },
+    {
+      "test": "Concurrent API Requests",
+      "status": "PASSED",
+      "duration": 321,
+      "result": {
+        "concurrentRequests": 5,
+        "successful": 5,
+        "successRate": 100,
+        "totalTime": 314
+      },
+      "timestamp": "2025-10-16T03:46:55.177Z"
+    },
+    {
+      "test": "Response Time Check",
+      "status": "PASSED",
+      "duration": 892,
+      "result": {
+        "avgResponseTime": 297,
+        "successRate": 66.66666666666666,
+        "results": [
+          {
+            "endpoint": "/dashboard",
+            "duration": 298,
+            "success": true
+          },
+          {
+            "endpoint": "/van-sales/routes",
+            "duration": 296,
+            "success": false
+          },
+          {
+            "endpoint": "/promotions/campaigns",
+            "duration": 298,
+            "success": true
+          }
+        ]
+      },
+      "timestamp": "2025-10-16T03:46:56.069Z"
+    }
+  ],
+  "productionReadiness": "NOT READY"
+}

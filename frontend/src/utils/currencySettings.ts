@@ -126,7 +126,10 @@ export const getCurrencyOptions = (): CurrencyOption[] => [
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' }
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' }
 ];
 
 /**
@@ -162,7 +165,10 @@ export const formatCurrencyAmount = (amount: number, options: any = {}) => {
       'EUR': '€',
       'CAD': 'CA$',
       'AUD': 'A$',
-      'JPY': '¥'
+      'JPY': '¥',
+      'NGN': '₦',
+      'ZAR': 'R',
+      'KES': 'KSh'
     };
     
     const defaultSymbol = currencySymbols[settings.currency];

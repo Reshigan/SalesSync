@@ -6,6 +6,7 @@ import { ShoppingCart, Plus, Search, Download, Eye, Edit, Trash2, Check, X, Cloc
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 
 interface PurchaseOrder {
   id: string
@@ -22,6 +23,7 @@ interface PurchaseOrder {
 export default function PurchaseOrdersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -57,7 +59,7 @@ export default function PurchaseOrdersPage() {
     return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${badges[status].color}`}>{badges[status].label}</span>
   }
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
+
 
   return (<ErrorBoundary>
 

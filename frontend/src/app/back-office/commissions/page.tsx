@@ -9,6 +9,7 @@ import { DataTable } from '@/components/ui/DataTable'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   DollarSign, 
   TrendingUp,
@@ -46,7 +47,8 @@ interface Commission {
 }
 
 export default function CommissionsPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const [selectedCommissions, setSelectedCommissions] = useState<string[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
@@ -162,13 +164,7 @@ export default function CommissionsPage() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
+
 
   return (<ErrorBoundary>
 

@@ -89,7 +89,10 @@ export const useCurrency = () => {
         'EUR': '€',
         'CAD': 'CA$',
         'AUD': 'A$',
-        'JPY': '¥'
+        'JPY': '¥',
+        'NGN': '₦',
+        'ZAR': 'R',
+        'KES': 'KSh'
       };
       
       const defaultSymbol = currencySymbols[currencySettings.currency];

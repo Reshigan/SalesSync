@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Clock, ArrowRight, Users, Package, Truck, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
+import { useCurrency } from '@/hooks/useCurrency';
 interface SearchResult {
   id: string;
   title: string;

@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import customersService from '@/services/customers.service';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   User, 
   Mail, 
@@ -29,7 +30,8 @@ import {
 } from 'lucide-react';
 
 export default function CustomerDetailPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const params = useParams();
   const customerId = params.id;

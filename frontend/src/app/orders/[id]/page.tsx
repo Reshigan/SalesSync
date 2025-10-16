@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import ordersService from '@/services/orders.service';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   ShoppingCart, 
   User, 
@@ -29,7 +30,8 @@ import {
 } from 'lucide-react';
 
 export default function OrderDetailPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const params = useParams();
   const orderId = params.id;

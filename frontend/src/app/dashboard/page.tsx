@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   BarChart3, 
   Users, 
@@ -16,6 +17,7 @@ import {
 // Enhanced Dashboard with Tier 1 Features Toggle
 function DashboardContent() {
   const [enhancedMode, setEnhancedMode] = useState(false);
+  const { formatCurrency } = useCurrency();
 
   // Mock data for enhanced features
   const enhancedStats = {
@@ -34,13 +36,6 @@ function DashboardContent() {
       visitChange: 18.7,
       performanceScore: 87
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN'
-    }).format(amount);
   };
 
   const formatNumber = (num: number) => {
@@ -250,7 +245,7 @@ function DashboardContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-900">₦125,000</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(enhancedStats.totalSales)}</p>
               <p className="text-xs text-gray-500 mt-1">+12.5% from last month</p>
             </div>
             <TrendingUp className="h-8 w-8 text-gray-400" />
@@ -283,7 +278,7 @@ function DashboardContent() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Inventory Value</p>
-              <p className="text-2xl font-bold text-gray-900">₦85,000</p>
+              <p className="text-2xl font-bold text-gray-900">{formatCurrency(enhancedStats.inventoryValue)}</p>
               <p className="text-xs text-gray-500 mt-1">-2.1% from last month</p>
             </div>
             <Package className="h-8 w-8 text-gray-400" />

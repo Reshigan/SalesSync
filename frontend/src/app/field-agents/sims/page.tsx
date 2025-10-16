@@ -9,6 +9,7 @@ import { DataTable } from '@/components/ui/DataTable'
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   Smartphone, 
   MapPin, 
@@ -44,7 +45,8 @@ interface SimDistribution {
 }
 
 export default function SimDistributionPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const [selectedDistribution, setSelectedDistribution] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState('all')

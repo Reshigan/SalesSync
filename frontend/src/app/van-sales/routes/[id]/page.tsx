@@ -11,8 +11,10 @@ import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import vanSalesService from '@/services/van-sales.service';
 
+import { useCurrency } from '@/hooks/useCurrency';
 export default function RouteDetailPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const params = useParams();
   const routeId = params.id;

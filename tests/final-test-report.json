@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-10-16T03:43:42.091Z",
+  "testSuites": [
+    {
+      "suite": "Simple API Test",
+      "success": false,
+      "error": "No access token received"
+    },
+    {
+      "suite": "Backend API Tests",
+      "success": true,
+      "duration": 885,
+      "output": "🚀 STARTING BACKEND API TESTS\n==============================\n🔐 Authenticating with backend API...\n❌ Backend authentication failed: No access token received\n",
+      "error": null,
+      "testResults": null
+    },
+    {
+      "suite": "Comprehensive Transaction Tests",
+      "success": true,
+      "duration": 365,
+      "output": "🚀 STARTING COMPREHENSIVE TRANSACTION TESTS\n==============================================\n🚀 Initializing Comprehensive Transaction Tests...\n",
+      "error": null,
+      "testResults": null
+    }
+  ],
+  "summary": {
+    "totalSuites": 3,
+    "passedSuites": 2,
+    "failedSuites": 1,
+    "totalTests": 0,
+    "passedTests": 0,
+    "failedTests": 0
+  },
+  "productionReadiness": "NOT READY"
+}

@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import productsService from '@/services/products.service';
+import { useCurrency } from '@/hooks/useCurrency';
 import { 
   Package, 
   DollarSign, 
@@ -25,7 +26,8 @@ import {
 } from 'lucide-react';
 
 export default function ProductDetailPage() {
-  const [isLoading, setIsLoading] = useState(false);
+    const { formatCurrency } = useCurrency();
+const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
   const params = useParams();
   const productId = params.id;

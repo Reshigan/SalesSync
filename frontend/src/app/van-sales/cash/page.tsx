@@ -6,6 +6,7 @@ import { Banknote, Plus, Search, Download, Eye, CheckCircle, Clock, DollarSign, 
 import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { LoadingSpinner, LoadingPage } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/hooks/useCurrency';
 import vanSalesService from '@/services/van-sales.service';
 
 interface CashCollection {
@@ -23,6 +24,7 @@ interface CashCollection {
 export default function VanCashPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -55,7 +57,7 @@ export default function VanCashPage() {
     return <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${colors[status]}`}>{status}</span>
   }
 
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
+
 
   return (<ErrorBoundary>
 
