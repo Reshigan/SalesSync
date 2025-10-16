@@ -149,7 +149,10 @@ router.post('/loading', async (req, res) => {
         items.forEach(item => {
           db.run(`INSERT INTO van_loading_items (loading_id, product_id, quantity, created_at) VALUES (?, ?, ?, datetime('now'))`,
             [loadId, item.product_id, item.quantity],
-            () => { if (++inserted === items.length) res.status(201).json({ success: true, data: { id: loadId, load_number: loadNumber } }); }
+            function(err) { 
+              if (err) console.error('Error inserting item:', err);
+              if (++inserted === items.length) res.status(201).json({ success: true, data: { id: loadId, load_number: loadNumber } }); 
+            }
           );
         });
       }

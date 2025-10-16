@@ -51,6 +51,40 @@ export default function VanLoadingPage() {
   const [scanMode, setScanMode] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
+  const handleConfirmLoading = async () => {
+    if (!selectedVan || loadItems.length === 0) {
+      error('Please select a van and add items to load');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const loadingData = {
+        route_id: selectedVan,
+        warehouse_id: '1', // Default warehouse
+        loading_date: new Date().toISOString().split('T')[0],
+        items: loadItems.map(item => ({
+          product_id: item.sku,
+          quantity: item.quantity
+        }))
+      };
+
+      await vanSalesService.confirmLoading(loadingData);
+      success('Van loading confirmed successfully!');
+      
+      // Reset form
+      setLoadItems([]);
+      setSelectedVan('');
+      setCashFloat(5000);
+      
+    } catch (err: any) {
+      console.error('Loading confirmation failed:', err);
+      error(err.message || 'Failed to confirm van loading');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Mock data
   const availableStock: LoadItem[] = [
     {
@@ -378,10 +412,8 @@ export default function VanLoadingPage() {
                 <div className="space-y-2">
                   <Button
                     fullWidth
-                    disabled={!selectedVan || loadItems.length === 0}
-                    onClick={() => {
-                      console.log('Loading van...', { selectedVan, loadItems, cashFloat })
-                    }}
+                    disabled={!selectedVan || loadItems.length === 0 || isLoading}
+                    onClick={handleConfirmLoading}
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Confirm Loading
