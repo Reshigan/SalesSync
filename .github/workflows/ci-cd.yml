@@ -2,9 +2,9 @@ name: SalesSync CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ dev, test, main ]
   pull_request:
-    branches: [ main ]
+    branches: [ dev, test, main ]
 
 env:
   NODE_VERSION: '18'
@@ -12,14 +12,15 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Test Job
-  test:
-    name: Run Tests
+  # Development Branch - Basic validation
+  development:
+    name: Development Validation
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
     
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [18.x]
     
     steps:
     - name: Checkout code
