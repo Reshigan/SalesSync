@@ -19,6 +19,14 @@ export const vanSalesService = {
     const response = await apiClient.post('/van-sales/location', data) as any;
     return response.data;
   },
+  confirmLoading: async (data: any) => {
+    const response = await apiClient.post('/van-sales/loadings', data) as any;
+    return response.data;
+  },
+  getLoadings: async () => {
+    const response = await apiClient.get('/van-sales/loadings') as any;
+    return response.data;
+  },
 };
 
 export default vanSalesService;
