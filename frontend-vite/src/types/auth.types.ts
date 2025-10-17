@@ -94,6 +94,27 @@ export const PERMISSIONS = {
   DELETE_PRODUCTS: 'delete_products',
   MANAGE_INVENTORY: 'manage_inventory',
   
+  // Van Sales
+  VIEW_VAN_SALES: 'view_van_sales',
+  MANAGE_ROUTES: 'manage_routes',
+  VIEW_INVENTORY: 'view_inventory',
+  MANAGE_TRANSACTIONS: 'manage_transactions',
+  MANAGE_DELIVERIES: 'manage_deliveries',
+  
+  // Trade Marketing
+  VIEW_TRADE_MARKETING: 'view_trade_marketing',
+  MANAGE_PROMOTIONS: 'manage_promotions',
+  MANAGE_INCENTIVES: 'manage_incentives',
+  VIEW_MARKET_ANALYSIS: 'view_market_analysis',
+  MANAGE_TRADE_SPEND: 'manage_trade_spend',
+  
+  // Campaigns
+  VIEW_CAMPAIGNS: 'view_campaigns',
+  MANAGE_CAMPAIGNS: 'manage_campaigns',
+  MANAGE_AUDIENCES: 'manage_audiences',
+  VIEW_CAMPAIGN_PERFORMANCE: 'view_campaign_performance',
+  MANAGE_AB_TESTING: 'manage_ab_testing',
+  
   // Field operations
   VIEW_FIELD_OPERATIONS: 'view_field_operations',
   MANAGE_BOARD_PLACEMENTS: 'manage_board_placements',

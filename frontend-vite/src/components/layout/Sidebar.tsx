@@ -10,7 +10,10 @@ import {
   UserCheck,
   DollarSign,
   Building2,
-  Truck
+  Truck,
+  Target,
+  TrendingUp,
+  Megaphone
 } from 'lucide-react'
 import { useAuthStore, hasPermission } from '../../store/auth.store'
 import { PERMISSIONS } from '../../types/auth.types'
@@ -27,6 +30,90 @@ const navigation = [
     href: '/analytics',
     icon: BarChart3,
     permission: PERMISSIONS.VIEW_ANALYTICS,
+  },
+  {
+    name: 'Van Sales',
+    href: '/van-sales',
+    icon: Truck,
+    permission: PERMISSIONS.VIEW_VAN_SALES,
+    children: [
+      {
+        name: 'Route Management',
+        href: '/van-sales/routes',
+        permission: PERMISSIONS.MANAGE_ROUTES,
+      },
+      {
+        name: 'Inventory Tracking',
+        href: '/van-sales/inventory',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
+      {
+        name: 'Sales Transactions',
+        href: '/van-sales/transactions',
+        permission: PERMISSIONS.MANAGE_TRANSACTIONS,
+      },
+      {
+        name: 'Delivery Management',
+        href: '/van-sales/deliveries',
+        permission: PERMISSIONS.MANAGE_DELIVERIES,
+      },
+    ],
+  },
+  {
+    name: 'Trade Marketing',
+    href: '/trade-marketing',
+    icon: TrendingUp,
+    permission: PERMISSIONS.VIEW_TRADE_MARKETING,
+    children: [
+      {
+        name: 'Promotions',
+        href: '/trade-marketing/promotions',
+        permission: PERMISSIONS.MANAGE_PROMOTIONS,
+      },
+      {
+        name: 'Retailer Incentives',
+        href: '/trade-marketing/incentives',
+        permission: PERMISSIONS.MANAGE_INCENTIVES,
+      },
+      {
+        name: 'Market Analysis',
+        href: '/trade-marketing/analysis',
+        permission: PERMISSIONS.VIEW_MARKET_ANALYSIS,
+      },
+      {
+        name: 'Trade Spend',
+        href: '/trade-marketing/spend',
+        permission: PERMISSIONS.MANAGE_TRADE_SPEND,
+      },
+    ],
+  },
+  {
+    name: 'Campaigns',
+    href: '/campaigns',
+    icon: Megaphone,
+    permission: PERMISSIONS.VIEW_CAMPAIGNS,
+    children: [
+      {
+        name: 'Campaign Management',
+        href: '/campaigns/management',
+        permission: PERMISSIONS.MANAGE_CAMPAIGNS,
+      },
+      {
+        name: 'Target Audiences',
+        href: '/campaigns/audiences',
+        permission: PERMISSIONS.MANAGE_AUDIENCES,
+      },
+      {
+        name: 'Performance Tracking',
+        href: '/campaigns/performance',
+        permission: PERMISSIONS.VIEW_CAMPAIGN_PERFORMANCE,
+      },
+      {
+        name: 'A/B Testing',
+        href: '/campaigns/testing',
+        permission: PERMISSIONS.MANAGE_AB_TESTING,
+      },
+    ],
   },
   {
     name: 'Field Agents',

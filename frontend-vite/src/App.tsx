@@ -16,6 +16,17 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import AnalyticsPage from './pages/dashboard/AnalyticsPage'
 
+// Van Sales Pages
+import VanSalesPage from './pages/van-sales/VanSalesPage'
+import RouteManagementPage from './pages/van-sales/RouteManagementPage'
+import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
+
+// Trade Marketing Pages
+import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
+
+// Campaign Pages
+import CampaignsPage from './pages/campaigns/CampaignsPage'
+
 // Field Agent Pages
 import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
 import LiveMappingPage from './pages/field-agents/LiveMappingPage'
@@ -79,6 +90,17 @@ function App() {
             {/* Dashboard Routes */}
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+
+            {/* Van Sales Routes */}
+            <Route path="van-sales" element={<VanSalesPage />} />
+            <Route path="van-sales/routes" element={<RouteManagementPage />} />
+            <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
+
+            {/* Trade Marketing Routes */}
+            <Route path="trade-marketing" element={<TradeMarketingPage />} />
+
+            {/* Campaign Routes */}
+            <Route path="campaigns" element={<CampaignsPage />} />
 
             {/* Field Agent Routes */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
