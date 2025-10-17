@@ -74,5 +74,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom']
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/tests/setup.ts'],
+    alias: {
+      '../../services/api.service': path.resolve(__dirname, './src/tests/__mocks__/api.service.ts'),
+    },
+  },
 })
