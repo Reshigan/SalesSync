@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 // Layout Components
 import AuthLayout from './components/layout/AuthLayout'
 import DashboardLayout from './components/layout/DashboardLayout'
+import ErrorBoundary from './components/ui/ErrorBoundary'
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage'
@@ -38,7 +39,6 @@ import AuditLogsPage from './pages/admin/AuditLogsPage'
 
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
-import ErrorBoundary from './components/ui/ErrorBoundary'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function App() {

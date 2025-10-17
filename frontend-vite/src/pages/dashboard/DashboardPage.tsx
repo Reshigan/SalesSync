@@ -9,6 +9,7 @@ import {
   CheckCircle
 } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
+import { formatCurrency } from '../../utils/currency'
 
 // Mock data - replace with real API calls
 const mockStats = {
@@ -134,14 +135,14 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <StatCard
           title="Monthly Revenue"
-          value={`£${mockStats.monthlyRevenue.toLocaleString()}`}
+          value={formatCurrency(mockStats.monthlyRevenue)}
           icon={DollarSign}
           change={18}
           color="green"
         />
         <StatCard
           title="Monthly Commissions"
-          value={`£${mockStats.monthlyCommissions.toLocaleString()}`}
+          value={formatCurrency(mockStats.monthlyCommissions)}
           icon={TrendingUp}
           change={22}
           color="blue"

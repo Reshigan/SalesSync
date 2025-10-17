@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react'
 interface Props {
   children: ReactNode
   fallback?: ReactNode
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 interface State {
@@ -25,6 +26,12 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
     this.setState({ error, errorInfo })
+    
+    // Call custom error handler if provided
+    this.props.onError?.(error, errorInfo)
+    
+    // In production, you might want to send this to an error reporting service
+    // Example: Sentry.captureException(error, { contexts: { react: errorInfo } })
   }
 
   handleReset = () => {

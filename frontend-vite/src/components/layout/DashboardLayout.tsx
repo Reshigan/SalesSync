@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import OfflineIndicator from '../ui/OfflineIndicator'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -48,6 +49,9 @@ export default function DashboardLayout() {
           </div>
         </main>
       </div>
+      
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   )
 }

@@ -15,13 +15,15 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and tenant header
 apiClient.interceptors.request.use(
   (config) => {
     const token = getAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    // Add tenant header for multi-tenant support
+    config.headers['X-Tenant-Code'] = 'demo'
     return config
   },
   (error) => {
