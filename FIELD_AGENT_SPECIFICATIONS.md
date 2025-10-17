@@ -113,10 +113,12 @@ Select Brand → Choose Board Type → Place Board → Capture Photo → Analyti
 5. **Coverage Analytics**: Automatic calculation of coverage percentage
 
 #### 5.2 Board Analytics Engine
-- **Image Processing**: Analyze board visibility and placement
-- **Coverage Calculation**: Calculate percentage of storefront covered by board
-- **Quality Assessment**: Evaluate board condition and visibility
-- **Compliance Check**: Verify placement meets brand guidelines
+- **Image Processing**: Analyze board visibility and placement using computer vision
+- **Coverage Calculation**: Automatically calculate percentage of storefront covered by board
+- **Storefront Analysis**: Detect storefront boundaries and calculate board coverage ratio
+- **Quality Assessment**: Evaluate board condition, visibility, and placement quality
+- **Compliance Check**: Verify placement meets brand guidelines and positioning requirements
+- **AI-Powered Analytics**: Use machine learning to improve coverage calculation accuracy
 
 #### 5.3 Admin Board Management
 - **Board Catalog**: Admin can add/edit board types per brand
@@ -145,13 +147,16 @@ Select Product → Fill Distribution Form → Capture Details → Update Invento
 5. **Inventory Update**: Real-time inventory tracking
 
 #### 6.3 Product Forms System
-- **Dynamic Forms**: Each product type has specific form fields
+- **Dynamic Forms**: Each product type has specific form fields tailored to the product
 - **Required Information**: 
-  - Recipient details (name, phone, ID)
-  - Product serial numbers
-  - Activation details (for SIM cards)
-  - Delivery confirmation
-- **Media Capture**: Photos of product, recipient, documentation
+  - Recipient details (name, phone, ID number, address)
+  - Product serial numbers and IMEI (for devices)
+  - Activation details and network settings (for SIM cards)
+  - Delivery confirmation and recipient signature
+  - Distribution location and GPS coordinates
+- **Media Capture**: Photos of product, recipient, documentation, and delivery proof
+- **Individual Distribution**: Support for distributing products to individual customers/recipients
+- **Bulk Distribution**: Handle multiple product distributions in a single visit
 
 ### 7. Commission Management
 
