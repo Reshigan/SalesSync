@@ -84,10 +84,10 @@ const mockAgentData = [
 ]
 
 const mockActivityData = [
-  { type: 'Board Placement', count: 45, color: '#8B5CF6' },
-  { type: 'Product Distribution', count: 78, color: '#10B981' },
-  { type: 'Customer Visit', count: 32, color: '#F59E0B' },
-  { type: 'Commission Earned', count: 28, color: '#EF4444' },
+  { name: 'Board Placement', value: 45, color: '#8B5CF6' },
+  { name: 'Product Distribution', value: 78, color: '#10B981' },
+  { name: 'Customer Visit', value: 32, color: '#F59E0B' },
+  { name: 'Commission Earned', value: 28, color: '#EF4444' },
 ]
 
 export default function FieldAgentsPage() {

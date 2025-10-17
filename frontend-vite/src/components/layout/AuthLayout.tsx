@@ -1,24 +1,24 @@
 import { Outlet } from 'react-router-dom'
+import AnimatedLogo from '../ui/AnimatedLogo'
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+      </div>
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
         {/* Logo and branding */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-primary-600 rounded-xl flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">SS</span>
-          </div>
-          <h1 className="mt-4 text-3xl font-bold text-gray-900">
-            SalesSync
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Field Force Management Platform
-          </p>
+          <AnimatedLogo size="lg" showText={true} />
         </div>
 
         {/* Auth form container */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/20 p-8 transition-all duration-500 hover:shadow-3xl hover:bg-white/90">
           <Outlet />
         </div>
 
