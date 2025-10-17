@@ -5,6 +5,10 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  define: {
+    'import.meta.env.DEV': JSON.stringify(process.env.NODE_ENV === 'development'),
+    'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1')
+  },
   plugins: [
     react(),
     VitePWA({
@@ -70,5 +74,13 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom']
-  }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/tests/setup.ts'],
+    alias: {
+      '../../services/api.service': path.resolve(__dirname, './src/tests/__mocks__/api.service.ts'),
+    },
+  },
 })
