@@ -5,7 +5,7 @@ import { vi } from 'vitest'
 Object.defineProperty(import.meta, 'env', {
   value: {
     DEV: true,
-    VITE_API_BASE_URL: 'http://localhost:3001/api/v1'
+    VITE_API_BASE_URL: '/api'
   },
   writable: true
 })

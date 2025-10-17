@@ -2,7 +2,7 @@ import { apiClient } from './api.service'
 import { AIInsight, FraudDetection, DataInsight, AIAnalysis, LocalAIConfig } from '../types/ai.types'
 
 class AIService {
-  private baseUrl = '/api/v1/ai'
+  private baseUrl = '/api/ai'
   private ollamaUrl = 'http://localhost:11434'
   private isOllamaAvailable = false
 

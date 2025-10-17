@@ -12,7 +12,7 @@ import {
 } from '../types/transaction.types'
 
 class TransactionService {
-  private baseUrl = '/api/v1/transactions'
+  private baseUrl = '/api/transactions'
 
   // Generic CRUD Operations
   async getTransactions(filter?: TransactionFilter): Promise<Transaction[]> {
