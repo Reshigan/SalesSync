@@ -59,7 +59,10 @@ class OrdersService {
   async getOrders(filter?: OrderFilter): Promise<{ orders: Order[], total: number }> {
     try {
       const response = await apiClient.get(this.baseUrl, { params: filter })
-      return response.data
+      return {
+        orders: response.data.data?.orders || response.data.data || [],
+        total: response.data.data?.pagination?.total || response.data.data?.length || 0
+      }
     } catch (error) {
       console.error('Failed to fetch orders:', error)
       // Return mock data for development
