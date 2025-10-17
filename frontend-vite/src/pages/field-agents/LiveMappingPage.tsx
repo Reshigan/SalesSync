@@ -1,25 +1,20 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import {
   MapPin,
-  Navigation,
   Clock,
   Phone,
   MessageSquare,
   User,
-  Car,
   Battery,
   Signal,
   RefreshCw,
-  Filter,
   Search,
-  Eye,
   Route,
   AlertTriangle,
   CheckCircle,
   XCircle,
   Calendar,
-  Target,
-  TrendingUp
+  Target
 } from 'lucide-react'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
