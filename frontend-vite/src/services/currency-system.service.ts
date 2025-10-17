@@ -214,23 +214,25 @@ class CurrencySystemService extends ApiService {
       })
 
       // Detect currency based on coordinates
-      return await this.detectCurrency({
+      const detection = await this.detectCurrency({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude
       })
+      return detection.currency
     } catch (error) {
       // Fallback to browser locale
       const locale = navigator.language || 'en-US'
       const countryCode = locale.split('-')[1] || 'US'
 
       try {
-        return await this.detectCurrency({ country_code: countryCode })
+        const detection = await this.detectCurrency({ country_code: countryCode })
+        return detection.currency
       } catch (fallbackError) {
         // Final fallback - get base currency
         const currencies = await this.getCurrencies(true)
         const baseCurrency = currencies.find(c => c.is_base_currency)
         if (baseCurrency) {
-          return { currency: baseCurrency, detection_method: 'default' as const, location_info: {} }
+          return baseCurrency
         }
         throw new Error('No currency configuration found')
       }
