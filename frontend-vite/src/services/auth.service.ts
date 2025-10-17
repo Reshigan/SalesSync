@@ -10,8 +10,30 @@ import type {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<LoginResponse> {
-    const response = await apiClient.post<LoginResponse>('/auth/login', credentials)
-    return response.data
+    const response = await apiClient.post('/auth/login', credentials)
+    
+    // Adapt the API response to match the expected format
+    const apiData = response.data.data
+    return {
+      user: {
+        id: apiData.user.id,
+        email: apiData.user.email,
+        first_name: apiData.user.firstName,
+        last_name: apiData.user.lastName,
+        role: apiData.user.role,
+        status: apiData.user.status,
+        permissions: apiData.user.permissions || [],
+        last_login: apiData.user.lastLogin,
+        created_at: apiData.user.createdAt,
+        updated_at: apiData.user.updatedAt || apiData.user.createdAt,
+      },
+      tokens: {
+        access_token: apiData.token,
+        refresh_token: apiData.refreshToken,
+        expires_in: 86400, // 24 hours in seconds
+        token_type: 'Bearer' as const,
+      },
+    }
   }
 
   async logout(): Promise<void> {

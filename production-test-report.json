@@ -1,0 +1,44 @@
+{
+  "timestamp": "2025-10-17T06:05:07.177Z",
+  "summary": {
+    "passed": 21,
+    "failed": 7,
+    "skipped": 0,
+    "successRate": "75.0%"
+  },
+  "errors": [
+    {
+      "test": "Currency system integrated",
+      "message": "Currency functions not found in build"
+    },
+    {
+      "test": "Gzip compression",
+      "message": "Not enabled"
+    },
+    {
+      "test": "Component included: DashboardPage",
+      "message": "Component not found in build"
+    },
+    {
+      "test": "Component included: TransactionForm",
+      "message": "Component not found in build"
+    },
+    {
+      "test": "Component included: CurrencySettings",
+      "message": "Component not found in build"
+    },
+    {
+      "test": "Component included: OfflineIndicator",
+      "message": "Component not found in build"
+    },
+    {
+      "test": "Component included: LazyLoader",
+      "message": "Component not found in build"
+    }
+  ],
+  "environment": {
+    "baseUrl": "https://ss.gonxt.tech",
+    "nodeVersion": "v18.20.8",
+    "platform": "linux"
+  }
+}

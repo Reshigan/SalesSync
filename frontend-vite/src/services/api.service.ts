@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { getAuthToken } from '../store/auth.store'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 const API_TIMEOUT = 30000 // 30 seconds
 
 // Create axios instance
@@ -23,7 +23,7 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     // Add tenant header for multi-tenant support
-    config.headers['X-Tenant-Code'] = 'demo'
+    config.headers['X-Tenant-Code'] = 'DEMO'
     return config
   },
   (error) => {

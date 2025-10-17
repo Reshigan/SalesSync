@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-10-17T06:05:57.434Z",
+  "url": "https://ss.gonxt.tech",
+  "summary": {
+    "passed": 6,
+    "failed": 9,
+    "successRate": "40.0%"
+  },
+  "tests": [
+    {
+      "test": "Main application loads",
+      "status": "FAIL",
+      "details": "Status: 200"
+    },
+    {
+      "test": "Gzip compression enabled",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Security headers configured",
+      "status": "PASS",
+      "details": "3/3 headers"
+    },
+    {
+      "test": "JavaScript bundle loads",
+      "status": "FAIL",
+      "details": "Status: 200"
+    },
+    {
+      "test": "CSS bundle loads",
+      "status": "FAIL",
+      "details": "Status: 200"
+    },
+    {
+      "test": "Service Worker loads",
+      "status": "FAIL",
+      "details": "Status: 200"
+    },
+    {
+      "test": "PWA Manifest valid",
+      "status": "PASS",
+      "details": "Name: SalesSync - Van Sales Management"
+    },
+    {
+      "test": "Favicon loads",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "test": "Asset caching configured",
+      "status": "PASS",
+      "details": "max-age=31536000, public, immutable"
+    },
+    {
+      "test": "SPA routing works",
+      "status": "FAIL",
+      "details": "Status: 200"
+    },
+    {
+      "test": "React framework loaded",
+      "status": "FAIL",
+      "details": "React not found in bundle"
+    },
+    {
+      "test": "Client-side routing loaded",
+      "status": "FAIL",
+      "details": "Router not found in bundle"
+    },
+    {
+      "test": "State management loaded",
+      "status": "FAIL",
+      "details": "State management not found"
+    },
+    {
+      "test": "UI components loaded",
+      "status": "FAIL",
+      "details": "UI components not found"
+    },
+    {
+      "test": "Performance acceptable",
+      "status": "PASS",
+      "details": "296ms load time"
+    }
+  ],
+  "environment": {
+    "nodeVersion": "v18.20.8",
+    "platform": "linux"
+  }
+}
