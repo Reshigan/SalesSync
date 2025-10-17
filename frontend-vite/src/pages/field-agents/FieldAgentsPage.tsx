@@ -84,10 +84,10 @@ const mockAgentData = [
 ]
 
 const mockActivityData = [
-  { type: 'Board Placement', count: 45, color: '#8B5CF6' },
-  { type: 'Product Distribution', count: 78, color: '#10B981' },
-  { type: 'Customer Visit', count: 32, color: '#F59E0B' },
-  { type: 'Commission Earned', count: 28, color: '#EF4444' },
+  { name: 'Board Placement', value: 45, color: '#8B5CF6' },
+  { name: 'Product Distribution', value: 78, color: '#10B981' },
+  { name: 'Customer Visit', value: 32, color: '#F59E0B' },
+  { name: 'Commission Earned', value: 28, color: '#EF4444' },
 ]
 
 export default function FieldAgentsPage() {
@@ -354,20 +354,20 @@ export default function FieldAgentsPage() {
           </div>
           <div className="space-y-4 max-h-64 overflow-y-auto">
             {[
-              { agent: 'John Doe', action: 'Placed Premium Billboard', location: 'High Street, London', time: '2 min ago', type: 'placement' },
-              { agent: 'Jane Smith', action: 'Completed product delivery', location: 'ABC Store, Manchester', time: '5 min ago', type: 'distribution' },
-              { agent: 'Mike Johnson', action: 'Started customer visit', location: 'XYZ Corp, Birmingham', time: '12 min ago', type: 'visit' },
-              { agent: 'Sarah Wilson', action: 'Earned commission', location: 'Multiple locations', time: '18 min ago', type: 'commission' },
+              { agent: 'John Doe', action: 'Placed Premium Billboard', location: 'High Street, London', time: '2 min ago', name: 'placement' },
+              { agent: 'Jane Smith', action: 'Completed product delivery', location: 'ABC Store, Manchester', time: '5 min ago', name: 'distribution' },
+              { agent: 'Mike Johnson', action: 'Started customer visit', location: 'XYZ Corp, Birmingham', time: '12 min ago', name: 'visit' },
+              { agent: 'Sarah Wilson', action: 'Earned commission', location: 'Multiple locations', time: '18 min ago', name: 'commission' },
             ].map((activity, index) => (
               <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                 <div className={`p-2 rounded-full ${
-                  activity.type === 'placement' ? 'bg-purple-100' :
-                  activity.type === 'distribution' ? 'bg-green-100' :
-                  activity.type === 'visit' ? 'bg-blue-100' : 'bg-yellow-100'
+                  activity.name === 'placement' ? 'bg-purple-100' :
+                  activity.name === 'distribution' ? 'bg-green-100' :
+                  activity.name === 'visit' ? 'bg-blue-100' : 'bg-yellow-100'
                 }`}>
-                  {activity.type === 'placement' ? <MapPin className="h-4 w-4 text-purple-600" /> :
-                   activity.type === 'distribution' ? <Package className="h-4 w-4 text-green-600" /> :
-                   activity.type === 'visit' ? <Users className="h-4 w-4 text-blue-600" /> :
+                  {activity.name === 'placement' ? <MapPin className="h-4 w-4 text-purple-600" /> :
+                   activity.name === 'distribution' ? <Package className="h-4 w-4 text-green-600" /> :
+                   activity.name === 'visit' ? <Users className="h-4 w-4 text-blue-600" /> :
                    <DollarSign className="h-4 w-4 text-yellow-600" />}
                 </div>
                 <div className="flex-1">
