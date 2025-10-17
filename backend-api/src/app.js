@@ -72,6 +72,16 @@ async function initializeApp() {
     console.log('Loading surveys routes...');
     const surveysRoutes = require('./routes/surveys-simple');
     const settingsRoutes = require('./routes/settings');
+    
+    // Load new comprehensive API routes
+    console.log('Loading new comprehensive API routes...');
+    const promotionsEventsRoutes = require('./routes/promotions-events');
+    const visitsSurveysRoutes = require('./routes/visits-surveys');
+    const pictureAssignmentsRoutes = require('./routes/picture-assignments');
+    const gpsTrackingRoutes = require('./routes/gps-tracking');
+    const currencySystemRoutes = require('./routes/currency-system');
+    const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
+    const vanSalesRoutes = require('./routes/van-sales');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -97,6 +107,16 @@ async function initializeApp() {
     console.log('Mounting surveys routes...');
     app.use('/api/surveys', surveysRoutes);
     app.use('/api/settings', settingsRoutes);
+    
+    // Mount new comprehensive API routes
+    console.log('Mounting new comprehensive API routes...');
+    app.use('/api/promotions-events', promotionsEventsRoutes);
+    app.use('/api/visits-surveys', visitsSurveysRoutes);
+    app.use('/api/picture-assignments', pictureAssignmentsRoutes);
+    app.use('/api/gps-tracking', gpsTrackingRoutes);
+    app.use('/api/currency-system', currencySystemRoutes);
+    app.use('/api/comprehensive-transactions', comprehensiveTransactionsRoutes);
+    app.use('/api/van-sales', vanSalesRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

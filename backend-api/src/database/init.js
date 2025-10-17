@@ -1268,6 +1268,310 @@ async function createTables() {
       FOREIGN KEY (survey_id) REFERENCES surveys(id),
       FOREIGN KEY (respondent_id) REFERENCES users(id),
       UNIQUE(survey_id, respondent_id)
+    )`,
+
+    // GPS Tracking Tables
+    `CREATE TABLE IF NOT EXISTS gps_locations (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      accuracy REAL,
+      altitude REAL,
+      speed REAL,
+      heading REAL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      battery_level INTEGER,
+      is_mock_location BOOLEAN DEFAULT FALSE,
+      address TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS gps_geofences (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      radius REAL NOT NULL,
+      type TEXT DEFAULT 'customer' CHECK (type IN ('customer', 'warehouse', 'office', 'restricted')),
+      customer_id TEXT,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS gps_geofence_events (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      geofence_id TEXT NOT NULL,
+      event_type TEXT NOT NULL CHECK (event_type IN ('enter', 'exit')),
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      duration_minutes INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (geofence_id) REFERENCES gps_geofences(id)
+    )`,
+
+    // Promotions and Events Tables
+    `CREATE TABLE IF NOT EXISTS promotions (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL CHECK (type IN ('discount', 'bogo', 'bundle', 'cashback', 'loyalty')),
+      discount_type TEXT CHECK (discount_type IN ('percentage', 'fixed_amount')),
+      discount_value REAL,
+      min_purchase_amount REAL,
+      max_discount_amount REAL,
+      applicable_products TEXT, -- JSON array of product IDs
+      applicable_categories TEXT, -- JSON array of category IDs
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      budget REAL,
+      spent_amount REAL DEFAULT 0,
+      target_audience TEXT, -- JSON object with targeting criteria
+      status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled')),
+      created_by TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS promotion_assignments (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      promotion_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      assigned_by TEXT NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'accepted', 'declined', 'completed')),
+      notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (promotion_id) REFERENCES promotions(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id),
+      UNIQUE(promotion_id, agent_id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL CHECK (type IN ('product_launch', 'trade_show', 'training', 'meeting', 'campaign')),
+      location TEXT,
+      latitude REAL,
+      longitude REAL,
+      start_date DATETIME NOT NULL,
+      end_date DATETIME NOT NULL,
+      budget REAL,
+      expected_attendees INTEGER,
+      actual_attendees INTEGER,
+      status TEXT DEFAULT 'planned' CHECK (status IN ('planned', 'active', 'completed', 'cancelled')),
+      created_by TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (created_by) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS event_assignments (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      role TEXT DEFAULT 'attendee' CHECK (role IN ('organizer', 'presenter', 'attendee', 'support')),
+      assigned_by TEXT NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'accepted', 'declined', 'attended', 'no_show')),
+      notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (event_id) REFERENCES events(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id),
+      UNIQUE(event_id, agent_id)
+    )`,
+
+    // Enhanced Visits and Surveys Tables
+    `CREATE TABLE IF NOT EXISTS visit_assignments (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      visit_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      assigned_by TEXT NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      due_date DATE,
+      priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'accepted', 'in_progress', 'completed', 'cancelled')),
+      notes TEXT,
+      completion_notes TEXT,
+      completed_at DATETIME,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (visit_id) REFERENCES visits(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id),
+      UNIQUE(visit_id, agent_id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS survey_assignments (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      survey_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      assigned_by TEXT NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      due_date DATE,
+      target_responses INTEGER DEFAULT 1,
+      completed_responses INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'in_progress', 'completed', 'overdue')),
+      notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (survey_id) REFERENCES surveys(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id),
+      UNIQUE(survey_id, agent_id)
+    )`,
+
+    // Picture Assignments Table
+    `CREATE TABLE IF NOT EXISTS picture_assignments (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      type TEXT NOT NULL CHECK (type IN ('product_display', 'store_front', 'competitor_analysis', 'compliance_check', 'event_coverage')),
+      location TEXT,
+      latitude REAL,
+      longitude REAL,
+      customer_id TEXT,
+      assigned_to TEXT NOT NULL,
+      assigned_by TEXT NOT NULL,
+      assigned_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      due_date DATE,
+      priority TEXT DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'urgent')),
+      status TEXT DEFAULT 'assigned' CHECK (status IN ('assigned', 'in_progress', 'completed', 'rejected')),
+      requirements TEXT, -- JSON object with specific requirements
+      uploaded_files TEXT, -- JSON array of file paths
+      completion_notes TEXT,
+      completed_at DATETIME,
+      reviewed_by TEXT,
+      reviewed_at DATETIME,
+      review_status TEXT CHECK (review_status IN ('pending', 'approved', 'rejected', 'needs_revision')),
+      review_notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (assigned_to) REFERENCES users(id),
+      FOREIGN KEY (assigned_by) REFERENCES users(id),
+      FOREIGN KEY (reviewed_by) REFERENCES users(id)
+    )`,
+
+    // Currency System Tables
+    `CREATE TABLE IF NOT EXISTS currencies (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      code TEXT NOT NULL,
+      name TEXT NOT NULL,
+      symbol TEXT NOT NULL,
+      decimal_places INTEGER DEFAULT 2,
+      exchange_rate REAL DEFAULT 1.0,
+      is_base_currency BOOLEAN DEFAULT FALSE,
+      is_active BOOLEAN DEFAULT TRUE,
+      last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      UNIQUE(tenant_id, code)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS currency_regions (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      currency_id TEXT NOT NULL,
+      region_id TEXT,
+      area_id TEXT,
+      country_code TEXT,
+      is_default BOOLEAN DEFAULT FALSE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (currency_id) REFERENCES currencies(id),
+      FOREIGN KEY (region_id) REFERENCES regions(id),
+      FOREIGN KEY (area_id) REFERENCES areas(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS exchange_rate_history (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      currency_id TEXT NOT NULL,
+      rate REAL NOT NULL,
+      effective_date DATE NOT NULL,
+      source TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (currency_id) REFERENCES currencies(id)
+    )`,
+
+    // Comprehensive Transactions Tables
+    `CREATE TABLE IF NOT EXISTS transaction_types (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      code TEXT NOT NULL,
+      category TEXT NOT NULL CHECK (category IN ('sale', 'return', 'refund', 'adjustment', 'transfer')),
+      affects_inventory BOOLEAN DEFAULT TRUE,
+      affects_commission BOOLEAN DEFAULT TRUE,
+      requires_approval BOOLEAN DEFAULT FALSE,
+      is_active BOOLEAN DEFAULT TRUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      UNIQUE(tenant_id, code)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS transaction_reversals (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      original_transaction_id TEXT NOT NULL,
+      reversal_transaction_id TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      reversal_type TEXT NOT NULL CHECK (reversal_type IN ('full', 'partial')),
+      reversed_amount REAL NOT NULL,
+      reversed_by TEXT NOT NULL,
+      reversed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      approval_status TEXT DEFAULT 'pending' CHECK (approval_status IN ('pending', 'approved', 'rejected')),
+      approved_by TEXT,
+      approved_at DATETIME,
+      notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (original_transaction_id) REFERENCES transactions(id),
+      FOREIGN KEY (reversal_transaction_id) REFERENCES transactions(id),
+      FOREIGN KEY (reversed_by) REFERENCES users(id),
+      FOREIGN KEY (approved_by) REFERENCES users(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS transaction_audit_log (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      transaction_id TEXT NOT NULL,
+      action TEXT NOT NULL CHECK (action IN ('created', 'updated', 'cancelled', 'reversed', 'approved', 'rejected')),
+      old_values TEXT, -- JSON object
+      new_values TEXT, -- JSON object
+      changed_by TEXT NOT NULL,
+      changed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      ip_address TEXT,
+      user_agent TEXT,
+      notes TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (transaction_id) REFERENCES transactions(id),
+      FOREIGN KEY (changed_by) REFERENCES users(id)
     )`
   ];
   

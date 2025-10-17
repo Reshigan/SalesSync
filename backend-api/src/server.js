@@ -271,6 +271,14 @@ async function startServer() {
     const integrationsRoutes = require('./routes/integrations');
     const mobileRoutes = require('./routes/mobile');
     const settingsRoutes = require('./routes/settings');
+    
+    // New comprehensive API routes
+    const promotionsEventsRoutes = require('./routes/promotions-events');
+    const visitsSurveysRoutes = require('./routes/visits-surveys');
+    const pictureAssignmentsRoutes = require('./routes/picture-assignments');
+    const gpsTrackingRoutes = require('./routes/gps-tracking');
+    const currencySystemRoutes = require('./routes/currency-system');
+    const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -330,6 +338,14 @@ async function startServer() {
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
     app.use('/api/settings', authTenantMiddleware, settingsRoutes);
+    
+    // New comprehensive API routes
+    app.use('/api/promotions-events', authTenantMiddleware, promotionsEventsRoutes);
+    app.use('/api/visits-surveys', authTenantMiddleware, visitsSurveysRoutes);
+    app.use('/api/picture-assignments', authTenantMiddleware, pictureAssignmentsRoutes);
+    app.use('/api/gps-tracking', authTenantMiddleware, gpsTrackingRoutes);
+    app.use('/api/currency-system', authTenantMiddleware, currencySystemRoutes);
+    app.use('/api/comprehensive-transactions', authTenantMiddleware, comprehensiveTransactionsRoutes);
 
     logger.info('Routes configured successfully');
 
