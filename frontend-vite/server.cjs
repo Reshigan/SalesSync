@@ -7,8 +7,8 @@ const PORT = process.env.PORT || 3000;
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Handle React Router - serve index.html for all routes
-app.get('/*', (req, res) => {
+// Handle React Router - serve index.html for all routes that don't match static files
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
