@@ -1,44 +1,54 @@
 {
-  "timestamp": "2025-10-17T06:05:07.177Z",
+  "timestamp": "2025-10-20T12:38:06.438Z",
+  "productionUrl": "https://ss.gonxt.tech",
   "summary": {
-    "passed": 21,
-    "failed": 7,
-    "skipped": 0,
-    "successRate": "75.0%"
+    "total": 7,
+    "passed": 6,
+    "failed": 1,
+    "successRate": "85.7%"
   },
-  "errors": [
+  "results": [
     {
-      "test": "Currency system integrated",
-      "message": "Currency functions not found in build"
+      "name": "Site Accessibility",
+      "status": "FAILED",
+      "duration": 2442,
+      "error": "Frontend not yet deployed - CI/CD pipeline may still be in progress"
     },
     {
-      "test": "Gzip compression",
-      "message": "Not enabled"
+      "name": "Backend API Health",
+      "status": "PASSED",
+      "duration": 1111,
+      "error": null
     },
     {
-      "test": "Component included: DashboardPage",
-      "message": "Component not found in build"
+      "name": "Security Headers",
+      "status": "PASSED",
+      "duration": 1116,
+      "error": null
     },
     {
-      "test": "Component included: TransactionForm",
-      "message": "Component not found in build"
+      "name": "SSL Certificate",
+      "status": "PASSED",
+      "duration": 1117,
+      "error": null
     },
     {
-      "test": "Component included: CurrencySettings",
-      "message": "Component not found in build"
+      "name": "Performance",
+      "status": "PASSED",
+      "duration": 1108,
+      "error": null
     },
     {
-      "test": "Component included: OfflineIndicator",
-      "message": "Component not found in build"
+      "name": "API Endpoints",
+      "status": "PASSED",
+      "duration": 4107,
+      "error": null
     },
     {
-      "test": "Component included: LazyLoader",
-      "message": "Component not found in build"
+      "name": "Mobile Responsiveness",
+      "status": "PASSED",
+      "duration": 3082,
+      "error": null
     }
-  ],
-  "environment": {
-    "baseUrl": "https://ss.gonxt.tech",
-    "nodeVersion": "v18.20.8",
-    "platform": "linux"
-  }
+  ]
 }

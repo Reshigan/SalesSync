@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-10-20T12:38:09.018Z",
+  "productionUrl": "https://ss.gonxt.tech",
+  "testSuite": "Comprehensive Production Tests",
+  "duration": 17109,
+  "overallSummary": {
+    "totalTests": 9,
+    "totalPassed": 8,
+    "totalFailed": 1,
+    "skippedCategories": 1,
+    "overallSuccessRate": "88.9%"
+  },
+  "categoryResults": [
+    {
+      "category": "Backend & Infrastructure",
+      "results": [
+        {
+          "name": "Site Accessibility",
+          "status": "FAILED",
+          "duration": 2442,
+          "error": "Frontend not yet deployed - CI/CD pipeline may still be in progress"
+        },
+        {
+          "name": "Backend API Health",
+          "status": "PASSED",
+          "duration": 1111,
+          "error": null
+        },
+        {
+          "name": "Security Headers",
+          "status": "PASSED",
+          "duration": 1116,
+          "error": null
+        },
+        {
+          "name": "SSL Certificate",
+          "status": "PASSED",
+          "duration": 1117,
+          "error": null
+        },
+        {
+          "name": "Performance",
+          "status": "PASSED",
+          "duration": 1108,
+          "error": null
+        },
+        {
+          "name": "API Endpoints",
+          "status": "PASSED",
+          "duration": 4107,
+          "error": null
+        },
+        {
+          "name": "Mobile Responsiveness",
+          "status": "PASSED",
+          "duration": 3082,
+          "error": null
+        }
+      ],
+      "summary": {
+        "total": 7,
+        "passed": 6,
+        "failed": 1,
+        "successRate": "85.7%"
+      }
+    },
+    {
+      "category": "Frontend Functional",
+      "skipped": true,
+      "reason": "Frontend not deployed"
+    },
+    {
+      "category": "Integration Tests",
+      "results": [
+        {
+          "name": "API Integration",
+          "status": "PASSED",
+          "duration": 0,
+          "error": null
+        },
+        {
+          "name": "CORS and Security",
+          "status": "PASSED",
+          "duration": 0,
+          "error": null
+        }
+      ],
+      "summary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "successRate": "100.0%"
+      }
+    }
+  ]
+}
