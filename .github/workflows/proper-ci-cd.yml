@@ -30,49 +30,49 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: |
-          frontend/package-lock.json
-          backend/package-lock.json
+          frontend-vite/package-lock.json
+          backend-api/package-lock.json
     
     - name: Install Frontend Dependencies
       run: |
-        cd frontend
+        cd frontend-vite-vite
         npm ci
     
     - name: Install Backend Dependencies
       run: |
-        cd backend
+        cd backend-api-api
         npm ci
     
     - name: Frontend Linting
       run: |
-        cd frontend
+        cd frontend-vite-vite
         npm run lint
     
     - name: Frontend Type Check
       run: |
-        cd frontend
+        cd frontend-vite
         npm run type-check
     
     - name: Frontend Build
       run: |
-        cd frontend
+        cd frontend-vite
         npm run build
       env:
         NEXT_PUBLIC_API_URL: http://localhost:3001/api
     
     - name: Backend Linting
       run: |
-        cd backend
+        cd backend-api
         npm run lint || echo "Backend linting not configured"
     
     - name: Backend Build Check
       run: |
-        cd backend
+        cd backend-api
         npm run build || echo "Backend build not configured"
     
     - name: Run Tests
       run: |
-        cd frontend && npm test -- --watchAll=false || echo "Frontend tests not configured"
+        cd frontend-vite && npm test -- --watchAll=false || echo "Frontend tests not configured"
         cd ../backend && npm test -- --watchAll=false || echo "Backend tests not configured"
       continue-on-error: true
 
@@ -94,17 +94,17 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: |
-          frontend/package-lock.json
-          backend/package-lock.json
+          frontend-vite/package-lock.json
+          backend-api/package-lock.json
     
     - name: Install Dependencies
       run: |
-        cd frontend && npm ci
+        cd frontend-vite && npm ci
         cd ../backend && npm ci
     
     - name: Run Full Test Suite
       run: |
-        cd frontend
+        cd frontend-vite
         npm run lint
         npm run type-check
         npm run build
@@ -125,7 +125,7 @@ jobs:
     
     - name: Build for Staging
       run: |
-        cd frontend
+        cd frontend-vite
         NEXT_PUBLIC_API_URL=https://staging.ss.gonxt.tech/api npm run build
     
     - name: Deploy to Staging (Placeholder)
@@ -160,17 +160,17 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: |
-          frontend/package-lock.json
-          backend/package-lock.json
+          frontend-vite/package-lock.json
+          backend-api/package-lock.json
     
     - name: Install Dependencies
       run: |
-        cd frontend && npm ci
+        cd frontend-vite && npm ci
         cd ../backend && npm ci
     
     - name: Production Validation
       run: |
-        cd frontend
+        cd frontend-vite
         npm run lint
         npm run type-check
         npm run build
@@ -187,7 +187,7 @@ jobs:
     
     - name: Build for Production
       run: |
-        cd frontend
+        cd frontend-vite
         NEXT_PUBLIC_API_URL=https://ss.gonxt.tech/api npm run build
     
     - name: Deploy to Production
@@ -257,12 +257,12 @@ jobs:
     
     - name: Run npm audit (Frontend)
       run: |
-        cd frontend
+        cd frontend-vite
         npm audit --audit-level=high || echo "Frontend audit found issues"
     
     - name: Run npm audit (Backend)
       run: |
-        cd backend
+        cd backend-api
         npm audit --audit-level=high || echo "Backend audit found issues"
 
   # ========================================

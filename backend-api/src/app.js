@@ -82,6 +82,13 @@ async function initializeApp() {
     const currencySystemRoutes = require('./routes/currency-system');
     const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
     const vanSalesRoutes = require('./routes/van-sales');
+    
+    // Load missing API routes
+    const inventoryRoutes = require('./routes/inventory');
+    const aiAnalyticsRoutes = require('./routes/ai-analytics');
+    const analyticsRoutes = require('./routes/analytics');
+    const reportsRoutes = require('./routes/reports');
+    const workflowsRoutes = require('./routes/workflows');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -117,6 +124,13 @@ async function initializeApp() {
     app.use('/api/currency-system', currencySystemRoutes);
     app.use('/api/comprehensive-transactions', comprehensiveTransactionsRoutes);
     app.use('/api/van-sales', vanSalesRoutes);
+    
+    // Mount missing API routes
+    app.use('/api/inventory', inventoryRoutes);
+    app.use('/api/ai', aiAnalyticsRoutes);
+    app.use('/api/analytics', analyticsRoutes);
+    app.use('/api/reports', reportsRoutes);
+    app.use('/api/workflows', workflowsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

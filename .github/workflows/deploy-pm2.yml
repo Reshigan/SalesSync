@@ -25,12 +25,12 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: |
-          frontend/package-lock.json
+          frontend-vite/package-lock.json
           backend-api/package-lock.json
     
     - name: Install Frontend Dependencies
       run: |
-        cd frontend
+        cd frontend-vite
         npm ci
     
     - name: Install Backend Dependencies
@@ -40,12 +40,12 @@ jobs:
     
     - name: Run Linting
       run: |
-        cd frontend && npm run lint || true
+        cd frontend-vite && npm run lint || true
         cd ../backend-api && npm run lint || true
     
     - name: Build Frontend
       run: |
-        cd frontend
+        cd frontend-vite
         npm run build
     
     - name: Build Backend
@@ -69,7 +69,7 @@ jobs:
     
     - name: Run npm audit (Frontend)
       run: |
-        cd frontend
+        cd frontend-vite
         npm audit --audit-level=high || true
     
     - name: Run npm audit (Backend)
@@ -160,7 +160,7 @@ jobs:
           
           # Install/Update dependencies
           echo "📦 Installing Frontend Dependencies..."
-          cd frontend
+          cd frontend-vite
           npm ci --production
           
           echo "📦 Installing Backend Dependencies..."
@@ -169,7 +169,7 @@ jobs:
           
           # Build frontend for production
           echo "🏗️ Building Frontend..."
-          cd ../frontend
+          cd ../frontend-vite
           npm run build
           
           # Restart services with PM2
@@ -183,7 +183,7 @@ jobs:
           pm2 start ecosystem.config.js --only salessync-backend || pm2 start server.js --name salessync-backend
           
           # Start frontend
-          cd ../frontend
+          cd ../frontend-vite
           pm2 start ecosystem.config.js --only salessync-frontend || pm2 start npm --name salessync-frontend -- start
           
           # Save PM2 configuration

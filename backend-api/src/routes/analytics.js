@@ -178,6 +178,57 @@ router.get('/dashboard', asyncHandler(async (req, res) => {
   });
 }));
 
+// Advanced Analytics endpoint
+router.get('/advanced', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  // Advanced analytics combining multiple data sources
+  const advancedMetrics = await getQuery(`
+    SELECT 
+      'sales_performance' as metric_type,
+      COUNT(DISTINCT o.id) as total_orders,
+      COALESCE(SUM(o.total_amount), 0) as total_revenue,
+      COUNT(DISTINCT o.customer_id) as unique_customers,
+      COUNT(DISTINCT o.salesman_id) as active_agents
+    FROM orders o
+    WHERE o.tenant_id = ?
+    AND o.order_date >= DATE('now', '-30 days')
+    
+    UNION ALL
+    
+    SELECT 
+      'inventory_turnover' as metric_type,
+      COUNT(DISTINCT p.id) as total_products,
+      COALESCE(SUM(i.quantity_on_hand), 0) as total_stock,
+      COUNT(DISTINCT i.warehouse_id) as warehouses,
+      0 as active_agents
+    FROM products p
+    LEFT JOIN inventory_stock i ON p.id = i.product_id
+    WHERE p.tenant_id = ?
+    
+    UNION ALL
+    
+    SELECT 
+      'customer_engagement' as metric_type,
+      COUNT(DISTINCT c.id) as total_customers,
+      COUNT(DISTINCT CASE WHEN o.order_date >= DATE('now', '-30 days') THEN c.id END) as active_customers,
+      COUNT(DISTINCT c.area_id) as coverage_areas,
+      0 as active_agents
+    FROM customers c
+    LEFT JOIN orders o ON c.id = o.customer_id
+    WHERE c.tenant_id = ?
+  `, [tenantId, tenantId, tenantId]);
+
+  res.json({
+    success: true,
+    data: {
+      metrics: advancedMetrics,
+      generated_at: new Date().toISOString(),
+      period: '30_days'
+    }
+  });
+}));
+
 // Simple test endpoints
 router.get('/test', asyncHandler(async (req, res) => {
   res.json({
