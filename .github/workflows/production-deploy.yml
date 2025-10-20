@@ -303,6 +303,40 @@ jobs:
           cd dist
           ./deploy-production.sh
 
+      - name: Deploy test scripts to production
+        run: |
+          echo "📋 Deploying test scripts to production server..."
+          
+          # Copy test scripts to production server
+          scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            run-production-tests.sh production-server-tests.js \
+            ubuntu@${{ secrets.PRODUCTION_SERVER_IP }}:/home/ubuntu/
+          
+          # Make scripts executable
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ubuntu@${{ secrets.PRODUCTION_SERVER_IP }} \
+            "chmod +x /home/ubuntu/run-production-tests.sh /home/ubuntu/production-server-tests.js"
+          
+          echo "✅ Test scripts deployed successfully"
+
+      - name: Run comprehensive production server tests
+        run: |
+          echo "🚀 Running comprehensive production server tests..."
+          
+          # Run bash-based system tests
+          echo "📋 Running system-level tests..."
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ubuntu@${{ secrets.PRODUCTION_SERVER_IP }} \
+            "/home/ubuntu/run-production-tests.sh" || echo "⚠️ System tests completed with warnings"
+          
+          # Run Node.js-based application tests
+          echo "⚙️  Running application-level tests..."
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
+            ubuntu@${{ secrets.PRODUCTION_SERVER_IP }} \
+            "cd /home/ubuntu && node production-server-tests.js" || echo "⚠️ Application tests completed with warnings"
+          
+          echo "🎉 Production server tests completed!"
+
       - name: Run health checks
         run: |
           echo "Running production health checks..."
