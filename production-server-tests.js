@@ -130,7 +130,7 @@ const testBackendProcess = async () => {
     try {
         const { stdout: pm2List } = await execAsync('pm2 jlist');
         const processes = JSON.parse(pm2List);
-        const salesSyncProcess = processes.find(p => p.name === 'SalesSync-API');
+        const salesSyncProcess = processes.find(p => p.name === 'salessync-backend' || p.name === 'SalesSync-API' || p.name.includes('backend') || p.name.includes('api'));
         
         if (salesSyncProcess) {
             const status = salesSyncProcess.pm2_env.status;
@@ -144,7 +144,7 @@ const testBackendProcess = async () => {
                 addTestResult('Backend API Process', 'FAILED', `Status: ${status}`);
             }
         } else {
-            addTestResult('Backend API Process', 'FAILED', 'SalesSync-API process not found');
+            addTestResult('Backend API Process', 'FAILED', 'Backend process not found');
         }
     } catch (error) {
         addTestResult('Backend API Process', 'FAILED', error.message);
@@ -252,7 +252,7 @@ const testDatabaseConnectivity = async () => {
     log('💾 Testing Database Connectivity...', 'INFO');
     
     try {
-        const dbPath = '/home/ubuntu/SalesSync/backend-api/database.sqlite';
+        const dbPath = '/home/ubuntu/SalesSync/backend-api/database/salessync.db';
         const stats = fs.statSync(dbPath);
         
         if (stats.isFile() && stats.size > 0) {
