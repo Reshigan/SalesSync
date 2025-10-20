@@ -50,9 +50,12 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          cd SalesSync
+          cd /var/www/SalesSync
           git pull origin main
           cd frontend-vite
           npm ci
           npm run build
+          cd ../backend-api
+          npm ci
+          pm2 restart salessync-backend
           pm2 restart salessync-frontend
