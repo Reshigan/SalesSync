@@ -67,6 +67,16 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
     
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend-vite
+        npm ci
+    
+    - name: Install Backend Dependencies
+      run: |
+        cd backend-api
+        npm ci
+    
     - name: Run npm audit (Frontend)
       run: |
         cd frontend-vite
