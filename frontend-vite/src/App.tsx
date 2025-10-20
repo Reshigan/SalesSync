@@ -25,6 +25,9 @@ import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
 // Trade Marketing Pages
 import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
 
+// Events Pages
+import EventsPage from './pages/events/EventsPage'
+
 // Campaign Pages
 import CampaignsPage from './pages/campaigns/CampaignsPage'
 
@@ -151,6 +154,9 @@ function App() {
 
             {/* Trade Marketing Routes */}
             <Route path="trade-marketing" element={<TradeMarketingPage />} />
+
+            {/* Events Routes */}
+            <Route path="events" element={<EventsPage />} />
 
             {/* Campaign Routes */}
             <Route path="campaigns" element={<CampaignsPage />} />

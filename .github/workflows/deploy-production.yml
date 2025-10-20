@@ -108,25 +108,28 @@ jobs:
               npm install --production
             fi
             
-            # Restart backend with PM2
+            # Restart backend with PM2 (port 3000)
             echo "🔄 Restarting backend..."
-            pm2 restart salessync-backend || pm2 start src/server.js --name salessync-backend
+            pm2 restart salessync-backend || pm2 start src/server.js --name salessync-backend --env production
             
-            # Install frontend dependencies if package.json changed
-            echo "📦 Checking frontend dependencies..."
-            cd ..
-            if git diff --name-only HEAD@{1} HEAD | grep -q "package.json"; then
-              echo "Installing frontend dependencies..."
-              npm install
-            fi
-            
-            # Build frontend
+            # Build frontend (Vite static build)
             echo "🏗️  Building frontend..."
+            cd ../frontend-vite
+            if git diff --name-only HEAD@{1} HEAD | grep -q "frontend-vite/package.json"; then
+              echo "Installing frontend dependencies..."
+              npm install --production
+            fi
             npm run build
             
-            # Restart frontend with PM2
-            echo "🔄 Restarting frontend..."
-            pm2 restart salessync-frontend || pm2 start npm --name salessync-frontend -- start
+            # Remove any old frontend PM2 process (we serve static files via nginx)
+            echo "🧹 Cleaning up old frontend processes..."
+            pm2 delete salessync-frontend 2>/dev/null || true
+            
+            # Update nginx configuration
+            echo "📝 Updating nginx configuration..."
+            sudo cp ../deployment/nginx/salessync.conf /etc/nginx/sites-available/
+            sudo ln -sf /etc/nginx/sites-available/salessync.conf /etc/nginx/sites-enabled/
+            sudo nginx -t && sudo systemctl reload nginx
             
             # Save PM2 configuration
             pm2 save

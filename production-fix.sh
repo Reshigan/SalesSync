@@ -1,3 +1,15 @@
+#!/bin/bash
+
+# Production Fix Script for SalesSync
+# This script fixes the deployment configuration and ensures proper service setup
+
+set -e
+
+echo "🔧 Starting SalesSync Production Fix..."
+
+# 1. Fix nginx configuration to route correctly
+echo "📝 Updating nginx configuration..."
+sudo tee /etc/nginx/sites-available/salessync.conf > /dev/null << 'EOF'
 server {
     listen 80;
     server_name ss.gonxt.tech;
@@ -19,46 +31,15 @@ server {
     # Hide server information
     server_tokens off;
 
-    # Security Headers (More permissive for Next.js)
+    # Security Headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
-    # More permissive CSP for Next.js
+    # CSP for React/Vite
     add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; font-src 'self' data: https:; connect-src 'self' https://ss.gonxt.tech wss://ss.gonxt.tech; frame-ancestors 'none'; object-src 'none';" always;
-
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-
-    # Security: Block access to sensitive files and directories
-    location ~ /\.env {
-        deny all;
-        access_log off;
-        log_not_found off;
-        return 404;
-    }
-    
-    location ~ /\.git {
-        deny all;
-        access_log off;
-        log_not_found off;
-        return 404;
-    }
-    
-    location ~ /\.(htaccess|htpasswd|ini|log|sh|sql|conf|config)$ {
-        deny all;
-        access_log off;
-        log_not_found off;
-        return 404;
-    }
-    
-    location ~ /(config|logs|tmp|cache|backup|backups)/.*\.(php|pl|py|jsp|asp|sh|cgi)$ {
-        deny all;
-        access_log off;
-        log_not_found off;
-        return 404;
-    }
 
     # Backend API (runs on port 3000)
     location /api/ {
@@ -96,7 +77,7 @@ server {
         }
     }
 
-    # Ollama AI Service
+    # Ollama AI Service (if needed)
     location /ollama/ {
         proxy_pass http://localhost:11434/;
         proxy_http_version 1.1;
@@ -110,3 +91,48 @@ server {
         proxy_read_timeout 86400;
     }
 }
+EOF
+
+# 2. Enable the site and reload nginx
+echo "🔄 Reloading nginx configuration..."
+sudo ln -sf /etc/nginx/sites-available/salessync.conf /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+
+# 3. Navigate to project directory
+cd /home/ubuntu/salessync
+
+# 4. Build the frontend
+echo "🏗️  Building frontend..."
+cd frontend-vite
+npm install --production
+npm run build
+
+# 5. Restart backend service (should be on port 3000)
+echo "🔄 Restarting backend service..."
+cd ../backend-api
+pm2 restart salessync-backend || pm2 start src/server.js --name salessync-backend --env production
+
+# 6. Remove any conflicting frontend PM2 process
+echo "🧹 Cleaning up PM2 processes..."
+pm2 delete salessync-frontend 2>/dev/null || true
+
+# 7. Save PM2 configuration
+pm2 save
+
+# 8. Check status
+echo "✅ Checking deployment status..."
+pm2 status
+
+# 9. Test the deployment
+echo "🏥 Testing deployment..."
+sleep 5
+curl -k https://ss.gonxt.tech/health | jq '.' || echo "Health check failed"
+
+echo "🎉 Production fix complete!"
+echo "🌐 Frontend: https://ss.gonxt.tech"
+echo "🔌 Backend API: https://ss.gonxt.tech/api/"
+echo "🏥 Health: https://ss.gonxt.tech/health"
+EOF
+
+chmod +x /home/ubuntu/salessync/production-fix.sh

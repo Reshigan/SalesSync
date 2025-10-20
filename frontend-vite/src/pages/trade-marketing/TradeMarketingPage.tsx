@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
-import { TrendingUp, Target, DollarSign, Users, BarChart3, Calendar } from 'lucide-react'
+import { TrendingUp, Target, DollarSign, Users, BarChart3, Calendar, Plus, Filter, Award, Zap, ShoppingCart, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
 
 interface TradeMarketingMetrics {
@@ -11,12 +11,16 @@ interface TradeMarketingMetrics {
   roi: number
   marketShare: number
   competitorAnalysis: number
+  channelPartners: number
+  tradeSpendEfficiency: number
+  volumeGrowth: number
+  priceRealization: number
 }
 
 interface Promotion {
   id: string
   name: string
-  type: 'discount' | 'rebate' | 'volume_incentive' | 'display_allowance'
+  type: 'discount' | 'rebate' | 'volume_incentive' | 'display_allowance' | 'trade_spend' | 'channel_program'
   status: 'active' | 'planned' | 'completed' | 'paused'
   startDate: string
   endDate: string
@@ -25,6 +29,31 @@ interface Promotion {
   participatingRetailers: number
   expectedROI: number
   actualROI?: number
+  category: string
+  channel: string
+  performance: {
+    volumeImpact: number
+    revenueImpact: number
+    marginImpact: number
+  }
+}
+
+interface ChannelPartner {
+  id: string
+  name: string
+  type: 'distributor' | 'retailer' | 'wholesaler'
+  tier: 'platinum' | 'gold' | 'silver' | 'bronze'
+  totalSpend: number
+  performance: number
+  programs: number
+}
+
+interface CompetitorAnalysis {
+  competitor: string
+  marketShare: number
+  priceIndex: number
+  promotionalActivity: number
+  trend: 'up' | 'down' | 'stable'
 }
 
 export default function TradeMarketingPage() {
@@ -34,11 +63,18 @@ export default function TradeMarketingPage() {
     retailerParticipation: 0,
     roi: 0,
     marketShare: 0,
-    competitorAnalysis: 0
+    competitorAnalysis: 0,
+    channelPartners: 0,
+    tradeSpendEfficiency: 0,
+    volumeGrowth: 0,
+    priceRealization: 0
   })
   
   const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [channelPartners, setChannelPartners] = useState<ChannelPartner[]>([])
+  const [competitorData, setCompetitorData] = useState<CompetitorAnalysis[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'overview' | 'promotions' | 'channels' | 'competitors'>('overview')
 
   useEffect(() => {
     fetchTradeMarketingData()
@@ -54,7 +90,11 @@ export default function TradeMarketingPage() {
         retailerParticipation: 85,
         roi: 3.2,
         marketShare: 24.5,
-        competitorAnalysis: 12
+        competitorAnalysis: 12,
+        channelPartners: 45,
+        tradeSpendEfficiency: 78.5,
+        volumeGrowth: 12.3,
+        priceRealization: 94.2
       })
 
       setPromotions([
@@ -69,7 +109,14 @@ export default function TradeMarketingPage() {
           spent: 32000,
           participatingRetailers: 45,
           expectedROI: 3.5,
-          actualROI: 3.8
+          actualROI: 3.8,
+          category: 'Beverages',
+          channel: 'Retail',
+          performance: {
+            volumeImpact: 15.2,
+            revenueImpact: 18.7,
+            marginImpact: 12.4
+          }
         },
         {
           id: '2',
@@ -82,7 +129,14 @@ export default function TradeMarketingPage() {
           spent: 18500,
           participatingRetailers: 28,
           expectedROI: 2.8,
-          actualROI: 3.1
+          actualROI: 3.1,
+          category: 'Snacks',
+          channel: 'Wholesale',
+          performance: {
+            volumeImpact: 22.1,
+            revenueImpact: 25.3,
+            marginImpact: 8.9
+          }
         },
         {
           id: '3',
@@ -94,7 +148,68 @@ export default function TradeMarketingPage() {
           budget: 35000,
           spent: 0,
           participatingRetailers: 0,
-          expectedROI: 4.2
+          expectedROI: 4.2,
+          category: 'Seasonal',
+          channel: 'Retail',
+          performance: {
+            volumeImpact: 0,
+            revenueImpact: 0,
+            marginImpact: 0
+          }
+        }
+      ])
+
+      setChannelPartners([
+        {
+          id: '1',
+          name: 'SuperMart Distribution',
+          type: 'distributor',
+          tier: 'platinum',
+          totalSpend: 45000,
+          performance: 92.5,
+          programs: 8
+        },
+        {
+          id: '2',
+          name: 'FreshMart Retail Chain',
+          type: 'retailer',
+          tier: 'gold',
+          totalSpend: 32000,
+          performance: 87.3,
+          programs: 5
+        },
+        {
+          id: '3',
+          name: 'QuickStop Wholesale',
+          type: 'wholesaler',
+          tier: 'silver',
+          totalSpend: 18500,
+          performance: 78.9,
+          programs: 3
+        }
+      ])
+
+      setCompetitorData([
+        {
+          competitor: 'CompetitorA',
+          marketShare: 28.5,
+          priceIndex: 102.3,
+          promotionalActivity: 85.2,
+          trend: 'up'
+        },
+        {
+          competitor: 'CompetitorB',
+          marketShare: 22.1,
+          priceIndex: 98.7,
+          promotionalActivity: 72.4,
+          trend: 'down'
+        },
+        {
+          competitor: 'CompetitorC',
+          marketShare: 18.9,
+          priceIndex: 105.1,
+          promotionalActivity: 91.8,
+          trend: 'stable'
         }
       ])
     } catch (error) {
@@ -150,8 +265,33 @@ export default function TradeMarketingPage() {
         </Button>
       </div>
 
+      {/* Navigation Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { id: 'overview', name: 'Overview', icon: BarChart3 },
+            { id: 'promotions', name: 'Promotions', icon: Target },
+            { id: 'channels', name: 'Channel Partners', icon: Users },
+            { id: 'competitors', name: 'Competitor Analysis', icon: TrendingUp }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`${
+                activeTab === tab.id
+                  ? 'border-primary-500 text-primary-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center`}
+            >
+              <tab.icon className="h-4 w-4 mr-2" />
+              {tab.name}
+            </button>
+          ))}
+        </nav>
+      </div>
+
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -159,8 +299,9 @@ export default function TradeMarketingPage() {
                 <DollarSign className="h-6 w-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Spend</p>
+                <p className="text-sm font-medium text-gray-600">Total Trade Spend</p>
                 <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalSpend)}</p>
+                <p className="text-xs text-green-600">+12.5% vs last quarter</p>
               </div>
             </div>
           </CardContent>
@@ -173,8 +314,9 @@ export default function TradeMarketingPage() {
                 <Target className="h-6 w-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Promotions</p>
+                <p className="text-sm font-medium text-gray-600">Active Programs</p>
                 <p className="text-2xl font-bold text-gray-900">{metrics.activePromotions}</p>
+                <p className="text-xs text-blue-600">{metrics.channelPartners} partners</p>
               </div>
             </div>
           </CardContent>
@@ -184,11 +326,12 @@ export default function TradeMarketingPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-purple-600" />
+                <TrendingUp className="h-6 w-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Retailer Participation</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.retailerParticipation}%</p>
+                <p className="text-sm font-medium text-gray-600">Trade ROI</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.roi}x</p>
+                <p className="text-xs text-green-600">Efficiency: {metrics.tradeSpendEfficiency}%</p>
               </div>
             </div>
           </CardContent>
@@ -198,11 +341,12 @@ export default function TradeMarketingPage() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-orange-600" />
+                <Zap className="h-6 w-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Average ROI</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.roi}x</p>
+                <p className="text-sm font-medium text-gray-600">Volume Growth</p>
+                <p className="text-2xl font-bold text-gray-900">{metrics.volumeGrowth}%</p>
+                <p className="text-xs text-gray-600">Price realization: {metrics.priceRealization}%</p>
               </div>
             </div>
           </CardContent>
@@ -217,130 +361,326 @@ export default function TradeMarketingPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Market Share</p>
                 <p className="text-2xl font-bold text-gray-900">{metrics.marketShare}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Competitor Analysis</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.competitorAnalysis}</p>
+                <p className="text-xs text-green-600">+2.1% vs competitors</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Promotions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Promotions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Promotion Details
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Budget Utilization
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Retailers
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ROI
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {promotions.map((promotion) => (
-                  <tr key={promotion.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(promotion.startDate).toLocaleDateString()} - {new Date(promotion.endDate).toLocaleDateString()}
-                        </div>
+      {/* Tab Content */}
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Top Performing Programs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {promotions.slice(0, 3).map((promotion) => (
+                  <div key={promotion.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <div className="font-medium text-gray-900">{promotion.name}</div>
+                      <div className="text-sm text-gray-500">{promotion.category} • {promotion.channel}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-green-600">
+                        {promotion.actualROI ? `${promotion.actualROI}x ROI` : `${promotion.expectedROI}x Expected`}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(promotion.type)}`}>
-                        {promotion.type.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
-                        {promotion.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatCurrency(promotion.spent)} / {formatCurrency(promotion.budget)}
+                      <div className="text-sm text-gray-500">
+                        {formatCurrency(promotion.spent)} spent
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            getBudgetUtilization(promotion.spent, promotion.budget) > 80 
-                              ? 'bg-red-600' 
-                              : getBudgetUtilization(promotion.spent, promotion.budget) > 60 
-                                ? 'bg-yellow-600' 
-                                : 'bg-green-600'
-                          }`}
-                          style={{ width: `${getBudgetUtilization(promotion.spent, promotion.budget)}%` }}
-                        ></div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {getBudgetUtilization(promotion.spent, promotion.budget)}% utilized
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {promotion.participatingRetailers}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        Expected: {promotion.expectedROI}x
-                      </div>
-                      {promotion.actualROI && (
-                        <div className={`text-sm ${promotion.actualROI >= promotion.expectedROI ? 'text-green-600' : 'text-red-600'}`}>
-                          Actual: {promotion.actualROI}x
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
-                          View Details
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Channel Performance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {channelPartners.map((partner) => (
+                  <div key={partner.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center">
+                      <div className={`w-3 h-3 rounded-full mr-3 ${
+                        partner.tier === 'platinum' ? 'bg-purple-500' :
+                        partner.tier === 'gold' ? 'bg-yellow-500' :
+                        partner.tier === 'silver' ? 'bg-gray-400' : 'bg-orange-500'
+                      }`}></div>
+                      <div>
+                        <div className="font-medium text-gray-900">{partner.name}</div>
+                        <div className="text-sm text-gray-500 capitalize">{partner.type} • {partner.tier}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-blue-600">{partner.performance}%</div>
+                      <div className="text-sm text-gray-500">{partner.programs} programs</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {activeTab === 'promotions' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Trade Marketing Programs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Program Details
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type & Channel
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Budget & Spend
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Performance Impact
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ROI
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {promotions.map((promotion) => (
+                    <tr key={promotion.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(promotion.startDate).toLocaleDateString()} - {new Date(promotion.endDate).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">{promotion.category}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(promotion.type)}`}>
+                          {promotion.type.replace('_', ' ')}
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">{promotion.channel}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
+                          {promotion.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {formatCurrency(promotion.spent)} / {formatCurrency(promotion.budget)}
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              getBudgetUtilization(promotion.spent, promotion.budget) > 80 
+                                ? 'bg-red-600' 
+                                : getBudgetUtilization(promotion.spent, promotion.budget) > 60 
+                                  ? 'bg-yellow-600' 
+                                  : 'bg-green-600'
+                            }`}
+                            style={{ width: `${getBudgetUtilization(promotion.spent, promotion.budget)}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {getBudgetUtilization(promotion.spent, promotion.budget)}% utilized
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-xs text-gray-600">
+                          <div>Volume: +{promotion.performance.volumeImpact}%</div>
+                          <div>Revenue: +{promotion.performance.revenueImpact}%</div>
+                          <div>Margin: +{promotion.performance.marginImpact}%</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          Expected: {promotion.expectedROI}x
+                        </div>
+                        {promotion.actualROI && (
+                          <div className={`text-sm ${promotion.actualROI >= promotion.expectedROI ? 'text-green-600' : 'text-red-600'}`}>
+                            Actual: {promotion.actualROI}x
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'channels' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Channel Partner Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {channelPartners.map((partner) => (
+                <Card key={partner.id} className="border-l-4 border-l-blue-500">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <div className={`w-4 h-4 rounded-full mr-3 ${
+                          partner.tier === 'platinum' ? 'bg-purple-500' :
+                          partner.tier === 'gold' ? 'bg-yellow-500' :
+                          partner.tier === 'silver' ? 'bg-gray-400' : 'bg-orange-500'
+                        }`}></div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{partner.name}</h3>
+                          <p className="text-sm text-gray-500 capitalize">{partner.type}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${
+                        partner.tier === 'platinum' ? 'text-purple-600 bg-purple-100' :
+                        partner.tier === 'gold' ? 'text-yellow-600 bg-yellow-100' :
+                        partner.tier === 'silver' ? 'text-gray-600 bg-gray-100' : 'text-orange-600 bg-orange-100'
+                      }`}>
+                        {partner.tier}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Total Spend</span>
+                        <span className="font-medium">{formatCurrency(partner.totalSpend)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Performance</span>
+                        <span className="font-medium text-green-600">{partner.performance}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Active Programs</span>
+                        <span className="font-medium">{partner.programs}</span>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Manage Programs
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'competitors' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Competitive Intelligence</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Competitor
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Market Share
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price Index
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Promotional Activity
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Trend
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {competitorData.map((competitor, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{competitor.competitor}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{competitor.marketShare}%</div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className="h-2 rounded-full bg-blue-600"
+                            style={{ width: `${(competitor.marketShare / 35) * 100}%` }}
+                          ></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`text-sm ${competitor.priceIndex > 100 ? 'text-red-600' : 'text-green-600'}`}>
+                          {competitor.priceIndex}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{competitor.promotionalActivity}%</div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                          <div 
+                            className="h-2 rounded-full bg-orange-600"
+                            style={{ width: `${competitor.promotionalActivity}%` }}
+                          ></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
+                          competitor.trend === 'up' ? 'text-green-600 bg-green-100' :
+                          competitor.trend === 'down' ? 'text-red-600 bg-red-100' :
+                          'text-gray-600 bg-gray-100'
+                        }`}>
+                          {competitor.trend === 'up' ? <TrendingUp className="h-3 w-3 mr-1" /> :
+                           competitor.trend === 'down' ? <TrendingDown className="h-3 w-3 mr-1" /> :
+                           <BarChart3 className="h-3 w-3 mr-1" />}
+                          {competitor.trend}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <Button variant="outline" size="sm">
+                          View Analysis
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
