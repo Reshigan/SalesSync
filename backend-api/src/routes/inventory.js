@@ -18,7 +18,7 @@ router.get('/', asyncHandler(async (req, res) => {
       i.quantity_on_hand,
       i.quantity_reserved,
       i.cost_price,
-      i.last_updated
+      i.updated_at as last_updated
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
