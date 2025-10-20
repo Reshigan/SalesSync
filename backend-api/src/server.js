@@ -271,6 +271,7 @@ async function startServer() {
     const integrationsRoutes = require('./routes/integrations');
     const mobileRoutes = require('./routes/mobile');
     const settingsRoutes = require('./routes/settings');
+    const workflowRoutes = require('./routes/workflows');
     
     // New comprehensive API routes
     const promotionsEventsRoutes = require('./routes/promotions-events');
@@ -338,6 +339,7 @@ async function startServer() {
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
     app.use('/api/settings', authTenantMiddleware, settingsRoutes);
+    app.use('/api/workflows', authTenantMiddleware, workflowRoutes);
     
     // New comprehensive API routes
     app.use('/api/promotions-events', authTenantMiddleware, promotionsEventsRoutes);

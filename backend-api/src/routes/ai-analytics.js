@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../database/init');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get AI dashboard overview
@@ -9,7 +9,7 @@ router.get('/dashboard', requireFunction('analytics', 'view'), async (req, res) 
     const { period = '30' } = req.query; // days
     
     // Active AI models
-    const activeModels = await db.all(`
+    const activeModels = await getQuery(`
       SELECT model_type, COUNT(*) as count, AVG(
         CASE 
           WHEN json_extract(performance_metrics, '$.accuracy') IS NOT NULL 
@@ -23,7 +23,7 @@ router.get('/dashboard', requireFunction('analytics', 'view'), async (req, res) 
     `, [req.user.tenantId]);
     
     // Recent alerts
-    const recentAlerts = await db.all(`
+    const recentAlerts = await getQuery(`
       SELECT alert_type, severity, COUNT(*) as count
       FROM ai_alerts 
       WHERE tenant_id = ? AND alert_date >= date('now', '-${period} days')
@@ -39,7 +39,7 @@ router.get('/dashboard', requireFunction('analytics', 'view'), async (req, res) 
     `, [req.user.tenantId]);
     
     // Forecast accuracy
-    const forecastAccuracy = await db.get(`
+    const forecastAccuracy = await getOneQuery(`
       SELECT 
         AVG(accuracy_score) as avg_accuracy,
         COUNT(*) as total_forecasts,
@@ -50,7 +50,7 @@ router.get('/dashboard', requireFunction('analytics', 'view'), async (req, res) 
     `, [req.user.tenantId]);
     
     // Top insights
-    const topInsights = await db.all(`
+    const topInsights = await getQuery(`
       SELECT 
         ci.insight_type,
         COUNT(*) as count,
@@ -137,7 +137,7 @@ router.get('/forecasts', requireFunction('analytics', 'view'), async (req, res) 
     query += ' ORDER BY sf.forecast_date DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
     
-    const forecasts = await db.all(query, params);
+    const forecasts = await getQuery(query, params);
     
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM sales_forecasts WHERE tenant_id = ?';
@@ -163,7 +163,7 @@ router.get('/forecasts', requireFunction('analytics', 'view'), async (req, res) 
       countParams.push(start_date, end_date);
     }
     
-    const { total } = await db.get(countQuery, countParams);
+    const { total } = await getOneQuery(countQuery, countParams);
     
     res.json({
       success: true,
@@ -197,7 +197,7 @@ router.post('/forecasts/generate', requireFunction('analytics', 'create'), async
     }
     
     // Get or create AI model for this forecast type
-    let model = await db.get(`
+    let model = await getOneQuery(`
       SELECT * FROM ai_models 
       WHERE tenant_id = ? AND model_type = 'sales_forecast' AND status = 'active'
       ORDER BY last_trained_at DESC LIMIT 1
@@ -206,7 +206,7 @@ router.post('/forecasts/generate', requireFunction('analytics', 'create'), async
     if (!model) {
       // Create a basic model
       const modelId = require('crypto').randomBytes(16).toString('hex');
-      await db.run(`
+      await runQuery(`
         INSERT INTO ai_models (
           id, tenant_id, model_name, model_type, model_version, algorithm,
           performance_metrics, last_trained_at
@@ -222,7 +222,7 @@ router.post('/forecasts/generate', requireFunction('analytics', 'create'), async
         new Date().toISOString()
       ]);
       
-      model = await db.get('SELECT * FROM ai_models WHERE id = ?', [modelId]);
+      model = await getOneQuery('SELECT * FROM ai_models WHERE id = ?', [modelId]);
     }
     
     // Get historical data for forecasting
@@ -236,7 +236,7 @@ router.post('/forecasts/generate', requireFunction('analytics', 'create'), async
     for (const forecast of forecasts) {
       const forecastId = require('crypto').randomBytes(16).toString('hex');
       
-      await db.run(`
+      await runQuery(`
         INSERT INTO sales_forecasts (
           id, tenant_id, model_id, forecast_type, target_id, forecast_period,
           forecast_date, predicted_value, confidence_interval_lower, 
@@ -305,7 +305,7 @@ router.get('/insights/customers', requireFunction('analytics', 'view'), async (r
     
     query += ' ORDER BY ci.generated_at DESC LIMIT 50';
     
-    const insights = await db.all(query, params);
+    const insights = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -342,7 +342,7 @@ router.post('/insights/customers/generate', requireFunction('analytics', 'create
       if (insight) {
         const insightId = require('crypto').randomBytes(16).toString('hex');
         
-        await db.run(`
+        await runQuery(`
           INSERT INTO customer_insights (
             id, tenant_id, customer_id, insight_type, insight_value,
             insight_category, risk_level, recommended_actions, key_indicators,
@@ -414,7 +414,7 @@ router.get('/recommendations/products', requireFunction('analytics', 'view'), as
     
     query += ' ORDER BY pr.recommendation_score DESC LIMIT 50';
     
-    const recommendations = await db.all(query, params);
+    const recommendations = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -461,7 +461,7 @@ router.get('/alerts', requireFunction('analytics', 'view'), async (req, res) => 
     
     query += ' ORDER BY aa.alert_date DESC LIMIT 100';
     
-    const alerts = await db.all(query, params);
+    const alerts = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -480,7 +480,7 @@ router.get('/alerts', requireFunction('analytics', 'view'), async (req, res) => 
 // Acknowledge alert
 router.put('/alerts/:id/acknowledge', requireFunction('analytics', 'edit'), async (req, res) => {
   try {
-    await db.run(`
+    await runQuery(`
       UPDATE ai_alerts 
       SET acknowledged_at = CURRENT_TIMESTAMP, acknowledged_by = ?
       WHERE id = ? AND tenant_id = ?
@@ -528,7 +528,7 @@ router.get('/trends', requireFunction('analytics', 'view'), async (req, res) => 
     
     query += ' ORDER BY mt.detected_at DESC LIMIT 50';
     
-    const trends = await db.all(query, params);
+    const trends = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -585,7 +585,7 @@ router.get('/benchmarks', requireFunction('analytics', 'view'), async (req, res)
     
     query += ' ORDER BY pb.calculated_at DESC LIMIT 100';
     
-    const benchmarks = await db.all(query, params);
+    const benchmarks = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -624,7 +624,7 @@ router.get('/predictions', requireFunction('analytics', 'view'), async (req, res
     query += ' ORDER BY sf.forecast_date DESC LIMIT ?';
     params.push(parseInt(periods));
     
-    const predictions = await db.all(query, params);
+    const predictions = await getQuery(query, params);
     
     // If no predictions exist, generate some basic ones
     if (predictions.length === 0) {

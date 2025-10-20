@@ -6,17 +6,17 @@ FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy frontend package files
-COPY frontend/package*.json ./
+COPY frontend-vite/package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 # Copy frontend source
-COPY frontend/ ./
+COPY frontend-vite/ ./
 
 # Build frontend
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV VITE_API_URL=http://localhost:12001/api
 RUN npm run build
 
 # Stage 2: Build Backend
@@ -61,8 +61,7 @@ WORKDIR /app
 COPY --from=backend-builder --chown=salessync:nodejs /app/backend ./backend-api
 
 # Copy frontend build from builder
-COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/.next ./frontend/.next
-COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/public ./frontend/public
+COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/dist ./frontend/dist
 COPY --from=frontend-builder --chown=salessync:nodejs /app/frontend/package*.json ./frontend/
 
 # Install frontend production dependencies
@@ -136,8 +135,8 @@ module.exports = {
     },
     {
       name: 'salessync-frontend',
-      script: 'npm',
-      args: 'start',
+      script: 'node',
+      args: '../frontend-vite/server.cjs',
       cwd: './frontend',
       instances: 1,
       env: {
