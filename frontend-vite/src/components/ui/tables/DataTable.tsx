@@ -19,7 +19,7 @@ interface DataTableProps {
   pageSize?: number
 }
 
-export default function DataTable({
+function DataTable({
   data,
   columns,
   title,
@@ -278,3 +278,6 @@ export default function DataTable({
     </div>
   )
 }
+
+export { DataTable }
+export default DataTable

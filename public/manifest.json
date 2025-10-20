@@ -58,7 +58,41 @@
       "purpose": "maskable any"
     }
   ],
-  "categories": ["business", "productivity"],
-  "lang": "en",
-  "dir": "ltr"
+  "categories": ["business", "productivity", "finance"],
+  "lang": "en-ZA",
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "New Visit",
+      "short_name": "Visit",
+      "description": "Start a new customer visit",
+      "url": "/visits/new",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard", 
+      "description": "View sales dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Customers",
+      "short_name": "Customers",
+      "description": "Manage customers",
+      "url": "/customers", 
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Inventory",
+      "short_name": "Inventory",
+      "description": "Check inventory levels", 
+      "url": "/inventory",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

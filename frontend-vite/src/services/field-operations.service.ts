@@ -1,0 +1,587 @@
+import { ApiService } from './api.service'
+
+export interface FieldAgent {
+  id: string
+  tenant_id: string
+  user_id: string
+  employee_code: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  status: 'active' | 'inactive' | 'on_leave' | 'terminated'
+  role: 'field_agent' | 'supervisor' | 'team_lead'
+  team_id?: string
+  team_name?: string
+  supervisor_id?: string
+  supervisor_name?: string
+  hire_date: string
+  territory: Territory
+  performance_metrics: AgentPerformanceMetrics
+  current_location?: Location
+  last_activity: string
+  created_at: string
+}
+
+export interface Territory {
+  id: string
+  name: string
+  code: string
+  boundaries: GeoBoundary[]
+  customers: number
+  potential_customers: number
+  area_size: number
+}
+
+export interface GeoBoundary {
+  latitude: number
+  longitude: number
+}
+
+export interface Location {
+  latitude: number
+  longitude: number
+  address?: string
+  timestamp: string
+}
+
+export interface AgentPerformanceMetrics {
+  total_visits: number
+  successful_visits: number
+  visit_success_rate: number
+  total_sales: number
+  total_revenue: number
+  average_order_value: number
+  customer_acquisition: number
+  customer_retention_rate: number
+  productivity_score: number
+  last_updated: string
+}
+
+export interface FieldTask {
+  id: string
+  tenant_id: string
+  title: string
+  description: string
+  type: 'visit' | 'delivery' | 'collection' | 'survey' | 'promotion' | 'maintenance' | 'other'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
+  assigned_to: string
+  assigned_agent_name: string
+  customer_id?: string
+  customer_name?: string
+  location: Location
+  scheduled_date: string
+  due_date: string
+  estimated_duration: number
+  actual_duration?: number
+  completion_notes?: string
+  attachments: TaskAttachment[]
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface TaskAttachment {
+  id: string
+  name: string
+  type: 'image' | 'document' | 'audio' | 'video'
+  url: string
+  file_size: number
+  uploaded_at: string
+}
+
+export interface FieldVisit {
+  id: string
+  tenant_id: string
+  agent_id: string
+  agent_name: string
+  customer_id: string
+  customer_name: string
+  visit_type: 'sales' | 'service' | 'collection' | 'survey' | 'promotion' | 'relationship'
+  purpose: string
+  status: 'planned' | 'in_progress' | 'completed' | 'cancelled'
+  scheduled_date: string
+  actual_start_time?: string
+  actual_end_time?: string
+  duration_minutes?: number
+  location: Location
+  check_in_location?: Location
+  check_out_location?: Location
+  outcomes: VisitOutcome[]
+  notes?: string
+  photos: string[]
+  created_at: string
+}
+
+export interface VisitOutcome {
+  type: 'sale' | 'order' | 'payment' | 'complaint' | 'feedback' | 'survey' | 'other'
+  description: string
+  value?: number
+  reference_id?: string
+}
+
+export interface TeamPerformance {
+  team_id: string
+  team_name: string
+  supervisor_id: string
+  supervisor_name: string
+  agent_count: number
+  total_visits: number
+  successful_visits: number
+  total_sales: number
+  total_revenue: number
+  average_performance_score: number
+  top_performers: AgentPerformance[]
+  performance_trend: PerformanceTrend[]
+}
+
+export interface AgentPerformance {
+  agent_id: string
+  agent_name: string
+  visits: number
+  sales: number
+  revenue: number
+  performance_score: number
+}
+
+export interface PerformanceTrend {
+  date: string
+  visits: number
+  sales: number
+  revenue: number
+  performance_score: number
+}
+
+export interface FieldOperationsStats {
+  total_agents: number
+  active_agents: number
+  total_tasks: number
+  pending_tasks: number
+  completed_tasks: number
+  total_visits: number
+  successful_visits: number
+  visit_success_rate: number
+  total_revenue: number
+  average_performance_score: number
+}
+
+export interface AgentFilter {
+  search?: string
+  status?: string
+  role?: string
+  team_id?: string
+  supervisor_id?: string
+  territory_id?: string
+  page?: number
+  limit?: number
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+export interface TaskFilter {
+  search?: string
+  type?: string
+  priority?: string
+  status?: string
+  assigned_to?: string
+  customer_id?: string
+  start_date?: string
+  end_date?: string
+  page?: number
+  limit?: number
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+export interface VisitFilter {
+  search?: string
+  agent_id?: string
+  customer_id?: string
+  visit_type?: string
+  status?: string
+  start_date?: string
+  end_date?: string
+  page?: number
+  limit?: number
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+class FieldOperationsService extends ApiService {
+  private baseUrl = '/field-operations'
+
+  // Agent Management
+  async getFieldAgents(filter: AgentFilter = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/agents?${params.toString()}`)
+    return response.data
+  }
+
+  async getFieldAgent(id: string) {
+    const response = await this.get(`${this.baseUrl}/agents/${id}`)
+    return response.data
+  }
+
+  async createFieldAgent(agent: Partial<FieldAgent>) {
+    const response = await this.post(`${this.baseUrl}/agents`, agent)
+    return response.data
+  }
+
+  async updateFieldAgent(id: string, agent: Partial<FieldAgent>) {
+    const response = await this.put(`${this.baseUrl}/agents/${id}`, agent)
+    return response.data
+  }
+
+  async deleteFieldAgent(id: string) {
+    const response = await this.delete(`${this.baseUrl}/agents/${id}`)
+    return response.data
+  }
+
+  async getAgentPerformance(agentId: string, startDate?: string, endDate?: string) {
+    const params = new URLSearchParams()
+    if (startDate) params.append('start_date', startDate)
+    if (endDate) params.append('end_date', endDate)
+
+    const response = await this.get(`${this.baseUrl}/agents/${agentId}/performance?${params.toString()}`)
+    return response.data
+  }
+
+  async getAgentLocation(agentId: string) {
+    const response = await this.get(`${this.baseUrl}/agents/${agentId}/location`)
+    return response.data
+  }
+
+  async updateAgentLocation(agentId: string, location: Location) {
+    const response = await this.post(`${this.baseUrl}/agents/${agentId}/location`, location)
+    return response.data
+  }
+
+  async getAgentLocationHistory(agentId: string, startDate?: string, endDate?: string) {
+    const params = new URLSearchParams()
+    if (startDate) params.append('start_date', startDate)
+    if (endDate) params.append('end_date', endDate)
+
+    const response = await this.get(`${this.baseUrl}/agents/${agentId}/location-history?${params.toString()}`)
+    return response.data
+  }
+
+  // Task Management
+  async getFieldTasks(filter: TaskFilter = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/tasks?${params.toString()}`)
+    return response.data
+  }
+
+  async getFieldTask(id: string) {
+    const response = await this.get(`${this.baseUrl}/tasks/${id}`)
+    return response.data
+  }
+
+  async createFieldTask(task: Partial<FieldTask>) {
+    const response = await this.post(`${this.baseUrl}/tasks`, task)
+    return response.data
+  }
+
+  async updateFieldTask(id: string, task: Partial<FieldTask>) {
+    const response = await this.put(`${this.baseUrl}/tasks/${id}`, task)
+    return response.data
+  }
+
+  async deleteFieldTask(id: string) {
+    const response = await this.delete(`${this.baseUrl}/tasks/${id}`)
+    return response.data
+  }
+
+  async assignTask(taskId: string, agentId: string) {
+    const response = await this.post(`${this.baseUrl}/tasks/${taskId}/assign`, { agent_id: agentId })
+    return response.data
+  }
+
+  async startTask(taskId: string) {
+    const response = await this.post(`${this.baseUrl}/tasks/${taskId}/start`)
+    return response.data
+  }
+
+  async completeTask(taskId: string, notes?: string, attachments?: File[]) {
+    const formData = new FormData()
+    if (notes) formData.append('notes', notes)
+    if (attachments) {
+      attachments.forEach((file, index) => {
+        formData.append(`attachment_${index}`, file)
+      })
+    }
+
+    const response = await this.post(`${this.baseUrl}/tasks/${taskId}/complete`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  }
+
+  async cancelTask(taskId: string, reason?: string) {
+    const response = await this.post(`${this.baseUrl}/tasks/${taskId}/cancel`, { reason })
+    return response.data
+  }
+
+  // Visit Management
+  async getFieldVisits(filter: VisitFilter = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/visits?${params.toString()}`)
+    return response.data
+  }
+
+  async getFieldVisit(id: string) {
+    const response = await this.get(`${this.baseUrl}/visits/${id}`)
+    return response.data
+  }
+
+  async createFieldVisit(visit: Partial<FieldVisit>) {
+    const response = await this.post(`${this.baseUrl}/visits`, visit)
+    return response.data
+  }
+
+  async updateFieldVisit(id: string, visit: Partial<FieldVisit>) {
+    const response = await this.put(`${this.baseUrl}/visits/${id}`, visit)
+    return response.data
+  }
+
+  async checkInVisit(visitId: string, location: Location) {
+    const response = await this.post(`${this.baseUrl}/visits/${visitId}/check-in`, { location })
+    return response.data
+  }
+
+  async checkOutVisit(visitId: string, location: Location, outcomes: VisitOutcome[], notes?: string, photos?: File[]) {
+    const formData = new FormData()
+    formData.append('location', JSON.stringify(location))
+    formData.append('outcomes', JSON.stringify(outcomes))
+    if (notes) formData.append('notes', notes)
+    if (photos) {
+      photos.forEach((file, index) => {
+        formData.append(`photo_${index}`, file)
+      })
+    }
+
+    const response = await this.post(`${this.baseUrl}/visits/${visitId}/check-out`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  }
+
+  async cancelVisit(visitId: string, reason?: string) {
+    const response = await this.post(`${this.baseUrl}/visits/${visitId}/cancel`, { reason })
+    return response.data
+  }
+
+  // Team Management
+  async getTeamPerformance(teamId?: string, startDate?: string, endDate?: string) {
+    const params = new URLSearchParams()
+    if (teamId) params.append('team_id', teamId)
+    if (startDate) params.append('start_date', startDate)
+    if (endDate) params.append('end_date', endDate)
+
+    const response = await this.get(`${this.baseUrl}/teams/performance?${params.toString()}`)
+    return response.data
+  }
+
+  async getTeamStats(teamId?: string) {
+    const params = new URLSearchParams()
+    if (teamId) params.append('team_id', teamId)
+
+    const response = await this.get(`${this.baseUrl}/teams/stats?${params.toString()}`)
+    return response.data
+  }
+
+  // Territory Management
+  async getTerritories() {
+    const response = await this.get(`${this.baseUrl}/territories`)
+    return response.data
+  }
+
+  async getTerritory(id: string) {
+    const response = await this.get(`${this.baseUrl}/territories/${id}`)
+    return response.data
+  }
+
+  async createTerritory(territory: Partial<Territory>) {
+    const response = await this.post(`${this.baseUrl}/territories`, territory)
+    return response.data
+  }
+
+  async updateTerritory(id: string, territory: Partial<Territory>) {
+    const response = await this.put(`${this.baseUrl}/territories/${id}`, territory)
+    return response.data
+  }
+
+  async deleteTerritory(id: string) {
+    const response = await this.delete(`${this.baseUrl}/territories/${id}`)
+    return response.data
+  }
+
+  // Analytics & Reporting
+  async getFieldOperationsStats(dateRange?: any) {
+    const params = new URLSearchParams()
+    if (dateRange?.start_date) params.append('start_date', dateRange.start_date)
+    if (dateRange?.end_date) params.append('end_date', dateRange.end_date)
+
+    const response = await this.get(`${this.baseUrl}/stats?${params.toString()}`)
+    return response.data
+  }
+
+  async getPerformanceAnalytics(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/analytics/performance?${params.toString()}`)
+    return response.data
+  }
+
+  async getProductivityAnalytics(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/analytics/productivity?${params.toString()}`)
+    return response.data
+  }
+
+  async exportFieldOperationsReport(format: 'pdf' | 'excel' = 'pdf', filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+    params.append('format', format)
+
+    const response = await this.get(`${this.baseUrl}/reports/operations?${params.toString()}`, {
+      responseType: 'blob'
+    })
+    
+    const blob = new Blob([response.data])
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `field-operations-report-${Date.now()}.${format}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
+
+  // Real-time Operations
+  async getLiveAgentLocations() {
+    const response = await this.get(`${this.baseUrl}/live/agent-locations`)
+    return response.data
+  }
+
+  async getActiveVisits() {
+    const response = await this.get(`${this.baseUrl}/live/active-visits`)
+    return response.data
+  }
+
+  async getPendingTasks() {
+    const response = await this.get(`${this.baseUrl}/live/pending-tasks`)
+    return response.data
+  }
+
+  async getRealtimeMetrics() {
+    const response = await this.get(`${this.baseUrl}/live/metrics`)
+    return response.data
+  }
+
+  // Bulk Operations
+  async bulkAssignTasks(taskIds: string[], agentId: string) {
+    const response = await this.post(`${this.baseUrl}/tasks/bulk-assign`, {
+      task_ids: taskIds,
+      agent_id: agentId
+    })
+    return response.data
+  }
+
+  async bulkUpdateTaskStatus(taskIds: string[], status: string) {
+    const response = await this.post(`${this.baseUrl}/tasks/bulk-update-status`, {
+      task_ids: taskIds,
+      status
+    })
+    return response.data
+  }
+
+  // Additional methods for missing functionality
+  async getFieldOperationsAnalytics(dateRange: any) {
+    const params = new URLSearchParams()
+    if (dateRange.start_date) params.append('start_date', dateRange.start_date)
+    if (dateRange.end_date) params.append('end_date', dateRange.end_date)
+
+    const response = await this.get(`${this.baseUrl}/analytics?${params.toString()}`)
+    return response.data
+  }
+
+  async getFieldOperationsTrends(dateRange: any) {
+    const params = new URLSearchParams()
+    if (dateRange.start_date) params.append('start_date', dateRange.start_date)
+    if (dateRange.end_date) params.append('end_date', dateRange.end_date)
+
+    const response = await this.get(`${this.baseUrl}/trends?${params.toString()}`)
+    return response.data
+  }
+
+  async getRouteOptimization(agentId: string, date: string) {
+    const response = await this.get(`${this.baseUrl}/routes/optimize?agent_id=${agentId}&date=${date}`)
+    return response.data
+  }
+
+  async getFieldInsights(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/insights?${params.toString()}`)
+    return response.data
+  }
+
+  async getOperationalMetrics(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/metrics?${params.toString()}`)
+    return response.data
+  }
+}
+
+export const fieldOperationsService = new FieldOperationsService()

@@ -96,6 +96,7 @@ export const PERMISSIONS = {
   
   // Van Sales
   VIEW_VAN_SALES: 'view_van_sales',
+  MANAGE_VAN_SALES: 'manage_van_sales',
   MANAGE_ROUTES: 'manage_routes',
   VIEW_INVENTORY: 'view_inventory',
   MANAGE_TRANSACTIONS: 'manage_transactions',
@@ -103,6 +104,7 @@ export const PERMISSIONS = {
   
   // Trade Marketing
   VIEW_TRADE_MARKETING: 'view_trade_marketing',
+  VIEW_PROMOTIONS: 'view_promotions',
   MANAGE_PROMOTIONS: 'manage_promotions',
   MANAGE_INCENTIVES: 'manage_incentives',
   VIEW_MARKET_ANALYSIS: 'view_market_analysis',
@@ -117,9 +119,22 @@ export const PERMISSIONS = {
   
   // Field operations
   VIEW_FIELD_OPERATIONS: 'view_field_operations',
+  MANAGE_FIELD_AGENTS: 'manage_field_agents',
   MANAGE_BOARD_PLACEMENTS: 'manage_board_placements',
   MANAGE_PRODUCT_DISTRIBUTION: 'manage_product_distribution',
   VIEW_AGENT_LOCATIONS: 'view_agent_locations',
+  
+  // KYC Management
+  VIEW_KYC: 'view_kyc',
+  MANAGE_KYC: 'manage_kyc',
+  VIEW_KYC_REPORTS: 'view_kyc_reports',
+  
+  // Surveys
+  VIEW_SURVEYS: 'view_surveys',
+  MANAGE_SURVEYS: 'manage_surveys',
+  
+  // Inventory Reports
+  VIEW_INVENTORY_REPORTS: 'view_inventory_reports',
   
   // Analytics and reporting
   VIEW_ANALYTICS: 'view_analytics',

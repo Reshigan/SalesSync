@@ -149,17 +149,15 @@ async function seedDemoData() {
     // Start transaction
     db.exec('BEGIN TRANSACTION');
 
-    // 1. Create Tenant
-    console.log('1️⃣  Creating tenant...');
-    const tenantResult = db.prepare(`
-      INSERT INTO tenants (code, name, status, created_at)
-      VALUES (?, ?, 'active', datetime('now'))
-    `).run(TENANT_CODE, TENANT_NAME);
-    const tenantId = tenantResult.lastInsertRowid;
-    console.log(`   ✅ Tenant created: ${TENANT_NAME} (ID: ${tenantId})`);
+    // 1. Use existing tenant
+    console.log('1️⃣  Using existing tenant...');
+    const existingTenant = db.prepare(`SELECT id FROM tenants LIMIT 1`).get();
+    const tenantId = existingTenant.id;
+    console.log(`   ✅ Using tenant ID: ${tenantId}`);
 
-    // 2. Create Users
+    // 2. Clear existing users and create new ones
     console.log('\n2️⃣  Creating users...');
+    db.prepare(`DELETE FROM users WHERE tenant_id = ?`).run(tenantId);
     const hashedPassword = await bcrypt.hash('demo123', 10);
     
     const users = [
@@ -180,18 +178,25 @@ async function seedDemoData() {
     
     for (const user of users) {
       const result = db.prepare(`
-        INSERT INTO users (tenant_id, email, password, name, role, phone, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, 'active', datetime('now'))
-      `).run(tenantId, user.email, hashedPassword, user.name, user.role, user.phone);
+        INSERT INTO users (tenant_id, email, password_hash, first_name, last_name, role, phone, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+      `).run(tenantId, user.email, hashedPassword, user.name.split(' ')[0], user.name.split(' ')[1] || '', user.role, user.phone);
       
-      userIds[user.role === 'field_agent' ? user.name : user.role] = result.lastInsertRowid;
+      // Get the actual TEXT ID from the database
+      const createdUser = db.prepare(`
+        SELECT id FROM users WHERE email = ? AND tenant_id = ?
+      `).get(user.email, tenantId);
+      
+      userIds[user.role === 'field_agent' ? user.name : user.role] = createdUser.id;
       
       if (user.role === 'field_agent') {
-        fieldAgents.push({ id: result.lastInsertRowid, name: user.name });
+        fieldAgents.push({ id: createdUser.id, name: user.name, first_name: user.name.split(' ')[0], last_name: user.name.split(' ')[1] || '' });
       }
       
       console.log(`   ✅ ${user.role}: ${user.name} (${user.email})`);
     }
+    
+    console.log(`   📊 Created ${fieldAgents.length} field agents:`, fieldAgents.map(a => `${a.name} (ID: ${a.id})`));
 
     // 3. Create Products
     console.log('\n3️⃣  Creating products...');
@@ -201,22 +206,23 @@ async function seedDemoData() {
     for (const [category, products] of Object.entries(PRODUCT_CATEGORIES)) {
       for (const product of products) {
         const result = db.prepare(`
-          INSERT INTO products (tenant_id, sku, name, category, price, cost, stock_quantity, 
-                               reorder_level, status, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+          INSERT INTO products (tenant_id, code, name, selling_price, cost_price, status, created_at)
+          VALUES (?, ?, ?, ?, ?, 'active', datetime('now'))
         `).run(
           tenantId,
           product.sku,
           product.name,
-          category,
           product.price,
-          product.cost,
-          randomInt(100, 1000),
-          50,
+          product.cost
         );
         
+        // Get the actual TEXT ID from the database
+        const createdProduct = db.prepare(`
+          SELECT id FROM products WHERE code = ? AND tenant_id = ?
+        `).get(product.sku, tenantId);
+        
         productIds.push({
-          id: result.lastInsertRowid,
+          id: createdProduct.id,
           ...product,
           category
         });
@@ -248,50 +254,68 @@ async function seedDemoData() {
         `Premium ${customerType}`
       ];
       
+      const customerCode = `CUST${String(i + 1).padStart(4, '0')}`;
       const result = db.prepare(`
-        INSERT INTO customers (tenant_id, name, email, phone, address, city, province, 
-                              postal_code, customer_type, status, credit_limit, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, datetime('now'))
+        INSERT INTO customers (tenant_id, name, code, email, phone, address, type, status, credit_limit, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?, datetime('now'))
       `).run(
         tenantId,
         randomChoice(businessNames),
+        customerCode,
         isInformal ? null : faker.internet.email(),
         `+27 ${randomInt(71, 84)} ${randomInt(100, 999)} ${randomInt(1000, 9999)}`,
         isInformal ? `${randomInt(1, 999)} ${location.city}` : faker.location.streetAddress(),
-        location.city,
-        location.province,
-        randomInt(1000, 9999),
         customerType,
         isInformal ? randomInt(5000, 20000) : randomInt(20000, 100000)
       );
       
-      customerIds.push(result.lastInsertRowid);
+      // Get the actual TEXT ID from the database
+      const createdCustomer = db.prepare(`
+        SELECT id FROM customers WHERE code = ? AND tenant_id = ?
+      `).get(customerCode, tenantId);
+      
+      customerIds.push(createdCustomer.id);
     }
     console.log(`   ✅ Created ${customerIds.length} customers (mix of formal and informal retailers)`);
 
     // 5. Create Field Agents with territories
     console.log('\n5️⃣  Assigning field agent territories...');
-    for (const agent of fieldAgents) {
+    const agentIds = [];
+    fieldAgents.forEach((agent, i) => {
       const assignedCities = cities.slice(
         randomInt(0, cities.length - 5),
         randomInt(5, 15)
       );
       
+      const employeeCode = `EMP${String(i + 1).padStart(4, '0')}`;
+      console.log(`Creating agent for user: ${agent.name} (${agent.id}), employeeCode: ${employeeCode}`);
+      // Create agent record for this field agent
       db.prepare(`
-        INSERT INTO field_agents (tenant_id, user_id, territory, status, created_at)
-        VALUES (?, ?, ?, 'active', datetime('now'))
+        INSERT INTO agents (tenant_id, user_id, agent_type, employee_code)
+        VALUES (?, ?, ?, ?)
       `).run(
         tenantId,
         agent.id,
-        assignedCities.map(c => c.city).join(', ')
+        'field_agent',
+        employeeCode
       );
-    }
-    console.log(`   ✅ Assigned territories to ${fieldAgents.length} field agents`);
+      
+      // Get the agent ID
+      const createdAgent = db.prepare(`
+        SELECT id FROM agents WHERE employee_code = ? AND tenant_id = ?
+      `).get(employeeCode, tenantId);
+      
+      agentIds.push(createdAgent.id);
+    });
+    console.log(`   ✅ Created agent records for ${fieldAgents.length} field agents`);
 
     // 6. Generate Orders (12 months of data)
     console.log('\n6️⃣  Generating orders (12 months)...');
     const orderIds = [];
     let orderCount = 0;
+    
+    // Get agent IDs from agents table
+    // Use the agentIds array we created earlier
     
     for (let month = 0; month < 12; month++) {
       const monthStart = new Date(START_DATE);
@@ -305,7 +329,7 @@ async function seedDemoData() {
       for (let i = 0; i < ordersThisMonth; i++) {
         const orderDate = randomDate(monthStart, monthEnd);
         const customer = randomChoice(customerIds);
-        const agent = randomChoice(fieldAgents);
+        const agent = randomChoice(agentIds);
         
         // Each order has 3-12 products
         const orderProducts = [];
@@ -333,29 +357,36 @@ async function seedDemoData() {
           Math.random() * 100 < weights.slice(0, i + 1).reduce((a, b) => a + b, 0)
         )];
         
+        const orderNumber = `ORD${String(orderCount + 1).padStart(6, '0')}`;
         const orderResult = db.prepare(`
-          INSERT INTO orders (tenant_id, customer_id, user_id, order_date, status, 
-                             subtotal, tax, total, notes, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          INSERT INTO orders (tenant_id, order_number, customer_id, salesman_id, order_date, 
+                             subtotal, tax_amount, total_amount, order_status, notes, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
         `).run(
           tenantId,
+          orderNumber,
           customer,
-          agent.id,
-          orderDate.toISOString(),
-          status,
+          agent,
+          orderDate.toISOString().split('T')[0],
           subtotal.toFixed(2),
           tax.toFixed(2),
           total.toFixed(2),
-          `Order placed by ${agent.name}`
+          status,
+          `Order placed via mobile app`
         );
         
-        const orderId = orderResult.lastInsertRowid;
+        // Get the actual TEXT ID from the database
+        const createdOrder = db.prepare(`
+          SELECT id FROM orders WHERE order_number = ? AND tenant_id = ?
+        `).get(orderNumber, tenantId);
+        
+        const orderId = createdOrder.id;
         orderIds.push(orderId);
         
         // Insert order items
         for (const item of orderProducts) {
           db.prepare(`
-            INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal)
+            INSERT INTO order_items (order_id, product_id, quantity, unit_price, line_total)
             VALUES (?, ?, ?, ?, ?)
           `).run(
             orderId,
@@ -382,7 +413,7 @@ async function seedDemoData() {
       monthEnd.setMonth(monthEnd.getMonth() + 1);
       
       // Each agent visits 80-120 customers per month
-      for (const agent of fieldAgents) {
+      for (const agent of agentIds) {
         const visitsThisMonth = randomInt(80, 120);
         
         for (let i = 0; i < visitsThisMonth; i++) {
@@ -391,12 +422,12 @@ async function seedDemoData() {
           const visitTypes = ['Sales', 'Collection', 'Survey', 'Delivery', 'Promotion'];
           
           db.prepare(`
-            INSERT INTO visits (tenant_id, user_id, customer_id, visit_date, visit_type,
+            INSERT INTO visits (tenant_id, agent_id, customer_id, visit_date, visit_type,
                                check_in_time, check_out_time, latitude, longitude, notes, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
           `).run(
             tenantId,
-            agent.id,
+            agent,
             customer,
             visitDate.toISOString(),
             randomChoice(visitTypes),
@@ -422,22 +453,28 @@ async function seedDemoData() {
       const endDate = new Date(startDate.getTime() + randomInt(14, 90) * 24 * 60 * 60 * 1000);
       const product = randomChoice(productIds);
       
-      const result = db.prepare(`
-        INSERT INTO promotional_campaigns (tenant_id, name, description, start_date, end_date,
-                                          discount_type, discount_value, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      const campaignName = `${product.name} ${randomChoice(PROMO_TYPES)}`;
+      db.prepare(`
+        INSERT INTO promotional_campaigns (tenant_id, name, campaign_type, start_date, end_date,
+                                          budget, target_activations, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         tenantId,
-        `${product.name} ${randomChoice(PROMO_TYPES)}`,
-        `Special promotion on ${product.name} - Limited time offer!`,
+        campaignName,
+        randomChoice(['discount', 'bundle', 'loyalty', 'seasonal']),
         startDate.toISOString(),
         endDate.toISOString(),
-        randomChoice(['percentage', 'fixed']),
-        randomInt(5, 30),
+        randomInt(5000, 50000),
+        randomInt(100, 1000),
         endDate < new Date() ? 'completed' : 'active'
       );
       
-      campaignIds.push(result.lastInsertRowid);
+      // Get the campaign ID
+      const createdCampaign = db.prepare(`
+        SELECT id FROM promotional_campaigns WHERE name = ? AND tenant_id = ?
+      `).get(campaignName, tenantId);
+      
+      campaignIds.push(createdCampaign.id);
     }
     console.log(`   ✅ Created ${campaignIds.length} promotional campaigns`);
 
@@ -450,24 +487,23 @@ async function seedDemoData() {
       const activities = randomInt(20, 50);
       
       for (let i = 0; i < activities; i++) {
-        const agent = randomChoice(fieldAgents);
+        const agent = randomChoice(agentIds);
         const customer = randomChoice(customerIds);
         const activityDate = randomDate(START_DATE, END_DATE);
         
         db.prepare(`
-          INSERT INTO promotion_activities (tenant_id, campaign_id, user_id, customer_id,
-                                           activity_date, samples_distributed, sales_generated,
-                                           notes, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          INSERT INTO promoter_activities (tenant_id, campaign_id, promoter_id, customer_id,
+                                           activity_date, samples_distributed, contacts_made,
+                                           status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'completed', datetime('now'))
         `).run(
           tenantId,
           campaignId,
-          agent.id,
+          agent,
           customer,
           activityDate.toISOString(),
           randomInt(10, 100),
-          randomInt(500, 5000),
-          'Promotion executed successfully'
+          randomInt(5, 20)
         );
         
         promoActivityCount++;
@@ -481,28 +517,34 @@ async function seedDemoData() {
     
     for (let i = 0; i < 8; i++) {
       const surveyTypes = ['Customer Satisfaction', 'Product Feedback', 'Market Research', 'Competitor Analysis'];
+      const surveyTitle = randomChoice(surveyTypes);
       
-      const result = db.prepare(`
-        INSERT INTO surveys (tenant_id, title, description, status, created_at)
-        VALUES (?, ?, ?, 'active', datetime('now'))
+      // Create sample questions for the survey
+      const questions = [
+        { id: 1, text: 'How satisfied are you with our products?', type: 'rating', required: true },
+        { id: 2, text: 'What improvements would you suggest?', type: 'text', required: false },
+        { id: 3, text: 'Would you recommend us to others?', type: 'yes_no', required: true },
+        { id: 4, text: 'Rate the service quality', type: 'rating', required: true }
+      ];
+      
+      db.prepare(`
+        INSERT INTO surveys (tenant_id, title, description, questions, survey_type, status)
+        VALUES (?, ?, ?, ?, ?, ?)
       `).run(
         tenantId,
-        randomChoice(surveyTypes),
-        'Collecting feedback from customers and field observations'
+        surveyTitle,
+        'Collecting feedback from customers and field observations',
+        JSON.stringify(questions),
+        'adhoc',
+        'active'
       );
       
-      const surveyId = result.lastInsertRowid;
-      surveyIds.push(surveyId);
+      // Get the survey ID
+      const createdSurvey = db.prepare(`
+        SELECT id FROM surveys WHERE title = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 1
+      `).get(surveyTitle, tenantId);
       
-      // Add 5-8 questions per survey
-      for (let j = 0; j < randomInt(5, 8); j++) {
-        const question = randomChoice(SURVEY_QUESTIONS);
-        
-        db.prepare(`
-          INSERT INTO survey_questions (survey_id, question, question_type, required, order_index)
-          VALUES (?, ?, ?, 1, ?)
-        `).run(surveyId, question.question, question.type, j);
-      }
+      surveyIds.push(createdSurvey.id);
     }
     console.log(`   ✅ Created ${surveyIds.length} surveys with questions`);
 
@@ -511,53 +553,27 @@ async function seedDemoData() {
     let responseCount = 0;
     
     for (const surveyId of surveyIds) {
-      // Get survey questions
-      const questions = db.prepare(`
-        SELECT id, question_type FROM survey_questions WHERE survey_id = ?
-      `).all(surveyId);
-      
       // Each survey has 50-150 responses
       const responses = randomInt(50, 150);
       
       for (let i = 0; i < responses; i++) {
-        const agent = randomChoice(fieldAgents);
+        const agent = randomChoice(agentIds);
         const customer = randomChoice(customerIds);
         const responseDate = randomDate(START_DATE, END_DATE);
         
-        const submissionResult = db.prepare(`
-          INSERT INTO survey_submissions (tenant_id, survey_id, user_id, customer_id,
-                                          submission_date, created_at)
-          VALUES (?, ?, ?, ?, ?, datetime('now'))
-        `).run(tenantId, surveyId, agent.id, customer, responseDate.toISOString());
+        // Generate responses for the 4 questions we defined
+        const surveyResponses = {
+          '1': randomInt(1, 5).toString(), // Rating question
+          '2': faker.lorem.sentence(), // Text question
+          '3': randomChoice(['Yes', 'No']), // Yes/No question
+          '4': randomInt(1, 5).toString() // Rating question
+        };
         
-        const submissionId = submissionResult.lastInsertRowid;
-        
-        // Add answers for each question
-        for (const question of questions) {
-          let answer;
-          
-          switch (question.question_type) {
-            case 'yes_no':
-              answer = randomChoice(['Yes', 'No']);
-              break;
-            case 'number':
-              answer = randomInt(0, 100).toString();
-              break;
-            case 'rating':
-              answer = randomInt(1, 5).toString();
-              break;
-            case 'text':
-              answer = faker.lorem.sentence();
-              break;
-            default:
-              answer = 'N/A';
-          }
-          
-          db.prepare(`
-            INSERT INTO survey_answers (submission_id, question_id, answer)
-            VALUES (?, ?, ?)
-          `).run(submissionId, question.id, answer);
-        }
+        db.prepare(`
+          INSERT INTO survey_responses (tenant_id, survey_id, agent_id, customer_id,
+                                       responses, submitted_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(tenantId, surveyId, agent, customer, JSON.stringify(surveyResponses), responseDate.toISOString());
         
         responseCount++;
       }
@@ -570,7 +586,7 @@ async function seedDemoData() {
     
     for (let i = 0; i < 120; i++) {
       const customer = randomChoice(customerIds);
-      const agent = randomChoice(fieldAgents);
+      const agent = randomChoice(agentIds);
       const submissionDate = randomDate(START_DATE, END_DATE);
       
       const statuses = ['pending', 'approved', 'rejected'];
@@ -579,17 +595,29 @@ async function seedDemoData() {
         Math.random() * 100 < statusWeights.slice(0, idx + 1).reduce((a, b) => a + b, 0)
       )];
       
+      // Create sample KYC submission data
+      const submissionData = {
+        business_name: faker.company.name(),
+        registration_number: faker.string.alphanumeric(10),
+        tax_number: faker.string.alphanumeric(12),
+        contact_person: faker.person.fullName(),
+        phone: faker.phone.number(),
+        address: faker.location.streetAddress(),
+        documents: ['business_registration.pdf', 'tax_certificate.pdf']
+      };
+      
       db.prepare(`
-        INSERT INTO kyc_submissions (tenant_id, customer_id, user_id, submission_date,
-                                     status, verified_by, verification_date, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        INSERT INTO kyc_submissions (tenant_id, customer_id, product_id, agent_id, 
+                                     submission_data, verification_status, submitted_at, verified_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         tenantId,
         customer,
-        agent.id,
-        submissionDate.toISOString(),
+        randomChoice(productIds).id,
+        agent,
+        JSON.stringify(submissionData),
         status,
-        status !== 'pending' ? userIds.manager : null,
+        submissionDate.toISOString(),
         status !== 'pending' ? new Date(submissionDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString() : null
       );
       
@@ -597,9 +625,13 @@ async function seedDemoData() {
     }
     console.log(`   ✅ Created ${kycCount} KYC submissions`);
 
-    // 13. Create Inventory Transactions
-    console.log('\n1️⃣3️⃣  Recording inventory transactions...');
-    let inventoryCount = 0;
+    // 13. Create Stock Movements
+    console.log('\n1️⃣3️⃣  Recording stock movements...');
+    let stockMovementCount = 0;
+    
+    // Get warehouse ID
+    const warehouse = db.prepare(`SELECT id FROM warehouses LIMIT 1`).get();
+    const warehouseId = warehouse.id;
     
     for (let month = 0; month < 12; month++) {
       const monthStart = new Date(START_DATE);
@@ -607,34 +639,38 @@ async function seedDemoData() {
       const monthEnd = new Date(monthStart);
       monthEnd.setMonth(monthEnd.getMonth() + 1);
       
-      // 50-100 inventory transactions per month
-      const transactions = randomInt(50, 100);
+      // 50-100 stock movements per month
+      const movements = randomInt(50, 100);
       
-      for (let i = 0; i < transactions; i++) {
+      for (let i = 0; i < movements; i++) {
         const product = randomChoice(productIds);
-        const transDate = randomDate(monthStart, monthEnd);
-        const transTypes = ['stock_in', 'stock_out', 'adjustment', 'return'];
-        const transType = randomChoice(transTypes);
-        const quantity = transType === 'stock_in' ? randomInt(50, 500) : randomInt(5, 100);
+        const movementDate = randomDate(monthStart, monthEnd);
+        const movementTypes = ['inbound', 'outbound', 'adjustment', 'transfer'];
+        const movementType = randomChoice(movementTypes);
+        const quantity = movementType === 'inbound' ? randomInt(50, 500) : randomInt(5, 100);
         
         db.prepare(`
-          INSERT INTO inventory_transactions (tenant_id, product_id, transaction_type,
-                                             quantity, reference, notes, transaction_date, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          INSERT INTO stock_movements (tenant_id, reference_number, product_id, 
+                                      to_warehouse_id, quantity, movement_type, movement_date,
+                                      reason, status, created_by)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           tenantId,
+          `SM-${Date.now()}-${month}-${i}-${randomInt(1000, 9999)}`,
           product.id,
-          transType,
+          warehouseId,
           quantity,
-          `REF-${Date.now()}-${randomInt(1000, 9999)}`,
-          `${transType.replace('_', ' ')} transaction`,
-          transDate.toISOString()
+          movementType,
+          movementDate.toISOString().split('T')[0], // DATE format
+          `${movementType} movement`,
+          'approved',
+          userIds.admin
         );
         
-        inventoryCount++;
+        stockMovementCount++;
       }
     }
-    console.log(`   ✅ Created ${inventoryCount} inventory transactions`);
+    console.log(`   ✅ Created ${stockMovementCount} stock movements`);
 
     // Commit transaction
     db.exec('COMMIT');

@@ -64,16 +64,37 @@ export const getDefaultCurrency = (): Currency => {
 
 export const formatCurrency = (
   amount: number,
-  currency?: Currency,
+  currencyOrOptions?: Currency | {
+    showSymbol?: boolean
+    showCode?: boolean
+    compact?: boolean
+  },
   options?: {
     showSymbol?: boolean
     showCode?: boolean
     compact?: boolean
   }
 ): string => {
-  const curr = currency || getDefaultCurrency()
+  let curr: Currency
+  let opts: { showSymbol?: boolean; showCode?: boolean; compact?: boolean }
+
+  // Handle different parameter combinations
+  if (typeof currencyOrOptions === 'string') {
+    // formatCurrency(amount, currency, options)
+    curr = currencyOrOptions
+    opts = options || {}
+  } else if (typeof currencyOrOptions === 'object' && currencyOrOptions !== null) {
+    // formatCurrency(amount, options)
+    curr = getDefaultCurrency()
+    opts = currencyOrOptions
+  } else {
+    // formatCurrency(amount)
+    curr = getDefaultCurrency()
+    opts = {}
+  }
+
   const config = CURRENCIES[curr]
-  const { showSymbol = true, showCode = false, compact = false } = options || {}
+  const { showSymbol = true, showCode = false, compact = false } = opts
 
   if (compact && Math.abs(amount) >= 1000000) {
     const millions = amount / 1000000

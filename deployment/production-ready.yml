@@ -1,0 +1,227 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ../frontend-vite
+      dockerfile: ../Dockerfile.production
+    container_name: salessync-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../ssl:/etc/nginx/ssl:ro
+      - frontend_logs:/var/log/nginx
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - salessync-network
+
+  # Backend API Service
+  backend:
+    build:
+      context: ../backend-api
+      dockerfile: ../Dockerfile.production
+    container_name: salessync-backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../backend-api/database:/app/database
+      - ../backend-api/logs:/app/logs
+      - ../backend-api/uploads:/app/uploads
+      - backend_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_PATH=/app/database/database.sqlite
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - LOG_LEVEL=info
+      - MAX_FILE_SIZE=10485760
+      - RATE_LIMIT_WINDOW=900000
+      - RATE_LIMIT_MAX=1000
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: salessync-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ../deployment/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL Database (for enterprise scale)
+  postgres:
+    image: postgres:15-alpine
+    container_name: salessync-postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../deployment/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    restart: unless-stopped
+    networks:
+      - salessync-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: salessync-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../deployment/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - salessync-network
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: salessync-grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../deployment/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    networks:
+      - salessync-network
+    depends_on:
+      - prometheus
+
+  # Log Management - ELK Stack (Elasticsearch)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: salessync-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
+    networks:
+      - salessync-network
+
+  # Log Management - Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: salessync-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
+    networks:
+      - salessync-network
+
+  # Backup Service
+  backup:
+    build:
+      context: ../deployment/backup
+      dockerfile: Dockerfile
+    container_name: salessync-backup
+    volumes:
+      - postgres_data:/backup/postgres:ro
+      - redis_data:/backup/redis:ro
+      - backend_data:/backup/backend:ro
+      - ../deployment/backup/scripts:/backup/scripts:ro
+      - backup_storage:/backup/storage
+    environment:
+      - BACKUP_SCHEDULE=${BACKUP_SCHEDULE:-0 2 * * *}
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - S3_BUCKET=${S3_BACKUP_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - salessync-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_data:
+    driver: local
+  frontend_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+  backup_storage:
+    driver: local
+
+networks:
+  salessync-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

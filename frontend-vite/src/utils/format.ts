@@ -4,17 +4,46 @@ import { formatCurrency as formatCurrencyUtil } from './currency'
 export const formatCurrency = formatCurrencyUtil
 
 // Date formatting utilities
-export const formatDate = (date: string | Date, options?: {
-  format?: 'short' | 'medium' | 'long' | 'full'
-  includeTime?: boolean
-  locale?: string
-}): string => {
-  const { format = 'medium', includeTime = false, locale = 'en-GB' } = options || {}
+export const formatDate = (
+  date: string | Date, 
+  optionsOrFormat?: {
+    format?: 'short' | 'medium' | 'long' | 'full'
+    includeTime?: boolean
+    locale?: string
+  } | string
+): string => {
+  let options: {
+    format?: 'short' | 'medium' | 'long' | 'full'
+    includeTime?: boolean
+    locale?: string
+  }
+
+  // Handle string format parameter (e.g., 'MMM dd')
+  if (typeof optionsOrFormat === 'string') {
+    // Convert common format strings to options
+    if (optionsOrFormat === 'MMM dd') {
+      options = { format: 'short' }
+    } else {
+      options = { format: 'medium' }
+    }
+  } else {
+    options = optionsOrFormat || {}
+  }
+
+  const { format = 'medium', includeTime = false, locale = 'en-GB' } = options
   
   const dateObj = typeof date === 'string' ? new Date(date) : date
   
   if (isNaN(dateObj.getTime())) {
     return 'Invalid Date'
+  }
+
+  // Handle specific format strings
+  if (typeof optionsOrFormat === 'string' && optionsOrFormat === 'MMM dd') {
+    return dateObj.toLocaleDateString(locale, { 
+      month: 'short', 
+      day: '2-digit' 
+    })
   }
   
   const formatOptions: Intl.DateTimeFormatOptions = {}

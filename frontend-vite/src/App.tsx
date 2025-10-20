@@ -18,6 +18,7 @@ import AnalyticsPage from './pages/dashboard/AnalyticsPage'
 
 // Van Sales Pages
 import VanSalesPage from './pages/van-sales/VanSalesPage'
+import VanSalesDashboard from './pages/van-sales/VanSalesDashboard'
 import RouteManagementPage from './pages/van-sales/RouteManagementPage'
 import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
 
@@ -27,12 +28,31 @@ import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
 // Campaign Pages
 import CampaignsPage from './pages/campaigns/CampaignsPage'
 
-// Field Agent Pages
+// Field Operations Pages
 import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
+import FieldOperationsDashboard from './pages/field-operations/FieldOperationsDashboard'
 import LiveMappingPage from './pages/field-agents/LiveMappingPage'
 import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
 import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
 import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
+
+// KYC Pages
+import KYCDashboard from './pages/kyc/KYCDashboard'
+import KYCManagement from './pages/kyc/KYCManagement'
+import KYCReports from './pages/kyc/KYCReports'
+
+// Surveys Pages
+import SurveysDashboard from './pages/surveys/SurveysDashboard'
+import SurveysManagement from './pages/surveys/SurveysManagement'
+
+// Inventory Pages
+import InventoryDashboard from './pages/inventory/InventoryDashboard'
+import InventoryManagement from './pages/inventory/InventoryManagement'
+import InventoryReports from './pages/inventory/InventoryReports'
+
+// Promotions Pages
+import PromotionsDashboard from './pages/promotions/PromotionsDashboard'
+import PromotionsManagement from './pages/promotions/PromotionsManagement'
 
 // Business Pages
 import CustomersPage from './pages/customers/CustomersPage'
@@ -92,9 +112,42 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
 
             {/* Van Sales Routes */}
-            <Route path="van-sales" element={<VanSalesPage />} />
+            <Route path="van-sales" element={<VanSalesDashboard />} />
+            <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
+            <Route path="van-sales/management" element={<VanSalesPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
+
+            {/* Field Operations Routes */}
+            <Route path="field-operations" element={<FieldOperationsDashboard />} />
+            <Route path="field-operations/dashboard" element={<FieldOperationsDashboard />} />
+            <Route path="field-operations/agents" element={<FieldAgentsPage />} />
+            <Route path="field-operations/mapping" element={<LiveMappingPage />} />
+            <Route path="field-operations/boards" element={<BoardPlacementPage />} />
+            <Route path="field-operations/products" element={<ProductDistributionPage />} />
+            <Route path="field-operations/commission" element={<CommissionTrackingPage />} />
+
+            {/* KYC Routes */}
+            <Route path="kyc" element={<KYCDashboard />} />
+            <Route path="kyc/dashboard" element={<KYCDashboard />} />
+            <Route path="kyc/management" element={<KYCManagement />} />
+            <Route path="kyc/reports" element={<KYCReports />} />
+
+            {/* Surveys Routes */}
+            <Route path="surveys" element={<SurveysDashboard />} />
+            <Route path="surveys/dashboard" element={<SurveysDashboard />} />
+            <Route path="surveys/management" element={<SurveysManagement />} />
+
+            {/* Inventory Routes */}
+            <Route path="inventory" element={<InventoryDashboard />} />
+            <Route path="inventory/dashboard" element={<InventoryDashboard />} />
+            <Route path="inventory/management" element={<InventoryManagement />} />
+            <Route path="inventory/reports" element={<InventoryReports />} />
+
+            {/* Promotions Routes */}
+            <Route path="promotions" element={<PromotionsDashboard />} />
+            <Route path="promotions/dashboard" element={<PromotionsDashboard />} />
+            <Route path="promotions/management" element={<PromotionsManagement />} />
 
             {/* Trade Marketing Routes */}
             <Route path="trade-marketing" element={<TradeMarketingPage />} />
@@ -102,7 +155,7 @@ function App() {
             {/* Campaign Routes */}
             <Route path="campaigns" element={<CampaignsPage />} />
 
-            {/* Field Agent Routes */}
+            {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />

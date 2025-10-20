@@ -13,7 +13,12 @@ import {
   Truck,
   Target,
   TrendingUp,
-  Megaphone
+  Megaphone,
+  FileText,
+  Gift,
+  CreditCard,
+  MessageSquare,
+  Route
 } from 'lucide-react'
 import { useAuthStore, hasPermission } from '../../store/auth.store'
 import { PERMISSIONS } from '../../types/auth.types'
@@ -38,6 +43,16 @@ const navigation = [
     permission: PERMISSIONS.VIEW_VAN_SALES,
     children: [
       {
+        name: 'Dashboard',
+        href: '/van-sales/dashboard',
+        permission: PERMISSIONS.VIEW_VAN_SALES,
+      },
+      {
+        name: 'Management',
+        href: '/van-sales/management',
+        permission: PERMISSIONS.MANAGE_VAN_SALES,
+      },
+      {
         name: 'Route Management',
         href: '/van-sales/routes',
         permission: PERMISSIONS.MANAGE_ROUTES,
@@ -47,15 +62,125 @@ const navigation = [
         href: '/van-sales/inventory',
         permission: PERMISSIONS.VIEW_INVENTORY,
       },
+    ],
+  },
+  {
+    name: 'Field Operations',
+    href: '/field-operations',
+    icon: Route,
+    permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+    children: [
       {
-        name: 'Sales Transactions',
-        href: '/van-sales/transactions',
-        permission: PERMISSIONS.MANAGE_TRANSACTIONS,
+        name: 'Dashboard',
+        href: '/field-operations/dashboard',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
       },
       {
-        name: 'Delivery Management',
-        href: '/van-sales/deliveries',
-        permission: PERMISSIONS.MANAGE_DELIVERIES,
+        name: 'Agent Management',
+        href: '/field-operations/agents',
+        permission: PERMISSIONS.MANAGE_FIELD_AGENTS,
+      },
+      {
+        name: 'Live Mapping',
+        href: '/field-operations/mapping',
+        permission: PERMISSIONS.VIEW_AGENT_LOCATIONS,
+      },
+      {
+        name: 'Board Placement',
+        href: '/field-operations/boards',
+        permission: PERMISSIONS.MANAGE_BOARD_PLACEMENTS,
+      },
+      {
+        name: 'Product Distribution',
+        href: '/field-operations/products',
+        permission: PERMISSIONS.MANAGE_PRODUCT_DISTRIBUTION,
+      },
+      {
+        name: 'Commission Tracking',
+        href: '/field-operations/commission',
+        permission: PERMISSIONS.VIEW_COMMISSIONS,
+      },
+    ],
+  },
+  {
+    name: 'KYC Management',
+    href: '/kyc',
+    icon: CreditCard,
+    permission: PERMISSIONS.VIEW_KYC,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/kyc/dashboard',
+        permission: PERMISSIONS.VIEW_KYC,
+      },
+      {
+        name: 'Management',
+        href: '/kyc/management',
+        permission: PERMISSIONS.MANAGE_KYC,
+      },
+      {
+        name: 'Reports',
+        href: '/kyc/reports',
+        permission: PERMISSIONS.VIEW_KYC_REPORTS,
+      },
+    ],
+  },
+  {
+    name: 'Surveys',
+    href: '/surveys',
+    icon: MessageSquare,
+    permission: PERMISSIONS.VIEW_SURVEYS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/surveys/dashboard',
+        permission: PERMISSIONS.VIEW_SURVEYS,
+      },
+      {
+        name: 'Management',
+        href: '/surveys/management',
+        permission: PERMISSIONS.MANAGE_SURVEYS,
+      },
+    ],
+  },
+  {
+    name: 'Inventory',
+    href: '/inventory',
+    icon: Package,
+    permission: PERMISSIONS.VIEW_INVENTORY,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/inventory/dashboard',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
+      {
+        name: 'Management',
+        href: '/inventory/management',
+        permission: PERMISSIONS.MANAGE_INVENTORY,
+      },
+      {
+        name: 'Reports',
+        href: '/inventory/reports',
+        permission: PERMISSIONS.VIEW_INVENTORY_REPORTS,
+      },
+    ],
+  },
+  {
+    name: 'Promotions',
+    href: '/promotions',
+    icon: Gift,
+    permission: PERMISSIONS.VIEW_PROMOTIONS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/promotions/dashboard',
+        permission: PERMISSIONS.VIEW_PROMOTIONS,
+      },
+      {
+        name: 'Management',
+        href: '/promotions/management',
+        permission: PERMISSIONS.MANAGE_PROMOTIONS,
       },
     ],
   },
@@ -112,34 +237,6 @@ const navigation = [
         name: 'A/B Testing',
         href: '/campaigns/testing',
         permission: PERMISSIONS.MANAGE_AB_TESTING,
-      },
-    ],
-  },
-  {
-    name: 'Field Agents',
-    href: '/field-agents',
-    icon: UserCheck,
-    permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
-    children: [
-      {
-        name: 'Live Mapping',
-        href: '/field-agents/mapping',
-        permission: PERMISSIONS.VIEW_AGENT_LOCATIONS,
-      },
-      {
-        name: 'Board Placement',
-        href: '/field-agents/boards',
-        permission: PERMISSIONS.MANAGE_BOARD_PLACEMENTS,
-      },
-      {
-        name: 'Product Distribution',
-        href: '/field-agents/products',
-        permission: PERMISSIONS.MANAGE_PRODUCT_DISTRIBUTION,
-      },
-      {
-        name: 'Commission Tracking',
-        href: '/field-agents/commission',
-        permission: PERMISSIONS.VIEW_COMMISSIONS,
       },
     ],
   },
