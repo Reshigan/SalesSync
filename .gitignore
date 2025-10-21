@@ -42,3 +42,10 @@ yarn-error.log*
 # Temporary files
 *.tmp
 .cache/
+
+# Database temporary files
+*.db-shm
+*.db-wal
+
+# OpenHands
+.openhands/

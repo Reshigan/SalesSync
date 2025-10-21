@@ -280,6 +280,14 @@ async function startServer() {
     const gpsTrackingRoutes = require('./routes/gps-tracking');
     const currencySystemRoutes = require('./routes/currency-system');
     const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
+    
+    // Field Marketing System routes
+    const boardsRoutes = require('./routes/boards');
+    const boardInstallationsRoutes = require('./routes/board-installations');
+    const productDistributionsRoutes = require('./routes/product-distributions');
+    const gpsLocationRoutes = require('./routes/gps-location');
+    const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
+    const commissionsFieldRoutes = require('./routes/commissions');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -348,6 +356,14 @@ async function startServer() {
     app.use('/api/gps-tracking', authTenantMiddleware, gpsTrackingRoutes);
     app.use('/api/currency-system', authTenantMiddleware, currencySystemRoutes);
     app.use('/api/comprehensive-transactions', authTenantMiddleware, comprehensiveTransactionsRoutes);
+    
+    // Field Marketing System routes
+    app.use('/api/boards', authTenantMiddleware, boardsRoutes);
+    app.use('/api/board-installations', authTenantMiddleware, boardInstallationsRoutes);
+    app.use('/api/product-distributions', authTenantMiddleware, productDistributionsRoutes);
+    app.use('/api/gps-location', authTenantMiddleware, gpsLocationRoutes);
+    app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
+    app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
 
     logger.info('Routes configured successfully');
 

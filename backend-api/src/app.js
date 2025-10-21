@@ -89,6 +89,15 @@ async function initializeApp() {
     const analyticsRoutes = require('./routes/analytics');
     const reportsRoutes = require('./routes/reports');
     const workflowsRoutes = require('./routes/workflows');
+    
+    // Load Field Marketing System routes
+    console.log('Loading field marketing system routes...');
+    const boardsRoutes = require('./routes/boards');
+    const boardInstallationsRoutes = require('./routes/board-installations');
+    const productDistributionsRoutes = require('./routes/product-distributions');
+    const gpsLocationRoutes = require('./routes/gps-location');
+    const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
+    const commissionsRoutes = require('./routes/commissions');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -131,6 +140,15 @@ async function initializeApp() {
     app.use('/api/analytics', analyticsRoutes);
     app.use('/api/reports', reportsRoutes);
     app.use('/api/workflows', workflowsRoutes);
+    
+    // Mount Field Marketing System routes
+    console.log('Mounting field marketing system routes...');
+    app.use('/api/boards', boardsRoutes);
+    app.use('/api/board-installations', boardInstallationsRoutes);
+    app.use('/api/product-distributions', productDistributionsRoutes);
+    app.use('/api/gps-location', gpsLocationRoutes);
+    app.use('/api/field-agent-workflow', fieldAgentWorkflowRoutes);
+    app.use('/api/commissions', commissionsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);
