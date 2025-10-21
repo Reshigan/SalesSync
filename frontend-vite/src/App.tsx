@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { tenantService } from './services/tenant.service'
 
 // Layout Components
 import AuthLayout from './components/layout/AuthLayout'
@@ -77,12 +78,27 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
+  const [tenantLoading, setTenantLoading] = useState(true)
 
   useEffect(() => {
-    initialize()
+    const initializeApp = async () => {
+      try {
+        // Initialize tenant service first
+        await tenantService.initialize()
+        setTenantLoading(false)
+        
+        // Then initialize auth
+        await initialize()
+      } catch (error) {
+        console.error('Failed to initialize app:', error)
+        setTenantLoading(false)
+      }
+    }
+
+    initializeApp()
   }, [initialize])
 
-  if (isLoading) {
+  if (isLoading || tenantLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingSpinner size="lg" />

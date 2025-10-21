@@ -580,4 +580,185 @@ router.post('/:id/billing', asyncHandler(async (req, res, next) => {
   }
 }));
 
+/**
+ * @swagger
+ * /api/tenant/resolve:
+ *   post:
+ *     summary: Resolve tenant configuration based on domain/path
+ *     tags: [Tenants]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               domain:
+ *                 type: string
+ *               path:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Tenant resolved successfully
+ *       404:
+ *         description: Tenant not found
+ */
+router.post('/resolve', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getOneQuery } = require('../database/init');
+  
+  const { domain, path } = req.body;
+  
+  try {
+    let tenant = null;
+    
+    // Strategy 1: Try exact domain match
+    if (domain) {
+      tenant = await getOneQuery(`
+        SELECT code, name, domain, features, status
+        FROM tenants 
+        WHERE domain = ? AND status = 'active'
+      `, [domain]);
+    }
+    
+    // Strategy 2: Try subdomain extraction
+    if (!tenant && domain) {
+      const parts = domain.split('.');
+      if (parts.length >= 3) {
+        const subdomain = parts[0];
+        const tenantCode = `${subdomain.toUpperCase()}_SA`;
+        
+        tenant = await getOneQuery(`
+          SELECT code, name, domain, features, status
+          FROM tenants 
+          WHERE code = ? AND status = 'active'
+        `, [tenantCode]);
+        
+        // If not found, create dynamic tenant config
+        if (!tenant) {
+          tenant = {
+            code: tenantCode,
+            name: `${subdomain.charAt(0).toUpperCase() + subdomain.slice(1)} Tenant`,
+            domain: domain,
+            features: {
+              vanSales: true,
+              promotions: true,
+              merchandising: true,
+              warehouse: true,
+              backOffice: true
+            },
+            status: 'active'
+          };
+        }
+      }
+    }
+    
+    // Strategy 3: Try path-based resolution
+    if (!tenant && path) {
+      const pathParts = path.split('/');
+      if (pathParts[1] === 'tenant' && pathParts[2]) {
+        const tenantSlug = pathParts[2];
+        const tenantCode = `${tenantSlug.toUpperCase()}_SA`;
+        
+        tenant = await getOneQuery(`
+          SELECT code, name, domain, features, status
+          FROM tenants 
+          WHERE code = ? AND status = 'active'
+        `, [tenantCode]);
+        
+        if (!tenant) {
+          tenant = {
+            code: tenantCode,
+            name: `${tenantSlug.charAt(0).toUpperCase() + tenantSlug.slice(1)} Tenant`,
+            domain: domain,
+            features: {
+              vanSales: true,
+              promotions: true,
+              merchandising: true,
+              warehouse: true,
+              backOffice: true
+            },
+            status: 'active'
+          };
+        }
+      }
+    }
+    
+    // Default fallback
+    if (!tenant) {
+      tenant = {
+        code: 'DEMO_SA',
+        name: 'Demo Tenant',
+        domain: domain || 'localhost',
+        features: {
+          vanSales: true,
+          promotions: true,
+          merchandising: true,
+          warehouse: true,
+          backOffice: true
+        },
+        status: 'active'
+      };
+    }
+    
+    // Parse features if it's a string
+    if (typeof tenant.features === 'string') {
+      tenant.features = JSON.parse(tenant.features);
+    }
+    
+    res.json({
+      success: true,
+      data: tenant
+    });
+    
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/tenant/mappings:
+ *   get:
+ *     summary: Get tenant domain mappings for frontend configuration
+ *     tags: [Tenants]
+ *     responses:
+ *       200:
+ *         description: Tenant mappings retrieved successfully
+ */
+router.get('/mappings', asyncHandler(async (req, res, next) => {
+  // Lazy-load database functions
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const tenants = await getQuery(`
+      SELECT code, name, domain, features, status
+      FROM tenants 
+      WHERE status = 'active'
+      ORDER BY name
+    `);
+    
+    // Format as domain mappings
+    const mappings = {};
+    tenants.forEach(tenant => {
+      if (tenant.domain) {
+        mappings[tenant.domain] = {
+          code: tenant.code,
+          name: tenant.name,
+          domain: tenant.domain,
+          features: typeof tenant.features === 'string' ? JSON.parse(tenant.features) : tenant.features
+        };
+      }
+    });
+    
+    res.json({
+      success: true,
+      data: mappings
+    });
+    
+  } catch (error) {
+    next(error);
+  }
+}));
+
 module.exports = router;

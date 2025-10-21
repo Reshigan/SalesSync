@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { getAuthToken } from '../store/auth.store'
+import { tenantService } from './tenant.service'
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
@@ -22,8 +23,9 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    // Add tenant header for multi-tenant support
-    config.headers['X-Tenant-Code'] = 'DEMO'
+    // Add dynamic tenant header for multi-tenant support
+    const tenantCode = tenantService.getTenantCode()
+    config.headers['X-Tenant-Code'] = tenantCode
     return config
   },
   (error) => {
