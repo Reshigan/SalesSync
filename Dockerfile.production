@@ -123,7 +123,7 @@ module.exports = {
       exec_mode: 'fork',
       env: {
         NODE_ENV: 'production',
-        PORT: 3001,
+        PORT: 12001,
         HOST: '0.0.0.0'
       },
       error_file: './logs/backend-error.log',
@@ -135,9 +135,7 @@ module.exports = {
     },
     {
       name: 'salessync-frontend',
-      script: 'node',
-      args: '../frontend-vite/server.cjs',
-      cwd: './frontend',
+      script: './frontend/server.cjs',
       instances: 1,
       env: {
         NODE_ENV: 'production',
@@ -158,15 +156,15 @@ EOF
 USER salessync
 
 # Expose ports
-EXPOSE 3001 12000
+EXPOSE 12001 12000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:3001/health && curl -f http://localhost:12000 || exit 1
+    CMD curl -f http://localhost:12001/health && curl -f http://localhost:12000 || exit 1
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=12001
 ENV FRONTEND_PORT=12000
 
 # Start the application

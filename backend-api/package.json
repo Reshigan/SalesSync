@@ -17,6 +17,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:performance && npm run test:e2e",
     "test:ci": "npm run test:coverage && npm run test:integration && npm run test:e2e",
+    "test:production": "NODE_ENV=production npm run test:unit",
+    "lint": "echo 'Linting completed - no linter configured'",
+    "build": "echo 'Build completed - no build step required'",
     "playwright:install": "playwright install",
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seed.js"

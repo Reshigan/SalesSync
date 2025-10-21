@@ -43,7 +43,7 @@ jobs:
     - name: Run Backend Linting
       run: |
         cd backend-api
-        npm run lint || echo "Linting completed with warnings"
+        npm run lint
 
     # Frontend Tests
     - name: Install Frontend Dependencies
@@ -61,7 +61,7 @@ jobs:
     - name: Run Frontend Linting
       run: |
         cd frontend-vite
-        npm run lint || echo "Linting completed with warnings"
+        npm run lint
 
     - name: Build Frontend
       run: |
@@ -146,7 +146,7 @@ jobs:
     - name: Run Production Tests
       run: |
         cd backend-api
-        npm run test:production || echo "Production tests completed"
+        npm run test:production
 
     - name: Build Production Docker Images
       run: |
@@ -208,7 +208,7 @@ jobs:
         
         # Health check
         sleep 10
-        curl -f http://localhost:12001/api/health || exit 1
+        curl -f http://localhost:12001/health || exit 1
         curl -f http://localhost:12000/ || exit 1
         
         echo "✅ Production deployment completed successfully"
@@ -275,7 +275,7 @@ jobs:
         
         # Health check
         sleep 10
-        curl -f http://localhost:12001/api/health || exit 1
+        curl -f http://localhost:12001/health || exit 1
         curl -f http://localhost:12000/ || exit 1
         
         echo "✅ Rollback completed successfully"
