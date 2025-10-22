@@ -139,12 +139,15 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       role: user.role
     };
     
+    const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
+    const refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+    
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || '24h'
+      expiresIn: expiresIn
     });
     
     const refreshToken = jwt.sign(tokenPayload, process.env.JWT_REFRESH_SECRET, {
-      expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+      expiresIn: refreshExpiresIn
     });
     
     // Update last login
@@ -218,6 +221,13 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       data: {
         user: userData,
         tenant: tenantData,
+        tokens: {
+          access_token: token,
+          refresh_token: refreshToken,
+          expires_in: expiresIn,
+          token_type: 'Bearer'
+        },
+        // Keep old format for backward compatibility
         token,
         refreshToken
       }
