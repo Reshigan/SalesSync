@@ -5,16 +5,24 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all van sales
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const vanSales = await getQuery(`
     SELECT 
       id,
+      sale_number,
       van_id,
       agent_id,
-      route_id,
+      customer_id,
       sale_date,
+      sale_type,
+      subtotal,
+      tax_amount,
+      discount_amount,
       total_amount,
+      amount_paid,
+      amount_due,
+      payment_method,
       status,
       created_at
     FROM van_sales 
@@ -33,27 +41,53 @@ router.post('/', asyncHandler(async (req, res) => {
   const {
     van_id,
     agent_id,
-    route_id,
+    customer_id,
     sale_date,
+    sale_type,
+    subtotal,
+    tax_amount,
+    discount_amount,
     total_amount,
+    amount_paid,
+    amount_due,
+    payment_method,
+    payment_reference,
+    location_lat,
+    location_lng,
+    notes,
     items
   } = req.body;
 
   const vanSaleId = require('crypto').randomUUID();
+  const saleNumber = `VS-${Date.now()}`;
   
   const result = await runQuery(
     `INSERT INTO van_sales (
-      id, tenant_id, van_id, agent_id, route_id, sale_date,
-      total_amount, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, tenant_id, sale_number, van_id, agent_id, customer_id, sale_date,
+      sale_type, subtotal, tax_amount, discount_amount, total_amount, 
+      amount_paid, amount_due, payment_method, payment_reference,
+      location_lat, location_lng, notes, status, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       vanSaleId,
-      req.user.tenantId,
+      req.tenantId,
+      saleNumber,
       van_id,
       agent_id,
-      route_id,
+      customer_id,
       sale_date || new Date().toISOString().split('T')[0],
+      sale_type || 'cash',
+      subtotal || 0,
+      tax_amount || 0,
+      discount_amount || 0,
       total_amount || 0,
+      amount_paid || 0,
+      amount_due || 0,
+      payment_method,
+      payment_reference,
+      location_lat,
+      location_lng,
+      notes,
       'completed',
       new Date().toISOString()
     ]
@@ -63,8 +97,10 @@ router.post('/', asyncHandler(async (req, res) => {
     success: true,
     data: {
       id: vanSaleId,
+      sale_number: saleNumber,
       van_id,
       agent_id,
+      customer_id,
       total_amount: total_amount || 0,
       status: 'completed'
     }
@@ -74,7 +110,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // Get van sale by ID
 router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const vanSale = await getOneQuery(`
     SELECT * FROM van_sales 
@@ -97,7 +133,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update van sale
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { van_id, agent_id, route_id, sale_date, total_amount, status } = req.body;
   
   const result = await runQuery(`
@@ -123,7 +159,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 // Delete van sale
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM van_sales 
@@ -146,7 +182,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
 // Get van sales by agent
 router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const { agentId } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const vanSales = await getQuery(`
     SELECT * FROM van_sales 
