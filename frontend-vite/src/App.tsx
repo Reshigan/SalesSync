@@ -10,12 +10,16 @@ import ErrorBoundary from './components/ui/ErrorBoundary'
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage'
+import MobileLoginPage from './pages/auth/MobileLoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage'
 import AnalyticsPage from './pages/dashboard/AnalyticsPage'
+
+// Agent Pages
+import AgentDashboard from './pages/agent/AgentDashboard'
 
 // Van Sales Pages
 import VanSalesPage from './pages/van-sales/VanSalesPage'
@@ -118,9 +122,15 @@ function App() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthLayout />
           }>
             <Route path="login" element={<LoginPage />} />
+            <Route path="mobile-login" element={<MobileLoginPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
             <Route index element={<Navigate to="login" replace />} />
+          </Route>
+
+          {/* Agent Routes (No Layout) */}
+          <Route path="/agent/*" element={<Routes />}>
+            <Route path="dashboard" element={<AgentDashboard />} />
           </Route>
 
           {/* Protected Routes */}

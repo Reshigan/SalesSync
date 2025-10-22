@@ -203,6 +203,16 @@ export default function LoginPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Login Link */}
+      <div className="mt-6 text-center">
+        <Link
+          to="/auth/mobile-login"
+          className="inline-flex items-center justify-center text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+        >
+          <span>Agent? Login with mobile number →</span>
+        </Link>
+      </div>
     </div>
   )
 }
