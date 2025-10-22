@@ -41,6 +41,15 @@ import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
 
 // Field Marketing Pages
 import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
+import CustomerSelection from './pages/field-marketing/CustomerSelection'
+import GPSVerification from './pages/field-marketing/GPSVerification'
+import BrandSelection from './pages/field-marketing/BrandSelection'
+import VisitList from './pages/field-marketing/VisitList'
+import BoardPlacement from './pages/field-marketing/BoardPlacement'
+import ProductDistribution from './pages/field-marketing/ProductDistribution'
+import NewCustomerRegistration from './pages/field-marketing/NewCustomerRegistration'
+import VisitSummary from './pages/field-marketing/VisitSummary'
+import MyCommissions from './pages/field-marketing/MyCommissions'
 
 // KYC Pages
 import KYCDashboard from './pages/kyc/KYCDashboard'
@@ -136,6 +145,15 @@ function App() {
             {/* Field Marketing Routes */}
             <Route path="field-marketing" element={<FieldMarketingDashboard />} />
             <Route path="field-marketing/dashboard" element={<FieldMarketingDashboard />} />
+            <Route path="field-marketing/customer-selection" element={<CustomerSelection />} />
+            <Route path="field-marketing/gps-verification" element={<GPSVerification />} />
+            <Route path="field-marketing/brand-selection" element={<BrandSelection />} />
+            <Route path="field-marketing/visit-list" element={<VisitList />} />
+            <Route path="field-marketing/board-placement" element={<BoardPlacement />} />
+            <Route path="field-marketing/product-distribution" element={<ProductDistribution />} />
+            <Route path="field-marketing/new-customer" element={<NewCustomerRegistration />} />
+            <Route path="field-marketing/visit-summary" element={<VisitSummary />} />
+            <Route path="field-marketing/my-commissions" element={<MyCommissions />} />
 
             {/* KYC Routes */}
             <Route path="kyc" element={<KYCDashboard />} />
