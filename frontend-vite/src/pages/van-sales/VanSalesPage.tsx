@@ -45,52 +45,72 @@ export default function VanSalesPage() {
   const fetchVanSalesData = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
-      // Simulated data for now
+      const token = localStorage.getItem('token')
+      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
+      
+      // Fetch vans data
+      const vansResponse = await fetch('/api/vans', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
+        }
+      })
+      const vansData = await vansResponse.json()
+      
+      // Fetch van sales data
+      const salesResponse = await fetch('/api/van-sales', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
+        }
+      })
+      const salesData = await salesResponse.json()
+      
+      // Fetch routes data
+      const routesResponse = await fetch('/api/routes', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
+        }
+      })
+      const routesData = await routesResponse.json()
+      
+      // Calculate metrics from real data
+      const vans = vansData.success ? vansData.data : []
+      const sales = salesData.success ? salesData.data : []
+      const routes = routesData.success ? routesData.data : []
+      
+      const totalSales = sales.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0)
+      const activeVans = vans.filter((van: any) => van.status === 'active').length
+      
       setMetrics({
-        totalVans: 25,
-        activeRoutes: 18,
-        todaySales: 45750,
-        totalInventory: 125000,
-        averageDeliveryTime: 32,
-        routeEfficiency: 87
+        totalVans: vans.length,
+        activeRoutes: routes.length,
+        todaySales: totalSales,
+        totalInventory: 125000, // TODO: Calculate from inventory API
+        averageDeliveryTime: 32, // TODO: Calculate from actual data
+        routeEfficiency: activeVans > 0 ? Math.round((activeVans / vans.length) * 100) : 0
       })
 
-      setVanPerformance([
-        {
-          id: '1',
-          vanNumber: 'VAN-001',
-          driver: 'John Smith',
-          route: 'North District',
-          status: 'active',
-          todaySales: 3250,
-          deliveries: 12,
-          efficiency: 92,
-          location: 'Downtown Area'
-        },
-        {
-          id: '2',
-          vanNumber: 'VAN-002',
-          driver: 'Sarah Johnson',
-          route: 'South District',
-          status: 'active',
-          todaySales: 2890,
-          deliveries: 8,
-          efficiency: 85,
-          location: 'Industrial Zone'
-        },
-        {
-          id: '3',
-          vanNumber: 'VAN-003',
-          driver: 'Mike Davis',
-          route: 'East District',
-          status: 'maintenance',
-          todaySales: 0,
-          deliveries: 0,
-          efficiency: 0,
-          location: 'Service Center'
+      // Map vans to performance data
+      const vanPerformanceData = vans.map((van: any) => {
+        const vanSales = sales.filter((sale: any) => sale.van_id === van.id)
+        const vanSalesTotal = vanSales.reduce((sum: number, sale: any) => sum + (sale.total_amount || 0), 0)
+        
+        return {
+          id: van.id,
+          vanNumber: van.registration_number || van.van_number || 'N/A',
+          driver: van.assigned_agent_name || 'Unassigned',
+          route: 'Route TBD', // TODO: Get from route assignment
+          status: van.status || 'inactive',
+          todaySales: vanSalesTotal,
+          deliveries: vanSales.length,
+          efficiency: van.status === 'active' ? 92 : 0, // TODO: Calculate real efficiency
+          location: 'GPS location TBD' // TODO: Get from GPS tracking
         }
-      ])
+      })
+      
+      setVanPerformance(vanPerformanceData)
     } catch (error) {
       console.error('Error fetching van sales data:', error)
     } finally {
