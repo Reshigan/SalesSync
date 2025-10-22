@@ -28,10 +28,10 @@ class AuthService {
         updated_at: apiData.user.updatedAt || apiData.user.createdAt,
       },
       tokens: {
-        access_token: apiData.token,
-        refresh_token: apiData.refreshToken,
-        expires_in: 86400, // 24 hours in seconds
-        token_type: 'Bearer' as const,
+        access_token: apiData.tokens?.access_token || apiData.token,
+        refresh_token: apiData.tokens?.refresh_token || apiData.refreshToken,
+        expires_in: apiData.tokens?.expires_in || '24h',
+        token_type: apiData.tokens?.token_type || 'Bearer',
       },
     }
   }
