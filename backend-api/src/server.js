@@ -290,6 +290,7 @@ async function startServer() {
     const gpsLocationRoutes = require('./routes/gps-location');
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsFieldRoutes = require('./routes/commissions');
+    const tradeMarketingRoutes = require('./routes/trade-marketing');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -317,6 +318,7 @@ async function startServer() {
     app.use('/api/warehouses', authTenantMiddleware, warehouseRoutes);
     app.use('/api/vans', authTenantMiddleware, vanRoutes);
     app.use('/api/promotions', authTenantMiddleware, promotionRoutes);
+    app.use('/api/trade-marketing', authTenantMiddleware, tradeMarketingRoutes);
     app.use('/api/merchandising', authTenantMiddleware, merchandisingRoutes);
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
