@@ -223,6 +223,7 @@ async function startServer() {
     const { authTenantMiddleware, requirePermission, requireFeature, checkUserLimits } = require('./middleware/authTenantMiddleware');
     logger.info('Importing auth routes...');
     const authRoutes = require('./routes/auth');
+    const authMobileRoutes = require('./routes/auth-mobile');
     logger.info('Importing tenant routes...');
     const tenantRoutes = require('./routes/tenants');
     const userRoutes = require('./routes/users');
@@ -230,6 +231,7 @@ async function startServer() {
     const productRoutes = require('./routes/products');
     const inventoryRoutes = require('./routes/inventory');
     const orderRoutes = require('./routes/orders');
+    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
     const visitRoutes = require('./routes/visits');
     const commissionRoutes = require('./routes/commissions');
     const reportRoutes = require('./routes/reports');
@@ -297,6 +299,7 @@ async function startServer() {
     // Public routes (no authentication required)
     logger.info('Registering auth routes...');
     app.use('/api/auth', authRateLimit, authRoutes);
+    app.use('/api/auth', authRateLimit, authMobileRoutes); // Mobile login routes
     logger.info('Registering tenant routes...');
     app.use('/api/tenants', tenantRoutes);
 
@@ -306,6 +309,7 @@ async function startServer() {
     app.use('/api/products', authTenantMiddleware, productRoutes);
     app.use('/api/inventory', authTenantMiddleware, inventoryRoutes);
     app.use('/api/orders', authTenantMiddleware, orderRoutes);
+    app.use('/api/orders', authTenantMiddleware, ordersEnhancedRoutes); // Enhanced endpoints
     app.use('/api/visits', authTenantMiddleware, visitRoutes);
     app.use('/api/commissions', authTenantMiddleware, commissionRoutes);
     app.use('/api/reports', authTenantMiddleware, reportRoutes);
