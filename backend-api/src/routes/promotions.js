@@ -11,11 +11,14 @@ router.get('/', asyncHandler(async (req, res) => {
     SELECT 
       id,
       name,
-      promotion_type,
+      type as promotion_type,
+      description,
+      discount_type,
+      discount_value,
       start_date,
       end_date,
-      discount_percentage,
-      discount_amount,
+      budget,
+      spent_amount,
       status,
       created_at
     FROM promotions 
@@ -33,30 +36,35 @@ router.get('/', asyncHandler(async (req, res) => {
 router.post('/', asyncHandler(async (req, res) => {
   const {
     name,
-    promotion_type,
+    description,
+    type,
+    discount_type,
+    discount_value,
     start_date,
     end_date,
-    discount_percentage,
-    discount_amount
+    budget
   } = req.body;
 
   const promotionId = require('crypto').randomUUID();
   
   const result = await runQuery(
     `INSERT INTO promotions (
-      id, tenant_id, name, promotion_type, start_date, end_date,
-      discount_percentage, discount_amount, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, tenant_id, name, description, type, discount_type, discount_value,
+      start_date, end_date, budget, status, created_by, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       promotionId,
       req.user.tenantId,
       name,
-      promotion_type || 'discount',
+      description || '',
+      type || 'discount',
+      discount_type || 'percentage',
+      discount_value || 0,
       start_date,
       end_date,
-      discount_percentage || 0,
-      discount_amount || 0,
-      'active',
+      budget || 0,
+      'draft',
+      req.user.userId,
       new Date().toISOString()
     ]
   );

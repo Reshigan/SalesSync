@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const getDatabase = () => require('../utils/database').getDatabase();
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 // Authentication middleware is applied globally in server.js
 
 /**
@@ -80,8 +80,6 @@ const getDatabase = () => require('../utils/database').getDatabase();
  */
 router.get('/', async (req, res) => {
   try {
-    const db = getDatabase();
-    
     const query = `
       SELECT 
         r.*,
@@ -99,7 +97,7 @@ router.get('/', async (req, res) => {
       ORDER BY r.name
     `;
     
-    const routes = db.prepare(query).all(req.tenantId);
+    const routes = await getQuery(query, [req.tenantId]);
     
     res.json({
       success: true,
@@ -136,7 +134,6 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
     const { id } = req.params;
     
     const query = `
@@ -152,7 +149,7 @@ router.get('/:id', async (req, res) => {
       WHERE r.id = ? AND r.tenant_id = ?
     `;
     
-    const route = db.prepare(query).get(id, req.tenantId);
+    const route = await getOneQuery(query, [id, req.tenantId]);
     
     if (!route) {
       return res.status(404).json({

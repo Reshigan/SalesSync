@@ -1,5 +1,5 @@
 const express = require('express');
-const getDatabase = () => require('../utils/database').getDatabase();
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
@@ -100,8 +100,6 @@ const bcrypt = require('bcrypt');
  */
 router.get('/', async (req, res) => {
   try {
-    const db = getDatabase();
-    
     const query = `
       SELECT 
         u.*,
@@ -109,11 +107,11 @@ router.get('/', async (req, res) => {
         0 as performance_rating,
         NULL as last_activity
       FROM users u
-      WHERE u.tenant_id = ? AND u.role IN ('sales_agent', 'merchandiser', 'promoter', 'supervisor')
+      WHERE u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'van_sales_agent')
       ORDER BY u.first_name, u.last_name
     `;
     
-    const agents = db.prepare(query).all(req.tenantId);
+    const agents = await getQuery(query, [req.tenantId]);
     
     res.json({
       success: true,
@@ -150,7 +148,6 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
     const { id } = req.params;
     
     const query = `
@@ -163,10 +160,10 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
       LEFT JOIN users mgr ON u.manager_id = mgr.id
-      WHERE u.id = ? AND u.tenant_id = ? AND u.role IN ('sales_agent', 'merchandiser', 'promoter', 'supervisor')
+      WHERE u.id = ? AND u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor')
     `;
     
-    const agent = db.prepare(query).get(id, req.tenantId);
+    const agent = await getOneQuery(query, [id, req.tenantId]);
     
     if (!agent) {
       return res.status(404).json({

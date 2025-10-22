@@ -1,5 +1,5 @@
 const express = require('express');
-const getDatabase = () => require('../utils/database').getDatabase();
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 // Authentication middleware is applied globally in server.js
@@ -70,7 +70,7 @@ const { v4: uuidv4 } = require('uuid');
  */
 router.get('/', async (req, res) => {
   try {
-    const db = getDatabase();
+    
     
     const query = `
       SELECT 
@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
       ORDER BY a.name
     `;
     
-    const areas = db.prepare(query).all(req.tenantId);
+    const areas = await getQuery(query, [req.tenantId]);
     
     res.json({
       success: true,
@@ -126,7 +126,7 @@ router.get('/', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
+    
     const { id } = req.params;
     
     const query = `
@@ -140,7 +140,7 @@ router.get('/:id', async (req, res) => {
       WHERE a.id = ? AND a.tenant_id = ?
     `;
     
-    const area = db.prepare(query).get(id, req.tenantId);
+    const area = await getOneQuery(query, [id, req.tenantId]);
     
     if (!area) {
       return res.status(404).json({
@@ -202,7 +202,7 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const db = getDatabase();
+    
     const { code, name, region_id, manager_id, description, status = 'active' } = req.body;
     
     // Validate required fields
@@ -214,7 +214,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if code already exists
-    const existingArea = db.prepare('SELECT id FROM areas WHERE code = ? AND tenant_id = ?').get(code, req.tenantId);
+    const existingArea = await getOneQuery('SELECT id FROM areas WHERE code = ? AND tenant_id = ?', [code, req.tenantId]);
     if (existingArea) {
       return res.status(400).json({
         success: false,
@@ -247,7 +247,7 @@ router.post('/', async (req, res) => {
       WHERE a.id = ?
     `;
     
-    const area = db.prepare(query).get(id);
+    const area = await getOneQuery(query, [id]);
     
     res.status(201).json({
       success: true,
@@ -304,12 +304,12 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
+    
     const { id } = req.params;
     const { code, name, region_id, manager_id, description, status } = req.body;
     
     // Check if area exists
-    const existingArea = db.prepare('SELECT id FROM areas WHERE id = ? AND tenant_id = ?').get(id, req.tenantId);
+    const existingArea = await getOneQuery('SELECT id FROM areas WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     if (!existingArea) {
       return res.status(404).json({
         success: false,
@@ -319,7 +319,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if code already exists (excluding current area)
     if (code) {
-      const duplicateArea = db.prepare('SELECT id FROM areas WHERE code = ? AND tenant_id = ? AND id != ?').get(code, req.tenantId, id);
+      const duplicateArea = await getOneQuery('SELECT id FROM areas WHERE code = ? AND tenant_id = ? AND id != ?', [code, req.tenantId, id]);
       if (duplicateArea) {
         return res.status(400).json({
           success: false,
@@ -358,7 +358,7 @@ router.put('/:id', async (req, res) => {
       WHERE a.id = ?
     `;
     
-    const area = db.prepare(query).get(id);
+    const area = await getOneQuery(query, [id]);
     
     res.json({
       success: true,
@@ -397,11 +397,11 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
+    
     const { id } = req.params;
     
     // Check if area exists
-    const existingArea = db.prepare('SELECT id FROM areas WHERE id = ? AND tenant_id = ?').get(id, req.tenantId);
+    const existingArea = await getOneQuery('SELECT id FROM areas WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     if (!existingArea) {
       return res.status(404).json({
         success: false,
@@ -410,7 +410,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if area has associated routes
-    const routeCount = db.prepare('SELECT COUNT(*) as count FROM routes WHERE area_id = ?').get(id);
+    const routeCount = await getOneQuery('SELECT COUNT(*) as count FROM routes WHERE area_id = ?', [id]);
     if (routeCount.count > 0) {
       return res.status(400).json({
         success: false,

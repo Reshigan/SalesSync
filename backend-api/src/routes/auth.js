@@ -12,7 +12,8 @@ const router = express.Router();
 const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
-  tenantCode: Joi.string().optional()
+  tenantCode: Joi.string().optional(),
+  remember_me: Joi.boolean().optional()
 });
 
 const refreshSchema = Joi.object({

@@ -24,7 +24,7 @@ export interface TenantMapping {
 // Default tenant configurations
 const DEFAULT_TENANT_MAPPINGS: TenantMapping = {
   'demo.salessync.com': {
-    code: 'DEMO_SA',
+    code: 'DEMO',
     name: 'Demo Tenant',
     domain: 'demo.salessync.com',
     theme: {
@@ -42,14 +42,19 @@ const DEFAULT_TENANT_MAPPINGS: TenantMapping = {
     }
   },
   'ss.gonxt.tech': {
-    code: 'DEMO_SA', // Default for main domain
+    code: 'DEMO', // Default for main domain
     name: 'SalesSync Demo',
     domain: 'ss.gonxt.tech'
   },
   'localhost': {
-    code: 'DEMO_SA',
+    code: 'DEMO',
     name: 'Local Development',
     domain: 'localhost'
+  },
+  'work-1-otdktmkeksbigpch.prod-runtime.all-hands.dev': {
+    code: 'DEMO',
+    name: 'SalesSync Development',
+    domain: 'work-1-otdktmkeksbigpch.prod-runtime.all-hands.dev'
   }
 }
 
@@ -90,7 +95,7 @@ class TenantService {
    * Get tenant code for API headers
    */
   getTenantCode(): string {
-    return this.currentTenant?.code || 'DEMO_SA'
+    return this.currentTenant?.code || 'DEMO'
   }
 
   /**
@@ -206,7 +211,7 @@ class TenantService {
    */
   private getDefaultTenant(): TenantConfig {
     return {
-      code: 'DEMO_SA',
+      code: 'DEMO',
       name: 'Default Tenant',
       domain: window.location.hostname
     }

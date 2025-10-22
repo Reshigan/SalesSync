@@ -138,6 +138,7 @@ async function createTables() {
       first_name TEXT NOT NULL,
       last_name TEXT NOT NULL,
       phone TEXT,
+      mobile TEXT,
       role TEXT NOT NULL,
       employee_id TEXT,
       area_id TEXT,
@@ -333,6 +334,9 @@ async function createTables() {
       hire_date DATE,
       territory_id TEXT, -- can be route_id, area_id, or region_id
       commission_structure_id TEXT,
+      mobile_number TEXT,
+      mobile_pin TEXT,
+      pin_last_changed DATETIME,
       status TEXT DEFAULT 'active',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (tenant_id) REFERENCES tenants(id),
@@ -1991,6 +1995,33 @@ async function seedMasterData(tenantId) {
       INSERT INTO customers (tenant_id, name, code, type, phone, route_id, status)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [tenantId, customer.name, customer.code, customer.type, customer.phone, routeId, 'active']);
+  }
+  
+  // Create field agents with mobile login capability
+  const agents = [
+    { firstName: 'Nomsa', lastName: 'Zulu', email: 'nomsa.zulu@demo.com', mobile: '+27820000001', code: 'AGT001', type: 'field_agent' },
+    { firstName: 'Thabo', lastName: 'Mokoena', email: 'thabo.mokoena@demo.com', mobile: '+27820000002', code: 'AGT002', type: 'field_agent' },
+    { firstName: 'Lerato', lastName: 'Dlamini', email: 'lerato.dlamini@demo.com', mobile: '+27820000003', code: 'AGT003', type: 'merchandiser' },
+    { firstName: 'Sipho', lastName: 'Ndlovu', email: 'sipho.ndlovu@demo.com', mobile: '+27820000004', code: 'AGT004', type: 'promoter' },
+    { firstName: 'Zanele', lastName: 'Khumalo', email: 'zanele.khumalo@demo.com', mobile: '+27820000005', code: 'AGT005', type: 'van_sales' },
+    { firstName: 'Mandla', lastName: 'Sithole', email: 'mandla.sithole@demo.com', mobile: '+27820000006', code: 'AGT006', type: 'field_agent' },
+    { firstName: 'Nandi', lastName: 'Mthembu', email: 'nandi.mthembu@demo.com', mobile: '+27820000007', code: 'AGT007', type: 'field_agent' }
+  ];
+  
+  for (const agent of agents) {
+    // Create user for agent
+    const userId = uuidv4();
+    const hashedPassword = await bcrypt.hash('agent123', 10);
+    await runQuery(`
+      INSERT INTO users (id, tenant_id, email, password_hash, first_name, last_name, role, mobile, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [userId, tenantId, agent.email, hashedPassword, agent.firstName, agent.lastName, 'field_agent', agent.mobile, 'active']);
+    
+    // Create agent record with mobile login credentials
+    await runQuery(`
+      INSERT INTO agents (tenant_id, user_id, agent_type, employee_code, territory_id, mobile_number, mobile_pin, status)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `, [tenantId, userId, agent.type, agent.code, routeId, agent.mobile, '123456', 'active']);
   }
 }
 

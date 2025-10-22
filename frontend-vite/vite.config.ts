@@ -50,7 +50,35 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 12000,
     cors: true,
-    allowedHosts: ['all']
+    strictPort: false,
+    allowedHosts: [
+      'work-1-otdktmkeksbigpch.prod-runtime.all-hands.dev',
+      'localhost',
+      '127.0.0.1'
+    ],
+    hmr: {
+      clientPort: 12000
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:12001',
+        changeOrigin: true,
+        secure: false,
+        configure: (proxy, _options) => {
+          proxy.on('proxyReq', (proxyReq, req, _res) => {
+            // Log for debugging
+            console.log('Proxying request to:', req.url)
+            console.log('Original headers:', req.headers)
+            
+            // Forward X-Tenant-Code header from client, or set default
+            const tenantCode = req.headers['x-tenant-code'] || 'DEMO'
+            proxyReq.setHeader('X-Tenant-Code', tenantCode)
+            
+            console.log('Forwarding with X-Tenant-Code:', tenantCode)
+          })
+        }
+      }
+    }
   },
   preview: {
     host: '0.0.0.0',
