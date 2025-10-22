@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Camera, Store, User, Phone, Mail, MapPinned, Building2, Users, Clock, CreditCard, ChevronRight, Save, AlertCircle } from 'lucide-react';
-import { useGPS } from '../../hooks/useGPS';
+import { useGeolocation } from '../../hooks/useGeolocation';
 import CameraCapture from '../../components/CameraCapture';
 
 interface CustomerData {
@@ -49,9 +49,9 @@ const INTEREST_LEVELS = [
 
 export default function NewCustomerRegistration() {
   const navigate = useNavigate();
-  const { position, error: gpsError, getCurrentPosition, accuracy } = useGPS();
+  const { position, error: gpsError, loading: gpsLoading, getCurrentPosition } = useGeolocation();
 
-  const [step, setStep] = useState<'gps' | 'details' | 'photos' | 'brands' | 'review'('gps');
+  const [step, setStep] = useState<'gps' | 'details' | 'photos' | 'brands' | 'review'>('gps');
   const [customerData, setCustomerData] = useState<CustomerData>({
     storeName: '',
     ownerName: '',
@@ -96,10 +96,10 @@ export default function NewCustomerRegistration() {
         ...prev,
         latitude: position.latitude,
         longitude: position.longitude,
-        accuracy: accuracy
+        accuracy: position.accuracy
       }));
     }
-  }, [position, accuracy]);
+  }, [position]);
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
     setCustomerData(prev => ({ ...prev, [field]: value }));
@@ -162,24 +162,24 @@ export default function NewCustomerRegistration() {
     }
   };
 
-  const handleStorefrontCapture = (photo: File) => {
-    setStorefrontPhoto(photo);
-    setStorefrontPhotoPreview(URL.createObjectURL(photo));
+  const handleStorefrontCapture = (imageData: string, file: File) => {
+    setStorefrontPhoto(file);
+    setStorefrontPhotoPreview(imageData);
     setShowStorefrontCamera(false);
     if (errors.storefrontPhoto) {
       setErrors(prev => ({ ...prev, storefrontPhoto: '' }));
     }
   };
 
-  const handleInteriorCapture = (photo: File) => {
-    setInteriorPhoto(photo);
-    setInteriorPhotoPreview(URL.createObjectURL(photo));
+  const handleInteriorCapture = (imageData: string, file: File) => {
+    setInteriorPhoto(file);
+    setInteriorPhotoPreview(imageData);
     setShowInteriorCamera(false);
   };
 
-  const handleIdCapture = (photo: File) => {
-    setIdDocumentPhoto(photo);
-    setIdDocumentPhotoPreview(URL.createObjectURL(photo));
+  const handleIdCapture = (imageData: string, file: File) => {
+    setIdDocumentPhoto(file);
+    setIdDocumentPhotoPreview(imageData);
     setShowIdCamera(false);
     if (errors.idDocumentPhoto) {
       setErrors(prev => ({ ...prev, idDocumentPhoto: '' }));
@@ -332,7 +332,7 @@ export default function NewCustomerRegistration() {
                 <AlertCircle className="w-5 h-5 text-red-600 mr-2 mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm text-red-800 font-medium">GPS Error</p>
-                  <p className="text-sm text-red-700 mt-1">{gpsError}</p>
+                  <p className="text-sm text-red-700 mt-1">{gpsError.message}</p>
                 </div>
               </div>
             )}
@@ -351,7 +351,7 @@ export default function NewCustomerRegistration() {
                   <div className="space-y-2 text-sm text-green-700">
                     <p><strong>Latitude:</strong> {position.latitude.toFixed(6)}</p>
                     <p><strong>Longitude:</strong> {position.longitude.toFixed(6)}</p>
-                    <p><strong>Accuracy:</strong> ±{accuracy?.toFixed(0)}m</p>
+                    <p><strong>Accuracy:</strong> ±{position.accuracy?.toFixed(0)}m</p>
                   </div>
                 </div>
 
@@ -927,7 +927,7 @@ export default function NewCustomerRegistration() {
       {showStorefrontCamera && (
         <CameraCapture
           onCapture={handleStorefrontCapture}
-          onClose={() => setShowStorefrontCamera(false)}
+          onCancel={() => setShowStorefrontCamera(false)}
           aspectRatio="landscape"
         />
       )}
@@ -935,7 +935,7 @@ export default function NewCustomerRegistration() {
       {showInteriorCamera && (
         <CameraCapture
           onCapture={handleInteriorCapture}
-          onClose={() => setShowInteriorCamera(false)}
+          onCancel={() => setShowInteriorCamera(false)}
           aspectRatio="landscape"
         />
       )}
@@ -943,7 +943,7 @@ export default function NewCustomerRegistration() {
       {showIdCamera && (
         <CameraCapture
           onCapture={handleIdCapture}
-          onClose={() => setShowIdCamera(false)}
+          onCancel={() => setShowIdCamera(false)}
           aspectRatio="landscape"
         />
       )}

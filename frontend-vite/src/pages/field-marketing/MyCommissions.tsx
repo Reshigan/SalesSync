@@ -79,7 +79,7 @@ export default function MyCommissions() {
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const filterCommissions = (status?: Commission['status']) => {
+  const filterCommissions = (status?: Commission['status'] | 'all') => {
     if (!status || status === 'all') return commissions;
     return commissions.filter(c => c.status === status);
   };

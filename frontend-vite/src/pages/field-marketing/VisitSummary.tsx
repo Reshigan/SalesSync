@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, XCircle, Target, Package, DollarSign, Clock, MapPin, AlertCircle, ChevronDown, ChevronUp, MessageSquare, Calendar, Check } from 'lucide-react';
 
-interface Visit Summary {
+interface VisitSummaryData {
   visitId: string;
   customerId: string;
   customerName: string;
@@ -40,7 +40,7 @@ export default function VisitSummary() {
   const location = useLocation();
   
   // In production, this data would come from location.state or API
-  const [visitData] = useState<VisitSummary>({
+  const [visitData] = useState<VisitSummaryData>({
     visitId: 'VST-2025-10-22-001',
     customerId: 'CUST-001',
     customerName: 'ABC Spaza Shop',
