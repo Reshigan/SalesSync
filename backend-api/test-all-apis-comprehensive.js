@@ -83,7 +83,7 @@ async function runComprehensiveTests() {
   
   console.log('\n📍 Field Operations:');
   results.push(await testAPI('/api/visits', 'Customer Visits'));
-  results.push(await testAPI('/api/gps/locations', 'GPS Locations'));
+  results.push(await testAPI('/api/gps-tracking/locations', 'GPS Locations'));
   
   console.log('\n💰 Sales & Transactions:');
   results.push(await testAPI('/api/van-sales', 'Van Sales'));

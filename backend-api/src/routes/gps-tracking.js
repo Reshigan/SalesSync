@@ -359,7 +359,7 @@ router.post('/validate-proximity', async (req, res) => {
     
     // Get customer location
     const customer = await getOneQuery(`
-      SELECT id, business_name, latitude, longitude, address
+      SELECT id, name, latitude, longitude, address
       FROM customers
       WHERE id = ? AND tenant_id = ?
     `, [customer_id, req.user.tenantId]);
@@ -399,7 +399,7 @@ router.post('/validate-proximity', async (req, res) => {
         required_radius: required_radius,
         customer: {
           id: customer.id,
-          name: customer.business_name,
+          name: customer.name,
           address: customer.address,
           location: {
             latitude: customer.latitude,
@@ -463,7 +463,7 @@ router.get('/agents/:id/track', async (req, res) => {
     const { date_from, date_to, limit = 100 } = req.query;
     
     let query = `
-      SELECT al.*, c.business_name as customer_name
+      SELECT al.*, c.name as customer_name
       FROM agent_locations al
       LEFT JOIN customers c ON al.customer_id = c.id
       WHERE al.agent_id = ? AND al.tenant_id = ?
@@ -561,7 +561,7 @@ router.get('/live-agents', async (req, res) => {
              u.first_name || ' ' || u.last_name as agent_name,
              u.phone as agent_phone,
              u.email as agent_email,
-             c.business_name as current_customer
+             c.name as current_customer
       FROM agents a
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON a.current_customer_id = c.id
@@ -659,6 +659,71 @@ router.get('/dashboard', async (req, res) => {
     res.status(500).json({
       success: false,
       error: { message: 'Failed to fetch dashboard data', code: 'FETCH_ERROR' }
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/gps-tracking/locations:
+ *   get:
+ *     summary: Get all GPS location records
+ *     tags: [GPS Tracking]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: agent_id
+ *         schema:
+ *           type: string
+ *         description: Filter by agent ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of records
+ *     responses:
+ *       200:
+ *         description: List of GPS locations
+ */
+router.get('/locations', async (req, res) => {
+  try {
+    const { getQuery } = await import('../utils/database.js');
+    const { agent_id, limit = 50 } = req.query;
+    
+    let query = `
+      SELECT al.*, 
+             u.first_name || ' ' || u.last_name as agent_name,
+             c.name as customer_name
+      FROM agent_locations al
+      LEFT JOIN agents a ON al.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      LEFT JOIN customers c ON al.customer_id = c.id
+      WHERE al.tenant_id = ?
+    `;
+    
+    const params = [req.user.tenantId];
+    
+    if (agent_id) {
+      query += ' AND al.agent_id = ?';
+      params.push(agent_id);
+    }
+    
+    query += ' ORDER BY al.recorded_at DESC LIMIT ?';
+    params.push(parseInt(limit));
+    
+    const locations = await getQuery(query, params);
+    
+    res.json({
+      success: true,
+      data: locations
+    });
+  } catch (error) {
+    console.error('Error fetching GPS locations:', error);
+    res.status(500).json({
+      success: false,
+      error: { message: 'Failed to fetch GPS locations', code: 'FETCH_ERROR' }
     });
   }
 });
