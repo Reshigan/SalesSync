@@ -40,6 +40,9 @@ import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
 import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
 import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
 
+// Field Marketing Pages
+import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
+
 // KYC Pages
 import KYCDashboard from './pages/kyc/KYCDashboard'
 import KYCManagement from './pages/kyc/KYCManagement'
@@ -145,6 +148,10 @@ function App() {
             <Route path="field-operations/boards" element={<BoardPlacementPage />} />
             <Route path="field-operations/products" element={<ProductDistributionPage />} />
             <Route path="field-operations/commission" element={<CommissionTrackingPage />} />
+
+            {/* Field Marketing Routes */}
+            <Route path="field-marketing" element={<FieldMarketingDashboard />} />
+            <Route path="field-marketing/dashboard" element={<FieldMarketingDashboard />} />
 
             {/* KYC Routes */}
             <Route path="kyc" element={<KYCDashboard />} />

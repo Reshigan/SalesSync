@@ -1572,6 +1572,202 @@ async function createTables() {
       FOREIGN KEY (tenant_id) REFERENCES tenants(id),
       FOREIGN KEY (transaction_id) REFERENCES transactions(id),
       FOREIGN KEY (changed_by) REFERENCES users(id)
+    )`,
+    
+    // Field Marketing System Tables
+    `CREATE TABLE IF NOT EXISTS boards (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      board_name TEXT NOT NULL,
+      board_type TEXT NOT NULL,
+      width_cm REAL,
+      height_cm REAL,
+      cost_price REAL,
+      installation_cost REAL,
+      commission_rate REAL,
+      reference_image_url TEXT,
+      description TEXT,
+      status TEXT DEFAULT 'active',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS brand_boards (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      brand_id TEXT NOT NULL,
+      board_id TEXT NOT NULL,
+      coverage_standard REAL,
+      visibility_standard REAL,
+      is_active INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (brand_id) REFERENCES brands(id),
+      FOREIGN KEY (board_id) REFERENCES boards(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS board_installations (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      customer_id TEXT NOT NULL,
+      board_id TEXT NOT NULL,
+      brand_id TEXT NOT NULL,
+      visit_id TEXT,
+      installation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      latitude REAL,
+      longitude REAL,
+      gps_accuracy REAL,
+      before_photo_url TEXT,
+      after_photo_url TEXT,
+      storefront_area_sqm REAL,
+      board_area_sqm REAL,
+      coverage_percentage REAL,
+      visibility_score REAL,
+      optimal_position INTEGER,
+      quality_score REAL,
+      commission_amount REAL,
+      commission_paid INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'installed',
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (board_id) REFERENCES boards(id),
+      FOREIGN KEY (brand_id) REFERENCES brands(id),
+      FOREIGN KEY (visit_id) REFERENCES visits(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS product_distributions (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      customer_id TEXT,
+      recipient_name TEXT NOT NULL,
+      recipient_id_number TEXT,
+      recipient_phone TEXT,
+      recipient_email TEXT,
+      product_id TEXT NOT NULL,
+      product_type TEXT NOT NULL,
+      quantity INTEGER DEFAULT 1,
+      distribution_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+      latitude REAL,
+      longitude REAL,
+      gps_accuracy REAL,
+      serial_number TEXT,
+      imei_number TEXT,
+      id_photo_url TEXT,
+      proof_photo_url TEXT,
+      signature_url TEXT,
+      kyc_data TEXT,
+      activation_status TEXT DEFAULT 'pending',
+      activation_date DATETIME,
+      commission_amount REAL,
+      commission_paid INTEGER DEFAULT 0,
+      follow_up_date DATE,
+      follow_up_status TEXT,
+      status TEXT DEFAULT 'distributed',
+      notes TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (product_id) REFERENCES products(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS agent_gps_logs (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      accuracy REAL,
+      altitude REAL,
+      speed REAL,
+      bearing REAL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      activity_type TEXT,
+      reference_type TEXT,
+      reference_id TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS commission_transactions (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      transaction_type TEXT NOT NULL,
+      reference_type TEXT,
+      reference_id TEXT,
+      base_amount REAL NOT NULL,
+      multiplier REAL DEFAULT 1.0,
+      bonus_amount REAL DEFAULT 0,
+      deduction_amount REAL DEFAULT 0,
+      total_amount REAL NOT NULL,
+      calculation_details TEXT,
+      currency TEXT DEFAULT 'USD',
+      status TEXT DEFAULT 'pending',
+      approved_by TEXT,
+      approved_at DATETIME,
+      rejected_by TEXT,
+      rejected_at DATETIME,
+      rejection_reason TEXT,
+      paid_at DATETIME,
+      payment_reference TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES agents(id),
+      FOREIGN KEY (approved_by) REFERENCES users(id),
+      FOREIGN KEY (rejected_by) REFERENCES users(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS visit_tasks (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      visit_id TEXT NOT NULL,
+      task_type TEXT NOT NULL,
+      task_name TEXT NOT NULL,
+      task_description TEXT,
+      is_mandatory INTEGER DEFAULT 0,
+      sequence_order INTEGER DEFAULT 0,
+      brand_id TEXT,
+      survey_id TEXT,
+      board_id TEXT,
+      product_id TEXT,
+      status TEXT DEFAULT 'pending',
+      completed_at DATETIME,
+      completed_by TEXT,
+      result_data TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (visit_id) REFERENCES visits(id),
+      FOREIGN KEY (brand_id) REFERENCES brands(id),
+      FOREIGN KEY (survey_id) REFERENCES surveys(id),
+      FOREIGN KEY (board_id) REFERENCES boards(id),
+      FOREIGN KEY (product_id) REFERENCES products(id),
+      FOREIGN KEY (completed_by) REFERENCES agents(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS customer_location_history (
+      id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+      tenant_id TEXT NOT NULL,
+      customer_id TEXT NOT NULL,
+      latitude REAL NOT NULL,
+      longitude REAL NOT NULL,
+      accuracy REAL,
+      updated_by TEXT NOT NULL,
+      update_reason TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (updated_by) REFERENCES users(id)
     )`
   ];
   
@@ -1579,6 +1775,22 @@ async function createTables() {
   await runQuery(`ALTER TABLE products ADD COLUMN sample_inventory INTEGER DEFAULT 0`).catch(() => {
     // Column might already exist, ignore error
   });
+  
+  // Add GPS fields to customers table
+  await runQuery(`ALTER TABLE customers ADD COLUMN latitude REAL`).catch(() => {});
+  await runQuery(`ALTER TABLE customers ADD COLUMN longitude REAL`).catch(() => {});
+  await runQuery(`ALTER TABLE customers ADD COLUMN gps_accuracy REAL`).catch(() => {});
+  await runQuery(`ALTER TABLE customers ADD COLUMN gps_updated_at DATETIME`).catch(() => {});
+  
+  // Add product commission fields to products table
+  await runQuery(`ALTER TABLE products ADD COLUMN commission_rate REAL`).catch(() => {});
+  await runQuery(`ALTER TABLE products ADD COLUMN commission_type TEXT`).catch(() => {});
+  await runQuery(`ALTER TABLE products ADD COLUMN activation_bonus REAL`).catch(() => {});
+  
+  // Add commission tracking to agents table
+  await runQuery(`ALTER TABLE agents ADD COLUMN total_commission_earned REAL DEFAULT 0`).catch(() => {});
+  await runQuery(`ALTER TABLE agents ADD COLUMN total_commission_paid REAL DEFAULT 0`).catch(() => {});
+  await runQuery(`ALTER TABLE agents ADD COLUMN commission_balance REAL DEFAULT 0`).catch(() => {});
   
   for (const table of tables) {
     await runQuery(table);
