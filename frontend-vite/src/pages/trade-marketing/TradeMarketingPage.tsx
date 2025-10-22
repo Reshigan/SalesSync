@@ -83,135 +83,81 @@ export default function TradeMarketingPage() {
   const fetchTradeMarketingData = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
-      setMetrics({
-        totalSpend: 125000,
-        activePromotions: 8,
-        retailerParticipation: 85,
-        roi: 3.2,
-        marketShare: 24.5,
-        competitorAnalysis: 12,
-        channelPartners: 45,
-        tradeSpendEfficiency: 78.5,
-        volumeGrowth: 12.3,
-        priceRealization: 94.2
+      const token = localStorage.getItem('token')
+      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
+      
+      // Fetch metrics
+      const metricsResponse = await fetch('/api/trade-marketing/metrics', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
+        }
       })
+      const metricsData = await metricsResponse.json()
+      if (metricsData.success) {
+        setMetrics(metricsData.data)
+      }
 
-      setPromotions([
-        {
-          id: '1',
-          name: 'Summer Volume Incentive',
-          type: 'volume_incentive',
-          status: 'active',
-          startDate: '2024-01-01',
-          endDate: '2024-03-31',
-          budget: 50000,
-          spent: 32000,
-          participatingRetailers: 45,
-          expectedROI: 3.5,
-          actualROI: 3.8,
-          category: 'Beverages',
-          channel: 'Retail',
-          performance: {
-            volumeImpact: 15.2,
-            revenueImpact: 18.7,
-            marginImpact: 12.4
-          }
-        },
-        {
-          id: '2',
-          name: 'New Product Launch Rebate',
-          type: 'rebate',
-          status: 'active',
-          startDate: '2024-01-15',
-          endDate: '2024-02-15',
-          budget: 25000,
-          spent: 18500,
-          participatingRetailers: 28,
-          expectedROI: 2.8,
-          actualROI: 3.1,
-          category: 'Snacks',
-          channel: 'Wholesale',
-          performance: {
-            volumeImpact: 22.1,
-            revenueImpact: 25.3,
-            marginImpact: 8.9
-          }
-        },
-        {
-          id: '3',
-          name: 'Holiday Display Program',
-          type: 'display_allowance',
-          status: 'planned',
-          startDate: '2024-02-01',
-          endDate: '2024-02-29',
-          budget: 35000,
-          spent: 0,
-          participatingRetailers: 0,
-          expectedROI: 4.2,
-          category: 'Seasonal',
-          channel: 'Retail',
-          performance: {
-            volumeImpact: 0,
-            revenueImpact: 0,
-            marginImpact: 0
-          }
+      // Fetch promotions
+      const promotionsResponse = await fetch('/api/trade-marketing/promotions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
         }
-      ])
+      })
+      const promotionsData = await promotionsResponse.json()
+      if (promotionsData.success) {
+        setPromotions(promotionsData.data)
+      }
 
-      setChannelPartners([
-        {
-          id: '1',
-          name: 'SuperMart Distribution',
-          type: 'distributor',
-          tier: 'platinum',
-          totalSpend: 45000,
-          performance: 92.5,
-          programs: 8
-        },
-        {
-          id: '2',
-          name: 'FreshMart Retail Chain',
-          type: 'retailer',
-          tier: 'gold',
-          totalSpend: 32000,
-          performance: 87.3,
-          programs: 5
-        },
-        {
-          id: '3',
-          name: 'QuickStop Wholesale',
-          type: 'wholesaler',
-          tier: 'silver',
-          totalSpend: 18500,
-          performance: 78.9,
-          programs: 3
+      // Fetch channel partners
+      const partnersResponse = await fetch('/api/trade-marketing/channel-partners', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
         }
-      ])
+      })
+      const partnersData = await partnersResponse.json()
+      if (partnersData.success) {
+        setChannelPartners(partnersData.data)
+      }
 
-      setCompetitorData([
-        {
-          competitor: 'CompetitorA',
-          marketShare: 28.5,
-          priceIndex: 102.3,
-          promotionalActivity: 85.2,
-          trend: 'up'
-        },
-        {
-          competitor: 'CompetitorB',
-          marketShare: 22.1,
-          priceIndex: 98.7,
-          promotionalActivity: 72.4,
-          trend: 'down'
-        },
-        {
-          competitor: 'CompetitorC',
-          marketShare: 18.9,
-          priceIndex: 105.1,
-          promotionalActivity: 91.8,
-          trend: 'stable'
+      // Fetch competitor analysis
+      const competitorResponse = await fetch('/api/trade-marketing/competitor-analysis', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
         }
-      ])
+      })
+      const competitorData = await competitorResponse.json()
+      if (competitorData.success) {
+        setCompetitorData(competitorData.data)
+      } else {
+        // Fallback to mock data if API returns nothing
+        setCompetitorData([
+          {
+            competitor: 'Competitor A',
+            marketShare: 28.5,
+            priceIndex: 102.3,
+            promotionalActivity: 85.2,
+            trend: 'up'
+          },
+          {
+            competitor: 'Competitor B',
+            marketShare: 22.1,
+            priceIndex: 98.7,
+            promotionalActivity: 72.4,
+            trend: 'down'
+          },
+          {
+            competitor: 'Competitor C',
+            marketShare: 18.9,
+            priceIndex: 105.1,
+            promotionalActivity: 91.8,
+            trend: 'stable'
+          }
+        ])
+      }
     } catch (error) {
       console.error('Error fetching trade marketing data:', error)
     } finally {
