@@ -79,6 +79,8 @@ async function initializeApp() {
     const visitsSurveysRoutes = require('./routes/visits-surveys');
     const pictureAssignmentsRoutes = require('./routes/picture-assignments');
     const gpsTrackingRoutes = require('./routes/gps-tracking');
+    const performanceRoutes = require('./routes/performance');
+    const notificationsRoutes = require('./routes/notifications');
     const currencySystemRoutes = require('./routes/currency-system');
     const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
     const vanSalesRoutes = require('./routes/van-sales');
@@ -130,6 +132,8 @@ async function initializeApp() {
     app.use('/api/visits-surveys', visitsSurveysRoutes);
     app.use('/api/picture-assignments', pictureAssignmentsRoutes);
     app.use('/api/gps-tracking', gpsTrackingRoutes);
+    app.use('/api/performance', performanceRoutes);
+    app.use('/api/notifications', notificationsRoutes);
     app.use('/api/currency-system', currencySystemRoutes);
     app.use('/api/comprehensive-transactions', comprehensiveTransactionsRoutes);
     app.use('/api/van-sales', vanSalesRoutes);

@@ -282,6 +282,8 @@ async function startServer() {
     const gpsTrackingRoutes = require('./routes/gps-tracking');
     const currencySystemRoutes = require('./routes/currency-system');
     const comprehensiveTransactionsRoutes = require('./routes/comprehensive-transactions');
+    const performanceRoutes = require('./routes/performance');
+    const notificationsRoutes = require('./routes/notifications');
     
     // Field Marketing System routes
     const boardsRoutes = require('./routes/boards');
@@ -362,6 +364,8 @@ async function startServer() {
     app.use('/api/gps-tracking', authTenantMiddleware, gpsTrackingRoutes);
     app.use('/api/currency-system', authTenantMiddleware, currencySystemRoutes);
     app.use('/api/comprehensive-transactions', authTenantMiddleware, comprehensiveTransactionsRoutes);
+    app.use('/api/performance', performanceRoutes);
+    app.use('/api/notifications', notificationsRoutes);
     
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
