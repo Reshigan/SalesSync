@@ -33,6 +33,9 @@ import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
 // Events Pages
 import EventsPage from './pages/events/EventsPage'
 
+// Brand Activations Pages
+import BrandActivationsPage from './pages/brand-activations/BrandActivationsPage'
+
 // Campaign Pages
 import CampaignsPage from './pages/campaigns/CampaignsPage'
 
@@ -190,6 +193,9 @@ function App() {
 
             {/* Events Routes */}
             <Route path="events" element={<EventsPage />} />
+            
+            {/* Brand Activations Routes */}
+            <Route path="brand-activations" element={<BrandActivationsPage />} />
 
             {/* Campaign Routes */}
             <Route path="campaigns" element={<CampaignsPage />} />

@@ -106,18 +106,20 @@ export const formatCurrency = (
     return `${showSymbol ? config.symbol : ''}${thousands.toFixed(1)}K${showCode ? ` ${config.code}` : ''}`
   }
 
-  const formatted = new Intl.NumberFormat(config.locale, {
-    style: showSymbol ? 'currency' : 'decimal',
-    currency: config.code,
-    minimumFractionDigits: config.decimals,
-    maximumFractionDigits: config.decimals
-  }).format(amount)
-
-  if (showCode && !showSymbol) {
-    return `${formatted} ${config.code}`
+  // Format number with thousand separators and decimals
+  const formattedNumber = amount.toFixed(config.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  
+  let result = formattedNumber
+  
+  if (showSymbol) {
+    result = `${config.symbol} ${formattedNumber}`
+  }
+  
+  if (showCode) {
+    result = showSymbol ? `${result} (${config.code})` : `${formattedNumber} ${config.code}`
   }
 
-  return formatted
+  return result
 }
 
 export const parseCurrency = (value: string, currency?: Currency): number => {
