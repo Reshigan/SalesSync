@@ -3,7 +3,10 @@ const http = require('http');
 const cors = require('cors');
 const winston = require('winston');
 const expressWinston = require('express-winston');
-require('dotenv').config();
+const path = require('path');
+
+// Load .env from the project root (parent of src directory)
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const config = require('./config/database');
 
@@ -424,6 +427,10 @@ async function startServer() {
     const { router: monitoringRoutes, trackRequest } = require('./routes/monitoring');
     app.use(trackRequest); // Global request tracking
     app.use('/api/monitoring', monitoringRoutes);
+
+    // Backup routes
+    const backupRoutes = require('./routes/backup');
+    app.use('/api/backup', authTenantMiddleware, backupRoutes);
 
     logger.info('Routes configured successfully');
 
