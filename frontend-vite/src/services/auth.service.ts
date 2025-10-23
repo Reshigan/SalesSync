@@ -14,6 +14,21 @@ class AuthService {
     
     // Adapt the API response to match the expected format
     const apiData = response.data.data
+    
+    // Helper to convert expires_in to number (seconds)
+    const parseExpiresIn = (value: any): number => {
+      if (typeof value === 'number') return value
+      if (typeof value === 'string') {
+        const match = value.match(/^(\d+)([smhd])$/)
+        if (match) {
+          const [, num, unit] = match
+          const multipliers = { s: 1, m: 60, h: 3600, d: 86400 }
+          return parseInt(num) * (multipliers[unit as keyof typeof multipliers] || 3600)
+        }
+      }
+      return 86400 // Default: 24 hours
+    }
+    
     return {
       user: {
         id: apiData.user.id,
@@ -30,8 +45,8 @@ class AuthService {
       tokens: {
         access_token: apiData.tokens?.access_token || apiData.token,
         refresh_token: apiData.tokens?.refresh_token || apiData.refreshToken,
-        expires_in: apiData.tokens?.expires_in || '24h',
-        token_type: apiData.tokens?.token_type || 'Bearer',
+        expires_in: parseExpiresIn(apiData.tokens?.expires_in),
+        token_type: (apiData.tokens?.token_type || 'Bearer') as 'Bearer',
       },
     }
   }

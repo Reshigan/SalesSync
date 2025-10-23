@@ -142,6 +142,19 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     const expiresIn = process.env.JWT_EXPIRES_IN || '24h';
     const refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
     
+    // Convert time strings to seconds for the response
+    const convertToSeconds = (timeStr) => {
+      if (typeof timeStr === 'number') return timeStr;
+      const match = timeStr.match(/^(\d+)([smhd])$/);
+      if (!match) return 86400; // default 24h
+      const [, value, unit] = match;
+      const multipliers = { s: 1, m: 60, h: 3600, d: 86400 };
+      return parseInt(value) * (multipliers[unit] || 3600);
+    };
+    
+    const expiresInSeconds = convertToSeconds(expiresIn);
+    const refreshExpiresInSeconds = convertToSeconds(refreshExpiresIn);
+    
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
       expiresIn: expiresIn
     });
@@ -224,7 +237,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
         tokens: {
           access_token: token,
           refresh_token: refreshToken,
-          expires_in: expiresIn,
+          expires_in: expiresInSeconds, // Send as number (seconds)
           token_type: 'Bearer'
         },
         // Keep old format for backward compatibility
