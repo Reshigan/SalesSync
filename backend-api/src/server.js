@@ -170,7 +170,52 @@ app.use(expressWinston.logger({
   }
 }));
 
-// Health check endpoints
+// Swagger API Documentation
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
+
+app.use('/api/docs', swaggerUi.serve);
+app.get('/api/docs', swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'SalesSync API Documentation',
+}));
+
+// Swagger JSON endpoint
+app.get('/api/docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Health check endpoint
+ *     tags: [Health]
+ *     responses:
+ *       200:
+ *         description: Server is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: healthy
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 uptime:
+ *                   type: number
+ *                   example: 123.456
+ *                 environment:
+ *                   type: string
+ *                   example: production
+ *                 version:
+ *                   type: string
+ *                   example: 1.3.0
+ */
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
@@ -374,6 +419,11 @@ async function startServer() {
     app.use('/api/gps-location', authTenantMiddleware, gpsLocationRoutes);
     app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
+
+    // Monitoring routes
+    const { router: monitoringRoutes, trackRequest } = require('./routes/monitoring');
+    app.use(trackRequest); // Global request tracking
+    app.use('/api/monitoring', monitoringRoutes);
 
     logger.info('Routes configured successfully');
 
