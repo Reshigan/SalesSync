@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   LayoutDashboard, 
   Package, 
@@ -8,6 +8,8 @@ import {
 } from 'lucide-react'
 import BoardManagement from '../../components/field-marketing/BoardManagement'
 import CommissionDashboard from '../../components/field-marketing/CommissionDashboard'
+import { apiClient } from '../../services/api.service'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
 
 type TabType = 'overview' | 'boards' | 'products' | 'commissions' | 'installations'
 
@@ -62,6 +64,45 @@ export default function FieldMarketingDashboard() {
 }
 
 function OverviewTab() {
+  const [stats, setStats] = useState({
+    activeBoards: 0,
+    installations: 0,
+    distributions: 0,
+    commissions: 0
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true)
+      const [boardsRes, installationsRes, distributionsRes, commissionsRes] = await Promise.all([
+        apiClient.get('/boards?status=active'),
+        apiClient.get('/board-installations'),
+        apiClient.get('/product-distributions'),
+        apiClient.get('/commissions?status=pending')
+      ])
+      
+      setStats({
+        activeBoards: boardsRes.data.data?.length || 0,
+        installations: installationsRes.data.data?.length || 0,
+        distributions: distributionsRes.data.data?.length || 0,
+        commissions: commissionsRes.data.data?.reduce((sum: number, c: any) => sum + (c.amount || 0), 0) || 0
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="p-6"><LoadingSpinner /></div>
+  }
+
   return (
     <div className="p-6 space-y-6">
       <div>
@@ -75,7 +116,7 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Boards</p>
-              <p className="text-3xl font-bold text-gray-900">0</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.activeBoards}</p>
             </div>
             <Package className="w-10 h-10 text-blue-500" />
           </div>
@@ -85,7 +126,7 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Installations</p>
-              <p className="text-3xl font-bold text-gray-900">0</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.installations}</p>
             </div>
             <MapPin className="w-10 h-10 text-green-500" />
           </div>
@@ -95,7 +136,7 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Distributions</p>
-              <p className="text-3xl font-bold text-gray-900">0</p>
+              <p className="text-3xl font-bold text-gray-900">{stats.distributions}</p>
             </div>
             <BarChart3 className="w-10 h-10 text-purple-500" />
           </div>
@@ -105,7 +146,7 @@ function OverviewTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Commissions</p>
-              <p className="text-3xl font-bold text-gray-900">$0.00</p>
+              <p className="text-3xl font-bold text-gray-900">${stats.commissions.toFixed(2)}</p>
             </div>
             <DollarSign className="w-10 h-10 text-yellow-500" />
           </div>

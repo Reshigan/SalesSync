@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Package, Plus, Trash2, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
+import { apiClient } from '../../services/api.service';
 
 interface Brand {
   id: string;
@@ -151,13 +152,18 @@ export default function ProductDistribution() {
       setSubmitting(true);
       setError(null);
 
-      // TODO: Submit to backend
-      // await fieldMarketingService.submitProductDistributions(customerId, distributions);
+      await apiClient.post('/product-distributions', {
+        customer_id: customerId,
+        distributions: distributions.map(d => ({
+          product_id: d.product_id,
+          recipient_name: d.recipient_name,
+          recipient_id_number: d.recipient_id_number,
+          recipient_phone: d.recipient_phone,
+          serial_number: d.serial_number,
+          quantity: d.quantity
+        }))
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Navigate back to visit list
       navigate(`/field-marketing/visit-list/${customerId}`, {
         state: { customer, brands, gpsVerified, productDistributionComplete: true },
       });

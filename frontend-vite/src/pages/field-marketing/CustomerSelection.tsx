@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, MapPin, Clock, Users, PlusCircle, Navigation } from 'lucide-react';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { haversineDistance, formatDistance } from '../../utils/gps.utils';
+import { apiClient } from '../../services/api.service';
 
 interface Customer {
   id: string;
@@ -53,42 +54,21 @@ export default function CustomerSelection() {
       setLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API call
-      // const response = await customerService.getMyCustomers();
-      // setCustomers(response.data);
-
-      // Mock data for demonstration
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          store_name: 'Mikes Spaza Shop',
-          owner_name: 'Mike Mokoena',
-          phone: '0823456789',
-          address: '123 Main Street, Soweto',
-          gps_latitude: -26.2041,
-          gps_longitude: 28.0473,
-          last_visit_date: '2025-10-15',
-          status: 'active',
-          brands: [
-            { id: '1', brand_name: 'MTN', logo_url: null },
-            { id: '2', brand_name: 'Vodacom', logo_url: null },
-          ],
-        },
-        {
-          id: '2',
-          store_name: 'Thembis Corner Cafe',
-          owner_name: 'Thembi Dlamini',
-          phone: '0734567890',
-          address: '456 Market Road, Alexandra',
-          gps_latitude: -26.1076,
-          gps_longitude: 28.0967,
-          last_visit_date: null,
-          status: 'active',
-          brands: [{ id: '1', brand_name: 'MTN', logo_url: null }],
-        },
-      ];
-
-      setCustomers(mockCustomers);
+      const response = await apiClient.get('/customers?status=active');
+      const customersData = response.data.data || [];
+      
+      setCustomers(customersData.map((c: any) => ({
+        id: c.id,
+        store_name: c.store_name || c.business_name || c.name,
+        owner_name: c.owner_name || c.contact_person,
+        phone: c.phone || c.mobile,
+        address: c.address,
+        gps_latitude: c.gps_latitude || c.latitude,
+        gps_longitude: c.gps_longitude || c.longitude,
+        last_visit_date: c.last_visit_date,
+        status: c.status,
+        brands: c.brands || []
+      })));
     } catch (err) {
       setError('Failed to load customers. Please try again.');
       console.error('Error fetching customers:', err);

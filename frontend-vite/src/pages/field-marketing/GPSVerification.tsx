@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { verifyLocation, formatDistance, formatCoordinates, getAccuracyLevel } from '../../utils/gps.utils';
+import { apiClient } from '../../services/api.service';
 
 interface Customer {
   id: string;
@@ -92,10 +93,25 @@ export default function GPSVerification() {
     });
   };
 
-  const handleUpdateCustomerLocation = () => {
-    // TODO: Implement update customer location
-    // This should open a modal to confirm and provide justification
-    alert('Update customer location feature - TODO: Implement modal with justification field');
+  const handleUpdateCustomerLocation = async () => {
+    if (!position || !customer) return;
+    
+    const justification = prompt('Please provide a reason for updating the customer location:');
+    if (!justification) return;
+    
+    try {
+      await apiClient.put(`/customers/${customer.id}/location`, {
+        gps_latitude: position.latitude,
+        gps_longitude: position.longitude,
+        justification: justification
+      });
+      
+      alert('Customer location updated successfully');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating customer location:', error);
+      alert('Failed to update customer location. Please try again.');
+    }
   };
 
   const handleCancel = () => {

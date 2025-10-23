@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Check, ArrowRight, Package, AlertCircle } from 'lucide-react';
+import { apiClient } from '../../services/api.service';
 
 interface Brand {
   id: string;
@@ -48,45 +49,17 @@ export default function BrandSelection() {
       setLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API call
-      // const response = await fieldMarketingService.getBrands();
-      // setBrands(response.data);
+      const response = await apiClient.get('/brands?status=active');
+      const brandsData = response.data.data || [];
+      
+      setBrands(brandsData.map((b: any) => ({
+        id: b.id,
+        brand_name: b.brand_name || b.name,
+        logo_url: b.logo_url || b.logo,
+        description: b.description,
+        status: b.status
+      })));
 
-      // Mock data
-      const mockBrands: Brand[] = [
-        {
-          id: '1',
-          brand_name: 'MTN',
-          logo_url: null,
-          description: 'Mobile telecommunications',
-          status: 'active',
-        },
-        {
-          id: '2',
-          brand_name: 'Vodacom',
-          logo_url: null,
-          description: 'Mobile telecommunications',
-          status: 'active',
-        },
-        {
-          id: '3',
-          brand_name: 'Telkom',
-          logo_url: null,
-          description: 'Mobile telecommunications',
-          status: 'active',
-        },
-        {
-          id: '4',
-          brand_name: 'Cell C',
-          logo_url: null,
-          description: 'Mobile telecommunications',
-          status: 'active',
-        },
-      ];
-
-      setBrands(mockBrands);
-
-      // Pre-select customer's existing brands
       if (customer?.brands) {
         const existingBrandIds = new Set(customer.brands.map((b) => b.id));
         setSelectedBrands(existingBrandIds);

@@ -101,6 +101,31 @@ async function initializeApp() {
     const gpsLocationRoutes = require('./routes/gps-location');
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsRoutes = require('./routes/commissions');
+    
+    // Load additional missing routes
+    console.log('Loading additional API routes...');
+    const visitsRoutes = require('./routes/visits');
+    const categoriesRoutes = require('./routes/categories');
+    const brandsRoutes = require('./routes/brands');
+    const tradeMarketingRoutes = require('./routes/trade-marketing');
+    const vansRoutes = require('./routes/vans');
+    const fieldOperationsRoutes = require('./routes/field-operations');
+    const merchandisingRoutes = require('./routes/merchandising');
+    const regionsRoutes = require('./routes/regions');
+    const kycRoutes = require('./routes/kyc');
+    const transactionsRoutes = require('./routes/transactions-api');
+    const cashManagementRoutes = require('./routes/cash-management');
+    const commissionsApiRoutes = require('./routes/commissions-api');
+    const stockMovementsRoutes = require('./routes/stock-movements');
+    const stockCountsRoutes = require('./routes/stock-counts');
+    const purchaseOrdersRoutes = require('./routes/purchase-orders');
+    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
+    const vanSalesOperationsRoutes = require('./routes/van-sales-operations');
+    const integrationsRoutes = require('./routes/integrations');
+    const bulkOperationsRoutes = require('./routes/bulk-operations');
+    const monitoringRoutes = require('./routes/monitoring');
+    const backupRoutes = require('./routes/backup');
+    const advancedReportingRoutes = require('./routes/advanced-reporting');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -154,6 +179,31 @@ async function initializeApp() {
     app.use('/api/gps-location', gpsLocationRoutes);
     app.use('/api/field-agent-workflow', fieldAgentWorkflowRoutes);
     app.use('/api/commissions', commissionsRoutes);
+    
+    // Mount additional missing routes
+    console.log('Mounting additional API routes...');
+    app.use('/api/visits', visitsRoutes);
+    app.use('/api/categories', categoriesRoutes);
+    app.use('/api/brands', brandsRoutes);
+    app.use('/api/trade-marketing', tradeMarketingRoutes);
+    app.use('/api/vans', vansRoutes);
+    app.use('/api/field-operations', fieldOperationsRoutes);
+    app.use('/api/merchandising', merchandisingRoutes);
+    app.use('/api/regions', regionsRoutes);
+    app.use('/api/kyc', kycRoutes);
+    app.use('/api/transactions', transactionsRoutes);
+    app.use('/api/cash-management', cashManagementRoutes);
+    app.use('/api/commissions-api', commissionsApiRoutes);
+    app.use('/api/stock-movements', stockMovementsRoutes);
+    app.use('/api/stock-counts', stockCountsRoutes);
+    app.use('/api/purchase-orders', purchaseOrdersRoutes);
+    app.use('/api/orders-enhanced', ordersEnhancedRoutes);
+    app.use('/api/van-sales-operations', vanSalesOperationsRoutes);
+    app.use('/api/integrations', integrationsRoutes);
+    app.use('/api/bulk-operations', bulkOperationsRoutes);
+    app.use('/api/monitoring', monitoringRoutes);
+    app.use('/api/backup', backupRoutes);
+    app.use('/api/advanced-reporting', advancedReportingRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);
