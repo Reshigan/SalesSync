@@ -85,6 +85,10 @@ import AuditLogsPage from './pages/admin/AuditLogsPage'
 import RolePermissionsPage from './pages/admin/RolePermissionsPage'
 import DataImportExportPage from './pages/admin/DataImportExportPage'
 
+// Finance Pages
+import InvoiceManagementPage from './pages/finance/InvoiceManagementPage'
+import PaymentCollectionPage from './pages/finance/PaymentCollectionPage'
+
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -218,6 +222,10 @@ function App() {
             <Route path="orders/:id" element={<OrderDetailsPage />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/:id" element={<ProductDetailsPage />} />
+
+            {/* Finance Routes */}
+            <Route path="finance/invoices" element={<InvoiceManagementPage />} />
+            <Route path="finance/payments" element={<PaymentCollectionPage />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
