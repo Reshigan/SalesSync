@@ -1,23 +1,514 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Edit2, Printer, Download, Package, DollarSign, Calendar, User, MapPin, CheckCircle, XCircle, Clock, Truck, FileText, CreditCard, Save, X, Plus, Trash2 } from 'lucide-react'
+
+interface OrderItem {
+  id: string
+  productId: string
+  productName: string
+  sku: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+  taxAmount: number
+  totalAmount: number
+}
+
+interface Order {
+  id: string
+  orderNumber: string
+  orderDate: string
+  deliveryDate: string
+  customerId: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  agentId: string
+  agentName: string
+  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+  paymentStatus: 'pending' | 'partial' | 'paid' | 'refunded'
+  paymentMethod: string
+  shippingAddress: string
+  billingAddress: string
+  subtotal: number
+  taxAmount: number
+  shippingCost: number
+  discount: number
+  totalAmount: number
+  notes: string
+  items: OrderItem[]
+  timeline: TimelineEvent[]
+}
+
+interface TimelineEvent {
+  id: string
+  timestamp: string
+  event: string
+  description: string
+  user: string
+}
+
 export default function OrderDetailsPage() {
-  return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Order Details functionality coming soon.
-        </p>
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [order, setOrder] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isEditing, setIsEditing] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
+
+  useEffect(() => {
+    fetchOrderDetails()
+  }, [id])
+
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true)
+      // Mock data
+      const mockOrder: Order = {
+        id: id || '1',
+        orderNumber: 'ORD000123',
+        orderDate: new Date().toISOString(),
+        deliveryDate: new Date(Date.now() + 7 * 86400000).toISOString(),
+        customerId: 'cust-1',
+        customerName: 'ABC Retail Store',
+        customerEmail: 'contact@abcstore.com',
+        customerPhone: '+1234567890',
+        agentId: 'agent-1',
+        agentName: 'John Agent',
+        status: 'confirmed',
+        paymentStatus: 'partial',
+        paymentMethod: 'bank_transfer',
+        shippingAddress: '123 Main St, Metro City, State 12345',
+        billingAddress: '123 Main St, Metro City, State 12345',
+        subtotal: 10000,
+        taxAmount: 1000,
+        shippingCost: 500,
+        discount: 500,
+        totalAmount: 11000,
+        notes: 'Please deliver before 5 PM',
+        items: [
+          {
+            id: '1',
+            productId: 'prod-1',
+            productName: 'Coca-Cola 500ml',
+            sku: 'SKU00001',
+            quantity: 100,
+            unitPrice: 50,
+            subtotal: 5000,
+            taxAmount: 500,
+            totalAmount: 5500
+          },
+          {
+            id: '2',
+            productId: 'prod-2',
+            productName: 'Pepsi 500ml',
+            sku: 'SKU00002',
+            quantity: 100,
+            unitPrice: 50,
+            subtotal: 5000,
+            taxAmount: 500,
+            totalAmount: 5500
+          }
+        ],
+        timeline: [
+          {
+            id: '1',
+            timestamp: new Date().toISOString(),
+            event: 'Order Confirmed',
+            description: 'Order has been confirmed and is being prepared',
+            user: 'System'
+          },
+          {
+            id: '2',
+            timestamp: new Date(Date.now() - 3600000).toISOString(),
+            event: 'Order Created',
+            description: 'Order was created by field agent',
+            user: 'John Agent'
+          }
+        ]
+      }
+      setOrder(mockOrder)
+    } catch (error) {
+      console.error('Failed to fetch order details:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'bg-green-100 text-green-800'
+      case 'shipped': return 'bg-blue-100 text-blue-800'
+      case 'confirmed': return 'bg-purple-100 text-purple-800'
+      case 'pending': return 'bg-yellow-100 text-yellow-800'
+      case 'cancelled': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case 'paid': return 'bg-green-100 text-green-800'
+      case 'partial': return 'bg-yellow-100 text-yellow-800'
+      case 'pending': return 'bg-orange-100 text-orange-800'
+      case 'refunded': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const handlePrint = () => {
+    window.print()
+  }
+
+  const handleDownload = () => {
+    console.log('Downloading invoice...')
+  }
+
+  const updateOrderStatus = async (newStatus: string) => {
+    try {
+      console.log('Updating order status to:', newStatus)
+      setOrder({ ...order!, status: newStatus as any })
+    } catch (error) {
+      console.error('Failed to update order status:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
-      
-      <div className="card">
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Order Details
-          </h3>
-          <p className="text-gray-600">
-            This feature is under development.
-          </p>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Order not found</h3>
+        <button onClick={() => navigate('/orders')} className="btn btn-primary mt-4">
+          Back to Orders
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
+            <p className="text-sm text-gray-600">
+              Placed on {new Date(order.orderDate).toLocaleDateString()}
+            </p>
+          </div>
+          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(order.status)}`}>
+            {order.status.toUpperCase()}
+          </span>
+          <span className={`px-3 py-1 text-sm font-medium rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>
+            {order.paymentStatus.toUpperCase()}
+          </span>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={handlePrint} className="btn btn-secondary flex items-center gap-2">
+            <Printer className="w-4 h-4" /> Print
+          </button>
+          <button onClick={handleDownload} className="btn btn-secondary flex items-center gap-2">
+            <Download className="w-4 h-4" /> Download
+          </button>
+          <button onClick={() => setIsEditing(!isEditing)} className="btn btn-primary flex items-center gap-2">
+            <Edit2 className="w-4 h-4" /> Edit Order
+          </button>
         </div>
       </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="card">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Package className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Items</p>
+              <p className="text-2xl font-bold text-gray-900">{order.items.length}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <DollarSign className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Total Amount</p>
+              <p className="text-2xl font-bold text-gray-900">${order.totalAmount.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <Calendar className="w-6 h-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Delivery Date</p>
+              <p className="text-lg font-bold text-gray-900">
+                {new Date(order.deliveryDate).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-100 rounded-lg">
+              <CreditCard className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Payment Method</p>
+              <p className="text-sm font-bold text-gray-900">{order.paymentMethod.replace('_', ' ')}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {['details', 'items', 'timeline', 'documents'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'details' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Customer Information */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Customer Information
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600">Name</p>
+                <p className="text-sm font-medium text-gray-900">{order.customerName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="text-sm font-medium text-gray-900">{order.customerEmail}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Phone</p>
+                <p className="text-sm font-medium text-gray-900">{order.customerPhone}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Shipping Address</p>
+                <p className="text-sm font-medium text-gray-900">{order.shippingAddress}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Information */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Order Information
+            </h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm text-gray-600">Agent</p>
+                <p className="text-sm font-medium text-gray-900">{order.agentName}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Order Date</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {new Date(order.orderDate).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Delivery Date</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {new Date(order.deliveryDate).toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Notes</p>
+                <p className="text-sm font-medium text-gray-900">{order.notes || 'No notes'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Update */}
+          <div className="card lg:col-span-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Order Status</h3>
+            <div className="flex gap-3">
+              <button
+                onClick={() => updateOrderStatus('confirmed')}
+                disabled={order.status === 'confirmed'}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" /> Confirm
+              </button>
+              <button
+                onClick={() => updateOrderStatus('shipped')}
+                disabled={order.status === 'shipped'}
+                className="btn btn-secondary flex items-center gap-2"
+              >
+                <Truck className="w-4 h-4" /> Mark as Shipped
+              </button>
+              <button
+                onClick={() => updateOrderStatus('delivered')}
+                disabled={order.status === 'delivered'}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <CheckCircle className="w-4 h-4" /> Mark as Delivered
+              </button>
+              <button
+                onClick={() => updateOrderStatus('cancelled')}
+                disabled={order.status === 'cancelled'}
+                className="btn btn-danger flex items-center gap-2"
+              >
+                <XCircle className="w-4 h-4" /> Cancel Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'items' && (
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tax</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {order.items.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.productName}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600">{item.sku}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900 text-right">${item.subtotal.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm text-gray-600 text-right">${item.taxAmount.toFixed(2)}</td>
+                    <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">${item.totalAmount.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50">
+                <tr>
+                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Subtotal:</td>
+                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.subtotal.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Tax:</td>
+                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.taxAmount.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Shipping:</td>
+                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.shippingCost.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Discount:</td>
+                  <td className="px-6 py-3 text-right text-sm font-semibold text-red-600">-${order.discount.toFixed(2)}</td>
+                </tr>
+                <tr className="border-t-2 border-gray-300">
+                  <td colSpan={6} className="px-6 py-4 text-right text-base font-bold text-gray-900">Total Amount:</td>
+                  <td className="px-6 py-4 text-right text-xl font-bold text-green-600">${order.totalAmount.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'timeline' && (
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Timeline</h3>
+          <div className="space-y-4">
+            {order.timeline.map((event, index) => (
+              <div key={event.id} className="flex gap-4">
+                <div className="flex flex-col items-center">
+                  <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-600' : 'bg-gray-300'}`} />
+                  {index < order.timeline.length - 1 && (
+                    <div className="w-0.5 h-full bg-gray-300 mt-1" />
+                  )}
+                </div>
+                <div className="flex-1 pb-6">
+                  <div className="flex items-center justify-between mb-1">
+                    <h4 className="font-medium text-gray-900">{event.event}</h4>
+                    <span className="text-sm text-gray-500">
+                      {new Date(event.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600">{event.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">By {event.user}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'documents' && (
+        <div className="card">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Documents</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <FileText className="w-8 h-8 text-blue-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Invoice #{order.orderNumber}</p>
+                  <p className="text-sm text-gray-600">Generated on {new Date(order.orderDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <button className="btn btn-secondary flex items-center gap-2">
+                <Download className="w-4 h-4" /> Download
+              </button>
+            </div>
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+              <div className="flex items-center gap-3">
+                <FileText className="w-8 h-8 text-green-600" />
+                <div>
+                  <p className="font-medium text-gray-900">Delivery Note</p>
+                  <p className="text-sm text-gray-600">Ready for download</p>
+                </div>
+              </div>
+              <button className="btn btn-secondary flex items-center gap-2">
+                <Download className="w-4 h-4" /> Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
