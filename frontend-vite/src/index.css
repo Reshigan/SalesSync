@@ -155,6 +155,21 @@
     @apply animate-slide-up;
   }
 
+  @keyframes slide-in {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+
   /* Mobile responsive utilities */
   .mobile-menu {
     @apply fixed inset-0 z-40 lg:hidden;

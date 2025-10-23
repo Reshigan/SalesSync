@@ -89,9 +89,14 @@ import DataImportExportPage from './pages/admin/DataImportExportPage'
 import InvoiceManagementPage from './pages/finance/InvoiceManagementPage'
 import PaymentCollectionPage from './pages/finance/PaymentCollectionPage'
 
+// Analytics Pages
+import ExecutiveDashboard from './pages/analytics/ExecutiveDashboard'
+import AdvancedAnalyticsDashboard from './pages/analytics/AdvancedAnalyticsDashboard'
+
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import ToastContainer from './components/ui/Toast'
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
@@ -126,6 +131,7 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
+        <ToastContainer />
         <Routes>
           {/* Public Routes */}
           <Route path="/auth/*" element={
@@ -226,6 +232,10 @@ function App() {
             {/* Finance Routes */}
             <Route path="finance/invoices" element={<InvoiceManagementPage />} />
             <Route path="finance/payments" element={<PaymentCollectionPage />} />
+
+            {/* Analytics Routes */}
+            <Route path="analytics/executive" element={<ExecutiveDashboard />} />
+            <Route path="analytics/advanced" element={<AdvancedAnalyticsDashboard />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
