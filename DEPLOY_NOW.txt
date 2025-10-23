@@ -1,0 +1,112 @@
+╔══════════════════════════════════════════════════════════════════════════╗
+║                   🚀 DEPLOY VISIT MANAGEMENT NOW                         ║
+║                                                                          ║
+║  Copy and paste these commands on your production server                ║
+║  Server: ubuntu@35.177.226.170                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+STEP 1: SSH to Production Server
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ssh ubuntu@35.177.226.170
+
+
+STEP 2: Run Deployment Command (ONE COMMAND)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+curl -sSL https://raw.githubusercontent.com/Reshigan/SalesSync/main/server-deploy.sh | sudo bash
+
+
+ALTERNATIVE: Manual Step-by-Step
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+If you prefer manual deployment:
+
+# Navigate to repo (or clone if doesn't exist)
+cd /var/www/salessync || git clone https://github.com/Reshigan/SalesSync.git /var/www/salessync
+
+# Pull latest changes
+cd /var/www/salessync
+sudo git pull origin main
+
+# Build frontend
+cd frontend-vite
+sudo npm install --legacy-peer-deps
+sudo npm run build
+
+# Backup current deployment
+sudo mkdir -p /var/www/salessync/backups
+sudo tar -czf /var/www/salessync/backups/frontend_$(date +%Y%m%d_%H%M%S).tar.gz -C /var/www/salessync/frontend . 2>/dev/null || true
+
+# Deploy
+sudo rm -rf /var/www/salessync/frontend/*
+sudo cp -r dist/* /var/www/salessync/frontend/
+sudo chown -R www-data:www-data /var/www/salessync/frontend
+sudo chmod -R 755 /var/www/salessync/frontend
+
+# Verify
+curl -I https://ss.gonxt.tech
+
+
+STEP 3: Test in Browser
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open: https://ss.gonxt.tech
+2. Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac)
+3. Login:
+   - Tenant: demo
+   - Email: admin@demo.com
+   - Password: admin123
+4. Navigate: Field Operations → Visit Management
+5. Test buttons:
+   ✓ Schedule Visit (should open form)
+   ✓ Submit form (should create visit)
+   ✓ Edit visit (should open form with data)
+   ✓ Delete visit (should show confirmation)
+   ✓ Search (should filter in real-time)
+   ✓ Filters (should update list)
+
+
+WHAT'S NEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Visit Management page (FULLY FUNCTIONAL)
+   - Create visits (assign agent, customer, date, type)
+   - Edit visits (all fields editable)
+   - Delete visits (with confirmation)
+   - Search visits (real-time)
+   - Filter visits (status, agent, type, date range)
+   - Statistics dashboard (visit metrics)
+   - ALL BUTTONS WORK!
+
+📍 Location: Field Operations → Visit Management
+🔗 URL: https://ss.gonxt.tech/field-operations/visits
+
+Git Commits:
+- c786af7: Visit Management implementation
+- c23910d: Deployment scripts
+
+
+TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Issue: Still seeing old version
+→ Clear browser cache (Ctrl+Shift+R)
+
+Issue: 404 on visit management page
+→ Check nginx config has: try_files $uri $uri/ /index.html;
+→ Restart nginx: sudo systemctl restart nginx
+
+Issue: Buttons don't work
+→ Check browser console (F12) for errors
+→ Verify API is running: pm2 status
+
+Issue: 502 Bad Gateway
+→ Restart backend: pm2 restart backend-api
+
+
+NEED HELP?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Check these files for detailed instructions:
+- MANUAL_DEPLOYMENT_GUIDE.md (step-by-step guide)
+- DEPLOYMENT_SUMMARY.md (what's being deployed)
+- README_PRODUCTION_STATUS.md (full system status)
+
+╔══════════════════════════════════════════════════════════════════════════╗
+║  Deployment ready! All code pushed to GitHub (commit c23910d)            ║
+║  Run the commands above to deploy Visit Management to production         ║
+╚══════════════════════════════════════════════════════════════════════════╝
