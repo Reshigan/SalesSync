@@ -126,6 +126,11 @@ async function initializeApp() {
     const monitoringRoutes = require('./routes/monitoring');
     const backupRoutes = require('./routes/backup');
     const advancedReportingRoutes = require('./routes/advanced-reporting');
+    
+    // Load NEW Field Marketing & Trade Marketing routes
+    console.log('Loading NEW Field Marketing & Trade Marketing routes...');
+    const fieldMarketingRoutes = require('./routes/fieldMarketing');
+    const tradeMarketingNewRoutes = require('./routes/tradeMarketing');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -204,6 +209,11 @@ async function initializeApp() {
     app.use('/api/monitoring', monitoringRoutes);
     app.use('/api/backup', backupRoutes);
     app.use('/api/advanced-reporting', advancedReportingRoutes);
+    
+    // Mount NEW Field Marketing & Trade Marketing routes
+    console.log('Mounting NEW Field Marketing & Trade Marketing routes...');
+    app.use('/api/field-marketing', fieldMarketingRoutes);
+    app.use('/api/trade-marketing-new', tradeMarketingNewRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

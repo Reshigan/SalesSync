@@ -341,6 +341,10 @@ async function startServer() {
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsFieldRoutes = require('./routes/commissions');
     const tradeMarketingRoutes = require('./routes/trade-marketing');
+    
+    // NEW Field Marketing & Trade Marketing routes
+    const fieldMarketingRoutes = require('./routes/fieldMarketing');
+    const tradeMarketingNewRoutes = require('./routes/tradeMarketing');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -370,6 +374,11 @@ async function startServer() {
     app.use('/api/promotions', authTenantMiddleware, promotionRoutes);
     app.use('/api/trade-marketing', authTenantMiddleware, tradeMarketingRoutes);
     app.use('/api/merchandising', authTenantMiddleware, merchandisingRoutes);
+    
+    // NEW Field Marketing & Trade Marketing routes
+    logger.info('Mounting NEW Field Marketing & Trade Marketing routes...');
+    app.use('/api/field-marketing', authTenantMiddleware, fieldMarketingRoutes);
+    app.use('/api/trade-marketing-new', authTenantMiddleware, tradeMarketingNewRoutes);
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
