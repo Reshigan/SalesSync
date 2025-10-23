@@ -42,6 +42,7 @@ import CampaignsPage from './pages/campaigns/CampaignsPage'
 // Field Operations Pages
 import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
 import FieldOperationsDashboard from './pages/field-operations/FieldOperationsDashboard'
+import VisitManagement from './pages/field-operations/VisitManagement'
 import LiveMappingPage from './pages/field-agents/LiveMappingPage'
 import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
 import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
@@ -157,6 +158,7 @@ function App() {
             <Route path="field-operations" element={<FieldOperationsDashboard />} />
             <Route path="field-operations/dashboard" element={<FieldOperationsDashboard />} />
             <Route path="field-operations/agents" element={<FieldAgentsPage />} />
+            <Route path="field-operations/visits" element={<VisitManagement />} />
             <Route path="field-operations/mapping" element={<LiveMappingPage />} />
             <Route path="field-operations/boards" element={<BoardPlacementPage />} />
             <Route path="field-operations/products" element={<ProductDistributionPage />} />

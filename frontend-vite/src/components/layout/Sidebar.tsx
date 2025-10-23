@@ -81,6 +81,11 @@ const navigation = [
         permission: PERMISSIONS.MANAGE_FIELD_AGENTS,
       },
       {
+        name: 'Visit Management',
+        href: '/field-operations/visits',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+      },
+      {
         name: 'Live Mapping',
         href: '/field-operations/mapping',
         permission: PERMISSIONS.VIEW_AGENT_LOCATIONS,
