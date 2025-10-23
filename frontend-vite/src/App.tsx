@@ -83,6 +83,7 @@ import UserManagementPage from './pages/admin/UserManagementPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
 import RolePermissionsPage from './pages/admin/RolePermissionsPage'
+import DataImportExportPage from './pages/admin/DataImportExportPage'
 
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
@@ -237,6 +238,11 @@ function App() {
             <Route path="admin/roles" element={
               <ProtectedRoute requiredRole="admin">
                 <RolePermissionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/import-export" element={
+              <ProtectedRoute requiredRole="admin">
+                <DataImportExportPage />
               </ProtectedRoute>
             } />
             <Route path="admin/audit" element={
