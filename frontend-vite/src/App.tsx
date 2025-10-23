@@ -82,6 +82,7 @@ import AdminPage from './pages/admin/AdminPage'
 import UserManagementPage from './pages/admin/UserManagementPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
+import RolePermissionsPage from './pages/admin/RolePermissionsPage'
 
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
@@ -231,6 +232,11 @@ function App() {
             <Route path="admin/settings" element={
               <ProtectedRoute requiredRole="admin">
                 <SystemSettingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/roles" element={
+              <ProtectedRoute requiredRole="admin">
+                <RolePermissionsPage />
               </ProtectedRoute>
             } />
             <Route path="admin/audit" element={
