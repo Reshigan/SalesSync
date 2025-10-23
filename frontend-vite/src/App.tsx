@@ -1,102 +1,66 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { tenantService } from './services/tenant.service'
 
-// Layout Components
+// Layout Components (keep eager loaded)
 import AuthLayout from './components/layout/AuthLayout'
 import DashboardLayout from './components/layout/DashboardLayout'
 import ErrorBoundary from './components/ui/ErrorBoundary'
-
-// Auth Pages
-import LoginPage from './pages/auth/LoginPage'
-import MobileLoginPage from './pages/auth/MobileLoginPage'
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
-
-// Dashboard Pages
-import DashboardPage from './pages/dashboard/DashboardPage'
-import AnalyticsPage from './pages/dashboard/AnalyticsPage'
-
-// Agent Pages
-import AgentDashboard from './pages/agent/AgentDashboard'
-
-// Van Sales Pages
-import VanSalesPage from './pages/van-sales/VanSalesPage'
-import VanSalesDashboard from './pages/van-sales/VanSalesDashboard'
-import RouteManagementPage from './pages/van-sales/RouteManagementPage'
-import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
-
-// Trade Marketing Pages
-import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
-
-// Events Pages
-import EventsPage from './pages/events/EventsPage'
-
-// Brand Activations Pages
-import BrandActivationsPage from './pages/brand-activations/BrandActivationsPage'
-
-// Campaign Pages
-import CampaignsPage from './pages/campaigns/CampaignsPage'
-
-// Field Operations Pages
-import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
-import FieldOperationsDashboard from './pages/field-operations/FieldOperationsDashboard'
-import VisitManagement from './pages/field-operations/VisitManagement'
-import LiveMappingPage from './pages/field-agents/LiveMappingPage'
-import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
-import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
-import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
-
-// Field Marketing Pages
-import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
-
-// KYC Pages
-import KYCDashboard from './pages/kyc/KYCDashboard'
-import KYCManagement from './pages/kyc/KYCManagement'
-import KYCReports from './pages/kyc/KYCReports'
-
-// Surveys Pages
-import SurveysDashboard from './pages/surveys/SurveysDashboard'
-import SurveysManagement from './pages/surveys/SurveysManagement'
-
-// Inventory Pages
-import InventoryDashboard from './pages/inventory/InventoryDashboard'
-import InventoryManagement from './pages/inventory/InventoryManagement'
-import InventoryReports from './pages/inventory/InventoryReports'
-
-// Promotions Pages
-import PromotionsDashboard from './pages/promotions/PromotionsDashboard'
-import PromotionsManagement from './pages/promotions/PromotionsManagement'
-
-// Business Pages
-import CustomersPage from './pages/customers/CustomersPage'
-import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
-import OrdersPage from './pages/orders/OrdersPage'
-import OrderDetailsPage from './pages/orders/OrderDetailsPage'
-import ProductsPage from './pages/products/ProductsPage'
-import ProductDetailsPage from './pages/products/ProductDetailsPage'
-
-// Admin Pages
-import AdminPage from './pages/admin/AdminPage'
-import UserManagementPage from './pages/admin/UserManagementPage'
-import SystemSettingsPage from './pages/admin/SystemSettingsPage'
-import AuditLogsPage from './pages/admin/AuditLogsPage'
-import RolePermissionsPage from './pages/admin/RolePermissionsPage'
-import DataImportExportPage from './pages/admin/DataImportExportPage'
-
-// Finance Pages
-import InvoiceManagementPage from './pages/finance/InvoiceManagementPage'
-import PaymentCollectionPage from './pages/finance/PaymentCollectionPage'
-
-// Analytics Pages
-import ExecutiveDashboard from './pages/analytics/ExecutiveDashboard'
-import AdvancedAnalyticsDashboard from './pages/analytics/AdvancedAnalyticsDashboard'
-
-// Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
 import ToastContainer from './components/ui/Toast'
+
+// Lazy Load All Pages
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'))
+const MobileLoginPage = lazy(() => import('./pages/auth/MobileLoginPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
+const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'))
+const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage'))
+const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
+const VanSalesPage = lazy(() => import('./pages/van-sales/VanSalesPage'))
+const VanSalesDashboard = lazy(() => import('./pages/van-sales/VanSalesDashboard'))
+const RouteManagementPage = lazy(() => import('./pages/van-sales/RouteManagementPage'))
+const InventoryTrackingPage = lazy(() => import('./pages/van-sales/InventoryTrackingPage'))
+const TradeMarketingPage = lazy(() => import('./pages/trade-marketing/TradeMarketingPage'))
+const EventsPage = lazy(() => import('./pages/events/EventsPage'))
+const BrandActivationsPage = lazy(() => import('./pages/brand-activations/BrandActivationsPage'))
+const CampaignsPage = lazy(() => import('./pages/campaigns/CampaignsPage'))
+const FieldAgentsPage = lazy(() => import('./pages/field-agents/FieldAgentsPage'))
+const FieldOperationsDashboard = lazy(() => import('./pages/field-operations/FieldOperationsDashboard'))
+const VisitManagement = lazy(() => import('./pages/field-operations/VisitManagement'))
+const LiveMappingPage = lazy(() => import('./pages/field-agents/LiveMappingPage'))
+const BoardPlacementPage = lazy(() => import('./pages/field-agents/BoardPlacementPage'))
+const ProductDistributionPage = lazy(() => import('./pages/field-agents/ProductDistributionPage'))
+const CommissionTrackingPage = lazy(() => import('./pages/field-agents/CommissionTrackingPage'))
+const FieldMarketingDashboard = lazy(() => import('./pages/field-marketing/FieldMarketingDashboard'))
+const KYCDashboard = lazy(() => import('./pages/kyc/KYCDashboard'))
+const KYCManagement = lazy(() => import('./pages/kyc/KYCManagement'))
+const KYCReports = lazy(() => import('./pages/kyc/KYCReports'))
+const SurveysDashboard = lazy(() => import('./pages/surveys/SurveysDashboard'))
+const SurveysManagement = lazy(() => import('./pages/surveys/SurveysManagement'))
+const InventoryDashboard = lazy(() => import('./pages/inventory/InventoryDashboard'))
+const InventoryManagement = lazy(() => import('./pages/inventory/InventoryManagement'))
+const InventoryReports = lazy(() => import('./pages/inventory/InventoryReports'))
+const PromotionsDashboard = lazy(() => import('./pages/promotions/PromotionsDashboard'))
+const PromotionsManagement = lazy(() => import('./pages/promotions/PromotionsManagement'))
+const CustomersPage = lazy(() => import('./pages/customers/CustomersPage'))
+const CustomerDetailsPage = lazy(() => import('./pages/customers/CustomerDetailsPage'))
+const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'))
+const OrderDetailsPage = lazy(() => import('./pages/orders/OrderDetailsPage'))
+const ProductsPage = lazy(() => import('./pages/products/ProductsPage'))
+const ProductDetailsPage = lazy(() => import('./pages/products/ProductDetailsPage'))
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'))
+const SystemSettingsPage = lazy(() => import('./pages/admin/SystemSettingsPage'))
+const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'))
+const RolePermissionsPage = lazy(() => import('./pages/admin/RolePermissionsPage'))
+const DataImportExportPage = lazy(() => import('./pages/admin/DataImportExportPage'))
+const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManagementPage'))
+const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
+const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
+const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
@@ -132,7 +96,12 @@ function App() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
         <ToastContainer />
-        <Routes>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        }>
+          <Routes>
           {/* Public Routes */}
           <Route path="/auth/*" element={
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthLayout />
@@ -280,6 +249,7 @@ function App() {
               <Navigate to="/auth/login" replace />
           } />
         </Routes>
+        </Suspense>
       </div>
     </ErrorBoundary>
   )
