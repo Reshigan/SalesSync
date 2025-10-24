@@ -37,7 +37,7 @@ async function createSuperAdmin() {
       const hashedPassword = await bcrypt.hash('SuperAdmin@2025!', 10);
       db.prepare(`
         UPDATE users 
-        SET password = ?, role = ?, updated_at = CURRENT_TIMESTAMP 
+        SET password_hash = ?, role = ?, updated_at = CURRENT_TIMESTAMP 
         WHERE email = ?
       `).run(hashedPassword, 'superadmin', 'superadmin@salessync.system');
       
@@ -48,7 +48,7 @@ async function createSuperAdmin() {
       const hashedPassword = await bcrypt.hash('SuperAdmin@2025!', 10);
       db.prepare(`
         INSERT INTO users (
-          tenant_id, email, password, first_name, last_name, 
+          tenant_id, email, password_hash, first_name, last_name, 
           role, status, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `).run(
