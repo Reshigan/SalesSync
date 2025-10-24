@@ -379,6 +379,12 @@ async function startServer() {
     logger.info('Mounting NEW Field Marketing & Trade Marketing routes...');
     app.use('/api/field-marketing', authTenantMiddleware, fieldMarketingRoutes);
     app.use('/api/trade-marketing-new', authTenantMiddleware, tradeMarketingNewRoutes);
+    
+    // Global Search
+    logger.info('Mounting Global Search route...');
+    const searchRoutes = require('./routes/search');
+    app.use('/api/search', authTenantMiddleware, searchRoutes);
+    
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
