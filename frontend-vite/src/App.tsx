@@ -68,6 +68,16 @@ const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboa
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
 
+// Enterprise Modules 2-8
+const OrderManagement = lazy(() => import('./pages/OrderManagement'))
+const InventoryManagementEnhanced = lazy(() => import('./pages/InventoryManagement'))
+const FinancialDashboard = lazy(() => import('./pages/FinancialDashboard'))
+const WarehouseManagement = lazy(() => import('./pages/WarehouseManagement'))
+const VanSalesManagement = lazy(() => import('./pages/VanSalesManagement'))
+const FieldOperationsDashboardEnhanced = lazy(() => import('./pages/FieldOperationsDashboard'))
+const CRMDashboard = lazy(() => import('./pages/CRMDashboard'))
+const MarketingCampaigns = lazy(() => import('./pages/MarketingCampaigns'))
+
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
   const [tenantLoading, setTenantLoading] = useState(true)
@@ -208,6 +218,16 @@ function App() {
             <Route path="finance/dashboard" element={<FinanceDashboard />} />
             <Route path="finance/invoices" element={<InvoiceManagementPage />} />
             <Route path="finance/payments" element={<PaymentCollectionPage />} />
+
+            {/* Enterprise Module Routes */}
+            <Route path="orders-management" element={<OrderManagement />} />
+            <Route path="inventory-enhanced" element={<InventoryManagementEnhanced />} />
+            <Route path="finance-enhanced" element={<FinancialDashboard />} />
+            <Route path="warehouse" element={<WarehouseManagement />} />
+            <Route path="van-sales-enhanced" element={<VanSalesManagement />} />
+            <Route path="field-ops-enhanced" element={<FieldOperationsDashboardEnhanced />} />
+            <Route path="crm" element={<CRMDashboard />} />
+            <Route path="marketing" element={<MarketingCampaigns />} />
 
             {/* Sales Routes */}
             <Route path="sales/dashboard" element={<SalesDashboard />} />
