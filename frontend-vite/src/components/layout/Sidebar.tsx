@@ -18,7 +18,8 @@ import {
   Gift,
   CreditCard,
   MessageSquare,
-  Route
+  Route,
+  Shield
 } from 'lucide-react'
 import { useAuthStore, hasPermission } from '../../store/auth.store'
 import { PERMISSIONS } from '../../types/auth.types'
@@ -264,6 +265,13 @@ const navigation = [
     permission: PERMISSIONS.VIEW_PRODUCTS,
   },
   {
+    name: 'SuperAdmin',
+    href: '/superadmin/tenants',
+    icon: Shield,
+    permission: null, // We'll check role directly in the component
+    requiresRole: 'superadmin',
+  },
+  {
     name: 'Administration',
     href: '/admin',
     icon: Settings,
@@ -292,6 +300,11 @@ export default function Sidebar() {
   const { user } = useAuthStore()
 
   const isNavItemVisible = (item: any) => {
+    // Check if item requires specific role
+    if (item.requiresRole && user?.role !== item.requiresRole) {
+      return false
+    }
+    // Check permission
     if (!item.permission) return true
     return hasPermission(item.permission)
   }

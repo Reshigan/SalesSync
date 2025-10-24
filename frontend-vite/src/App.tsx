@@ -61,6 +61,7 @@ const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManageme
 const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
 const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
+const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
@@ -205,6 +206,13 @@ function App() {
             {/* Analytics Routes */}
             <Route path="analytics/executive" element={<ExecutiveDashboard />} />
             <Route path="analytics/advanced" element={<AdvancedAnalyticsDashboard />} />
+
+            {/* SuperAdmin Routes */}
+            <Route path="superadmin/tenants" element={
+              <ProtectedRoute requiredRole="superadmin">
+                <TenantManagement />
+              </ProtectedRoute>
+            } />
 
             {/* Admin Routes */}
             <Route path="admin" element={
