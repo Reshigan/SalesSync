@@ -10,7 +10,7 @@ echo "🚀 Starting SalesSync Production Deployment..."
 # Configuration
 PRODUCTION_SERVER="35.177.226.170"
 PRODUCTION_USER="ubuntu"
-SSH_KEY_PATH="./SSLS.pem"
+SSH_KEY_PATH="/workspace/project/SSLS.pem"
 BACKEND_DIR="/home/ubuntu/SalesSync/backend-api"
 FRONTEND_BUILD_DIR="/var/www/html"
 PM2_APP_NAME="salessync-backend"

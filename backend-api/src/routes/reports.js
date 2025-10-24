@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Generate Report
-router.post('/generate', authenticateToken, async (req, res) => {
+router.post('/generate', async (req, res) => {
   try {
     const { type, dateFrom, dateTo, groupBy } = req.body;
     let query, params = [req.user.tenantId];
@@ -37,7 +37,7 @@ router.post('/generate', authenticateToken, async (req, res) => {
 });
 
 // Export Report
-router.post('/export', authenticateToken, async (req, res) => {
+router.post('/export', async (req, res) => {
   try {
     const { format } = req.query;
     const { data } = req.body;
@@ -60,7 +60,7 @@ router.post('/export', authenticateToken, async (req, res) => {
 });
 
 // Run Template
-router.post('/templates/:id/run', authenticateToken, async (req, res) => {
+router.post('/templates/:id/run', async (req, res) => {
   try {
     const templateId = parseInt(req.params.id);
     const mockData = Array(50).fill(0).map((_, i) => ({
@@ -77,7 +77,7 @@ router.post('/templates/:id/run', authenticateToken, async (req, res) => {
 });
 
 // Analytics Dashboard
-router.get('/analytics', authenticateToken, async (req, res) => {
+router.get('/analytics', async (req, res) => {
   try {
     const revenue = req.db.prepare(`SELECT SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')`).get(req.user.tenantId);
     const agents = req.db.prepare(`SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND role = 'agent'`).get(req.user.tenantId);
