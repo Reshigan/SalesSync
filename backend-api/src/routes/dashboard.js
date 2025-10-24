@@ -871,4 +871,317 @@ router.get('/sales', asyncHandler(async (req, res, next) => {
   }
 }));
 
+/**
+ * @swagger
+ * /api/dashboard/customers:
+ *   get:
+ *     summary: Get customer dashboard metrics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Customer dashboard data retrieved successfully
+ */
+router.get('/customers', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, getQuery } = require('../database/init');
+  
+  try {
+    const tenantId = req.tenantId;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+    const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+    // Total Customers
+    const customers = await getOneQuery(`
+      SELECT 
+        COUNT(*) as total_customers,
+        (SELECT COUNT(*) FROM customers WHERE tenant_id = ? 
+         AND strftime('%Y', created_at) = ? 
+         AND strftime('%m', created_at) = ?) as new_customers
+      FROM customers
+      WHERE tenant_id = ?
+      AND status = 'active'
+    `, [
+      tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0'),
+      tenantId
+    ]);
+
+    // Customer Lifetime Value
+    const clv = await getOneQuery(`
+      SELECT COALESCE(AVG(total_value), 0) as avg_clv
+      FROM (
+        SELECT customer_id, SUM(total_amount) as total_value
+        FROM orders
+        WHERE tenant_id = ?
+        AND order_status NOT IN ('cancelled', 'rejected')
+        GROUP BY customer_id
+      )
+    `, [tenantId]);
+
+    // Active vs Inactive
+    const activity = await getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT o.customer_id) as active_customers
+      FROM orders o
+      WHERE o.tenant_id = ?
+      AND o.order_date >= date('now', '-3 months')
+      AND o.order_status NOT IN ('cancelled', 'rejected')
+    `, [tenantId]);
+
+    // Churn Rate
+    const churn = await getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT CASE WHEN last_order >= date('now', '-3 months') THEN customer_id END) as retained,
+        COUNT(DISTINCT customer_id) as total
+      FROM (
+        SELECT customer_id, MAX(order_date) as last_order
+        FROM orders
+        WHERE tenant_id = ?
+        AND order_date >= date('now', '-6 months')
+        GROUP BY customer_id
+      )
+    `, [tenantId]);
+
+    // Top Customers
+    const topCustomers = await getQuery(`
+      SELECT 
+        c.id, c.name, c.email, c.phone,
+        COUNT(o.id) as order_count,
+        COALESCE(SUM(o.total_amount), 0) as total_spent
+      FROM customers c
+      LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status NOT IN ('cancelled', 'rejected')
+      WHERE c.tenant_id = ?
+      GROUP BY c.id
+      ORDER BY total_spent DESC
+      LIMIT 10
+    `, [tenantId]);
+
+    // Calculate metrics
+    const totalCustomers = customers.total_customers || 0;
+    const newCustomers = customers.new_customers || 0;
+    const activeCustomers = activity.active_customers || 0;
+    const inactiveCustomers = totalCustomers - activeCustomers;
+    const churnRate = churn.total > 0 ? ((churn.total - churn.retained) / churn.total) * 100 : 0;
+    const retentionRate = 100 - churnRate;
+
+    res.json({
+      success: true,
+      data: {
+        totalCustomers,
+        newCustomers,
+        activeCustomers,
+        inactiveCustomers,
+        customerLifetimeValue: Math.round(clv.avg_clv || 0),
+        churnRate: Math.round(churnRate * 10) / 10,
+        retentionRate: Math.round(retentionRate * 10) / 10,
+        topCustomers: topCustomers.map(c => ({
+          ...c,
+          total_spent: Math.round(c.total_spent)
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Customer dashboard error:', error);
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/dashboard/orders:
+ *   get:
+ *     summary: Get orders dashboard metrics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Orders dashboard data retrieved successfully
+ */
+router.get('/orders', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, getQuery } = require('../database/init');
+  
+  try {
+    const tenantId = req.tenantId;
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentYear = currentDate.getFullYear();
+
+    // Order Statistics
+    const stats = await getOneQuery(`
+      SELECT 
+        COUNT(*) as total_orders,
+        COUNT(CASE WHEN order_status = 'pending' THEN 1 END) as pending,
+        COUNT(CASE WHEN order_status = 'confirmed' THEN 1 END) as confirmed,
+        COUNT(CASE WHEN order_status = 'delivered' OR payment_status = 'paid' THEN 1 END) as delivered,
+        COUNT(CASE WHEN order_status = 'cancelled' THEN 1 END) as cancelled,
+        COALESCE(SUM(total_amount), 0) as total_value,
+        COALESCE(AVG(total_amount), 0) as avg_value
+      FROM orders
+      WHERE tenant_id = ?
+      AND strftime('%Y', order_date) = ?
+      AND strftime('%m', order_date) = ?
+    `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
+
+    // Today's Orders
+    const today = await getOneQuery(`
+      SELECT 
+        COUNT(*) as count,
+        COALESCE(SUM(total_amount), 0) as value
+      FROM orders
+      WHERE tenant_id = ?
+      AND DATE(order_date) = DATE('now')
+      AND order_status NOT IN ('cancelled', 'rejected')
+    `, [tenantId]);
+
+    // Recent Orders
+    const recentOrders = await getQuery(`
+      SELECT 
+        o.id, o.order_number, o.order_date, o.delivery_date,
+        o.total_amount, o.order_status, o.payment_status,
+        c.name as customer_name, c.phone as customer_phone,
+        u.first_name || ' ' || u.last_name as agent_name
+      FROM orders o
+      JOIN customers c ON c.id = o.customer_id
+      LEFT JOIN agents a ON a.id = o.salesman_id
+      LEFT JOIN users u ON u.id = a.user_id
+      WHERE o.tenant_id = ?
+      ORDER BY o.order_date DESC
+      LIMIT 20
+    `, [tenantId]);
+
+    // Order Trends (last 7 days)
+    const trends = await getQuery(`
+      SELECT 
+        DATE(order_date) as date,
+        COUNT(*) as count,
+        COALESCE(SUM(total_amount), 0) as value
+      FROM orders
+      WHERE tenant_id = ?
+      AND order_date >= date('now', '-7 days')
+      AND order_status NOT IN ('cancelled', 'rejected')
+      GROUP BY DATE(order_date)
+      ORDER BY date ASC
+    `, [tenantId]);
+
+    res.json({
+      success: true,
+      data: {
+        totalOrders: stats.total_orders || 0,
+        pending: stats.pending || 0,
+        confirmed: stats.confirmed || 0,
+        delivered: stats.delivered || 0,
+        cancelled: stats.cancelled || 0,
+        totalValue: Math.round(stats.total_value || 0),
+        averageValue: Math.round(stats.avg_value || 0),
+        todayOrders: today.count || 0,
+        todayValue: Math.round(today.value || 0),
+        recentOrders,
+        trends
+      }
+    });
+  } catch (error) {
+    console.error('Orders dashboard error:', error);
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/dashboard/admin:
+ *   get:
+ *     summary: Get admin dashboard metrics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Admin dashboard data retrieved successfully
+ */
+router.get('/admin', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, getQuery } = require('../database/init');
+  
+  try {
+    const tenantId = req.tenantId;
+
+    // System Statistics
+    const stats = await getOneQuery(`
+      SELECT 
+        (SELECT COUNT(*) FROM users WHERE tenant_id = ?) as total_users,
+        (SELECT COUNT(*) FROM users WHERE tenant_id = ? AND status = 'active') as active_users,
+        (SELECT COUNT(*) FROM agents WHERE tenant_id = ?) as total_agents,
+        (SELECT COUNT(*) FROM agents WHERE tenant_id = ? AND status = 'active') as active_agents,
+        (SELECT COUNT(*) FROM customers WHERE tenant_id = ?) as total_customers,
+        (SELECT COUNT(*) FROM products WHERE tenant_id = ?) as total_products,
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = ?) as total_orders,
+        (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE tenant_id = ? AND order_status NOT IN ('cancelled', 'rejected')) as total_revenue
+    `, [tenantId, tenantId, tenantId, tenantId, tenantId, tenantId, tenantId, tenantId]);
+
+    // Recent Activity
+    const recentUsers = await getQuery(`
+      SELECT id, first_name, last_name, email, role, status, created_at
+      FROM users
+      WHERE tenant_id = ?
+      ORDER BY created_at DESC
+      LIMIT 10
+    `, [tenantId]);
+
+    // Agent Performance
+    const agentPerformance = await getQuery(`
+      SELECT 
+        u.id, u.first_name || ' ' || u.last_name as name,
+        COUNT(o.id) as order_count,
+        COALESCE(SUM(o.total_amount), 0) as total_sales,
+        COUNT(v.id) as visit_count
+      FROM agents a
+      JOIN users u ON u.id = a.user_id
+      LEFT JOIN orders o ON o.salesman_id = a.id AND o.order_status NOT IN ('cancelled', 'rejected')
+      LEFT JOIN visits v ON v.agent_id = a.id
+      WHERE a.tenant_id = ?
+      AND a.status = 'active'
+      GROUP BY a.id
+      ORDER BY total_sales DESC
+      LIMIT 10
+    `, [tenantId]);
+
+    // System Health
+    const health = await getOneQuery(`
+      SELECT 
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = ? AND payment_status IN ('pending', 'partial')) as pending_payments,
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = ? AND order_status IN ('pending', 'confirmed') AND delivery_date < date('now')) as overdue_orders,
+        (SELECT COUNT(*) FROM agents WHERE tenant_id = ? AND id NOT IN (SELECT DISTINCT agent_id FROM visits WHERE created_at >= date('now', '-7 days'))) as inactive_agents
+    `, [tenantId, tenantId, tenantId]);
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers: stats.total_users || 0,
+        activeUsers: stats.active_users || 0,
+        totalAgents: stats.total_agents || 0,
+        activeAgents: stats.active_agents || 0,
+        totalCustomers: stats.total_customers || 0,
+        totalProducts: stats.total_products || 0,
+        totalOrders: stats.total_orders || 0,
+        totalRevenue: Math.round(stats.total_revenue || 0),
+        recentUsers,
+        agentPerformance: agentPerformance.map(a => ({
+          ...a,
+          total_sales: Math.round(a.total_sales)
+        })),
+        systemHealth: {
+          pendingPayments: health.pending_payments || 0,
+          overdueOrders: health.overdue_orders || 0,
+          inactiveAgents: health.inactive_agents || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Admin dashboard error:', error);
+    next(error);
+  }
+}));
+
 module.exports = router;

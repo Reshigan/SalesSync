@@ -61,6 +61,9 @@ const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManageme
 const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
 const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
 const SalesDashboard = lazy(() => import('./pages/sales/SalesDashboard'))
+const CustomerDashboard = lazy(() => import('./pages/customers/CustomerDashboard'))
+const OrderDashboard = lazy(() => import('./pages/orders/OrderDashboard'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
@@ -208,6 +211,15 @@ function App() {
 
             {/* Sales Routes */}
             <Route path="sales/dashboard" element={<SalesDashboard />} />
+            
+            {/* Customer Dashboard */}
+            <Route path="customers/dashboard" element={<CustomerDashboard />} />
+            
+            {/* Order Dashboard */}
+            <Route path="orders/dashboard" element={<OrderDashboard />} />
+            
+            {/* Admin Dashboard */}
+            <Route path="admin/dashboard" element={<AdminDashboard />} />
 
             {/* Analytics Routes */}
             <Route path="analytics/executive" element={<ExecutiveDashboard />} />

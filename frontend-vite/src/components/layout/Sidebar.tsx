@@ -285,6 +285,11 @@ const navigation = [
         href: '/orders',
         permission: PERMISSIONS.VIEW_ORDERS,
       },
+      {
+        name: 'Order Analytics',
+        href: '/orders/dashboard',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
     ],
   },
   {
@@ -292,6 +297,18 @@ const navigation = [
     href: '/customers',
     icon: Building2,
     permission: PERMISSIONS.VIEW_CUSTOMERS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/customers/dashboard',
+        permission: PERMISSIONS.VIEW_CUSTOMERS,
+      },
+      {
+        name: 'All Customers',
+        href: '/customers',
+        permission: PERMISSIONS.VIEW_CUSTOMERS,
+      },
+    ],
   },
   {
     name: 'Products',
@@ -312,6 +329,11 @@ const navigation = [
     icon: Settings,
     permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
     children: [
+      {
+        name: 'Dashboard',
+        href: '/admin/dashboard',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
       {
         name: 'User Management',
         href: '/admin/users',
