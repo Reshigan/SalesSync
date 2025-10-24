@@ -1318,12 +1318,51 @@ async function createTables() {
       payment_method TEXT,
       reference_number TEXT,
       notes TEXT,
-      status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled')),
+      status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed', 'cancelled', 'refunded')),
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now')),
       FOREIGN KEY (tenant_id) REFERENCES tenants(id),
       FOREIGN KEY (customer_id) REFERENCES customers(id),
       FOREIGN KEY (invoice_id) REFERENCES invoices(id)
+    )`,
+
+    // Quotes and Proposals
+    `CREATE TABLE IF NOT EXISTS quotes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL DEFAULT 'default-tenant',
+      customer_id TEXT NOT NULL,
+      quote_number TEXT NOT NULL UNIQUE,
+      quote_date TEXT NOT NULL,
+      valid_until TEXT,
+      subtotal DECIMAL(15,2) NOT NULL DEFAULT 0,
+      discount DECIMAL(15,2) NOT NULL DEFAULT 0,
+      tax DECIMAL(15,2) NOT NULL DEFAULT 0,
+      total_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+      status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'approved', 'rejected', 'converted', 'expired')),
+      notes TEXT,
+      terms TEXT,
+      order_id INTEGER,
+      approved_by TEXT,
+      approval_notes TEXT,
+      rejection_reason TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (order_id) REFERENCES orders(id)
+    )`,
+
+    `CREATE TABLE IF NOT EXISTS quote_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      quote_id INTEGER NOT NULL,
+      product_id TEXT,
+      description TEXT NOT NULL,
+      quantity DECIMAL(10,2) NOT NULL,
+      unit_price DECIMAL(15,2) NOT NULL,
+      total DECIMAL(15,2) NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (quote_id) REFERENCES quotes(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id)
     )`,
 
     // GPS Tracking Tables
