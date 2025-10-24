@@ -55,6 +55,7 @@ async function initializeApp() {
     const customerRoutes = require('./routes/customers');
     const productRoutes = require('./routes/products');
     const orderRoutes = require('./routes/orders');
+    const ordersFulfillmentRoutes = require('./routes/orders-fulfillment');
     const userRoutes = require('./routes/users');
     const areaRoutes = require('./routes/areas');
     const warehouseRoutes = require('./routes/warehouses');
@@ -154,6 +155,7 @@ async function initializeApp() {
     app.use('/api/customers', customerRoutes);
     app.use('/api/products', productRoutes);
     app.use('/api/orders', orderRoutes);
+    app.use('/api/orders', ordersFulfillmentRoutes); // Extended fulfillment features
     app.use('/api/users', userRoutes);
     app.use('/api/areas', areaRoutes);
     app.use('/api/warehouses', warehouseRoutes);
