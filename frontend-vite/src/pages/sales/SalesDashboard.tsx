@@ -1,0 +1,273 @@
+import { useState, useEffect } from 'react'
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  CircularProgress,
+  Alert,
+  LinearProgress,
+} from '@mui/material'
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Target,
+  Award,
+} from 'lucide-react'
+import { apiClient as api } from '../../services/api.service'
+
+interface SalesMetrics {
+  totalSales: number
+  salesChange: number
+  totalOrders: number
+  ordersChange: number
+  averageOrderValue: number
+  aovChange: number
+  conversionRate: number
+  salesTarget: number
+  salesAchieved: number
+  targetProgress: number
+  pendingOrders: number
+  fulfilledOrders: number
+}
+
+const SalesDashboard = () => {
+  const [metrics, setMetrics] = useState<SalesMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    fetchSalesMetrics()
+  }, [])
+
+  const fetchSalesMetrics = async () => {
+    try {
+      setLoading(true)
+      const response = await api.get('/dashboard/sales')
+      if (response.data.success) {
+        setMetrics(response.data.data)
+      } else {
+        setError('Failed to load sales data')
+      }
+    } catch (err: any) {
+      console.error('Sales dashboard error:', err)
+      setError(err.message || 'Failed to load sales data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>
+  }
+
+  if (!metrics) {
+    return <Alert severity="warning">No sales data available</Alert>
+  }
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
+  const formatPercentage = (value: number) => {
+    return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
+  }
+
+  const MetricCard = ({ title, value, change, icon: Icon, color }: any) => (
+    <Card>
+      <CardContent>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography color="text.secondary" gutterBottom variant="body2">
+              {title}
+            </Typography>
+            <Typography variant="h4" component="div" fontWeight="bold">
+              {value}
+            </Typography>
+            {change !== undefined && (
+              <Box display="flex" alignItems="center" mt={1}>
+                {change > 0 ? (
+                  <TrendingUp size={16} color="green" />
+                ) : (
+                  <TrendingDown size={16} color="red" />
+                )}
+                <Typography
+                  variant="body2"
+                  color={change > 0 ? 'success.main' : 'error.main'}
+                  ml={0.5}
+                >
+                  {formatPercentage(change)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" ml={0.5}>
+                  vs last month
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          <Box
+            sx={{
+              backgroundColor: `${color}.50`,
+              borderRadius: 2,
+              p: 1,
+            }}
+          >
+            <Icon size={24} color={color} />
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  )
+
+  return (
+    <Box>
+      <Typography variant="h4" gutterBottom fontWeight="bold">
+        Sales Dashboard
+      </Typography>
+      <Typography variant="body1" color="text.secondary" mb={3}>
+        Track sales performance, orders, and revenue targets
+      </Typography>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Total Sales (MTD)"
+            value={formatCurrency(metrics.totalSales)}
+            change={metrics.salesChange}
+            icon={DollarSign}
+            color="#10b981"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Total Orders"
+            value={metrics.totalOrders.toLocaleString()}
+            change={metrics.ordersChange}
+            icon={ShoppingCart}
+            color="#3b82f6"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Average Order Value"
+            value={formatCurrency(metrics.averageOrderValue)}
+            change={metrics.aovChange}
+            icon={Target}
+            color="#f59e0b"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="body2">
+                    Conversion Rate
+                  </Typography>
+                  <Typography variant="h4" component="div" fontWeight="bold" color="success.main">
+                    {metrics.conversionRate.toFixed(1)}%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" mt={1}>
+                    Leads to orders
+                  </Typography>
+                </Box>
+                <Box sx={{ backgroundColor: '#dcfce7', borderRadius: 2, p: 1 }}>
+                  <Award size={24} color="#10b981" />
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Box>
+                  <Typography color="text.secondary" gutterBottom variant="body2">
+                    Monthly Sales Target
+                  </Typography>
+                  <Typography variant="h5" component="div" fontWeight="bold">
+                    {formatCurrency(metrics.salesAchieved)} / {formatCurrency(metrics.salesTarget)}
+                  </Typography>
+                </Box>
+                <Box textAlign="right">
+                  <Typography variant="h4" fontWeight="bold" color="primary.main">
+                    {metrics.targetProgress.toFixed(1)}%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    achieved
+                  </Typography>
+                </Box>
+              </Box>
+              <LinearProgress
+                variant="determinate"
+                value={metrics.targetProgress}
+                sx={{
+                  height: 10,
+                  borderRadius: 5,
+                  backgroundColor: '#e5e7eb',
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor: metrics.targetProgress >= 100 ? '#10b981' : '#3b82f6',
+                  },
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                Order Status
+              </Typography>
+              <Grid container spacing={2} mt={1}>
+                <Grid item xs={6}>
+                  <Box p={2} sx={{ backgroundColor: '#dbeafe', borderRadius: 2 }}>
+                    <Typography variant="h4" fontWeight="bold" color="#3b82f6">
+                      {metrics.pendingOrders}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Pending Orders
+                    </Typography>
+                  </Box>
+                </Grid>
+                <Grid item xs={6}>
+                  <Box p={2} sx={{ backgroundColor: '#dcfce7', borderRadius: 2 }}>
+                    <Typography variant="h4" fontWeight="bold" color="#10b981">
+                      {metrics.fulfilledOrders}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Fulfilled Orders
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    </Box>
+  )
+}
+
+export default SalesDashboard

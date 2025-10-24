@@ -247,16 +247,51 @@ const navigation = [
     ],
   },
   {
+    name: 'Finance',
+    href: '/finance',
+    icon: DollarSign,
+    permission: PERMISSIONS.VIEW_ANALYTICS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/finance/dashboard',
+        permission: PERMISSIONS.VIEW_ANALYTICS,
+      },
+      {
+        name: 'Invoices',
+        href: '/finance/invoices',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Payments',
+        href: '/finance/payments',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+    ],
+  },
+  {
+    name: 'Sales',
+    href: '/sales',
+    icon: TrendingUp,
+    permission: PERMISSIONS.VIEW_ORDERS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/sales/dashboard',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Orders',
+        href: '/orders',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+    ],
+  },
+  {
     name: 'Customers',
     href: '/customers',
     icon: Building2,
     permission: PERMISSIONS.VIEW_CUSTOMERS,
-  },
-  {
-    name: 'Orders',
-    href: '/orders',
-    icon: ShoppingCart,
-    permission: PERMISSIONS.VIEW_ORDERS,
   },
   {
     name: 'Products',

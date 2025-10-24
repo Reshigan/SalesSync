@@ -59,6 +59,8 @@ const RolePermissionsPage = lazy(() => import('./pages/admin/RolePermissionsPage
 const DataImportExportPage = lazy(() => import('./pages/admin/DataImportExportPage'))
 const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManagementPage'))
 const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
+const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
+const SalesDashboard = lazy(() => import('./pages/sales/SalesDashboard'))
 const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
@@ -200,8 +202,12 @@ function App() {
             <Route path="products/:id" element={<ProductDetailsPage />} />
 
             {/* Finance Routes */}
+            <Route path="finance/dashboard" element={<FinanceDashboard />} />
             <Route path="finance/invoices" element={<InvoiceManagementPage />} />
             <Route path="finance/payments" element={<PaymentCollectionPage />} />
+
+            {/* Sales Routes */}
+            <Route path="sales/dashboard" element={<SalesDashboard />} />
 
             {/* Analytics Routes */}
             <Route path="analytics/executive" element={<ExecutiveDashboard />} />
