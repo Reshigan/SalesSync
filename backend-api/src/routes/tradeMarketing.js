@@ -527,4 +527,81 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/trade-marketing-new/materials/library
+ * @desc    Get POS materials library
+ * @access  Private
+ */
+router.get('/materials/library', authMiddleware, async (req, res) => {
+  try {
+    // In production, this would fetch from a materials database table
+    const materials = [
+      { id: 1, name: 'Brand Standee A-Frame', type: 'Standee', brand: 'Coca-Cola', dimensions: '180x60cm', stockLevel: 45, cost: 2500 },
+      { id: 2, name: 'Refrigerator Decal', type: 'Decal', brand: 'Pepsi', dimensions: '60x40cm', stockLevel: 120, cost: 150 },
+      { id: 3, name: 'Promotional Banner', type: 'Banner', brand: 'Sprite', dimensions: '300x100cm', stockLevel: 30, cost: 800 },
+      { id: 4, name: 'LED Display Board', type: 'Display', brand: 'Fanta', dimensions: '120x80cm', stockLevel: 15, cost: 8500 },
+      { id: 5, name: 'Shelf Wobbler', type: 'Wobbler', brand: 'Mountain Dew', dimensions: '15x10cm', stockLevel: 500, cost: 25 },
+      { id: 6, name: 'Counter Display Unit', type: 'Display', brand: 'Red Bull', dimensions: '50x40x60cm', stockLevel: 22, cost: 3200 },
+    ];
+    
+    res.json({
+      success: true,
+      materials
+    });
+  } catch (error) {
+    console.error('Materials library error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching materials library',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/trade-marketing-new/pos-materials
+ * @desc    Get POS material installations (overload - GET version)
+ * @access  Private
+ */
+router.get('/pos-materials', authMiddleware, async (req, res) => {
+  try {
+    // In production, fetch from pos_material_installations table
+    const { storeId, status, startDate, endDate } = req.query;
+    
+    // Mock data for now - replace with actual database query
+    const installations = [
+      {
+        id: 1,
+        materialId: 1,
+        materialName: 'Brand Standee A-Frame',
+        storeId: 101,
+        storeName: 'Metro Mart Downtown',
+        installationDate: '2025-10-20',
+        condition: 'excellent',
+        location: 'Store entrance - right side',
+        gpsCoordinates: { latitude: 40.7128, longitude: -74.0060 },
+        photosBefore: [],
+        photosAfter: [],
+        qrCode: 'STAND-001-2025',
+        installedBy: req.user.name,
+        notes: 'Installed near main entrance as per planogram',
+        verificationStatus: 'verified'
+      }
+    ];
+    
+    res.json({
+      success: true,
+      installations,
+      count: installations.length
+    });
+  } catch (error) {
+    console.error('Get POS materials error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching POS materials',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
