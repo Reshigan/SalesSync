@@ -152,6 +152,14 @@ async function initializeApp() {
     console.log('Loading approval routes...');
     const approvalRoutes = require('./routes/approvals');
 
+    // Load Enterprise Critical Features routes
+    console.log('Loading enterprise critical features routes...');
+    const authCompleteRoutes = require('./routes/auth-complete');
+    const rbacRoutes = require('./routes/rbac');
+    const filesRoutes = require('./routes/files');
+    const exportsRoutes = require('./routes/exports');
+    const widgetsRoutes = require('./routes/widgets');
+
     // Mount routes
     app.use('/api/auth', authRoutes);
     app.use('/api/dashboard', dashboardRoutes);
@@ -254,6 +262,14 @@ async function initializeApp() {
     // Mount Approval routes
     console.log('Mounting approval routes...');
     app.use('/api/approvals', approvalRoutes);
+
+    // Mount Enterprise Critical Features routes
+    console.log('Mounting enterprise critical features routes...');
+    app.use('/api/auth-complete', authCompleteRoutes);
+    app.use('/api/rbac', rbacRoutes);
+    app.use('/api/files', filesRoutes);
+    app.use('/api/exports', exportsRoutes);
+    app.use('/api/widgets', widgetsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);
