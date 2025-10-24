@@ -90,6 +90,8 @@ async function initializeApp() {
     // Load missing API routes
     const inventoryRoutes = require('./routes/inventory');
     const inventoryEnhancedRoutes = require('./routes/inventory-enhanced');
+    const financialEnhancedRoutes = require('./routes/financial-enhanced');
+    const warehouseEnhancedRoutes = require('./routes/warehouse-enhanced');
     const aiAnalyticsRoutes = require('./routes/ai-analytics');
     const analyticsRoutes = require('./routes/analytics');
     const reportsRoutes = require('./routes/reports');
@@ -191,6 +193,8 @@ async function initializeApp() {
     // Mount missing API routes
     app.use('/api/inventory', inventoryRoutes);
     app.use('/api/inventory', inventoryEnhancedRoutes); // Module 2 enhancements
+    app.use('/api/finance', financialEnhancedRoutes); // Module 3 enhancements
+    app.use('/api/warehouse', warehouseEnhancedRoutes); // Module 4 enhancements
     app.use('/api/ai', aiAnalyticsRoutes);
     app.use('/api/analytics', analyticsRoutes);
     app.use('/api/reports', reportsRoutes);
