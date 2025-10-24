@@ -384,6 +384,10 @@ async function startServer() {
     logger.info('Mounting Global Search route...');
     const searchRoutes = require('./routes/search');
     app.use('/api/search', authTenantMiddleware, searchRoutes);
+
+    // Admin routes
+    const adminRoutes = require('./routes/admin');
+    app.use('/api/admin', authTenantMiddleware, adminRoutes);
     
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
