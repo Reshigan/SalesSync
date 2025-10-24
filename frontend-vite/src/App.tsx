@@ -68,7 +68,7 @@ const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboa
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
 
-// Enterprise Modules 2-8
+// Enterprise Modules 2-15
 const OrderManagement = lazy(() => import('./pages/OrderManagement'))
 const InventoryManagementEnhanced = lazy(() => import('./pages/InventoryManagement'))
 const FinancialDashboard = lazy(() => import('./pages/FinancialDashboard'))
@@ -77,6 +77,13 @@ const VanSalesManagement = lazy(() => import('./pages/VanSalesManagement'))
 const FieldOperationsDashboardEnhanced = lazy(() => import('./pages/FieldOperationsDashboard'))
 const CRMDashboard = lazy(() => import('./pages/CRMDashboard'))
 const MarketingCampaigns = lazy(() => import('./pages/MarketingCampaigns'))
+const MerchandisingDashboard = lazy(() => import('./pages/MerchandisingDashboard'))
+const DataCollectionDashboard = lazy(() => import('./pages/DataCollectionDashboard'))
+const ProcurementDashboard = lazy(() => import('./pages/ProcurementDashboard'))
+const HRDashboard = lazy(() => import('./pages/HRDashboard'))
+const CommissionsDashboard = lazy(() => import('./pages/CommissionsDashboard'))
+const TerritoryManagement = lazy(() => import('./pages/TerritoryManagement'))
+const WorkflowsDashboard = lazy(() => import('./pages/WorkflowsDashboard'))
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
@@ -228,6 +235,13 @@ function App() {
             <Route path="field-ops-enhanced" element={<FieldOperationsDashboardEnhanced />} />
             <Route path="crm" element={<CRMDashboard />} />
             <Route path="marketing" element={<MarketingCampaigns />} />
+            <Route path="merchandising" element={<MerchandisingDashboard />} />
+            <Route path="data-collection" element={<DataCollectionDashboard />} />
+            <Route path="procurement" element={<ProcurementDashboard />} />
+            <Route path="hr" element={<HRDashboard />} />
+            <Route path="commissions" element={<CommissionsDashboard />} />
+            <Route path="territories" element={<TerritoryManagement />} />
+            <Route path="workflows" element={<WorkflowsDashboard />} />
 
             {/* Sales Routes */}
             <Route path="sales/dashboard" element={<SalesDashboard />} />
