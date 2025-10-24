@@ -1365,6 +1365,25 @@ async function createTables() {
       FOREIGN KEY (product_id) REFERENCES products(id)
     )`,
 
+    // Approval Workflow System
+    `CREATE TABLE IF NOT EXISTS approval_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      tenant_id TEXT NOT NULL DEFAULT 'default-tenant',
+      entity_type TEXT NOT NULL CHECK (entity_type IN ('order', 'quote', 'invoice', 'payment', 'refund')),
+      entity_id INTEGER NOT NULL,
+      requested_by TEXT NOT NULL,
+      approver_user_id TEXT NOT NULL,
+      status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_review', 'approved', 'rejected', 'cancelled')),
+      priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+      notes TEXT,
+      approval_notes TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      approved_at TEXT,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (requested_by) REFERENCES users(id),
+      FOREIGN KEY (approver_user_id) REFERENCES users(id)
+    )`,
+
     // GPS Tracking Tables
     `CREATE TABLE IF NOT EXISTS gps_locations (
       id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),

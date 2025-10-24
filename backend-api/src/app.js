@@ -143,6 +143,10 @@ async function initializeApp() {
     // Load Quote routes
     console.log('Loading quote routes...');
     const quoteRoutes = require('./routes/quotes');
+    
+    // Load Approval routes
+    console.log('Loading approval routes...');
+    const approvalRoutes = require('./routes/approvals');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -238,6 +242,10 @@ async function initializeApp() {
     // Mount Quote routes
     console.log('Mounting quote routes...');
     app.use('/api/quotes', quoteRoutes);
+    
+    // Mount Approval routes
+    console.log('Mounting approval routes...');
+    app.use('/api/approvals', approvalRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);
