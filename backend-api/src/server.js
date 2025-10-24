@@ -346,6 +346,11 @@ async function startServer() {
     // NEW Field Marketing & Trade Marketing routes
     const fieldMarketingRoutes = require('./routes/fieldMarketing');
     const tradeMarketingNewRoutes = require('./routes/tradeMarketing');
+    
+    // NEW Option D Sprint routes
+    const paymentRoutes = require('./routes/payments');
+    const quoteRoutes = require('./routes/quotes');
+    const approvalRoutes = require('./routes/approvals');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -464,6 +469,12 @@ async function startServer() {
     // Backup routes
     const backupRoutes = require('./routes/backup');
     app.use('/api/backup', authTenantMiddleware, backupRoutes);
+    
+    // Option D Sprint routes (Payments, Quotes, Approvals)
+    logger.info('Mounting Option D Sprint routes...');
+    app.use('/api/payments', authTenantMiddleware, paymentRoutes);
+    app.use('/api/quotes', authTenantMiddleware, quoteRoutes);
+    app.use('/api/approvals', authTenantMiddleware, approvalRoutes);
 
     logger.info('Routes configured successfully');
 

@@ -1,506 +1,332 @@
 /**
  * Approval Workflow Routes
- * Multi-level approval system for orders, quotes, invoices
+ * Manage approval requests for quotes, orders, discounts
  */
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, getTenantId } = require('../middleware/auth');
-const { getDatabase } = require('../database/database');
-const emailService = require('../services/emailService');
+const { AppError, asyncHandler } = require('../middleware/errorHandler');
 
 /**
- * POST /api/approvals/submit
- * Submit an entity for approval
+ * POST /api/approvals
+ * Create a new approval request
  */
-router.post('/submit', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const {
-      entityType, // 'order', 'quote', 'invoice', 'payment'
-      entityId,
-      approverUserId,
-      notes,
-      priority = 'normal'
-    } = req.body;
+router.post('/', asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const userId = req.user.id;
+  
+  const {
+    entityType,
+    entityId,
+    requestType,
+    amount,
+    reason,
+    approverId
+  } = req.body;
 
-    if (!entityType || !entityId) {
-      return res.status(400).json({ error: 'Entity type and ID are required' });
-    }
-
-    // Check if already submitted
-    const existing = await db.get(
-      `SELECT * FROM approval_requests 
-       WHERE entity_type = ? AND entity_id = ? AND status IN ('pending', 'in_review')`,
-      [entityType, entityId]
-    );
-
-    if (existing) {
-      return res.status(400).json({ error: 'Approval request already exists' });
-    }
-
-    // Create approval request
-    const result = await db.run(
-      `INSERT INTO approval_requests (
-        tenant_id, entity_type, entity_id, requested_by, approver_user_id,
-        status, priority, notes, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        tenantId,
-        entityType,
-        entityId,
-        req.user.id,
-        approverUserId,
-        'pending',
-        priority,
-        notes || '',
-        new Date().toISOString()
-      ]
-    );
-
-    // Update entity status
-    await updateEntityStatus(db, entityType, entityId, 'pending_approval');
-
-    // Send notification to approver (if email configured)
-    try {
-      const approver = await db.get('SELECT * FROM users WHERE id = ?', [approverUserId]);
-      if (approver && approver.email) {
-        await emailService.sendEmail({
-          to: approver.email,
-          subject: `Approval Request: ${entityType} #${entityId}`,
-          text: `You have a new approval request for ${entityType} #${entityId}.\n\nNotes: ${notes || 'None'}`,
-          html: `
-            <h2>New Approval Request</h2>
-            <p>You have a new approval request:</p>
-            <ul>
-              <li><strong>Type:</strong> ${entityType}</li>
-              <li><strong>ID:</strong> ${entityId}</li>
-              <li><strong>Priority:</strong> ${priority}</li>
-              <li><strong>Notes:</strong> ${notes || 'None'}</li>
-            </ul>
-            <p>Please review and approve or reject this request.</p>
-          `
-        });
-      }
-    } catch (emailError) {
-      console.error('Error sending approval notification:', emailError);
-    }
-
-    res.status(201).json({
-      success: true,
-      approvalRequestId: result.lastID,
-      message: 'Submitted for approval'
-    });
-
-  } catch (error) {
-    console.error('Error submitting for approval:', error);
-    res.status(500).json({ error: error.message });
+  if (!entityType || !entityId || !requestType) {
+    throw new AppError('Entity type, entity ID, and request type are required', 400);
   }
-});
+
+  const requestDate = new Date().toISOString();
+  const status = 'pending';
+
+  const result = await runQuery(
+    `INSERT INTO approval_requests (
+      tenant_id, entity_type, entity_id, request_type,
+      requested_by, approver_id, status, request_date,
+      amount, reason
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      tenantId,
+      entityType,
+      entityId,
+      requestType,
+      userId,
+      approverId || null,
+      status,
+      requestDate,
+      amount || null,
+      reason || ''
+    ]
+  );
+
+  const approval = await getOneQuery(
+    'SELECT * FROM approval_requests WHERE id = ?',
+    [result.lastID]
+  );
+
+  res.json({
+    success: true,
+    approval
+  });
+}));
+
+/**
+ * GET /api/approvals
+ * List approval requests
+ */
+router.get('/', asyncHandler(async (req, res) => {
+  const { getQuery, getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const userId = req.user.id;
+  const { status, entityType, requestType, limit = 50, offset = 0 } = req.query;
+
+  let whereClause = 'WHERE a.tenant_id = ?';
+  let params = [tenantId];
+
+  // Filter by status
+  if (status) {
+    whereClause += ' AND a.status = ?';
+    params.push(status);
+  }
+
+  // Filter by entity type
+  if (entityType) {
+    whereClause += ' AND a.entity_type = ?';
+    params.push(entityType);
+  }
+
+  // Filter by request type
+  if (requestType) {
+    whereClause += ' AND a.request_type = ?';
+    params.push(requestType);
+  }
+
+  const approvalsQuery = `
+    SELECT
+      a.*,
+      u1.first_name || ' ' || u1.last_name as requester_name,
+      u2.first_name || ' ' || u2.last_name as approver_name
+    FROM approval_requests a
+    LEFT JOIN users u1 ON a.requested_by = u1.id
+    LEFT JOIN users u2 ON a.approver_id = u2.id
+    ${whereClause}
+    ORDER BY a.request_date DESC
+    LIMIT ? OFFSET ?
+  `;
+  params.push(parseInt(limit), parseInt(offset));
+
+  const approvals = await getQuery(approvalsQuery, params);
+
+  const countQuery = `SELECT COUNT(*) as total FROM approval_requests a ${whereClause}`;
+  const countResult = await getOneQuery(countQuery, params.slice(0, -2));
+  const total = countResult.total;
+
+  res.json({
+    approvals,
+    pagination: {
+      total,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    }
+  });
+}));
 
 /**
  * GET /api/approvals/pending
- * Get pending approvals for current user
+ * Get pending approvals assigned to current user
  */
-router.get('/pending', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const userId = req.user.id;
+router.get('/pending', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const userId = req.user.id;
 
-    const approvals = await db.all(
-      `SELECT ar.*, 
-              u.name as requester_name,
-              u.email as requester_email
-       FROM approval_requests ar
-       LEFT JOIN users u ON ar.requested_by = u.id
-       WHERE ar.tenant_id = ? AND ar.approver_user_id = ? AND ar.status = 'pending'
-       ORDER BY ar.created_at DESC`,
-      [tenantId, userId]
-    );
+  const approvals = await getQuery(
+    `SELECT
+      a.*,
+      u.first_name || ' ' || u.last_name as requester_name
+    FROM approval_requests a
+    LEFT JOIN users u ON a.requested_by = u.id
+    WHERE a.tenant_id = ? AND a.approver_id = ? AND a.status = 'pending'
+    ORDER BY a.request_date ASC`,
+    [tenantId, userId]
+  );
 
-    // Get entity details for each approval
-    for (const approval of approvals) {
-      approval.entity = await getEntityDetails(db, approval.entity_type, approval.entity_id, tenantId);
-    }
-
-    res.json({
-      success: true,
-      approvals
-    });
-
-  } catch (error) {
-    console.error('Error fetching pending approvals:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  res.json({
+    approvals,
+    count: approvals.length
+  });
+}));
 
 /**
- * GET /api/approvals/history
- * Get approval history
+ * GET /api/approvals/:id
+ * Get approval request by ID
  */
-router.get('/history', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const { entityType, entityId, status, limit = 50, offset = 0 } = req.query;
+router.get('/:id', asyncHandler(async (req, res) => {
+  const { getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const { id } = req.params;
 
-    let query = `
-      SELECT ar.*, 
-             u1.name as requester_name,
-             u2.name as approver_name
-      FROM approval_requests ar
-      LEFT JOIN users u1 ON ar.requested_by = u1.id
-      LEFT JOIN users u2 ON ar.approver_user_id = u2.id
-      WHERE ar.tenant_id = ?
-    `;
-    const params = [tenantId];
+  const approval = await getOneQuery(
+    `SELECT
+      a.*,
+      u1.first_name || ' ' || u1.last_name as requester_name,
+      u1.email as requester_email,
+      u2.first_name || ' ' || u2.last_name as approver_name,
+      u2.email as approver_email
+    FROM approval_requests a
+    LEFT JOIN users u1 ON a.requested_by = u1.id
+    LEFT JOIN users u2 ON a.approver_id = u2.id
+    WHERE a.id = ? AND a.tenant_id = ?`,
+    [id, tenantId]
+  );
 
-    if (entityType) {
-      query += ' AND ar.entity_type = ?';
-      params.push(entityType);
-    }
-
-    if (entityId) {
-      query += ' AND ar.entity_id = ?';
-      params.push(entityId);
-    }
-
-    if (status) {
-      query += ' AND ar.status = ?';
-      params.push(status);
-    }
-
-    query += ' ORDER BY ar.created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-
-    const approvals = await db.all(query, params);
-
-    res.json({
-      success: true,
-      approvals
-    });
-
-  } catch (error) {
-    console.error('Error fetching approval history:', error);
-    res.status(500).json({ error: error.message });
+  if (!approval) {
+    throw new AppError('Approval request not found', 404);
   }
-});
+
+  res.json(approval);
+}));
 
 /**
  * POST /api/approvals/:id/approve
  * Approve a request
  */
-router.post('/:id/approve', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const { id } = req.params;
-    const { notes } = req.body;
+router.post('/:id/approve', asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const userId = req.user.id;
+  const { id } = req.params;
+  const { comments } = req.body;
 
-    // Get approval request
-    const approval = await db.get(
-      'SELECT * FROM approval_requests WHERE id = ? AND tenant_id = ?',
-      [id, tenantId]
-    );
+  const approval = await getOneQuery(
+    'SELECT * FROM approval_requests WHERE id = ? AND tenant_id = ?',
+    [id, tenantId]
+  );
 
-    if (!approval) {
-      return res.status(404).json({ error: 'Approval request not found' });
-    }
-
-    if (approval.status !== 'pending') {
-      return res.status(400).json({ error: 'Approval request is not pending' });
-    }
-
-    // Check if current user is the approver
-    if (approval.approver_user_id !== req.user.id) {
-      return res.status(403).json({ error: 'You are not authorized to approve this request' });
-    }
-
-    // Update approval request
-    await db.run(
-      `UPDATE approval_requests 
-       SET status = 'approved', 
-           approved_at = ?, 
-           approval_notes = ?
-       WHERE id = ?`,
-      [new Date().toISOString(), notes || '', id]
-    );
-
-    // Update entity status
-    await updateEntityStatus(db, approval.entity_type, approval.entity_id, 'approved');
-
-    // Send notification to requester
-    try {
-      const requester = await db.get('SELECT * FROM users WHERE id = ?', [approval.requested_by]);
-      if (requester && requester.email) {
-        await emailService.sendEmail({
-          to: requester.email,
-          subject: `Approved: ${approval.entity_type} #${approval.entity_id}`,
-          text: `Your ${approval.entity_type} #${approval.entity_id} has been approved.\n\nApproval Notes: ${notes || 'None'}`,
-          html: `
-            <h2>✓ Approved</h2>
-            <p>Your request has been approved:</p>
-            <ul>
-              <li><strong>Type:</strong> ${approval.entity_type}</li>
-              <li><strong>ID:</strong> ${approval.entity_id}</li>
-              <li><strong>Notes:</strong> ${notes || 'None'}</li>
-            </ul>
-          `
-        });
-      }
-    } catch (emailError) {
-      console.error('Error sending approval notification:', emailError);
-    }
-
-    res.json({
-      success: true,
-      message: 'Request approved successfully'
-    });
-
-  } catch (error) {
-    console.error('Error approving request:', error);
-    res.status(500).json({ error: error.message });
+  if (!approval) {
+    throw new AppError('Approval request not found', 404);
   }
-});
+
+  if (approval.status !== 'pending') {
+    throw new AppError('Approval request is not pending', 400);
+  }
+
+  // Verify user has permission to approve
+  if (approval.approver_id && approval.approver_id !== userId) {
+    // Check if user is admin/manager
+    const userRole = req.user.role;
+    if (userRole !== 'admin' && userRole !== 'manager') {
+      throw new AppError('You are not authorized to approve this request', 403);
+    }
+  }
+
+  const approvalDate = new Date().toISOString();
+
+  await runQuery(
+    `UPDATE approval_requests 
+     SET status = 'approved',
+         approved_by = ?,
+         approval_date = ?,
+         comments = ?
+     WHERE id = ?`,
+    [userId, approvalDate, comments || '', id]
+  );
+
+  const updatedApproval = await getOneQuery(
+    'SELECT * FROM approval_requests WHERE id = ?',
+    [id]
+  );
+
+  res.json({
+    success: true,
+    approval: updatedApproval,
+    message: 'Request approved successfully'
+  });
+}));
 
 /**
  * POST /api/approvals/:id/reject
  * Reject a request
  */
-router.post('/:id/reject', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const { id } = req.params;
-    const { reason } = req.body;
+router.post('/:id/reject', asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
+  const userId = req.user.id;
+  const { id } = req.params;
+  const { comments } = req.body;
 
-    if (!reason) {
-      return res.status(400).json({ error: 'Rejection reason is required' });
-    }
+  const approval = await getOneQuery(
+    'SELECT * FROM approval_requests WHERE id = ? AND tenant_id = ?',
+    [id, tenantId]
+  );
 
-    // Get approval request
-    const approval = await db.get(
-      'SELECT * FROM approval_requests WHERE id = ? AND tenant_id = ?',
-      [id, tenantId]
-    );
-
-    if (!approval) {
-      return res.status(404).json({ error: 'Approval request not found' });
-    }
-
-    if (approval.status !== 'pending') {
-      return res.status(400).json({ error: 'Approval request is not pending' });
-    }
-
-    // Check if current user is the approver
-    if (approval.approver_user_id !== req.user.id) {
-      return res.status(403).json({ error: 'You are not authorized to reject this request' });
-    }
-
-    // Update approval request
-    await db.run(
-      `UPDATE approval_requests 
-       SET status = 'rejected', 
-           approved_at = ?, 
-           approval_notes = ?
-       WHERE id = ?`,
-      [new Date().toISOString(), reason, id]
-    );
-
-    // Update entity status
-    await updateEntityStatus(db, approval.entity_type, approval.entity_id, 'rejected');
-
-    // Send notification to requester
-    try {
-      const requester = await db.get('SELECT * FROM users WHERE id = ?', [approval.requested_by]);
-      if (requester && requester.email) {
-        await emailService.sendEmail({
-          to: requester.email,
-          subject: `Rejected: ${approval.entity_type} #${approval.entity_id}`,
-          text: `Your ${approval.entity_type} #${approval.entity_id} has been rejected.\n\nReason: ${reason}`,
-          html: `
-            <h2>✗ Rejected</h2>
-            <p>Your request has been rejected:</p>
-            <ul>
-              <li><strong>Type:</strong> ${approval.entity_type}</li>
-              <li><strong>ID:</strong> ${approval.entity_id}</li>
-              <li><strong>Reason:</strong> ${reason}</li>
-            </ul>
-          `
-        });
-      }
-    } catch (emailError) {
-      console.error('Error sending rejection notification:', emailError);
-    }
-
-    res.json({
-      success: true,
-      message: 'Request rejected'
-    });
-
-  } catch (error) {
-    console.error('Error rejecting request:', error);
-    res.status(500).json({ error: error.message });
+  if (!approval) {
+    throw new AppError('Approval request not found', 404);
   }
-});
 
-/**
- * DELETE /api/approvals/:id
- * Cancel/withdraw approval request
- */
-router.delete('/:id', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
-    const { id } = req.params;
-
-    const approval = await db.get(
-      'SELECT * FROM approval_requests WHERE id = ? AND tenant_id = ?',
-      [id, tenantId]
-    );
-
-    if (!approval) {
-      return res.status(404).json({ error: 'Approval request not found' });
-    }
-
-    // Only requester can cancel
-    if (approval.requested_by !== req.user.id) {
-      return res.status(403).json({ error: 'Only the requester can cancel' });
-    }
-
-    if (approval.status !== 'pending') {
-      return res.status(400).json({ error: 'Can only cancel pending requests' });
-    }
-
-    // Update status
-    await db.run(
-      'UPDATE approval_requests SET status = ?, approved_at = ? WHERE id = ?',
-      ['cancelled', new Date().toISOString(), id]
-    );
-
-    // Reset entity status
-    await updateEntityStatus(db, approval.entity_type, approval.entity_id, 'draft');
-
-    res.json({
-      success: true,
-      message: 'Approval request cancelled'
-    });
-
-  } catch (error) {
-    console.error('Error cancelling approval:', error);
-    res.status(500).json({ error: error.message });
+  if (approval.status !== 'pending') {
+    throw new AppError('Approval request is not pending', 400);
   }
-});
+
+  // Verify user has permission to reject
+  if (approval.approver_id && approval.approver_id !== userId) {
+    const userRole = req.user.role;
+    if (userRole !== 'admin' && userRole !== 'manager') {
+      throw new AppError('You are not authorized to reject this request', 403);
+    }
+  }
+
+  const approvalDate = new Date().toISOString();
+
+  await runQuery(
+    `UPDATE approval_requests 
+     SET status = 'rejected',
+         approved_by = ?,
+         approval_date = ?,
+         comments = ?
+     WHERE id = ?`,
+    [userId, approvalDate, comments || 'Request rejected', id]
+  );
+
+  const updatedApproval = await getOneQuery(
+    'SELECT * FROM approval_requests WHERE id = ?',
+    [id]
+  );
+
+  res.json({
+    success: true,
+    approval: updatedApproval,
+    message: 'Request rejected'
+  });
+}));
 
 /**
  * GET /api/approvals/stats
  * Get approval statistics
  */
-router.get('/stats', authenticateToken, async (req, res) => {
-  try {
-    const tenantId = getTenantId(req);
-    const db = getDatabase();
+router.get('/tenant/stats', asyncHandler(async (req, res) => {
+  const { getQuery, getOneQuery } = require('../database/init');
+  const tenantId = req.tenantId;
 
-    // Status breakdown
-    const statusStats = await db.all(
-      `SELECT status, COUNT(*) as count
-       FROM approval_requests
-       WHERE tenant_id = ?
-       GROUP BY status`,
-      [tenantId]
-    );
+  const stats = await getOneQuery(
+    `SELECT
+      COUNT(*) as total_requests,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+      SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+      SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+    FROM approval_requests
+    WHERE tenant_id = ?`,
+    [tenantId]
+  );
 
-    // Entity type breakdown
-    const entityStats = await db.all(
-      `SELECT entity_type, COUNT(*) as count
-       FROM approval_requests
-       WHERE tenant_id = ?
-       GROUP BY entity_type`,
-      [tenantId]
-    );
+  const byType = await getQuery(
+    `SELECT
+      request_type,
+      COUNT(*) as count,
+      SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_count
+    FROM approval_requests
+    WHERE tenant_id = ?
+    GROUP BY request_type`,
+    [tenantId]
+  );
 
-    // Pending approvals by user
-    const pendingByUser = await db.all(
-      `SELECT ar.approver_user_id, u.name, COUNT(*) as count
-       FROM approval_requests ar
-       LEFT JOIN users u ON ar.approver_user_id = u.id
-       WHERE ar.tenant_id = ? AND ar.status = 'pending'
-       GROUP BY ar.approver_user_id, u.name`,
-      [tenantId]
-    );
-
-    // Average approval time
-    const avgTime = await db.get(
-      `SELECT AVG(
-         CAST((julianday(approved_at) - julianday(created_at)) * 24 * 60 AS INTEGER)
-       ) as avg_minutes
-       FROM approval_requests
-       WHERE tenant_id = ? AND status IN ('approved', 'rejected')`,
-      [tenantId]
-    );
-
-    res.json({
-      success: true,
-      stats: {
-        statusBreakdown: statusStats,
-        entityBreakdown: entityStats,
-        pendingByApprover: pendingByUser,
-        averageApprovalTimeMinutes: avgTime.avg_minutes || 0
-      }
-    });
-
-  } catch (error) {
-    console.error('Error fetching approval stats:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Helper functions
-
-async function updateEntityStatus(db, entityType, entityId, status) {
-  const tableMap = {
-    'order': 'orders',
-    'quote': 'quotes',
-    'invoice': 'invoices',
-    'payment': 'payments'
-  };
-
-  const table = tableMap[entityType];
-  if (!table) return;
-
-  try {
-    await db.run(
-      `UPDATE ${table} SET status = ?, updated_at = ? WHERE id = ?`,
-      [status, new Date().toISOString(), entityId]
-    );
-  } catch (error) {
-    console.error(`Error updating ${entityType} status:`, error);
-  }
-}
-
-async function getEntityDetails(db, entityType, entityId, tenantId) {
-  const tableMap = {
-    'order': 'orders',
-    'quote': 'quotes',
-    'invoice': 'invoices',
-    'payment': 'payments'
-  };
-
-  const table = tableMap[entityType];
-  if (!table) return null;
-
-  try {
-    const entity = await db.get(
-      `SELECT * FROM ${table} WHERE id = ? AND tenant_id = ?`,
-      [entityId, tenantId]
-    );
-    return entity;
-  } catch (error) {
-    console.error(`Error fetching ${entityType} details:`, error);
-    return null;
-  }
-}
+  res.json({
+    stats,
+    byType
+  });
+}));
 
 module.exports = router;
