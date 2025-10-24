@@ -84,6 +84,7 @@ const HRDashboard = lazy(() => import('./pages/HRDashboard'))
 const CommissionsDashboard = lazy(() => import('./pages/CommissionsDashboard'))
 const TerritoryManagement = lazy(() => import('./pages/TerritoryManagement'))
 const WorkflowsDashboard = lazy(() => import('./pages/WorkflowsDashboard'))
+const UserProfile = lazy(() => import('./pages/UserProfile'))
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
@@ -242,6 +243,7 @@ function App() {
             <Route path="commissions" element={<CommissionsDashboard />} />
             <Route path="territories" element={<TerritoryManagement />} />
             <Route path="workflows" element={<WorkflowsDashboard />} />
+            <Route path="profile" element={<UserProfile />} />
 
             {/* Sales Routes */}
             <Route path="sales/dashboard" element={<SalesDashboard />} />
