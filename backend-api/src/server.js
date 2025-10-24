@@ -292,6 +292,7 @@ async function startServer() {
     const kycRoutes = require('./routes/kyc');
     const surveyRoutes = require('./routes/surveys');
     const analyticsRoutes = require('./routes/analytics');
+    const financeRoutes = require('./routes/finance');
     const areaRoutes = require('./routes/areas');
     const routeRoutes = require('./routes/routes');
     const agentRoutes = require('./routes/agents');
@@ -393,6 +394,19 @@ async function startServer() {
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
     app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
+    
+    // Finance routes - special handling for debugging
+    logger.info('Mounting finance routes at /api/finance');
+    logger.info('Finance routes object type:', typeof financeRoutes);
+    logger.info('Finance routes stack length:', financeRoutes.stack ? financeRoutes.stack.length : 'N/A');
+    
+    // Mount finance routes with middleware
+    app.use('/api/finance', (req, res, next) => {
+      logger.info(`Finance route accessed: ${req.method} ${req.path}`);
+      next();
+    }, authTenantMiddleware, financeRoutes);
+    
+    logger.info('Finance routes mounted successfully');
     app.use('/api/areas', authTenantMiddleware, areaRoutes);
     app.use('/api/routes', authTenantMiddleware, routeRoutes);
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
