@@ -4,8 +4,12 @@ const Joi = require('joi');
 const { v4: uuidv4 } = require('uuid');
 // Database functions will be lazy-loaded to avoid circular dependencies
 const { AppError, asyncHandler } = require('../middleware/errorHandler');
+const { requireSuperAdmin } = require('../middleware/superadmin');
 
 const router = express.Router();
+
+// All tenant management routes require SuperAdmin access
+router.use(requireSuperAdmin);
 
 // Validation schemas
 const createTenantSchema = Joi.object({
@@ -759,6 +763,141 @@ router.get('/mappings', asyncHandler(async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+}));
+
+/**
+ * @swagger
+ * /api/tenants/{id}:
+ *   delete:
+ *     summary: Delete a tenant (SuperAdmin only)
+ *     tags: [Tenants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Tenant deleted successfully
+ *       404:
+ *         description: Tenant not found
+ *       403:
+ *         description: SuperAdmin access required
+ */
+router.delete('/:id', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, runQuery } = require('../database/init');
+  
+  const tenantId = parseInt(req.params.id);
+  
+  // Check if tenant exists
+  const tenant = await getOneQuery('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) {
+    return next(new AppError('Tenant not found', 404, 'NOT_FOUND'));
+  }
+  
+  // Prevent deletion of system tenant (if any)
+  if (tenant.code === 'SYSTEM' || tenant.code === 'SUPERADMIN') {
+    return next(new AppError('Cannot delete system tenant', 400, 'FORBIDDEN_DELETE'));
+  }
+  
+  try {
+    // In a real system, you'd want to:
+    // 1. Archive tenant data
+    // 2. Delete all related data (cascade)
+    // 3. Send notifications
+    // 4. Log the deletion
+    
+    // For now, we'll do a soft delete by marking as inactive
+    await runQuery(
+      'UPDATE tenants SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      ['deleted', tenantId]
+    );
+    
+    res.json({
+      success: true,
+      message: 'Tenant deleted successfully',
+      data: { id: tenantId }
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/tenants/{id}/activate:
+ *   post:
+ *     summary: Activate a tenant
+ *     tags: [Tenants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Tenant activated
+ */
+router.post('/:id/activate', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, runQuery } = require('../database/init');
+  
+  const tenantId = parseInt(req.params.id);
+  
+  const tenant = await getOneQuery('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) {
+    return next(new AppError('Tenant not found', 404, 'NOT_FOUND'));
+  }
+  
+  await runQuery(
+    'UPDATE tenants SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    ['active', tenantId]
+  );
+  
+  res.json({
+    success: true,
+    message: 'Tenant activated successfully',
+    data: { id: tenantId, status: 'active' }
+  });
+}));
+
+/**
+ * @swagger
+ * /api/tenants/{id}/suspend:
+ *   post:
+ *     summary: Suspend a tenant
+ *     tags: [Tenants]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Tenant suspended
+ */
+router.post('/:id/suspend', asyncHandler(async (req, res, next) => {
+  const { getOneQuery, runQuery } = require('../database/init');
+  
+  const tenantId = parseInt(req.params.id);
+  
+  const tenant = await getOneQuery('SELECT * FROM tenants WHERE id = ?', [tenantId]);
+  if (!tenant) {
+    return next(new AppError('Tenant not found', 404, 'NOT_FOUND'));
+  }
+  
+  await runQuery(
+    'UPDATE tenants SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    ['suspended', tenantId]
+  );
+  
+  res.json({
+    success: true,
+    message: 'Tenant suspended successfully',
+    data: { id: tenantId, status: 'suspended' }
+  });
 }));
 
 module.exports = router;
