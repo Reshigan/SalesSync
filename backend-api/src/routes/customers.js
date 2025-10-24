@@ -653,4 +653,647 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
   }
 }));
 
+/**
+ * @swagger
+ * /api/customers/:id/visits:
+ *   get:
+ *     summary: Get customer visit history
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const visits = getQuery('SELECT * FROM visits WHERE customer_id = ? AND tenant_id = ? ORDER BY visit_date DESC LIMIT 50', 
+      [req.params.id, req.tenantId]);
+    
+    res.json({
+      success: true,
+      data: visits || []
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/:id/credit:
+ *   get:
+ *     summary: Get customer credit information
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery, getQuery } = require('../database/init');
+  
+  try {
+    const customer = getOneQuery('SELECT credit_limit, payment_terms FROM customers WHERE id = ? AND tenant_id = ?', 
+      [req.params.id, req.tenantId]);
+    
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+    
+    // Calculate outstanding balance from orders
+    const result = getOneQuery(
+      `SELECT 
+        COALESCE(SUM(CASE WHEN payment_status IN ('pending', 'partial') THEN total_amount END), 0) as outstanding,
+        COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total_amount END), 0) as paid_amount,
+        COUNT(*) as total_orders
+      FROM orders 
+      WHERE customer_id = ? AND tenant_id = ?`,
+      [req.params.id, req.tenantId]
+    );
+    
+    const creditInfo = {
+      credit_limit: customer.credit_limit || 0,
+      outstanding_balance: result?.outstanding || 0,
+      available_credit: (customer.credit_limit || 0) - (result?.outstanding || 0),
+      payment_terms: customer.payment_terms || 0,
+      total_paid: result?.paid_amount || 0,
+      total_orders: result?.total_orders || 0
+    };
+    
+    res.json({
+      success: true,
+      data: creditInfo
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/:id/notes:
+ *   get:
+ *     summary: Get customer notes
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const notes = getQuery(
+      `SELECT n.*, u.first_name || ' ' || u.last_name as created_by_name
+      FROM customer_notes n
+      LEFT JOIN users u ON n.created_by = u.id
+      WHERE n.customer_id = ? AND n.tenant_id = ?
+      ORDER BY n.created_at DESC`,
+      [req.params.id, req.tenantId]
+    );
+    
+    res.json({
+      success: true,
+      data: notes || []
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/:id/notes:
+ *   post:
+ *     summary: Add customer note
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
+  const { runQuery, getOneQuery } = require('../database/init');
+  
+  const noteSchema = Joi.object({
+    note: Joi.string().required().min(1).max(5000),
+    type: Joi.string().valid('general', 'visit', 'complaint', 'feedback').default('general')
+  });
+  
+  try {
+    const { error, value } = noteSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+    
+    // Check if customer exists
+    const customer = getOneQuery('SELECT id FROM customers WHERE id = ? AND tenant_id = ?', 
+      [req.params.id, req.tenantId]);
+    
+    if (!customer) {
+      return res.status(404).json({ success: false, message: 'Customer not found' });
+    }
+    
+    const noteId = uuidv4();
+    const now = new Date().toISOString();
+    
+    runQuery(
+      `INSERT INTO customer_notes (id, customer_id, tenant_id, note, type, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [noteId, req.params.id, req.tenantId, value.note, value.type, req.userId, now]
+    );
+    
+    const note = getOneQuery(
+      `SELECT n.*, u.first_name || ' ' || u.last_name as created_by_name
+      FROM customer_notes n
+      LEFT JOIN users u ON n.created_by = u.id
+      WHERE n.id = ?`,
+      [noteId]
+    );
+    
+    res.status(201).json({
+      success: true,
+      message: 'Note added successfully',
+      data: note
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/bulk:
+ *   post:
+ *     summary: Bulk operations on customers
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/bulk', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
+  const { runQuery } = require('../database/init');
+  
+  const bulkSchema = Joi.object({
+    customer_ids: Joi.array().items(Joi.string()).required().min(1),
+    operation: Joi.string().valid('activate', 'deactivate', 'suspend', 'delete').required()
+  });
+  
+  try {
+    const { error, value } = bulkSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: false, message: error.details[0].message });
+    }
+    
+    const { customer_ids, operation } = value;
+    const placeholders = customer_ids.map(() => '?').join(',');
+    
+    let query, params;
+    
+    switch (operation) {
+      case 'activate':
+        query = `UPDATE customers SET status = 'active', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
+        params = [new Date().toISOString(), ...customer_ids, req.tenantId];
+        break;
+      case 'deactivate':
+        query = `UPDATE customers SET status = 'inactive', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
+        params = [new Date().toISOString(), ...customer_ids, req.tenantId];
+        break;
+      case 'suspend':
+        query = `UPDATE customers SET status = 'suspended', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
+        params = [new Date().toISOString(), ...customer_ids, req.tenantId];
+        break;
+      case 'delete':
+        query = `UPDATE customers SET deleted_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
+        params = [new Date().toISOString(), ...customer_ids, req.tenantId];
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid operation' });
+    }
+    
+    const result = runQuery(query, params);
+    
+    res.json({
+      success: true,
+      message: `Bulk ${operation} completed successfully`,
+      data: {
+        affected: result.changes || 0
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/export:
+ *   post:
+ *     summary: Export customers to CSV
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/export', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const { customer_ids, filters } = req.body;
+    
+    let query = `
+      SELECT 
+        c.code,
+        c.name,
+        c.type,
+        c.phone,
+        c.email,
+        c.address,
+        c.status,
+        c.credit_limit,
+        c.payment_terms,
+        c.created_at,
+        COALESCE(order_count, 0) as total_orders,
+        COALESCE(order_total, 0) as total_spent
+      FROM customers c
+      LEFT JOIN (
+        SELECT customer_id, COUNT(*) as order_count, SUM(total_amount) as order_total
+        FROM orders
+        WHERE tenant_id = ?
+        GROUP BY customer_id
+      ) o ON c.id = o.customer_id
+      WHERE c.tenant_id = ? AND c.deleted_at IS NULL
+    `;
+    
+    let params = [req.tenantId, req.tenantId];
+    
+    if (customer_ids && customer_ids.length > 0) {
+      const placeholders = customer_ids.map(() => '?').join(',');
+      query += ` AND c.id IN (${placeholders})`;
+      params.push(...customer_ids);
+    }
+    
+    if (filters?.status) {
+      query += ' AND c.status = ?';
+      params.push(filters.status);
+    }
+    
+    if (filters?.type) {
+      query += ' AND c.type = ?';
+      params.push(filters.type);
+    }
+    
+    query += ' ORDER BY c.name ASC';
+    
+    const customers = getQuery(query, params);
+    
+    // Convert to CSV
+    const headers = ['Code', 'Name', 'Type', 'Phone', 'Email', 'Address', 'Status', 'Credit Limit', 'Payment Terms', 'Created At', 'Total Orders', 'Total Spent'];
+    const rows = customers.map(c => [
+      c.code || '',
+      c.name || '',
+      c.type || '',
+      c.phone || '',
+      c.email || '',
+      c.address || '',
+      c.status || '',
+      c.credit_limit || 0,
+      c.payment_terms || 0,
+      c.created_at || '',
+      c.total_orders || 0,
+      c.total_spent || 0
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename=customers_export_${Date.now()}.csv`);
+    res.send(csvContent);
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * @swagger
+ * /api/customers/stats:
+ *   get:
+ *     summary: Get customer statistics
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery } = require('../database/init');
+  
+  try {
+    const stats = getOneQuery(`
+      SELECT 
+        COUNT(*) as total_customers,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_customers,
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_customers,
+        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) as suspended_customers,
+        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
+        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
+        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
+        SUM(CASE WHEN created_at >= date('now', '-30 days') THEN 1 ELSE 0 END) as new_customers_30d,
+        SUM(CASE WHEN created_at >= date('now', '-7 days') THEN 1 ELSE 0 END) as new_customers_7d
+      FROM customers
+      WHERE tenant_id = ? AND deleted_at IS NULL
+    `, [req.tenantId]);
+    
+    res.json({
+      success: true,
+      data: stats || {}
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Get customer visits history
+ */
+router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const visits = getQuery(`
+      SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
+      FROM visits v
+      LEFT JOIN users u ON v.agent_id = u.id
+      WHERE v.customer_id = ? AND v.tenant_id = ?
+      ORDER BY v.visit_date DESC
+      LIMIT 50
+    `, [req.params.id, req.tenantId]);
+    
+    res.json({ success: true, data: visits });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Get customer KYC information
+ */
+router.get('/:id/kyc', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery } = require('../database/init');
+  
+  try {
+    const kyc = getOneQuery(`
+      SELECT * FROM customer_kyc
+      WHERE customer_id = ? AND tenant_id = ?
+      ORDER BY created_at DESC
+      LIMIT 1
+    `, [req.params.id, req.tenantId]);
+    
+    res.json({ success: true, data: kyc });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Add customer note
+ */
+router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
+  const { runQuery } = require('../database/init');
+  const { note } = req.body;
+  
+  if (!note) {
+    return res.status(400).json({ success: false, error: 'Note is required' });
+  }
+  
+  try {
+    const noteId = uuidv4();
+    runQuery(`
+      INSERT INTO customer_notes (id, customer_id, tenant_id, user_id, note, created_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `, [noteId, req.params.id, req.tenantId, req.userId, note]);
+    
+    res.json({ success: true, data: { id: noteId, note, created_at: new Date().toISOString() } });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Get customer notes
+ */
+router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const notes = getQuery(`
+      SELECT cn.*, u.first_name || ' ' || u.last_name as user_name
+      FROM customer_notes cn
+      LEFT JOIN users u ON cn.user_id = u.id
+      WHERE cn.customer_id = ? AND cn.tenant_id = ?
+      ORDER BY cn.created_at DESC
+    `, [req.params.id, req.tenantId]);
+    
+    res.json({ success: true, data: notes });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Get customer credit information
+ */
+router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery, getQuery } = require('../database/init');
+  
+  try {
+    const customer = getOneQuery(`
+      SELECT credit_limit, payment_terms FROM customers
+      WHERE id = ? AND tenant_id = ?
+    `, [req.params.id, req.tenantId]);
+    
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+    
+    // Calculate outstanding balance
+    const outstandingResult = getOneQuery(`
+      SELECT COALESCE(SUM(total_amount - paid_amount), 0) as outstanding
+      FROM orders
+      WHERE customer_id = ? AND tenant_id = ? AND payment_status != 'paid'
+    `, [req.params.id, req.tenantId]);
+    
+    const outstanding = outstandingResult?.outstanding || 0;
+    const creditLimit = customer.credit_limit || 0;
+    const available = creditLimit - outstanding;
+    
+    res.json({
+      success: true,
+      data: {
+        credit_limit: creditLimit,
+        outstanding: outstanding,
+        available: available,
+        utilization: creditLimit > 0 ? (outstanding / creditLimit * 100).toFixed(2) : 0,
+        payment_terms: customer.payment_terms
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Bulk create/update customers
+ */
+router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async (req, res, next) => {
+  const { runQuery, getOneQuery } = require('../database/init');
+  const { customers } = req.body;
+  
+  if (!Array.isArray(customers) || customers.length === 0) {
+    return res.status(400).json({ success: false, error: 'Customers array is required' });
+  }
+  
+  try {
+    const results = { created: 0, updated: 0, errors: [] };
+    
+    for (const customerData of customers) {
+      try {
+        // Check if customer exists by code
+        const existing = getOneQuery(`
+          SELECT id FROM customers WHERE code = ? AND tenant_id = ?
+        `, [customerData.code, req.tenantId]);
+        
+        if (existing) {
+          // Update
+          runQuery(`
+            UPDATE customers
+            SET name = ?, type = ?, phone = ?, email = ?, address = ?,
+                latitude = ?, longitude = ?, credit_limit = ?, payment_terms = ?,
+                updated_at = datetime('now')
+            WHERE id = ? AND tenant_id = ?
+          `, [
+            customerData.name, customerData.type || 'retail', customerData.phone,
+            customerData.email, customerData.address, customerData.latitude,
+            customerData.longitude, customerData.creditLimit || 0,
+            customerData.paymentTerms || 0, existing.id, req.tenantId
+          ]);
+          results.updated++;
+        } else {
+          // Create
+          const customerId = uuidv4();
+          runQuery(`
+            INSERT INTO customers (
+              id, tenant_id, code, name, type, phone, email, address,
+              latitude, longitude, credit_limit, payment_terms, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+          `, [
+            customerId, req.tenantId, customerData.code, customerData.name,
+            customerData.type || 'retail', customerData.phone, customerData.email,
+            customerData.address, customerData.latitude, customerData.longitude,
+            customerData.creditLimit || 0, customerData.paymentTerms || 0
+          ]);
+          results.created++;
+        }
+      } catch (err) {
+        results.errors.push({
+          customer: customerData.code,
+          error: err.message
+        });
+      }
+    }
+    
+    res.json({ success: true, data: results });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Export customers to CSV
+ */
+router.post('/export', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getQuery } = require('../database/init');
+  
+  try {
+    const { type, status, routeId } = req.body;
+    
+    let whereClause = 'WHERE c.tenant_id = ?';
+    let params = [req.tenantId];
+    
+    if (type) {
+      whereClause += ' AND c.type = ?';
+      params.push(type);
+    }
+    
+    if (status) {
+      whereClause += ' AND c.status = ?';
+      params.push(status);
+    }
+    
+    if (routeId) {
+      whereClause += ' AND c.route_id = ?';
+      params.push(routeId);
+    }
+    
+    const customers = getQuery(`
+      SELECT 
+        c.code, c.name, c.type, c.phone, c.email, c.address,
+        c.credit_limit, c.payment_terms, c.status, c.latitude, c.longitude,
+        r.name as route_name, c.created_at
+      FROM customers c
+      LEFT JOIN routes r ON c.route_id = r.id
+      ${whereClause}
+      ORDER BY c.created_at DESC
+    `, params);
+    
+    // Convert to CSV
+    if (customers.length === 0) {
+      return res.json({ success: true, data: { csv: '', count: 0 } });
+    }
+    
+    const headers = Object.keys(customers[0]);
+    const csvRows = [headers.join(',')];
+    
+    for (const customer of customers) {
+      const values = headers.map(header => {
+        const val = customer[header];
+        return val !== null && val !== undefined ? `"${String(val).replace(/"/g, '""')}"` : '';
+      });
+      csvRows.push(values.join(','));
+    }
+    
+    const csv = csvRows.join('\n');
+    
+    res.json({
+      success: true,
+      data: {
+        csv: csv,
+        count: customers.length,
+        filename: `customers_export_${new Date().toISOString().split('T')[0]}.csv`
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
+/**
+ * Get customer statistics
+ */
+router.get('/stats/summary', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery } = require('../database/init');
+  
+  try {
+    const stats = getOneQuery(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive,
+        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail,
+        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale,
+        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor
+      FROM customers
+      WHERE tenant_id = ?
+    `, [req.tenantId]);
+    
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    next(error);
+  }
+}));
+
 module.exports = router;
