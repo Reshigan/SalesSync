@@ -135,6 +135,10 @@ async function initializeApp() {
     // Load Finance routes
     console.log('Loading finance routes...');
     const financeRoutes = require('./routes/finance');
+    
+    // Load Payment routes
+    console.log('Loading payment routes...');
+    const paymentRoutes = require('./routes/payments');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -222,6 +226,10 @@ async function initializeApp() {
     // Mount Finance routes
     console.log('Mounting finance routes...');
     app.use('/api/finance', financeRoutes);
+    
+    // Mount Payment routes
+    console.log('Mounting payment routes...');
+    app.use('/api/payments', paymentRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

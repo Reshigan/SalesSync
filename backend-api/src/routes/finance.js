@@ -390,4 +390,72 @@ router.get('/accounts-receivable', asyncHandler(async (req, res) => {
   });
 }));
 
+// Generate PDF invoice
+router.get('/invoices/:id/pdf', asyncHandler(async (req, res) => {
+  const invoicePDFService = require('../services/invoicePDF');
+  const { id } = req.params;
+  
+  // For now, using default tenant. In production, get from auth
+  const tenantId = 'default-tenant';
+  
+  try {
+    const pdfBuffer = await invoicePDFService.generateInvoicePDF(id, tenantId);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice-${id}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw new AppError(`Failed to generate PDF: ${error.message}`, 500);
+  }
+}));
+
+// Email invoice
+router.post('/invoices/:id/email', asyncHandler(async (req, res) => {
+  const emailService = require('../services/emailService');
+  const { getOneQuery } = require('../database/init');
+  const { id } = req.params;
+  const { recipientEmail } = req.body;
+  
+  // For now, using default tenant. In production, get from auth
+  const tenantId = 'default-tenant';
+  
+  if (!recipientEmail) {
+    throw new AppError('Recipient email is required', 400);
+  }
+  
+  try {
+    // Get invoice details
+    const invoice = await getOneQuery(
+      `SELECT i.*, c.name as customer_name, c.email as customer_email
+       FROM invoices i
+       LEFT JOIN customers c ON i.customer_id = c.id
+       WHERE i.id = ?`,
+      [id]
+    );
+    
+    if (!invoice) {
+      throw new AppError('Invoice not found', 404);
+    }
+    
+    // Send email
+    const result = await emailService.sendInvoiceEmail(id, tenantId, recipientEmail, {
+      invoiceNumber: invoice.invoice_number,
+      invoiceDate: invoice.invoice_date,
+      dueDate: invoice.due_date,
+      totalAmount: `$${invoice.total_amount}`,
+      customerName: invoice.customer_name
+    });
+    
+    res.json({
+      success: true,
+      message: 'Invoice email sent successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error sending invoice email:', error);
+    throw new AppError(`Failed to send email: ${error.message}`, 500);
+  }
+}));
+
 module.exports = router;
