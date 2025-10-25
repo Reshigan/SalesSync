@@ -49,25 +49,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`space-y-6 transition-all duration-700 ease-out ${isFormVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+    <div className={`space-y-6 transition-all duration-500 ease-out ${isFormVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="text-center">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold text-gray-900">
           Welcome Back
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Sign in to continue to your dashboard
+        <p className="mt-3 text-base text-gray-600">
+          Sign in to your account
         </p>
       </div>
 
-      <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
         {/* Email field */}
-        <div className="group">
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 transition-colors group-focus-within:text-blue-600">
-            Email address
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
-              <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail className="h-5 w-5 text-gray-400" />
             </div>
             <input
               {...register('email', {
@@ -78,24 +78,24 @@ export default function LoginPage() {
                 },
               })}
               type="email"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white hover:bg-white"
-              placeholder="Enter your email"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="you@company.com"
               autoComplete="email"
             />
           </div>
           {errors.email && (
-            <p className="mt-2 text-sm text-red-600 animate-pulse">{errors.email.message}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.email.message}</p>
           )}
         </div>
 
         {/* Password field */}
-        <div className="group">
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2 transition-colors group-focus-within:text-blue-600">
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
             Password
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-600">
-              <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Lock className="h-5 w-5 text-gray-400" />
             </div>
             <input
               {...register('password', {
@@ -106,13 +106,13 @@ export default function LoginPage() {
                 },
               })}
               type={showPassword ? 'text' : 'password'}
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white hover:bg-white"
-              placeholder="Enter your password"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              placeholder="••••••••"
               autoComplete="current-password"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -123,7 +123,7 @@ export default function LoginPage() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-2 text-sm text-red-600 animate-pulse">{errors.password.message}</p>
+            <p className="mt-1.5 text-sm text-red-600">{errors.password.message}</p>
           )}
         </div>
 
@@ -153,8 +153,8 @@ export default function LoginPage() {
 
         {/* Error message */}
         {error && (
-          <div className="rounded-xl bg-red-50 border border-red-200 p-4 animate-pulse">
-            <div className="text-sm text-red-700 font-medium">{error}</div>
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
+            <div className="text-sm text-red-700">{error}</div>
           </div>
         )}
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="group w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex justify-center items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex justify-center items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>
@@ -172,45 +172,21 @@ export default function LoginPage() {
               </>
             ) : (
               <>
-                <span>Sign in</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span>Sign In</span>
+                <ArrowRight className="h-4 w-4" />
               </>
             )}
           </button>
         </div>
       </form>
 
-      {/* Demo credentials */}
-      {import.meta.env.DEV && (
-        <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-            Demo Credentials
-          </h3>
-          <div className="space-y-2 text-xs text-gray-700">
-            <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
-              <span><strong>Admin:</strong> admin@salessync.com</span>
-              <span className="text-blue-600 font-mono">admin123</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
-              <span><strong>Manager:</strong> manager@salessync.com</span>
-              <span className="text-blue-600 font-mono">manager123</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
-              <span><strong>Agent:</strong> agent@salessync.com</span>
-              <span className="text-blue-600 font-mono">agent123</span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Mobile Login Link */}
       <div className="mt-6 text-center">
         <Link
           to="/auth/mobile-login"
-          className="inline-flex items-center justify-center text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
         >
-          <span>Agent? Login with mobile number →</span>
+          Agent? Login with mobile number →
         </Link>
       </div>
     </div>

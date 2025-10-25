@@ -12,7 +12,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 import ToastContainer from './components/ui/Toast'
 
 // Lazy Load All Pages
-const LoginPage = lazy(() => import('./pages/LoginRedesign'))
+const LoginPage = lazy(() => import('./pages/LoginSimple'))
 const MobileLoginPage = lazy(() => import('./pages/auth/MobileLoginPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
