@@ -29,9 +29,11 @@ import {
   LocalShipping,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthStore } from '../store/auth.store';
 
 const LoginRedesign = () => {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -63,38 +65,19 @@ const LoginRedesign = () => {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Tenant-Code': 'demo'
-        },
-        body: JSON.stringify({
-          email: formData.username,
-          password: formData.password
-        }),
+      // Use the auth store login function
+      await login({
+        email: formData.username,
+        password: formData.password,
+        tenantCode: 'demo'
       });
-
-      const data = await response.json();
-
-      console.log('Login response:', response.status, data);
       
-      if (response.ok && data.success) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        console.log('Login successful, redirecting...');
-        
-        // Force page navigation - don't set loading to false, just redirect
-        window.location.href = '/dashboard';
-        return; // Exit immediately
-      } else {
-        setError(data.message || 'Invalid credentials');
-        setLoading(false);
-      }
+      // Login successful - navigate to dashboard
+      console.log('Login successful, navigating to dashboard...');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       console.error('Login error:', err);
-      setError('Connection error. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
       setLoading(false);
     }
   };

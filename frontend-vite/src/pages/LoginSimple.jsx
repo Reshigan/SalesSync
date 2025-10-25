@@ -20,9 +20,11 @@ import {
   Business,
   CheckCircle,
 } from '@mui/icons-material';
+import { useAuthStore } from '../store/auth.store';
 
 const LoginSimple = () => {
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -34,35 +36,18 @@ const LoginSimple = () => {
     setLoading(true);
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/auth/login`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'X-Tenant-Code': 'demo'
-        },
-        body: JSON.stringify({
-          email: formData.username,
-          password: formData.password
-        }),
+      // Use the auth store login function
+      await login({
+        email: formData.username,
+        password: formData.password,
+        tenantCode: 'demo'
       });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        localStorage.setItem('token', data.data.token);
-        localStorage.setItem('user', JSON.stringify(data.data.user));
-        console.log('Login successful, redirecting...');
-        
-        // Force page navigation - don't set loading to false, just redirect
-        window.location.href = '/dashboard';
-        return; // Exit immediately
-      } else {
-        setError(data.message || 'Invalid credentials');
-        setLoading(false);
-      }
+      
+      // Login successful - navigate to dashboard
+      console.log('Login successful, navigating to dashboard...');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      setError('Connection error. Please try again.');
+      setError(err.message || 'Login failed. Please try again.');
       setLoading(false);
     }
   };
