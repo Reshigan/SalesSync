@@ -78,14 +78,18 @@ const LoginRedesign = () => {
 
       const data = await response.json();
 
+      console.log('Login response:', response.status, data);
+      
       if (response.ok && data.success) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/dashboard');
+        console.log('Login successful, redirecting...');
+        window.location.href = '/dashboard';
       } else {
         setError(data.message || 'Invalid credentials');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Connection error. Please try again.');
     } finally {
       setLoading(false);
