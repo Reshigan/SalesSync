@@ -52,18 +52,17 @@ const LoginSimple = () => {
       if (response.ok && data.success) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        console.log('Login successful, navigating to dashboard...');
+        console.log('Login successful, redirecting...');
         
-        // Force immediate page reload to dashboard
-        setTimeout(() => {
-          window.location.replace('/dashboard');
-        }, 100);
+        // Force page navigation - don't set loading to false, just redirect
+        window.location.href = '/dashboard';
+        return; // Exit immediately
       } else {
         setError(data.message || 'Invalid credentials');
+        setLoading(false);
       }
     } catch (err) {
       setError('Connection error. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
