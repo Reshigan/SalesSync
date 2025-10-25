@@ -52,7 +52,9 @@ const LoginSimple = () => {
       if (response.ok && data.success) {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        navigate('/dashboard');
+        console.log('Login successful, navigating to dashboard...');
+        // Use window.location for reliable navigation
+        window.location.href = '/dashboard';
       } else {
         setError(data.message || 'Invalid credentials');
       }
