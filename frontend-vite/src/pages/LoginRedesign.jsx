@@ -84,7 +84,11 @@ const LoginRedesign = () => {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         console.log('Login successful, redirecting...');
-        window.location.href = '/dashboard';
+        
+        // Force immediate page reload to dashboard
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 100);
       } else {
         setError(data.message || 'Invalid credentials');
       }

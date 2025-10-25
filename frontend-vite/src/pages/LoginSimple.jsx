@@ -53,8 +53,11 @@ const LoginSimple = () => {
         localStorage.setItem('token', data.data.token);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         console.log('Login successful, navigating to dashboard...');
-        // Use window.location for reliable navigation
-        window.location.href = '/dashboard';
+        
+        // Force immediate page reload to dashboard
+        setTimeout(() => {
+          window.location.replace('/dashboard');
+        }, 100);
       } else {
         setError(data.message || 'Invalid credentials');
       }
