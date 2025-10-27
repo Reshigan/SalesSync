@@ -36,17 +36,23 @@ const LoginSimple = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting login with:', {
+        email: formData.username,
+        tenantCode: 'DEMO'
+      });
+      
       // Use the auth store login function
       await login({
         email: formData.username,
         password: formData.password,
-        tenantCode: 'demo'
+        tenantCode: 'DEMO'
       });
       
       // Login successful - navigate to dashboard
       console.log('Login successful, navigating to dashboard...');
       navigate('/dashboard', { replace: true });
     } catch (err) {
+      console.error('Login error:', err);
       setError(err.message || 'Login failed. Please try again.');
       setLoading(false);
     }

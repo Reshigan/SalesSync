@@ -11,8 +11,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const PRODUCTION_URL = 'https://ss.gonxt.tech';
-const API_BASE_URL = `${PRODUCTION_URL}/api`;
+const PRODUCTION_URL = 'http://localhost:12000';
+const API_BASE_URL = 'http://localhost:12001/api';
 const TEST_RESULTS_DIR = './test-results';
 const SCREENSHOTS_DIR = './test-screenshots';
 
@@ -109,7 +109,7 @@ const runBackendTests = async () => {
     
     const apiTests = [
         { name: 'Health Check', endpoint: '/health', method: 'GET' },
-        { name: 'Authentication - Login', endpoint: '/auth/login', method: 'POST', data: { email: 'admin@salessync.com', password: 'admin123' } },
+        { name: 'Authentication - Login', endpoint: '/auth/login', method: 'POST', data: { email: 'admin@demo.com', password: 'admin123' } },
         { name: 'Users List', endpoint: '/users', method: 'GET' },
         { name: 'Customers List', endpoint: '/customers', method: 'GET' },
         { name: 'Products List', endpoint: '/products', method: 'GET' },
@@ -129,7 +129,10 @@ const runBackendTests = async () => {
                 url: `${API_BASE_URL}${test.endpoint}`,
                 timeout: 10000,
                 validateStatus: (status) => status < 500, // Accept 4xx as valid responses
-                headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {},
+                headers: {
+                    'X-Tenant-Code': 'DEMO',
+                    ...(authToken ? { 'Authorization': `Bearer ${authToken}` } : {})
+                },
                 httpsAgent: new (require('https').Agent)({
                     rejectUnauthorized: false // Accept self-signed certificates
                 })

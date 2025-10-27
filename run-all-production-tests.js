@@ -77,7 +77,7 @@ class ComprehensiveTestSuite {
                 })
             });
             
-            const healthResponse = await api.get('https://ss.gonxt.tech/api/health');
+            const healthResponse = await api.get('http://localhost:12000/api/health');
             
             if (healthResponse.status === 200 && healthResponse.data.status === 'healthy') {
                 console.log('✅ API Integration - PASSED');
@@ -112,7 +112,7 @@ class ComprehensiveTestSuite {
                 })
             });
             
-            const response = await api.get('https://ss.gonxt.tech/health');
+            const response = await api.get('http://localhost:12000/health');
             const headers = response.headers;
             
             const requiredHeaders = [
@@ -195,7 +195,7 @@ class ComprehensiveTestSuite {
         
         const comprehensiveReport = {
             timestamp: new Date().toISOString(),
-            productionUrl: 'https://ss.gonxt.tech',
+            productionUrl: 'http://localhost:12000',
             testSuite: 'Comprehensive Production Tests',
             duration: totalDuration,
             overallSummary: {
@@ -238,7 +238,7 @@ class ComprehensiveTestSuite {
     async runAllTests() {
         console.log('\n🎯 STARTING COMPREHENSIVE PRODUCTION TEST SUITE');
         console.log('===============================================');
-        console.log(`🌐 Target: https://ss.gonxt.tech`);
+        console.log(`🌐 Target: http://localhost:12000`);
         console.log(`📅 Date: ${new Date().toISOString()}`);
         console.log(`🚀 SalesSync Enterprise v1.0.0 Production Testing`);
         

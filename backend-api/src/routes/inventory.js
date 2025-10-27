@@ -163,4 +163,72 @@ router.get('/test/health', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/inventory/stats - Inventory statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [overall, stockLevels, topProducts, warehouseDistribution] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT i.product_id) as total_products,
+        SUM(i.quantity_on_hand) as total_quantity,
+        SUM(i.quantity_reserved) as total_reserved,
+        SUM(i.quantity_on_hand * i.cost_price) as total_inventory_value,
+        COUNT(DISTINCT i.warehouse_id) as warehouse_count
+      FROM inventory_stock i
+      WHERE i.tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock,
+        COUNT(CASE WHEN i.quantity_on_hand > 0 AND i.quantity_on_hand <= p.reorder_level THEN 1 END) as low_stock,
+        COUNT(CASE WHEN i.quantity_on_hand > p.reorder_level THEN 1 END) as in_stock
+      FROM inventory_stock i
+      JOIN products p ON i.product_id = p.id
+      WHERE i.tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        p.id, p.name, p.code,
+        SUM(i.quantity_on_hand) as total_quantity,
+        SUM(i.quantity_on_hand * i.cost_price) as inventory_value
+      FROM inventory_stock i
+      JOIN products p ON i.product_id = p.id
+      WHERE i.tenant_id = ?
+      GROUP BY p.id
+      ORDER BY inventory_value DESC
+      LIMIT 10
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        w.id, w.name, w.location,
+        COUNT(DISTINCT i.product_id) as product_count,
+        SUM(i.quantity_on_hand) as total_quantity,
+        SUM(i.quantity_on_hand * i.cost_price) as inventory_value
+      FROM inventory_stock i
+      JOIN warehouses w ON i.warehouse_id = w.id
+      WHERE i.tenant_id = ?
+      GROUP BY w.id
+      ORDER BY inventory_value DESC
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      overall: {
+        ...overall,
+        total_inventory_value: parseFloat((overall.total_inventory_value || 0).toFixed(2)),
+        available_quantity: overall.total_quantity - overall.total_reserved
+      },
+      stockLevels: stockLevels[0] || {},
+      topProducts,
+      warehouseDistribution
+    }
+  });
+}));
+
 module.exports = router;

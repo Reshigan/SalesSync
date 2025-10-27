@@ -1,4 +1,5 @@
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Order {
   id: string
@@ -54,7 +55,7 @@ export interface OrderFilter {
 }
 
 class OrdersService {
-  private baseUrl = '/api/orders'
+  private readonly baseUrl = API_CONFIG.ENDPOINTS.ORDERS.BASE
 
   async getOrders(filter?: OrderFilter): Promise<{ orders: Order[], total: number }> {
     try {
@@ -65,8 +66,7 @@ class OrdersService {
       }
     } catch (error) {
       console.error('Failed to fetch orders:', error)
-      // Return mock data for development
-      return this.getMockOrders(filter)
+      throw error
     }
   }
 
@@ -119,69 +119,6 @@ class OrdersService {
     }
   }
 
-  // Mock data for development
-  private getMockOrders(filter?: OrderFilter): { orders: Order[], total: number } {
-    const mockOrders: Order[] = [
-      {
-        id: '132222ef28591ab877b2ca90263ed8bb',
-        tenant_id: 'demo',
-        order_number: 'ORD-001',
-        customer_id: 'c874a76dc577e314126efbc7ef6e36a9',
-        order_date: '2025-10-06',
-        subtotal: 150.00,
-        tax_amount: 0,
-        discount_amount: 0,
-        total_amount: 150.00,
-        payment_status: 'pending',
-        order_status: 'pending',
-        created_at: '2025-10-06T06:30:34Z',
-        customer: {
-          id: 'c874a76dc577e314126efbc7ef6e36a9',
-          name: 'Demo Customer',
-          email: 'customer@demo.com',
-          phone: '+44 123 456 7890'
-        },
-        items: [
-          {
-            id: '7e03b0a0041b4c94342f326bd3056096',
-            order_id: '132222ef28591ab877b2ca90263ed8bb',
-            product_id: '76f4d483-bdaa-40e9-94e1-65b8dcdca410',
-            quantity: 2,
-            unit_price: 75.00,
-            discount_amount: 0,
-            tax_amount: 0,
-            total_amount: 150.00,
-            product: {
-              id: '76f4d483-bdaa-40e9-94e1-65b8dcdca410',
-              name: 'Premium Product',
-              sku: 'PROD-001'
-            }
-          }
-        ]
-      }
-    ]
-
-    let filteredOrders = mockOrders
-
-    if (filter) {
-      filteredOrders = mockOrders.filter(order => {
-        if (filter.status && order.order_status !== filter.status) return false
-        if (filter.payment_status && order.payment_status !== filter.payment_status) return false
-        if (filter.customer_id && order.customer_id !== filter.customer_id) return false
-        return true
-      })
-    }
-
-    const limit = filter?.limit || 10
-    const page = filter?.page || 1
-    const start = (page - 1) * limit
-    const end = start + limit
-
-    return {
-      orders: filteredOrders.slice(start, end),
-      total: filteredOrders.length
-    }
-  }
 }
 
 export const ordersService = new OrdersService()

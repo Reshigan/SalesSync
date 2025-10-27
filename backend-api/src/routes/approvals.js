@@ -4,8 +4,8 @@
  */
 
 const express = require('express');
+const { asyncHandler } = require('../middleware/errorHandler');
 const router = express.Router();
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
 
 /**
  * POST /api/approvals

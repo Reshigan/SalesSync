@@ -29,67 +29,22 @@ export default function AuditLogsPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true)
-      // Mock data for now - replace with real API
-      const mockLogs: AuditLog[] = [
-        {
-          id: '1',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          user: 'admin@demo.com',
-          action: 'UPDATE',
-          entity: 'User',
-          entityId: 'user-123',
-          details: 'Updated user status to active',
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0'
-        },
-        {
-          id: '2',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          user: 'manager@demo.com',
-          action: 'CREATE',
-          entity: 'Order',
-          entityId: 'order-456',
-          details: 'Created new order ORD000456',
-          ipAddress: '192.168.1.2',
-          userAgent: 'Mozilla/5.0'
-        },
-        {
-          id: '3',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-          user: 'agent@demo.com',
-          action: 'DELETE',
-          entity: 'Product',
-          entityId: 'prod-789',
-          details: 'Deleted product SKU12345',
-          ipAddress: '192.168.1.3',
-          userAgent: 'Mozilla/5.0'
-        },
-        {
-          id: '4',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-          user: 'admin@demo.com',
-          action: 'LOGIN',
-          entity: 'Auth',
-          entityId: 'session-001',
-          details: 'User logged in successfully',
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0'
-        },
-        {
-          id: '5',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-          user: 'manager@demo.com',
-          action: 'UPDATE',
-          entity: 'Customer',
-          entityId: 'cust-111',
-          details: 'Updated customer credit limit',
-          ipAddress: '192.168.1.2',
-          userAgent: 'Mozilla/5.0'
-        }
-      ]
-      setLogs(mockLogs)
+      
+      // Fetch audit logs from API
+      const params: any = {}
+      if (filterAction) params.action = filterAction
+      if (filterEntity) params.entity = filterEntity
+      if (dateRange[0]) params.startDate = dateRange[0]
+      if (dateRange[1]) params.endDate = dateRange[1]
+      
+      const response = await api.get('/admin/audit-logs', { params })
+      setLogs(response.data.data || [])
     } catch (error) {
       console.error('Failed to fetch audit logs:', error)
+      // In production, show empty state instead of mock data
+      if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_MOCK_DATA === 'false') {
+        setLogs([])
+      }
     } finally {
       setLoading(false)
     }

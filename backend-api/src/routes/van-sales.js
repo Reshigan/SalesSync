@@ -205,4 +205,70 @@ router.get('/test/health', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/van-sales/stats - Van sales statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [vanCounts, salesStats, routeStats, topVans] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_vans,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_vans,
+        COUNT(CASE WHEN status = 'on_route' THEN 1 END) as vans_on_route
+      FROM vans WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT vs.id) as total_sales,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_sale_value,
+        COUNT(DISTINCT vs.customer_id) as customers_served
+      FROM van_sales vs
+      INNER JOIN vans v ON vs.van_id = v.id
+      WHERE v.tenant_id = ?
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT r.id) as total_routes,
+        AVG(r.distance_km) as avg_route_distance,
+        COUNT(CASE WHEN r.status = 'completed' THEN 1 END) as completed_routes
+      FROM van_routes r
+      INNER JOIN vans v ON r.van_id = v.id
+      WHERE v.tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        v.id, v.registration_number, v.driver_name,
+        COUNT(vs.id) as sale_count,
+        SUM(vs.total_amount) as total_revenue
+      FROM vans v
+      LEFT JOIN van_sales vs ON v.id = vs.van_id
+      WHERE v.tenant_id = ?
+      GROUP BY v.id
+      ORDER BY total_revenue DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      vans: vanCounts,
+      sales: {
+        ...salesStats,
+        total_revenue: parseFloat((salesStats.total_revenue || 0).toFixed(2)),
+        avg_sale_value: parseFloat((salesStats.avg_sale_value || 0).toFixed(2))
+      },
+      routes: {
+        ...routeStats,
+        avg_route_distance: parseFloat((routeStats.avg_route_distance || 0).toFixed(2))
+      },
+      topVans
+    }
+  });
+}));
+
 module.exports = router;

@@ -145,4 +145,46 @@ router.get('/test/health', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/kyc/stats - KYC statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [kycCounts, statusBreakdown, recentActivity] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_submissions,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reviews,
+        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
+      FROM kyc_submissions WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT status, COUNT(*) as count
+      FROM kyc_submissions WHERE tenant_id = ?
+      GROUP BY status
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        k.id, k.customer_id, c.name as customer_name,
+        k.status, k.submitted_at, k.reviewed_at
+      FROM kyc_submissions k
+      LEFT JOIN customers c ON k.customer_id = c.id
+      WHERE k.tenant_id = ?
+      ORDER BY k.submitted_at DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      counts: kycCounts,
+      statusBreakdown,
+      recentActivity
+    }
+  });
+}));
+
 module.exports = router;

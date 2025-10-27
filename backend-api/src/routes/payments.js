@@ -288,4 +288,55 @@ router.get('/tenant/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/payments/stats - Payment statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [paymentCounts, methodBreakdown, dailyStats] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_payments,
+        SUM(amount) as total_amount,
+        AVG(amount) as avg_payment,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments
+      FROM payments WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        payment_method,
+        COUNT(*) as count,
+        SUM(amount) as total_amount
+      FROM payments WHERE tenant_id = ?
+      GROUP BY payment_method
+      ORDER BY total_amount DESC
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        DATE(payment_date) as date,
+        COUNT(*) as payment_count,
+        SUM(amount) as daily_total
+      FROM payments
+      WHERE tenant_id = ? AND payment_date >= DATE('now', '-30 days')
+      GROUP BY DATE(payment_date)
+      ORDER BY date DESC
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      payments: {
+        ...paymentCounts,
+        total_amount: parseFloat((paymentCounts.total_amount || 0).toFixed(2)),
+        avg_payment: parseFloat((paymentCounts.avg_payment || 0).toFixed(2))
+      },
+      methodBreakdown,
+      dailyStats
+    }
+  });
+}));
+
 module.exports = router;

@@ -699,4 +699,495 @@ router.get('/brands/list', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/products/stats:
+ *   get:
+ *     summary: Get product statistics
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Product statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalProducts:
+ *                       type: integer
+ *                     activeProducts:
+ *                       type: integer
+ *                     lowStockProducts:
+ *                       type: integer
+ *                     outOfStockProducts:
+ *                       type: integer
+ *                     totalValue:
+ *                       type: number
+ *                     byCategory:
+ *                       type: array
+ *                     byBrand:
+ *                       type: array
+ */
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    // Get all statistics in parallel for performance
+    const [
+      totalProducts,
+      activeProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalValue,
+      byCategory,
+      byBrand
+    ] = await Promise.all([
+      // Total products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ?',
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Active products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?',
+          [tenantId, 'active'],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Low stock products (less than reorder level or less than 10)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) > 0
+           AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Out of stock products
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) = 0`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Total inventory value (cost_price * quantity)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT SUM(p.cost_price * COALESCE(i.quantity_on_hand, 0)) as total
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ?`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.total || 0)
+        );
+      }),
+      
+      // Products by category
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT c.id, c.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM categories c
+           LEFT JOIN products p ON c.id = p.category_id AND p.tenant_id = c.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE c.tenant_id = ?
+           GROUP BY c.id, c.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      }),
+      
+      // Products by brand
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT b.id, b.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM brands b
+           LEFT JOIN products p ON b.id = p.brand_id AND p.tenant_id = b.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE b.tenant_id = ?
+           GROUP BY b.id, b.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        totalProducts,
+        activeProducts,
+        inactiveProducts: totalProducts - activeProducts,
+        lowStockProducts,
+        outOfStockProducts,
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        byCategory,
+        byBrand
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching product stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch product statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/products/{id}/stock-history:
+ *   get:
+ *     summary: Get product stock movement history
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: warehouse_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ */
+router.get('/:id/stock-history', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+    const { start_date, end_date, warehouse_id, limit = 50 } = req.query;
+    const db = getDatabase();
+    
+    // Verify product exists
+    const product = await getOneQuery('products', { id }, tenantId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    // Build query for stock movements
+    let sql = `
+      SELECT 
+        im.id,
+        im.product_id,
+        im.warehouse_id,
+        w.name as warehouse_name,
+        im.movement_type,
+        im.quantity,
+        im.reference_number,
+        im.reference_type,
+        im.notes,
+        im.created_at,
+        im.created_by,
+        u.full_name as created_by_name,
+        COALESCE(
+          (SELECT SUM(
+            CASE 
+              WHEN im2.movement_type IN ('stock_in', 'stock_adjustment_in', 'stock_transfer_in') 
+              THEN im2.quantity
+              WHEN im2.movement_type IN ('stock_out', 'stock_adjustment_out', 'stock_transfer_out', 'sale', 'damage', 'expired')
+              THEN -im2.quantity
+              ELSE 0
+            END
+          )
+          FROM inventory_movements im2
+          WHERE im2.product_id = im.product_id
+          AND im2.tenant_id = im.tenant_id
+          AND im2.created_at <= im.created_at
+          ${warehouse_id ? 'AND im2.warehouse_id = ?' : ''}
+          ), 0
+        ) as running_balance
+      FROM inventory_movements im
+      LEFT JOIN warehouses w ON im.warehouse_id = w.id
+      LEFT JOIN users u ON im.created_by = u.id
+      WHERE im.product_id = ?
+      AND im.tenant_id = ?
+    `;
+    
+    const params = [id, tenantId];
+    
+    // Add filters
+    if (start_date) {
+      sql += ' AND DATE(im.created_at) >= DATE(?)';
+      params.push(start_date);
+    }
+    
+    if (end_date) {
+      sql += ' AND DATE(im.created_at) <= DATE(?)';
+      params.push(end_date);
+    }
+    
+    if (warehouse_id) {
+      sql += ' AND im.warehouse_id = ?';
+      params.push(warehouse_id);
+    }
+    
+    sql += ' ORDER BY im.created_at DESC, im.id DESC LIMIT ?';
+    params.push(parseInt(limit));
+    
+    const movements = await new Promise((resolve, reject) => {
+      db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows || []));
+    });
+    
+    // Get current stock levels by warehouse
+    const stockLevels = await new Promise((resolve, reject) => {
+      db.all(
+        `SELECT 
+          i.warehouse_id,
+          w.name as warehouse_name,
+          i.quantity_on_hand,
+          i.quantity_available,
+          i.quantity_reserved,
+          i.last_updated
+        FROM inventory_stock i
+        LEFT JOIN warehouses w ON i.warehouse_id = w.id
+        WHERE i.product_id = ?
+        AND i.tenant_id = ?
+        ${warehouse_id ? 'AND i.warehouse_id = ?' : ''}
+        ORDER BY w.name`,
+        warehouse_id ? [id, tenantId, warehouse_id] : [id, tenantId],
+        (err, rows) => err ? reject(err) : resolve(rows || [])
+      );
+    });
+    
+    // Calculate summary
+    const summary = movements.reduce((acc, mov) => {
+      const qty = mov.quantity;
+      if (['stock_in', 'stock_adjustment_in', 'stock_transfer_in'].includes(mov.movement_type)) {
+        acc.totalIn += qty;
+      } else if (['stock_out', 'stock_adjustment_out', 'stock_transfer_out', 'sale', 'damage', 'expired'].includes(mov.movement_type)) {
+        acc.totalOut += qty;
+      }
+      return acc;
+    }, { totalIn: 0, totalOut: 0 });
+    
+    summary.netChange = summary.totalIn - summary.totalOut;
+    summary.totalMovements = movements.length;
+    
+    res.json({
+      success: true,
+      data: {
+        product: {
+          id: product.id,
+          name: product.name,
+          code: product.code
+        },
+        movements,
+        stockLevels,
+        summary,
+        filters: {
+          start_date: start_date || null,
+          end_date: end_date || null,
+          warehouse_id: warehouse_id || null,
+          limit: parseInt(limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching stock history:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch stock history',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/products/{id}/sales-data:
+ *   get:
+ *     summary: Get product sales history and trends
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [daily, weekly, monthly, yearly]
+ *           default: monthly
+ *       - in: query
+ *         name: months
+ *         schema:
+ *           type: integer
+ *           default: 12
+ */
+router.get('/:id/sales-data', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+    const { period = 'monthly', months = 12 } = req.query;
+    const db = getDatabase();
+    
+    const product = await getOneQuery('products', { id }, tenantId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    
+    // Get sales data grouped by period
+    const dateFormat = {
+      daily: '%Y-%m-%d',
+      weekly: '%Y-W%W',
+      monthly: '%Y-%m',
+      yearly: '%Y'
+    }[period] || '%Y-%m';
+    
+    const [salesTrend, topCustomers, revenueStats] = await Promise.all([
+      // Sales trend by period
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT 
+            strftime('${dateFormat}', o.order_date) as period,
+            COUNT(DISTINCT o.id) as order_count,
+            SUM(oi.quantity) as total_quantity,
+            SUM(oi.quantity * oi.unit_price) as total_revenue,
+            AVG(oi.unit_price) as avg_price
+          FROM orders o
+          INNER JOIN order_items oi ON o.id = oi.order_id
+          WHERE oi.product_id = ?
+          AND o.tenant_id = ?
+          AND o.status != 'cancelled'
+          AND date(o.order_date) >= date('now', '-${parseInt(months)} months')
+          GROUP BY period
+          ORDER BY period DESC`,
+          [id, tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      }),
+      
+      // Top customers for this product
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT 
+            c.id,
+            c.name,
+            c.code,
+            COUNT(DISTINCT o.id) as order_count,
+            SUM(oi.quantity) as total_quantity,
+            SUM(oi.quantity * oi.unit_price) as total_spent,
+            MAX(o.order_date) as last_order_date
+          FROM customers c
+          INNER JOIN orders o ON c.id = o.customer_id
+          INNER JOIN order_items oi ON o.id = oi.order_id
+          WHERE oi.product_id = ?
+          AND o.tenant_id = ?
+          AND o.status != 'cancelled'
+          GROUP BY c.id, c.name, c.code
+          ORDER BY total_spent DESC
+          LIMIT 10`,
+          [id, tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      }),
+      
+      // Overall revenue statistics
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT 
+            COUNT(DISTINCT o.id) as total_orders,
+            SUM(oi.quantity) as total_quantity_sold,
+            SUM(oi.quantity * oi.unit_price) as total_revenue,
+            AVG(oi.unit_price) as average_price,
+            MIN(oi.unit_price) as min_price,
+            MAX(oi.unit_price) as max_price,
+            MIN(o.order_date) as first_sale_date,
+            MAX(o.order_date) as last_sale_date
+          FROM orders o
+          INNER JOIN order_items oi ON o.id = oi.order_id
+          WHERE oi.product_id = ?
+          AND o.tenant_id = ?
+          AND o.status != 'cancelled'`,
+          [id, tenantId],
+          (err, row) => err ? reject(err) : resolve(row || {})
+        );
+      })
+    ]);
+    
+    // Calculate growth rate
+    const growthRate = salesTrend.length >= 2 ? 
+      ((salesTrend[0].total_revenue - salesTrend[1].total_revenue) / salesTrend[1].total_revenue * 100) : 0;
+    
+    res.json({
+      success: true,
+      data: {
+        product: {
+          id: product.id,
+          name: product.name,
+          code: product.code,
+          selling_price: product.selling_price
+        },
+        salesTrend,
+        topCustomers,
+        statistics: {
+          ...revenueStats,
+          total_revenue: parseFloat((revenueStats.total_revenue || 0).toFixed(2)),
+          average_price: parseFloat((revenueStats.average_price || 0).toFixed(2)),
+          growth_rate: parseFloat(growthRate.toFixed(2))
+        },
+        period,
+        months: parseInt(months)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching sales data:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch sales data',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

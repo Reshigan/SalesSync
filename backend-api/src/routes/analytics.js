@@ -1,6 +1,6 @@
 const express = require('express');
-const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
+const router = express.Router();
 const { getQuery, getOneQuery } = require('../utils/database');
 
 // Sales Analytics
@@ -235,6 +235,58 @@ router.get('/test', asyncHandler(async (req, res) => {
     success: true,
     message: 'Analytics API is working',
     timestamp: new Date().toISOString()
+  });
+}));
+
+// GET /api/analytics/stats - Analytics overview statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [businessMetrics, trends, topPerformers] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = ?) as total_orders,
+        (SELECT SUM(total_amount) FROM orders WHERE tenant_id = ?) as total_revenue,
+        (SELECT COUNT(*) FROM visits WHERE tenant_id = ?) as total_visits,
+        (SELECT COUNT(DISTINCT customer_id) FROM orders WHERE tenant_id = ?) as unique_customers
+    `, [tenantId, tenantId, tenantId, tenantId]),
+    
+    getQuery(`
+      SELECT 
+        DATE(o.created_at) as date,
+        COUNT(*) as order_count,
+        SUM(o.total_amount) as daily_revenue
+      FROM orders o
+      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
+      GROUP BY DATE(o.created_at)
+      ORDER BY date DESC
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        p.id, p.name,
+        SUM(oi.quantity) as total_sold,
+        SUM(oi.quantity * oi.unit_price) as revenue
+      FROM order_items oi
+      INNER JOIN products p ON oi.product_id = p.id
+      INNER JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ?
+      GROUP BY p.id
+      ORDER BY revenue DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      metrics: {
+        ...businessMetrics,
+        total_revenue: parseFloat((businessMetrics.total_revenue || 0).toFixed(2))
+      },
+      trends,
+      topPerformers
+    }
   });
 }));
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { asyncHandler } = require('../middleware/errorHandler');
 
 // Generate Report
 router.post('/generate', async (req, res) => {
@@ -119,5 +120,51 @@ router.get('/analytics', async (req, res) => {
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// GET /api/reports/stats - Report generation statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [reportCounts, typeBreakdown, recentReports] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_reports,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_reports,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reports,
+        COUNT(CASE WHEN created_at >= DATE('now', '-30 days') THEN 1 END) as recent_reports
+      FROM generated_reports WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        report_type,
+        COUNT(*) as count
+      FROM generated_reports
+      WHERE tenant_id = ?
+      GROUP BY report_type
+      ORDER BY count DESC
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        r.id, r.report_type, r.status, r.created_at,
+        u.name as generated_by
+      FROM generated_reports r
+      LEFT JOIN users u ON r.user_id = u.id
+      WHERE r.tenant_id = ?
+      ORDER BY r.created_at DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      counts: reportCounts,
+      typeBreakdown,
+      recent: recentReports
+    }
+  });
+}));
 
 module.exports = router;

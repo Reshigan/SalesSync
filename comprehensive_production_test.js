@@ -6,8 +6,8 @@ const http = require('http');
 // Disable SSL certificate validation for self-signed certificates
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
-const BASE_URL = 'https://ss.gonxt.tech';
-const TENANT_CODE = 'DEMO_SA';
+const BASE_URL = 'http://localhost:12001';
+const TENANT_CODE = 'DEMO';
 
 let authToken = '';
 let testResults = [];
@@ -50,11 +50,11 @@ async function testInfrastructure() {
   // Test 1: Frontend accessibility
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12000,
       path: '/',
       method: 'GET',
-      protocol: 'https:'
+      protocol: 'http:'
     });
     logTest('Frontend Accessibility', response.statusCode === 200, `Status: ${response.statusCode}`);
   } catch (error) {
@@ -64,11 +64,11 @@ async function testInfrastructure() {
   // Test 2: API Health Check
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/health',
       method: 'GET',
-      protocol: 'https:'
+      protocol: 'http:'
     });
     logTest('API Health Check', response.statusCode === 200, `Status: ${response.statusCode}`);
   } catch (error) {
@@ -78,11 +78,11 @@ async function testInfrastructure() {
   // Test 3: Database Connectivity
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/tenants',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers: {
         'X-Tenant-Code': TENANT_CODE
       }
@@ -100,18 +100,18 @@ async function testAuthentication() {
   // Test 1: User Login
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/auth/login',
       method: 'POST',
-      protocol: 'https:',
+      protocol: 'http:',
       headers: {
         'Content-Type': 'application/json',
         'X-Tenant-Code': TENANT_CODE
       }
     }, {
-      email: 'admin@afridistribute.co.za',
-      password: 'demo123'
+      email: 'admin@demo.com',
+      password: 'admin123'
     });
 
     const success = response.statusCode === 200 && response.body.success && response.body.data.token;
@@ -127,11 +127,11 @@ async function testAuthentication() {
   if (authToken) {
     try {
       const response = await makeRequest({
-        hostname: 'ss.gonxt.tech',
-        port: 443,
+        hostname: 'localhost',
+        port: 12001,
         path: '/api/auth/me',
         method: 'GET',
-        protocol: 'https:',
+        protocol: 'http:',
         headers: {
           'Authorization': `Bearer ${authToken}`,
           'X-Tenant-Code': TENANT_CODE
@@ -164,11 +164,11 @@ async function testCoreFeatures() {
   // Test 1: Products API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/products',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Products API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -179,11 +179,11 @@ async function testCoreFeatures() {
   // Test 2: Customers API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/customers',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Customers API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -194,11 +194,11 @@ async function testCoreFeatures() {
   // Test 3: Orders API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/orders',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Orders API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -209,11 +209,11 @@ async function testCoreFeatures() {
   // Test 4: Inventory API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/inventory',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Inventory API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -224,11 +224,11 @@ async function testCoreFeatures() {
   // Test 5: Reports API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/reports/sales-summary',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Reports API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -255,11 +255,11 @@ async function testEnterpriseFeatures() {
   // Test 1: AI Predictions API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/ai/predictions',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('AI Predictions API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -270,11 +270,11 @@ async function testEnterpriseFeatures() {
   // Test 2: Advanced Analytics API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/analytics/advanced',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Advanced Analytics API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -285,11 +285,11 @@ async function testEnterpriseFeatures() {
   // Test 3: Multi-warehouse Support
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/warehouses',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Multi-warehouse Support', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -300,11 +300,11 @@ async function testEnterpriseFeatures() {
   // Test 4: Custom Workflows API
   try {
     const response = await makeRequest({
-      hostname: 'ss.gonxt.tech',
-      port: 443,
+      hostname: 'localhost',
+      port: 12001,
       path: '/api/workflows',
       method: 'GET',
-      protocol: 'https:',
+      protocol: 'http:',
       headers
     });
     logTest('Custom Workflows API', response.statusCode === 200, `Status: ${response.statusCode}`);
@@ -319,9 +319,9 @@ async function testPerformance() {
 
   // Test response times for critical endpoints
   const endpoints = [
-    { path: '/', name: 'Frontend Load Time' },
-    { path: '/api/health', name: 'API Response Time' },
-    { path: '/api/products', name: 'Products Query Time', requiresAuth: true }
+    { path: '/', name: 'Frontend Load Time', port: 12000 },
+    { path: '/api/health', name: 'API Response Time', port: 12001 },
+    { path: '/api/products', name: 'Products Query Time', port: 12001, requiresAuth: true }
   ];
 
   for (const endpoint of endpoints) {
@@ -333,11 +333,11 @@ async function testPerformance() {
       } : {};
 
       const response = await makeRequest({
-        hostname: 'ss.gonxt.tech',
-        port: 443,
+        hostname: 'localhost',
+        port: endpoint.port,
         path: endpoint.path,
         method: 'GET',
-        protocol: 'https:',
+        protocol: 'http:',
         headers
       });
 

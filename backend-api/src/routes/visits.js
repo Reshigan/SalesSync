@@ -576,4 +576,127 @@ router.get('/customer/:customerId', async (req, res) => {
   }
 });
 
+// GET /api/visits/stats - Visit statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { date_from, date_to, agent_id } = req.query;
+    const db = getDatabase();
+    
+    let whereClause = 'WHERE v.tenant_id = ?';
+    const params = [tenantId];
+    
+    if (date_from) {
+      whereClause += ' AND DATE(v.visit_date) >= ?';
+      params.push(date_from);
+    }
+    if (date_to) {
+      whereClause += ' AND DATE(v.visit_date) <= ?';
+      params.push(date_to);
+    }
+    if (agent_id) {
+      whereClause += ' AND v.agent_id = ?';
+      params.push(agent_id);
+    }
+    
+    const [overallStats, statusBreakdown, agentPerformance, dailyTrend] = await Promise.all([
+      // Overall statistics
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_visits,
+            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+            COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END) as scheduled_visits,
+            COUNT(CASE WHEN v.status = 'cancelled' THEN 1 END) as cancelled_visits,
+            COUNT(CASE WHEN v.check_in_time IS NOT NULL THEN 1 END) as checked_in_visits,
+            AVG(CASE 
+              WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
+              THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
+            END) as avg_visit_duration_minutes,
+            COUNT(DISTINCT v.customer_id) as unique_customers,
+            COUNT(DISTINCT v.agent_id) as active_agents
+          FROM visits v
+          ${whereClause}
+        `, params, (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Status breakdown
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            v.status,
+            COUNT(*) as count,
+            COUNT(DISTINCT v.agent_id) as agent_count
+          FROM visits v
+          ${whereClause}
+          GROUP BY v.status
+          ORDER BY count DESC
+        `, params, (err, rows) => err ? reject(err) : resolve(rows || []));
+      }),
+      
+      // Agent performance
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            v.agent_id,
+            u.first_name || ' ' || u.last_name as agent_name,
+            COUNT(*) as total_visits,
+            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+            AVG(CASE 
+              WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
+              THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
+            END) as avg_duration_minutes,
+            COUNT(DISTINCT v.customer_id) as unique_customers
+          FROM visits v
+          LEFT JOIN agents a ON v.agent_id = a.id
+          LEFT JOIN users u ON a.user_id = u.id
+          ${whereClause}
+          GROUP BY v.agent_id, agent_name
+          ORDER BY completed_visits DESC
+          LIMIT 10
+        `, params, (err, rows) => err ? reject(err) : resolve(rows || []));
+      }),
+      
+      // Daily trend (last 30 days)
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            DATE(v.visit_date) as date,
+            COUNT(*) as total_visits,
+            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+            COUNT(DISTINCT v.agent_id) as active_agents
+          FROM visits v
+          WHERE v.tenant_id = ?
+          AND DATE(v.visit_date) >= DATE('now', '-30 days')
+          GROUP BY DATE(v.visit_date)
+          ORDER BY date DESC
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        overall: {
+          ...overallStats,
+          avg_visit_duration_minutes: parseFloat((overallStats.avg_visit_duration_minutes || 0).toFixed(2)),
+          completion_rate: overallStats.total_visits > 0 
+            ? parseFloat(((overallStats.completed_visits / overallStats.total_visits) * 100).toFixed(2))
+            : 0
+        },
+        statusBreakdown,
+        topAgents: agentPerformance,
+        dailyTrend
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching visit stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch visit statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

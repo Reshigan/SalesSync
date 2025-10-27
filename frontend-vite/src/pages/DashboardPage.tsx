@@ -45,19 +45,15 @@ const DashboardPage: React.FC = () => {
         },
       };
 
-      // Generate sample revenue data (replace with actual API data)
-      const revenueData = generateRevenueData(stats);
+      // Fetch revenue data from API
+      const revenueResponse = await api.get('/dashboard/revenue-trends');
+      const revenueData = revenueResponse.data.data || [];
 
-      // Generate sales by category data
-      const salesData = [
-        { category: 'Electronics', sales: 45000, orders: 120 },
-        { category: 'Clothing', sales: 32000, orders: 210 },
-        { category: 'Food', sales: 28000, orders: 180 },
-        { category: 'Books', sales: 15000, orders: 95 },
-        { category: 'Other', sales: 12000, orders: 65 },
-      ];
+      // Fetch sales by category from API
+      const salesResponse = await api.get('/dashboard/sales-by-category');
+      const salesData = salesResponse.data.data || [];
 
-      // Order status distribution
+      // Order status distribution from stats
       const orderStatusData = [
         { name: 'Pending', value: stats.pendingOrders || 0, color: '#ff9800' },
         { name: 'Processing', value: stats.processingOrders || 0, color: '#2196f3' },
@@ -66,14 +62,9 @@ const DashboardPage: React.FC = () => {
         { name: 'Cancelled', value: stats.cancelledOrders || 0, color: '#f44336' },
       ];
 
-      // Top products
-      const topProducts = [
-        { name: 'Product A', sales: 12500, units: 145, change: 12 },
-        { name: 'Product B', sales: 9800, units: 98, change: -5 },
-        { name: 'Product C', sales: 8200, units: 76, change: 18 },
-        { name: 'Product D', sales: 7500, units: 65, change: 8 },
-        { name: 'Product E', sales: 6200, units: 52, change: -2 },
-      ];
+      // Fetch top products from API
+      const topProductsResponse = await api.get('/dashboard/top-products');
+      const topProducts = topProductsResponse.data.data || [];
 
       setDashboardData({
         kpiData,
@@ -85,6 +76,7 @@ const DashboardPage: React.FC = () => {
       setError(null);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch dashboard data');
+      console.error('Dashboard data fetch error:', err);
     } finally {
       setLoading(false);
     }
@@ -93,17 +85,6 @@ const DashboardPage: React.FC = () => {
   const calculateChange = (current: number, previous: number): number => {
     if (previous === 0) return 0;
     return Math.round(((current - previous) / previous) * 100);
-  };
-
-  const generateRevenueData = (stats: any) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const currentMonth = new Date().getMonth();
-    
-    return months.slice(0, currentMonth + 1).map((month, index) => ({
-      month,
-      revenue: Math.floor(Math.random() * 50000) + 30000,
-      target: 60000,
-    }));
   };
 
   if (loading) {

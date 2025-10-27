@@ -1,8 +1,13 @@
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 import { AIInsight, FraudDetection, DataInsight, AIAnalysis, LocalAIConfig } from '../types/ai.types'
 
 class AIService {
-  private baseUrl = '/api/ai'
+  private readonly baseUrl = API_CONFIG.ENDPOINTS.AI.CHAT
+  // Build full URL using centralized config
+  private buildUrl(endpoint: string): string {
+    return `${API_CONFIG.BASE_URL}${endpoint}`
+  }
   private ollamaUrl = 'http://localhost:11434'
   private isOllamaAvailable = false
 
@@ -22,7 +27,11 @@ class AIService {
   // Local AI Analysis using Ollama/Llama 3
   async analyzeWithLocalAI(data: any, analysisType: string): Promise<any> {
     if (!this.isOllamaAvailable) {
-      // Fallback to mock analysis or backend service
+      // In production, throw error if AI service is not available
+      if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_MOCK_DATA === 'false') {
+        throw new Error('AI service is not available')
+      }
+      // Fallback to mock analysis only in development
       return this.mockAIAnalysis(data, analysisType)
     }
 
@@ -48,6 +57,10 @@ class AIService {
       return this.parseAIResponse(result.response, analysisType)
     } catch (error) {
       console.error('Local AI analysis failed:', error)
+      // In production, throw error instead of returning mock data
+      if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_MOCK_DATA === 'false') {
+        throw error
+      }
       return this.mockAIAnalysis(data, analysisType)
     }
   }

@@ -1,9 +1,9 @@
 const express = require('express');
+const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 // Database functions will be lazy-loaded to avoid circular dependencies
-const { AppError, asyncHandler } = require('../middleware/errorHandler');
 const { tenantMiddleware } = require('../middleware/tenantMiddleware');
 
 const router = express.Router();

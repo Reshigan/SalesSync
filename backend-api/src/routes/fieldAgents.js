@@ -505,4 +505,212 @@ router.get('/:agentId/visits', async (req, res, next) => {
   }
 });
 
+// GET /api/field-agents/stats - Field agent statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    const [agentCount, agentPerformance, topPerformers, territoryStats] = await Promise.all([
+      // Total agent counts
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_agents,
+            COUNT(CASE WHEN a.status = 'active' THEN 1 END) as active_agents,
+            COUNT(CASE WHEN a.status = 'inactive' THEN 1 END) as inactive_agents
+          FROM agents a
+          WHERE a.tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Overall performance metrics
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(DISTINCT v.id) as total_visits,
+            COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
+            COUNT(DISTINCT o.id) as total_orders,
+            SUM(o.total_amount) as total_revenue,
+            AVG(o.total_amount) as avg_order_value
+          FROM agents a
+          LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
+          LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = ?
+          WHERE a.tenant_id = ?
+        `, [tenantId, tenantId, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Top performing agents
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            a.id,
+            u.first_name || ' ' || u.last_name as agent_name,
+            a.code as agent_code,
+            COUNT(DISTINCT v.id) as visit_count,
+            COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
+            COUNT(DISTINCT o.id) as order_count,
+            COALESCE(SUM(o.total_amount), 0) as total_revenue,
+            COUNT(DISTINCT v.customer_id) as unique_customers
+          FROM agents a
+          LEFT JOIN users u ON a.user_id = u.id
+          LEFT JOIN visits v ON a.id = v.agent_id
+          LEFT JOIN orders o ON a.id = o.salesman_id
+          WHERE a.tenant_id = ?
+          GROUP BY a.id, agent_name, agent_code
+          ORDER BY total_revenue DESC
+          LIMIT 10
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      }),
+      
+      // Territory coverage
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            a.territory,
+            COUNT(DISTINCT a.id) as agent_count,
+            COUNT(DISTINCT v.id) as visit_count,
+            COUNT(DISTINCT v.customer_id) as customer_count
+          FROM agents a
+          LEFT JOIN visits v ON a.id = v.agent_id
+          WHERE a.tenant_id = ?
+          AND a.territory IS NOT NULL
+          GROUP BY a.territory
+          ORDER BY agent_count DESC
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        agents: agentCount,
+        performance: {
+          ...agentPerformance,
+          total_revenue: parseFloat((agentPerformance.total_revenue || 0).toFixed(2)),
+          avg_order_value: parseFloat((agentPerformance.avg_order_value || 0).toFixed(2)),
+          visit_completion_rate: agentPerformance.total_visits > 0
+            ? parseFloat(((agentPerformance.completed_visits / agentPerformance.total_visits) * 100).toFixed(2))
+            : 0
+        },
+        topPerformers,
+        territoryStats
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching field agent stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch field agent statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// GET /api/field-agents/:id/performance - Individual agent performance
+router.get('/:id/performance', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tenantId = req.user.tenantId;
+    const { months = 3 } = req.query;
+    const db = getDatabase();
+    
+    const [agentInfo, visitStats, orderStats, monthlyTrend] = await Promise.all([
+      // Agent information
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT a.*, u.first_name || ' ' || u.last_name as agent_name
+          FROM agents a
+          LEFT JOIN users u ON a.user_id = u.id
+          WHERE a.id = ? AND a.tenant_id = ?
+        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row));
+      }),
+      
+      // Visit statistics
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_visits,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_visits,
+            COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_visits,
+            COUNT(DISTINCT customer_id) as unique_customers,
+            AVG(CASE 
+              WHEN check_out_time IS NOT NULL AND check_in_time IS NOT NULL 
+              THEN (julianday(check_out_time) - julianday(check_in_time)) * 24 * 60 
+            END) as avg_visit_duration_minutes
+          FROM visits
+          WHERE agent_id = ? AND tenant_id = ?
+          AND DATE(visit_date) >= DATE('now', '-${parseInt(months)} months')
+        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Order statistics
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_orders,
+            SUM(total_amount) as total_revenue,
+            AVG(total_amount) as avg_order_value,
+            MAX(total_amount) as max_order_value,
+            COUNT(DISTINCT customer_id) as unique_customers
+          FROM orders
+          WHERE salesman_id = ? AND tenant_id = ?
+          AND DATE(order_date) >= DATE('now', '-${parseInt(months)} months')
+        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Monthly performance trend
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            strftime('%Y-%m', v.visit_date) as month,
+            COUNT(DISTINCT v.id) as visit_count,
+            COUNT(DISTINCT o.id) as order_count,
+            COALESCE(SUM(o.total_amount), 0) as revenue
+          FROM visits v
+          LEFT JOIN orders o ON v.customer_id = o.customer_id 
+            AND DATE(o.order_date) = DATE(v.visit_date)
+            AND o.salesman_id = ?
+          WHERE v.agent_id = ? AND v.tenant_id = ?
+          AND DATE(v.visit_date) >= DATE('now', '-${parseInt(months)} months')
+          GROUP BY month
+          ORDER BY month DESC
+        `, [id, id, tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    if (!agentInfo) {
+      return res.status(404).json({ success: false, message: 'Agent not found' });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        agent: agentInfo,
+        visits: {
+          ...visitStats,
+          completion_rate: visitStats.total_visits > 0
+            ? parseFloat(((visitStats.completed_visits / visitStats.total_visits) * 100).toFixed(2))
+            : 0,
+          avg_visit_duration_minutes: parseFloat((visitStats.avg_visit_duration_minutes || 0).toFixed(2))
+        },
+        orders: {
+          ...orderStats,
+          total_revenue: parseFloat((orderStats.total_revenue || 0).toFixed(2)),
+          avg_order_value: parseFloat((orderStats.avg_order_value || 0).toFixed(2)),
+          max_order_value: parseFloat((orderStats.max_order_value || 0).toFixed(2))
+        },
+        monthlyTrend
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching agent performance:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch agent performance',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

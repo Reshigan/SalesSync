@@ -604,4 +604,89 @@ router.get('/pos-materials', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/campaigns/stats - Campaign statistics
+router.get('/campaigns/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    const [campaignCounts, statusBreakdown, performance, topCampaigns] = await Promise.all([
+      // Campaign counts
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_campaigns,
+            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_campaigns,
+            COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns
+          FROM campaigns WHERE tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Status breakdown
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT status, COUNT(*) as count
+          FROM campaigns WHERE tenant_id = ?
+          GROUP BY status
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      }),
+      
+      // Performance metrics
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(DISTINCT ce.id) as total_executions,
+            COUNT(DISTINCT ce.customer_id) as customers_reached,
+            SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END) as completed_executions,
+            AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END) as avg_conversion_value
+          FROM campaigns c
+          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+          WHERE c.tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      // Top performing campaigns
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            c.id, c.name, c.type, c.status,
+            COUNT(DISTINCT ce.id) as execution_count,
+            COUNT(DISTINCT ce.customer_id) as customer_count,
+            SUM(COALESCE(ce.conversion_value, 0)) as total_conversion
+          FROM campaigns c
+          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+          WHERE c.tenant_id = ?
+          GROUP BY c.id, c.name, c.type, c.status
+          ORDER BY total_conversion DESC
+          LIMIT 10
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        campaigns: campaignCounts,
+        statusBreakdown,
+        performance: {
+          ...performance,
+          avg_conversion_value: parseFloat((performance.avg_conversion_value || 0).toFixed(2)),
+          conversion_rate: performance.total_executions > 0
+            ? parseFloat(((performance.completed_executions / performance.total_executions) * 100).toFixed(2))
+            : 0
+        },
+        topCampaigns
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching campaign stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch campaign statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

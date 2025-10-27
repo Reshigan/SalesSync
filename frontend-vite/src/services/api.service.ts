@@ -1,12 +1,13 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { getAuthToken } from '../store/auth.store'
 import { tenantService } from './tenant.service'
+import { API_CONFIG } from '../config/api.config'
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-const API_TIMEOUT = 30000 // 30 seconds
+const API_BASE_URL = API_CONFIG.BASE_URL
+const API_TIMEOUT = API_CONFIG.TIMEOUT
 
-// Create axios instance
+// Create axios instance with baseURL
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -66,6 +67,30 @@ apiClient.interceptors.response.use(
           window.location.href = '/auth/login'
         }
       }
+    }
+
+    // Handle 403 Forbidden - user doesn't have permission
+    if (error.response?.status === 403) {
+      console.error('Access Forbidden: Insufficient permissions')
+      
+      // Optionally show a toast/notification here
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/login')) {
+        // Store the attempted URL for potential redirect after re-login
+        sessionStorage.setItem('redirectAfterLogin', window.location.pathname)
+        
+        // Redirect to login with error message
+        window.location.href = '/auth/login?error=forbidden'
+      }
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network Error: Unable to reach the server')
+      return Promise.reject({
+        message: 'Network error: Unable to connect to the server. Please check your internet connection.',
+        code: 'NETWORK_ERROR',
+        status: 0,
+      })
     }
 
     // Handle other errors

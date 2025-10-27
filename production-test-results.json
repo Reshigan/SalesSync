@@ -1,0 +1,1560 @@
+{
+  "total": 1000,
+  "passed": 100,
+  "failed": 900,
+  "skipped": 0,
+  "categories": {
+    "System Health & Infrastructure": {
+      "total": 100,
+      "passed": 0,
+      "failed": 100,
+      "skipped": 0
+    },
+    "Authentication & Authorization": {
+      "total": 150,
+      "passed": 100,
+      "failed": 50,
+      "skipped": 0
+    },
+    "Core API Endpoints": {
+      "total": 200,
+      "passed": 0,
+      "failed": 200,
+      "skipped": 0
+    },
+    "Data Management": {
+      "total": 150,
+      "passed": 0,
+      "failed": 150,
+      "skipped": 0
+    },
+    "Enterprise Features": {
+      "total": 150,
+      "passed": 0,
+      "failed": 150,
+      "skipped": 0
+    },
+    "Reporting & Analytics": {
+      "total": 100,
+      "passed": 0,
+      "failed": 100,
+      "skipped": 0
+    },
+    "Performance & Load": {
+      "total": 100,
+      "passed": 0,
+      "failed": 100,
+      "skipped": 0
+    },
+    "Error Handling & Edge Cases": {
+      "total": 50,
+      "passed": 0,
+      "failed": 50,
+      "skipped": 0
+    }
+  },
+  "startTime": "2025-10-27T15:02:30.713Z",
+  "endTime": "2025-10-27T15:02:30.744Z",
+  "errors": [
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 1",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.714Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 2",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 3",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 4",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 5",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 6",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 7",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 8",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 9",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.715Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 10",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 11",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 12",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 13",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 14",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 15",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 16",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 17",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 18",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 19",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 20",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 21",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 22",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 23",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.716Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 24",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 25",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 26",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 27",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 28",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 29",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 30",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 31",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 32",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 33",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 34",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 35",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 36",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 37",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 38",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 39",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.717Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 40",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 41",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 42",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 43",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 44",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 45",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 46",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 47",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 48",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 49",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "System Health & Infrastructure",
+      "testName": "Health Check 50",
+      "error": "Health check failed",
+      "timestamp": "2025-10-27T15:02:30.718Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 1",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.721Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 2",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.721Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 3",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.721Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 4",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.721Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 5",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.721Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 6",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 7",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 8",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 9",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 10",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 11",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 12",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 13",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 14",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 15",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 16",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 17",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 18",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 19",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 20",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 21",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 22",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 23",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 24",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 25",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 26",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 27",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 28",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 29",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 30",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 31",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 32",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 33",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 34",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 35",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 36",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 37",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.722Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 38",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 39",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 40",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 41",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 42",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 43",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 44",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 45",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 46",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 47",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 48",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 49",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Authentication & Authorization",
+      "testName": "Valid Login Test 50",
+      "error": "Login failed",
+      "timestamp": "2025-10-27T15:02:30.723Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 1",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 2",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 3",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 4",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 5",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 6",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 7",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 8",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 9",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 10",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 11",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 12",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 13",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 14",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.739Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 15",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 16",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 17",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 18",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 19",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 20",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 21",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 22",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 23",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 24",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/health Performance Test 25",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 1",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 2",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 3",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 4",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 5",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 6",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 7",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 8",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 9",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 10",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 11",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 12",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 13",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 14",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 15",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 16",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 17",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 18",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 19",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 20",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 21",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 22",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 23",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 24",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/customers Performance Test 25",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.740Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 1",
+      "error": "Response time: 1ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 2",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 3",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 4",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 5",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 6",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 7",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 8",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 9",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 10",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 11",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 12",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 13",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 14",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 15",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 16",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 17",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 18",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 19",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 20",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 21",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 22",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 23",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 24",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/products Performance Test 25",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 1",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 2",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 3",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 4",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 5",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 6",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 7",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 8",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 9",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 10",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 11",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 12",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 13",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.741Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 14",
+      "error": "Response time: 1ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 15",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 16",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 17",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 18",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 19",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 20",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 21",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 22",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 23",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 24",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Performance & Load",
+      "testName": "/api/analytics/dashboard Performance Test 25",
+      "error": "Response time: 0ms",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 1",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 2",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 3",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 4",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 5",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 6",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 7",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 8",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 9",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/nonexistent 10",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 1",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 2",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 3",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 4",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 5",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 6",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 7",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 8",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 9",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/invalid/endpoint 10",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.742Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 1",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 2",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 3",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 4",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 5",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 6",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 7",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 8",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 9",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/test/404 10",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 1",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 2",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 3",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 4",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 5",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 6",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 7",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 8",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 9",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/missing 10",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 1",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 2",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 3",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 4",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 5",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 6",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 7",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 8",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 9",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.743Z"
+    },
+    {
+      "category": "Error Handling & Edge Cases",
+      "testName": "404 Test /api/notfound 10",
+      "error": "Expected 404, got 0",
+      "timestamp": "2025-10-27T15:02:30.744Z"
+    }
+  ]
+}

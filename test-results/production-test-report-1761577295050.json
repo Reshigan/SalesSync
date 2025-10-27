@@ -1,0 +1,134 @@
+{
+  "timestamp": "2025-10-27T15:01:32.000Z",
+  "environment": "production",
+  "url": "https://ss.gonxt.tech",
+  "totalTests": 11,
+  "passedTests": 1,
+  "failedTests": 10,
+  "skippedTests": 0,
+  "tests": [
+    {
+      "category": "backend",
+      "name": "Health Check",
+      "status": "PASSED",
+      "details": "Status: 200, Response: {\"status\":\"healthy\",\"timestamp\":\"2025-10-27T15:01:32.267Z\",\"uptime\":41810.156314432,\"environment\":\"d",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:32.319Z"
+    },
+    {
+      "category": "backend",
+      "name": "Authentication - Login",
+      "status": "FAILED",
+      "details": "Status: 400, Response: {\"success\":false,\"error\":{\"message\":\"Tenant code header (X-Tenant-Code) is required\",\"code\":\"TENANT_",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:32.622Z"
+    },
+    {
+      "category": "backend",
+      "name": "Users List",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:32.921Z"
+    },
+    {
+      "category": "backend",
+      "name": "Customers List",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:33.222Z"
+    },
+    {
+      "category": "backend",
+      "name": "Products List",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:33.524Z"
+    },
+    {
+      "category": "backend",
+      "name": "Orders List",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:33.826Z"
+    },
+    {
+      "category": "backend",
+      "name": "Routes List",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:34.133Z"
+    },
+    {
+      "category": "backend",
+      "name": "Analytics Dashboard",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:34.436Z"
+    },
+    {
+      "category": "backend",
+      "name": "Reports Summary",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:34.739Z"
+    },
+    {
+      "category": "backend",
+      "name": "Inventory Status",
+      "status": "FAILED",
+      "details": "Status: 401, Response: {\"success\":false,\"error\":{\"message\":\"Access token is required\",\"code\":\"TOKEN_REQUIRED\",\"stack\":\"Erro",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:35.040Z"
+    },
+    {
+      "category": "frontend",
+      "name": "Browser Setup",
+      "status": "FAILED",
+      "details": "Error: Could not find Chrome (ver. 141.0.7390.78). This can occur if either\n 1. you did not perform an installation before running the script (e.g. `npx puppeteer browsers install chrome`) or\n 2. your cache path is incorrectly configured (which is: /root/.cache/puppeteer).\nFor (2), check out our guide on configuring puppeteer at https://pptr.dev/guides/configuration.",
+      "screenshot": null,
+      "timestamp": "2025-10-27T15:01:35.043Z"
+    }
+  ],
+  "coverage": {
+    "backend": {
+      "total": 10,
+      "passed": 1,
+      "failed": 9
+    },
+    "frontend": {
+      "total": 1,
+      "passed": 0,
+      "failed": 1
+    },
+    "integration": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0
+    },
+    "e2e": {
+      "total": 0,
+      "passed": 0,
+      "failed": 0
+    }
+  },
+  "summary": {
+    "totalTests": 11,
+    "passedTests": 1,
+    "failedTests": 10,
+    "skippedTests": 0,
+    "successRate": "9.09",
+    "coverage": {
+      "backend": "10.00",
+      "frontend": "0.00",
+      "integration": 0,
+      "e2e": 0
+    }
+  }
+}

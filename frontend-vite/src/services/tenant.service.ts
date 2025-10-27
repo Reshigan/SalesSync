@@ -55,6 +55,11 @@ const DEFAULT_TENANT_MAPPINGS: TenantMapping = {
     code: 'DEMO',
     name: 'SalesSync Development',
     domain: 'work-1-otdktmkeksbigpch.prod-runtime.all-hands.dev'
+  },
+  'work-1-vmhjvymxmtxtzzmm.prod-runtime.all-hands.dev': {
+    code: 'DEMO',
+    name: 'SalesSync Development',
+    domain: 'work-1-vmhjvymxmtxtzzmm.prod-runtime.all-hands.dev'
   }
 }
 

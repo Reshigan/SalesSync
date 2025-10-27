@@ -138,4 +138,53 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
   });
 }));
 
+// GET /api/surveys/stats - Survey statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [surveyCounts, responseCounts, topSurveys] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_surveys,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_surveys,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_surveys
+      FROM surveys WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT sr.id) as total_responses,
+        COUNT(DISTINCT sr.customer_id) as unique_respondents,
+        AVG(CASE WHEN sr.completion_time IS NOT NULL THEN sr.completion_time END) as avg_completion_time
+      FROM survey_responses sr
+      INNER JOIN surveys s ON sr.survey_id = s.id
+      WHERE s.tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        s.id, s.title, s.status,
+        COUNT(sr.id) as response_count
+      FROM surveys s
+      LEFT JOIN survey_responses sr ON s.id = sr.survey_id
+      WHERE s.tenant_id = ?
+      GROUP BY s.id
+      ORDER BY response_count DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      surveys: surveyCounts,
+      responses: {
+        ...responseCounts,
+        avg_completion_time: parseFloat((responseCounts.avg_completion_time || 0).toFixed(2))
+      },
+      topSurveys
+    }
+  });
+}));
+
 module.exports = router;

@@ -1,4 +1,5 @@
 const express = require('express');
+const { asyncHandler } = require('../middleware/errorHandler');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 
@@ -148,5 +149,45 @@ router.delete('/territories/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// GET /api/admin/stats - Admin overview statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [userStats, activityStats, systemHealth] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_users,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_users,
+        COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin_count,
+        COUNT(CASE WHEN role = 'sales_rep' THEN 1 END) as sales_rep_count
+      FROM users WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT DATE(created_at)) as active_days,
+        COUNT(*) as total_activities
+      FROM audit_logs
+      WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        (SELECT COUNT(*) FROM customers WHERE tenant_id = ?) as total_customers,
+        (SELECT COUNT(*) FROM products WHERE tenant_id = ?) as total_products,
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = ?) as total_orders
+    `, [tenantId, tenantId, tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      users: userStats,
+      activity: activityStats,
+      system: systemHealth
+    }
+  });
+}));
 
 module.exports = router;

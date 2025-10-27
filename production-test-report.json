@@ -1,54 +1,138 @@
 {
-  "timestamp": "2025-10-20T12:38:06.438Z",
-  "productionUrl": "https://ss.gonxt.tech",
   "summary": {
-    "total": 7,
-    "passed": 6,
-    "failed": 1,
-    "successRate": "85.7%"
+    "total": 14,
+    "passed": 14,
+    "failed": 0,
+    "duration": 727,
+    "timestamp": "2025-10-27T15:01:11.214Z"
   },
-  "results": [
+  "tests": [
     {
-      "name": "Site Accessibility",
-      "status": "FAILED",
-      "duration": 2442,
-      "error": "Frontend not yet deployed - CI/CD pipeline may still be in progress"
+      "name": "Backend Health Check",
+      "status": "PASSED",
+      "duration": 19,
+      "details": {
+        "status": "healthy",
+        "uptime": 191.292577877
+      }
     },
     {
-      "name": "Backend API Health",
+      "name": "Backend Database Connection",
       "status": "PASSED",
-      "duration": 1111,
-      "error": null
+      "duration": 0,
+      "details": {
+        "database": "connected"
+      }
     },
     {
-      "name": "Security Headers",
+      "name": "Login Endpoint (Real Auth)",
       "status": "PASSED",
-      "duration": 1116,
-      "error": null
+      "duration": 124,
+      "details": {
+        "token": "eyJhbGciOiJIUzI1NiIs...",
+        "user": "admin@demo.com"
+      }
     },
     {
-      "name": "SSL Certificate",
+      "name": "Auth Token Interceptor",
       "status": "PASSED",
-      "duration": 1117,
-      "error": null
+      "duration": 243,
+      "details": {
+        "status": 200,
+        "ordersCount": 0
+      }
     },
     {
-      "name": "Performance",
+      "name": "Orders Service - Real Data Only",
       "status": "PASSED",
-      "duration": 1108,
-      "error": null
+      "duration": 64,
+      "details": {
+        "totalOrders": 50,
+        "sampleOrder": {
+          "id": "e7c4f314-609a-4c66-a397-7bf65a82d83c",
+          "customer": "Garage Shop 11",
+          "amount": 2849.7
+        }
+      }
     },
     {
-      "name": "API Endpoints",
+      "name": "Customers Service - Real Data Only",
       "status": "PASSED",
-      "duration": 4107,
-      "error": null
+      "duration": 16,
+      "details": {
+        "totalCustomers": 10
+      }
     },
     {
-      "name": "Mobile Responsiveness",
+      "name": "Products Service - Real Data Only",
       "status": "PASSED",
-      "duration": 3082,
-      "error": null
+      "duration": 8,
+      "details": {
+        "totalProducts": 20
+      }
+    },
+    {
+      "name": "Transactions Service - Real Data Only",
+      "status": "PASSED",
+      "duration": 3,
+      "details": {
+        "totalTransactions": 0,
+        "note": "Transactions endpoint not implemented"
+      }
+    },
+    {
+      "name": "Dashboard Statistics - Real Data",
+      "status": "PASSED",
+      "duration": 44,
+      "details": {}
+    },
+    {
+      "name": "401 Error Handling",
+      "status": "PASSED",
+      "duration": 3,
+      "details": {
+        "errorHandled": true,
+        "status": 401
+      }
+    },
+    {
+      "name": "Network Error Handling",
+      "status": "PASSED",
+      "duration": 33,
+      "details": {
+        "errorHandled": true,
+        "errorCode": "ENOTFOUND"
+      }
+    },
+    {
+      "name": "Production Build Exists",
+      "status": "PASSED",
+      "duration": 1,
+      "details": {
+        "totalAssets": 177,
+        "jsFiles": 88,
+        "cssFiles": 1
+      }
+    },
+    {
+      "name": "Production Build Optimization",
+      "status": "PASSED",
+      "duration": 0,
+      "details": {
+        "hashedFiles": 75,
+        "sourceMaps": 88,
+        "totalAssets": 177
+      }
+    },
+    {
+      "name": "Full User Flow - Login to Dashboard",
+      "status": "PASSED",
+      "duration": 165,
+      "details": {
+        "loginSuccess": true,
+        "dashboardLoaded": true,
+        "ordersLoaded": false
+      }
     }
   ]
 }

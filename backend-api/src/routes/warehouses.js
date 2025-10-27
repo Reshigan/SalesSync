@@ -346,4 +346,88 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
+// GET /api/warehouses/stats - Warehouse statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    const [warehouseCounts, inventoryStats, transferStats, capacityUtilization] = await Promise.all([
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_warehouses,
+            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_warehouses,
+            SUM(CASE WHEN capacity IS NOT NULL THEN capacity ELSE 0 END) as total_capacity
+          FROM warehouses WHERE tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(DISTINCT i.product_id) as total_products,
+            SUM(i.quantity_on_hand) as total_quantity,
+            SUM(i.quantity_on_hand * i.cost_price) as total_value
+          FROM inventory_stock i
+          WHERE i.tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            COUNT(*) as total_transfers,
+            COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_transfers,
+            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_transfers,
+            SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END) as total_transferred_quantity
+          FROM stock_transfers
+          WHERE tenant_id = ?
+        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      
+      new Promise((resolve, reject) => {
+        db.all(`
+          SELECT 
+            w.id, w.name, w.capacity,
+            COUNT(DISTINCT i.product_id) as product_count,
+            SUM(i.quantity_on_hand) as current_quantity,
+            SUM(i.quantity_on_hand * i.cost_price) as inventory_value
+          FROM warehouses w
+          LEFT JOIN inventory_stock i ON w.id = i.warehouse_id
+          WHERE w.tenant_id = ?
+          GROUP BY w.id
+          ORDER BY inventory_value DESC
+        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        warehouses: warehouseCounts,
+        inventory: {
+          ...inventoryStats,
+          total_value: parseFloat((inventoryStats.total_value || 0).toFixed(2))
+        },
+        transfers: transferStats,
+        capacityUtilization: capacityUtilization.map(w => ({
+          ...w,
+          inventory_value: parseFloat((w.inventory_value || 0).toFixed(2)),
+          utilization_percentage: w.capacity > 0 
+            ? parseFloat(((w.current_quantity / w.capacity) * 100).toFixed(2))
+            : null
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching warehouse stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch warehouse statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 module.exports = router;

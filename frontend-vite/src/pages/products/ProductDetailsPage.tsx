@@ -52,49 +52,49 @@ export default function ProductDetailsPage() {
   }, [id])
 
   const fetchProductDetails = async () => {
+    if (!id) {
+      console.error('No product ID provided')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
-      const mockProduct: Product = {
-        id: id || '1',
-        sku: 'SKU00001',
-        name: 'Coca-Cola 500ml',
-        description: 'Premium quality Coca-Cola soft drink in 500ml bottle',
-        category: 'Beverages',
-        brand: 'Coca-Cola',
-        unitPrice: 50.00,
-        costPrice: 30.00,
-        unit: 'bottle',
-        stockQuantity: 850,
-        reorderLevel: 200,
-        status: 'active',
-        images: [],
-        createdAt: new Date(Date.now() - 365 * 86400000).toISOString(),
-        totalSales: 12500,
-        totalRevenue: 625000,
-        avgOrderValue: 2500
+      
+      // Fetch product details from API
+      const productResponse = await productsService.getProduct(id)
+      if (!productResponse) {
+        throw new Error('Product not found')
+      }
+      
+      setProduct(productResponse)
+      setEditForm(productResponse)
+
+      // Fetch stock history from API
+      try {
+        const stockHistoryResponse = await productsService.getStockHistory(id)
+        setStockHistory(stockHistoryResponse || [])
+      } catch (error) {
+        console.error('Failed to fetch stock history:', error)
+        setStockHistory([])
       }
 
-      const mockStockHistory: StockHistory[] = [
-        { date: new Date().toISOString(), quantity: 500, type: 'in', reference: 'PO-001' },
-        { date: new Date(Date.now() - 86400000).toISOString(), quantity: 200, type: 'out', reference: 'ORD-123' },
-        { date: new Date(Date.now() - 172800000).toISOString(), quantity: 300, type: 'out', reference: 'ORD-122' }
-      ]
-
-      const mockSalesData: SalesData[] = [
-        { month: 'Jan', sales: 1000, revenue: 50000 },
-        { month: 'Feb', sales: 1200, revenue: 60000 },
-        { month: 'Mar', sales: 1100, revenue: 55000 },
-        { month: 'Apr', sales: 1300, revenue: 65000 },
-        { month: 'May', sales: 1500, revenue: 75000 },
-        { month: 'Jun', sales: 1400, revenue: 70000 }
-      ]
-
-      setProduct(mockProduct)
-      setStockHistory(mockStockHistory)
-      setSalesData(mockSalesData)
-      setEditForm(mockProduct)
+      // Fetch sales data from API
+      try {
+        const salesDataResponse = await productsService.getProductSalesData(id)
+        setSalesData(salesDataResponse || [])
+      } catch (error) {
+        console.error('Failed to fetch sales data:', error)
+        setSalesData([])
+      }
     } catch (error) {
       console.error('Failed to fetch product details:', error)
+      // In production, don't use mock data - show error to user
+      if (import.meta.env.PROD || import.meta.env.VITE_ENABLE_MOCK_DATA === 'false') {
+        setProduct(null)
+        setStockHistory([])
+        setSalesData([])
+      }
     } finally {
       setLoading(false)
     }

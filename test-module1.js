@@ -42,11 +42,11 @@ function section(msg) {
 
 // Helper function to login and get token
 async function getAuthToken() {
-  const tenantHeaders = { 'X-Tenant-Code': 'DEFAULT' };
+  const tenantHeaders = { 'X-Tenant-Code': 'DEMO' };
   
   try {
     const response = await axios.post(`${API_URL}/api/auth/login`, {
-      email: 'admin@salessync.com',
+      email: 'admin@demo.com',
       password: 'admin123'
     }, { headers: tenantHeaders });
     return response.data.token;

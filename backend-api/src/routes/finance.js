@@ -458,4 +458,74 @@ router.post('/invoices/:id/email', asyncHandler(async (req, res) => {
   }
 }));
 
+// GET /api/finance/stats - Finance statistics
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [invoiceStats, paymentStats, accountsReceivable, recentTransactions] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_invoices,
+        SUM(total_amount) as total_invoiced,
+        SUM(paid_amount) as total_paid,
+        SUM(total_amount - paid_amount) as outstanding_balance,
+        COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_invoices,
+        COUNT(CASE WHEN status = 'overdue' THEN 1 END) as overdue_invoices
+      FROM invoices WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_payments,
+        SUM(amount) as total_received,
+        COUNT(CASE WHEN payment_method = 'cash' THEN 1 END) as cash_payments,
+        COUNT(CASE WHEN payment_method = 'card' THEN 1 END) as card_payments,
+        COUNT(CASE WHEN payment_method = 'bank_transfer' THEN 1 END) as bank_transfers
+      FROM payments WHERE tenant_id = ?
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        c.id, c.name,
+        SUM(i.total_amount - i.paid_amount) as outstanding_amount
+      FROM invoices i
+      INNER JOIN customers c ON i.customer_id = c.id
+      WHERE i.tenant_id = ? AND i.status != 'paid'
+      GROUP BY c.id
+      HAVING outstanding_amount > 0
+      ORDER BY outstanding_amount DESC
+      LIMIT 10
+    `, [tenantId]),
+    
+    getQuery(`
+      SELECT 
+        p.id, p.amount, p.payment_method, p.payment_date,
+        c.name as customer_name
+      FROM payments p
+      INNER JOIN customers c ON p.customer_id = c.id
+      WHERE p.tenant_id = ?
+      ORDER BY p.payment_date DESC
+      LIMIT 10
+    `, [tenantId])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      invoices: {
+        ...invoiceStats,
+        total_invoiced: parseFloat((invoiceStats.total_invoiced || 0).toFixed(2)),
+        total_paid: parseFloat((invoiceStats.total_paid || 0).toFixed(2)),
+        outstanding_balance: parseFloat((invoiceStats.outstanding_balance || 0).toFixed(2))
+      },
+      payments: {
+        ...paymentStats,
+        total_received: parseFloat((paymentStats.total_received || 0).toFixed(2))
+      },
+      accountsReceivable,
+      recentTransactions
+    }
+  });
+}));
+
 module.exports = router;

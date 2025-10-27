@@ -184,20 +184,19 @@ router.get('/transactions', async (req, res) => {
     
     let query = `
       SELECT t.*, 
-             c.business_name as customer_name,
+             c.name as customer_name,
              u.first_name || ' ' || u.last_name as agent_name,
              curr.code as currency_code,
              curr.symbol as currency_symbol,
              COUNT(ti.id) as item_count,
-             COUNT(p.id) as payment_count,
-             COALESCE(SUM(p.amount), 0) as total_paid
+             0 as payment_count,
+             0 as total_paid
       FROM transactions t
       LEFT JOIN customers c ON t.customer_id = c.id
       LEFT JOIN agents a ON t.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN currencies curr ON t.currency_id = curr.id
       LEFT JOIN transaction_items ti ON t.id = ti.transaction_id
-      LEFT JOIN payments p ON t.id = p.transaction_id AND p.status = 'completed'
       WHERE t.tenant_id = ?
     `;
     

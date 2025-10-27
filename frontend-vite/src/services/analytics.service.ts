@@ -1,4 +1,4 @@
-import { ApiService } from './api.service'
+import { apiClient } from './api.service'
 
 export interface DashboardMetrics {
   sales: SalesMetrics
@@ -155,8 +155,8 @@ export interface ReportConfig {
   include_summary: boolean
 }
 
-class AnalyticsService extends ApiService {
-  private baseUrl = '/analytics'
+class AnalyticsService {
+  private readonly baseUrl = '/analytics'
 
   async getDashboardMetrics(filter: AnalyticsFilter = {}) {
     const params = new URLSearchParams()
@@ -166,8 +166,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/dashboard?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/dashboard?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getDashboardOverview(filter: AnalyticsFilter = {}) {
@@ -180,8 +180,8 @@ class AnalyticsService extends ApiService {
       params.append('limit', String(options.limit))
     }
 
-    const response = await this.get(`${this.baseUrl}/recent-activity?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/recent-activity?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getSalesAnalytics(filter: AnalyticsFilter = {}) {
@@ -192,8 +192,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/sales?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/sales?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getVisitAnalytics(filter: AnalyticsFilter = {}) {
@@ -204,8 +204,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/visits?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/visits?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getAgentAnalytics(filter: AnalyticsFilter = {}) {
@@ -216,8 +216,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/agents?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/agents?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getCustomerAnalytics(filter: AnalyticsFilter = {}) {
@@ -228,8 +228,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/customers?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/customers?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getProductAnalytics(filter: AnalyticsFilter = {}) {
@@ -240,8 +240,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/products?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/products?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getCampaignAnalytics(filter: AnalyticsFilter = {}) {
@@ -252,8 +252,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/campaigns?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/campaigns?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getRevenueAnalytics(filter: AnalyticsFilter = {}) {
@@ -264,8 +264,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/revenue?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/revenue?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getPerformanceAnalytics(filter: AnalyticsFilter = {}) {
@@ -276,12 +276,12 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/performance?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/performance?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async generateReport(config: ReportConfig) {
-    const response = await this.post(`${this.baseUrl}/reports`, config, {
+    const response = await apiClient.post(`${this.baseUrl}/reports`, config, {
       responseType: 'blob'
     })
     
@@ -297,8 +297,8 @@ class AnalyticsService extends ApiService {
   }
 
   async getRealtimeMetrics() {
-    const response = await this.get(`${this.baseUrl}/realtime`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/realtime`)
+    return response.data.data || response.data
   }
 
   async getComparativeAnalytics(filter: AnalyticsFilter & { compare_period?: string }) {
@@ -309,8 +309,8 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/comparative?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/comparative?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getForecastAnalytics(filter: AnalyticsFilter & { forecast_period?: number }) {
@@ -321,16 +321,16 @@ class AnalyticsService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/forecast?${params.toString()}`)
-    return response.data
+    const response = await apiClient.get(`${this.baseUrl}/forecast?${params.toString()}`)
+    return response.data.data || response.data
   }
 
   async getCustomAnalytics(query: string, filter: AnalyticsFilter = {}) {
-    const response = await this.post(`${this.baseUrl}/custom`, {
+    const response = await apiClient.post(`${this.baseUrl}/custom`, {
       query,
       filter
     })
-    return response.data
+    return response.data.data || response.data
   }
 }
 

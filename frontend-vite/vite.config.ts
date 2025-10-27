@@ -53,6 +53,7 @@ export default defineConfig({
     strictPort: false,
     allowedHosts: [
       'work-1-otdktmkeksbigpch.prod-runtime.all-hands.dev',
+      'work-1-vmhjvymxmtxtzzmm.prod-runtime.all-hands.dev',
       'localhost',
       '127.0.0.1'
     ],

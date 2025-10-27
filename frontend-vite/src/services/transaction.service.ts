@@ -1,4 +1,5 @@
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 import { 
   Transaction, 
   FieldAgentTransaction, 
@@ -12,7 +13,11 @@ import {
 } from '../types/transaction.types'
 
 class TransactionService {
-  private baseUrl = '/api/transactions'
+  private readonly baseUrl = API_CONFIG.ENDPOINTS.TRANSACTIONS.BASE
+  // Build full URL using centralized config
+  private buildUrl(endpoint: string): string {
+    return `${API_CONFIG.BASE_URL}${endpoint}`
+  }
 
   // Generic CRUD Operations
   async getTransactions(filter?: TransactionFilter): Promise<Transaction[]> {
@@ -21,7 +26,7 @@ class TransactionService {
       return response.data
     } catch (error) {
       console.error('Failed to fetch transactions:', error)
-      return this.getMockTransactions(filter)
+      throw error
     }
   }
 
@@ -372,78 +377,6 @@ class TransactionService {
     }
   }
 
-  // Mock data for development
-  private getMockTransactions(filter?: TransactionFilter): Transaction[] {
-    const mockTransactions: Transaction[] = [
-      {
-        id: 'txn_001',
-        type: 'forward',
-        module: 'field_agents',
-        status: 'completed',
-        amount: 150.00,
-        currency: 'GBP',
-        description: 'Commission payment for board placement',
-        metadata: { board_id: 'board_001', location: 'High Street, London' },
-        created_by: 'agent_001',
-        created_at: '2024-01-15T10:00:00Z',
-        updated_at: '2024-01-15T10:30:00Z',
-        completed_at: '2024-01-15T10:30:00Z',
-        agent_id: 'agent_001',
-        transaction_data: {
-          commission_rate: 0.15,
-          commission_amount: 150.00,
-          board_placement: {
-            board_id: 'board_001',
-            location: 'High Street, London',
-            placement_fee: 1000.00
-          }
-        }
-      } as FieldAgentTransaction,
-      {
-        id: 'txn_002',
-        type: 'reverse',
-        module: 'customers',
-        reference_id: 'txn_001',
-        status: 'pending',
-        amount: -75.00,
-        currency: 'GBP',
-        description: 'Partial refund for damaged goods',
-        metadata: { refund_reason: 'Product damaged during delivery' },
-        created_by: 'admin_001',
-        created_at: '2024-01-15T14:00:00Z',
-        updated_at: '2024-01-15T14:00:00Z',
-        reversal_reason: 'Product damaged during delivery',
-        customer_id: 'cust_001',
-        transaction_data: {
-          payment_method: 'card',
-          payment_reference: 'ref_12345',
-          invoice_number: 'INV-001',
-          items: [
-            {
-              product_id: 'prod_001',
-              product_name: 'Premium Widget',
-              quantity: 1,
-              unit_price: 75.00,
-              discount: 0,
-              tax: 0,
-              total: 75.00
-            }
-          ]
-        }
-      } as CustomerTransaction
-    ]
-
-    if (filter) {
-      return mockTransactions.filter(txn => {
-        if (filter.module && txn.module !== filter.module) return false
-        if (filter.type && txn.type !== filter.type) return false
-        if (filter.status && txn.status !== filter.status) return false
-        return true
-      })
-    }
-
-    return mockTransactions
-  }
 }
 
 export const transactionService = new TransactionService()

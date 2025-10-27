@@ -888,4 +888,72 @@ router.get('/salesman/:salesmanId', async (req, res) => {
   }
 });
 
+// GET /api/orders/stats - Order statistics
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    const [totalOrders, ordersByStatus, revenueStats, topCustomers] = await Promise.all([
+      new Promise((resolve, reject) => {
+        db.get('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count));
+      }),
+      new Promise((resolve, reject) => {
+        db.all(`SELECT status, COUNT(*) as count, SUM(total_amount) as total_value
+                FROM orders WHERE tenant_id = ? GROUP BY status`, [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || []));
+      }),
+      new Promise((resolve, reject) => {
+        db.get(`SELECT SUM(total_amount) as total_revenue, AVG(total_amount) as average_order_value
+                FROM orders WHERE tenant_id = ?`, [tenantId],
+          (err, row) => err ? reject(err) : resolve(row || {}));
+      }),
+      new Promise((resolve, reject) => {
+        db.all(`SELECT c.id, c.name, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent
+                FROM customers c INNER JOIN orders o ON c.id = o.customer_id
+                WHERE o.tenant_id = ? GROUP BY c.id ORDER BY total_spent DESC LIMIT 10`, [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || []));
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: { totalOrders, ordersByStatus, revenue: revenueStats, topCustomers }
+    });
+  } catch (error) {
+    console.error('Error fetching order stats:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch order statistics' });
+  }
+});
+
+// PUT /api/orders/:id/status - Update order status
+router.put('/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    const validStatuses = ['draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status' });
+    }
+    
+    await new Promise((resolve, reject) => {
+      db.run('UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?',
+        [status, id, tenantId], function(err) {
+          if (err) reject(err);
+          else if (this.changes === 0) reject(new Error('Order not found'));
+          else resolve();
+        });
+    });
+    
+    res.json({ success: true, message: `Order status updated to ${status}` });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update order status' });
+  }
+});
+
 module.exports = router;

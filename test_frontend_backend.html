@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SalesSync API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; background: #f0f0f0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        h1 { color: #3B82F6; }
+        button { background: #3B82F6; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #2563EB; }
+        .result { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; }
+        .success { border-left: 4px solid #10B981; }
+        .error { border-left: 4px solid #EF4444; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SalesSync API Test</h1>
+        <p>Test the connection between frontend and backend API</p>
+        
+        <h3>1. Test Backend Health</h3>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        
+        <h3>2. Test Login</h3>
+        <input type="email" id="email" placeholder="Email" value="admin@demo.com">
+        <input type="password" id="password" placeholder="Password" value="admin123">
+        <input type="text" id="tenant" placeholder="Tenant Code" value="DEMO">
+        <button onclick="testLogin()">Test Login</button>
+        
+        <h3>3. Test Authenticated Request</h3>
+        <button onclick="testDashboard()">Test Dashboard API</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:12001';
+        let authToken = null;
+
+        function showResult(data, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + (isError ? 'error' : 'success');
+            resultDiv.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+        }
+
+        async function testHealth() {
+            try {
+                showResult('Testing backend health...');
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult(`Error: ${error.message}`, true);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const tenant = document.getElementById('tenant').value;
+
+                showResult('Attempting login...');
+                
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Tenant-Code': tenant
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    authToken = data.data.tokens.access_token;
+                    showResult({
+                        message: 'Login successful!',
+                        user: data.data.user,
+                        token: authToken.substring(0, 50) + '...'
+                    });
+                } else {
+                    showResult(data, true);
+                }
+            } catch (error) {
+                showResult(`Error: ${error.message}`, true);
+            }
+        }
+
+        async function testDashboard() {
+            if (!authToken) {
+                showResult('Please login first!', true);
+                return;
+            }
+
+            try {
+                showResult('Fetching dashboard data...');
+                
+                const response = await fetch(`${API_URL}/api/dashboard/overview`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'X-Tenant-Code': 'DEMO'
+                    }
+                });
+
+                const data = await response.json();
+                showResult(data);
+            } catch (error) {
+                showResult(`Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html>
