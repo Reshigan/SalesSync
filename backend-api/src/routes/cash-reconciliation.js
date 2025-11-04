@@ -6,9 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const cashReconciliationService = require('../services/cash-reconciliation.service');
-const { authenticateToken } = require('../middleware/auth');
 
-router.use(authenticateToken);
 
 /**
  * POST /api/cash-reconciliation/start
