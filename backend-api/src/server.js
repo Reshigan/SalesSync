@@ -313,6 +313,7 @@ async function startServer() {
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
     const fieldOperationsRoutes = require('./routes/field-operations');
+    const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
     const regionsRoutes = require('./routes/regions');
@@ -432,7 +433,14 @@ async function startServer() {
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
     app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
-    app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
+    const useEnhancedFieldOps = process.env.AGENT_FLOW_V2 !== 'false'; // Default to true
+    if (useEnhancedFieldOps) {
+      logger.info('Using enhanced field-operations route with visit workflow');
+      app.use('/api/field-operations', authTenantMiddleware, fieldOperationsEnhancedRoutes);
+    } else {
+      logger.info('Using legacy field-operations route');
+      app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
+    }
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
