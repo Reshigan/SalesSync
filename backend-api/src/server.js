@@ -312,6 +312,7 @@ async function startServer() {
     const agentRoutes = require('./routes/agents');
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
+    const fieldOperationsRoutes = require('./routes/field-operations');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
     const regionsRoutes = require('./routes/regions');
@@ -431,6 +432,7 @@ async function startServer() {
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
     app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
+    app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);

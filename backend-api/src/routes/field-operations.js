@@ -176,6 +176,63 @@ router.get('/status/:status', asyncHandler(async (req, res) => {
   });
 }));
 
+router.get('/live-locations', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const locations = await getQuery(`
+    SELECT 
+      a.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      v.agent_latitude as latitude,
+      v.agent_longitude as longitude,
+      v.gps_accuracy as accuracy,
+      v.start_time as timestamp,
+      v.status,
+      c.name as customer_name,
+      c.id as customer_id
+    FROM agents a
+    LEFT JOIN users u ON a.user_id = u.id
+    LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
+    LEFT JOIN customers c ON v.customer_id = c.id
+    WHERE a.tenant_id = ? 
+      AND a.agent_type = 'field_marketing'
+      AND v.agent_latitude IS NOT NULL 
+      AND v.agent_longitude IS NOT NULL
+    ORDER BY v.start_time DESC
+  `, [tenantId, tenantId]);
+
+  res.json({
+    success: true,
+    data: locations || []
+  });
+}));
+
+router.get('/visits/active', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const activeVisits = await getQuery(`
+    SELECT 
+      v.*,
+      a.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      c.name as customer_name,
+      c.address as customer_address,
+      c.latitude as customer_latitude,
+      c.longitude as customer_longitude
+    FROM visits v
+    JOIN agents a ON v.agent_id = a.id
+    LEFT JOIN users u ON a.user_id = u.id
+    JOIN customers c ON v.customer_id = c.id
+    WHERE v.tenant_id = ? AND v.status = 'in_progress'
+    ORDER BY v.start_time DESC
+  `, [tenantId]);
+
+  res.json({
+    success: true,
+    data: activeVisits || []
+  });
+}));
+
 // Test endpoint
 router.get('/test/health', asyncHandler(async (req, res) => {
   res.json({
