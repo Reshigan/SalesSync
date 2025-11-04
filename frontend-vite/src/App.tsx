@@ -25,6 +25,7 @@ const VanSalesWorkflowPage = lazy(() => import('./pages/van-sales/VanSalesWorkfl
 const RouteManagementPage = lazy(() => import('./pages/van-sales/RouteManagementPage'))
 const InventoryTrackingPage = lazy(() => import('./pages/van-sales/InventoryTrackingPage'))
 const TradeMarketingPage = lazy(() => import('./pages/trade-marketing/TradeMarketingPage'))
+const ActivationWorkflowPage = lazy(() => import('./pages/trade-marketing/ActivationWorkflowPage'))
 const EventsPage = lazy(() => import('./pages/events/EventsPage'))
 const BrandActivationsPage = lazy(() => import('./pages/brand-activations/BrandActivationsPage'))
 const CampaignsPage = lazy(() => import('./pages/campaigns/CampaignsPage'))
@@ -204,6 +205,7 @@ function App() {
 
             {/* Trade Marketing Routes */}
             <Route path="trade-marketing" element={<TradeMarketingPage />} />
+            <Route path="trade-marketing/activation" element={<ActivationWorkflowPage />} />
 
             {/* Events Routes */}
             <Route path="events" element={<EventsPage />} />
