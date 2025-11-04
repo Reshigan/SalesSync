@@ -319,7 +319,7 @@ export default function FieldAgentsPage() {
         />
         <StatCard
           title="Total Commissions"
-          value={`£${agentStats.totalCommissions.toLocaleString()}`}
+          value={formatCurrency(agentStats.totalCommissions)}
           icon={DollarSign}
           change={22}
           color="green"
@@ -362,7 +362,7 @@ export default function FieldAgentsPage() {
             data={performanceData}
             xKey="date"
             yKeys={[
-              { key: 'commissions', color: '#F59E0B', name: 'Daily Commissions (£)' },
+              { key: 'commissions', color: '#F59E0B', name: 'Daily Commissions (R)' },
             ]}
             height={300}
           />
@@ -477,7 +477,7 @@ export default function FieldAgentsPage() {
               <DollarSign className="h-8 w-8 text-yellow-600" />
             </div>
             <div className="mt-2 text-xs text-yellow-600">
-              <span className="font-medium">Total Value:</span> £12,450
+              <span className="font-medium">Total Value:</span> {formatCurrency(12450)}
             </div>
           </div>
         </div>
