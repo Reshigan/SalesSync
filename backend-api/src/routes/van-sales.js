@@ -138,7 +138,7 @@ router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const latestLoad = await getOneQuery(`
-    SELECT id, load_date
+    SELECT id, load_date, stock_loaded, stock_sold, stock_returned
     FROM van_loads
     WHERE van_id = ? AND tenant_id = ?
     ORDER BY load_date DESC
@@ -151,17 +151,22 @@ router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
     // Get all products with their quantities from the latest load
     inventory = await getQuery(`
       SELECT 
+        p.id || '-' || ? as id,
+        ? as van_id,
         p.id as product_id,
         p.name as product_name,
-        p.sku as product_sku,
+        p.sku as product_code,
+        0 as current_stock,
+        0 as loaded_stock,
+        0 as sold_stock,
+        0 as returned_stock,
         p.unit_price,
-        0 as quantity_loaded,
-        0 as quantity_sold,
-        0 as quantity_remaining
+        0 as total_value,
+        ? as last_updated
       FROM products p
       WHERE p.tenant_id = ?
       ORDER BY p.name
-    `, [tenantId]);
+    `, [vanId, vanId, latestLoad.load_date, tenantId]);
   }
 
   res.json({
@@ -206,11 +211,10 @@ router.get('/stats', asyncHandler(async (req, res) => {
     getOneQuery(`
       SELECT 
         COUNT(DISTINCT r.id) as total_routes,
-        AVG(r.distance_km) as avg_route_distance,
-        COUNT(CASE WHEN r.status = 'completed' THEN 1 END) as completed_routes
-      FROM van_routes r
-      INNER JOIN vans v ON r.van_id = v.id
-      WHERE v.tenant_id = ?
+        0 as avg_route_distance,
+        COUNT(CASE WHEN r.status = 'active' THEN 1 END) as completed_routes
+      FROM routes r
+      WHERE r.tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
