@@ -63,71 +63,62 @@ export default function OrderDetailsPage() {
   const fetchOrderDetails = async () => {
     try {
       setLoading(true)
-      // Mock data
-      const mockOrder: Order = {
-        id: id || '1',
-        orderNumber: 'ORD000123',
-        orderDate: new Date().toISOString(),
-        deliveryDate: new Date(Date.now() + 7 * 86400000).toISOString(),
-        customerId: 'cust-1',
-        customerName: 'ABC Retail Store',
-        customerEmail: 'contact@abcstore.com',
-        customerPhone: '+1234567890',
-        agentId: 'agent-1',
-        agentName: 'John Agent',
-        status: 'confirmed',
-        paymentStatus: 'partial',
-        paymentMethod: 'bank_transfer',
-        shippingAddress: '123 Main St, Metro City, State 12345',
-        billingAddress: '123 Main St, Metro City, State 12345',
-        subtotal: 10000,
-        taxAmount: 1000,
-        shippingCost: 500,
-        discount: 500,
-        totalAmount: 11000,
-        notes: 'Please deliver before 5 PM',
-        items: [
-          {
-            id: '1',
-            productId: 'prod-1',
-            productName: 'Coca-Cola 500ml',
-            sku: 'SKU00001',
-            quantity: 100,
-            unitPrice: 50,
-            subtotal: 5000,
-            taxAmount: 500,
-            totalAmount: 5500
-          },
-          {
-            id: '2',
-            productId: 'prod-2',
-            productName: 'Pepsi 500ml',
-            sku: 'SKU00002',
-            quantity: 100,
-            unitPrice: 50,
-            subtotal: 5000,
-            taxAmount: 500,
-            totalAmount: 5500
-          }
-        ],
-        timeline: [
-          {
-            id: '1',
-            timestamp: new Date().toISOString(),
-            event: 'Order Confirmed',
-            description: 'Order has been confirmed and is being prepared',
-            user: 'System'
-          },
-          {
-            id: '2',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-            event: 'Order Created',
-            description: 'Order was created by field agent',
-            user: 'John Agent'
-          }
-        ]
+      
+      if (!id) {
+        console.error('No order ID provided')
+        setLoading(false)
+        return
       }
-      setOrder(mockOrder)
+
+      const orderData = await ordersService.getOrder(id)
+
+      if (orderData) {
+        const mappedOrder: Order = {
+          id: orderData.id,
+          orderNumber: orderData.order_number,
+          orderDate: orderData.order_date,
+          deliveryDate: orderData.delivery_date || '',
+          customerId: orderData.customer_id,
+          customerName: orderData.customer?.name || 'Unknown Customer',
+          customerEmail: orderData.customer?.email || '',
+          customerPhone: orderData.customer?.phone || '',
+          agentId: orderData.salesman_id || '',
+          agentName: 'Field Agent',
+          status: orderData.order_status,
+          paymentStatus: orderData.payment_status,
+          paymentMethod: orderData.payment_method || '',
+          shippingAddress: '',
+          billingAddress: '',
+          subtotal: orderData.subtotal,
+          taxAmount: orderData.tax_amount,
+          shippingCost: 0,
+          discount: orderData.discount_amount,
+          totalAmount: orderData.total_amount,
+          notes: orderData.notes || '',
+          items: (orderData.items || []).map((item: any) => ({
+            id: item.id,
+            productId: item.product_id,
+            productName: item.product?.name || 'Unknown Product',
+            sku: item.product?.sku || '',
+            quantity: item.quantity,
+            unitPrice: item.unit_price,
+            subtotal: item.quantity * item.unit_price,
+            taxAmount: item.tax_amount,
+            totalAmount: item.total_amount
+          })),
+          timeline: [
+            {
+              id: '1',
+              timestamp: orderData.created_at,
+              event: 'Order Created',
+              description: `Order ${orderData.order_number} was created`,
+              user: 'System'
+            }
+          ]
+        }
+        
+        setOrder(mappedOrder)
+      }
     } catch (error) {
       console.error('Failed to fetch order details:', error)
     } finally {
