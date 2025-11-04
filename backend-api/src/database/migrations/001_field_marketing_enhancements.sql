@@ -62,10 +62,12 @@ CREATE TABLE IF NOT EXISTS commission_events (
   approved_by TEXT,
   approved_at DATETIME,
   paid_at DATETIME,
+  idempotency_key TEXT, -- For preventing duplicate commissions from offline replays
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tenant_id) REFERENCES tenants(id),
   FOREIGN KEY (agent_id) REFERENCES agents(id),
-  FOREIGN KEY (visit_id) REFERENCES visits(id)
+  FOREIGN KEY (visit_id) REFERENCES visits(id),
+  UNIQUE(tenant_id, idempotency_key) -- Prevent duplicate commissions
 );
 
 CREATE TABLE IF NOT EXISTS product_types (

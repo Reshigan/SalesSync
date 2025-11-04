@@ -16,11 +16,26 @@ router.post('/visits', asyncHandler(async (req, res) => {
     gps_lng,
     gps_accuracy,
     visit_type,
-    is_new_customer
+    is_new_customer,
+    idempotency_key
   } = req.body;
 
   const tenantId = req.tenantId;
-  const agentId = req.user?.agentId || req.body.agent_id;
+  
+  if (!req.user?.userId) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+  
+  const agent = await getOneQuery(
+    'SELECT id FROM agents WHERE user_id = ? AND tenant_id = ?',
+    [req.user.userId, tenantId]
+  );
+  
+  if (!agent) {
+    return res.status(403).json({ success: false, message: 'User is not an agent' });
+  }
+  
+  const agentId = agent.id;
 
   let distanceMeters = null;
   let requiresOverride = false;
@@ -37,7 +52,7 @@ router.post('/visits', asyncHandler(async (req, res) => {
     }
   }
 
-  const visitId = uuidv4();
+  const visitId = idempotency_key || uuidv4();
   const db = getDatabase();
 
   await new Promise((resolve, reject) => {
