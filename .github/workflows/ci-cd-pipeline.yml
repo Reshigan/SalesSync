@@ -60,10 +60,12 @@ jobs:
     - name: Run Frontend Tests
       run: |
         cd frontend-vite
-        npm test
+        npx vitest --run
       env:
         NODE_ENV: test
+        CI: true
       continue-on-error: true
+      timeout-minutes: 15
 
     - name: Run Frontend Linting
       run: |
