@@ -5,7 +5,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all field operations
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operations = await getQuery(`
     SELECT 
@@ -47,7 +47,7 @@ router.post('/', asyncHandler(async (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       operationId,
-      req.user.tenantId,
+      req.tenantId,
       operation_type || 'visit',
       agent_id,
       customer_id,
@@ -70,16 +70,18 @@ router.post('/', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/live-locations', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+// Get live agent locations (MUST come before /:id to avoid route shadowing)
+router.get('/live/agent-locations', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
   
   const locations = await getQuery(`
     SELECT 
       a.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
-      v.agent_latitude as latitude,
-      v.agent_longitude as longitude,
-      v.gps_accuracy as accuracy,
+      u.phone,
+      u.email,
+      v.latitude,
+      v.longitude,
       v.visit_date as timestamp,
       v.status,
       c.name as customer_name,
@@ -89,9 +91,8 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
     LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
     LEFT JOIN customers c ON v.customer_id = c.id
     WHERE a.tenant_id = ? 
-      AND a.agent_type = 'field_marketing'
-      AND v.agent_latitude IS NOT NULL 
-      AND v.agent_longitude IS NOT NULL
+      AND v.latitude IS NOT NULL 
+      AND v.longitude IS NOT NULL
     ORDER BY v.visit_date DESC
   `, [tenantId, tenantId]);
 
@@ -101,8 +102,9 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
   });
 }));
 
-router.get('/visits/active', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+// Get active visits (MUST come before /:id to avoid route shadowing)
+router.get('/live/active-visits', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
   
   const activeVisits = await getQuery(`
     SELECT 
@@ -130,7 +132,7 @@ router.get('/visits/active', asyncHandler(async (req, res) => {
 // Get operations by agent
 router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const { agentId } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operations = await getQuery(`
     SELECT * FROM field_operations 
@@ -147,7 +149,7 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
 // Get operations by status
 router.get('/status/:status', asyncHandler(async (req, res) => {
   const { status } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operations = await getQuery(`
     SELECT * FROM field_operations 
@@ -173,7 +175,7 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 // Get field operation by ID (MUST come after specific routes to avoid shadowing)
 router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operation = await getOneQuery(`
     SELECT * FROM field_operations 
@@ -196,7 +198,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update field operation
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { operation_type, agent_id, customer_id, scheduled_date, status, completed_date, description } = req.body;
   
   const result = await runQuery(`
@@ -222,7 +224,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 // Delete field operation
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM field_operations 

@@ -113,23 +113,17 @@ router.get('/routes', asyncHandler(async (req, res) => {
   
   const routes = await getQuery(`
     SELECT 
-      vr.id,
-      vr.route_name,
-      vr.van_id,
-      vr.agent_id,
-      vr.route_date,
-      vr.start_time,
-      vr.end_time,
-      vr.status,
-      vr.distance_km,
-      vr.stops_planned,
-      vr.stops_completed,
-      v.registration_number as van_registration,
-      v.driver_name
-    FROM van_routes vr
-    LEFT JOIN vans v ON vr.van_id = v.id
-    WHERE v.tenant_id = ?
-    ORDER BY vr.route_date DESC, vr.start_time DESC
+      r.id,
+      r.name,
+      r.code,
+      r.status,
+      r.created_at,
+      r.salesman_id as driver_id,
+      u.first_name || ' ' || u.last_name as driver_name
+    FROM routes r
+    LEFT JOIN users u ON r.salesman_id = u.id
+    WHERE r.tenant_id = ?
+    ORDER BY r.created_at DESC
   `, [tenantId]);
 
   res.json({
@@ -138,28 +132,24 @@ router.get('/routes', asyncHandler(async (req, res) => {
   });
 }));
 
-// Get van inventory by van ID
+// Get van inventory by van ID (MUST come before /:id to avoid route shadowing)
 router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
   const { vanId } = req.params;
   const tenantId = req.tenantId;
   
   const inventory = await getQuery(`
     SELECT 
-      vi.id,
-      vi.van_id,
-      vi.product_id,
-      vi.quantity_loaded,
-      vi.quantity_sold,
-      vi.quantity_remaining,
-      vi.last_updated,
-      p.name as product_name,
-      p.sku as product_sku,
-      p.unit_price
-    FROM van_inventory vi
-    JOIN products p ON vi.product_id = p.id
-    JOIN vans v ON vi.van_id = v.id
-    WHERE vi.van_id = ? AND v.tenant_id = ?
-    ORDER BY p.name
+      vl.id,
+      vl.van_id,
+      vl.load_date,
+      vl.stock_loaded,
+      vl.stock_sold,
+      vl.stock_returned,
+      vl.status
+    FROM van_loads vl
+    WHERE vl.van_id = ? AND vl.tenant_id = ?
+    ORDER BY vl.load_date DESC
+    LIMIT 1
   `, [vanId, tenantId]);
 
   res.json({
@@ -179,7 +169,7 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 
 // GET /api/van-sales/stats - Van sales statistics
 router.get('/stats', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const [vanCounts, salesStats, routeStats, topVans] = await Promise.all([
     getOneQuery(`
