@@ -330,6 +330,8 @@ async function startServer() {
     const customerActivationRoutes = require('./routes/customer-activation-simple');
     const surveysSimpleRoutes = require('./routes/surveys-simple');
     const samplesRoutes = require('./routes/samples');
+    const cashReconciliationRoutes = require('./routes/cash-reconciliation');
+    const hierarchyRoutes = require('./routes/hierarchy');
     const eventsRoutes = require('./routes/events');
     const campaignAnalyticsRoutes = require('./routes/campaign-analytics');
     const campaignExecutionRoutes = require('./routes/campaign-execution');
@@ -457,6 +459,8 @@ async function startServer() {
     app.use('/api/customer-activation', authTenantMiddleware, customerActivationRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveysSimpleRoutes);
     app.use('/api/samples', authTenantMiddleware, samplesRoutes);
+    app.use('/api/cash-reconciliation', authTenantMiddleware, cashReconciliationRoutes);
+    app.use('/api/hierarchy', authTenantMiddleware, hierarchyRoutes);
     app.use('/api/events', authTenantMiddleware, eventsRoutes);
     app.use('/api/campaign-analytics', authTenantMiddleware, campaignAnalyticsRoutes);
     app.use('/api/campaigns', authTenantMiddleware, campaignExecutionRoutes);
