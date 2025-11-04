@@ -19,6 +19,7 @@ import PieChart from '../../components/charts/PieChart'
 import DataTable from '../../components/ui/tables/DataTable'
 import { fieldOperationsService } from '../../services/field-operations.service'
 import { commissionsService } from '../../services/commissions.service'
+import { formatCurrency } from '../../utils/currency'
 
 export default function FieldAgentsPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d')
@@ -209,7 +210,7 @@ export default function FieldAgentsPage() {
       title: 'Monthly Commission',
       sortable: true,
       render: (value: number) => (
-        <span className="font-medium text-gray-900">£{value.toLocaleString()}</span>
+        <span className="font-medium text-gray-900">{formatCurrency(value)}</span>
       ),
     },
     {
