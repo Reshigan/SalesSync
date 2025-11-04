@@ -196,6 +196,67 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   });
 }));
 
+// Get van routes
+router.get('/routes', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  
+  const routes = await getQuery(`
+    SELECT 
+      vr.id,
+      vr.route_name,
+      vr.van_id,
+      vr.agent_id,
+      vr.route_date,
+      vr.start_time,
+      vr.end_time,
+      vr.status,
+      vr.distance_km,
+      vr.stops_planned,
+      vr.stops_completed,
+      v.registration_number as van_registration,
+      v.driver_name
+    FROM van_routes vr
+    LEFT JOIN vans v ON vr.van_id = v.id
+    WHERE v.tenant_id = ?
+    ORDER BY vr.route_date DESC, vr.start_time DESC
+  `, [tenantId]);
+
+  res.json({
+    success: true,
+    data: routes || []
+  });
+}));
+
+// Get van inventory by van ID
+router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
+  const { vanId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const inventory = await getQuery(`
+    SELECT 
+      vi.id,
+      vi.van_id,
+      vi.product_id,
+      vi.quantity_loaded,
+      vi.quantity_sold,
+      vi.quantity_remaining,
+      vi.last_updated,
+      p.name as product_name,
+      p.sku as product_sku,
+      p.unit_price
+    FROM van_inventory vi
+    JOIN products p ON vi.product_id = p.id
+    JOIN vans v ON vi.van_id = v.id
+    WHERE vi.van_id = ? AND v.tenant_id = ?
+    ORDER BY p.name
+  `, [vanId, tenantId]);
+
+  res.json({
+    success: true,
+    data: inventory || []
+  });
+}));
+
 // Test endpoint
 router.get('/test/health', asyncHandler(async (req, res) => {
   res.json({

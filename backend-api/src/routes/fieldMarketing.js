@@ -463,6 +463,59 @@ router.get('/commissions', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/board-installations', authMiddleware, async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
+    
+    let sql = `
+      SELECT 
+        bp.*,
+        fmb.board_name,
+        fmb.board_type,
+        c.name as customer_name,
+        c.address as customer_address,
+        fv.visit_code
+      FROM board_placements bp
+      JOIN field_marketing_boards fmb ON bp.board_id = fmb.id
+      JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN field_visits fv ON bp.visit_id = fv.id
+      WHERE bp.agent_id = ?
+    `;
+    
+    const params = [req.user.id];
+    
+    if (status) {
+      sql += ` AND bp.placement_status = ?`;
+      params.push(status);
+    }
+    
+    if (startDate) {
+      sql += ` AND DATE(bp.created_at) >= ?`;
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      sql += ` AND DATE(bp.created_at) <= ?`;
+      params.push(endDate);
+    }
+    
+    sql += ` ORDER BY bp.created_at DESC LIMIT 100`;
+    
+    const installations = await db.all(sql, params);
+    
+    res.json({ 
+      success: true,
+      data: installations || []
+    });
+  } catch (error) {
+    console.error('Get board installations error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch board installations' 
+    });
+  }
+});
+
 // Submit Survey
 router.post('/surveys/submit', authMiddleware, async (req, res) => {
   try {
