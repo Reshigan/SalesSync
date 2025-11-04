@@ -21,6 +21,7 @@ const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage'))
 const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
 const VanSalesPage = lazy(() => import('./pages/van-sales/VanSalesPage'))
 const VanSalesDashboard = lazy(() => import('./pages/van-sales/VanSalesDashboard'))
+const VanSalesWorkflowPage = lazy(() => import('./pages/van-sales/VanSalesWorkflowPage'))
 const RouteManagementPage = lazy(() => import('./pages/van-sales/RouteManagementPage'))
 const InventoryTrackingPage = lazy(() => import('./pages/van-sales/InventoryTrackingPage'))
 const TradeMarketingPage = lazy(() => import('./pages/trade-marketing/TradeMarketingPage'))
@@ -45,6 +46,7 @@ const SurveysManagement = lazy(() => import('./pages/surveys/SurveysManagement')
 const InventoryDashboard = lazy(() => import('./pages/inventory/InventoryDashboard'))
 const InventoryManagement = lazy(() => import('./pages/inventory/InventoryManagement'))
 const InventoryReports = lazy(() => import('./pages/inventory/InventoryReports'))
+const StockCountWorkflowPage = lazy(() => import('./pages/inventory/StockCountWorkflowPage'))
 const PromotionsDashboard = lazy(() => import('./pages/promotions/PromotionsDashboard'))
 const PromotionsManagement = lazy(() => import('./pages/promotions/PromotionsManagement'))
 const CustomersPage = lazy(() => import('./pages/customers/CustomersPage'))
@@ -159,6 +161,7 @@ function App() {
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
+            <Route path="van-sales/workflow" element={<VanSalesWorkflowPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
 
@@ -191,6 +194,7 @@ function App() {
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
+            <Route path="inventory/stock-count" element={<StockCountWorkflowPage />} />
             <Route path="inventory/reports" element={<InventoryReports />} />
 
             {/* Promotions Routes */}
