@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Search, Truck, Package, MapPin, Calendar, CheckCircle, XCircle, Clock, Download, Plus, Eye, Edit2 } from 'lucide-react'
+import { vanSalesService } from '../../services/van-sales.service'
 
 interface Distribution {
   id: string
@@ -45,54 +46,33 @@ export default function ProductDistributionPage() {
   const fetchDistributions = async () => {
     try {
       setLoading(true)
-      const mockDistributions: Distribution[] = [
-        {
-          id: '1',
-          distributionNumber: 'DIST-001',
-          vanId: 'van-1',
-          vanNumber: 'VAN-001',
-          driverId: 'driver-1',
-          driverName: 'John Driver',
-          routeName: 'Route A - North Zone',
-          distributionDate: new Date().toISOString(),
-          status: 'in_progress',
-          totalProducts: 25,
-          totalQuantity: 500,
-          deliveredQuantity: 350,
-          startTime: new Date(Date.now() - 3600000 * 4).toISOString()
-        },
-        {
-          id: '2',
-          distributionNumber: 'DIST-002',
-          vanId: 'van-2',
-          vanNumber: 'VAN-002',
-          driverId: 'driver-2',
-          driverName: 'Jane Agent',
-          routeName: 'Route B - South Zone',
-          distributionDate: new Date().toISOString(),
-          status: 'completed',
-          totalProducts: 20,
-          totalQuantity: 400,
-          deliveredQuantity: 400,
-          startTime: new Date(Date.now() - 3600000 * 8).toISOString(),
-          endTime: new Date(Date.now() - 3600000 * 2).toISOString()
-        },
-        {
-          id: '3',
-          distributionNumber: 'DIST-003',
-          vanId: 'van-3',
-          vanNumber: 'VAN-003',
-          driverId: 'driver-3',
-          driverName: 'Mike Sales',
-          routeName: 'Route C - East Zone',
-          distributionDate: new Date(Date.now() + 86400000).toISOString(),
-          status: 'scheduled',
-          totalProducts: 30,
-          totalQuantity: 600,
-          deliveredQuantity: 0
+      const routesResponse = await vanSalesService.getVanRoutes({
+        status: filterStatus === 'all' ? undefined : filterStatus
+      })
+
+      const mappedDistributions: Distribution[] = (routesResponse.data || []).map((route: any) => {
+        const totalQuantity = route.total_quantity || route.loaded_quantity || 0
+        const deliveredQuantity = route.delivered_quantity || route.sold_quantity || 0
+        
+        return {
+          id: route.id,
+          distributionNumber: route.code || route.name || `DIST-${route.id}`,
+          vanId: route.van_id || 'unknown',
+          vanNumber: route.van_code || route.van_number || 'N/A',
+          driverId: route.driver_id || 'unknown',
+          driverName: route.driver_name || route.current_driver_name || 'Unknown Driver',
+          routeName: route.name || 'Unknown Route',
+          distributionDate: route.start_time || route.created_at || new Date().toISOString(),
+          status: route.status === 'active' ? 'in_progress' : route.status === 'completed' ? 'completed' : route.status === 'inactive' ? 'scheduled' : 'scheduled',
+          totalProducts: route.total_products || route.product_count || 0,
+          totalQuantity: totalQuantity,
+          deliveredQuantity: deliveredQuantity,
+          startTime: route.start_time,
+          endTime: route.end_time
         }
-      ]
-      setDistributions(mockDistributions)
+      })
+
+      setDistributions(mappedDistributions)
     } catch (error) {
       console.error('Failed to fetch distributions:', error)
     } finally {
@@ -101,36 +81,27 @@ export default function ProductDistributionPage() {
   }
 
   const fetchDistributionItems = async (distributionId: string) => {
-    const mockItems: DistributionItem[] = [
-      {
-        id: '1',
-        productId: 'prod-1',
-        productName: 'Coca-Cola 500ml',
-        sku: 'SKU00001',
-        loadedQuantity: 100,
-        deliveredQuantity: 75,
-        remainingQuantity: 25
-      },
-      {
-        id: '2',
-        productId: 'prod-2',
-        productName: 'Pepsi 500ml',
-        sku: 'SKU00002',
-        loadedQuantity: 100,
-        deliveredQuantity: 80,
-        remainingQuantity: 20
-      },
-      {
-        id: '3',
-        productId: 'prod-3',
-        productName: 'Sprite 500ml',
-        sku: 'SKU00003',
-        loadedQuantity: 100,
-        deliveredQuantity: 95,
-        remainingQuantity: 5
-      }
-    ]
-    setDistributionItems(mockItems)
+    try {
+      const distribution = distributions.find(d => d.id === distributionId)
+      if (!distribution) return
+
+      const inventoryResponse = await vanSalesService.getVanInventory(distribution.vanId)
+
+      const mappedItems: DistributionItem[] = (inventoryResponse.data || []).map((item: any) => ({
+        id: item.id,
+        productId: item.product_id,
+        productName: item.product_name || 'Unknown Product',
+        sku: item.product_code || item.sku || 'N/A',
+        loadedQuantity: item.loaded_stock || item.current_stock || 0,
+        deliveredQuantity: item.sold_stock || 0,
+        remainingQuantity: item.current_stock || (item.loaded_stock || 0) - (item.sold_stock || 0)
+      }))
+
+      setDistributionItems(mappedItems)
+    } catch (error) {
+      console.error('Failed to fetch distribution items:', error)
+      setDistributionItems([])
+    }
   }
 
   const filteredDistributions = distributions.filter(dist => {
