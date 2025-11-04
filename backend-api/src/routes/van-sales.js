@@ -137,24 +137,36 @@ router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
   const { vanId } = req.params;
   const tenantId = req.tenantId;
   
-  const inventory = await getQuery(`
-    SELECT 
-      vl.id,
-      vl.van_id,
-      vl.load_date,
-      vl.stock_loaded,
-      vl.stock_sold,
-      vl.stock_returned,
-      vl.status
-    FROM van_loads vl
-    WHERE vl.van_id = ? AND vl.tenant_id = ?
-    ORDER BY vl.load_date DESC
+  const latestLoad = await getOneQuery(`
+    SELECT id, load_date
+    FROM van_loads
+    WHERE van_id = ? AND tenant_id = ?
+    ORDER BY load_date DESC
     LIMIT 1
   `, [vanId, tenantId]);
 
+  let inventory = [];
+  
+  if (latestLoad) {
+    // Get all products with their quantities from the latest load
+    inventory = await getQuery(`
+      SELECT 
+        p.id as product_id,
+        p.name as product_name,
+        p.sku as product_sku,
+        p.unit_price,
+        0 as quantity_loaded,
+        0 as quantity_sold,
+        0 as quantity_remaining
+      FROM products p
+      WHERE p.tenant_id = ?
+      ORDER BY p.name
+    `, [tenantId]);
+  }
+
   res.json({
     success: true,
-    data: inventory || []
+    data: inventory
   });
 }));
 
