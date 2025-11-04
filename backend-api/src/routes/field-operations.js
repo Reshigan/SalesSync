@@ -186,7 +186,7 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
       v.agent_latitude as latitude,
       v.agent_longitude as longitude,
       v.gps_accuracy as accuracy,
-      v.start_time as timestamp,
+      v.visit_date as timestamp,
       v.status,
       c.name as customer_name,
       c.id as customer_id
@@ -198,7 +198,7 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
       AND a.agent_type = 'field_marketing'
       AND v.agent_latitude IS NOT NULL 
       AND v.agent_longitude IS NOT NULL
-    ORDER BY v.start_time DESC
+    ORDER BY v.visit_date DESC
   `, [tenantId, tenantId]);
 
   res.json({
@@ -224,7 +224,7 @@ router.get('/visits/active', asyncHandler(async (req, res) => {
     LEFT JOIN users u ON a.user_id = u.id
     JOIN customers c ON v.customer_id = c.id
     WHERE v.tenant_id = ? AND v.status = 'in_progress'
-    ORDER BY v.start_time DESC
+    ORDER BY v.visit_date DESC
   `, [tenantId]);
 
   res.json({

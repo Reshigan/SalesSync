@@ -466,6 +466,7 @@ router.get('/commissions', authMiddleware, async (req, res) => {
 router.get('/board-installations', authMiddleware, async (req, res) => {
   try {
     const { status, startDate, endDate } = req.query;
+    const db = getDatabase();
     
     let sql = `
       SELECT 
@@ -501,11 +502,19 @@ router.get('/board-installations', authMiddleware, async (req, res) => {
     
     sql += ` ORDER BY bp.created_at DESC LIMIT 100`;
     
-    const installations = await db.all(sql, params);
-    
-    res.json({ 
-      success: true,
-      data: installations || []
+    db.all(sql, params, (err, installations) => {
+      if (err) {
+        console.error('Get board installations error:', err);
+        return res.status(500).json({ 
+          success: false,
+          error: 'Failed to fetch board installations' 
+        });
+      }
+      
+      res.json({ 
+        success: true,
+        data: installations || []
+      });
     });
   } catch (error) {
     console.error('Get board installations error:', error);
