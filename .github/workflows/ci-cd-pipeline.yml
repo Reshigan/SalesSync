@@ -33,6 +33,11 @@ jobs:
         cd backend-api
         npm ci
 
+    - name: Setup Test Environment
+      run: |
+        cd backend-api
+        cp .env.example .env.test
+
     - name: Run Backend Tests
       run: |
         cd backend-api
