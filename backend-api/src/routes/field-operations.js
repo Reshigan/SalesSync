@@ -225,7 +225,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
   
   const result = await runQuery(`
-    DELETE FROM van_sales 
+    DELETE FROM field_operations 
     WHERE id = ? AND tenant_id = ?
   `, [id, tenantId]);
 
