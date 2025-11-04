@@ -17,82 +17,114 @@ import LineChart from '../../components/charts/LineChart'
 import BarChart from '../../components/charts/BarChart'
 import PieChart from '../../components/charts/PieChart'
 import DataTable from '../../components/ui/tables/DataTable'
-
-// Mock data - replace with real API calls
-const mockAgentStats = {
-  totalAgents: 45,
-  activeToday: 38,
-  totalPlacements: 156,
-  totalDistributions: 284,
-  totalCommissions: 12450,
-  avgPerformance: 87.5,
-}
-
-const mockPerformanceData = [
-  { date: '2024-01-01', placements: 12, distributions: 28, commissions: 850 },
-  { date: '2024-01-02', placements: 15, distributions: 32, commissions: 920 },
-  { date: '2024-01-03', placements: 18, distributions: 35, commissions: 1100 },
-  { date: '2024-01-04', placements: 14, distributions: 29, commissions: 890 },
-  { date: '2024-01-05', placements: 20, distributions: 38, commissions: 1200 },
-  { date: '2024-01-06', placements: 16, distributions: 31, commissions: 980 },
-  { date: '2024-01-07', placements: 22, distributions: 42, commissions: 1350 },
-]
-
-const mockAgentData = [
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+44 7700 900123',
-    status: 'Active',
-    location: 'London, UK',
-    todayPlacements: 3,
-    todayDistributions: 8,
-    monthlyCommission: 1250,
-    performance: 92,
-    lastActivity: '2 minutes ago',
-    totalTransactions: 156,
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    phone: '+44 7700 900124',
-    status: 'Active',
-    location: 'Manchester, UK',
-    todayPlacements: 2,
-    todayDistributions: 6,
-    monthlyCommission: 1100,
-    performance: 88,
-    lastActivity: '15 minutes ago',
-    totalTransactions: 142,
-  },
-  {
-    id: 3,
-    name: 'Mike Johnson',
-    email: 'mike@example.com',
-    phone: '+44 7700 900125',
-    status: 'Offline',
-    location: 'Birmingham, UK',
-    todayPlacements: 0,
-    todayDistributions: 0,
-    monthlyCommission: 950,
-    performance: 75,
-    lastActivity: '2 hours ago',
-    totalTransactions: 98,
-  },
-]
-
-const mockActivityData = [
-  { name: 'Board Placement', value: 45, color: '#8B5CF6' },
-  { name: 'Product Distribution', value: 78, color: '#10B981' },
-  { name: 'Customer Visit', value: 32, color: '#F59E0B' },
-  { name: 'Commission Earned', value: 28, color: '#EF4444' },
-]
+import { fieldOperationsService } from '../../services/field-operations.service'
+import { commissionsService } from '../../services/commissions.service'
 
 export default function FieldAgentsPage() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d')
   const [selectedAgent, setSelectedAgent] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [agentStats, setAgentStats] = useState<any>({
+    totalAgents: 0,
+    activeToday: 0,
+    totalPlacements: 0,
+    totalDistributions: 0,
+    totalCommissions: 0,
+    avgPerformance: 0,
+  })
+  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [agentData, setAgentData] = useState<any[]>([])
+  const [activityData, setActivityData] = useState<any[]>([])
+
+  useEffect(() => {
+    loadFieldAgentsData()
+  }, [selectedTimeRange])
+
+  const getDateRange = () => {
+    const end = new Date()
+    const start = new Date()
+    
+    switch (selectedTimeRange) {
+      case '1d':
+        start.setDate(start.getDate() - 1)
+        break
+      case '7d':
+        start.setDate(start.getDate() - 7)
+        break
+      case '30d':
+        start.setDate(start.getDate() - 30)
+        break
+      case '90d':
+        start.setDate(start.getDate() - 90)
+        break
+    }
+    
+    return {
+      start_date: start.toISOString().split('T')[0],
+      end_date: end.toISOString().split('T')[0]
+    }
+  }
+
+  const loadFieldAgentsData = async () => {
+    try {
+      setLoading(true)
+      const dateRange = getDateRange()
+
+      const [stats, agents, analytics, commissionStats] = await Promise.all([
+        fieldOperationsService.getFieldOperationsStats(dateRange),
+        fieldOperationsService.getFieldAgents({ status: 'active' }),
+        fieldOperationsService.getPerformanceAnalytics(dateRange),
+        commissionsService.getCommissionStats()
+      ])
+
+      setAgentStats({
+        totalAgents: stats.total_agents || 0,
+        activeToday: stats.active_agents || 0,
+        totalPlacements: stats.completed_tasks || 0,
+        totalDistributions: stats.total_visits || 0,
+        totalCommissions: commissionStats.total_amount || 0,
+        avgPerformance: stats.average_performance_score || 0,
+      })
+
+      if (analytics.trends && Array.isArray(analytics.trends)) {
+        setPerformanceData(analytics.trends.map((trend: any) => ({
+          date: trend.date,
+          placements: trend.tasks_completed || 0,
+          distributions: trend.visits_completed || 0,
+          commissions: trend.revenue || 0
+        })))
+      }
+
+      if (agents.data && Array.isArray(agents.data)) {
+        setAgentData(agents.data.map((agent: any) => ({
+          id: agent.id,
+          name: `${agent.first_name} ${agent.last_name}`,
+          email: agent.email,
+          phone: agent.phone,
+          status: agent.status === 'active' ? 'Active' : 'Offline',
+          location: agent.territory?.name || 'Unknown',
+          todayPlacements: agent.performance_metrics?.total_visits || 0,
+          todayDistributions: agent.performance_metrics?.successful_visits || 0,
+          monthlyCommission: agent.performance_metrics?.total_revenue || 0,
+          performance: agent.performance_metrics?.productivity_score || 0,
+          lastActivity: agent.last_activity || 'Unknown',
+          totalTransactions: agent.performance_metrics?.total_sales || 0,
+        })))
+      }
+
+      setActivityData([
+        { name: 'Board Placement', value: stats.completed_tasks || 0, color: '#8B5CF6' },
+        { name: 'Product Distribution', value: stats.total_visits || 0, color: '#10B981' },
+        { name: 'Customer Visit', value: stats.successful_visits || 0, color: '#F59E0B' },
+        { name: 'Commission Earned', value: commissionStats.total_commissions || 0, color: '#EF4444' },
+      ])
+
+    } catch (error) {
+      console.error('Failed to load field agents data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const StatCard = ({ title, value, icon: Icon, change, color = 'primary' }: any) => (
     <div className="card">
@@ -258,42 +290,42 @@ export default function FieldAgentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <StatCard
           title="Total Agents"
-          value={mockAgentStats.totalAgents}
+          value={agentStats.totalAgents}
           icon={Users}
           change={8}
           color="blue"
         />
         <StatCard
           title="Active Today"
-          value={mockAgentStats.activeToday}
+          value={agentStats.activeToday}
           icon={Activity}
           change={12}
           color="green"
         />
         <StatCard
           title="Board Placements"
-          value={mockAgentStats.totalPlacements}
+          value={agentStats.totalPlacements}
           icon={MapPin}
           change={-5}
           color="purple"
         />
         <StatCard
           title="Distributions"
-          value={mockAgentStats.totalDistributions}
+          value={agentStats.totalDistributions}
           icon={Package}
           change={15}
           color="orange"
         />
         <StatCard
           title="Total Commissions"
-          value={`£${mockAgentStats.totalCommissions.toLocaleString()}`}
+          value={`£${agentStats.totalCommissions.toLocaleString()}`}
           icon={DollarSign}
           change={22}
           color="green"
         />
         <StatCard
           title="Avg Performance"
-          value={`${mockAgentStats.avgPerformance}%`}
+          value={`${agentStats.avgPerformance}%`}
           icon={TrendingUp}
           change={3}
           color="blue"
@@ -309,7 +341,7 @@ export default function FieldAgentsPage() {
             <p className="text-sm text-gray-600">Daily performance metrics over time</p>
           </div>
           <LineChart
-            data={mockPerformanceData}
+            data={performanceData}
             xKey="date"
             yKeys={[
               { key: 'placements', color: '#8B5CF6', name: 'Board Placements' },
@@ -326,7 +358,7 @@ export default function FieldAgentsPage() {
             <p className="text-sm text-gray-600">Daily commission earnings</p>
           </div>
           <BarChart
-            data={mockPerformanceData}
+            data={performanceData}
             xKey="date"
             yKeys={[
               { key: 'commissions', color: '#F59E0B', name: 'Daily Commissions (£)' },
@@ -343,7 +375,7 @@ export default function FieldAgentsPage() {
             <h3 className="text-lg font-medium text-gray-900">Activity Distribution</h3>
             <p className="text-sm text-gray-600">Breakdown of agent activities</p>
           </div>
-          <PieChart data={mockActivityData} height={250} />
+          <PieChart data={activityData} height={250} />
         </div>
 
         {/* Real-time Activity Feed */}
@@ -383,7 +415,7 @@ export default function FieldAgentsPage() {
 
       {/* Detailed Agent Table */}
       <DataTable
-        data={mockAgentData}
+        data={agentData}
         columns={agentColumns}
         title="Field Agent Details"
         searchable={true}

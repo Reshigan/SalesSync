@@ -85,7 +85,7 @@ router.post('/devices/register', requireFunction('mobile', 'create'), async (req
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         deviceDbId,
-        req.user.tenantId,
+        req.tenantId,
         req.user.userId,
         device_id,
         device_name,
@@ -166,7 +166,7 @@ router.post('/push/subscribe', requireFunction('mobile', 'create'), async (req, 
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         subscriptionId,
-        req.user.tenantId,
+        req.tenantId,
         req.user.userId,
         device_id,
         device_type,
@@ -221,7 +221,7 @@ router.post('/push/send', requireFunction('mobile', 'create'), async (req, res) 
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       notificationId,
-      req.user.tenantId,
+      req.tenantId,
       notification_type || 'general',
       title,
       body,
@@ -285,7 +285,7 @@ router.post('/offline/queue', requireFunction('mobile', 'create'), async (req, r
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       queueId,
-      req.user.tenantId,
+      req.tenantId,
       req.user.userId,
       device_id,
       entity_type,
@@ -315,7 +315,7 @@ router.get('/offline/queue', requireFunction('mobile', 'view'), async (req, res)
       WHERE tenant_id = ? AND user_id = ?
     `;
     
-    const params = [req.user.tenantId, req.user.userId];
+    const params = [req.tenantId, req.user.userId];
     
     if (device_id) {
       query += ' AND device_id = ?';
@@ -352,7 +352,7 @@ router.post('/offline/sync/:id', requireFunction('mobile', 'execute'), async (re
     const queueItem = await db.get(`
       SELECT * FROM offline_sync_queue 
       WHERE id = ? AND tenant_id = ? AND user_id = ?
-    `, [req.params.id, req.user.tenantId, req.user.userId]);
+    `, [req.params.id, req.tenantId, req.user.userId]);
     
     if (!queueItem) {
       return res.status(404).json({ success: false, error: 'Queue item not found' });
@@ -418,7 +418,7 @@ router.post('/barcode/scan', requireFunction('mobile', 'create'), async (req, re
     const product = await db.get(`
       SELECT * FROM products 
       WHERE tenant_id = ? AND (sku = ? OR barcode = ?)
-    `, [req.user.tenantId, barcode_value, barcode_value]);
+    `, [req.tenantId, barcode_value, barcode_value]);
     
     const scanResult = {
       found: !!product,
@@ -432,7 +432,7 @@ router.post('/barcode/scan', requireFunction('mobile', 'create'), async (req, re
         SELECT * FROM products 
         WHERE tenant_id = ? AND (sku LIKE ? OR name LIKE ?)
         LIMIT 5
-      `, [req.user.tenantId, `%${barcode_value}%`, `%${barcode_value}%`]);
+      `, [req.tenantId, `%${barcode_value}%`, `%${barcode_value}%`]);
       
       scanResult.suggestions = similarProducts;
     }
@@ -444,7 +444,7 @@ router.post('/barcode/scan', requireFunction('mobile', 'create'), async (req, re
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       scanId,
-      req.user.tenantId,
+      req.tenantId,
       req.user.userId,
       device_id,
       barcode_value,
@@ -498,7 +498,7 @@ router.post('/camera/capture', upload.single('photo'), requireFunction('mobile',
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       captureId,
-      req.user.tenantId,
+      req.tenantId,
       req.user.userId,
       device_id,
       capture_type,
@@ -541,7 +541,7 @@ router.get('/settings', requireFunction('mobile', 'view'), async (req, res) => {
       WHERE tenant_id = ? AND user_id = ?
     `;
     
-    const params = [req.user.tenantId, req.user.userId];
+    const params = [req.tenantId, req.user.userId];
     
     if (device_id) {
       query += ' AND device_id = ?';
@@ -625,7 +625,7 @@ router.post('/settings', requireFunction('mobile', 'create'), async (req, res) =
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `, [
           settingId,
-          req.user.tenantId,
+          req.tenantId,
           req.user.userId,
           device_id,
           category,
@@ -679,7 +679,7 @@ router.post('/location/track', requireFunction('mobile', 'create'), async (req, 
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       locationId,
-      req.user.tenantId,
+      req.tenantId,
       req.user.userId,
       device_id,
       latitude,
@@ -735,7 +735,7 @@ router.post('/performance/record', requireFunction('mobile', 'create'), async (r
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       metricId,
-      req.user.tenantId,
+      req.tenantId,
       req.user.userId,
       device_id,
       metric_type,

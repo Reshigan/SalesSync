@@ -12,7 +12,7 @@ const getDatabase = () => require('../utils/database').getDatabase();
 router.post('/receive', async (req, res) => {
   try {
     const { poId, warehouseId, items, receivedBy } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const receiptId = await new Promise((resolve, reject) => {
@@ -52,7 +52,7 @@ router.post('/receive', async (req, res) => {
 router.post('/receive/put-away', async (req, res) => {
   try {
     const { receiptId, productId, quantity, locationId } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const taskId = await new Promise((resolve, reject) => {
@@ -77,7 +77,7 @@ router.post('/receive/put-away', async (req, res) => {
 router.get('/receiving/pending', async (req, res) => {
   try {
     const { warehouseId } = req.query;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const pending = await new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ router.get('/receiving/pending', async (req, res) => {
 router.post('/pick/create-list', async (req, res) => {
   try {
     const { orderId, warehouseId, priority } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const pickListId = await new Promise((resolve, reject) => {
@@ -165,7 +165,7 @@ router.post('/pick/create-list', async (req, res) => {
 router.get('/pick/active', async (req, res) => {
   try {
     const { warehouseId } = req.query;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const active = await new Promise((resolve, reject) => {
@@ -200,7 +200,7 @@ router.get('/pick/active', async (req, res) => {
 router.post('/pick/confirm', async (req, res) => {
   try {
     const { pickListItemId, quantityPicked, locationId } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     await new Promise((resolve, reject) => {
@@ -231,7 +231,7 @@ router.post('/pick/confirm', async (req, res) => {
 router.post('/pack/start', async (req, res) => {
   try {
     const { pickListId, station } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const packingId = await new Promise((resolve, reject) => {
@@ -255,7 +255,7 @@ router.post('/pack/start', async (req, res) => {
 router.post('/pack/complete', async (req, res) => {
   try {
     const { packingId, boxes, totalWeight } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     await new Promise((resolve, reject) => {
@@ -286,7 +286,7 @@ router.post('/pack/complete', async (req, res) => {
 router.post('/ship/create', async (req, res) => {
   try {
     const { packingId, carrier, trackingNumber, shippingCost } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const manifestId = await new Promise((resolve, reject) => {
@@ -311,7 +311,7 @@ router.post('/ship/create', async (req, res) => {
 router.post('/ship/dispatch', async (req, res) => {
   try {
     const { manifestId } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     await new Promise((resolve, reject) => {
@@ -341,7 +341,7 @@ router.post('/ship/dispatch', async (req, res) => {
 router.post('/cycle-count/create', async (req, res) => {
   try {
     const { warehouseId, products, countType } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const countId = await new Promise((resolve, reject) => {
@@ -379,7 +379,7 @@ router.post('/cycle-count/create', async (req, res) => {
 router.post('/cycle-count/submit', async (req, res) => {
   try {
     const { countResultId, countedQuantity, notes } = req.body;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     await new Promise((resolve, reject) => {
@@ -406,7 +406,7 @@ router.post('/cycle-count/submit', async (req, res) => {
 router.get('/cycle-count/variance', async (req, res) => {
   try {
     const { countTaskId } = req.query;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     const variances = await new Promise((resolve, reject) => {
@@ -443,7 +443,7 @@ router.get('/cycle-count/variance', async (req, res) => {
 router.get('/analytics', async (req, res) => {
   try {
     const { warehouseId, period } = req.query;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
 
     // Calculate key metrics

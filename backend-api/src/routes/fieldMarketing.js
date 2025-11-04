@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 // ============================================
@@ -460,6 +460,68 @@ router.get('/commissions', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Get commissions error:', error);
     res.status(500).json({ error: 'Failed to fetch commissions' });
+  }
+});
+
+router.get('/board-installations', authMiddleware, async (req, res) => {
+  try {
+    const { status, startDate, endDate } = req.query;
+    const db = getDatabase();
+    
+    let sql = `
+      SELECT 
+        bp.*,
+        fmb.board_name,
+        fmb.board_type,
+        c.name as customer_name,
+        c.address as customer_address,
+        fv.visit_code
+      FROM board_placements bp
+      JOIN field_marketing_boards fmb ON bp.board_id = fmb.id
+      JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN field_visits fv ON bp.visit_id = fv.id
+      WHERE bp.agent_id = ?
+    `;
+    
+    const params = [req.user.id];
+    
+    if (status) {
+      sql += ` AND bp.placement_status = ?`;
+      params.push(status);
+    }
+    
+    if (startDate) {
+      sql += ` AND DATE(bp.created_at) >= ?`;
+      params.push(startDate);
+    }
+    
+    if (endDate) {
+      sql += ` AND DATE(bp.created_at) <= ?`;
+      params.push(endDate);
+    }
+    
+    sql += ` ORDER BY bp.created_at DESC LIMIT 100`;
+    
+    db.all(sql, params, (err, installations) => {
+      if (err) {
+        console.error('Get board installations error:', err);
+        return res.status(500).json({ 
+          success: false,
+          error: 'Failed to fetch board installations' 
+        });
+      }
+      
+      res.json({ 
+        success: true,
+        data: installations || []
+      });
+    });
+  } catch (error) {
+    console.error('Get board installations error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch board installations' 
+    });
   }
 });
 

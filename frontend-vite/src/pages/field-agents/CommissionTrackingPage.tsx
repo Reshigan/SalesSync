@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Search, Filter, DollarSign, TrendingUp, Users, Calendar, Download, Eye, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { fieldMarketingService } from '../../services/field-marketing.service'
 
 interface Commission {
   id: string
@@ -29,61 +30,35 @@ export default function CommissionTrackingPage() {
   const fetchCommissions = async () => {
     try {
       setLoading(true)
-      const mockCommissions: Commission[] = [
-        {
-          id: '1',
-          agentId: 'agent-1',
-          agentName: 'John Agent',
-          period: '2025-01',
-          salesAmount: 125000,
-          commissionRate: 5,
-          commissionAmount: 6250,
-          bonusAmount: 1000,
-          totalEarnings: 7250,
-          status: 'paid',
-          paidDate: new Date().toISOString()
-        },
-        {
-          id: '2',
-          agentId: 'agent-2',
-          agentName: 'Jane Field',
-          period: '2025-01',
-          salesAmount: 98000,
-          commissionRate: 5,
-          commissionAmount: 4900,
-          bonusAmount: 500,
-          totalEarnings: 5400,
-          status: 'paid',
-          paidDate: new Date().toISOString()
-        },
-        {
-          id: '3',
-          agentId: 'agent-3',
-          agentName: 'Mike Sales',
-          period: '2025-02',
-          salesAmount: 145000,
-          commissionRate: 5,
-          commissionAmount: 7250,
-          bonusAmount: 1500,
-          totalEarnings: 8750,
-          status: 'approved'
-        },
-        {
-          id: '4',
-          agentId: 'agent-1',
-          agentName: 'John Agent',
-          period: '2025-02',
-          salesAmount: 132000,
-          commissionRate: 5,
-          commissionAmount: 6600,
-          bonusAmount: 1200,
-          totalEarnings: 7800,
-          status: 'pending'
+      
+      const commissionsResponse = await fieldMarketingService.getCommissions({
+        status: filterStatus === 'all' ? undefined : filterStatus
+      })
+
+      const mappedCommissions: Commission[] = (commissionsResponse.data || []).map((comm: any) => {
+        const commissionAmount = comm.commission_amount || comm.amount || 0
+        const bonusAmount = comm.bonus_amount || comm.bonus || 0
+        const salesAmount = comm.sales_amount || comm.total_sales || (commissionAmount / (comm.commission_rate || 5)) * 100
+        
+        return {
+          id: comm.id,
+          agentId: comm.agent_id || 'unknown',
+          agentName: comm.agent_name || 'Unknown Agent',
+          period: comm.period || comm.commission_period || new Date(comm.created_at || Date.now()).toISOString().slice(0, 7),
+          salesAmount: salesAmount,
+          commissionRate: comm.commission_rate || comm.rate || 5,
+          commissionAmount: commissionAmount,
+          bonusAmount: bonusAmount,
+          totalEarnings: commissionAmount + bonusAmount,
+          status: comm.status || 'pending',
+          paidDate: comm.paid_date || comm.payment_date
         }
-      ]
-      setCommissions(mockCommissions)
+      })
+      
+      setCommissions(mappedCommissions)
     } catch (error) {
       console.error('Failed to fetch commissions:', error)
+      setCommissions([])
     } finally {
       setLoading(false)
     }
@@ -126,16 +101,25 @@ export default function CommissionTrackingPage() {
     }
   }
 
-  const approveCommission = (id: string) => {
-    setCommissions(commissions.map(c => 
-      c.id === id ? { ...c, status: 'approved' as const } : c
-    ))
+  const approveCommission = async (id: string) => {
+    try {
+      await fieldMarketingService.approveCommission(id)
+      setCommissions(commissions.map(c => 
+        c.id === id ? { ...c, status: 'approved' as const } : c
+      ))
+    } catch (error) {
+      console.error('Failed to approve commission:', error)
+    }
   }
 
-  const payCommission = (id: string) => {
-    setCommissions(commissions.map(c => 
-      c.id === id ? { ...c, status: 'paid' as const, paidDate: new Date().toISOString() } : c
-    ))
+  const payCommission = async (id: string) => {
+    try {
+      setCommissions(commissions.map(c => 
+        c.id === id ? { ...c, status: 'paid' as const, paidDate: new Date().toISOString() } : c
+      ))
+    } catch (error) {
+      console.error('Failed to pay commission:', error)
+    }
   }
 
   return (

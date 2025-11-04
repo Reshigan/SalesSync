@@ -5,7 +5,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all field operations
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operations = await getQuery(`
     SELECT 
@@ -47,7 +47,7 @@ router.post('/', asyncHandler(async (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       operationId,
-      req.user.tenantId,
+      req.tenantId,
       operation_type || 'visit',
       agent_id,
       customer_id,
@@ -70,10 +70,112 @@ router.post('/', asyncHandler(async (req, res) => {
   });
 }));
 
-// Get field operation by ID
+// Get live agent locations (MUST come before /:id to avoid route shadowing)
+router.get('/live/agent-locations', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  
+  const locations = await getQuery(`
+    SELECT 
+      a.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      u.phone,
+      u.email,
+      v.latitude,
+      v.longitude,
+      v.visit_date as timestamp,
+      v.status,
+      c.name as customer_name,
+      c.id as customer_id
+    FROM agents a
+    LEFT JOIN users u ON a.user_id = u.id
+    LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
+    LEFT JOIN customers c ON v.customer_id = c.id
+    WHERE a.tenant_id = ? 
+      AND v.latitude IS NOT NULL 
+      AND v.longitude IS NOT NULL
+    ORDER BY v.visit_date DESC
+  `, [tenantId, tenantId]);
+
+  res.json({
+    success: true,
+    data: locations || []
+  });
+}));
+
+// Get active visits (MUST come before /:id to avoid route shadowing)
+router.get('/live/active-visits', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  
+  const activeVisits = await getQuery(`
+    SELECT 
+      v.*,
+      a.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      c.name as customer_name,
+      c.address as customer_address,
+      c.latitude as customer_latitude,
+      c.longitude as customer_longitude
+    FROM visits v
+    JOIN agents a ON v.agent_id = a.id
+    LEFT JOIN users u ON a.user_id = u.id
+    JOIN customers c ON v.customer_id = c.id
+    WHERE v.tenant_id = ? AND v.status = 'in_progress'
+    ORDER BY v.visit_date DESC
+  `, [tenantId]);
+
+  res.json({
+    success: true,
+    data: activeVisits || []
+  });
+}));
+
+// Get operations by agent
+router.get('/agent/:agentId', asyncHandler(async (req, res) => {
+  const { agentId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const operations = await getQuery(`
+    SELECT * FROM field_operations 
+    WHERE agent_id = ? AND tenant_id = ?
+    ORDER BY scheduled_date DESC
+  `, [agentId, tenantId]);
+
+  res.json({
+    success: true,
+    data: operations || []
+  });
+}));
+
+// Get operations by status
+router.get('/status/:status', asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const tenantId = req.tenantId;
+  
+  const operations = await getQuery(`
+    SELECT * FROM field_operations 
+    WHERE status = ? AND tenant_id = ?
+    ORDER BY scheduled_date DESC
+  `, [status, tenantId]);
+
+  res.json({
+    success: true,
+    data: operations || []
+  });
+}));
+
+// Test endpoint
+router.get('/test/health', asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    message: 'Field Operations API is working',
+    timestamp: new Date().toISOString()
+  });
+}));
+
+// Get field operation by ID (MUST come after specific routes to avoid shadowing)
 router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const operation = await getOneQuery(`
     SELECT * FROM field_operations 
@@ -96,7 +198,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update field operation
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { operation_type, agent_id, customer_id, scheduled_date, status, completed_date, description } = req.body;
   
   const result = await runQuery(`
@@ -122,7 +224,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 // Delete field operation
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM field_operations 
@@ -139,49 +241,6 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'Field operation deleted successfully'
-  });
-}));
-
-// Get operations by agent
-router.get('/agent/:agentId', asyncHandler(async (req, res) => {
-  const { agentId } = req.params;
-  const tenantId = req.user.tenantId;
-  
-  const operations = await getQuery(`
-    SELECT * FROM field_operations 
-    WHERE agent_id = ? AND tenant_id = ?
-    ORDER BY scheduled_date DESC
-  `, [agentId, tenantId]);
-
-  res.json({
-    success: true,
-    data: operations || []
-  });
-}));
-
-// Get operations by status
-router.get('/status/:status', asyncHandler(async (req, res) => {
-  const { status } = req.params;
-  const tenantId = req.user.tenantId;
-  
-  const operations = await getQuery(`
-    SELECT * FROM field_operations 
-    WHERE status = ? AND tenant_id = ?
-    ORDER BY scheduled_date DESC
-  `, [status, tenantId]);
-
-  res.json({
-    success: true,
-    data: operations || []
-  });
-}));
-
-// Test endpoint
-router.get('/test/health', asyncHandler(async (req, res) => {
-  res.json({
-    success: true,
-    message: 'Field Operations API is working',
-    timestamp: new Date().toISOString()
   });
 }));
 

@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 // Get all commissions
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const { agent_id, status, transaction_type, from_date, to_date } = req.query;
 
     let query = `
@@ -64,7 +64,7 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
 
     const db = getDatabase();
     db.get(
@@ -100,7 +100,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 router.post('/:id/approve', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const userId = req.user.userId;
 
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
@@ -163,7 +163,7 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
 router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
   try {
     const { agentId } = req.params;
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const { from_date, to_date } = req.query;
 
     let dateFilter = '';
@@ -220,7 +220,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 
 // GET /api/commissions/stats - Commission statistics
 router.get('/stats', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const [commissionStats, topEarners, monthlyTrends] = await Promise.all([
     getOneQuery(`
