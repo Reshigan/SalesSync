@@ -92,12 +92,26 @@ const corsOptions = {
     const allowedOrigins = process.env.CORS_ORIGIN ? 
       process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : ['*'];
     
-    // Allow requests with no origin (like mobile apps, Postman, curl) or from allowed origins
-    if (allowedOrigins.includes('*') || !origin || allowedOrigins.some(allowed => origin.includes(allowed) || allowed.includes('*'))) {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    const isAllowed = allowedOrigins.includes('*') || 
+                     allowedOrigins.some(allowed => {
+                       if (allowed === '*') return true;
+                       if (allowed.includes('*')) {
+                         const pattern = allowed.replace(/\*/g, '.*');
+                         return new RegExp(`^${pattern}$`).test(origin);
+                       }
+                       return origin === allowed;
+                     });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
-      callback(null, true); // Allow anyway for production - we have other security measures
+      logger.warn(`CORS REJECTED origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
