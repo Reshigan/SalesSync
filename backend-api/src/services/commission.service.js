@@ -76,17 +76,35 @@ class CommissionService {
    * @param {string} currency - Currency code (default: ZAR)
    * @returns {Promise<object>} Created commission event
    */
-  async createEvent(tenantId, agentId, visitId, eventType, eventRefId, amount, currency = 'ZAR') {
+  async createEvent(tenantId, agentId, visitId, eventType, eventRefId, amount, currency = 'ZAR', idempotencyKey = null) {
     const db = getDatabase();
+    
+    if (idempotencyKey) {
+      const existing = await new Promise((resolve, reject) => {
+        db.get(
+          'SELECT * FROM commission_events WHERE tenant_id = ? AND idempotency_key = ?',
+          [tenantId, idempotencyKey],
+          (err, row) => {
+            if (err) return reject(err);
+            resolve(row);
+          }
+        );
+      });
+      
+      if (existing) {
+        return existing;
+      }
+    }
+    
     const id = uuidv4();
 
     return new Promise((resolve, reject) => {
       db.run(
         `INSERT INTO commission_events (
           id, tenant_id, agent_id, visit_id, event_type, event_ref_id,
-          amount, currency, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
-        [id, tenantId, agentId, visitId, eventType, eventRefId, amount, currency, 'pending'],
+          amount, currency, status, idempotency_key, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        [id, tenantId, agentId, visitId, eventType, eventRefId, amount, currency, 'pending', idempotencyKey],
         function(err) {
           if (err) {
             console.error('Error creating commission event:', err);
