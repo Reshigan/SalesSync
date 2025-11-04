@@ -58,6 +58,7 @@ const SystemSettingsPage = lazy(() => import('./pages/admin/SystemSettingsPage')
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'))
 const RolePermissionsPage = lazy(() => import('./pages/admin/RolePermissionsPage'))
 const DataImportExportPage = lazy(() => import('./pages/admin/DataImportExportPage'))
+const BoardManagementPage = lazy(() => import('./pages/admin/BoardManagementPage'))
 const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManagementPage'))
 const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
 const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
@@ -299,6 +300,11 @@ function App() {
             <Route path="admin/audit" element={
               <ProtectedRoute requiredRole="admin">
                 <AuditLogsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/boards" element={
+              <ProtectedRoute requiredRole="admin">
+                <BoardManagementPage />
               </ProtectedRoute>
             } />
 
