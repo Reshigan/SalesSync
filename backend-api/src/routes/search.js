@@ -34,7 +34,7 @@ router.get('/', authMiddleware, async (req, res) => {
          WHERE (name LIKE ? OR phone LIKE ? OR customer_code LIKE ?)
          AND tenant_id = ?
          LIMIT ?`,
-        [searchTerm, searchTerm, searchTerm, req.user.tenantId, maxLimit]
+        [searchTerm, searchTerm, searchTerm, req.tenantId, maxLimit]
       );
 
       customers.forEach(customer => {
@@ -57,7 +57,7 @@ router.get('/', authMiddleware, async (req, res) => {
          WHERE (name LIKE ? OR phone LIKE ? OR store_code LIKE ?)
          AND tenant_id = ?
          LIMIT ?`,
-        [searchTerm, searchTerm, searchTerm, req.user.tenantId, maxLimit]
+        [searchTerm, searchTerm, searchTerm, req.tenantId, maxLimit]
       );
 
       stores.forEach(store => {
@@ -80,7 +80,7 @@ router.get('/', authMiddleware, async (req, res) => {
          WHERE (name LIKE ? OR sku LIKE ? OR barcode LIKE ?)
          AND tenant_id = ?
          LIMIT ?`,
-        [searchTerm, searchTerm, searchTerm, req.user.tenantId, maxLimit]
+        [searchTerm, searchTerm, searchTerm, req.tenantId, maxLimit]
       );
 
       products.forEach(product => {
@@ -105,7 +105,7 @@ router.get('/', authMiddleware, async (req, res) => {
          WHERE (c.name LIKE ? OR u.name LIKE ?)
          AND fmv.tenant_id = ?
          LIMIT ?`,
-        [searchTerm, searchTerm, req.user.tenantId, maxLimit]
+        [searchTerm, searchTerm, req.tenantId, maxLimit]
       );
 
       visits.forEach(visit => {
@@ -129,7 +129,7 @@ router.get('/', authMiddleware, async (req, res) => {
          WHERE (o.order_number LIKE ? OR c.name LIKE ?)
          AND o.tenant_id = ?
          LIMIT ?`,
-        [searchTerm, searchTerm, req.user.tenantId, maxLimit]
+        [searchTerm, searchTerm, req.tenantId, maxLimit]
       );
 
       orders.forEach(order => {
