@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, X, AlertCircle } from 'lucide-react'
-import Button from '../ui/Button'
+import { Button } from '../ui/Button'
 
 interface Field {
   name: string
