@@ -4,6 +4,7 @@ import {
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
   Navigation, Gift, Users, TrendingUp
 } from 'lucide-react';
+import { apiClient } from '../../services/api.client';
 
 interface Campaign {
   id: string;
@@ -96,17 +97,10 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadCampaigns = async () => {
     try {
       setLoading(true);
-      const mockCampaigns: Campaign[] = [
-        {
-          id: '1',
-          name: 'Summer Promotion 2025',
-          campaign_type: 'product_launch',
-          start_date: '2025-11-01',
-          end_date: '2025-12-31',
-          budget: 50000
-        }
-      ];
-      setCampaigns(mockCampaigns);
+      const response = await apiClient.get('/api/campaigns', {
+        params: { status: 'active', limit: 100 }
+      });
+      setCampaigns(response.data.campaigns || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load campaigns');
     } finally {
@@ -117,16 +111,10 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'SuperMart Downtown',
-          address: '123 Main Street, Johannesburg',
-          latitude: -26.2041,
-          longitude: 28.0473
-        }
-      ];
-      setCustomers(mockCustomers);
+      const response = await apiClient.get('/api/customers', {
+        params: { limit: 100 }
+      });
+      setCustomers(response.data.customers || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load customers');
     } finally {
@@ -137,25 +125,8 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadActivationTasks = async () => {
     try {
       setLoading(true);
-      const mockTasks: ActivationTask[] = [
-        {
-          id: '1',
-          task_type: 'shelf_placement',
-          task_description: 'Place promotional materials on main shelf',
-          requires_photo: true,
-          is_mandatory: true,
-          status: 'pending'
-        },
-        {
-          id: '2',
-          task_type: 'pos_material',
-          task_description: 'Install POS display at checkout',
-          requires_photo: true,
-          is_mandatory: true,
-          status: 'pending'
-        }
-      ];
-      setTasks(mockTasks);
+      const response = await apiClient.get(`/api/campaigns/${selectedCampaign?.id}/tasks`);
+      setTasks(response.data.tasks || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load tasks');
     } finally {
@@ -166,17 +137,10 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadSampleAllocations = async () => {
     try {
       setLoading(true);
-      const mockAllocations: SampleAllocation[] = [
-        {
-          id: '1',
-          product_name: 'Energy Drink Sample',
-          brand_name: 'PowerUp',
-          allocated_quantity: 50,
-          distributed_quantity: 10,
-          remaining_quantity: 40
-        }
-      ];
-      setSampleAllocations(mockAllocations);
+      const response = await apiClient.get('/api/samples/allocations', {
+        params: { status: 'active' }
+      });
+      setSampleAllocations(response.data.allocations || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load sample allocations');
     } finally {
@@ -282,15 +246,32 @@ const ActivationWorkflowPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const summary = {
-        activation_id: `ACT-${Date.now()}`,
-        campaign: selectedCampaign.name,
-        customer: selectedCustomer.name,
-        tasks_completed: Object.keys(taskPhotos).length,
-        samples_distributed: Object.values(sampleDistributions).reduce((sum, qty) => sum + qty, 0)
+      
+      const activationData = {
+        campaign_id: selectedCampaign.id,
+        customer_id: selectedCustomer.id,
+        tasks: tasks.map(task => ({
+          task_id: task.id,
+          photo: taskPhotos[task.id],
+          notes: taskNotes[task.id],
+          status: taskPhotos[task.id] ? 'completed' : 'pending'
+        })),
+        samples: Object.entries(sampleDistributions).map(([allocationId, quantity]) => ({
+          allocation_id: allocationId,
+          quantity,
+          recipient_name: recipientInfo.name,
+          recipient_phone: recipientInfo.phone,
+          age_group: recipientInfo.age_group,
+          gender: recipientInfo.gender,
+          feedback: recipientInfo.feedback
+        })),
+        gps_lat: gpsLocation.lat,
+        gps_lng: gpsLocation.lng
       };
 
-      setActivationSummary(summary);
+      const response = await apiClient.post('/api/trade-marketing/activations', activationData);
+      
+      setActivationSummary(response.data);
       setCurrentStep(6);
     } catch (err: any) {
       setError(err.message || 'Failed to submit activation');
