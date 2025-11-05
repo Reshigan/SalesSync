@@ -39,6 +39,7 @@ const ProductDistributionPage = lazy(() => import('./pages/field-agents/ProductD
 const CommissionTrackingPage = lazy(() => import('./pages/field-agents/CommissionTrackingPage'))
 const AgentWorkflowPage = lazy(() => import('./pages/field-agents/AgentWorkflowPage'))
 const SurveyPage = lazy(() => import('./pages/field-agents/SurveyPage'))
+const TaskPage = lazy(() => import('./pages/field-agents/TaskPage'))
 const FieldMarketingDashboard = lazy(() => import('./pages/field-marketing/FieldMarketingDashboard'))
 const KYCDashboard = lazy(() => import('./pages/kyc/KYCDashboard'))
 const KYCManagement = lazy(() => import('./pages/kyc/KYCManagement'))
@@ -374,6 +375,7 @@ function App() {
             {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
             <Route path="field-agents/workflow" element={<AgentWorkflowPage />} />
+            <Route path="field-agents/task/:taskId" element={<TaskPage />} />
             <Route path="field-agents/survey/:instanceId" element={<SurveyPage />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
