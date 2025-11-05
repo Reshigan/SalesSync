@@ -5,10 +5,10 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authTenantMiddleware } = require('../middleware/authTenantMiddleware');
 const { getDatabase } = require('../database/queries');
 
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -36,7 +36,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/brand/:brandId', authenticateToken, async (req, res) => {
+router.get('/brand/:brandId', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -62,7 +62,7 @@ router.get('/brand/:brandId', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/active/:pictureType', authenticateToken, async (req, res) => {
+router.get('/active/:pictureType', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -94,7 +94,7 @@ router.get('/active/:pictureType', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -169,7 +169,7 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-router.put('/:id/deactivate', authenticateToken, async (req, res) => {
+router.put('/:id/deactivate', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -198,7 +198,7 @@ router.put('/:id/deactivate', authenticateToken, async (req, res) => {
   }
 });
 
-router.get('/comparisons', authenticateToken, async (req, res) => {
+router.get('/comparisons', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
@@ -250,7 +250,7 @@ router.get('/comparisons', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/compare', authenticateToken, async (req, res) => {
+router.post('/compare', authTenantMiddleware, async (req, res) => {
   try {
     const db = getDatabase();
     const tenantId = req.user.tenantId;
