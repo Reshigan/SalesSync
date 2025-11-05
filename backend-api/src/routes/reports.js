@@ -280,9 +280,9 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
   const snapshot = await getQuery(`
     SELECT 
       p.id as product_id,
-      p.product_code,
+      p.code as product_code,
       p.name as product_name,
-      p.category,
+      COALESCE(p.category_id, 'Uncategorized') as category,
       COALESCE(s.quantity_on_hand, 0) as current_stock,
       0 as reorder_level,
       0 as max_stock_level,
