@@ -12,6 +12,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { fieldMarketingService } from '../../services/field-marketing.service'
 
 interface BoardPlacement {
   id: string
@@ -83,187 +84,70 @@ export default function BoardPlacementPage() {
       setLoading(true)
       setError(null)
       
-      // Mock data for board placements
-      const mockCampaigns: Campaign[] = [
-        {
-          id: '1',
-          name: 'Summer Sale 2024',
-          client: 'Fashion Retailer Inc',
-          start_date: '2024-06-01',
-          end_date: '2024-08-31',
-          budget: 50000,
-          boards_required: 25,
-          boards_placed: 18,
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Tech Product Launch',
-          client: 'TechCorp Solutions',
-          start_date: '2024-07-15',
-          end_date: '2024-09-15',
-          budget: 75000,
-          boards_required: 30,
-          boards_placed: 22,
-          status: 'active'
-        },
-        {
-          id: '3',
-          name: 'Holiday Promotion',
-          client: 'Retail Chain Ltd',
-          start_date: '2024-11-01',
-          end_date: '2024-12-31',
-          budget: 100000,
-          boards_required: 50,
-          boards_placed: 0,
-          status: 'paused'
-        }
-      ]
+      const installationsResponse = await fieldMarketingService.getBoardInstallations({
+        status: statusFilter === 'all' ? undefined : statusFilter
+      })
 
-      const mockPlacements: BoardPlacement[] = [
-        {
-          id: '1',
-          board_id: 'BB-001',
-          board_type: 'billboard',
-          location: {
-            address: '123 Main St, New York, NY',
-            lat: 40.7128,
-            lng: -74.0060,
-            landmark: 'Near Central Station'
-          },
-          agent_id: '1',
-          agent_name: 'John Smith',
-          placement_date: '2024-06-15T09:00:00Z',
-          status: 'active',
-          photos: {
-            before: '/api/photos/bb001-before.jpg',
-            after: '/api/photos/bb001-after.jpg',
-            current: '/api/photos/bb001-current.jpg'
-          },
-          campaign: {
-            id: '1',
-            name: 'Summer Sale 2024',
-            client: 'Fashion Retailer Inc',
-            budget: 50000
-          },
-          metrics: {
-            visibility_score: 92,
-            foot_traffic: 15000,
-            estimated_impressions: 45000,
-            cost_per_impression: 0.12
-          },
-          notes: 'High visibility location, excellent condition',
-          verification_required: false,
-          last_verified: '2024-10-15T14:30:00Z'
+      const mappedPlacements: BoardPlacement[] = (installationsResponse.data || []).map((installation: any) => ({
+        id: installation.id,
+        board_id: installation.board_code || installation.board_id || `BOARD-${installation.id}`,
+        board_type: installation.board_type || 'billboard',
+        location: {
+          address: installation.location_address || installation.customer_address || 'Unknown location',
+          lat: installation.latitude || installation.location?.latitude || 0,
+          lng: installation.longitude || installation.location?.longitude || 0,
+          landmark: installation.landmark || installation.location_notes || ''
         },
-        {
-          id: '2',
-          board_id: 'PO-002',
-          board_type: 'poster',
-          location: {
-            address: '456 Broadway, New York, NY',
-            lat: 40.7589,
-            lng: -73.9851,
-            landmark: 'Times Square Area'
-          },
-          agent_id: '2',
-          agent_name: 'Sarah Johnson',
-          placement_date: '2024-07-20T11:30:00Z',
-          status: 'active',
-          photos: {
-            after: '/api/photos/po002-after.jpg',
-            current: '/api/photos/po002-current.jpg'
-          },
-          campaign: {
-            id: '2',
-            name: 'Tech Product Launch',
-            client: 'TechCorp Solutions',
-            budget: 75000
-          },
-          metrics: {
-            visibility_score: 88,
-            foot_traffic: 25000,
-            estimated_impressions: 75000,
-            cost_per_impression: 0.08
-          },
-          notes: 'Premium location with high foot traffic',
-          verification_required: true,
-          last_verified: '2024-10-10T16:45:00Z'
+        agent_id: installation.agent_id || 'unknown',
+        agent_name: installation.agent_name || 'Unknown Agent',
+        placement_date: installation.installation_date || installation.created_at || new Date().toISOString(),
+        removal_date: installation.removal_date,
+        status: installation.status || 'active',
+        photos: {
+          before: installation.pre_installation_photo || installation.before_photo,
+          after: installation.post_installation_photo || installation.after_photo || '',
+          current: installation.current_photo
         },
-        {
-          id: '3',
-          board_id: 'BN-003',
-          board_type: 'banner',
-          location: {
-            address: '789 5th Ave, New York, NY',
-            lat: 40.7614,
-            lng: -73.9776,
-            landmark: 'Shopping District'
-          },
-          agent_id: '3',
-          agent_name: 'Mike Davis',
-          placement_date: '2024-06-25T08:15:00Z',
-          removal_date: '2024-08-25T17:00:00Z',
-          status: 'removed',
-          photos: {
-            before: '/api/photos/bn003-before.jpg',
-            after: '/api/photos/bn003-after.jpg'
-          },
-          campaign: {
-            id: '1',
-            name: 'Summer Sale 2024',
-            client: 'Fashion Retailer Inc',
-            budget: 50000
-          },
-          metrics: {
-            visibility_score: 85,
-            foot_traffic: 12000,
-            estimated_impressions: 36000,
-            cost_per_impression: 0.15
-          },
-          notes: 'Campaign completed successfully, removed as scheduled',
-          verification_required: false,
-          last_verified: '2024-08-25T17:00:00Z'
+        campaign: {
+          id: installation.campaign_id || installation.brand_id || 'unknown',
+          name: installation.campaign_name || installation.brand_name || 'Unknown Campaign',
+          client: installation.client_name || installation.customer_name || 'Unknown Client',
+          budget: installation.campaign_budget || 0
         },
-        {
-          id: '4',
-          board_id: 'DG-004',
-          board_type: 'digital',
-          location: {
-            address: '321 Park Ave, New York, NY',
-            lat: 40.7505,
-            lng: -73.9934,
-            landmark: 'Business District'
-          },
-          agent_id: '1',
-          agent_name: 'John Smith',
-          placement_date: '2024-08-01T10:00:00Z',
-          status: 'damaged',
-          photos: {
-            after: '/api/photos/dg004-after.jpg',
-            current: '/api/photos/dg004-damaged.jpg'
-          },
-          campaign: {
-            id: '2',
-            name: 'Tech Product Launch',
-            client: 'TechCorp Solutions',
-            budget: 75000
-          },
-          metrics: {
-            visibility_score: 95,
-            foot_traffic: 20000,
-            estimated_impressions: 60000,
-            cost_per_impression: 0.10
-          },
-          notes: 'Digital display damaged by weather, requires repair',
-          verification_required: true,
-          last_verified: '2024-10-12T09:20:00Z'
+        metrics: {
+          visibility_score: installation.visibility_score || installation.coverage_percentage || 0,
+          foot_traffic: installation.foot_traffic || installation.estimated_traffic || 0,
+          estimated_impressions: installation.estimated_impressions || (installation.foot_traffic || 0) * 3,
+          cost_per_impression: installation.cost_per_impression || 0.10
+        },
+        notes: installation.notes || installation.installation_notes || '',
+        verification_required: installation.verification_required || installation.requires_verification || false,
+        last_verified: installation.last_verified || installation.verification_date || installation.updated_at || new Date().toISOString()
+      }))
+
+      // Derive campaigns from placements
+      const campaignMap = new Map<string, Campaign>()
+      mappedPlacements.forEach(placement => {
+        if (!campaignMap.has(placement.campaign.id)) {
+          campaignMap.set(placement.campaign.id, {
+            id: placement.campaign.id,
+            name: placement.campaign.name,
+            client: placement.campaign.client,
+            start_date: placement.placement_date,
+            end_date: placement.removal_date || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+            budget: placement.campaign.budget,
+            boards_required: 0,
+            boards_placed: 0,
+            status: 'active'
+          })
         }
-      ]
+        const campaign = campaignMap.get(placement.campaign.id)!
+        campaign.boards_placed++
+        campaign.boards_required = Math.max(campaign.boards_required, campaign.boards_placed + 5)
+      })
       
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setPlacements(mockPlacements)
-      setCampaigns(mockCampaigns)
+      setPlacements(mappedPlacements)
+      setCampaigns(Array.from(campaignMap.values()))
     } catch (err) {
       setError('Failed to load board placements data')
       console.error('Error loading placements:', err)

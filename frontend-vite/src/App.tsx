@@ -21,9 +21,11 @@ const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage'))
 const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
 const VanSalesPage = lazy(() => import('./pages/van-sales/VanSalesPage'))
 const VanSalesDashboard = lazy(() => import('./pages/van-sales/VanSalesDashboard'))
+const VanSalesWorkflowPage = lazy(() => import('./pages/van-sales/VanSalesWorkflowPage'))
 const RouteManagementPage = lazy(() => import('./pages/van-sales/RouteManagementPage'))
 const InventoryTrackingPage = lazy(() => import('./pages/van-sales/InventoryTrackingPage'))
 const TradeMarketingPage = lazy(() => import('./pages/trade-marketing/TradeMarketingPage'))
+const ActivationWorkflowPage = lazy(() => import('./pages/trade-marketing/ActivationWorkflowPage'))
 const EventsPage = lazy(() => import('./pages/events/EventsPage'))
 const BrandActivationsPage = lazy(() => import('./pages/brand-activations/BrandActivationsPage'))
 const CampaignsPage = lazy(() => import('./pages/campaigns/CampaignsPage'))
@@ -34,6 +36,8 @@ const LiveMappingPage = lazy(() => import('./pages/field-agents/LiveMappingPage'
 const BoardPlacementPage = lazy(() => import('./pages/field-agents/BoardPlacementPage'))
 const ProductDistributionPage = lazy(() => import('./pages/field-agents/ProductDistributionPage'))
 const CommissionTrackingPage = lazy(() => import('./pages/field-agents/CommissionTrackingPage'))
+const AgentWorkflowPage = lazy(() => import('./pages/field-agents/AgentWorkflowPage'))
+const SurveyPage = lazy(() => import('./pages/field-agents/SurveyPage'))
 const FieldMarketingDashboard = lazy(() => import('./pages/field-marketing/FieldMarketingDashboard'))
 const KYCDashboard = lazy(() => import('./pages/kyc/KYCDashboard'))
 const KYCManagement = lazy(() => import('./pages/kyc/KYCManagement'))
@@ -43,6 +47,7 @@ const SurveysManagement = lazy(() => import('./pages/surveys/SurveysManagement')
 const InventoryDashboard = lazy(() => import('./pages/inventory/InventoryDashboard'))
 const InventoryManagement = lazy(() => import('./pages/inventory/InventoryManagement'))
 const InventoryReports = lazy(() => import('./pages/inventory/InventoryReports'))
+const StockCountWorkflowPage = lazy(() => import('./pages/inventory/StockCountWorkflowPage'))
 const PromotionsDashboard = lazy(() => import('./pages/promotions/PromotionsDashboard'))
 const PromotionsManagement = lazy(() => import('./pages/promotions/PromotionsManagement'))
 const CustomersPage = lazy(() => import('./pages/customers/CustomersPage'))
@@ -57,6 +62,7 @@ const SystemSettingsPage = lazy(() => import('./pages/admin/SystemSettingsPage')
 const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'))
 const RolePermissionsPage = lazy(() => import('./pages/admin/RolePermissionsPage'))
 const DataImportExportPage = lazy(() => import('./pages/admin/DataImportExportPage'))
+const BoardManagementPage = lazy(() => import('./pages/admin/BoardManagementPage'))
 const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManagementPage'))
 const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
 const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
@@ -156,6 +162,7 @@ function App() {
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
+            <Route path="van-sales/workflow" element={<VanSalesWorkflowPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
 
@@ -188,6 +195,7 @@ function App() {
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
+            <Route path="inventory/stock-count" element={<StockCountWorkflowPage />} />
             <Route path="inventory/reports" element={<InventoryReports />} />
 
             {/* Promotions Routes */}
@@ -197,6 +205,7 @@ function App() {
 
             {/* Trade Marketing Routes */}
             <Route path="trade-marketing" element={<TradeMarketingPage />} />
+            <Route path="trade-marketing/activation" element={<ActivationWorkflowPage />} />
 
             {/* Events Routes */}
             <Route path="events" element={<EventsPage />} />
@@ -209,6 +218,8 @@ function App() {
 
             {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
+            <Route path="field-agents/workflow" element={<AgentWorkflowPage />} />
+            <Route path="field-agents/survey/:instanceId" element={<SurveyPage />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
             <Route path="field-agents/products" element={<ProductDistributionPage />} />
@@ -297,6 +308,11 @@ function App() {
             <Route path="admin/audit" element={
               <ProtectedRoute requiredRole="admin">
                 <AuditLogsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/boards" element={
+              <ProtectedRoute requiredRole="admin">
+                <BoardManagementPage />
               </ProtectedRoute>
             } />
 

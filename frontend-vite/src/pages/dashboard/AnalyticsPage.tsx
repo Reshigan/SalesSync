@@ -41,6 +41,8 @@ import {
   Pie
 } from 'recharts'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { analyticsService } from '../../services/analytics.service'
+import { dashboardService } from '../../services/dashboard.service'
 
 interface AnalyticsData {
   overview: {
@@ -131,86 +133,110 @@ export default function AnalyticsPage() {
       setLoading(true)
       setError(null)
       
-      // Mock data for comprehensive analytics
-      const mockData: AnalyticsData = {
+      const filter = {
+        start_date: getStartDate(dateRange),
+        end_date: new Date().toISOString().split('T')[0]
+      }
+      
+      const [
+        dashboardMetrics,
+        salesAnalytics,
+        agentAnalytics,
+        customerAnalytics,
+        productAnalytics
+      ] = await Promise.all([
+        analyticsService.getDashboardMetrics(filter),
+        analyticsService.getSalesAnalytics(filter),
+        analyticsService.getAgentAnalytics(filter),
+        analyticsService.getCustomerAnalytics(filter),
+        analyticsService.getProductAnalytics(filter)
+      ])
+      
+      const analyticsData: AnalyticsData = {
         overview: {
-          total_revenue: 125000,
-          revenue_growth: 12.5,
-          total_orders: 1250,
-          orders_growth: 8.3,
-          total_customers: 450,
-          customers_growth: 15.2,
-          total_products: 89,
-          products_growth: 5.1,
-          avg_order_value: 100,
-          aov_growth: 3.8,
-          conversion_rate: 24.5,
-          conversion_growth: 2.1
+          total_revenue: dashboardMetrics.sales?.total_revenue || 0,
+          revenue_growth: dashboardMetrics.sales?.revenue_growth || 0,
+          total_orders: dashboardMetrics.sales?.total_orders || 0,
+          orders_growth: dashboardMetrics.sales?.orders_growth || 0,
+          total_customers: dashboardMetrics.customers?.total_customers || 0,
+          customers_growth: ((dashboardMetrics.customers?.new_customers || 0) / (dashboardMetrics.customers?.total_customers || 1)) * 100,
+          total_products: dashboardMetrics.products?.total_products || 0,
+          products_growth: 0,
+          avg_order_value: dashboardMetrics.sales?.average_order_value || 0,
+          aov_growth: 0,
+          conversion_rate: dashboardMetrics.visits?.visit_success_rate || 0,
+          conversion_growth: 0
         },
-        revenue_trend: Array.from({ length: 30 }, (_, i) => ({
-          date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          revenue: Math.floor(Math.random() * 5000) + 2000,
-          orders: Math.floor(Math.random() * 50) + 20,
-          customers: Math.floor(Math.random() * 30) + 10
-        })),
-        sales_by_category: [
-          { category: 'Electronics', revenue: 45000, orders: 450, percentage: 36 },
-          { category: 'Clothing', revenue: 32000, orders: 320, percentage: 25.6 },
-          { category: 'Home & Garden', revenue: 25000, orders: 250, percentage: 20 },
-          { category: 'Sports', revenue: 15000, orders: 150, percentage: 12 },
-          { category: 'Books', revenue: 8000, orders: 80, percentage: 6.4 }
-        ],
-        top_products: [
-          { id: '1', name: 'Wireless Headphones', revenue: 15000, quantity_sold: 150, growth: 25.3 },
-          { id: '2', name: 'Smart Watch', revenue: 12000, quantity_sold: 120, growth: 18.7 },
-          { id: '3', name: 'Laptop Stand', revenue: 8500, quantity_sold: 85, growth: -5.2 },
-          { id: '4', name: 'Phone Case', revenue: 7200, quantity_sold: 240, growth: 12.1 },
-          { id: '5', name: 'Bluetooth Speaker', revenue: 6800, quantity_sold: 68, growth: 8.9 }
-        ],
-        customer_segments: [
-          { segment: 'Premium', count: 120, revenue: 60000, percentage: 48 },
-          { segment: 'Regular', count: 200, revenue: 45000, percentage: 36 },
-          { segment: 'New', count: 130, revenue: 20000, percentage: 16 }
-        ],
-        field_agent_performance: [
-          { agent_id: '1', agent_name: 'John Smith', total_sales: 25000, orders_count: 125, customers_visited: 85, conversion_rate: 68.2, commission_earned: 2500 },
-          { agent_id: '2', agent_name: 'Sarah Johnson', total_sales: 22000, orders_count: 110, customers_visited: 78, conversion_rate: 71.8, commission_earned: 2200 },
-          { agent_id: '3', agent_name: 'Mike Davis', total_sales: 18000, orders_count: 90, customers_visited: 65, conversion_rate: 69.2, commission_earned: 1800 },
-          { agent_id: '4', agent_name: 'Lisa Wilson', total_sales: 20000, orders_count: 100, customers_visited: 72, conversion_rate: 72.2, commission_earned: 2000 }
-        ],
-        geographic_data: [
-          { region: 'North', revenue: 45000, orders: 450, customers: 180, growth: 15.2 },
-          { region: 'South', revenue: 35000, orders: 350, customers: 140, growth: 8.7 },
-          { region: 'East', revenue: 25000, orders: 250, customers: 100, growth: 12.1 },
-          { region: 'West', revenue: 20000, orders: 200, customers: 80, growth: 5.3 }
-        ],
+        revenue_trend: salesAnalytics.sales_by_period || [],
+        sales_by_category: salesAnalytics.sales_by_category?.map((cat: any) => ({
+          category: cat.category_name || cat.category,
+          revenue: cat.revenue || 0,
+          orders: cat.orders || 0,
+          percentage: cat.percentage || 0
+        })) || [],
+        top_products: productAnalytics.top_selling_products?.map((p: any) => ({
+          id: p.product_id,
+          name: p.product_name,
+          revenue: p.revenue || 0,
+          quantity_sold: p.quantity_sold || 0,
+          growth: p.growth_rate || 0
+        })) || [],
+        customer_segments: customerAnalytics.customers_by_type?.map((seg: any) => ({
+          segment: seg.type,
+          count: seg.count,
+          revenue: 0,
+          percentage: seg.percentage
+        })) || [],
+        field_agent_performance: agentAnalytics.top_performers?.map((agent: any) => ({
+          agent_id: agent.agent_id,
+          agent_name: agent.agent_name,
+          total_sales: agent.total_sales || 0,
+          orders_count: 0,
+          customers_visited: agent.total_visits || 0,
+          conversion_rate: agent.success_rate || 0,
+          commission_earned: agent.commission_earned || 0
+        })) || [],
+        geographic_data: salesAnalytics.sales_by_region?.map((region: any) => ({
+          region: region.region_name || region.region,
+          revenue: region.revenue || 0,
+          orders: region.orders || 0,
+          customers: 0,
+          growth: 0
+        })) || [],
         time_analysis: {
-          peak_hours: Array.from({ length: 24 }, (_, i) => ({
-            hour: i,
-            orders: Math.floor(Math.random() * 20) + 5,
-            revenue: Math.floor(Math.random() * 2000) + 500
-          })),
-          peak_days: [
-            { day: 'Monday', orders: 180, revenue: 18000 },
-            { day: 'Tuesday', orders: 165, revenue: 16500 },
-            { day: 'Wednesday', orders: 190, revenue: 19000 },
-            { day: 'Thursday', orders: 175, revenue: 17500 },
-            { day: 'Friday', orders: 220, revenue: 22000 },
-            { day: 'Saturday', orders: 200, revenue: 20000 },
-            { day: 'Sunday', orders: 120, revenue: 12000 }
-          ]
+          peak_hours: [],
+          peak_days: []
         }
       }
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setData(mockData)
+      setData(analyticsData)
     } catch (err) {
       setError('Failed to load analytics data')
       console.error('Error loading analytics:', err)
     } finally {
       setLoading(false)
     }
+  }
+  
+  const getStartDate = (range: string): string => {
+    const now = new Date()
+    switch (range) {
+      case '7d':
+        now.setDate(now.getDate() - 7)
+        break
+      case '30d':
+        now.setDate(now.getDate() - 30)
+        break
+      case '90d':
+        now.setDate(now.getDate() - 90)
+        break
+      case '1y':
+        now.setFullYear(now.getFullYear() - 1)
+        break
+      default:
+        now.setDate(now.getDate() - 30)
+    }
+    return now.toISOString().split('T')[0]
   }
 
   const refreshData = async () => {

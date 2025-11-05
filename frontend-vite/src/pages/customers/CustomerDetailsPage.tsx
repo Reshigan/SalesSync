@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, Mail, Phone, MapPin, CreditCard, ShoppingCart, TrendingUp, Clock, FileText, DollarSign, Package, Activity, Save, X } from 'lucide-react'
+import { customersService } from '../../services/customers.service'
 
 
 interface Customer {
@@ -69,48 +70,75 @@ export default function CustomerDetailsPage() {
   const fetchCustomerDetails = async () => {
     try {
       setLoading(true)
-      // Mock data - replace with real API
-      const mockCustomer: Customer = {
-        id: id || '1',
-        customerCode: 'CUST0001',
-        name: 'ABC Retail Store',
-        email: 'contact@abcstore.com',
-        phone: '+1234567890',
-        address: '123 Main Street',
-        city: 'Metro City',
-        region: 'North',
-        territory: 'Territory A',
-        type: 'retail',
-        status: 'active',
-        creditLimit: 50000,
-        currentBalance: 12500,
-        totalOrders: 48,
-        totalRevenue: 125000,
-        lastOrderDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365).toISOString()
+      
+      if (!id) {
+        console.error('No customer ID provided')
+        setLoading(false)
+        return
       }
 
-      const mockOrders: Order[] = [
-        { id: '1', orderNumber: 'ORD001', orderDate: new Date().toISOString(), totalAmount: 5000, status: 'delivered', paymentStatus: 'paid' },
-        { id: '2', orderNumber: 'ORD002', orderDate: new Date(Date.now() - 86400000).toISOString(), totalAmount: 3500, status: 'shipped', paymentStatus: 'paid' },
-        { id: '3', orderNumber: 'ORD003', orderDate: new Date(Date.now() - 172800000).toISOString(), totalAmount: 4200, status: 'pending', paymentStatus: 'pending' }
-      ]
+      const [customerData, ordersData, transactionsData, visitsData] = await Promise.all([
+        customersService.getCustomer(id),
+        customersService.getCustomerOrders(id),
+        customersService.getCustomerTransactions(id),
+        customersService.getCustomerVisits(id)
+      ])
 
-      const mockPayments: Payment[] = [
-        { id: '1', paymentNumber: 'PAY001', paymentDate: new Date().toISOString(), amount: 5000, method: 'bank_transfer', status: 'completed' },
-        { id: '2', paymentNumber: 'PAY002', paymentDate: new Date(Date.now() - 86400000).toISOString(), amount: 3500, method: 'cash', status: 'completed' }
-      ]
+      if (customerData) {
+        const mappedCustomer: Customer = {
+          id: customerData.id,
+          customerCode: customerData.code,
+          name: customerData.name,
+          email: customerData.email || '',
+          phone: customerData.phone || '',
+          address: customerData.address || '',
+          city: '',
+          region: customerData.region_name || '',
+          territory: customerData.area_name || '',
+          type: customerData.type,
+          status: customerData.status,
+          creditLimit: customerData.credit_limit,
+          currentBalance: 0,
+          totalOrders: customerData.total_orders,
+          totalRevenue: customerData.total_sales,
+          lastOrderDate: new Date().toISOString(),
+          createdAt: customerData.created_at
+        }
+        
+        setCustomer(mappedCustomer)
+        setEditForm(mappedCustomer)
+      }
 
-      const mockVisits: Visit[] = [
-        { id: '1', visitDate: new Date().toISOString(), visitType: 'regular', agentName: 'John Agent', status: 'completed', notes: 'Routine check' },
-        { id: '2', visitDate: new Date(Date.now() - 172800000).toISOString(), visitType: 'delivery', agentName: 'Jane Field', status: 'completed', notes: 'Order delivery' }
-      ]
+      const mappedOrders: Order[] = (ordersData || []).map((order: any) => ({
+        id: order.id,
+        orderNumber: order.order_number || order.code,
+        orderDate: order.order_date || order.created_at,
+        totalAmount: order.total_amount || order.total,
+        status: order.status,
+        paymentStatus: order.payment_status || 'pending'
+      }))
+      setOrders(mappedOrders)
 
-      setCustomer(mockCustomer)
-      setOrders(mockOrders)
-      setPayments(mockPayments)
-      setVisits(mockVisits)
-      setEditForm(mockCustomer)
+      const mappedPayments: Payment[] = (transactionsData || []).map((txn: any) => ({
+        id: txn.id,
+        paymentNumber: txn.transaction_number || txn.reference,
+        paymentDate: txn.transaction_date || txn.created_at,
+        amount: txn.amount,
+        method: txn.payment_method || 'cash',
+        status: txn.status
+      }))
+      setPayments(mappedPayments)
+
+      const mappedVisits: Visit[] = (visitsData || []).map((visit: any) => ({
+        id: visit.id,
+        visitDate: visit.visit_date || visit.created_at,
+        visitType: visit.visit_type || visit.purpose,
+        agentName: visit.agent_name || 'Unknown',
+        status: visit.status,
+        notes: visit.notes || visit.remarks || ''
+      }))
+      setVisits(mappedVisits)
+
     } catch (error) {
       console.error('Failed to fetch customer details:', error)
     } finally {
@@ -120,8 +148,16 @@ export default function CustomerDetailsPage() {
 
   const handleSave = async () => {
     try {
-      // API call to update customer
-      console.log('Saving customer:', editForm)
+      if (!id) return
+      
+      const updates = {
+        name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone,
+        address: editForm.address
+      }
+      
+      await customersService.updateCustomer(id, updates)
       setCustomer({ ...customer!, ...editForm })
       setIsEditing(false)
     } catch (error) {

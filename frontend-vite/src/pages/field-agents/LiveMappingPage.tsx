@@ -17,6 +17,7 @@ import {
   Target
 } from 'lucide-react'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import { fieldOperationsService } from '../../services/field-operations.service'
 
 interface FieldAgent {
   id: string
@@ -88,151 +89,58 @@ export default function LiveMappingPage() {
       setLoading(true)
       setError(null)
       
-      // Mock data for field agents
-      const mockAgents: FieldAgent[] = [
-        {
-          id: '1',
-          name: 'John Smith',
-          phone: '+1-555-0101',
-          email: 'john.smith@company.com',
-          status: 'active',
-          location: {
-            lat: 40.7128,
-            lng: -74.0060,
-            address: '123 Main St, New York, NY',
-            timestamp: new Date().toISOString()
-          },
-          route: {
-            id: 'route-1',
-            name: 'Manhattan North',
-            customers_planned: 12,
-            customers_visited: 8,
-            progress: 67
-          },
-          device: {
-            battery_level: 85,
-            signal_strength: 4,
-            last_sync: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-          },
-          performance: {
-            visits_today: 8,
-            sales_today: 2500,
-            distance_traveled: 45.2,
-            efficiency_score: 92
-          }
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          phone: '+1-555-0102',
-          email: 'sarah.johnson@company.com',
-          status: 'active',
-          location: {
-            lat: 40.7589,
-            lng: -73.9851,
-            address: '456 Broadway, New York, NY',
-            timestamp: new Date().toISOString()
-          },
-          route: {
-            id: 'route-2',
-            name: 'Manhattan South',
-            customers_planned: 10,
-            customers_visited: 6,
-            progress: 60
-          },
-          device: {
-            battery_level: 92,
-            signal_strength: 5,
-            last_sync: new Date(Date.now() - 2 * 60 * 1000).toISOString()
-          },
-          performance: {
-            visits_today: 6,
-            sales_today: 1800,
-            distance_traveled: 32.1,
-            efficiency_score: 88
-          }
-        },
-        {
-          id: '3',
-          name: 'Mike Davis',
-          phone: '+1-555-0103',
-          email: 'mike.davis@company.com',
-          status: 'inactive',
-          location: {
-            lat: 40.6892,
-            lng: -74.0445,
-            address: '789 Liberty St, Jersey City, NJ',
-            timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-          },
-          route: {
-            id: 'route-3',
-            name: 'Jersey City',
-            customers_planned: 8,
-            customers_visited: 3,
-            progress: 38
-          },
-          device: {
-            battery_level: 23,
-            signal_strength: 2,
-            last_sync: new Date(Date.now() - 45 * 60 * 1000).toISOString()
-          },
-          performance: {
-            visits_today: 3,
-            sales_today: 950,
-            distance_traveled: 18.7,
-            efficiency_score: 65
-          }
-        }
-      ]
+      const [liveAgents, activeVisitsData] = await Promise.all([
+        fieldOperationsService.getLiveAgentLocations(),
+        fieldOperationsService.getActiveVisits()
+      ])
 
-      const mockVisits: CustomerVisit[] = [
-        {
-          id: '1',
-          customer_name: 'ABC Electronics',
-          address: '100 Tech Ave, New York, NY',
-          visit_time: '09:00 AM',
-          status: 'completed',
-          duration: 45,
-          sales_amount: 850,
-          notes: 'Successful sale, customer interested in new products'
+      const mappedAgents: FieldAgent[] = (liveAgents.data || []).map((agent: any) => ({
+        id: agent.agent_id || agent.id,
+        name: `${agent.first_name || ''} ${agent.last_name || ''}`.trim() || agent.agent_name || 'Unknown',
+        phone: agent.phone || 'N/A',
+        email: agent.email || 'N/A',
+        status: agent.status === 'active' ? 'active' : agent.status === 'inactive' ? 'inactive' : 'offline',
+        location: {
+          lat: agent.current_location?.latitude || agent.location?.latitude || 0,
+          lng: agent.current_location?.longitude || agent.location?.longitude || 0,
+          address: agent.current_location?.address || agent.location?.address || 'Unknown location',
+          timestamp: agent.current_location?.timestamp || agent.location?.timestamp || new Date().toISOString()
         },
-        {
-          id: '2',
-          customer_name: 'XYZ Retail',
-          address: '200 Commerce St, New York, NY',
-          visit_time: '10:30 AM',
-          status: 'completed',
-          duration: 30,
-          sales_amount: 650,
-          notes: 'Regular order placed'
+        route: {
+          id: agent.route_id || agent.territory?.id || 'unknown',
+          name: agent.route_name || agent.territory?.name || 'Unknown route',
+          customers_planned: agent.planned_visits || agent.route?.customers_planned || 0,
+          customers_visited: agent.completed_visits || agent.route?.customers_visited || 0,
+          progress: agent.route_progress || Math.round(((agent.completed_visits || 0) / (agent.planned_visits || 1)) * 100) || 0
         },
-        {
-          id: '3',
-          customer_name: 'Tech Solutions Inc',
-          address: '300 Innovation Blvd, New York, NY',
-          visit_time: '12:00 PM',
-          status: 'in_progress',
-          duration: 0,
-          sales_amount: 0,
-          notes: 'Currently presenting new product line'
+        device: {
+          battery_level: agent.device_info?.battery_level || agent.battery_level || 100,
+          signal_strength: agent.device_info?.signal_strength || agent.signal_strength || 5,
+          last_sync: agent.device_info?.last_sync || agent.last_sync || new Date().toISOString()
         },
-        {
-          id: '4',
-          customer_name: 'Global Distributors',
-          address: '400 Trade Center, New York, NY',
-          visit_time: '02:00 PM',
-          status: 'planned',
-          duration: 0,
-          sales_amount: 0,
-          notes: 'Scheduled for product demonstration'
+        performance: {
+          visits_today: agent.performance_metrics?.total_visits || agent.visits_today || 0,
+          sales_today: agent.performance_metrics?.total_revenue || agent.sales_today || 0,
+          distance_traveled: agent.distance_traveled || 0,
+          efficiency_score: agent.performance_metrics?.productivity_score || agent.efficiency_score || 0
         }
-      ]
+      }))
+
+      const mappedVisits: CustomerVisit[] = (activeVisitsData.data || []).map((visit: any) => ({
+        id: visit.id,
+        customer_name: visit.customer_name || 'Unknown Customer',
+        address: visit.location?.address || visit.customer_address || 'Unknown address',
+        visit_time: visit.scheduled_date ? new Date(visit.scheduled_date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+        status: visit.status || 'planned',
+        duration: visit.duration_minutes || 0,
+        sales_amount: visit.outcomes?.find((o: any) => o.type === 'sale')?.value || 0,
+        notes: visit.notes || visit.purpose || ''
+      }))
       
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setAgents(mockAgents)
-      setVisits(mockVisits)
-      if (mockAgents.length > 0) {
-        setSelectedAgent(mockAgents[0])
+      setAgents(mappedAgents)
+      setVisits(mappedVisits)
+      if (mappedAgents.length > 0) {
+        setSelectedAgent(mappedAgents[0])
       }
     } catch (err) {
       setError('Failed to load field agents data')

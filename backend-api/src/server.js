@@ -92,12 +92,26 @@ const corsOptions = {
     const allowedOrigins = process.env.CORS_ORIGIN ? 
       process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : ['*'];
     
-    // Allow requests with no origin (like mobile apps, Postman, curl) or from allowed origins
-    if (allowedOrigins.includes('*') || !origin || allowedOrigins.some(allowed => origin.includes(allowed) || allowed.includes('*'))) {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    const isAllowed = allowedOrigins.includes('*') || 
+                     allowedOrigins.some(allowed => {
+                       if (allowed === '*') return true;
+                       if (allowed.includes('*')) {
+                         const pattern = allowed.replace(/\*/g, '.*');
+                         return new RegExp(`^${pattern}$`).test(origin);
+                       }
+                       return origin === allowed;
+                     });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
-      logger.warn(`CORS blocked origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
-      callback(null, true); // Allow anyway for production - we have other security measures
+      logger.warn(`CORS REJECTED origin: ${origin}. Allowed: ${allowedOrigins.join(', ')}`);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -298,6 +312,8 @@ async function startServer() {
     const agentRoutes = require('./routes/agents');
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
+    const fieldOperationsRoutes = require('./routes/field-operations');
+    const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
     const regionsRoutes = require('./routes/regions');
@@ -314,6 +330,8 @@ async function startServer() {
     const customerActivationRoutes = require('./routes/customer-activation-simple');
     const surveysSimpleRoutes = require('./routes/surveys-simple');
     const samplesRoutes = require('./routes/samples');
+    const cashReconciliationRoutes = require('./routes/cash-reconciliation');
+    const hierarchyRoutes = require('./routes/hierarchy');
     const eventsRoutes = require('./routes/events');
     const campaignAnalyticsRoutes = require('./routes/campaign-analytics');
     const campaignExecutionRoutes = require('./routes/campaign-execution');
@@ -417,6 +435,14 @@ async function startServer() {
     app.use('/api/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/suppliers', authTenantMiddleware, supplierRoutes);
     app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
+    const useEnhancedFieldOps = process.env.AGENT_FLOW_V2 !== 'false'; // Default to true
+    if (useEnhancedFieldOps) {
+      logger.info('Using enhanced field-operations route with visit workflow');
+      app.use('/api/field-operations', authTenantMiddleware, fieldOperationsEnhancedRoutes);
+    } else {
+      logger.info('Using legacy field-operations route');
+      app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
+    }
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
@@ -433,6 +459,8 @@ async function startServer() {
     app.use('/api/customer-activation', authTenantMiddleware, customerActivationRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveysSimpleRoutes);
     app.use('/api/samples', authTenantMiddleware, samplesRoutes);
+    app.use('/api/cash-reconciliation', authTenantMiddleware, cashReconciliationRoutes);
+    app.use('/api/hierarchy', authTenantMiddleware, hierarchyRoutes);
     app.use('/api/events', authTenantMiddleware, eventsRoutes);
     app.use('/api/campaign-analytics', authTenantMiddleware, campaignAnalyticsRoutes);
     app.use('/api/campaigns', authTenantMiddleware, campaignExecutionRoutes);

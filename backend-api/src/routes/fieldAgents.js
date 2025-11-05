@@ -66,11 +66,11 @@ router.get('/', async (req, res, next) => {
     const { getQuery } = require('../database/init');
     
     const agents = await getQuery(
-      `SELECT a.*, u.name, u.email, u.phone, u.status
+      `SELECT a.*, u.first_name, u.last_name, u.email, u.phone, u.status
        FROM agents a
        JOIN users u ON a.user_id = u.id
        WHERE a.tenant_id = ? AND a.agent_type = 'field_marketing'
-       ORDER BY u.name`,
+       ORDER BY u.first_name, u.last_name`,
       [req.tenantId]
     );
     
