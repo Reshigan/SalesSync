@@ -249,7 +249,7 @@ function App() {
           </Route>
 
           {/* Protected Routes */}
-          <Route path="/*" element={
+          <Route path="/" element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
