@@ -187,14 +187,18 @@ export default function TaskPage() {
 
     setLoading(true);
     try {
-      await apiClient.post(`/field-operations/board-placements`, {
+      await apiClient.post(`/board-installations`, {
         task_id: taskId,
         visit_id: task?.visit_id,
         board_id: board.id,
-        photo_url: photoUrl,
-        storefront_polygon: storefrontPolygon,
-        board_polygon: boardPolygon,
-        coverage_percentage: coveragePercentage,
+        customer_id: task?.customer_id,
+        brand_id: board.brand_id,
+        after_photo_url: photoUrl,
+        storefront_polygon: JSON.stringify(storefrontPolygon),
+        board_polygon: JSON.stringify(boardPolygon),
+        latitude: 0, // TODO: Get from visit GPS
+        longitude: 0,
+        gps_accuracy: 0,
       });
 
       await apiClient.patch(`/field-operations/tasks/${taskId}`, {
@@ -211,11 +215,13 @@ export default function TaskPage() {
   const handleDistributionSubmit = async (data: Record<string, any>) => {
     setLoading(true);
     try {
-      await apiClient.post(`/field-operations/product-distributions`, {
+      await apiClient.post(`/product-distributions`, {
         task_id: taskId,
         visit_id: task?.visit_id,
         product_type_id: productType?.id,
-        form_data: data,
+        distribution_data: data,
+        customer_id: task?.customer_id,
+        agent_id: task?.agent_id,
       });
 
       await apiClient.patch(`/field-operations/tasks/${taskId}`, {
