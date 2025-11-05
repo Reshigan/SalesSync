@@ -44,6 +44,11 @@ const navigation = [
     permission: PERMISSIONS.VIEW_VAN_SALES,
     children: [
       {
+        name: 'Sales Workflow',
+        href: '/van-sales/workflow',
+        permission: PERMISSIONS.VIEW_VAN_SALES,
+      },
+      {
         name: 'Dashboard',
         href: '/van-sales/dashboard',
         permission: PERMISSIONS.VIEW_VAN_SALES,
@@ -71,6 +76,11 @@ const navigation = [
     icon: Route,
     permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
     children: [
+      {
+        name: 'Agent Workflow',
+        href: '/field-agents/workflow',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+      },
       {
         name: 'Dashboard',
         href: '/field-operations/dashboard',
@@ -156,6 +166,11 @@ const navigation = [
     permission: PERMISSIONS.VIEW_INVENTORY,
     children: [
       {
+        name: 'Stock Count Workflow',
+        href: '/inventory/stock-count',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
+      {
         name: 'Dashboard',
         href: '/inventory/dashboard',
         permission: PERMISSIONS.VIEW_INVENTORY,
@@ -196,6 +211,11 @@ const navigation = [
     icon: TrendingUp,
     permission: PERMISSIONS.VIEW_TRADE_MARKETING,
     children: [
+      {
+        name: 'Activation Workflow',
+        href: '/trade-marketing/activation',
+        permission: PERMISSIONS.VIEW_TRADE_MARKETING,
+      },
       {
         name: 'Promotions',
         href: '/trade-marketing/promotions',
