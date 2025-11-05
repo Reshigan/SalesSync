@@ -4,7 +4,7 @@ import {
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
   Navigation, ShoppingCart, DollarSign, FileText
 } from 'lucide-react';
-import { apiClient } from '../../services/api.client';
+import { apiClient } from '../../services/api.service';
 
 interface Customer {
   id: string;

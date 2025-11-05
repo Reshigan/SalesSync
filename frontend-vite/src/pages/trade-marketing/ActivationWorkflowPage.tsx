@@ -4,7 +4,7 @@ import {
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
   Navigation, Gift, Users, TrendingUp
 } from 'lucide-react';
-import { apiClient } from '../../services/api.client';
+import { apiClient } from '../../services/api.service';
 
 interface Campaign {
   id: string;

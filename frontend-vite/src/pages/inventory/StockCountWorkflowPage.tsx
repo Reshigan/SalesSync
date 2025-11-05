@@ -4,7 +4,7 @@ import {
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
   Navigation, Warehouse, TrendingUp, TrendingDown
 } from 'lucide-react';
-import { apiClient } from '../../services/api.client';
+import { apiClient } from '../../services/api.service';
 
 interface Warehouse {
   id: string;
