@@ -258,7 +258,7 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
         THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
         ELSE NULL END) as avg_visit_duration_minutes
     FROM users u
-    LEFT JOIN field_visits v ON u.id = v.agent_id AND v.tenant_id = ?
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?
     WHERE u.tenant_id = ?
       AND u.role = 'agent'
       AND (v.visit_date >= ? OR v.visit_date IS NULL)
@@ -314,12 +314,12 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
       COUNT(c.id) as total_transactions,
-      SUM(c.commission_amount) as total_commission,
-      SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END) as approved_commission,
-      SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END) as pending_commission,
-      SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END) as paid_commission
+      SUM(c.amount) as total_commission,
+      SUM(CASE WHEN c.status = 'approved' THEN c.amount ELSE 0 END) as approved_commission,
+      SUM(CASE WHEN c.status = 'pending' THEN c.amount ELSE 0 END) as pending_commission,
+      SUM(CASE WHEN c.status = 'paid' THEN c.amount ELSE 0 END) as paid_commission
     FROM users u
-    LEFT JOIN commission_events c ON u.id = c.agent_id AND c.tenant_id = ?
+    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = ?
     WHERE u.tenant_id = ?
       AND u.role = 'agent'
       ${agentId ? 'AND u.id = ?' : ''}
