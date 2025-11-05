@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Search, Filter, Download, RefreshCw } from 'lucide-react'
-import DataTable from '../ui/DataTable'
-import Button from '../ui/Button'
+import DataTable from '../ui/tables/DataTable'
+import { Button } from '../ui/Button'
 
 interface Column {
   key: string

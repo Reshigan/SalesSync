@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, RotateCcw, Clock, User } from 'lucide-react'
-import Button from '../ui/Button'
+import { Button } from '../ui/Button'
 
 interface DetailField {
   label: string

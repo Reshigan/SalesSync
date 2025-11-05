@@ -167,4 +167,153 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+router.get('/sales/summary', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { startDate, endDate, groupBy = 'day' } = req.query;
+
+  const salesData = await getQuery(`
+    SELECT 
+      DATE(o.order_date) as date,
+      COUNT(o.id) as total_orders,
+      SUM(o.total_amount) as total_revenue,
+      AVG(o.total_amount) as avg_order_value,
+      COUNT(DISTINCT o.customer_id) as unique_customers
+    FROM orders o
+    WHERE o.tenant_id = ?
+      AND o.order_date >= ?
+      AND o.order_date <= ?
+    GROUP BY DATE(o.order_date)
+    ORDER BY date DESC
+  `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
+
+  res.json({
+    success: true,
+    data: salesData
+  });
+}));
+
+router.get('/sales/exceptions', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { startDate, endDate } = req.query;
+
+  const exceptions = await getQuery(`
+    SELECT 
+      o.id,
+      o.order_number,
+      o.order_date,
+      o.total_amount,
+      o.status,
+      c.name as customer_name,
+      u.first_name || ' ' || u.last_name as agent_name,
+      'High Value Order' as exception_type
+    FROM orders o
+    LEFT JOIN customers c ON o.customer_id = c.id
+    LEFT JOIN users u ON o.agent_id = u.id
+    WHERE o.tenant_id = ?
+      AND o.total_amount > 10000
+      AND o.order_date >= ?
+      AND o.order_date <= ?
+    ORDER BY o.order_date DESC
+  `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
+
+  res.json({
+    success: true,
+    data: exceptions
+  });
+}));
+
+router.get('/operations/productivity', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { startDate, endDate } = req.query;
+
+  const productivity = await getQuery(`
+    SELECT 
+      u.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      COUNT(DISTINCT v.id) as total_visits,
+      COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
+      COUNT(DISTINCT v.customer_id) as unique_customers,
+      AVG(CASE WHEN v.check_out_time IS NOT NULL 
+        THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
+        ELSE NULL END) as avg_visit_duration_minutes
+    FROM users u
+    LEFT JOIN field_visits v ON u.id = v.agent_id AND v.tenant_id = ?
+    WHERE u.tenant_id = ?
+      AND u.role = 'agent'
+      AND (v.visit_date >= ? OR v.visit_date IS NULL)
+      AND (v.visit_date <= ? OR v.visit_date IS NULL)
+    GROUP BY u.id, u.first_name, u.last_name
+    ORDER BY completed_visits DESC
+  `, [tenantId, tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
+
+  res.json({
+    success: true,
+    data: productivity
+  });
+}));
+
+router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { warehouseId } = req.query;
+
+  const snapshot = await getQuery(`
+    SELECT 
+      p.id as product_id,
+      p.product_code,
+      p.name as product_name,
+      p.category,
+      i.quantity as current_stock,
+      i.reorder_level,
+      i.max_stock_level,
+      CASE 
+        WHEN i.quantity <= i.reorder_level THEN 'Low Stock'
+        WHEN i.quantity >= i.max_stock_level THEN 'Overstock'
+        ELSE 'Normal'
+      END as stock_status,
+      i.last_updated
+    FROM products p
+    LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = ?
+    WHERE p.tenant_id = ?
+      ${warehouseId ? 'AND i.warehouse_id = ?' : ''}
+    ORDER BY stock_status DESC, p.name ASC
+  `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
+
+  res.json({
+    success: true,
+    data: snapshot
+  });
+}));
+
+router.get('/finance/commissions', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { startDate, endDate, agentId } = req.query;
+
+  const commissions = await getQuery(`
+    SELECT 
+      u.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      COUNT(c.id) as total_transactions,
+      SUM(c.commission_amount) as total_commission,
+      SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END) as approved_commission,
+      SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END) as pending_commission,
+      SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END) as paid_commission
+    FROM users u
+    LEFT JOIN commission_events c ON u.id = c.agent_id AND c.tenant_id = ?
+    WHERE u.tenant_id = ?
+      AND u.role = 'agent'
+      ${agentId ? 'AND u.id = ?' : ''}
+      AND (c.created_at >= ? OR c.created_at IS NULL)
+      AND (c.created_at <= ? OR c.created_at IS NULL)
+    GROUP BY u.id, u.first_name, u.last_name
+    ORDER BY total_commission DESC
+  `, agentId 
+    ? [tenantId, tenantId, agentId, startDate || '2024-01-01', endDate || '2025-12-31']
+    : [tenantId, tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
+
+  res.json({
+    success: true,
+    data: commissions
+  });
+}));
+
 module.exports = router;

@@ -1,10 +1,10 @@
-/**
 import { API_CONFIG } from '../config/api.config'
+import { apiClient } from './api.service'
+
+/**
  * Reports Service
  * Handles report generation and analytics
  */
-
-import { apiClient } from './api.service'
 
 export interface Report {
   id: string
