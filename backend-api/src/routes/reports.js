@@ -301,7 +301,7 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    data: snapshot
+    data: snapshot || []
   });
 }));
 
