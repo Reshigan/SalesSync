@@ -313,6 +313,7 @@ async function startServer() {
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
     const fieldOperationsRoutes = require('./routes/field-operations');
+    const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks');
     const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
@@ -443,6 +444,7 @@ async function startServer() {
       logger.info('Using legacy field-operations route');
       app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
     }
+    app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes);
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
