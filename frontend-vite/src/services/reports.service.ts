@@ -189,6 +189,68 @@ class ReportsService {
       throw error
     }
   }
+
+  async getSalesReport(reportType: string, filters: Record<string, any>): Promise<{ data: any[] }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/sales/${reportType}`, { params: filters })
+      return { data: response.data.data || [] }
+    } catch (error) {
+      console.error(`Failed to fetch sales ${reportType} report:`, error)
+      return { data: [] }
+    }
+  }
+
+  async getFieldOperationsReport(reportType: string, filters: Record<string, any>): Promise<{ data: any[] }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/field-operations/${reportType}`, { params: filters })
+      return { data: response.data.data || [] }
+    } catch (error) {
+      console.error(`Failed to fetch field operations ${reportType} report:`, error)
+      return { data: [] }
+    }
+  }
+
+  async getInventoryReport(reportType: string, filters: Record<string, any>): Promise<{ data: any[] }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/inventory/${reportType}`, { params: filters })
+      return { data: response.data.data || [] }
+    } catch (error) {
+      console.error(`Failed to fetch inventory ${reportType} report:`, error)
+      return { data: [] }
+    }
+  }
+
+  async getFinanceReport(reportType: string, filters: Record<string, any>): Promise<{ data: any[] }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/finance/${reportType}`, { params: filters })
+      return { data: response.data.data || [] }
+    } catch (error) {
+      console.error(`Failed to fetch finance ${reportType} report:`, error)
+      return { data: [] }
+    }
+  }
+
+  async exportReport(module: string, reportType: string, format: 'csv' | 'excel' | 'pdf', filters: Record<string, any>): Promise<void> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${module}/${reportType}/export`, {
+        params: { ...filters, format },
+        responseType: 'blob'
+      })
+      
+      const blob = new Blob([response.data])
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${module}-${reportType}-${Date.now()}.${format}`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export report:', error)
+      throw error
+    }
+  }
 }
 
 export const reportsService = new ReportsService()

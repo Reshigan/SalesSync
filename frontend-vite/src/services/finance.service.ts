@@ -166,6 +166,72 @@ class FinanceService {
       throw error
     }
   }
+
+  async getCommissionPayouts(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get('/commissions/payouts', { params: filter })
+      return {
+        data: response.data.data || [],
+        total: response.data.data?.length || 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch commission payouts:', error)
+      throw error
+    }
+  }
+
+  async getCommissionPayout(id: number): Promise<{ data: any }> {
+    try {
+      const response = await apiClient.get(`/commissions/payouts/${id}`)
+      return { data: response.data.data }
+    } catch (error) {
+      console.error('Failed to fetch commission payout:', error)
+      throw error
+    }
+  }
+
+  async getCashReconciliations(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get('/finance/cash-reconciliation', { params: filter })
+      return {
+        data: response.data.data || [],
+        total: response.data.data?.length || 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch cash reconciliations:', error)
+      throw error
+    }
+  }
+
+  async getCashReconciliation(id: number): Promise<{ data: any }> {
+    try {
+      const response = await apiClient.get(`/finance/cash-reconciliation/${id}`)
+      return { data: response.data.data }
+    } catch (error) {
+      console.error('Failed to fetch cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async createCashReconciliation(data: any): Promise<{ data: any }> {
+    try {
+      const response = await apiClient.post('/finance/cash-reconciliation', data)
+      return { data: response.data.data }
+    } catch (error) {
+      console.error('Failed to create cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async getAgents(): Promise<{ data: any[] }> {
+    try {
+      const response = await apiClient.get('/field-agents')
+      return { data: response.data.data || [] }
+    } catch (error) {
+      console.error('Failed to fetch agents:', error)
+      throw error
+    }
+  }
 }
 
 export const financeService = new FinanceService()
