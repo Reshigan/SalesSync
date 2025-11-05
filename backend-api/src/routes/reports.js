@@ -284,11 +284,11 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
       p.name as product_name,
       p.category,
       COALESCE(s.quantity_on_hand, 0) as current_stock,
-      COALESCE(s.reorder_point, 0) as reorder_level,
-      COALESCE(s.max_quantity, 0) as max_stock_level,
+      0 as reorder_level,
+      0 as max_stock_level,
       CASE 
-        WHEN COALESCE(s.quantity_on_hand, 0) <= COALESCE(s.reorder_point, 0) AND COALESCE(s.reorder_point, 0) > 0 THEN 'Low Stock'
-        WHEN COALESCE(s.quantity_on_hand, 0) >= COALESCE(s.max_quantity, 0) AND COALESCE(s.max_quantity, 0) > 0 THEN 'Overstock'
+        WHEN COALESCE(s.quantity_on_hand, 0) = 0 THEN 'Out of Stock'
+        WHEN COALESCE(s.quantity_on_hand, 0) < 10 THEN 'Low Stock'
         ELSE 'Normal'
       END as stock_status,
       s.updated_at as last_updated
