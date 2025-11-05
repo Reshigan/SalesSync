@@ -9,7 +9,7 @@ export default function SalesReturnDetail() {
   const [returnData, setReturnData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect() => {
+  useEffect(() => {
     loadReturn()
   }, [id])
 
