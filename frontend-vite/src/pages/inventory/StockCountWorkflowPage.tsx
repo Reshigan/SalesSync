@@ -4,6 +4,7 @@ import {
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
   Navigation, Warehouse, TrendingUp, TrendingDown
 } from 'lucide-react';
+import { apiClient } from '../../services/api.client';
 
 interface Warehouse {
   id: string;
@@ -71,17 +72,10 @@ const StockCountWorkflowPage: React.FC = () => {
   const loadWarehouses = async () => {
     try {
       setLoading(true);
-      const mockWarehouses: Warehouse[] = [
-        {
-          id: '1',
-          name: 'Main Warehouse',
-          code: 'WH001',
-          address: '123 Industrial Road, Johannesburg',
-          latitude: -26.2041,
-          longitude: 28.0473
-        }
-      ];
-      setWarehouses(mockWarehouses);
+      const response = await apiClient.get('/api/warehouses', {
+        params: { limit: 100 }
+      });
+      setWarehouses(response.data.warehouses || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load warehouses');
     } finally {
@@ -92,11 +86,16 @@ const StockCountWorkflowPage: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const mockProducts: Product[] = [
-        { id: '1', name: 'Product A', code: 'PRD001', system_quantity: 100 },
-        { id: '2', name: 'Product B', code: 'PRD002', system_quantity: 50 }
-      ];
-      setProducts(mockProducts);
+      const response = await apiClient.get('/api/products', {
+        params: { limit: 100 }
+      });
+      const productsData = response.data.products || [];
+      setProducts(productsData.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        code: p.sku || p.code,
+        system_quantity: p.stock_quantity || 0
+      })));
     } catch (err: any) {
       setError(err.message || 'Failed to load products');
     } finally {
@@ -226,16 +225,25 @@ const StockCountWorkflowPage: React.FC = () => {
 
     try {
       setLoading(true);
-      const summary = {
-        count_id: `CNT-${Date.now()}`,
-        warehouse: selectedWarehouse.name,
-        total_items: countItems.length,
-        total_variance: countItems.reduce((sum, item) => sum + Math.abs(item.variance), 0),
-        overages: countItems.filter(item => item.variance > 0).length,
-        shortages: countItems.filter(item => item.variance < 0).length
+      
+      const countData = {
+        warehouse_id: selectedWarehouse.id,
+        items: countItems.map(item => ({
+          product_id: item.product_id,
+          system_quantity: item.system_quantity,
+          counted_quantity: item.counted_quantity,
+          variance: item.variance,
+          variance_reason: item.variance_reason
+        })),
+        photo,
+        notes,
+        gps_lat: gpsLocation.lat,
+        gps_lng: gpsLocation.lng
       };
 
-      setCountSummary(summary);
+      const response = await apiClient.post('/api/inventory/stock-counts', countData);
+      
+      setCountSummary(response.data);
       setCurrentStep(5);
     } catch (err: any) {
       setError(err.message || 'Failed to submit stock count');
