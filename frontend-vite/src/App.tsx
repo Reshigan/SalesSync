@@ -40,6 +40,8 @@ const CommissionTrackingPage = lazy(() => import('./pages/field-agents/Commissio
 const AgentWorkflowPage = lazy(() => import('./pages/field-agents/AgentWorkflowPage'))
 const SurveyPage = lazy(() => import('./pages/field-agents/SurveyPage'))
 const TaskPage = lazy(() => import('./pages/field-agents/TaskPage'))
+const SurveyBuilderPage = lazy(() => import('./pages/admin/SurveyBuilderPage'))
+const ProductTypeBuilderPage = lazy(() => import('./pages/admin/ProductTypeBuilderPage'))
 const FieldMarketingDashboard = lazy(() => import('./pages/field-marketing/FieldMarketingDashboard'))
 const KYCDashboard = lazy(() => import('./pages/kyc/KYCDashboard'))
 const KYCManagement = lazy(() => import('./pages/kyc/KYCManagement'))
@@ -510,6 +512,26 @@ function App() {
             <Route path="admin/boards" element={
               <ProtectedRoute requiredRole="admin">
                 <BoardManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/surveys" element={
+              <ProtectedRoute requiredRole="admin">
+                <SurveyBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/surveys/:id" element={
+              <ProtectedRoute requiredRole="admin">
+                <SurveyBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/product-types" element={
+              <ProtectedRoute requiredRole="admin">
+                <ProductTypeBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/product-types/:id" element={
+              <ProtectedRoute requiredRole="admin">
+                <ProductTypeBuilderPage />
               </ProtectedRoute>
             } />
 
