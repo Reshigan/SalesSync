@@ -1,0 +1,87 @@
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import TransactionDetail from '../../../components/transactions/TransactionDetail'
+import { vanSalesService } from '../../../services/van-sales.service'
+import { formatCurrency, formatDate } from '../../../utils/format'
+
+export default function VanSalesOrderDetail() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [order, setOrder] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadOrder()
+  }, [id])
+
+  const loadOrder = async () => {
+    setLoading(true)
+    try {
+      const response = await vanSalesService.getOrder(Number(id))
+      setOrder(response.data)
+    } catch (error) {
+      console.error('Failed to load order:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReverse = async () => {
+    if (!confirm('Are you sure you want to reverse this order? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      await vanSalesService.reverseOrder(Number(id))
+      navigate('/van-sales/orders')
+    } catch (error) {
+      console.error('Failed to reverse order:', error)
+      alert('Failed to reverse order')
+    }
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Loading...</div>
+  }
+
+  if (!order) {
+    return <div className="flex items-center justify-center h-64">Order not found</div>
+  }
+
+  const fields = [
+    { label: 'Order Number', value: order.order_number },
+    { label: 'Order Date', value: formatDate(order.order_date) },
+    { label: 'Customer', value: order.customer_name },
+    { label: 'Route', value: order.route_name },
+    { label: 'Delivery Date', value: formatDate(order.delivery_date) },
+    { label: 'Payment Method', value: order.payment_method },
+    { label: 'Total Amount', value: formatCurrency(order.total_amount) },
+    { label: 'Status', value: order.status },
+    { label: 'Notes', value: order.notes },
+    { label: 'Created By', value: order.created_by },
+    { label: 'Created At', value: formatDate(order.created_at) }
+  ]
+
+  const auditTrail = order.audit_trail || []
+
+  const statusColor = {
+    pending: 'yellow',
+    confirmed: 'blue',
+    delivered: 'green',
+    cancelled: 'red',
+    reversed: 'gray'
+  }[order.status] as 'green' | 'yellow' | 'red' | 'gray'
+
+  return (
+    <TransactionDetail
+      title={`Order ${order.order_number}`}
+      fields={fields}
+      auditTrail={auditTrail}
+      editPath={order.status === 'pending' ? `/van-sales/orders/${id}/edit` : undefined}
+      onReverse={order.status === 'delivered' ? handleReverse : undefined}
+      backPath="/van-sales/orders"
+      status={order.status}
+      statusColor={statusColor}
+    />
+  )
+}
