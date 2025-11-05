@@ -283,17 +283,17 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
       p.product_code,
       p.name as product_name,
       p.category,
-      COALESCE(s.quantity, 0) as current_stock,
-      COALESCE(s.reorder_level, 0) as reorder_level,
-      COALESCE(s.max_stock_level, 0) as max_stock_level,
+      COALESCE(s.quantity_on_hand, 0) as current_stock,
+      COALESCE(s.reorder_point, 0) as reorder_level,
+      COALESCE(s.max_quantity, 0) as max_stock_level,
       CASE 
-        WHEN COALESCE(s.quantity, 0) <= COALESCE(s.reorder_level, 0) AND COALESCE(s.reorder_level, 0) > 0 THEN 'Low Stock'
-        WHEN COALESCE(s.quantity, 0) >= COALESCE(s.max_stock_level, 0) AND COALESCE(s.max_stock_level, 0) > 0 THEN 'Overstock'
+        WHEN COALESCE(s.quantity_on_hand, 0) <= COALESCE(s.reorder_point, 0) AND COALESCE(s.reorder_point, 0) > 0 THEN 'Low Stock'
+        WHEN COALESCE(s.quantity_on_hand, 0) >= COALESCE(s.max_quantity, 0) AND COALESCE(s.max_quantity, 0) > 0 THEN 'Overstock'
         ELSE 'Normal'
       END as stock_status,
       s.updated_at as last_updated
     FROM products p
-    LEFT JOIN stock s ON p.id = s.product_id AND s.tenant_id = ?
+    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = ?
     WHERE p.tenant_id = ?
       ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
     ORDER BY stock_status DESC, p.name ASC
