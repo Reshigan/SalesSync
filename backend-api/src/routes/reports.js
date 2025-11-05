@@ -283,19 +283,19 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
       p.product_code,
       p.name as product_name,
       p.category,
-      i.quantity as current_stock,
-      i.reorder_level,
-      i.max_stock_level,
+      COALESCE(s.quantity, 0) as current_stock,
+      COALESCE(s.reorder_level, 0) as reorder_level,
+      COALESCE(s.max_stock_level, 0) as max_stock_level,
       CASE 
-        WHEN i.quantity <= i.reorder_level THEN 'Low Stock'
-        WHEN i.quantity >= i.max_stock_level THEN 'Overstock'
+        WHEN COALESCE(s.quantity, 0) <= COALESCE(s.reorder_level, 0) AND COALESCE(s.reorder_level, 0) > 0 THEN 'Low Stock'
+        WHEN COALESCE(s.quantity, 0) >= COALESCE(s.max_stock_level, 0) AND COALESCE(s.max_stock_level, 0) > 0 THEN 'Overstock'
         ELSE 'Normal'
       END as stock_status,
-      i.last_updated
+      s.updated_at as last_updated
     FROM products p
-    LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = ?
+    LEFT JOIN stock s ON p.id = s.product_id AND s.tenant_id = ?
     WHERE p.tenant_id = ?
-      ${warehouseId ? 'AND i.warehouse_id = ?' : ''}
+      ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
     ORDER BY stock_status DESC, p.name ASC
   `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
 
@@ -314,10 +314,10 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
       COUNT(c.id) as total_transactions,
-      SUM(c.amount) as total_commission,
-      SUM(CASE WHEN c.status = 'approved' THEN c.amount ELSE 0 END) as approved_commission,
-      SUM(CASE WHEN c.status = 'pending' THEN c.amount ELSE 0 END) as pending_commission,
-      SUM(CASE WHEN c.status = 'paid' THEN c.amount ELSE 0 END) as paid_commission
+      COALESCE(SUM(c.commission_amount), 0) as total_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END), 0) as approved_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END), 0) as pending_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END), 0) as paid_commission
     FROM users u
     LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = ?
     WHERE u.tenant_id = ?
