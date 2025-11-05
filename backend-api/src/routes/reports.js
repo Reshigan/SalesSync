@@ -229,7 +229,7 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
       'High Value Order' as exception_type
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
-    LEFT JOIN users u ON o.agent_id = u.id
+    LEFT JOIN users u ON o.salesman_id = u.id
     WHERE o.tenant_id = ?
       AND o.total_amount > 10000
       AND o.order_date >= ?
