@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { tenantService } from './services/tenant.service'
+import { ModuleProvider } from './contexts/ModuleContext'
 
 // Layout Components (keep eager loaded)
 import AuthLayout from './components/layout/AuthLayout'
@@ -124,14 +125,15 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <ToastContainer />
-        <Suspense fallback={
-          <div className="min-h-screen flex items-center justify-center">
-            <LoadingSpinner size="lg" />
-          </div>
-        }>
-          <Routes>
+      <ModuleProvider>
+        <div className="min-h-screen bg-gray-50">
+          <ToastContainer />
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          }>
+            <Routes>
           {/* Public Routes */}
           <Route path="/auth/*" element={
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthLayout />
@@ -326,9 +328,10 @@ function App() {
               <Navigate to="/dashboard" replace /> : 
               <Navigate to="/auth/login" replace />
           } />
-        </Routes>
-        </Suspense>
-      </div>
+          </Routes>
+          </Suspense>
+        </div>
+      </ModuleProvider>
     </ErrorBoundary>
   )
 }
