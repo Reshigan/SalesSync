@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { getDatabase } = require('../database/init');
+
+function getQuery(sql, params = []) {
+  const db = getDatabase();
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function getOneQuery(sql, params = []) {
+  const db = getDatabase();
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
 
 // Generate Report
 router.post('/generate', async (req, res) => {
@@ -168,7 +189,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
 }));
 
 router.get('/sales/summary', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate, groupBy = 'day' } = req.query;
 
   const salesData = await getQuery(`
@@ -193,7 +214,7 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
 }));
 
 router.get('/sales/exceptions', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate } = req.query;
 
   const exceptions = await getQuery(`
@@ -202,13 +223,13 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
       o.order_number,
       o.order_date,
       o.total_amount,
-      o.status,
+      o.order_status as status,
       c.name as customer_name,
       u.first_name || ' ' || u.last_name as agent_name,
       'High Value Order' as exception_type
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
-    LEFT JOIN users u ON o.agent_id = u.id
+    LEFT JOIN users u ON o.salesman_id = u.id
     WHERE o.tenant_id = ?
       AND o.total_amount > 10000
       AND o.order_date >= ?
@@ -223,7 +244,7 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
 }));
 
 router.get('/operations/productivity', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate } = req.query;
 
   const productivity = await getQuery(`
@@ -237,7 +258,7 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
         THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
         ELSE NULL END) as avg_visit_duration_minutes
     FROM users u
-    LEFT JOIN field_visits v ON u.id = v.agent_id AND v.tenant_id = ?
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?
     WHERE u.tenant_id = ?
       AND u.role = 'agent'
       AND (v.visit_date >= ? OR v.visit_date IS NULL)
@@ -253,39 +274,39 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
 }));
 
 router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { warehouseId } = req.query;
 
   const snapshot = await getQuery(`
     SELECT 
       p.id as product_id,
-      p.product_code,
+      p.code as product_code,
       p.name as product_name,
-      p.category,
-      i.quantity as current_stock,
-      i.reorder_level,
-      i.max_stock_level,
+      COALESCE(p.category_id, 'Uncategorized') as category,
+      COALESCE(s.quantity_on_hand, 0) as current_stock,
+      0 as reorder_level,
+      0 as max_stock_level,
       CASE 
-        WHEN i.quantity <= i.reorder_level THEN 'Low Stock'
-        WHEN i.quantity >= i.max_stock_level THEN 'Overstock'
+        WHEN COALESCE(s.quantity_on_hand, 0) = 0 THEN 'Out of Stock'
+        WHEN COALESCE(s.quantity_on_hand, 0) < 10 THEN 'Low Stock'
         ELSE 'Normal'
       END as stock_status,
-      i.last_updated
+      COALESCE(s.updated_at, p.created_at) as last_updated
     FROM products p
-    LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = ?
+    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = ?
     WHERE p.tenant_id = ?
-      ${warehouseId ? 'AND i.warehouse_id = ?' : ''}
+      ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
     ORDER BY stock_status DESC, p.name ASC
   `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
 
   res.json({
     success: true,
-    data: snapshot
+    data: snapshot || []
   });
 }));
 
 router.get('/finance/commissions', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate, agentId } = req.query;
 
   const commissions = await getQuery(`
@@ -293,12 +314,12 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
       COUNT(c.id) as total_transactions,
-      SUM(c.commission_amount) as total_commission,
-      SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END) as approved_commission,
-      SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END) as pending_commission,
-      SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END) as paid_commission
+      COALESCE(SUM(c.commission_amount), 0) as total_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END), 0) as approved_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END), 0) as pending_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END), 0) as paid_commission
     FROM users u
-    LEFT JOIN commission_events c ON u.id = c.agent_id AND c.tenant_id = ?
+    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = ?
     WHERE u.tenant_id = ?
       AND u.role = 'agent'
       ${agentId ? 'AND u.id = ?' : ''}
