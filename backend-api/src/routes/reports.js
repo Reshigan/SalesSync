@@ -2,6 +2,27 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { getDatabase } = require('../database/init');
+
+function getQuery(sql, params = []) {
+  const db = getDatabase();
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+}
+
+function getOneQuery(sql, params = []) {
+  const db = getDatabase();
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) reject(err);
+      else resolve(row);
+    });
+  });
+}
 
 // Generate Report
 router.post('/generate', async (req, res) => {
@@ -168,7 +189,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
 }));
 
 router.get('/sales/summary', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate, groupBy = 'day' } = req.query;
 
   const salesData = await getQuery(`
@@ -193,7 +214,7 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
 }));
 
 router.get('/sales/exceptions', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate } = req.query;
 
   const exceptions = await getQuery(`
@@ -223,7 +244,7 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
 }));
 
 router.get('/operations/productivity', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate } = req.query;
 
   const productivity = await getQuery(`
@@ -253,7 +274,7 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
 }));
 
 router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { warehouseId } = req.query;
 
   const snapshot = await getQuery(`
@@ -285,7 +306,7 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
 }));
 
 router.get('/finance/commissions', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user.tenantId;
   const { startDate, endDate, agentId } = req.query;
 
   const commissions = await getQuery(`
