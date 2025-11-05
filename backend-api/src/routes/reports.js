@@ -223,7 +223,7 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
       o.order_number,
       o.order_date,
       o.total_amount,
-      o.status,
+      o.order_status as status,
       c.name as customer_name,
       u.first_name || ' ' || u.last_name as agent_name,
       'High Value Order' as exception_type
