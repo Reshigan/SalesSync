@@ -291,7 +291,7 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
         WHEN COALESCE(s.quantity_on_hand, 0) < 10 THEN 'Low Stock'
         ELSE 'Normal'
       END as stock_status,
-      s.updated_at as last_updated
+      COALESCE(s.updated_at, p.created_at) as last_updated
     FROM products p
     LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = ?
     WHERE p.tenant_id = ?
