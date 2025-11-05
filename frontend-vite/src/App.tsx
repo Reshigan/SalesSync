@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { tenantService } from './services/tenant.service'
@@ -258,7 +258,7 @@ function App() {
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
 
-            {/* Van Sales Routes */}
+            {/* Van Sales Routes - Flat structure */}
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
