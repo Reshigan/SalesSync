@@ -253,6 +253,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api/version', require('./routes/version'));
+
 // API Documentation will be set up after database initialization
 
 // Routes will be set up after database initialization

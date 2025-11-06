@@ -1,0 +1,166 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-frontend:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend-vite/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: frontend-vite
+        run: npm ci
+        
+      - name: Build frontend
+        working-directory: frontend-vite
+        env:
+          VITE_GIT_COMMIT: ${{ github.sha }}
+        run: npm run build
+        
+      - name: Create tarball
+        working-directory: frontend-vite
+        run: tar -czf frontend-${{ github.sha }}.tar.gz -C dist .
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend-vite/frontend-${{ github.sha }}.tar.gz
+          retention-days: 7
+
+  build-backend:
+    name: Build Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend-api/package-lock.json
+          
+      - name: Create VERSION file
+        working-directory: backend-api
+        run: echo "${{ github.sha }}|$(date -u +%Y-%m-%dT%H:%M:%SZ)" > VERSION
+        
+      - name: Create tarball
+        run: |
+          tar -czf backend-${{ github.sha }}.tar.gz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='database/*.db' \
+            --exclude='database/*.db-*' \
+            --exclude='logs/*' \
+            --exclude='.env' \
+            -C backend-api .
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build
+          path: backend-${{ github.sha }}.tar.gz
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Production
+    needs: [build-frontend, build-backend]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ss.gonxt.tech
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: ./artifacts
+          
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-build
+          path: ./artifacts
+          
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          
+      - name: Copy artifacts to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            artifacts/frontend-${{ github.sha }}.tar.gz \
+            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
+          scp -i ~/.ssh/deploy_key \
+            artifacts/backend-${{ github.sha }}.tar.gz \
+            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
+            
+      - name: Copy deployment script to server
+        run: |
+          scp -i ~/.ssh/deploy_key \
+            deploy/salessync-deploy.sh \
+            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
+            
+      - name: Run deployment
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} \
+            "sudo cp /tmp/salessync-deploy.sh /usr/local/bin/ && \
+             sudo chmod +x /usr/local/bin/salessync-deploy.sh && \
+             sudo /usr/local/bin/salessync-deploy.sh ${{ github.sha }}"
+             
+      - name: Run smoke tests
+        run: |
+          sleep 5
+          # Test health endpoint
+          curl -f https://ss.gonxt.tech/health || exit 1
+          # Test version endpoint
+          curl -f https://ss.gonxt.tech/api/version || exit 1
+          # Test frontend loads
+          curl -f https://ss.gonxt.tech/ | grep -q "SalesSync" || exit 1
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+          ssh -i ~/.ssh/deploy_key \
+            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} \
+            "rm -f /tmp/frontend-${{ github.sha }}.tar.gz /tmp/backend-${{ github.sha }}.tar.gz /tmp/salessync-deploy.sh" || true
+            
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Release: ${{ github.sha }}"
+          echo "URL: https://ss.gonxt.tech"
+          
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          echo "Check logs for details"
