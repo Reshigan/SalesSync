@@ -15,9 +15,6 @@ import {
 class TransactionService {
   private readonly baseUrl = API_CONFIG.ENDPOINTS.TRANSACTIONS.BASE
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   // Generic CRUD Operations
   async getTransactions(filter?: TransactionFilter): Promise<Transaction[]> {
