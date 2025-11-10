@@ -153,6 +153,7 @@ router.delete('/territories/:id', async (req, res) => {
 // GET /api/admin/stats - Admin overview statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
+  const { getOneQuery } = require('../utils/database');
   
   const [userStats, activityStats, systemHealth] = await Promise.all([
     getOneQuery(`
@@ -169,8 +170,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(DISTINCT DATE(created_at)) as active_days,
         COUNT(*) as total_activities
       FROM audit_logs
-      WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')
-    `, [tenantId]),
+      WHERE created_at >= DATE('now', '-30 days')
+    `, []),
     
     getOneQuery(`
       SELECT 
