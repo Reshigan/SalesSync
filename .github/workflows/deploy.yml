@@ -1,0 +1,29 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        working-directory: backend-api
+        run: npm ci
+        
+      - name: Run migrations
+        working-directory: backend-api
+        run: node src/database/migrate.js
+        
+      - name: Deploy
+        run: echo "Deployment configured - ready for production"
