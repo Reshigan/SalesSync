@@ -9,16 +9,14 @@ const { v4: uuidv4 } = require('uuid');
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const { agent_id, status, transaction_type, from_date, to_date } = req.query;
+    const { agent_id, status, from_date, to_date } = req.query;
 
     let query = `
       SELECT ct.*, 
-             u.first_name || ' ' || u.last_name as agent_name,
-             approver.first_name || ' ' || approver.last_name as approved_by_name
+             u.first_name || ' ' || u.last_name as agent_name
       FROM commission_transactions ct
       LEFT JOIN agents a ON ct.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN users approver ON ct.approved_by = approver.id
       WHERE ct.tenant_id = ?
     `;
     const params = [tenantId];
@@ -28,35 +26,31 @@ router.get('/', authMiddleware, async (req, res) => {
       params.push(agent_id);
     }
     if (status) {
-      query += ' AND ct.status = ?';
+      query += ' AND ct.payment_status = ?';
       params.push(status);
     }
-    if (transaction_type) {
-      query += ' AND ct.transaction_type = ?';
-      params.push(transaction_type);
-    }
     if (from_date) {
-      query += ' AND date(ct.created_at) >= date(?)';
+      query += ' AND date(ct.transaction_date) >= date(?)';
       params.push(from_date);
     }
     if (to_date) {
-      query += ' AND date(ct.created_at) <= date(?)';
+      query += ' AND date(ct.transaction_date) <= date(?)';
       params.push(to_date);
     }
 
-    query += ' ORDER BY ct.created_at DESC';
+    query += ' ORDER BY ct.transaction_date DESC LIMIT 100';
 
     const db = getDatabase();
     db.all(query, params, (err, commissions) => {
       if (err) {
         console.error('Error fetching commissions:', err);
-        return res.status(500).json({ error: 'Failed to fetch commissions' });
+        return res.status(500).json({ success: false, error: 'Failed to fetch commissions' });
       }
-      res.json(commissions);
+      res.json({ success: true, data: commissions || [] });
     });
   } catch (error) {
     console.error('Error in get commissions:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 });
 
@@ -181,12 +175,12 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
     const db = getDatabase();
     db.get(
       `SELECT 
-        SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending_total,
-        SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as approved_total,
-        SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid_total,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
-        COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_count
+        SUM(CASE WHEN payment_status = 'pending' THEN commission_amount ELSE 0 END) as pending_total,
+        SUM(CASE WHEN payment_status = 'approved' THEN commission_amount ELSE 0 END) as approved_total,
+        SUM(CASE WHEN payment_status = 'paid' THEN commission_amount ELSE 0 END) as paid_total,
+        COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_count,
+        COUNT(CASE WHEN payment_status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count
        FROM commission_transactions
        WHERE agent_id = ? AND tenant_id = ?${dateFilter}`,
       params,
@@ -227,11 +221,11 @@ router.get('/stats', asyncHandler(async (req, res) => {
     getOneQuery(`
       SELECT 
         COUNT(*) as total_records,
-        COALESCE(SUM(total_amount), 0) as total_commissions,
-        COALESCE(AVG(total_amount), 0) as avg_commission,
-        COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_count,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END), 0) as pending_amount
+        COALESCE(SUM(commission_amount), 0) as total_commissions,
+        COALESCE(AVG(commission_amount), 0) as avg_commission,
+        COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count,
+        COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_count,
+        COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN commission_amount ELSE 0 END), 0) as pending_amount
       FROM commission_transactions WHERE tenant_id = ?
     `, [tenantId]),
     
@@ -239,7 +233,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
       SELECT 
         u.id, u.first_name || ' ' || u.last_name as name,
         COUNT(ct.id) as commission_count,
-        COALESCE(SUM(ct.total_amount), 0) as total_earned
+        COALESCE(SUM(ct.commission_amount), 0) as total_earned
       FROM commission_transactions ct
       INNER JOIN agents a ON ct.agent_id = a.id
       INNER JOIN users u ON a.user_id = u.id
@@ -251,11 +245,11 @@ router.get('/stats', asyncHandler(async (req, res) => {
     
     getQuery(`
       SELECT 
-        strftime('%Y-%m', ct.created_at) as month,
+        strftime('%Y-%m', ct.transaction_date) as month,
         COUNT(*) as count,
-        COALESCE(SUM(ct.total_amount), 0) as total_amount
+        COALESCE(SUM(ct.commission_amount), 0) as total_amount
       FROM commission_transactions ct
-      WHERE ct.tenant_id = ? AND ct.created_at >= DATE('now', '-6 months')
+      WHERE ct.tenant_id = ? AND ct.transaction_date >= DATE('now', '-6 months')
       GROUP BY month
       ORDER BY month DESC
     `, [tenantId])
