@@ -7,17 +7,23 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
-  const settings = await getQuery(`
-    SELECT 
-      setting_key,
-      setting_value,
-      setting_type,
-      description,
-      updated_at
-    FROM system_settings 
-    WHERE tenant_id = ?
-    ORDER BY setting_key
-  `, [tenantId]);
+  let settings = [];
+  try {
+    settings = await getQuery(`
+      SELECT 
+        setting_key,
+        setting_value,
+        setting_type,
+        description,
+        updated_at
+      FROM system_settings 
+      WHERE tenant_id = ?
+      ORDER BY setting_key
+    `, [tenantId]);
+  } catch (error) {
+    console.log('system_settings table not found, returning empty settings');
+    settings = [];
+  }
 
   // Convert to key-value object for easier frontend consumption
   const settingsObject = {};
@@ -64,10 +70,15 @@ router.get('/:key', asyncHandler(async (req, res) => {
   const { key } = req.params;
   const tenantId = req.tenantId;
   
-  const setting = await getOneQuery(`
-    SELECT * FROM system_settings 
-    WHERE setting_key = ? AND tenant_id = ?
-  `, [key, tenantId]);
+  let setting = null;
+  try {
+    setting = await getOneQuery(`
+      SELECT * FROM system_settings 
+      WHERE setting_key = ? AND tenant_id = ?
+    `, [key, tenantId]);
+  } catch (error) {
+    console.log('system_settings table not found');
+  }
 
   if (!setting) {
     return res.status(404).json({
@@ -108,43 +119,50 @@ router.put('/:key', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { value, type = 'string', description = '' } = req.body;
   
-  let settingValue = value;
-  
-  // Convert value to string for storage
-  if (type === 'json') {
-    settingValue = JSON.stringify(value);
-  } else if (type === 'boolean') {
-    settingValue = value ? 'true' : 'false';
-  } else {
-    settingValue = String(value);
-  }
-  
-  // Try to update first
-  const updateResult = await runQuery(`
-    UPDATE system_settings 
-    SET setting_value = ?, setting_type = ?, description = ?, updated_at = ?
-    WHERE setting_key = ? AND tenant_id = ?
-  `, [settingValue, type, description, new Date().toISOString(), key, tenantId]);
-
-  // If no rows were updated, insert new setting
-  if (updateResult.changes === 0) {
-    const settingId = require('crypto').randomUUID();
-    await runQuery(`
-      INSERT INTO system_settings (
-        id, tenant_id, setting_key, setting_value, setting_type, description, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [settingId, tenantId, key, settingValue, type, description, new Date().toISOString(), new Date().toISOString()]);
-  }
-
-  res.json({
-    success: true,
-    message: 'Setting updated successfully',
-    data: {
-      key: key,
-      value: value,
-      type: type
+  try {
+    let settingValue = value;
+    
+    // Convert value to string for storage
+    if (type === 'json') {
+      settingValue = JSON.stringify(value);
+    } else if (type === 'boolean') {
+      settingValue = value ? 'true' : 'false';
+    } else {
+      settingValue = String(value);
     }
-  });
+    
+    // Try to update first
+    const updateResult = await runQuery(`
+      UPDATE system_settings 
+      SET setting_value = ?, setting_type = ?, description = ?, updated_at = ?
+      WHERE setting_key = ? AND tenant_id = ?
+    `, [settingValue, type, description, new Date().toISOString(), key, tenantId]);
+
+    // If no rows were updated, insert new setting
+    if (updateResult.changes === 0) {
+      const settingId = require('crypto').randomUUID();
+      await runQuery(`
+        INSERT INTO system_settings (
+          id, tenant_id, setting_key, setting_value, setting_type, description, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [settingId, tenantId, key, settingValue, type, description, new Date().toISOString(), new Date().toISOString()]);
+    }
+
+    res.json({
+      success: true,
+      message: 'Setting updated successfully',
+      data: {
+        key: key,
+        value: value,
+        type: type
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Settings table not available'
+    });
+  }
 }));
 
 // Delete setting
