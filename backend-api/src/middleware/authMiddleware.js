@@ -102,8 +102,23 @@ const requireFunction = (module, functionCode, action = 'view') => {
       return next();
     }
     
-    // Check permissions if they exist
-    const hasPermission = req.userPermissions?.[module]?.[functionCode]?.[action];
+    // Check permissions if they exist (support both req.permissions and req.userPermissions for compatibility)
+    const permissions = req.permissions || req.userPermissions;
+    const hasPermission = permissions?.[module]?.[functionCode]?.[action];
+    
+    if (!hasPermission && process.env.NODE_ENV === 'production') {
+      console.log('[requireFunction] Permission check failed:', {
+        module,
+        functionCode,
+        action,
+        userRole: req.user?.role,
+        hasReqPermissions: !!req.permissions,
+        hasReqUserPermissions: !!req.userPermissions,
+        permissionsKeys: permissions ? Object.keys(permissions) : [],
+        modulePermissions: permissions?.[module] ? Object.keys(permissions[module]) : [],
+        hasPermission
+      });
+    }
     
     if (!hasPermission) {
       return next(new AppError(`Access denied to ${module}:${functionCode}:${action}`, 403, 'ACCESS_DENIED'));

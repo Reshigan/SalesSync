@@ -22,13 +22,14 @@ router.post('/visits', asyncHandler(async (req, res) => {
 
   const tenantId = req.tenantId;
   
-  if (!req.user?.userId) {
+  const userId = req.user?.userId || req.user?.id;
+  if (!userId) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
   }
   
   const agent = await getOneQuery(
     'SELECT id FROM agents WHERE user_id = ? AND tenant_id = ?',
-    [req.user.userId, tenantId]
+    [userId, tenantId]
   );
   
   if (!agent) {
