@@ -221,27 +221,29 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 // GET /api/commissions/stats - Commission statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
+  const { getOneQuery, getQuery } = require('../database/init');
   
   const [commissionStats, topEarners, monthlyTrends] = await Promise.all([
     getOneQuery(`
       SELECT 
         COUNT(*) as total_records,
-        SUM(commission_amount) as total_commissions,
-        AVG(commission_amount) as avg_commission,
+        COALESCE(SUM(total_amount), 0) as total_commissions,
+        COALESCE(AVG(total_amount), 0) as avg_commission,
         COUNT(CASE WHEN status = 'paid' THEN 1 END) as paid_count,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-        SUM(CASE WHEN status = 'pending' THEN commission_amount ELSE 0 END) as pending_amount
-      FROM commissions WHERE tenant_id = ?
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END), 0) as pending_amount
+      FROM commission_transactions WHERE tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
       SELECT 
-        u.id, u.name,
-        COUNT(c.id) as commission_count,
-        SUM(c.commission_amount) as total_earned
-      FROM commissions c
-      INNER JOIN users u ON c.user_id = u.id
-      WHERE c.tenant_id = ?
+        u.id, u.first_name || ' ' || u.last_name as name,
+        COUNT(ct.id) as commission_count,
+        COALESCE(SUM(ct.total_amount), 0) as total_earned
+      FROM commission_transactions ct
+      INNER JOIN agents a ON ct.agent_id = a.id
+      INNER JOIN users u ON a.user_id = u.id
+      WHERE ct.tenant_id = ?
       GROUP BY u.id
       ORDER BY total_earned DESC
       LIMIT 10
@@ -249,11 +251,11 @@ router.get('/stats', asyncHandler(async (req, res) => {
     
     getQuery(`
       SELECT 
-        strftime('%Y-%m', c.created_at) as month,
+        strftime('%Y-%m', ct.created_at) as month,
         COUNT(*) as count,
-        SUM(c.commission_amount) as total_amount
-      FROM commissions c
-      WHERE c.tenant_id = ? AND c.created_at >= DATE('now', '-6 months')
+        COALESCE(SUM(ct.total_amount), 0) as total_amount
+      FROM commission_transactions ct
+      WHERE ct.tenant_id = ? AND ct.created_at >= DATE('now', '-6 months')
       GROUP BY month
       ORDER BY month DESC
     `, [tenantId])

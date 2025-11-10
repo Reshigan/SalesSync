@@ -5,7 +5,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all KYC submissions
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const kycSubmissions = await getQuery(`
     SELECT 
@@ -44,7 +44,7 @@ router.post('/', asyncHandler(async (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       kycId,
-      req.user.tenantId,
+      req.tenantId,
       customer_id,
       submission_type || 'identity_verification',
       'pending',
@@ -68,7 +68,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // Get KYC submission by ID
 router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const kycSubmission = await getOneQuery(`
     SELECT * FROM kyc_submissions 
@@ -91,7 +91,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update KYC submission status
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { status, review_notes } = req.body;
   
   const result = await runQuery(`
@@ -116,7 +116,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 // Delete KYC submission
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM kyc_submissions 
@@ -147,7 +147,7 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 
 // GET /api/kyc/stats - KYC statistics
 router.get('/stats', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const [kycCounts, statusBreakdown, recentActivity] = await Promise.all([
     getOneQuery(`

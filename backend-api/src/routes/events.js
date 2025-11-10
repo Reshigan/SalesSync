@@ -488,7 +488,7 @@ router.post('/:id/performance', requireFunction, async (req, res) => {
 // GET /api/events/stats - Event statistics
 router.get('/stats', async (req, res) => {
   try {
-    const tenantId = req.user.tenantId;
+    const tenantId = req.tenantId;
     const db = getDatabase();
     
     const [eventCounts, typeBreakdown, attendance, upcomingEvents] = await Promise.all([

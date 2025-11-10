@@ -5,7 +5,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all settings
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const settings = await getQuery(`
     SELECT 
@@ -62,7 +62,7 @@ router.get('/', asyncHandler(async (req, res) => {
 // Get specific setting
 router.get('/:key', asyncHandler(async (req, res) => {
   const { key } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const setting = await getOneQuery(`
     SELECT * FROM system_settings 
@@ -105,7 +105,7 @@ router.get('/:key', asyncHandler(async (req, res) => {
 // Update or create setting
 router.put('/:key', asyncHandler(async (req, res) => {
   const { key } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { value, type = 'string', description = '' } = req.body;
   
   let settingValue = value;
@@ -150,7 +150,7 @@ router.put('/:key', asyncHandler(async (req, res) => {
 // Delete setting
 router.delete('/:key', asyncHandler(async (req, res) => {
   const { key } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM system_settings 
@@ -172,7 +172,7 @@ router.delete('/:key', asyncHandler(async (req, res) => {
 
 // Bulk update settings
 router.post('/bulk', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   const { settings } = req.body;
   
   if (!settings || typeof settings !== 'object') {
