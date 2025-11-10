@@ -3,23 +3,24 @@ const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
-// Get all field operations
+// Get all field operations (using visits table)
 router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const operations = await getQuery(`
     SELECT 
-      id,
-      operation_type,
-      agent_id,
-      customer_id,
-      status,
-      scheduled_date,
-      completed_date,
-      created_at
-    FROM field_operations 
-    WHERE tenant_id = ?
-    ORDER BY created_at DESC
+      v.id,
+      'visit' as operation_type,
+      v.agent_id,
+      v.customer_id,
+      v.status,
+      v.visit_date as scheduled_date,
+      v.check_out_time as completed_date,
+      v.created_at
+    FROM visits v
+    WHERE v.tenant_id = ?
+    ORDER BY v.created_at DESC
+    LIMIT 100
   `, [tenantId]);
 
   res.json({
@@ -28,10 +29,9 @@ router.get('/', asyncHandler(async (req, res) => {
   });
 }));
 
-// Create new field operation
+// Create new field operation (creates a visit)
 router.post('/', asyncHandler(async (req, res) => {
   const {
-    operation_type,
     agent_id,
     customer_id,
     scheduled_date,
@@ -41,14 +41,13 @@ router.post('/', asyncHandler(async (req, res) => {
   const operationId = require('crypto').randomUUID();
   
   const result = await runQuery(
-    `INSERT INTO field_operations (
-      id, tenant_id, operation_type, agent_id, customer_id,
-      scheduled_date, status, description, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO visits (
+      id, tenant_id, agent_id, customer_id,
+      visit_date, status, notes, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       operationId,
       req.tenantId,
-      operation_type || 'visit',
       agent_id,
       customer_id,
       scheduled_date || new Date().toISOString(),
@@ -62,7 +61,7 @@ router.post('/', asyncHandler(async (req, res) => {
     success: true,
     data: {
       id: operationId,
-      operation_type: operation_type || 'visit',
+      operation_type: 'visit',
       agent_id,
       customer_id,
       status: 'scheduled'
@@ -135,9 +134,13 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const operations = await getQuery(`
-    SELECT * FROM field_operations 
+    SELECT 
+      id, agent_id, customer_id, status,
+      visit_date as scheduled_date, check_out_time as completed_date,
+      created_at
+    FROM visits 
     WHERE agent_id = ? AND tenant_id = ?
-    ORDER BY scheduled_date DESC
+    ORDER BY visit_date DESC
   `, [agentId, tenantId]);
 
   res.json({
@@ -152,9 +155,13 @@ router.get('/status/:status', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const operations = await getQuery(`
-    SELECT * FROM field_operations 
+    SELECT 
+      id, agent_id, customer_id, status,
+      visit_date as scheduled_date, check_out_time as completed_date,
+      created_at
+    FROM visits 
     WHERE status = ? AND tenant_id = ?
-    ORDER BY scheduled_date DESC
+    ORDER BY visit_date DESC
   `, [status, tenantId]);
 
   res.json({
@@ -178,7 +185,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const operation = await getOneQuery(`
-    SELECT * FROM field_operations 
+    SELECT 
+      id, agent_id, customer_id, status,
+      visit_date as scheduled_date, check_out_time as completed_date,
+      notes as description, created_at
+    FROM visits 
     WHERE id = ? AND tenant_id = ?
   `, [id, tenantId]);
 
@@ -199,14 +210,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
-  const { operation_type, agent_id, customer_id, scheduled_date, status, completed_date, description } = req.body;
+  const { agent_id, customer_id, scheduled_date, status, completed_date, description } = req.body;
   
   const result = await runQuery(`
-    UPDATE field_operations 
-    SET operation_type = ?, agent_id = ?, customer_id = ?, scheduled_date = ?, 
-        status = ?, completed_date = ?, description = ?, updated_at = ?
+    UPDATE visits 
+    SET agent_id = ?, customer_id = ?, visit_date = ?, 
+        status = ?, check_out_time = ?, notes = ?
     WHERE id = ? AND tenant_id = ?
-  `, [operation_type, agent_id, customer_id, scheduled_date, status, completed_date, description, new Date().toISOString(), id, tenantId]);
+  `, [agent_id, customer_id, scheduled_date, status, completed_date, description, id, tenantId]);
 
   if (result.changes === 0) {
     return res.status(404).json({
@@ -227,7 +238,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const result = await runQuery(`
-    DELETE FROM field_operations 
+    DELETE FROM visits 
     WHERE id = ? AND tenant_id = ?
   `, [id, tenantId]);
 

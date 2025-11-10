@@ -20,35 +20,30 @@ router.post('/', asyncHandler(async (req, res) => {
     entityType,
     entityId,
     requestType,
-    amount,
-    reason,
-    approverId
+    notes,
+    approverUserId
   } = req.body;
 
-  if (!entityType || !entityId || !requestType) {
-    throw new AppError('Entity type, entity ID, and request type are required', 400);
+  if (!entityType || !entityId) {
+    throw new AppError('Entity type and entity ID are required', 400);
   }
 
-  const requestDate = new Date().toISOString();
   const status = 'pending';
 
   const result = await runQuery(
     `INSERT INTO approval_requests (
-      tenant_id, entity_type, entity_id, request_type,
-      requested_by, approver_id, status, request_date,
-      amount, reason
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      tenant_id, entity_type, entity_id,
+      requested_by, approver_user_id, status, notes, created_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       tenantId,
       entityType,
       entityId,
-      requestType,
       userId,
-      approverId || null,
+      approverUserId || null,
       status,
-      requestDate,
-      amount || null,
-      reason || ''
+      notes || '',
+      new Date().toISOString()
     ]
   );
 
@@ -71,7 +66,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const { getQuery, getOneQuery } = require('../database/init');
   const tenantId = req.tenantId;
   const userId = req.user.id;
-  const { status, entityType, requestType, limit = 50, offset = 0 } = req.query;
+  const { status, entityType, limit = 50, offset = 0 } = req.query;
 
   let whereClause = 'WHERE a.tenant_id = ?';
   let params = [tenantId];
@@ -88,12 +83,6 @@ router.get('/', asyncHandler(async (req, res) => {
     params.push(entityType);
   }
 
-  // Filter by request type
-  if (requestType) {
-    whereClause += ' AND a.request_type = ?';
-    params.push(requestType);
-  }
-
   const approvalsQuery = `
     SELECT
       a.*,
@@ -101,9 +90,9 @@ router.get('/', asyncHandler(async (req, res) => {
       u2.first_name || ' ' || u2.last_name as approver_name
     FROM approval_requests a
     LEFT JOIN users u1 ON a.requested_by = u1.id
-    LEFT JOIN users u2 ON a.approver_id = u2.id
+    LEFT JOIN users u2 ON a.approver_user_id = u2.id
     ${whereClause}
-    ORDER BY a.request_date DESC
+    ORDER BY a.created_at DESC
     LIMIT ? OFFSET ?
   `;
   params.push(parseInt(limit), parseInt(offset));
@@ -115,11 +104,14 @@ router.get('/', asyncHandler(async (req, res) => {
   const total = countResult.total;
 
   res.json({
-    approvals,
-    pagination: {
-      total,
-      limit: parseInt(limit),
-      offset: parseInt(offset)
+    success: true,
+    data: {
+      approvals,
+      pagination: {
+        total,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      }
     }
   });
 }));
@@ -139,14 +131,17 @@ router.get('/pending', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as requester_name
     FROM approval_requests a
     LEFT JOIN users u ON a.requested_by = u.id
-    WHERE a.tenant_id = ? AND a.approver_id = ? AND a.status = 'pending'
-    ORDER BY a.request_date ASC`,
+    WHERE a.tenant_id = ? AND a.approver_user_id = ? AND a.status = 'pending'
+    ORDER BY a.created_at ASC`,
     [tenantId, userId]
   );
 
   res.json({
-    approvals,
-    count: approvals.length
+    success: true,
+    data: {
+      approvals,
+      count: approvals.length
+    }
   });
 }));
 
@@ -168,7 +163,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
       u2.email as approver_email
     FROM approval_requests a
     LEFT JOIN users u1 ON a.requested_by = u1.id
-    LEFT JOIN users u2 ON a.approver_id = u2.id
+    LEFT JOIN users u2 ON a.approver_user_id = u2.id
     WHERE a.id = ? AND a.tenant_id = ?`,
     [id, tenantId]
   );
@@ -177,7 +172,10 @@ router.get('/:id', asyncHandler(async (req, res) => {
     throw new AppError('Approval request not found', 404);
   }
 
-  res.json(approval);
+  res.json({
+    success: true,
+    data: approval
+  });
 }));
 
 /**
@@ -205,7 +203,7 @@ router.post('/:id/approve', asyncHandler(async (req, res) => {
   }
 
   // Verify user has permission to approve
-  if (approval.approver_id && approval.approver_id !== userId) {
+  if (approval.approver_user_id && approval.approver_user_id !== userId) {
     // Check if user is admin/manager
     const userRole = req.user.role;
     if (userRole !== 'admin' && userRole !== 'manager') {
@@ -218,11 +216,10 @@ router.post('/:id/approve', asyncHandler(async (req, res) => {
   await runQuery(
     `UPDATE approval_requests 
      SET status = 'approved',
-         approved_by = ?,
-         approval_date = ?,
-         comments = ?
+         approved_at = ?,
+         approval_notes = ?
      WHERE id = ?`,
-    [userId, approvalDate, comments || '', id]
+    [approvalDate, comments || '', id]
   );
 
   const updatedApproval = await getOneQuery(
@@ -262,7 +259,7 @@ router.post('/:id/reject', asyncHandler(async (req, res) => {
   }
 
   // Verify user has permission to reject
-  if (approval.approver_id && approval.approver_id !== userId) {
+  if (approval.approver_user_id && approval.approver_user_id !== userId) {
     const userRole = req.user.role;
     if (userRole !== 'admin' && userRole !== 'manager') {
       throw new AppError('You are not authorized to reject this request', 403);
@@ -274,11 +271,10 @@ router.post('/:id/reject', asyncHandler(async (req, res) => {
   await runQuery(
     `UPDATE approval_requests 
      SET status = 'rejected',
-         approved_by = ?,
-         approval_date = ?,
-         comments = ?
+         approved_at = ?,
+         approval_notes = ?
      WHERE id = ?`,
-    [userId, approvalDate, comments || 'Request rejected', id]
+    [approvalDate, comments || 'Request rejected', id]
   );
 
   const updatedApproval = await getOneQuery(
@@ -314,18 +310,21 @@ router.get('/tenant/stats', asyncHandler(async (req, res) => {
 
   const byType = await getQuery(
     `SELECT
-      request_type,
+      entity_type,
       COUNT(*) as count,
       SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_count
     FROM approval_requests
     WHERE tenant_id = ?
-    GROUP BY request_type`,
+    GROUP BY entity_type`,
     [tenantId]
   );
 
   res.json({
-    stats,
-    byType
+    success: true,
+    data: {
+      stats,
+      byType
+    }
   });
 }));
 

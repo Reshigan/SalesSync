@@ -5,20 +5,22 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all KYC submissions
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const kycSubmissions = await getQuery(`
     SELECT 
       id,
       customer_id,
-      submission_type,
-      status,
+      product_id,
+      agent_id,
+      verification_status as status,
       submitted_at,
-      reviewed_at,
-      created_at
+      verified_at as reviewed_at,
+      submitted_at as created_at
     FROM kyc_submissions 
     WHERE tenant_id = ?
-    ORDER BY created_at DESC
+    ORDER BY submitted_at DESC
+    LIMIT 100
   `, [tenantId]);
 
   res.json({
@@ -31,25 +33,26 @@ router.get('/', asyncHandler(async (req, res) => {
 router.post('/', asyncHandler(async (req, res) => {
   const {
     customer_id,
-    submission_type,
-    document_data
+    product_id,
+    agent_id,
+    submission_data
   } = req.body;
 
   const kycId = require('crypto').randomUUID();
   
   const result = await runQuery(
     `INSERT INTO kyc_submissions (
-      id, tenant_id, customer_id, submission_type, status, 
-      document_data, submitted_at, created_at
+      id, tenant_id, customer_id, product_id, agent_id,
+      submission_data, verification_status, submitted_at
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       kycId,
-      req.user.tenantId,
+      req.tenantId,
       customer_id,
-      submission_type || 'identity_verification',
+      product_id,
+      agent_id,
+      JSON.stringify(submission_data || {}),
       'pending',
-      JSON.stringify(document_data || {}),
-      new Date().toISOString(),
       new Date().toISOString()
     ]
   );
@@ -59,7 +62,8 @@ router.post('/', asyncHandler(async (req, res) => {
     data: {
       id: kycId,
       customer_id,
-      submission_type: submission_type || 'identity_verification',
+      product_id,
+      agent_id,
       status: 'pending'
     }
   });
@@ -68,7 +72,7 @@ router.post('/', asyncHandler(async (req, res) => {
 // Get KYC submission by ID
 router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const kycSubmission = await getOneQuery(`
     SELECT * FROM kyc_submissions 
@@ -91,14 +95,14 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // Update KYC submission status
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
-  const { status, review_notes } = req.body;
+  const tenantId = req.tenantId;
+  const { status } = req.body;
   
   const result = await runQuery(`
     UPDATE kyc_submissions 
-    SET status = ?, review_notes = ?, reviewed_at = ?, updated_at = ?
+    SET verification_status = ?, verified_at = ?
     WHERE id = ? AND tenant_id = ?
-  `, [status, review_notes, new Date().toISOString(), new Date().toISOString(), id, tenantId]);
+  `, [status, new Date().toISOString(), id, tenantId]);
 
   if (result.changes === 0) {
     return res.status(404).json({
@@ -116,7 +120,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
 // Delete KYC submission
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const result = await runQuery(`
     DELETE FROM kyc_submissions 
@@ -147,28 +151,28 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 
 // GET /api/kyc/stats - KYC statistics
 router.get('/stats', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  const tenantId = req.tenantId;
   
   const [kycCounts, statusBreakdown, recentActivity] = await Promise.all([
     getOneQuery(`
       SELECT 
         COUNT(*) as total_submissions,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reviews,
-        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
-        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
+        COUNT(CASE WHEN verification_status = 'pending' THEN 1 END) as pending_reviews,
+        COUNT(CASE WHEN verification_status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN verification_status = 'rejected' THEN 1 END) as rejected_count
       FROM kyc_submissions WHERE tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
-      SELECT status, COUNT(*) as count
+      SELECT verification_status as status, COUNT(*) as count
       FROM kyc_submissions WHERE tenant_id = ?
-      GROUP BY status
+      GROUP BY verification_status
     `, [tenantId]),
     
     getQuery(`
       SELECT 
         k.id, k.customer_id, c.name as customer_name,
-        k.status, k.submitted_at, k.reviewed_at
+        k.verification_status as status, k.submitted_at, k.verified_at as reviewed_at
       FROM kyc_submissions k
       LEFT JOIN customers c ON k.customer_id = c.id
       WHERE k.tenant_id = ?
