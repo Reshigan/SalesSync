@@ -11,7 +11,7 @@ async function runMigrations() {
     db.run(`
       CREATE TABLE IF NOT EXISTS migrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE,
+        filename TEXT NOT NULL UNIQUE,
         executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `, (err) => {
@@ -22,9 +22,9 @@ async function runMigrations() {
   
   // Get list of executed migrations
   const executedMigrations = await new Promise((resolve, reject) => {
-    db.all('SELECT name FROM migrations', (err, rows) => {
+    db.all('SELECT filename FROM migrations', (err, rows) => {
       if (err) reject(err);
-      else resolve(rows.map(r => r.name));
+      else resolve(rows.map(r => r.filename));
     });
   });
   
@@ -66,7 +66,7 @@ async function runMigrations() {
     
     // Record migration as executed
     await new Promise((resolve, reject) => {
-      db.run('INSERT INTO migrations (name) VALUES (?)', [file], (err) => {
+      db.run('INSERT INTO migrations (filename) VALUES (?)', [file], (err) => {
         if (err) reject(err);
         else resolve();
       });
