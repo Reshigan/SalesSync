@@ -15,7 +15,7 @@ router.get('/', asyncHandler(async (req, res) => {
       v.customer_id,
       v.status,
       v.visit_date as scheduled_date,
-      v.completed_at as completed_date,
+      v.check_out_time as completed_date,
       v.created_at
     FROM visits v
     WHERE v.tenant_id = ?
@@ -136,7 +136,7 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const operations = await getQuery(`
     SELECT 
       id, agent_id, customer_id, status,
-      visit_date as scheduled_date, completed_at as completed_date,
+      visit_date as scheduled_date, check_out_time as completed_date,
       created_at
     FROM visits 
     WHERE agent_id = ? AND tenant_id = ?
@@ -157,7 +157,7 @@ router.get('/status/:status', asyncHandler(async (req, res) => {
   const operations = await getQuery(`
     SELECT 
       id, agent_id, customer_id, status,
-      visit_date as scheduled_date, completed_at as completed_date,
+      visit_date as scheduled_date, check_out_time as completed_date,
       created_at
     FROM visits 
     WHERE status = ? AND tenant_id = ?
@@ -187,7 +187,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   const operation = await getOneQuery(`
     SELECT 
       id, agent_id, customer_id, status,
-      visit_date as scheduled_date, completed_at as completed_date,
+      visit_date as scheduled_date, check_out_time as completed_date,
       notes as description, created_at
     FROM visits 
     WHERE id = ? AND tenant_id = ?
@@ -215,9 +215,9 @@ router.put('/:id', asyncHandler(async (req, res) => {
   const result = await runQuery(`
     UPDATE visits 
     SET agent_id = ?, customer_id = ?, visit_date = ?, 
-        status = ?, completed_at = ?, notes = ?, updated_at = ?
+        status = ?, check_out_time = ?, notes = ?
     WHERE id = ? AND tenant_id = ?
-  `, [agent_id, customer_id, scheduled_date, status, completed_date, description, new Date().toISOString(), id, tenantId]);
+  `, [agent_id, customer_id, scheduled_date, status, completed_date, description, id, tenantId]);
 
   if (result.changes === 0) {
     return res.status(404).json({
