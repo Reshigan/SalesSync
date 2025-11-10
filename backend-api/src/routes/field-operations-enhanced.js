@@ -102,6 +102,21 @@ router.post('/visits', asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: { visit, tasks, requires_override: requiresOverride, distance_meters: distanceMeters } });
 }));
 
+router.get('/visits/active', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const activeVisits = await getQuery(
+    `SELECT v.*, a.id as agent_id, u.first_name || ' ' || u.last_name as agent_name,
+            c.name as customer_name, c.address as customer_address, c.latitude as customer_latitude, c.longitude as customer_longitude
+     FROM visits v
+     JOIN agents a ON v.agent_id = a.id
+     LEFT JOIN users u ON a.user_id = u.id
+     JOIN customers c ON v.customer_id = c.id
+     WHERE v.tenant_id = ? AND v.status = 'in_progress'
+     ORDER BY v.visit_date DESC`, [tenantId]
+  );
+  res.json({ success: true, data: activeVisits || [] });
+}));
+
 router.get('/visits/:id', asyncHandler(async (req, res) => {
 router.get('/visits/active', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
