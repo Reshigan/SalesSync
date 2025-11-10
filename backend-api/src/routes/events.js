@@ -75,7 +75,7 @@ router.get('/', asyncHandler(async (req, res) => {
 }));
 
 // Get event by ID
-router.get('/:id', requireFunction, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -124,7 +124,7 @@ router.get('/:id', requireFunction, async (req, res) => {
 });
 
 // Create new event
-router.post('/', requireFunction, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const {
       title,
@@ -175,7 +175,7 @@ router.post('/', requireFunction, async (req, res) => {
 });
 
 // Update event
-router.put('/:id', requireFunction, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -231,7 +231,7 @@ router.put('/:id', requireFunction, async (req, res) => {
 });
 
 // Add participant to event
-router.post('/:id/participants', requireFunction, async (req, res) => {
+router.post('/:id/participants', async (req, res) => {
   try {
     const { id } = req.params;
     const { participant_id, role = 'attendee', notes } = req.body;
@@ -290,7 +290,7 @@ router.post('/:id/participants', requireFunction, async (req, res) => {
 });
 
 // Update participant attendance
-router.patch('/:id/participants/:participantId/attendance', requireFunction, async (req, res) => {
+router.patch('/:id/participants/:participantId/attendance', async (req, res) => {
   try {
     const { id, participantId } = req.params;
     const { attendance_status, check_in_time, check_out_time, notes } = req.body;
@@ -322,7 +322,7 @@ router.patch('/:id/participants/:participantId/attendance', requireFunction, asy
 });
 
 // Allocate resource to event
-router.post('/:id/resources', requireFunction, async (req, res) => {
+router.post('/:id/resources', async (req, res) => {
   try {
     const { id } = req.params;
     const { resource_id, quantity = 1, notes } = req.body;
@@ -355,7 +355,7 @@ router.post('/:id/resources', requireFunction, async (req, res) => {
 });
 
 // Get event analytics
-router.get('/analytics/summary', requireFunction, async (req, res) => {
+router.get('/analytics/summary', async (req, res) => {
   try {
     const { start_date, end_date, type } = req.query;
     
@@ -424,7 +424,7 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
 });
 
 // Record event performance
-router.post('/:id/performance', requireFunction, async (req, res) => {
+router.post('/:id/performance', async (req, res) => {
   try {
     const { id } = req.params;
     const {
