@@ -1,82 +1,78 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const { requireFunction, requireRole } = require('../middleware/authMiddleware');
+const { asyncHandler } = require('../middleware/errorHandler');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // Get all events
-router.get('/', requireFunction, async (req, res) => {
-  try {
-    const { page = 1, limit = 10, status, type, start_date, end_date } = req.query;
-    const offset = (page - 1) * limit;
-    
-    let query = `
-      SELECT e.*, u.name as organizer_name, 
-             COUNT(DISTINCT ep.id) as participant_count,
-             COUNT(DISTINCT er.id) as resource_count
-      FROM events e
-      LEFT JOIN users u ON e.organizer_id = u.id
-      LEFT JOIN event_participants ep ON e.id = ep.event_id
-      LEFT JOIN event_resources er ON e.id = er.event_id
-      WHERE 1=1
-    `;
-    
-    const params = [];
-    
-    if (status) {
-      query += ' AND e.status = ?';
-      params.push(status);
-    }
-    
-    if (type) {
-      query += ' AND e.type = ?';
-      params.push(type);
-    }
-    
-    if (start_date && end_date) {
-      query += ' AND e.start_date >= ? AND e.end_date <= ?';
-      params.push(start_date, end_date);
-    }
-    
-    query += ' GROUP BY e.id ORDER BY e.start_date DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), offset);
-    
-    const events = db.prepare(query).all(...params);
-    
-    // Get total count
-    let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE 1=1';
-    const countParams = [];
-    
-    if (status) {
-      countQuery += ' AND e.status = ?';
-      countParams.push(status);
-    }
-    
-    if (type) {
-      countQuery += ' AND e.type = ?';
-      countParams.push(type);
-    }
-    
-    if (start_date && end_date) {
-      countQuery += ' AND e.start_date >= ? AND e.end_date <= ?';
-      countParams.push(start_date, end_date);
-    }
-    
-    const { total } = db.prepare(countQuery).get(...countParams);
-    
-    res.json({
-      events,
+router.get('/', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { page = 1, limit = 10, status, type, start_date, end_date } = req.query;
+  const offset = (page - 1) * limit;
+  
+  let query = `
+    SELECT e.*, u.first_name || ' ' || u.last_name as organizer_name
+    FROM events e
+    LEFT JOIN users u ON e.organizer_id = u.id
+    WHERE e.tenant_id = ?
+  `;
+  
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND e.status = ?';
+    params.push(status);
+  }
+  
+  if (type) {
+    query += ' AND e.type = ?';
+    params.push(type);
+  }
+  
+  if (start_date && end_date) {
+    query += ' AND e.start_date >= ? AND e.end_date <= ?';
+    params.push(start_date, end_date);
+  }
+  
+  query += ' ORDER BY e.start_date DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), offset);
+  
+  const events = await getQuery(query, params);
+  
+  // Get total count
+  let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE e.tenant_id = ?';
+  const countParams = [tenantId];
+  
+  if (status) {
+    countQuery += ' AND e.status = ?';
+    countParams.push(status);
+  }
+  
+  if (type) {
+    countQuery += ' AND e.type = ?';
+    countParams.push(type);
+  }
+  
+  if (start_date && end_date) {
+    countQuery += ' AND e.start_date >= ? AND e.end_date <= ?';
+    countParams.push(start_date, end_date);
+  }
+  
+  const countResult = await getOneQuery(countQuery, countParams);
+  const total = countResult ? countResult.total : 0;
+  
+  res.json({
+    success: true,
+    data: {
+      events: events || [],
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
         pages: Math.ceil(total / limit)
       }
-    });
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    res.status(500).json({ error: 'Failed to fetch events' });
-  }
-});
+    }
+  });
+}));
 
 // Get event by ID
 router.get('/:id', requireFunction, async (req, res) => {
