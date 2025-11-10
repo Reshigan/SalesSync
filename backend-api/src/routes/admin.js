@@ -170,8 +170,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(DISTINCT DATE(created_at)) as active_days,
         COUNT(*) as total_activities
       FROM audit_logs
-      WHERE created_at >= DATE('now', '-30 days')
-    `, []),
+      WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')
+    `, [tenantId]),
     
     getOneQuery(`
       SELECT 
