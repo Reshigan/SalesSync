@@ -747,46 +747,121 @@ const VanSalesWorkflowPage: React.FC = () => {
 
         {/* Step 5: Order Summary */}
         {currentStep === 5 && orderSummary && (
-          <div className="bg-white rounded-lg p-6 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="bg-white rounded-lg p-6">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                {orderSummary.status === 'queued' ? 'Order Queued!' : 'Order Complete!'}
+              </h2>
+              <p className="text-sm text-gray-600">
+                {orderSummary.status === 'queued' 
+                  ? 'Order will be submitted when connection is restored'
+                  : `Order ID: ${orderSummary.order_id || orderSummary.id}`}
+              </p>
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              {orderSummary.status === 'queued' ? 'Order Queued!' : 'Order Complete!'}
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              {orderSummary.status === 'queued' 
-                ? 'Order will be submitted when connection is restored'
-                : `Order ID: ${orderSummary.order_id || orderSummary.id}`}
-            </p>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+            {/* Order Details */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Order Details</h3>
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Customer:</span>
                   <span className="font-medium text-gray-900">{selectedCustomer?.name}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Items:</span>
-                  <span className="font-medium text-gray-900">{orderItems.length}</span>
+                  <span className="font-medium text-gray-900">{orderItems.length} product{orderItems.length !== 1 ? 's' : ''}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total:</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total Amount:</span>
                   <span className="font-medium text-gray-900">R {orderTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Payment:</span>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Payment Method:</span>
                   <span className="font-medium text-gray-900">{paymentMethod === 'cash' ? 'Cash' : 'Credit'}</span>
                 </div>
+                {paymentMethod === 'cash' && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Cash Received:</span>
+                      <span className="font-medium text-gray-900">R {cashReceived.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Change Given:</span>
+                      <span className="font-medium text-green-600">R {changeGiven.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            <button
-              onClick={() => navigate('/van-sales')}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
-            >
-              Back to Van Sales
-            </button>
+            {/* Commission Preview */}
+            {orderSummary.status !== 'queued' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-blue-900">Commission Earned</h3>
+                    <p className="text-xs text-blue-700 mt-1">
+                      {((orderTotal * 0.05)).toFixed(2)} (5% of order value)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-blue-600">
+                      R {(orderTotal * 0.05).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Item Breakdown */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Items Ordered</h3>
+              <div className="space-y-2">
+                {orderItems.map((item, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm bg-white p-3 rounded border border-gray-200">
+                    <div>
+                      <p className="font-medium text-gray-900">{item.product_name}</p>
+                      <p className="text-xs text-gray-600">Qty: {item.quantity} × R {item.price.toFixed(2)}</p>
+                    </div>
+                    <p className="font-medium text-gray-900">R {item.total.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setCurrentStep(1);
+                  setSelectedCustomer(null);
+                  setGpsLocation(null);
+                  setGpsValidated(false);
+                  setOrderItems([]);
+                  setDeliveryPhoto(null);
+                  setSignature(null);
+                  setPaymentMethod('cash');
+                  setCashReceived(0);
+                  setOrderSummary(null);
+                  setSearchTerm('');
+                  setProductSearchTerm('');
+                }}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Create Another Order
+              </button>
+
+              <button
+                onClick={() => navigate('/van-sales')}
+                className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200"
+              >
+                Back to Van Sales Dashboard
+              </button>
+            </div>
           </div>
         )}
       </div>
