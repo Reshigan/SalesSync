@@ -78,7 +78,7 @@ const VanSalesWorkflowPage: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/customers', {
+      const response = await apiClient.get('/customers', {
         params: { limit: 100 }
       });
       setCustomers(response.data.customers || []);
@@ -92,7 +92,7 @@ const VanSalesWorkflowPage: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/products', {
+      const response = await apiClient.get('/products', {
         params: { limit: 100 }
       });
       setProducts(response.data.products || []);
@@ -241,7 +241,7 @@ const VanSalesWorkflowPage: React.FC = () => {
         gps_lng: gpsLocation.lng
       };
 
-      const response = await apiClient.post('/api/van-sales/orders', orderData);
+      const response = await apiClient.post('/van-sales/orders', orderData);
       
       setOrderSummary(response.data);
       setCurrentStep(5);
