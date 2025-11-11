@@ -120,6 +120,12 @@ const VanSalesWorkflowPage: React.FC = () => {
         const { latitude, longitude, accuracy } = position.coords;
         setGpsLocation({ lat: latitude, lng: longitude, accuracy });
 
+        if (accuracy > 100) {
+          setError(`GPS accuracy is low (${accuracy.toFixed(0)}m). Please wait for better signal or move to an open area.`);
+          setLoading(false);
+          return;
+        }
+
         if (selectedCustomer) {
           const dist = calculateDistance(
             latitude,
@@ -163,6 +169,13 @@ const VanSalesWorkflowPage: React.FC = () => {
 
   const handleAddProduct = (product: Product) => {
     const existingItem = orderItems.find(item => item.product_id === product.id);
+    const currentQuantity = existingItem ? existingItem.quantity : 0;
+    const newQuantity = currentQuantity + 1;
+    
+    if (newQuantity > product.stock_quantity) {
+      setError(`Insufficient stock. Only ${product.stock_quantity} units available for ${product.name}.`);
+      return;
+    }
     
     if (existingItem) {
       setOrderItems(orderItems.map(item =>
@@ -188,6 +201,12 @@ const VanSalesWorkflowPage: React.FC = () => {
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
       handleRemoveProduct(productId);
+      return;
+    }
+
+    const product = products.find(p => p.id === productId);
+    if (product && quantity > product.stock_quantity) {
+      setError(`Insufficient stock. Only ${product.stock_quantity} units available for ${product.name}.`);
       return;
     }
 
@@ -217,8 +236,34 @@ const VanSalesWorkflowPage: React.FC = () => {
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedCustomer || !gpsLocation || orderItems.length === 0) {
-      setError('Please complete all required steps');
+    if (!selectedCustomer) {
+      setError('Please select a customer');
+      return;
+    }
+    
+    if (!gpsLocation) {
+      setError('Please verify GPS location');
+      return;
+    }
+    
+    if (orderItems.length === 0) {
+      setError('Please add at least one product to the order');
+      return;
+    }
+    
+    if (!deliveryPhoto) {
+      setError('Please capture a delivery photo');
+      return;
+    }
+
+    const availableCredit = (selectedCustomer.credit_limit || 0) - (selectedCustomer.outstanding_balance || 0);
+    if (paymentMethod === 'credit' && orderTotal > availableCredit) {
+      setError(`Credit limit exceeded. Customer has R ${availableCredit.toFixed(2)} available credit. Order total is R ${orderTotal.toFixed(2)}.`);
+      return;
+    }
+
+    if (paymentMethod === 'cash' && cashReceived < orderTotal) {
+      setError(`Insufficient cash received. Order total is R ${orderTotal.toFixed(2)}, but only R ${cashReceived.toFixed(2)} was received.`);
       return;
     }
 
