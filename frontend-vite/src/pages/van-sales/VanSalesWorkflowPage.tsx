@@ -78,12 +78,14 @@ const VanSalesWorkflowPage: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await apiClient.get('/customers', {
         params: { limit: 100 }
       });
       setCustomers(response.data.customers || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to load customers');
+      const errorMessage = err.message || 'Failed to load customers';
+      setError(`${errorMessage}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -92,12 +94,14 @@ const VanSalesWorkflowPage: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await apiClient.get('/products', {
         params: { limit: 100 }
       });
       setProducts(response.data.products || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to load products');
+      const errorMessage = err.message || 'Failed to load products';
+      setError(`${errorMessage}. Please check your connection and try again.`);
     } finally {
       setLoading(false);
     }
@@ -351,14 +355,28 @@ const VanSalesWorkflowPage: React.FC = () => {
       {error && (
         <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
           <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1">
             <p className="text-sm text-red-800">{error}</p>
-            <button
-              onClick={() => setError(null)}
-              className="text-sm text-red-600 underline mt-1"
-            >
-              Dismiss
-            </button>
+            <div className="flex items-center space-x-3 mt-2">
+              <button
+                onClick={() => setError(null)}
+                className="text-sm text-red-600 underline"
+              >
+                Dismiss
+              </button>
+              {(error.includes('Failed to load') || error.includes('connection')) && (
+                <button
+                  onClick={() => {
+                    setError(null);
+                    if (currentStep === 1) loadCustomers();
+                    else if (currentStep === 3) loadProducts();
+                  }}
+                  className="text-sm text-red-600 underline"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -374,24 +392,59 @@ const VanSalesWorkflowPage: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3"
             />
-            <div className="space-y-3">
-              {filteredCustomers.map((customer) => (
-                <button
-                  key={customer.id}
-                  onClick={() => handleCustomerSelect(customer)}
-                  className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
-                >
-                  <h3 className="font-medium text-gray-900">{customer.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{customer.address}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-gray-500">{customer.phone}</span>
-                    <span className="text-sm font-medium text-gray-900">
-                      Credit: R {customer.credit_limit?.toLocaleString() || 0}
-                    </span>
+            
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
                   </div>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredCustomers.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <ShoppingCart className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {searchTerm ? 'No customers found' : 'No customers available'}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {searchTerm 
+                    ? `No customers match "${searchTerm}". Try a different search term.`
+                    : 'There are no customers in your route yet. Contact your manager to add customers.'}
+                </p>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredCustomers.map((customer) => (
+                  <button
+                    key={customer.id}
+                    onClick={() => handleCustomerSelect(customer)}
+                    className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                  >
+                    <h3 className="font-medium text-gray-900">{customer.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">{customer.address}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-gray-500">{customer.phone}</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        Credit: R {customer.credit_limit?.toLocaleString() || 0}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -468,26 +521,67 @@ const VanSalesWorkflowPage: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-3">
-              {filteredProducts.map((product) => (
-                <button
-                  key={product.id}
-                  onClick={() => handleAddProduct(product)}
-                  className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{product.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">SKU: {product.sku}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">R {product.price.toFixed(2)}</p>
-                      <p className="text-sm text-gray-600">Stock: {product.stock_quantity}</p>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-1/3"></div>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div className="h-3 bg-gray-200 rounded w-12"></div>
+                      </div>
                     </div>
                   </div>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {productSearchTerm ? 'No products found' : 'No products available'}
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {productSearchTerm 
+                    ? `No products match "${productSearchTerm}". Try a different search term.`
+                    : 'There are no products available for sale. Contact your manager to load inventory.'}
+                </p>
+                {productSearchTerm && (
+                  <button
+                    onClick={() => setProductSearchTerm('')}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredProducts.map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => handleAddProduct(product)}
+                    className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900">{product.name}</h3>
+                        <p className="text-sm text-gray-600 mt-1">SKU: {product.sku}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">R {product.price.toFixed(2)}</p>
+                        <p className="text-sm text-gray-600">Stock: {product.stock_quantity}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
 
             {orderItems.length > 0 && (
               <button
