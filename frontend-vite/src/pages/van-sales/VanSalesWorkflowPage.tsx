@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
-  Navigation, ShoppingCart, DollarSign, FileText
+  Navigation, ShoppingCart, DollarSign, FileText, WifiOff, Wifi
 } from 'lucide-react';
 import { apiClient } from '../../services/api.service';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { offlineQueueService } from '../../services/offline-queue.service';
 
 interface Customer {
   id: string;
@@ -35,9 +37,11 @@ interface OrderItem {
 
 const VanSalesWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [queuedOrdersCount, setQueuedOrdersCount] = useState(0);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -74,6 +78,26 @@ const VanSalesWorkflowPage: React.FC = () => {
       loadProducts();
     }
   }, [currentStep]);
+
+  useEffect(() => {
+    const updateQueueCount = () => {
+      setQueuedOrdersCount(offlineQueueService.getQueueCount());
+    };
+    
+    updateQueueCount();
+    const interval = setInterval(updateQueueCount, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (isOnline && queuedOrdersCount > 0) {
+      console.log('🔄 Back online! Processing queued orders...');
+      offlineQueueService.processQueue(apiClient).then(() => {
+        setQueuedOrdersCount(offlineQueueService.getQueueCount());
+      });
+    }
+  }, [isOnline, queuedOrdersCount]);
 
   const loadCustomers = async () => {
     try {
@@ -295,7 +319,21 @@ const VanSalesWorkflowPage: React.FC = () => {
       setOrderSummary(response.data);
       setCurrentStep(5);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit order');
+      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
+        const queueId = offlineQueueService.addToQueue('/van-sales/orders', 'POST', orderData);
+        setQueuedOrdersCount(offlineQueueService.getQueueCount());
+        setError('You are offline. Order has been queued and will be submitted when connection is restored.');
+        
+        setOrderSummary({ 
+          id: queueId, 
+          order_id: queueId,
+          status: 'queued',
+          message: 'Order queued for submission'
+        });
+        setCurrentStep(5);
+      } else {
+        setError(err.message || 'Failed to submit order');
+      }
     } finally {
       setLoading(false);
     }
@@ -319,6 +357,30 @@ const VanSalesWorkflowPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Online/Offline Status Banner */}
+      {!isOnline && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center">
+            <WifiOff className="w-4 h-4 text-yellow-600 mr-2" />
+            <span className="text-sm text-yellow-800">You are offline</span>
+          </div>
+          {queuedOrdersCount > 0 && (
+            <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+              {queuedOrdersCount} order{queuedOrdersCount !== 1 ? 's' : ''} queued
+            </span>
+          )}
+        </div>
+      )}
+      
+      {isOnline && queuedOrdersCount > 0 && (
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center">
+            <Wifi className="w-4 h-4 text-blue-600 mr-2 animate-pulse" />
+            <span className="text-sm text-blue-800">Syncing {queuedOrdersCount} queued order{queuedOrdersCount !== 1 ? 's' : ''}...</span>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Van Sales Order</h1>
@@ -689,9 +751,13 @@ const VanSalesWorkflowPage: React.FC = () => {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Order Complete!</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              {orderSummary.status === 'queued' ? 'Order Queued!' : 'Order Complete!'}
+            </h2>
             <p className="text-sm text-gray-600 mb-6">
-              Order ID: {orderSummary.order_id || orderSummary.id}
+              {orderSummary.status === 'queued' 
+                ? 'Order will be submitted when connection is restored'
+                : `Order ID: ${orderSummary.order_id || orderSummary.id}`}
             </p>
 
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
