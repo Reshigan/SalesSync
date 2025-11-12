@@ -33,7 +33,7 @@ const authTenantMiddleware = async (req, res, next) => {
 
     // Validate tenant exists and is active
     const tenant = await getOneQuery(
-      'SELECT * FROM tenants WHERE id = ? AND status = ?',
+      'SELECT * FROM tenants WHERE id = $1 AND status = $2',
       [decoded.tenantId, 'active']
     );
 
@@ -57,7 +57,7 @@ const authTenantMiddleware = async (req, res, next) => {
 
     // Get user from database
     const user = await getOneQuery(
-      'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
+      'SELECT * FROM users WHERE id = $1 AND tenant_id = $2 AND status = $3',
       [decoded.userId, decoded.tenantId, 'active']
     );
 
@@ -84,7 +84,7 @@ const authTenantMiddleware = async (req, res, next) => {
       FROM role_permissions rp
       JOIN modules m ON m.id = rp.module_id
       JOIN functions f ON f.id = rp.function_id
-      WHERE rp.tenant_id = ? AND rp.role = ?
+      WHERE rp.tenant_id = $1 AND rp.role = $2
     `, [decoded.tenantId, user.role]);
     
     // Organize permissions by module
@@ -167,7 +167,7 @@ const checkUserLimits = async (req, res, next) => {
     
     if (req.method === 'POST' && req.path.includes('/users')) {
       const userCount = await getOneQuery(
-        'SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND status = ?',
+        'SELECT COUNT(*) as count FROM users WHERE tenant_id = $1 AND status = $2',
         [req.tenantId, 'active']
       );
       
