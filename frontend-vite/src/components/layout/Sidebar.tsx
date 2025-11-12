@@ -242,6 +242,15 @@ export default function Sidebar() {
                 </CollapsibleSection>
               )}
 
+              {/* Configuration Section */}
+              {currentModuleNav.configuration && currentModuleNav.configuration.length > 0 && (
+                <CollapsibleSection title="Configuration" defaultExpanded={false}>
+                  {currentModuleNav.configuration
+                    .filter(isNavItemVisible)
+                    .map(renderNavLink)}
+                </CollapsibleSection>
+              )}
+
               {/* Reports Section */}
               {currentModuleNav.reports.length > 0 && (
                 <CollapsibleSection title="Reports" defaultExpanded={false}>
