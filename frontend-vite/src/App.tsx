@@ -325,6 +325,7 @@ function App() {
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
+            <Route path="inventory/warehouses" element={<WarehouseManagementPage />} />
             <Route path="inventory/receipts" element={<ReceiptsList />} />
             <Route path="inventory/receipts/create" element={<ReceiptCreate />} />
             <Route path="inventory/receipts/:id" element={<ReceiptDetail />} />
@@ -515,6 +516,16 @@ function App() {
             <Route path="admin/boards" element={
               <ProtectedRoute requiredRole="admin">
                 <BoardManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/territories" element={
+              <ProtectedRoute requiredRole="admin">
+                <TerritoryManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/brands" element={
+              <ProtectedRoute requiredRole="admin">
+                <BrandManagementPage />
               </ProtectedRoute>
             } />
             <Route path="admin/surveys" element={
