@@ -193,7 +193,6 @@ const DataCollectionDashboard = lazy(() => import('./pages/DataCollectionDashboa
 const ProcurementDashboard = lazy(() => import('./pages/ProcurementDashboard'))
 const HRDashboard = lazy(() => import('./pages/HRDashboard'))
 const CommissionsDashboard = lazy(() => import('./pages/CommissionsDashboard'))
-const TerritoryManagement = lazy(() => import('./pages/TerritoryManagement'))
 const WorkflowsDashboard = lazy(() => import('./pages/WorkflowsDashboard'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 
