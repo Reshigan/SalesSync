@@ -86,15 +86,16 @@ async function seed6MonthsData() {
     
     for (let i = 0; i < productNames.length; i++) {
       const productId = crypto.randomUUID();
-      const price = 15 + (i * 5);
+      const sellingPrice = 15 + (i * 5);
+      const costPrice = sellingPrice * 0.6;
       
       await dbRun(
-        `INSERT OR IGNORE INTO products (id, tenant_id, name, price, cost, stock_quantity, unit, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [productId, tenantId, productNames[i], price, price * 0.6, 1000, 'unit', 'active', new Date().toISOString()]
+        `INSERT OR IGNORE INTO products (id, tenant_id, name, code, barcode, unit_of_measure, selling_price, cost_price, tax_rate, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [productId, tenantId, productNames[i], `PROD${1000 + i}`, `BAR${1000 + i}`, 'unit', sellingPrice, costPrice, 15.00, 'active', new Date().toISOString()]
       );
       
-      products.push({ id: productId, name: productNames[i], price });
+      products.push({ id: productId, name: productNames[i], price: sellingPrice });
     }
     
     const customers = [];
