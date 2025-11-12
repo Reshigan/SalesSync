@@ -3,7 +3,24 @@
  * Seeds realistic transaction data across all flows
  */
 
-const { getDatabase } = require('./connection');
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+
+function getDatabase() {
+  const dbPath = path.join(__dirname, '../../database/salessync.db');
+  return new sqlite3.Database(dbPath);
+}
+
+const db = getDatabase();
+const dbGet = (query, params) => new Promise((resolve, reject) => {
+  db.get(query, params, (err, row) => err ? reject(err) : resolve(row));
+});
+const dbRun = (query, params) => new Promise((resolve, reject) => {
+  db.run(query, params, function(err) { err ? reject(err) : resolve(this); });
+});
+const dbAll = (query, params) => new Promise((resolve, reject) => {
+  db.all(query, params, (err, rows) => err ? reject(err) : resolve(rows));
+});
 const crypto = require('crypto');
 
 function generateDateRange(monthsBack = 6) {
@@ -35,28 +52,26 @@ function generateNearbyGPS(baseLat, baseLon, radiusMeters = 100) {
 }
 
 async function seed6MonthsData() {
-  const db = getDatabase();
-  
   console.log('Starting 6-month data seeding...');
   
   try {
-    const tenant = await db.get('SELECT id FROM tenants WHERE code = ?', ['DEMO']);
+    const tenant = await dbGet('SELECT id FROM tenants WHERE code = ?', ['DEMO']);
     if (!tenant) {
       throw new Error('DEMO tenant not found');
     }
     const tenantId = tenant.id;
     
-    const adminUser = await db.get('SELECT id FROM users WHERE email = ? AND tenant_id = ?', ['admin@demo.com', tenantId]);
-    const agentUser = await db.get('SELECT id FROM users WHERE email = ? AND tenant_id = ?', ['agent@demo.com', tenantId]);
+    const adminUser = await dbGet('SELECT id FROM users WHERE email = ? AND tenant_id = ?', ['admin@demo.com', tenantId]);
+    const agentUser = await dbGet('SELECT id FROM users WHERE email = ? AND tenant_id = ?', ['agent@demo.com', tenantId]);
     
     if (!adminUser || !agentUser) {
       throw new Error('Admin or agent user not found');
     }
     
-    let agent = await db.get('SELECT id FROM agents WHERE user_id = ?', [agentUser.id]);
+    let agent = await dbGet('SELECT id FROM agents WHERE user_id = ?', [agentUser.id]);
     if (!agent) {
       const agentId = crypto.randomUUID();
-      await db.run(
+      await dbRun(
         'INSERT INTO agents (id, tenant_id, user_id, agent_type, status, created_at) VALUES (?, ?, ?, ?, ?, ?)',
         [agentId, tenantId, agentUser.id, 'field_agent', 'active', new Date().toISOString()]
       );
@@ -73,7 +88,7 @@ async function seed6MonthsData() {
       const productId = crypto.randomUUID();
       const price = 15 + (i * 5);
       
-      await db.run(
+      await dbRun(
         `INSERT OR IGNORE INTO products (id, tenant_id, name, sku, category, price, cost, stock_quantity, unit, status, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [productId, tenantId, productNames[i], `SKU${1000 + i}`, 'Beverages', price, price * 0.6, 1000, 'unit', 'active', new Date().toISOString()]
@@ -97,7 +112,7 @@ async function seed6MonthsData() {
       const customerId = crypto.randomUUID();
       const gps = generateNearbyGPS(baseLatLon[0], baseLatLon[1], 50000);
       
-      await db.run(
+      await dbRun(
         `INSERT OR IGNORE INTO customers (id, tenant_id, name, email, phone, address, latitude, longitude, customer_type, status, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
@@ -125,7 +140,7 @@ async function seed6MonthsData() {
         const numItems = Math.floor(Math.random() * 5) + 1;
         let totalAmount = 0;
         
-        await db.run(
+        await dbRun(
           `INSERT INTO orders (id, tenant_id, customer_id, salesman_id, order_date, status, payment_method, total_amount, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [orderId, tenantId, customer.id, agent.id, date, 'completed', Math.random() > 0.5 ? 'cash' : 'credit', 0, date]
@@ -137,14 +152,14 @@ async function seed6MonthsData() {
           const lineTotal = product.price * quantity;
           totalAmount += lineTotal;
           
-          await db.run(
+          await dbRun(
             `INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, line_total, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [crypto.randomUUID(), orderId, product.id, quantity, product.price, lineTotal, date]
           );
         }
         
-        await db.run('UPDATE orders SET total_amount = ? WHERE id = ?', [totalAmount, orderId]);
+        await dbRun('UPDATE orders SET total_amount = ? WHERE id = ?', [totalAmount, orderId]);
         orderCount++;
       }
       
@@ -154,7 +169,7 @@ async function seed6MonthsData() {
         const customer = customers[Math.floor(Math.random() * customers.length)];
         const gps = generateNearbyGPS(customer.latitude, customer.longitude, 5);
         
-        await db.run(
+        await dbRun(
           `INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_out_time, latitude, longitude, status, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -168,7 +183,7 @@ async function seed6MonthsData() {
         
         if (Math.random() > 0.5) {
           const boardId = crypto.randomUUID();
-          await db.run(
+          await dbRun(
             `INSERT INTO board_placements (id, tenant_id, agent_id, customer_id, visit_id, board_type, placement_date, latitude, longitude, photo_url, coverage_percentage, status, created_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
