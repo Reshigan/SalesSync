@@ -84,8 +84,11 @@ const registerSchema = Joi.object({
  *         description: Authentication failed - invalid tenant or credentials
  */
 router.post('/login', asyncHandler(async (req, res, next) => {
-  // Lazy-load database functions
-  const { getOneQuery, getQuery, runQuery } = require('../database/init');
+  // Lazy-load database functions - use postgres-init in production
+  const dbModule = process.env.NODE_ENV === 'production' && process.env.DB_TYPE === 'postgres'
+    ? require('../database/postgres-init')
+    : require('../database/init');
+  const { getOneQuery, getQuery, runQuery } = dbModule;
   
   // SECURITY FIX: Require X-Tenant-Code header (can also accept X-Tenant-ID for backwards compatibility)
   const tenantCode = req.headers['x-tenant-code'] || req.headers['x-tenant-id'];
@@ -105,22 +108,34 @@ router.post('/login', asyncHandler(async (req, res, next) => {
   try {
     // SECURITY FIX: Validate tenant exists and is active
     // Accept either tenant code or UUID
-    const tenant = await getOneQuery(
-      'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
-      [tenantCode.toUpperCase(), tenantCode, 'active']
-    );
+    const tenant = process.env.DB_TYPE === 'postgres'
+      ? await getOneQuery(
+          'SELECT * FROM tenants WHERE (code = $1 OR id = $2) AND status = $3',
+          [tenantCode.toUpperCase(), tenantCode, 'active']
+        )
+      : await getOneQuery(
+          'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
+          [tenantCode.toUpperCase(), tenantCode, 'active']
+        );
     
     if (!tenant) {
       return next(new AppError('Invalid or inactive tenant', 401, 'INVALID_TENANT'));
     }
     
     // SECURITY FIX: Find user by email AND tenant_id (case-insensitive email)
-    const user = await getOneQuery(`
-      SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
-      FROM users u
-      JOIN tenants t ON t.id = u.tenant_id
-      WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
-    `, [email, tenant.id]);
+    const user = process.env.DB_TYPE === 'postgres'
+      ? await getOneQuery(`
+          SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
+          FROM users u
+          JOIN tenants t ON t.id = u.tenant_id
+          WHERE LOWER(u.email) = LOWER($1) AND u.tenant_id = $2 AND u.status = 'active' AND t.status = 'active'
+        `, [email, tenant.id])
+      : await getOneQuery(`
+          SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
+          FROM users u
+          JOIN tenants t ON t.id = u.tenant_id
+          WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
+        `, [email, tenant.id]);
     
     if (!user) {
       return next(new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS'));
