@@ -313,7 +313,7 @@ async function startServer() {
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
     const fieldOperationsRoutes = require('./routes/field-operations');
-    const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks');
+    // const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks'); // File doesn't exist
     const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
