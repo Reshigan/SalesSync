@@ -89,9 +89,9 @@ async function seed6MonthsData() {
       const price = 15 + (i * 5);
       
       await dbRun(
-        `INSERT OR IGNORE INTO products (id, tenant_id, name, category, price, cost, stock_quantity, unit, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [productId, tenantId, productNames[i], 'Beverages', price, price * 0.6, 1000, 'unit', 'active', new Date().toISOString()]
+        `INSERT OR IGNORE INTO products (id, tenant_id, name, price, cost, stock_quantity, unit, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [productId, tenantId, productNames[i], price, price * 0.6, 1000, 'unit', 'active', new Date().toISOString()]
       );
       
       products.push({ id: productId, name: productNames[i], price });
