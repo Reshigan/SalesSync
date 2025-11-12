@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { brandService } from '../../services/brand.service'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
-import { toast } from '../../components/ui/Toast'
 
 interface Brand {
   id: string
@@ -39,7 +38,7 @@ export default function BrandManagementPage() {
       setBrands(response.data || [])
     } catch (error) {
       console.error('Failed to load brands:', error)
-      toast.error('Failed to load brands')
+      alert('Failed to load brands')
     } finally {
       setLoading(false)
     }
@@ -50,10 +49,10 @@ export default function BrandManagementPage() {
     try {
       if (editingBrand) {
         await brandService.updateBrand(editingBrand.id, formData)
-        toast.success('Brand updated successfully')
+        alert('Brand updated successfully')
       } else {
         await brandService.createBrand(formData)
-        toast.success('Brand created successfully')
+        alert('Brand created successfully')
       }
       setShowModal(false)
       setEditingBrand(null)
@@ -61,7 +60,7 @@ export default function BrandManagementPage() {
       loadBrands()
     } catch (error) {
       console.error('Failed to save brand:', error)
-      toast.error('Failed to save brand')
+      alert('Failed to save brand')
     }
   }
 
@@ -82,11 +81,11 @@ export default function BrandManagementPage() {
     
     try {
       await brandService.deleteBrand(id)
-      toast.success('Brand deleted successfully')
+      alert('Brand deleted successfully')
       loadBrands()
     } catch (error) {
       console.error('Failed to delete brand:', error)
-      toast.error('Failed to delete brand')
+      alert('Failed to delete brand')
     }
   }
 
