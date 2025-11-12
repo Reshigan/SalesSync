@@ -108,15 +108,28 @@ router.post('/login', asyncHandler(async (req, res, next) => {
   try {
     // SECURITY FIX: Validate tenant exists and is active
     // Accept either tenant code or UUID
-    const tenant = process.env.DB_TYPE === 'postgres'
-      ? await getOneQuery(
+    // Check if tenantCode is a valid UUID format to avoid PostgreSQL type errors
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantCode);
+    
+    let tenant;
+    if (process.env.DB_TYPE === 'postgres') {
+      if (isUUID) {
+        tenant = await getOneQuery(
           'SELECT * FROM tenants WHERE (code = $1 OR id = $2) AND status = $3',
           [tenantCode.toUpperCase(), tenantCode, 'active']
-        )
-      : await getOneQuery(
-          'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
-          [tenantCode.toUpperCase(), tenantCode, 'active']
         );
+      } else {
+        tenant = await getOneQuery(
+          'SELECT * FROM tenants WHERE code = $1 AND status = $2',
+          [tenantCode.toUpperCase(), 'active']
+        );
+      }
+    } else {
+      tenant = await getOneQuery(
+        'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
+        [tenantCode.toUpperCase(), tenantCode, 'active']
+      );
+    }
     
     if (!tenant) {
       return next(new AppError('Invalid or inactive tenant', 401, 'INVALID_TENANT'));
