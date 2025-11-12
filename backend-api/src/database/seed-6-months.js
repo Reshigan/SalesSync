@@ -114,11 +114,11 @@ async function seed6MonthsData() {
       const gps = generateNearbyGPS(baseLatLon[0], baseLatLon[1], 50000);
       
       await dbRun(
-        `INSERT OR IGNORE INTO customers (id, tenant_id, name, email, phone, address, latitude, longitude, customer_type, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT OR IGNORE INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, credit_limit, payment_terms, status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          customerId, tenantId, customerNames[i], `customer${i}@demo.com`, `+2771${1000000 + i}`,
-          `${i + 1} Main Road, Johannesburg`, gps.latitude, gps.longitude, 'retail', 'active', new Date().toISOString()
+          customerId, tenantId, customerNames[i], `CUST${1000 + i}`, 'retail', `+2771${1000000 + i}`, `customer${i}@demo.com`,
+          `${i + 1} Main Road, Johannesburg`, gps.latitude, gps.longitude, 50000.00, 30, 'active', new Date().toISOString()
         ]
       );
       
