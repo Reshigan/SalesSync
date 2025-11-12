@@ -225,12 +225,12 @@ router.post('/login', asyncHandler(async (req, res, next) => {
       ? await getQuery(`
           SELECT
             m.code as module,
-            MAX(rp.can_view) as can_view,
-            MAX(rp.can_create) as can_create,
-            MAX(rp.can_edit) as can_edit,
-            MAX(rp.can_delete) as can_delete,
-            MAX(rp.can_approve) as can_approve,
-            MAX(rp.can_export) as can_export
+            BOOL_OR(rp.can_view) as can_view,
+            BOOL_OR(rp.can_create) as can_create,
+            BOOL_OR(rp.can_edit) as can_edit,
+            BOOL_OR(rp.can_delete) as can_delete,
+            BOOL_OR(rp.can_approve) as can_approve,
+            BOOL_OR(rp.can_export) as can_export
           FROM role_permissions rp
           JOIN modules m ON m.id = rp.module_id
           WHERE rp.tenant_id = $1 AND rp.role = $2
