@@ -370,6 +370,8 @@ async function startServer() {
     const paymentRoutes = require('./routes/payments');
     const quoteRoutes = require('./routes/quotes');
     const approvalRoutes = require('./routes/approvals');
+    
+    const individualsRoutes = require('./routes/individuals');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -512,6 +514,9 @@ async function startServer() {
     app.use('/api/payments', authTenantMiddleware, paymentRoutes);
     app.use('/api/quotes', authTenantMiddleware, quoteRoutes);
     app.use('/api/approvals', authTenantMiddleware, approvalRoutes);
+    
+    logger.info('Mounting fraud prevention routes...');
+    app.use('/api/individuals', authTenantMiddleware, individualsRoutes);
 
     logger.info('Routes configured successfully');
 
