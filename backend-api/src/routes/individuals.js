@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { normalizePhone, hashIdNumber } = require('../services/fraud-detection.service');
-const asyncHandler = require('../middleware/asyncHandler');
+const { asyncHandler } = require('../middleware/errorHandler');
 
 /**
  * GET /api/individuals
