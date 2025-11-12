@@ -51,6 +51,13 @@ const moduleNavigation: Record<ModuleType, any> = {
       { name: 'Territories', href: '/admin/territories', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
       { name: 'Brands', href: '/admin/brands', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
     ],
+    configuration: [
+      { name: 'Visit Task Templates', href: '/admin/visit-task-templates', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+      { name: 'Commission Rules', href: '/admin/commission-rules', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+      { name: 'GPS Thresholds', href: '/admin/gps-thresholds', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+      { name: 'Survey Builder', href: '/admin/surveys', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+      { name: 'Product Types', href: '/admin/product-types', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+    ],
     reports: [
       { name: 'Van Sales Dashboard', href: '/van-sales/dashboard', permission: PERMISSIONS.VIEW_VAN_SALES },
       { name: 'Field Operations Dashboard', href: '/field-operations/dashboard', permission: PERMISSIONS.VIEW_FIELD_OPERATIONS },
