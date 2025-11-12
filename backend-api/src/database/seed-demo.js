@@ -20,7 +20,6 @@ const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase, runQuery, getOneQuery } = require('./init');
 
-const DEMO_TENANT_ID = '4589f101-f539-42e7-9955-589995dc00af';
 const BCRYPT_ROUNDS = 10;
 
 async function seedDemoData() {
@@ -28,8 +27,8 @@ async function seedDemoData() {
     console.log('Starting demo data seeding...');
     
     const tenant = await getOneQuery(
-      'SELECT id, code, name FROM tenants WHERE id = ?',
-      [DEMO_TENANT_ID]
+      'SELECT id, code, name FROM tenants WHERE code = ?',
+      ['DEMO']
     );
     
     if (!tenant) {
@@ -37,7 +36,8 @@ async function seedDemoData() {
       process.exit(1);
     }
     
-    console.log(`Found tenant: ${tenant.name} (${tenant.code})`);
+    const DEMO_TENANT_ID = tenant.id;
+    console.log(`Found tenant: ${tenant.name} (${tenant.code}) with ID: ${DEMO_TENANT_ID}`);
     
     let adminUser = await getOneQuery(
       'SELECT id, email FROM users WHERE email = ? AND tenant_id = ?',
