@@ -473,7 +473,6 @@ async function startServer() {
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
     
-    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
     const cashReconciliationEnhancedRoutes = require('./routes/cash-reconciliation-enhanced');
     const dashboardsRoutes = require('./routes/dashboards');
     app.use('/api/orders-enhanced', authTenantMiddleware, ordersEnhancedRoutes);
