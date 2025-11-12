@@ -192,16 +192,28 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     });
     
     // Update last login
-    await runQuery(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-      [user.id]
-    );
+    if (process.env.DB_TYPE === 'postgres') {
+      await runQuery(
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+        [user.id]
+      );
+    } else {
+      await runQuery(
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+        [user.id]
+      );
+    }
     
     // Get full tenant data
-    const tenantData = await getOneQuery(
-      'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
-      [user.tenant_id]
-    );
+    const tenantData = process.env.DB_TYPE === 'postgres'
+      ? await getOneQuery(
+          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = $1',
+          [user.tenant_id]
+        )
+      : await getOneQuery(
+          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
+          [user.tenant_id]
+        );
     
     // Parse features JSON if it's a string
     if (tenantData && typeof tenantData.features === 'string') {
@@ -209,20 +221,35 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     }
     
     // Load user permissions
-    const permissions = await getQuery(`
-      SELECT
-        m.code as module,
-        MAX(rp.can_view) as can_view,
-        MAX(rp.can_create) as can_create,
-        MAX(rp.can_edit) as can_edit,
-        MAX(rp.can_delete) as can_delete,
-        MAX(rp.can_approve) as can_approve,
-        MAX(rp.can_export) as can_export
-      FROM role_permissions rp
-      JOIN modules m ON m.id = rp.module_id
-      WHERE rp.tenant_id = ? AND rp.role = ?
-      GROUP BY m.code
-    `, [user.tenant_id, user.role]);
+    const permissions = process.env.DB_TYPE === 'postgres'
+      ? await getQuery(`
+          SELECT
+            m.code as module,
+            MAX(rp.can_view) as can_view,
+            MAX(rp.can_create) as can_create,
+            MAX(rp.can_edit) as can_edit,
+            MAX(rp.can_delete) as can_delete,
+            MAX(rp.can_approve) as can_approve,
+            MAX(rp.can_export) as can_export
+          FROM role_permissions rp
+          JOIN modules m ON m.id = rp.module_id
+          WHERE rp.tenant_id = $1 AND rp.role = $2
+          GROUP BY m.code
+        `, [user.tenant_id, user.role])
+      : await getQuery(`
+          SELECT
+            m.code as module,
+            MAX(rp.can_view) as can_view,
+            MAX(rp.can_create) as can_create,
+            MAX(rp.can_edit) as can_edit,
+            MAX(rp.can_delete) as can_delete,
+            MAX(rp.can_approve) as can_approve,
+            MAX(rp.can_export) as can_export
+          FROM role_permissions rp
+          JOIN modules m ON m.id = rp.module_id
+          WHERE rp.tenant_id = ? AND rp.role = ?
+          GROUP BY m.code
+        `, [user.tenant_id, user.role]);
 
     // Format permissions for frontend
     const formattedPermissions = permissions.map(p => ({
