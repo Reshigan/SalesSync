@@ -43,9 +43,13 @@ const moduleNavigation: Record<ModuleType, any> = {
       { name: 'Inventory Management', href: '/inventory/management', permission: PERMISSIONS.MANAGE_INVENTORY },
     ],
     masters: [
+      { name: 'Warehouses', href: '/inventory/warehouses', permission: PERMISSIONS.MANAGE_INVENTORY },
       { name: 'Routes', href: '/van-sales/routes', permission: PERMISSIONS.MANAGE_ROUTES },
       { name: 'Field Agents', href: '/field-operations/agents', permission: PERMISSIONS.MANAGE_FIELD_AGENTS },
+      { name: 'Customers', href: '/customers', permission: PERMISSIONS.VIEW_CUSTOMERS },
       { name: 'Products', href: '/products', permission: PERMISSIONS.VIEW_PRODUCTS },
+      { name: 'Territories', href: '/admin/territories', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
+      { name: 'Brands', href: '/admin/brands', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
     ],
     reports: [
       { name: 'Van Sales Dashboard', href: '/van-sales/dashboard', permission: PERMISSIONS.VIEW_VAN_SALES },
