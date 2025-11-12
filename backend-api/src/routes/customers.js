@@ -283,6 +283,34 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
  *       404:
  *         description: Customer not found
  */
+router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery } = require('../database/init');
+  
+  try {
+    const stats = getOneQuery(`
+      SELECT 
+        COUNT(*) as total_customers,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_customers,
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_customers,
+        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) as suspended_customers,
+        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
+        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
+        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
+        SUM(CASE WHEN created_at >= date('now', '-30 days') THEN 1 ELSE 0 END) as new_customers_30d,
+        SUM(CASE WHEN created_at >= date('now', '-7 days') THEN 1 ELSE 0 END) as new_customers_7d
+      FROM customers
+      WHERE tenant_id = ? AND deleted_at IS NULL
+    `, [req.tenantId]);
+    
+    res.json({
+      success: true,
+      data: stats || {}
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
 router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
   const { getOneQuery, getQuery } = require('../database/init');
@@ -979,33 +1007,7 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
  *     security:
  *       - bearerAuth: []
  */
-router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery } = require('../database/init');
-  
-  try {
-    const stats = getOneQuery(`
-      SELECT 
-        COUNT(*) as total_customers,
-        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_customers,
-        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_customers,
-        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) as suspended_customers,
-        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
-        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
-        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
-        SUM(CASE WHEN created_at >= date('now', '-30 days') THEN 1 ELSE 0 END) as new_customers_30d,
-        SUM(CASE WHEN created_at >= date('now', '-7 days') THEN 1 ELSE 0 END) as new_customers_7d
-      FROM customers
-      WHERE tenant_id = ? AND deleted_at IS NULL
-    `, [req.tenantId]);
-    
-    res.json({
-      success: true,
-      data: stats || {}
-    });
-  } catch (error) {
-    next(error);
-  }
-}));
+
 
 /**
  * Get customer visits history

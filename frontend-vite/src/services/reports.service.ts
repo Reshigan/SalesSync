@@ -43,9 +43,6 @@ export interface ReportStats {
 class ReportsService {
   private readonly baseUrl = API_CONFIG.ENDPOINTS.REPORTS.BASE
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   async getReports(filter?: any): Promise<{ reports: Report[], total: number }> {
     try {

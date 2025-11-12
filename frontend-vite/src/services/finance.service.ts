@@ -55,9 +55,6 @@ export interface FinanceStats {
 class FinanceService {
   private readonly baseUrl = '/finance'
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
   private paymentsUrl = '/api/payments'
 
   // Invoices
