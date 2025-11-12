@@ -446,7 +446,7 @@ async function startServer() {
       logger.info('Using legacy field-operations route');
       app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
     }
-    app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes);
+    // app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes); // File doesn't exist on production
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
