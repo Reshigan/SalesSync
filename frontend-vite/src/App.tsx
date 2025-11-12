@@ -77,6 +77,9 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
 const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
 const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
+const WarehouseManagementPage = lazy(() => import('./pages/inventory-management/WarehouseManagementPage'))
+const TerritoryManagement = lazy(() => import('./pages/TerritoryManagement'))
+const BrandManagementPage = lazy(() => import('./pages/admin/BrandManagementPage'))
 
 const VanSalesOrdersList = lazy(() => import('./pages/van-sales/orders/VanSalesOrdersList'))
 const VanSalesOrderCreate = lazy(() => import('./pages/van-sales/orders/VanSalesOrderCreate'))
@@ -190,7 +193,6 @@ const DataCollectionDashboard = lazy(() => import('./pages/DataCollectionDashboa
 const ProcurementDashboard = lazy(() => import('./pages/ProcurementDashboard'))
 const HRDashboard = lazy(() => import('./pages/HRDashboard'))
 const CommissionsDashboard = lazy(() => import('./pages/CommissionsDashboard'))
-const TerritoryManagement = lazy(() => import('./pages/TerritoryManagement'))
 const WorkflowsDashboard = lazy(() => import('./pages/WorkflowsDashboard'))
 const UserProfile = lazy(() => import('./pages/UserProfile'))
 
@@ -322,6 +324,7 @@ function App() {
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
+            <Route path="inventory/warehouses" element={<WarehouseManagementPage />} />
             <Route path="inventory/receipts" element={<ReceiptsList />} />
             <Route path="inventory/receipts/create" element={<ReceiptCreate />} />
             <Route path="inventory/receipts/:id" element={<ReceiptDetail />} />
@@ -512,6 +515,16 @@ function App() {
             <Route path="admin/boards" element={
               <ProtectedRoute requiredRole="admin">
                 <BoardManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/territories" element={
+              <ProtectedRoute requiredRole="admin">
+                <TerritoryManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/brands" element={
+              <ProtectedRoute requiredRole="admin">
+                <BrandManagementPage />
               </ProtectedRoute>
             } />
             <Route path="admin/surveys" element={

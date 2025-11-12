@@ -89,8 +89,7 @@ class ProductsService {
 
   async getProducts(filter?: ProductFilter): Promise<{ products: Product[], categories: Category[], brands: Brand[], pagination: any }> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.BASE)
-      const response = await apiClient.get(url, { params: filter })
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.PRODUCTS.BASE, { params: filter })
       return {
         products: response.data.data?.products || response.data.data || [],
         categories: response.data.data?.categories || [],
@@ -105,8 +104,7 @@ class ProductsService {
 
   async getProduct(id: string): Promise<Product | null> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id))
-      const response = await apiClient.get(url)
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id))
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch product:', error)
@@ -148,7 +146,7 @@ class ProductsService {
 
   async getProductStats(): Promise<ProductStats> {
     try {
-      const response = await apiClient.get(this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.STATS))
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.PRODUCTS.STATS)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch product stats:', error)
@@ -158,7 +156,7 @@ class ProductsService {
 
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get('/api/categories')
+      const response = await apiClient.get('/categories')
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch categories:', error)
@@ -168,7 +166,7 @@ class ProductsService {
 
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await apiClient.get('/api/brands')
+      const response = await apiClient.get('/brands')
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch brands:', error)
