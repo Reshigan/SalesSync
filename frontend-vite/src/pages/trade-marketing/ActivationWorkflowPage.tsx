@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
-  Navigation, Gift, Users, TrendingUp
+  Navigation, Gift, Users, TrendingUp, WifiOff, Wifi, Refresh
 } from 'lucide-react';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { offlineQueueService } from '../../services/offline-queue.service';
+import { apiClient } from '../../services/api';
 
 interface Campaign {
   id: string;
@@ -42,9 +45,15 @@ interface SampleAllocation {
 
 const ActivationWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [samplesLoading, setSamplesLoading] = useState(false);
+  const [queuedActivationsCount, setQueuedActivationsCount] = useState(0);
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -95,92 +104,51 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const loadCampaigns = async () => {
     try {
-      setLoading(true);
-      const mockCampaigns: Campaign[] = [
-        {
-          id: '1',
-          name: 'Summer Promotion 2025',
-          campaign_type: 'product_launch',
-          start_date: '2025-11-01',
-          end_date: '2025-12-31',
-          budget: 50000
-        }
-      ];
-      setCampaigns(mockCampaigns);
+      setCampaignsLoading(true);
+      const response = await apiClient.get('/trade-marketing/campaigns', {
+        params: { status: 'active' }
+      });
+      setCampaigns(response.data.data || []);
+      setCampaignsLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load campaigns');
-    } finally {
-      setLoading(false);
+      setError('Failed to load campaigns. Please check your connection and try again.');
+      setCampaignsLoading(false);
     }
   };
 
   const loadCustomers = async () => {
     try {
-      setLoading(true);
-      const mockCustomers: Customer[] = [
-        {
-          id: '1',
-          name: 'SuperMart Downtown',
-          address: '123 Main Street, Johannesburg',
-          latitude: -26.2041,
-          longitude: 28.0473
-        }
-      ];
-      setCustomers(mockCustomers);
+      setCustomersLoading(true);
+      const response = await apiClient.get('/customers');
+      setCustomers(response.data.data || []);
+      setCustomersLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load customers');
-    } finally {
-      setLoading(false);
+      setError('Failed to load customers. Please check your connection and try again.');
+      setCustomersLoading(false);
     }
   };
 
   const loadActivationTasks = async () => {
     try {
-      setLoading(true);
-      const mockTasks: ActivationTask[] = [
-        {
-          id: '1',
-          task_type: 'shelf_placement',
-          task_description: 'Place promotional materials on main shelf',
-          requires_photo: true,
-          is_mandatory: true,
-          status: 'pending'
-        },
-        {
-          id: '2',
-          task_type: 'pos_material',
-          task_description: 'Install POS display at checkout',
-          requires_photo: true,
-          is_mandatory: true,
-          status: 'pending'
-        }
-      ];
-      setTasks(mockTasks);
+      setTasksLoading(true);
+      const response = await apiClient.get(`/trade-marketing/campaigns/${selectedCampaign?.id}/tasks`);
+      setTasks(response.data.data || []);
+      setTasksLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load tasks');
-    } finally {
-      setLoading(false);
+      setError('Failed to load activation tasks. Please check your connection and try again.');
+      setTasksLoading(false);
     }
   };
 
   const loadSampleAllocations = async () => {
     try {
-      setLoading(true);
-      const mockAllocations: SampleAllocation[] = [
-        {
-          id: '1',
-          product_name: 'Energy Drink Sample',
-          brand_name: 'PowerUp',
-          allocated_quantity: 50,
-          distributed_quantity: 10,
-          remaining_quantity: 40
-        }
-      ];
-      setSampleAllocations(mockAllocations);
+      setSamplesLoading(true);
+      const response = await apiClient.get('/samples/allocations');
+      setSampleAllocations(response.data.data || []);
+      setSamplesLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load sample allocations');
-    } finally {
-      setLoading(false);
+      setError('Failed to load sample allocations. Please check your connection and try again.');
+      setSamplesLoading(false);
     }
   };
 
@@ -196,7 +164,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const handleGPSValidation = () => {
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
+      setError('Geolocation is not supported by your browser. Please enable location services and try again.');
       return;
     }
 
@@ -205,6 +173,12 @@ const ActivationWorkflowPage: React.FC = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         setGpsLocation({ lat: latitude, lng: longitude, accuracy });
+
+        if (accuracy > 100) {
+          setError('GPS accuracy is poor (> 100m). Please move to an area with better GPS signal or wait for better accuracy.');
+          setLoading(false);
+          return;
+        }
 
         if (selectedCustomer) {
           const dist = calculateDistance(
@@ -219,13 +193,13 @@ const ActivationWorkflowPage: React.FC = () => {
             setGpsValidated(true);
             setCurrentStep(4);
           } else {
-            setError(`You are ${dist.toFixed(0)}m away from customer. Please move closer (max 10m).`);
+            setError(`You are ${dist.toFixed(0)}m away from customer. Please move closer (max 10m) or request manager override.`);
           }
         }
         setLoading(false);
       },
       (error) => {
-        setError(`GPS error: ${error.message}`);
+        setError(`GPS error: ${error.message}. Please enable location services and try again.`);
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -267,7 +241,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const handleSubmitActivation = async () => {
     if (!selectedCampaign || !selectedCustomer || !gpsLocation) {
-      setError('Please complete all required steps');
+      setError('Please complete all required steps: campaign, customer, and GPS validation.');
       return;
     }
 
@@ -276,25 +250,109 @@ const ActivationWorkflowPage: React.FC = () => {
     );
 
     if (incompleteTasks.length > 0) {
-      setError('Please complete all mandatory tasks with photos');
+      setError(`Please complete all mandatory tasks with photos. ${incompleteTasks.length} task(s) remaining.`);
       return;
+    }
+
+    const totalSamplesDistributed = Object.values(sampleDistributions).reduce((sum, qty) => sum + qty, 0);
+    
+    if (sampleAllocations.length > 0 && totalSamplesDistributed === 0) {
+      setError('Please distribute at least one sample before completing the activation.');
+      return;
+    }
+
+    for (const allocationId in sampleDistributions) {
+      const allocation = sampleAllocations.find(a => a.id === allocationId);
+      const distributedQty = sampleDistributions[allocationId];
+      
+      if (allocation && distributedQty > allocation.remaining_quantity) {
+        setError(`Cannot distribute ${distributedQty} samples of ${allocation.product_name}. Only ${allocation.remaining_quantity} remaining.`);
+        return;
+      }
+      
+      if (distributedQty < 0) {
+        setError('Sample quantity cannot be negative. Please enter a valid number.');
+        return;
+      }
     }
 
     try {
       setLoading(true);
+      
+      const activationData = {
+        campaign_id: selectedCampaign.id,
+        customer_id: selectedCustomer.id,
+        gps_lat: gpsLocation.lat,
+        gps_lng: gpsLocation.lng,
+        gps_accuracy: gpsLocation.accuracy,
+        tasks: tasks.map(task => ({
+          task_id: task.id,
+          photo: taskPhotos[task.id],
+          notes: taskNotes[task.id],
+          status: taskPhotos[task.id] ? 'completed' : 'skipped'
+        })),
+        samples: Object.entries(sampleDistributions).map(([allocationId, quantity]) => ({
+          allocation_id: allocationId,
+          quantity_distributed: quantity
+        })),
+        recipient_info: recipientInfo,
+        idempotency_key: `activation-${Date.now()}`,
+      };
+
+      const response = await apiClient.post('/trade-marketing/activations', activationData);
+
       const summary = {
-        activation_id: `ACT-${Date.now()}`,
+        activation_id: response.data.data?.id || `ACT-${Date.now()}`,
         campaign: selectedCampaign.name,
         customer: selectedCustomer.name,
         tasks_completed: Object.keys(taskPhotos).length,
-        samples_distributed: Object.values(sampleDistributions).reduce((sum, qty) => sum + qty, 0)
+        total_tasks: tasks.length,
+        samples_distributed: totalSamplesDistributed,
+        reach_estimate: response.data.data?.reach_estimate || 0
       };
 
       setActivationSummary(summary);
       setCurrentStep(6);
+      setLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit activation');
-    } finally {
+      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
+        const queueId = offlineQueueService.addToQueue('/trade-marketing/activations', 'POST', {
+          campaign_id: selectedCampaign.id,
+          customer_id: selectedCustomer.id,
+          gps_lat: gpsLocation.lat,
+          gps_lng: gpsLocation.lng,
+          gps_accuracy: gpsLocation.accuracy,
+          tasks: tasks.map(task => ({
+            task_id: task.id,
+            photo: taskPhotos[task.id],
+            notes: taskNotes[task.id],
+            status: taskPhotos[task.id] ? 'completed' : 'skipped'
+          })),
+          samples: Object.entries(sampleDistributions).map(([allocationId, quantity]) => ({
+            allocation_id: allocationId,
+            quantity_distributed: quantity
+          })),
+          recipient_info: recipientInfo,
+          idempotency_key: `activation-${Date.now()}`,
+        });
+        setQueuedActivationsCount(offlineQueueService.getQueueCount());
+        
+        const summary = {
+          activation_id: queueId,
+          campaign: selectedCampaign.name,
+          customer: selectedCustomer.name,
+          tasks_completed: Object.keys(taskPhotos).length,
+          total_tasks: tasks.length,
+          samples_distributed: totalSamplesDistributed,
+          queued: true
+        };
+        setActivationSummary(summary);
+        setCurrentStep(6);
+        setLoading(false);
+        return;
+      }
+      
+      setError(err.response?.data?.message || 'Failed to submit activation. Please try again.');
       setLoading(false);
     }
   };

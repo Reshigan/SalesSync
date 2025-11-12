@@ -35,6 +35,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Skeleton,
 } from '@mui/material';
 import {
   LocationOn,
@@ -45,8 +46,13 @@ import {
   Image,
   Inventory,
   AttachMoney,
+  WifiOff,
+  Wifi,
+  Refresh,
 } from '@mui/icons-material';
 import { apiClient } from '../../services/api';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { offlineQueueService } from '../../services/offline-queue.service';
 
 interface Customer {
   id: string;
@@ -79,9 +85,13 @@ const steps = [
 
 export default function AgentWorkflowPage() {
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [brandsLoading, setBrandsLoading] = useState(true);
+  const [queuedVisitsCount, setQueuedVisitsCount] = useState(0);
 
   const [isNewCustomer, setIsNewCustomer] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -107,20 +117,28 @@ export default function AgentWorkflowPage() {
   }, []);
 
   const loadCustomers = async () => {
+    setCustomersLoading(true);
     try {
       const response = await apiClient.get('/customers');
       setCustomers(response.data.data || []);
+      setCustomersLoading(false);
     } catch (err) {
       console.error('Error loading customers:', err);
+      setError('Failed to load customers. Please check your connection and try again.');
+      setCustomersLoading(false);
     }
   };
 
   const loadBrands = async () => {
+    setBrandsLoading(true);
     try {
       const response = await apiClient.get('/brands');
       setBrands(response.data.data || []);
+      setBrandsLoading(false);
     } catch (err) {
       console.error('Error loading brands:', err);
+      setError('Failed to load brands. Please check your connection and try again.');
+      setBrandsLoading(false);
     }
   };
 
@@ -140,11 +158,15 @@ export default function AgentWorkflowPage() {
 
     if (activeStep === 1) {
       if (!currentLocation) {
-        setError('GPS location is required');
+        setError('GPS location is required. Please enable location services and try again.');
+        return;
+      }
+      if (gpsAccuracy && gpsAccuracy > 100) {
+        setError('GPS accuracy is poor (> 100m). Please move to an area with better GPS signal or wait for better accuracy.');
         return;
       }
       if (requiresOverride) {
-        setError('GPS override required - distance > 10m');
+        setError('You are more than 10m away from the customer location. Please move closer or request manager override.');
         return;
       }
     }
@@ -226,7 +248,7 @@ export default function AgentWorkflowPage() {
   const createVisit = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.post('/field-operations/visits', {
+      const visitData = {
         customer_id: isNewCustomer ? null : selectedCustomer?.id,
         brand_ids: selectedBrands.map((b) => b.id),
         gps_lat: currentLocation?.lat,
@@ -234,14 +256,37 @@ export default function AgentWorkflowPage() {
         gps_accuracy: gpsAccuracy,
         visit_type: 'field_marketing',
         is_new_customer: isNewCustomer,
+        new_customer_name: isNewCustomer ? newCustomerName : null,
         idempotency_key: `visit-${Date.now()}`,
-      });
+      };
+
+      const response = await apiClient.post('/field-operations/visits', visitData);
 
       setVisitId(response.data.data.visit.id);
       setVisitTasks(response.data.data.tasks || []);
       setLoading(false);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create visit');
+      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
+        const queueId = offlineQueueService.addToQueue('/field-operations/visits', 'POST', {
+          customer_id: isNewCustomer ? null : selectedCustomer?.id,
+          brand_ids: selectedBrands.map((b) => b.id),
+          gps_lat: currentLocation?.lat,
+          gps_lng: currentLocation?.lng,
+          gps_accuracy: gpsAccuracy,
+          visit_type: 'field_marketing',
+          is_new_customer: isNewCustomer,
+          new_customer_name: isNewCustomer ? newCustomerName : null,
+          idempotency_key: `visit-${Date.now()}`,
+        });
+        setQueuedVisitsCount(offlineQueueService.getQueueCount());
+        setError('You are offline. Visit has been queued and will be submitted when connection is restored.');
+        setVisitId(queueId);
+        setVisitTasks([]);
+        setLoading(false);
+        return;
+      }
+      
+      setError(err.response?.data?.message || 'Failed to create visit. Please try again.');
       setLoading(false);
       throw err;
     }

@@ -470,6 +470,13 @@ async function startServer() {
     app.use('/api/advanced-reporting', authTenantMiddleware, advancedReportingRoutes);
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
+    
+    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
+    const cashReconciliationEnhancedRoutes = require('./routes/cash-reconciliation-enhanced');
+    const dashboardsRoutes = require('./routes/dashboards');
+    app.use('/api/orders-enhanced', authTenantMiddleware, ordersEnhancedRoutes);
+    app.use('/api/cash-reconciliation', authTenantMiddleware, cashReconciliationEnhancedRoutes);
+    app.use('/api/dashboards', authTenantMiddleware, dashboardsRoutes);
     app.use('/api/settings', authTenantMiddleware, settingsRoutes);
     app.use('/api/workflows', authTenantMiddleware, workflowRoutes);
     

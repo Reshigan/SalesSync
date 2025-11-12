@@ -153,6 +153,7 @@ router.delete('/territories/:id', async (req, res) => {
 // GET /api/admin/stats - Admin overview statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
+  const { getOneQuery } = require('../utils/database');
   
   const [userStats, activityStats, systemHealth] = await Promise.all([
     getOneQuery(`

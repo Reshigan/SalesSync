@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
-  Navigation, Warehouse, TrendingUp, TrendingDown
+  Navigation, Warehouse, TrendingUp, TrendingDown, WifiOff, Wifi, Refresh
 } from 'lucide-react';
+import { useOnlineStatus } from '../../hooks/useOnlineStatus';
+import { offlineQueueService } from '../../services/offline-queue.service';
+import { apiClient } from '../../services/api';
 
 interface Warehouse {
   id: string;
@@ -32,9 +35,13 @@ interface CountItem {
 
 const StockCountWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
+  const isOnline = useOnlineStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [warehousesLoading, setWarehousesLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [queuedCountsCount, setQueuedCountsCount] = useState(0);
 
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
@@ -70,37 +77,27 @@ const StockCountWorkflowPage: React.FC = () => {
 
   const loadWarehouses = async () => {
     try {
-      setLoading(true);
-      const mockWarehouses: Warehouse[] = [
-        {
-          id: '1',
-          name: 'Main Warehouse',
-          code: 'WH001',
-          address: '123 Industrial Road, Johannesburg',
-          latitude: -26.2041,
-          longitude: 28.0473
-        }
-      ];
-      setWarehouses(mockWarehouses);
+      setWarehousesLoading(true);
+      const response = await apiClient.get('/inventory/warehouses');
+      setWarehouses(response.data.data || []);
+      setWarehousesLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load warehouses');
-    } finally {
-      setLoading(false);
+      setError('Failed to load warehouses. Please check your connection and try again.');
+      setWarehousesLoading(false);
     }
   };
 
   const loadProducts = async () => {
     try {
-      setLoading(true);
-      const mockProducts: Product[] = [
-        { id: '1', name: 'Product A', code: 'PRD001', system_quantity: 100 },
-        { id: '2', name: 'Product B', code: 'PRD002', system_quantity: 50 }
-      ];
-      setProducts(mockProducts);
+      setProductsLoading(true);
+      const response = await apiClient.get('/products', {
+        params: { warehouse_id: selectedWarehouse?.id }
+      });
+      setProducts(response.data.data || []);
+      setProductsLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to load products');
-    } finally {
-      setLoading(false);
+      setError('Failed to load products. Please check your connection and try again.');
+      setProductsLoading(false);
     }
   };
 
@@ -111,7 +108,7 @@ const StockCountWorkflowPage: React.FC = () => {
 
   const handleGPSValidation = () => {
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser');
+      setError('Geolocation is not supported by your browser. Please enable location services and try again.');
       return;
     }
 
@@ -120,6 +117,12 @@ const StockCountWorkflowPage: React.FC = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         setGpsLocation({ lat: latitude, lng: longitude, accuracy });
+
+        if (accuracy > 100) {
+          setError('GPS accuracy is poor (> 100m). Please move to an area with better GPS signal or wait for better accuracy.');
+          setLoading(false);
+          return;
+        }
 
         if (selectedWarehouse) {
           const dist = calculateDistance(
@@ -134,13 +137,13 @@ const StockCountWorkflowPage: React.FC = () => {
             setGpsValidated(true);
             setCurrentStep(3);
           } else {
-            setError(`You are ${dist.toFixed(0)}m away from warehouse. Please move closer (max 50m).`);
+            setError(`You are ${dist.toFixed(0)}m away from warehouse. Please move closer (max 50m) or request manager override.`);
           }
         }
         setLoading(false);
       },
       (error) => {
-        setError(`GPS error: ${error.message}`);
+        setError(`GPS error: ${error.message}. Please enable location services and try again.`);
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -163,7 +166,20 @@ const StockCountWorkflowPage: React.FC = () => {
   };
 
   const handleCountProduct = (product: Product, countedQty: number) => {
+    if (countedQty < 0) {
+      setError('Counted quantity cannot be negative. Please enter a valid number.');
+      return;
+    }
+
     const variance = countedQty - product.system_quantity;
+    const variancePercent = product.system_quantity > 0 
+      ? Math.abs(variance / product.system_quantity) * 100 
+      : 0;
+
+    if (variancePercent > 50) {
+      setError(`Warning: Variance of ${variancePercent.toFixed(0)}% detected for ${product.name}. Please verify count is correct.`);
+    }
+
     const existingItem = countItems.find(item => item.product_id === product.id);
 
     if (existingItem) {
@@ -211,7 +227,12 @@ const StockCountWorkflowPage: React.FC = () => {
 
   const handleSubmitCount = async () => {
     if (!selectedWarehouse || !gpsLocation || countItems.length === 0) {
-      setError('Please complete all required steps');
+      setError('Please complete all required steps: warehouse, GPS validation, and product counts.');
+      return;
+    }
+
+    if (!photo) {
+      setError('Photo is required. Please capture a photo of the stock count.');
       return;
     }
 
@@ -220,26 +241,69 @@ const StockCountWorkflowPage: React.FC = () => {
     );
 
     if (variancesWithoutReasons.length > 0) {
-      setError('Please provide reasons for all variances');
+      setError('Please provide reasons for all variances before submitting.');
       return;
     }
 
     try {
       setLoading(true);
+      
+      const countData = {
+        warehouse_id: selectedWarehouse.id,
+        gps_lat: gpsLocation.lat,
+        gps_lng: gpsLocation.lng,
+        gps_accuracy: gpsLocation.accuracy,
+        items: countItems,
+        photo: photo,
+        notes: notes,
+        idempotency_key: `count-${Date.now()}`,
+      };
+
+      const response = await apiClient.post('/inventory/stock-counts', countData);
+
       const summary = {
-        count_id: `CNT-${Date.now()}`,
+        count_id: response.data.data?.id || `CNT-${Date.now()}`,
         warehouse: selectedWarehouse.name,
         total_items: countItems.length,
         total_variance: countItems.reduce((sum, item) => sum + Math.abs(item.variance), 0),
         overages: countItems.filter(item => item.variance > 0).length,
-        shortages: countItems.filter(item => item.variance < 0).length
+        shortages: countItems.filter(item => item.variance < 0).length,
+        adjustments_created: response.data.data?.adjustments_created || 0
       };
 
       setCountSummary(summary);
       setCurrentStep(5);
+      setLoading(false);
     } catch (err: any) {
-      setError(err.message || 'Failed to submit stock count');
-    } finally {
+      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
+        const queueId = offlineQueueService.addToQueue('/inventory/stock-counts', 'POST', {
+          warehouse_id: selectedWarehouse.id,
+          gps_lat: gpsLocation.lat,
+          gps_lng: gpsLocation.lng,
+          gps_accuracy: gpsLocation.accuracy,
+          items: countItems,
+          photo: photo,
+          notes: notes,
+          idempotency_key: `count-${Date.now()}`,
+        });
+        setQueuedCountsCount(offlineQueueService.getQueueCount());
+        
+        const summary = {
+          count_id: queueId,
+          warehouse: selectedWarehouse.name,
+          total_items: countItems.length,
+          total_variance: countItems.reduce((sum, item) => sum + Math.abs(item.variance), 0),
+          overages: countItems.filter(item => item.variance > 0).length,
+          shortages: countItems.filter(item => item.variance < 0).length,
+          queued: true
+        };
+        setCountSummary(summary);
+        setCurrentStep(5);
+        setLoading(false);
+        return;
+      }
+      
+      setError(err.response?.data?.message || 'Failed to submit stock count. Please try again.');
       setLoading(false);
     }
   };

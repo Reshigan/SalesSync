@@ -238,6 +238,54 @@ router.get('/test', asyncHandler(async (req, res) => {
   });
 }));
 
+router.get('/recent-activity', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  const limit = parseInt(req.query.limit) || 10;
+  
+  const recentOrders = await getQuery(`
+    SELECT 
+      'order' as activity_type,
+      o.id,
+      o.order_date as activity_date,
+      o.total_amount as amount,
+      c.name as customer_name,
+      u.first_name || ' ' || u.last_name as agent_name
+    FROM orders o
+    LEFT JOIN customers c ON o.customer_id = c.id
+    LEFT JOIN agents a ON o.salesman_id = a.id
+    LEFT JOIN users u ON a.user_id = u.id
+    WHERE o.tenant_id = ?
+    ORDER BY o.order_date DESC
+    LIMIT ?
+  `, [tenantId, limit]);
+  
+  const recentVisits = await getQuery(`
+    SELECT 
+      'visit' as activity_type,
+      v.id,
+      v.visit_date as activity_date,
+      NULL as amount,
+      c.name as customer_name,
+      u.first_name || ' ' || u.last_name as agent_name
+    FROM visits v
+    LEFT JOIN customers c ON v.customer_id = c.id
+    LEFT JOIN agents a ON v.agent_id = a.id
+    LEFT JOIN users u ON a.user_id = u.id
+    WHERE v.tenant_id = ?
+    ORDER BY v.visit_date DESC
+    LIMIT ?
+  `, [tenantId, limit]);
+  
+  const allActivities = [...recentOrders, ...recentVisits]
+    .sort((a, b) => new Date(b.activity_date) - new Date(a.activity_date))
+    .slice(0, limit);
+  
+  res.json({
+    success: true,
+    data: allActivities
+  });
+}));
+
 // GET /api/analytics/stats - Analytics overview statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
