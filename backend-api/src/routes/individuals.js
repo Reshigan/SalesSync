@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/connection');
+const { getDatabase } = require('../database/init');
 const { normalizePhone, hashIdNumber } = require('../services/fraud-detection.service');
 
 /**
