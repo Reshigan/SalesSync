@@ -317,10 +317,141 @@ async function createTables() {
       line_total DECIMAL(12,2) NOT NULL,
       FOREIGN KEY (order_id) REFERENCES orders(id),
       FOREIGN KEY (product_id) REFERENCES products(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS visits (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      customer_id UUID,
+      subject_type VARCHAR(50) CHECK(subject_type IN ('customer', 'individual')),
+      subject_id UUID,
+      agent_id UUID NOT NULL,
+      visit_date TIMESTAMP NOT NULL,
+      check_in_time TIMESTAMP,
+      check_out_time TIMESTAMP,
+      duration_minutes INTEGER,
+      lat DECIMAL(10,8),
+      lng DECIMAL(11,8),
+      gps_accuracy DECIMAL(10,2),
+      visit_type VARCHAR(50),
+      status VARCHAR(50) DEFAULT 'pending',
+      notes TEXT,
+      fraud_flags JSONB,
+      fraud_score DECIMAL(3,2) DEFAULT 0.0,
+      requires_review BOOLEAN DEFAULT false,
+      reviewed_by UUID,
+      reviewed_at TIMESTAMP,
+      review_notes TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (customer_id) REFERENCES customers(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      FOREIGN KEY (reviewed_by) REFERENCES users(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS visit_tasks (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      task_type VARCHAR(50) NOT NULL,
+      applies_to VARCHAR(50) DEFAULT 'both' CHECK(applies_to IN ('customer', 'individual', 'both')),
+      is_mandatory BOOLEAN DEFAULT false,
+      sequence_order INTEGER DEFAULT 0,
+      status VARCHAR(50) DEFAULT 'active',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS survey_templates (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      survey_type VARCHAR(50),
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS survey_questions (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      survey_template_id UUID NOT NULL,
+      question_text TEXT NOT NULL,
+      question_type VARCHAR(50) NOT NULL,
+      options JSONB,
+      is_required BOOLEAN DEFAULT false,
+      sequence_order INTEGER DEFAULT 0,
+      dedupe_key BOOLEAN DEFAULT false,
+      dedupe_scope VARCHAR(50) DEFAULT 'none' CHECK(dedupe_scope IN ('ever', 'day', 'week', 'month', 'none')),
+      dedupe_across VARCHAR(50) DEFAULT 'subject' CHECK(dedupe_across IN ('subject', 'agent', 'tenant')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (survey_template_id) REFERENCES survey_templates(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS individuals (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      phone VARCHAR(20),
+      phone_normalized VARCHAR(20),
+      id_type VARCHAR(50),
+      id_number VARCHAR(100),
+      id_hash VARCHAR(255),
+      address TEXT,
+      lat DECIMAL(10,8),
+      lng DECIMAL(11,8),
+      status VARCHAR(50) DEFAULT 'active' CHECK(status IN ('active', 'inactive', 'blocked')),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS dedupe_registry (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      subject_type VARCHAR(50) NOT NULL CHECK(subject_type IN ('customer', 'individual')),
+      subject_id UUID NOT NULL,
+      agent_id UUID NOT NULL,
+      visit_date DATE NOT NULL,
+      visit_timestamp TIMESTAMP NOT NULL,
+      lat DECIMAL(10,8),
+      lng DECIMAL(11,8),
+      gps_accuracy DECIMAL(10,2),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id),
+      UNIQUE (tenant_id, agent_id, subject_type, subject_id, visit_date)
+    )`,
+    
+    `CREATE TABLE IF NOT EXISTS survey_dedupe_registry (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      tenant_id UUID NOT NULL,
+      survey_template_id UUID NOT NULL,
+      subject_type VARCHAR(50) NOT NULL CHECK(subject_type IN ('customer', 'individual')),
+      subject_id UUID NOT NULL,
+      agent_id UUID,
+      dedupe_key_hash VARCHAR(255) NOT NULL,
+      submission_date DATE NOT NULL,
+      submission_timestamp TIMESTAMP NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+      FOREIGN KEY (survey_template_id) REFERENCES survey_templates(id),
+      FOREIGN KEY (agent_id) REFERENCES users(id)
     )`
   ];
 
   console.log('Creating database tables...');
+  
+  try {
+    await runQuery('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
+    console.log('UUID extension enabled');
+  } catch (error) {
+    console.log('UUID extension already enabled or not needed');
+  }
+  
   for (const table of tables) {
     try {
       await runQuery(table);
@@ -329,7 +460,30 @@ async function createTables() {
       throw error;
     }
   }
-  console.log('All tables created successfully');
+  
+  // Create indexes for fraud prevention
+  const indexes = [
+    'CREATE INDEX IF NOT EXISTS idx_individuals_phone_tenant ON individuals(tenant_id, phone_normalized) WHERE phone_normalized IS NOT NULL',
+    'CREATE INDEX IF NOT EXISTS idx_individuals_id_hash ON individuals(tenant_id, id_hash) WHERE id_hash IS NOT NULL',
+    'CREATE INDEX IF NOT EXISTS idx_individuals_location ON individuals(tenant_id, lat, lng) WHERE lat IS NOT NULL AND lng IS NOT NULL',
+    'CREATE INDEX IF NOT EXISTS idx_visits_subject ON visits(tenant_id, subject_type, subject_id)',
+    'CREATE INDEX IF NOT EXISTS idx_visits_gps_time ON visits(tenant_id, lat, lng, visit_date) WHERE lat IS NOT NULL AND lng IS NOT NULL',
+    'CREATE INDEX IF NOT EXISTS idx_visits_fraud_review ON visits(tenant_id, requires_review, fraud_score DESC) WHERE requires_review = true',
+    'CREATE INDEX IF NOT EXISTS idx_dedupe_registry_gps ON dedupe_registry(tenant_id, subject_type, subject_id, visit_timestamp, lat, lng) WHERE lat IS NOT NULL AND lng IS NOT NULL',
+    'CREATE INDEX IF NOT EXISTS idx_survey_dedupe_lookup ON survey_dedupe_registry(tenant_id, survey_template_id, subject_type, subject_id, dedupe_key_hash, submission_date)',
+    'CREATE INDEX IF NOT EXISTS idx_survey_dedupe_agent ON survey_dedupe_registry(tenant_id, survey_template_id, agent_id, dedupe_key_hash, submission_date) WHERE agent_id IS NOT NULL'
+  ];
+  
+  console.log('Creating indexes...');
+  for (const index of indexes) {
+    try {
+      await runQuery(index);
+    } catch (error) {
+      console.error('Error creating index:', error.message);
+    }
+  }
+  
+  console.log('All tables and indexes created successfully');
 }
 
 async function seedInitialData() {

@@ -33,7 +33,7 @@ const authTenantMiddleware = async (req, res, next) => {
 
     // Validate tenant exists and is active
     const tenant = await getOneQuery(
-      'SELECT * FROM tenants WHERE id = ? AND status = ?',
+      'SELECT * FROM tenants WHERE id = $1 AND status = $2',
       [decoded.tenantId, 'active']
     );
 
@@ -57,7 +57,7 @@ const authTenantMiddleware = async (req, res, next) => {
 
     // Get user from database
     const user = await getOneQuery(
-      'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
+      'SELECT * FROM users WHERE id = $1 AND tenant_id = $2 AND status = $3',
       [decoded.userId, decoded.tenantId, 'active']
     );
 
@@ -74,7 +74,6 @@ const authTenantMiddleware = async (req, res, next) => {
     const permissions = await getQuery(`
       SELECT 
         m.code as module_code,
-        f.code as function_code,
         rp.can_view,
         rp.can_create,
         rp.can_edit,
@@ -83,28 +82,28 @@ const authTenantMiddleware = async (req, res, next) => {
         rp.can_export
       FROM role_permissions rp
       JOIN modules m ON m.id = rp.module_id
-      JOIN functions f ON f.id = rp.function_id
-      WHERE rp.tenant_id = ? AND rp.role = ?
+      WHERE rp.tenant_id = $1 AND rp.role = $2
     `, [decoded.tenantId, user.role]);
     
     // Organize permissions by module
     const userPermissions = {};
     permissions.forEach(p => {
       if (!userPermissions[p.module_code]) {
-        userPermissions[p.module_code] = {};
+        userPermissions[p.module_code] = {
+          view: p.can_view,
+          create: p.can_create,
+          edit: p.can_edit,
+          delete: p.can_delete,
+          approve: p.can_approve,
+          export: p.can_export
+        };
       }
-      userPermissions[p.module_code][p.function_code] = {
-        view: p.can_view,
-        create: p.can_create,
-        edit: p.can_edit,
-        delete: p.can_delete,
-        approve: p.can_approve,
-        export: p.can_export
-      };
     });
 
-    // Parse tenant features
-    const tenantFeatures = tenant.features ? JSON.parse(tenant.features) : {};
+    // Parse tenant features (PostgreSQL JSONB is already an object, SQLite TEXT needs parsing)
+    const tenantFeatures = tenant.features 
+      ? (typeof tenant.features === 'string' ? JSON.parse(tenant.features) : tenant.features)
+      : {};
     
     // Attach all context to request
     req.user = {
@@ -167,7 +166,7 @@ const checkUserLimits = async (req, res, next) => {
     
     if (req.method === 'POST' && req.path.includes('/users')) {
       const userCount = await getOneQuery(
-        'SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND status = ?',
+        'SELECT COUNT(*) as count FROM users WHERE tenant_id = $1 AND status = $2',
         [req.tenantId, 'active']
       );
       
