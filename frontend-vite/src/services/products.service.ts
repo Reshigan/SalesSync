@@ -158,7 +158,7 @@ class ProductsService {
 
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get('/api/categories')
+      const response = await apiClient.get(this.buildUrl('/categories'))
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch categories:', error)
@@ -168,7 +168,7 @@ class ProductsService {
 
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await apiClient.get('/api/brands')
+      const response = await apiClient.get(this.buildUrl('/brands'))
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch brands:', error)
