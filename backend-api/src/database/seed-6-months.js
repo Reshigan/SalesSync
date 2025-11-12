@@ -3,7 +3,7 @@
  * Seeds realistic transaction data across all flows
  */
 
-const { getDatabase } = require('../database/connection');
+const { getDatabase } = require('./connection');
 const crypto = require('crypto');
 
 function generateDateRange(monthsBack = 6) {
