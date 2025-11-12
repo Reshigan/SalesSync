@@ -100,8 +100,10 @@ const authTenantMiddleware = async (req, res, next) => {
       }
     });
 
-    // Parse tenant features
-    const tenantFeatures = tenant.features ? JSON.parse(tenant.features) : {};
+    // Parse tenant features (PostgreSQL JSONB is already an object, SQLite TEXT needs parsing)
+    const tenantFeatures = tenant.features 
+      ? (typeof tenant.features === 'string' ? JSON.parse(tenant.features) : tenant.features)
+      : {};
     
     // Attach all context to request
     req.user = {
