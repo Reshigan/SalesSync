@@ -517,7 +517,7 @@ async function startServer() {
     app.use('/api/van-sales/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/van-sales/trends', authTenantMiddleware, trendsRoutes);
     app.use('/api/van-sales/routes', authTenantMiddleware, routeRoutes);
-    app.use('/api/van-sales/orders', authTenantMiddleware, ordersRoutes);
+    app.use('/api/van-sales/orders', authTenantMiddleware, orderRoutes);
     
     app.use('/api/trade-marketing/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/trade-marketing/analytics', authTenantMiddleware, analyticsRoutes);
