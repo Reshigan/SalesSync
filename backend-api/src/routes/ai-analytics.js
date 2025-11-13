@@ -108,7 +108,7 @@ router.get('/forecasts', requireFunction('analytics', 'view'), async (req, res) 
       LEFT JOIN ai_models am ON sf.model_id = am.id
       LEFT JOIN products p ON sf.forecast_type = 'product' AND sf.target_id = p.id
       LEFT JOIN customers c ON sf.forecast_type = 'customer' AND sf.target_id = c.id
-      LEFT JOIN agents a ON sf.forecast_type = 'agent' AND sf.target_id = a.id
+      LEFT JOIN users a ON sf.forecast_type = 'agent' AND sf.target_id = a.id
       WHERE sf.tenant_id = ?
     `;
     
@@ -283,7 +283,7 @@ router.get('/insights/customers', requireFunction('analytics', 'view'), async (r
         c.email as customer_email
       FROM customer_insights ci
       LEFT JOIN customers c ON ci.customer_id = c.id
-      WHERE ci.tenant_id = ? AND (ci.expires_at IS NULL OR ci.expires_at > datetime('now'))
+      WHERE ci.tenant_id = ? AND (ci.expires_at IS NULL OR ci.expires_at > CURRENT_TIMESTAMP)
     `;
     
     const params = [req.user.tenantId];
@@ -392,7 +392,7 @@ router.get('/recommendations/products', requireFunction('analytics', 'view'), as
       LEFT JOIN customers c ON pr.customer_id = c.id
       LEFT JOIN products p ON pr.product_id = p.id
       WHERE pr.tenant_id = ? AND pr.is_active = 1 
-      AND (pr.expires_at IS NULL OR pr.expires_at > datetime('now'))
+      AND (pr.expires_at IS NULL OR pr.expires_at > CURRENT_TIMESTAMP)
     `;
     
     const params = [req.user.tenantId];
@@ -560,7 +560,7 @@ router.get('/benchmarks', requireFunction('analytics', 'view'), async (req, res)
           ELSE pb.entity_id
         END as entity_name
       FROM performance_benchmarks pb
-      LEFT JOIN agents a ON pb.entity_type = 'agent' AND pb.entity_id = a.id
+      LEFT JOIN users a ON pb.entity_type = 'agent' AND pb.entity_id = a.id
       LEFT JOIN products p ON pb.entity_type = 'product' AND pb.entity_id = p.id
       LEFT JOIN customers c ON pb.entity_type = 'customer' AND pb.entity_id = c.id
       WHERE pb.tenant_id = ?

@@ -31,13 +31,13 @@ router.post('/generate', async (req, res) => {
     let query, params = [req.user.tenantId];
     
     if (type === 'sales') {
-      query = `SELECT DATE(created_at) as date, COUNT(*) as count, SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at BETWEEN ? AND ? GROUP BY DATE(created_at)`;
+      query = `SELECT created_at::date as date, COUNT(*) as count, SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at BETWEEN ? AND ? GROUP BY created_at::date`;
       params.push(dateFrom, dateTo);
     } else if (type === 'commission') {
       query = `SELECT agent_id, SUM(amount) as total FROM commissions WHERE tenant_id = ? AND date BETWEEN ? AND ? GROUP BY agent_id`;
       params.push(dateFrom, dateTo);
     } else if (type === 'visits') {
-      query = `SELECT DATE(visit_date) as date, COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date BETWEEN ? AND ? GROUP BY DATE(visit_date)`;
+      query = `SELECT visit_date::date as date, COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date BETWEEN ? AND ? GROUP BY visit_date::date`;
       params.push(dateFrom, dateTo);
     }
     
@@ -101,10 +101,10 @@ router.post('/templates/:id/run', async (req, res) => {
 // Analytics Dashboard
 router.get('/analytics', async (req, res) => {
   try {
-    const revenue = req.db.prepare(`SELECT SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')`).get(req.user.tenantId);
+    const revenue = req.db.prepare(`SELECT SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at >= CURRENT_DATE - INTERVAL '30 days'`).get(req.user.tenantId);
     const agents = req.db.prepare(`SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND role = 'agent'`).get(req.user.tenantId);
-    const boards = req.db.prepare(`SELECT COUNT(*) as count FROM board_placements WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')`).get(req.user.tenantId);
-    const visits = req.db.prepare(`SELECT COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date >= DATE('now', '-30 days')`).get(req.user.tenantId);
+    const boards = req.db.prepare(`SELECT COUNT(*) as count FROM board_placements WHERE tenant_id = ? AND created_at >= CURRENT_DATE - INTERVAL '30 days'`).get(req.user.tenantId);
+    const visits = req.db.prepare(`SELECT COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date >= CURRENT_DATE - INTERVAL '30 days'`).get(req.user.tenantId);
     
     const topAgents = req.db.prepare(`
       SELECT u.name, COUNT(v.id) as visits, SUM(c.amount) as commission 
@@ -152,7 +152,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as total_reports,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_reports,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reports,
-        COUNT(CASE WHEN created_at >= DATE('now', '-30 days') THEN 1 END) as recent_reports
+        COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as recent_reports
       FROM generated_reports WHERE tenant_id = ?
     `, [tenantId]),
     
@@ -194,7 +194,7 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
 
   const salesData = await getQuery(`
     SELECT 
-      DATE(o.order_date) as date,
+      o.order_date::date as date,
       COUNT(o.id) as total_orders,
       SUM(o.total_amount) as total_revenue,
       AVG(o.total_amount) as avg_order_value,
@@ -203,7 +203,7 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
     WHERE o.tenant_id = ?
       AND o.order_date >= ?
       AND o.order_date <= ?
-    GROUP BY DATE(o.order_date)
+    GROUP BY o.order_date::date
     ORDER BY date DESC
   `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
 

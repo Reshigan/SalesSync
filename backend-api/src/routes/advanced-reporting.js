@@ -562,7 +562,7 @@ router.get('/benchmarks', requireFunction('reports', 'view'), async (req, res) =
           ELSE bc.entity_id
         END as entity_name
       FROM benchmark_comparisons bc
-      LEFT JOIN agents a ON bc.entity_type = 'agent' AND bc.entity_id = a.id
+      LEFT JOIN users a ON bc.entity_type = 'agent' AND bc.entity_id = a.id
       LEFT JOIN products p ON bc.entity_type = 'product' AND bc.entity_id = p.id
       LEFT JOIN customers c ON bc.entity_type = 'customer' AND bc.entity_id = c.id
       WHERE bc.tenant_id = ?
@@ -654,12 +654,12 @@ router.get('/analytics', requireFunction('reports', 'view'), async (req, res) =>
     // Daily usage trend
     const usageTrend = await db.all(`
       SELECT 
-        DATE(timestamp) as date,
+        timestamp::date as date,
         COUNT(*) as total_actions,
         COUNT(DISTINCT user_id) as unique_users
       FROM report_analytics 
       WHERE tenant_id = ? AND timestamp >= date('now', '-${period} days')
-      GROUP BY DATE(timestamp)
+      GROUP BY timestamp::date
       ORDER BY date DESC
     `, [req.user.tenantId]);
     
@@ -698,7 +698,7 @@ async function generateReportData(template, parameters, filters, tenantId) {
           a.name as agent_name
         FROM orders o
         LEFT JOIN customers c ON o.customer_id = c.id
-        LEFT JOIN agents a ON o.agent_id = a.id
+        LEFT JOIN users a ON o.agent_id = a.id
         WHERE o.tenant_id = ?
       `;
       

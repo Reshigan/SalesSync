@@ -109,7 +109,7 @@ router.post('/', authMiddleware, async (req, res) => {
             before_photo_url, after_photo_url, storefront_area_sqm, board_area_sqm,
             coverage_percentage, visibility_score, optimal_position, quality_score,
             commission_amount, status, notes, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             installationId, tenantId, agentId, customer_id, board_id, brand_id, visit_id,
             latitude, longitude, gps_accuracy,
@@ -139,7 +139,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 `INSERT INTO commission_transactions (
                   id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
                   base_amount, total_amount, calculation_details, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
                 [
                   commissionId, tenantId, agentId, 'board_installation',
                   'board_installation', installationId,
@@ -193,7 +193,7 @@ router.get('/', authMiddleware, async (req, res) => {
       LEFT JOIN boards b ON bi.board_id = b.id
       LEFT JOIN customers c ON bi.customer_id = c.id
       LEFT JOIN brands br ON bi.brand_id = br.id
-      LEFT JOIN agents a ON bi.agent_id = a.id
+      LEFT JOIN users a ON bi.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE bi.tenant_id = ?
     `;
@@ -256,7 +256,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN customers c ON bi.customer_id = c.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       LEFT JOIN agents a ON bi.agent_id = a.id
+       LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
        WHERE bi.id = ? AND bi.tenant_id = ?`,
       [id, tenantId],
@@ -298,7 +298,7 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
         visibility_score = COALESCE(?, visibility_score),
         optimal_position = COALESCE(?, optimal_position),
         quality_score = COALESCE(?, quality_score),
-        updated_at = datetime('now')
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND tenant_id = ?`,
       [
         storefront_area_sqm,
@@ -381,7 +381,7 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
        FROM board_installations bi
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       LEFT JOIN agents a ON bi.agent_id = a.id
+       LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
        WHERE bi.customer_id = ? AND bi.tenant_id = ?
        ORDER BY bi.installation_date DESC`,

@@ -28,7 +28,7 @@ router.post('/visits', asyncHandler(async (req, res) => {
   }
   
   const agent = await getOneQuery(
-    'SELECT id FROM agents WHERE user_id = ? AND tenant_id = ?',
+    'SELECT id FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND user_id = ? AND tenant_id = ?',
     [userId, tenantId]
   );
   
@@ -61,7 +61,7 @@ router.post('/visits', asyncHandler(async (req, res) => {
       `INSERT INTO visits (
         id, tenant_id, agent_id, customer_id, visit_date, check_in_time,
         latitude, longitude, gps_accuracy, distance_meters, visit_type, status, created_at
-      ) VALUES (?, ?, ?, ?, date('now'), datetime('now'), ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, CURRENT_DATE, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [visitId, tenantId, agentId, customer_id, gps_lat, gps_lng, gps_accuracy, distanceMeters,
        visit_type || 'field_marketing', requiresOverride ? 'pending_override' : 'in_progress'],
       (err) => { if (err) return reject(err); resolve(); }
@@ -108,7 +108,7 @@ router.get('/visits/active', asyncHandler(async (req, res) => {
     `SELECT v.*, a.id as agent_id, u.first_name || ' ' || u.last_name as agent_name,
             c.name as customer_name, c.address as customer_address, c.latitude as customer_latitude, c.longitude as customer_longitude
      FROM visits v
-     JOIN agents a ON v.agent_id = a.id
+     JOIN users a ON v.agent_id = a.id
      LEFT JOIN users u ON a.user_id = u.id
      JOIN customers c ON v.customer_id = c.id
      WHERE v.tenant_id = ? AND v.status = 'in_progress'
@@ -124,7 +124,7 @@ router.get('/visits/active', asyncHandler(async (req, res) => {
     `SELECT v.*, a.id as agent_id, u.first_name || ' ' || u.last_name as agent_name,
             c.name as customer_name, c.address as customer_address, c.latitude as customer_latitude, c.longitude as customer_longitude
      FROM visits v
-     JOIN agents a ON v.agent_id = a.id
+     JOIN users a ON v.agent_id = a.id
      LEFT JOIN users u ON a.user_id = u.id
      JOIN customers c ON v.customer_id = c.id
      WHERE v.tenant_id = ? AND v.status = 'in_progress'
@@ -210,7 +210,7 @@ router.post('/visits/:id/complete', asyncHandler(async (req, res) => {
     const totalCommission = commissionEvents[0]?.total || 0;
 
     await runQuery(
-      `UPDATE visits SET status = 'completed', check_out_time = datetime('now'), total_commission = ?
+      `UPDATE visits SET status = 'completed', check_out_time = CURRENT_TIMESTAMP, total_commission = ?
        WHERE id = ? AND tenant_id = ?`,
       [totalCommission, id, tenantId]
     );
@@ -232,7 +232,7 @@ router.patch('/tasks/:id', asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   await runQuery(
-    `UPDATE visit_tasks SET status = ?, completed_at = CASE WHEN ? = 'completed' THEN datetime('now') ELSE NULL END WHERE id = ?`,
+    `UPDATE visit_tasks SET status = ?, completed_at = CASE WHEN ? = 'completed' THEN CURRENT_TIMESTAMP ELSE NULL END WHERE id = ?`,
     [status, status, id]
   );
 

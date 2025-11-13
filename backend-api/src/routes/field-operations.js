@@ -115,7 +115,7 @@ router.get('/live/active-visits', asyncHandler(async (req, res) => {
       c.latitude as customer_latitude,
       c.longitude as customer_longitude
     FROM visits v
-    JOIN agents a ON v.agent_id = a.id
+    JOIN users a ON v.agent_id = a.id
     LEFT JOIN users u ON a.user_id = u.id
     JOIN customers c ON v.customer_id = c.id
     WHERE v.tenant_id = ? AND v.status = 'in_progress'

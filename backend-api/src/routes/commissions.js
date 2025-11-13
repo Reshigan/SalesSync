@@ -15,7 +15,7 @@ router.get('/', authMiddleware, async (req, res) => {
       SELECT ct.*, 
              u.first_name || ' ' || u.last_name as agent_name
       FROM commission_transactions ct
-      LEFT JOIN agents a ON ct.agent_id = a.id
+      LEFT JOIN users a ON ct.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE ct.tenant_id = ?
     `;
@@ -67,7 +67,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
               approver.first_name || ' ' || approver.last_name as approved_by_name,
               rejecter.first_name || ' ' || rejecter.last_name as rejected_by_name
        FROM commission_transactions ct
-       LEFT JOIN agents a ON ct.agent_id = a.id
+       LEFT JOIN users a ON ct.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
        LEFT JOIN users approver ON ct.approved_by = approver.id
        LEFT JOIN users rejecter ON ct.rejected_by = rejecter.id
@@ -121,8 +121,8 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
           `UPDATE commission_transactions SET
             status = 'approved',
             approved_by = ?,
-            approved_at = datetime('now'),
-            updated_at = datetime('now')
+            approved_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND tenant_id = ?`,
           [userId, id, tenantId],
           function(err) {
@@ -191,7 +191,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
         }
 
         db.get(
-          'SELECT total_commission_earned, total_commission_paid, commission_balance FROM agents WHERE id = ? AND tenant_id = ?',
+          'SELECT total_commission_earned, total_commission_paid, commission_balance FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND id = ? AND tenant_id = ?',
           [agentId, tenantId],
           (err, agent) => {
             if (err) console.error('Error fetching agent:', err);
@@ -235,7 +235,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(ct.id) as commission_count,
         COALESCE(SUM(ct.commission_amount), 0) as total_earned
       FROM commission_transactions ct
-      INNER JOIN agents a ON ct.agent_id = a.id
+      INNER JOIN users a ON ct.agent_id = a.id
       INNER JOIN users u ON a.user_id = u.id
       WHERE ct.tenant_id = ?
       GROUP BY u.id
@@ -245,11 +245,11 @@ router.get('/stats', asyncHandler(async (req, res) => {
     
     getQuery(`
       SELECT 
-        strftime('%Y-%m', ct.transaction_date) as month,
+        to_char(ct.transaction_date, 'YYYY-MM') as month,
         COUNT(*) as count,
         COALESCE(SUM(ct.commission_amount), 0) as total_amount
       FROM commission_transactions ct
-      WHERE ct.tenant_id = ? AND ct.transaction_date >= DATE('now', '-6 months')
+      WHERE ct.tenant_id = ? AND ct.transaction_date >= CURRENT_DATE - INTERVAL '6 month'
       GROUP BY month
       ORDER BY month DESC
     `, [tenantId])

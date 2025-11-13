@@ -15,7 +15,7 @@ router.post('/sessions/start', asyncHandler(async (req, res) => {
   const sessionId = require('crypto').randomBytes(16).toString('hex');
   await runQuery(
     `INSERT INTO cash_sessions (id, tenant_id, agent_id, opening_float, status, started_by, started_at)
-     VALUES (?, ?, ?, ?, 'open', ?, datetime('now'))`,
+     VALUES (?, ?, ?, ?, 'open', ?, CURRENT_TIMESTAMP)`,
     [sessionId, tenantId, agent_id, opening_float || 0, userId]
   );
 
@@ -35,7 +35,7 @@ router.post('/sessions/:id/collect', asyncHandler(async (req, res) => {
   const collectionId = require('crypto').randomBytes(16).toString('hex');
   await runQuery(
     `INSERT INTO cash_collections (id, session_id, order_id, amount, payment_method, denominations, collected_at)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
     [collectionId, id, order_id, amount, payment_method, JSON.stringify(denominations)]
   );
 
@@ -74,7 +74,7 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
     await runQuery(
       `UPDATE cash_sessions 
        SET closing_cash = ?, expected_cash = ?, variance = ?, variance_percentage = ?, 
-           denominations = ?, notes = ?, status = ?, closed_by = ?, closed_at = datetime('now')
+           denominations = ?, notes = ?, status = ?, closed_by = ?, closed_at = CURRENT_TIMESTAMP
        WHERE id = ?`,
       [closing_cash, expectedCash, variance, variancePercentage, JSON.stringify(denominations), notes, status, userId, id]
     );
@@ -134,7 +134,7 @@ router.post('/deposits', asyncHandler(async (req, res) => {
     const depositId = require('crypto').randomBytes(16).toString('hex');
     await runQuery(
       `INSERT INTO bank_deposits (id, tenant_id, bank_account, amount, deposit_slip_number, deposit_date, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [depositId, tenantId, bank_account, deposit_amount, deposit_slip_number, deposit_date, userId]
     );
 
@@ -166,7 +166,7 @@ router.get('/sessions', asyncHandler(async (req, res) => {
            u.first_name || ' ' || u.last_name as agent_name,
            COUNT(cc.id) as collection_count
     FROM cash_sessions cs
-    LEFT JOIN agents a ON cs.agent_id = a.id
+    LEFT JOIN users a ON cs.agent_id = a.id
     LEFT JOIN users u ON a.user_id = u.id
     LEFT JOIN cash_collections cc ON cs.id = cc.session_id
     WHERE cs.tenant_id = ?
@@ -182,11 +182,11 @@ router.get('/sessions', asyncHandler(async (req, res) => {
     params.push(agent_id);
   }
   if (date_from) {
-    query += ' AND DATE(cs.started_at) >= ?';
+    query += ' AND cs.started_at::date >= ?';
     params.push(date_from);
   }
   if (date_to) {
-    query += ' AND DATE(cs.started_at) <= ?';
+    query += ' AND cs.started_at::date <= ?';
     params.push(date_to);
   }
 
@@ -212,7 +212,7 @@ router.get('/reports/daily', asyncHandler(async (req, res) => {
        COUNT(CASE WHEN cs.status = 'pending_approval' THEN 1 END) as pending_approvals,
        COUNT(CASE WHEN cs.status = 'closed' THEN 1 END) as closed_sessions
      FROM cash_sessions cs
-     WHERE cs.tenant_id = ? AND DATE(cs.started_at) = ?`,
+     WHERE cs.tenant_id = ? AND cs.started_at::date = ?`,
     [tenantId, reportDate]
   );
 
@@ -224,9 +224,9 @@ router.get('/reports/daily', asyncHandler(async (req, res) => {
        SUM(cs.total_collected) as total_collected,
        SUM(cs.variance) as total_variance
      FROM cash_sessions cs
-     JOIN agents a ON cs.agent_id = a.id
+     JOIN users a ON cs.agent_id = a.id
      LEFT JOIN users u ON a.user_id = u.id
-     WHERE cs.tenant_id = ? AND DATE(cs.started_at) = ?
+     WHERE cs.tenant_id = ? AND cs.started_at::date = ?
      GROUP BY a.id, agent_name`,
     [tenantId, reportDate]
   );
