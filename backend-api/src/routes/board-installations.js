@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Calculate storefront coverage (simplified - real implementation would use image recognition)
 function calculateCoverage(storefrontArea, boardWidth, boardHeight) {
@@ -63,8 +63,6 @@ router.post('/', authMiddleware, async (req, res) => {
         error: 'Customer ID, Board ID, and Brand ID are required' 
       });
     }
-
-    const db = getDatabase();
 
     // Get board details and commission rate
     db.get(
@@ -225,8 +223,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY bi.installation_date DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, installations) => {
       if (err) {
         console.error('Error fetching installations:', err);
@@ -245,8 +241,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT bi.*, b.board_name, b.board_type, b.width_cm, b.height_cm,
               c.name as customer_name, c.address as customer_address,
@@ -289,8 +283,6 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
       optimal_position,
       quality_score
     } = req.body;
-
-    const db = getDatabase();
     db.run(
       `UPDATE board_installations SET
         storefront_area_sqm = COALESCE(?, storefront_area_sqm),
@@ -343,8 +335,6 @@ router.get('/agent/:agentId', authMiddleware, async (req, res) => {
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT bi.*, b.board_name, b.board_type, c.name as customer_name, br.name as brand_name
        FROM board_installations bi
@@ -373,8 +363,6 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT bi.*, b.board_name, b.board_type, br.name as brand_name,
               u.first_name || ' ' || u.last_name as agent_name
@@ -435,8 +423,6 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
       query += ' AND brand_id = ?';
       params.push(brand_id);
     }
-
-    const db = getDatabase();
     db.get(query, params, (err, summary) => {
       if (err) {
         console.error('Error fetching analytics summary:', err);

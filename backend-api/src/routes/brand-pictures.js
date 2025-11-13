@@ -10,7 +10,6 @@ const { getDatabase } = require('../database/queries');
 
 router.get('/', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     
     const pictures = db.prepare(`
@@ -38,7 +37,6 @@ router.get('/', authTenantMiddleware, async (req, res) => {
 
 router.get('/brand/:brandId', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     const { brandId } = req.params;
     
@@ -64,7 +62,6 @@ router.get('/brand/:brandId', authTenantMiddleware, async (req, res) => {
 
 router.get('/active/:pictureType', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     const { pictureType } = req.params;
     
@@ -96,7 +93,6 @@ router.get('/active/:pictureType', authTenantMiddleware, async (req, res) => {
 
 router.post('/', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     const userId = req.user.userId;
     
@@ -171,7 +167,6 @@ router.post('/', authTenantMiddleware, async (req, res) => {
 
 router.put('/:id/deactivate', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     const { id } = req.params;
 
@@ -200,7 +195,6 @@ router.put('/:id/deactivate', authTenantMiddleware, async (req, res) => {
 
 router.get('/comparisons', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     const { comparison_type, related_entity_type, related_entity_id } = req.query;
     
@@ -252,7 +246,6 @@ router.get('/comparisons', authTenantMiddleware, async (req, res) => {
 
 router.post('/compare', authTenantMiddleware, async (req, res) => {
   try {
-    const db = getDatabase();
     const tenantId = req.user.tenantId;
     
     const {
@@ -302,6 +295,7 @@ router.post('/compare', authTenantMiddleware, async (req, res) => {
     };
 
     const comparisonId = require('crypto').randomBytes(16).toString('hex');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
     
     db.prepare(`
       INSERT INTO picture_comparison_results (

@@ -10,7 +10,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -33,7 +32,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -58,7 +56,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
@@ -73,7 +70,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
           const values = Object.values(data);
@@ -98,7 +94,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
@@ -129,8 +124,6 @@ router.get('/', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { agent_id, customer_id, visit_type, status, date_from, date_to, page = 1, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, c.name as customer_name, c.phone as customer_phone,
              u.first_name || ' ' || u.last_name as agent_name,
@@ -287,8 +280,6 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const visit = await new Promise((resolve, reject) => {
       db.get(`
         SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address,
@@ -505,8 +496,6 @@ router.get('/agent/:agentId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { agentId } = req.params;
     const { date, status } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
       FROM visits v
@@ -549,8 +538,6 @@ router.get('/customer/:customerId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { customerId } = req.params;
     const { limit = 10 } = req.query;
-    
-    const db = getDatabase();
     const visits = await new Promise((resolve, reject) => {
       db.all(`
         SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
@@ -581,7 +568,6 @@ router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, agent_id } = req.query;
-    const db = getDatabase();
     
     let whereClause = 'WHERE v.tenant_id = ?';
     const params = [tenantId];

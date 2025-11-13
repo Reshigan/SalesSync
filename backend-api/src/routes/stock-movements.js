@@ -22,7 +22,6 @@ router.get('/', async (req, res) => {
       status 
     } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT sm.*, 
@@ -89,7 +88,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     const sql = `
       SELECT sm.*, 
@@ -142,7 +140,6 @@ router.post('/', async (req, res) => {
 
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Validation
     if (!movement_type || !product_id || !quantity) {
@@ -202,7 +199,6 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
@@ -251,7 +247,6 @@ router.post('/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const sql = `
       UPDATE stock_movements 
@@ -292,7 +287,6 @@ router.post('/:id/complete', async (req, res) => {
     const { received_quantity, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Get movement details
     const getSql = `
@@ -362,7 +356,6 @@ router.post('/:id/cancel', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     const sql = `
       UPDATE stock_movements 
@@ -400,7 +393,6 @@ router.get('/stats/summary', async (req, res) => {
   try {
     const { from_date, to_date, warehouse_id } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT 

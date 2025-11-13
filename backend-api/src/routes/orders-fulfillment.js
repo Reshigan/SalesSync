@@ -23,7 +23,6 @@ router.post('/:id/status-transition', async (req, res) => {
     const { id } = req.params;
     const {from_status, to_status, action, metadata, notes} = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get current order
     const order = await new Promise((resolve, reject) => {
@@ -165,7 +164,6 @@ router.get('/:id/status-history', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const history = await new Promise((resolve, reject) => {
       db.all(
@@ -202,7 +200,6 @@ router.get('/:id/financial-summary', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get order
     const order = await new Promise((resolve, reject) => {
@@ -303,7 +300,6 @@ router.post('/:id/partial-fulfill', async (req, res) => {
     const { id } = req.params;
     const { fulfilled, backorders, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get order
     const order = await new Promise((resolve, reject) => {
@@ -406,7 +402,6 @@ router.get('/:id/backorders', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const backorders = await new Promise((resolve, reject) => {
       db.all(
@@ -444,7 +439,6 @@ router.post('/:id/modify', async (req, res) => {
     const { id } = req.params;
     const { action, item, reason, recalculate } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get order
     const order = await new Promise((resolve, reject) => {
@@ -552,7 +546,6 @@ router.get('/:id/modifications', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const modifications = await new Promise((resolve, reject) => {
       db.all(
@@ -592,7 +585,6 @@ router.post('/recurring', async (req, res) => {
       billingDay, shippingAddress, notes
     } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Validate schedule
     const validSchedules = ['daily', 'weekly', 'biweekly', 'monthly', 'quarterly', 'yearly'];
@@ -659,7 +651,6 @@ router.get('/recurring', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { status, customerId } = req.query;
-    const db = getDatabase();
 
     let sql = `
       SELECT ro.*, c.name as customer_name
@@ -705,7 +696,6 @@ router.post('/recurring/:id/pause', async (req, res) => {
     const { id } = req.params;
     const { reason, pauseUntil } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(
@@ -740,7 +730,6 @@ router.post('/recurring/:id/resume', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(
@@ -779,7 +768,6 @@ router.post('/:id/notes', async (req, res) => {
     const { id } = req.params;
     const { note, visibility } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const noteId = await new Promise((resolve, reject) => {
       db.run(
@@ -814,7 +802,6 @@ router.get('/:id/notes', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const notes = await new Promise((resolve, reject) => {
       db.all(
@@ -847,7 +834,6 @@ router.get('/:id/history', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get all history items (status changes, modifications, notes)
     const statusHistory = await new Promise((resolve, reject) => {

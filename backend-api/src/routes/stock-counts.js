@@ -12,7 +12,6 @@ router.get('/', async (req, res) => {
   try {
     const { warehouse_id, status, from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT sc.*, w.name as warehouse_name, u.first_name || ' ' || u.last_name as created_by_name,
@@ -46,7 +45,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     db.get(`SELECT sc.*, w.name as warehouse_name FROM stock_counts sc LEFT JOIN warehouses w ON sc.warehouse_id = w.id WHERE sc.id = ? AND sc.tenant_id = ?`, [id, tenantId], (err, count) => {
       if (err) return res.status(500).json({ error: 'Failed to fetch stock count' });
@@ -70,7 +68,6 @@ router.post('/', async (req, res) => {
     const { warehouse_id, count_date, count_type, notes, items } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!warehouse_id || !items || items.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -103,7 +100,6 @@ router.post('/:id/complete', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE stock_counts SET status = 'completed', completed_by = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],

@@ -12,7 +12,6 @@ router.get('/', async (req, res) => {
   try {
     const { agent_id, period, status, from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT c.*, u.first_name || ' ' || u.last_name as agent_name FROM agent_commissions c
       LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ?`;
@@ -41,7 +40,6 @@ router.post('/calculate', async (req, res) => {
     const { agent_id, period_start, period_end, commission_rate } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Calculate total sales for period
     db.get(`SELECT SUM(total_amount) as total_sales, COUNT(*) as order_count FROM orders
@@ -76,7 +74,6 @@ router.post('/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE commissions SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],
@@ -97,7 +94,6 @@ router.post('/:id/pay', async (req, res) => {
     const { payment_method, payment_reference } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE commissions SET status = 'paid', payment_method = ?, payment_reference = ?, paid_by = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'approved'`,
       [payment_method, payment_reference, userId, id, tenantId],
@@ -116,7 +112,6 @@ router.get('/summary', async (req, res) => {
   try {
     const { agent_id } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT status, COUNT(*) as count, SUM(commission_amount) as total FROM commissions WHERE tenant_id = ?`;
     const params = [tenantId];

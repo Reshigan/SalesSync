@@ -19,7 +19,6 @@ router.get('/multi-location', async (req, res) => {
   try {
     const { productId, warehouseId, belowMin } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let sql = `
       SELECT 
@@ -98,7 +97,6 @@ router.post('/transfer', async (req, res) => {
   try {
     const { productId, fromWarehouseId, toWarehouseId, quantity, reason, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Validate sufficient quantity at source
     const sourceInventory = await new Promise((resolve, reject) => {
@@ -178,7 +176,6 @@ router.post('/transfer/:id/complete', async (req, res) => {
     const { id } = req.params;
     const { receivedQuantity, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Get transfer details
     const transfer = await new Promise((resolve, reject) => {
@@ -282,7 +279,6 @@ router.get('/transactions', async (req, res) => {
   try {
     const { productId, warehouseId, type, startDate, endDate, limit = 100 } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let sql = `
       SELECT 
@@ -350,7 +346,6 @@ router.post('/adjust', async (req, res) => {
   try {
     const { productId, warehouseId, adjustmentType, quantity, reason, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Adjustment types: addition, subtraction, correction
     let quantityChange = quantity;
@@ -437,7 +432,6 @@ router.post('/products/:id/variants', async (req, res) => {
     const { id: parentId } = req.params;
     const { name, sku, attributes, price, cost } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const variantId = await new Promise((resolve, reject) => {
       db.run(
@@ -472,7 +466,6 @@ router.get('/products/:id/variants', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const variants = await new Promise((resolve, reject) => {
       db.all(
@@ -509,7 +502,6 @@ router.post('/lots', async (req, res) => {
   try {
     const { productId, lotNumber, quantity, manufactureDate, expiryDate, warehouseId } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const lotId = await new Promise((resolve, reject) => {
       db.run(
@@ -545,7 +537,6 @@ router.get('/lots', async (req, res) => {
   try {
     const { productId, warehouseId, expiringWithinDays } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let sql = `
       SELECT 
@@ -605,7 +596,6 @@ router.get('/reorder-suggestions', async (req, res) => {
   try {
     const { warehouseId } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let sql = `
       SELECT 
@@ -661,7 +651,6 @@ router.post('/auto-reorder', async (req, res) => {
   try {
     const { warehouseId, items } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const results = [];
 
@@ -747,7 +736,6 @@ router.get('/analytics', async (req, res) => {
   try {
     const { startDate, endDate, warehouseId } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Current stock levels
     let stockSql = `

@@ -10,7 +10,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -33,7 +32,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -58,7 +56,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
@@ -73,7 +70,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
           const values = Object.values(data);
@@ -98,7 +94,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const values = [];
@@ -238,8 +233,6 @@ router.get('/low-stock', async (req, res) => {
 router.get('/stock', async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
-    
-    const db = getDatabase();
     
     const { warehouse_id, low_stock, product_id } = req.query;
     

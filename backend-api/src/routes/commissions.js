@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { v4: uuidv4 } = require('uuid');
@@ -39,8 +38,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY ct.transaction_date DESC LIMIT 100';
-
-    const db = getDatabase();
     db.all(query, params, (err, commissions) => {
       if (err) {
         console.error('Error fetching commissions:', err);
@@ -59,8 +56,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT ct.*, 
               u.first_name || ' ' || u.last_name as agent_name, u.email as agent_email,
@@ -100,8 +95,6 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ error: 'Insufficient permissions to approve commissions' });
     }
-
-    const db = getDatabase();
     db.get(
       'SELECT * FROM commission_transactions WHERE id = ? AND tenant_id = ?',
       [id, tenantId],
@@ -171,8 +164,6 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
       dateFilter += ' AND date(created_at) <= date(?)';
       params.push(to_date);
     }
-
-    const db = getDatabase();
     db.get(
       `SELECT 
         SUM(CASE WHEN payment_status = 'pending' THEN commission_amount ELSE 0 END) as pending_total,
@@ -216,6 +207,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { getOneQuery, getQuery } = require('../database/init');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
   
   const [commissionStats, topEarners, monthlyTrends] = await Promise.all([
     getOneQuery(`

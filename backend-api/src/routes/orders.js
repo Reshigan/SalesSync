@@ -10,7 +10,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -33,7 +32,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -58,7 +56,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
@@ -73,7 +70,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
           const values = Object.values(data);
@@ -98,7 +94,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
@@ -200,7 +195,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
 
 // Generate order number
 const generateOrderNumber = async (tenantId) => {
-  const db = getDatabase();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   
   return new Promise((resolve, reject) => {
@@ -276,8 +270,6 @@ router.get('/', async (req, res) => {
       page = 1, 
       limit = 50 
     } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT o.*, c.name as customer_name, c.phone as customer_phone,
              u.first_name || ' ' || u.last_name as salesman_name,
@@ -471,8 +463,6 @@ router.post('/', async (req, res) => {
     let tax_amount = 0;
     let discount_amount = 0;
     
-    const db = getDatabase();
-    
     // Validate products and calculate amounts
     for (const item of items) {
       const product = await new Promise((resolve, reject) => {
@@ -598,7 +588,6 @@ router.post('/', async (req, res) => {
 
 // Helper function to get order with details
 const getOrderWithDetails = async (orderId, tenantId) => {
-  const db = getDatabase();
   
   const order = await new Promise((resolve, reject) => {
     db.get(`
@@ -816,8 +805,6 @@ router.get('/customer/:customerId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { customerId } = req.params;
     const { limit = 10 } = req.query;
-    
-    const db = getDatabase();
     const orders = await new Promise((resolve, reject) => {
       db.all(`
         SELECT o.*, COUNT(oi.id) as item_count
@@ -848,8 +835,6 @@ router.get('/salesman/:salesmanId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { salesmanId } = req.params;
     const { date_from, date_to, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT o.*, c.name as customer_name, COUNT(oi.id) as item_count
       FROM orders o
@@ -892,7 +877,6 @@ router.get('/salesman/:salesmanId', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     const [totalOrders, ordersByStatus, revenueStats, topCustomers] = await Promise.all([
       new Promise((resolve, reject) => {
@@ -933,7 +917,6 @@ router.put('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     const validStatuses = ['draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {

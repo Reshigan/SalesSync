@@ -30,7 +30,6 @@ router.get('/collections', async (req, res) => {
   try {
     const { agent_id, from_date, to_date, status } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT cc.*, u.first_name || ' ' || u.last_name as agent_name, r.route_number FROM cash_collections cc
       LEFT JOIN users u ON cc.agent_id = u.id
@@ -60,7 +59,6 @@ router.post('/collections', async (req, res) => {
     const { route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!agent_id || !amount) {
       return res.status(400).json({ error: 'Missing required fields: agent_id, amount' });
@@ -86,7 +84,6 @@ router.post('/reconciliations', async (req, res) => {
     const { route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance_reason, denominations } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const refNumber = `REC-${Date.now()}`;
     const variance = actual_cash - expected_cash;
@@ -110,7 +107,6 @@ router.post('/reconciliations/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],
@@ -130,7 +126,6 @@ router.post('/deposits', async (req, res) => {
     const { deposit_date, bank_name, account_number, amount, deposit_slip, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!deposit_date || !bank_name || !amount) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -155,7 +150,6 @@ router.get('/summary', async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT SUM(amount) as total_collected, COUNT(*) as collection_count FROM cash_collections WHERE tenant_id = ?`;
     const params = [tenantId];

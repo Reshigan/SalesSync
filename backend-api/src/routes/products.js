@@ -10,7 +10,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -33,7 +32,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -58,7 +56,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
@@ -73,7 +70,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
           const values = Object.values(data);
@@ -98,7 +94,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
@@ -237,7 +232,6 @@ router.get('/', async (req, res) => {
     // Get products with search
     let products;
     if (search) {
-      const db = getDatabase();
       const searchTerm = `%${search}%`;
       products = await new Promise((resolve, reject) => {
         db.all(`
@@ -259,7 +253,6 @@ router.get('/', async (req, res) => {
         });
       });
     } else {
-      const db = getDatabase();
       products = await new Promise((resolve, reject) => {
         let sql = `
           SELECT p.*, c.name as category_name, b.name as brand_name,
@@ -294,7 +287,6 @@ router.get('/', async (req, res) => {
     ]);
     
     // Get total count
-    const db = getDatabase();
     const totalCount = await new Promise((resolve, reject) => {
       db.get('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?', [tenantId], (err, row) => {
         if (err) reject(err);
@@ -394,7 +386,6 @@ router.post('/', async (req, res) => {
     const result = await insertQuery('products', productData);
     
     // Get the created product with related data
-    const db = getDatabase();
     const newProduct = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name
@@ -443,7 +434,6 @@ router.post('/', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     // Get all statistics in parallel for performance
     const [
@@ -574,8 +564,6 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const product = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name,
@@ -707,7 +695,6 @@ router.put('/:id', async (req, res) => {
     await updateQuery('products', updateData, { id }, tenantId);
     
     // Get updated product
-    const db = getDatabase();
     const updatedProduct = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name
@@ -768,7 +755,6 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if product is used in orders
-    const db = getDatabase();
     const orderItems = await new Promise((resolve, reject) => {
       db.get('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?', [id], (err, row) => {
         if (err) reject(err);
@@ -906,7 +892,6 @@ router.get('/:id/stock-history', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const { start_date, end_date, warehouse_id, limit = 50 } = req.query;
-    const db = getDatabase();
     
     // Verify product exists
     const product = await getOneQuery('products', { id }, tenantId);
@@ -1071,7 +1056,6 @@ router.get('/:id/sales-data', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const { period = 'monthly', months = 12 } = req.query;
-    const db = getDatabase();
     
     const product = await getOneQuery('products', { id }, tenantId);
     if (!product) {

@@ -10,7 +10,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -33,7 +32,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
@@ -58,7 +56,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
@@ -73,7 +70,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
           const values = Object.values(data);
@@ -98,7 +94,6 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
@@ -129,8 +124,6 @@ router.get('/', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { status, assigned_salesman_id } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name,
              COUNT(vl.id) as load_count
@@ -227,8 +220,6 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const van = await new Promise((resolve, reject) => {
       db.get(`
         SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
@@ -347,7 +338,6 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if van has load history
-    const db = getDatabase();
     const loadCount = await new Promise((resolve, reject) => {
       db.get('SELECT COUNT(*) as count FROM van_loads WHERE van_id = ?', [id], (err, row) => {
         if (err) reject(err);
@@ -381,8 +371,6 @@ router.get('/loads/list', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { van_id, salesman_id, status, date_from, date_to, page = 1, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT vl.*, v.registration_number as van_registration,
              u.first_name || ' ' || u.last_name as salesman_name
@@ -543,8 +531,6 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { loadId } = req.params;
-    
-    const db = getDatabase();
     const load = await new Promise((resolve, reject) => {
       db.get(`
         SELECT vl.*, v.registration_number as van_registration,

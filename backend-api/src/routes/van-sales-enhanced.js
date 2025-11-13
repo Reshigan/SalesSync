@@ -12,7 +12,6 @@ const express = require('express');
 const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
-const { getDatabase } = require('../database/init');
 const commissionService = require('../services/commission.service');
 const { v4: uuidv4 } = require('uuid');
 
@@ -64,8 +63,6 @@ router.post('/orders', asyncHandler(async (req, res) => {
       });
     }
   }
-
-  const db = getDatabase();
   
   await new Promise((resolve, reject) => {
     db.run('BEGIN TRANSACTION', (err) => { if (err) reject(err); else resolve(); });
@@ -188,7 +185,6 @@ router.patch('/orders/:id/fulfill', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { amount_paid, payment_method, payment_reference } = req.body;
   const tenantId = req.tenantId;
-  const db = getDatabase();
 
   await new Promise((resolve, reject) => {
     db.run('BEGIN TRANSACTION', (err) => { if (err) reject(err); else resolve(); });
@@ -285,7 +281,6 @@ router.patch('/orders/:id/cancel', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { cancellation_reason } = req.body;
   const tenantId = req.tenantId;
-  const db = getDatabase();
 
   await new Promise((resolve, reject) => {
     db.run('BEGIN TRANSACTION', (err) => { if (err) reject(err); else resolve(); });

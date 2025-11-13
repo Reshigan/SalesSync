@@ -12,7 +12,6 @@ const getDatabase = () => require('../utils/database').getDatabase();
 router.get('/ar/summary', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const summary = await new Promise((resolve, reject) => {
       db.get(`
@@ -39,7 +38,6 @@ router.get('/ar/summary', async (req, res) => {
 router.get('/ar/aging', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const aging = await new Promise((resolve, reject) => {
       db.all(`
@@ -73,7 +71,6 @@ router.post('/ar/payment', async (req, res) => {
   try {
     const { customerId, amount, paymentMethod, reference, invoiceAllocations } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Create payment record
     const paymentId = await new Promise((resolve, reject) => {
@@ -132,7 +129,6 @@ router.post('/ar/payment', async (req, res) => {
 router.get('/ap/summary', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const summary = await new Promise((resolve, reject) => {
       db.get(`
@@ -159,7 +155,6 @@ router.post('/ap/payment', async (req, res) => {
   try {
     const { billId, amount, paymentMethod, reference, paymentDate } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
@@ -203,7 +198,6 @@ router.post('/bank/import', async (req, res) => {
   try {
     const { bankAccountId, transactions } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let imported = 0;
     for (const txn of transactions) {
@@ -236,7 +230,6 @@ router.get('/bank/unmatched', async (req, res) => {
   try {
     const { bankAccountId } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const unmatched = await new Promise((resolve, reject) => {
       db.all(`
@@ -261,7 +254,6 @@ router.post('/bank/match', async (req, res) => {
   try {
     const { bankTransactionId, transactionType, transactionId } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
@@ -301,7 +293,6 @@ router.get('/credit/:customerId', async (req, res) => {
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const credit = await new Promise((resolve, reject) => {
       db.get(`
@@ -330,7 +321,6 @@ router.post('/credit/limit', async (req, res) => {
   try {
     const { customerId, creditLimit, paymentTerms, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
@@ -366,7 +356,6 @@ router.get('/reports/profit-loss', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Revenue
     const revenue = await new Promise((resolve, reject) => {
@@ -420,7 +409,6 @@ router.get('/reports/cash-flow', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const cashIn = await new Promise((resolve, reject) => {
       db.get(`

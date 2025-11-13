@@ -29,7 +29,6 @@ router.get('/routes', async (req, res) => {
   try {
     const { status, agent_id, date, van_id } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT vsr.*, u.first_name || ' ' || u.last_name as agent_name, v.plate_number FROM van_sales_routes vsr
       LEFT JOIN users u ON vsr.agent_id = u.id LEFT JOIN vans v ON vsr.van_id = v.id
@@ -58,7 +57,6 @@ router.post('/routes', async (req, res) => {
     const { agent_id, van_id, route_date, route_name, customers, start_time } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!agent_id || !van_id || !route_date || !customers || customers.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -92,7 +90,6 @@ router.post('/routes/:id/start', async (req, res) => {
     const { id } = req.params;
     const { start_odometer } = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE van_sales_routes SET status = 'in_progress', start_time = CURRENT_TIMESTAMP, start_odometer = ? WHERE id = ? AND tenant_id = ? AND status = 'planned'`,
       [start_odometer, id, tenantId],
@@ -112,7 +109,6 @@ router.post('/routes/:id/complete', async (req, res) => {
     const { id } = req.params;
     const { end_odometer, total_cash, total_orders } = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE van_sales_routes SET status = 'completed', end_time = CURRENT_TIMESTAMP, end_odometer = ?, total_cash = ?, total_orders = ? WHERE id = ? AND tenant_id = ? AND status = 'in_progress'`,
       [end_odometer, total_cash, total_orders, id, tenantId],
@@ -132,7 +128,6 @@ router.post('/loading', async (req, res) => {
     const { route_id, warehouse_id, loading_date, items } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!route_id || !warehouse_id || !items || items.length === 0) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -168,7 +163,6 @@ router.post('/customer-visit', async (req, res) => {
     const { route_id, customer_id, visit_time, order_created, order_amount, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`INSERT INTO route_visits (tenant_id, route_id, customer_id, visit_time, order_created, order_amount, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [tenantId, route_id, customer_id, visit_time || new Date().toISOString(), order_created || false, order_amount || 0, notes, userId],

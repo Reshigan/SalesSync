@@ -12,7 +12,6 @@ router.get('/', async (req, res) => {
   try {
     const { customer_id, status, document_type } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT k.*, c.name as customer_name, c.email, c.phone FROM kyc_documents k
       LEFT JOIN customers c ON k.customer_id = c.id WHERE k.tenant_id = ?`;
@@ -38,7 +37,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     db.get(`SELECT k.*, c.name as customer_name, c.email, c.phone, c.address,
       u.first_name || ' ' || u.last_name as verified_by_name FROM kyc_documents k
@@ -63,7 +61,6 @@ router.post('/', async (req, res) => {
     const { customer_id, document_type, document_number, document_url, expiry_date, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!customer_id || !document_type || !document_url) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -90,7 +87,6 @@ router.post('/:id/verify', async (req, res) => {
     const { verification_notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     db.run(`UPDATE kyc_documents SET status = 'verified', verification_notes = ?, verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
       [verification_notes, userId, id, tenantId],
@@ -111,7 +107,6 @@ router.post('/:id/reject', async (req, res) => {
     const { rejection_reason } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!rejection_reason) {
       return res.status(400).json({ error: 'Rejection reason is required' });
@@ -133,7 +128,6 @@ router.post('/:id/reject', async (req, res) => {
 router.get('/stats/summary', async (req, res) => {
   try {
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     db.get(`SELECT 
       COUNT(*) as total,

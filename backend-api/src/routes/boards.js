@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all boards for tenant
 router.get('/', authMiddleware, async (req, res) => {
@@ -24,8 +24,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY created_at DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, boards) => {
       if (err) {
         console.error('Error fetching boards:', err);
@@ -44,8 +42,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       'SELECT * FROM boards WHERE id = ? AND tenant_id = ?',
       [id, tenantId],
@@ -89,7 +85,6 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     const boardId = uuidv4();
-    const db = getDatabase();
 
     db.run(
       `INSERT INTO boards (
@@ -154,8 +149,6 @@ router.put('/:id', authMiddleware, async (req, res) => {
       description,
       status
     } = req.body;
-
-    const db = getDatabase();
 
     // Check if board exists
     db.get(
@@ -233,8 +226,6 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
 
-    const db = getDatabase();
-
     // Check if board exists
     db.get(
       'SELECT id FROM boards WHERE id = ? AND tenant_id = ?',
@@ -278,8 +269,6 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
     if (!brand_id) {
       return res.status(400).json({ error: 'Brand ID is required' });
     }
-
-    const db = getDatabase();
 
     // Check if board exists
     db.get(
@@ -361,8 +350,6 @@ router.get('/brand/:brandId', authMiddleware, async (req, res) => {
   try {
     const { brandId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT b.*, bb.coverage_standard, bb.visibility_standard, bb.is_active as assigned
       FROM boards b
@@ -389,8 +376,6 @@ router.delete('/:id/assign-brand/:brandId', authMiddleware, async (req, res) => 
   try {
     const { id, brandId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.run(
       'UPDATE brand_boards SET is_active = 0 WHERE board_id = ? AND brand_id = ? AND tenant_id = ?',
       [id, brandId, tenantId],

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Calculate product distribution commission
 function calculateProductCommission(product, quantity, monthlyVolume) {
@@ -67,8 +67,6 @@ router.post('/', authMiddleware, async (req, res) => {
     if (product_type === 'sim_card' && !serial_number) {
       return res.status(400).json({ error: 'Serial number is required for SIM cards' });
     }
-
-    const db = getDatabase();
 
     // Get product details
     db.get(
@@ -253,8 +251,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY pd.distribution_date DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, distributions) => {
       if (err) {
         console.error('Error fetching distributions:', err);
@@ -273,8 +269,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT pd.*, p.name as product_name, p.code as product_code, p.description as product_description,
               c.name as customer_name, c.phone as customer_phone,
@@ -313,8 +307,6 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
     if (!activation_status) {
       return res.status(400).json({ error: 'Activation status is required' });
     }
-
-    const db = getDatabase();
 
     // Check if activation is within 24 hours for bonus
     db.get(
@@ -401,8 +393,6 @@ router.post('/:id/follow-up', authMiddleware, async (req, res) => {
     if (!follow_up_date) {
       return res.status(400).json({ error: 'Follow-up date is required' });
     }
-
-    const db = getDatabase();
     db.run(
       `UPDATE product_distributions SET
         follow_up_date = ?,
@@ -445,8 +435,6 @@ router.get('/agent/:agentId', authMiddleware, async (req, res) => {
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT pd.*, p.name as product_name, p.code as product_code, c.name as customer_name
        FROM product_distributions pd
@@ -503,8 +491,6 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
       query += ' AND product_type = ?';
       params.push(product_type);
     }
-
-    const db = getDatabase();
     db.get(query, params, (err, summary) => {
       if (err) {
         console.error('Error fetching analytics:', err);

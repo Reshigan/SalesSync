@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get field agent dashboard
 router.get('/dashboard', authMiddleware, async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const agentId = req.user.userId;
-
-    const db = getDatabase();
     
     // Get today's scheduled visits
     const today = new Date().toISOString().split('T')[0];
@@ -116,8 +114,6 @@ router.post('/check-in', authMiddleware, async (req, res) => {
       });
     }
 
-    const db = getDatabase();
-
     // Create or update visit
     const visitId = uuidv4();
     
@@ -169,8 +165,6 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
     const { visitId } = req.params;
     const tenantId = req.user.tenantId;
     const { brand_ids } = req.query; // Comma-separated brand IDs
-
-    const db = getDatabase();
 
     // Get visit details
     db.get(
@@ -351,8 +345,6 @@ router.post('/visit-task/complete', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Task ID is required' });
     }
 
-    const db = getDatabase();
-
     db.run(
       `UPDATE visit_tasks SET
         status = 'completed',
@@ -403,8 +395,6 @@ router.post('/check-out', authMiddleware, async (req, res) => {
     if (!visit_id) {
       return res.status(400).json({ error: 'Visit ID is required' });
     }
-
-    const db = getDatabase();
 
     // Check if all mandatory tasks are completed
     db.get(
@@ -508,8 +498,6 @@ router.get('/my-visits', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY v.scheduled_date DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, visits) => {
       if (err) {
         console.error('Error fetching visits:', err);

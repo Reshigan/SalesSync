@@ -12,7 +12,6 @@ router.get('/', async (req, res) => {
   try {
     const { type, status, customer_id, from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT t.*, c.name as customer_name FROM cash_transactions t
       LEFT JOIN customers c ON t.customer_id = c.id WHERE t.tenant_id = ?`;
@@ -41,7 +40,6 @@ router.post('/', async (req, res) => {
     const { transaction_type, customer_id, order_id, amount, payment_method, reference, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!transaction_type || !amount) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -67,7 +65,6 @@ router.post('/refunds', async (req, res) => {
     const { original_transaction_id, amount, reason, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const refNumber = `REF-${Date.now()}`;
     db.run(`INSERT INTO refunds (tenant_id, refund_number, original_transaction_id, amount, reason, notes, status, created_by, created_at)
@@ -88,7 +85,6 @@ router.get('/summary', async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT transaction_type, SUM(amount) as total, COUNT(*) as count FROM transactions WHERE tenant_id = ?`;
     const params = [tenantId];

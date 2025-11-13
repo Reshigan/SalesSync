@@ -14,7 +14,6 @@ router.get('/', async (req, res) => {
   try {
     const { status, supplier_id, warehouse_id, from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT po.*, 
@@ -74,7 +73,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     // Get PO header
     const poSql = `
@@ -144,7 +142,6 @@ router.post('/', async (req, res) => {
 
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Validation
     if (!supplier_id || !warehouse_id || !items || items.length === 0) {
@@ -227,7 +224,6 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     // Remove items from updates if present (handled separately)
     const { items, ...poUpdates } = updates;
@@ -278,7 +274,6 @@ router.post('/:id/approve', async (req, res) => {
     const { approved_by_name } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const sql = `
       UPDATE purchase_orders 
@@ -319,7 +314,6 @@ router.post('/:id/receive', async (req, res) => {
     const { received_items, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!received_items || received_items.length === 0) {
       return res.status(400).json({ error: 'No received items provided' });
@@ -402,7 +396,6 @@ router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     // Delete PO items first
     const deleteItemsSql = `
@@ -454,7 +447,6 @@ router.get('/stats/summary', async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT 

@@ -244,8 +244,6 @@ router.get('/products', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to } = req.query;
     
-    const db = getDatabase();
-    
     let dateFilter = '';
     const params = [tenantId];
     
@@ -318,8 +316,6 @@ router.get('/products', async (req, res) => {
 router.get('/inventory', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    
-    const db = getDatabase();
     
     // Inventory summary
     const inventorySummary = await new Promise((resolve, reject) => {
@@ -398,8 +394,6 @@ router.get('/inventory', async (req, res) => {
 router.get('/dashboard', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    
-    const db = getDatabase();
     
     // Today's metrics
     const todayMetrics = await new Promise((resolve, reject) => {
@@ -480,8 +474,6 @@ router.get('/revenue', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to } = req.query;
     
-    const db = getDatabase();
-    
     let dateFilter = '';
     const params = [tenantId];
     
@@ -541,8 +533,6 @@ router.get('/orders', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { date_from, date_to } = req.query;
-    
-    const db = getDatabase();
     
     let dateFilter = '';
     const params = [tenantId];
@@ -605,8 +595,6 @@ router.get('/top-products', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, limit = 10 } = req.query;
     
-    const db = getDatabase();
-    
     let dateFilter = '';
     const params = [tenantId];
     
@@ -661,8 +649,6 @@ router.get('/top-customers', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, limit = 10 } = req.query;
     
-    const db = getDatabase();
-    
     let dateFilter = '';
     const params = [tenantId];
     
@@ -715,8 +701,6 @@ router.get('/agent-performance', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { date_from, date_to } = req.query;
-    
-    const db = getDatabase();
     
     let dateFilter = '';
     const params = [tenantId];

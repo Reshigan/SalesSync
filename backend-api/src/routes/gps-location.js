@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Haversine formula to calculate distance between two GPS coordinates
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -32,8 +32,6 @@ router.post('/validate-proximity', authMiddleware, async (req, res) => {
         error: 'Customer ID, latitude, and longitude are required' 
       });
     }
-
-    const db = getDatabase();
 
     // Get customer location
     db.get(
@@ -134,7 +132,6 @@ router.post('/log', authMiddleware, async (req, res) => {
     }
 
     const logId = uuidv4();
-    const db = getDatabase();
 
     db.run(
       `INSERT INTO agent_gps_logs (
@@ -191,8 +188,6 @@ router.get('/agent-track/:agentId', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY timestamp DESC LIMIT 1000';
-
-    const db = getDatabase();
     db.all(query, params, (err, logs) => {
       if (err) {
         console.error('Error fetching GPS track:', err);
@@ -218,8 +213,6 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
         error: 'Customer ID, latitude, and longitude are required' 
       });
     }
-
-    const db = getDatabase();
 
     // Check if customer exists
     db.get(
@@ -319,8 +312,6 @@ router.get('/customer-location-history/:customerId', authMiddleware, async (req,
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT clh.*, u.first_name || ' ' || u.last_name as updated_by_name
        FROM customer_location_history clh
@@ -351,8 +342,6 @@ router.post('/nearby-customers', authMiddleware, async (req, res) => {
     if (!latitude || !longitude) {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
-
-    const db = getDatabase();
 
     // Get all customers with GPS coordinates
     db.all(
@@ -402,8 +391,6 @@ router.get('/agent-current-location/:agentId', authMiddleware, async (req, res) 
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT * FROM agent_gps_logs
        WHERE agent_id = ? AND tenant_id = ?
