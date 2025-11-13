@@ -65,10 +65,10 @@ router.get('/sales', asyncHandler(async (req, res) => {
       COUNT(o.id) as total_orders,
       COALESCE(SUM(o.total_amount), 0) as total_revenue
     FROM orders o
-    JOIN agents a ON o.salesman_id = a.id
-    JOIN users u ON a.user_id = u.id
+    JOIN users u ON o.salesman_id = u.id
     WHERE o.tenant_id = $1 ${dateFilter}
-    GROUP BY a.id, u.first_name, u.last_name
+      AND u.role = 'agent'
+    GROUP BY u.id, u.first_name, u.last_name
     ORDER BY total_revenue DESC
     LIMIT 10
   `, params);
@@ -158,17 +158,29 @@ router.get('/revenue', asyncHandler(async (req, res) => {
 router.get('/dashboard', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
   
-  // Today's metrics
-  const todayMetrics = await getOneQuery(`
+  // Today's metrics - separate queries to avoid CROSS JOIN inflation
+  const orderMetrics = await getOneQuery(`
     SELECT 
-      COUNT(DISTINCT CASE WHEN DATE(o.order_date) = CURRENT_DATE THEN o.id END) as today_orders,
-      COALESCE(SUM(CASE WHEN DATE(o.order_date) = CURRENT_DATE THEN o.total_amount ELSE 0 END), 0) as today_revenue,
-      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = CURRENT_DATE THEN v.id END) as today_visits,
-      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = CURRENT_DATE AND v.status = 'completed' THEN v.id END) as today_completed_visits
+      COUNT(*) FILTER (WHERE o.order_date = CURRENT_DATE) as today_orders,
+      COALESCE(SUM(o.total_amount) FILTER (WHERE o.order_date = CURRENT_DATE), 0) as today_revenue
     FROM orders o
-    CROSS JOIN visits v
-    WHERE o.tenant_id = $1 AND v.tenant_id = $2
-  `, [tenantId, tenantId]);
+    WHERE o.tenant_id = $1
+  `, [tenantId]);
+  
+  const visitMetrics = await getOneQuery(`
+    SELECT 
+      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE) as today_visits,
+      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE AND v.status = 'completed') as today_completed_visits
+    FROM visits v
+    WHERE v.tenant_id = $1
+  `, [tenantId]);
+  
+  const todayMetrics = {
+    today_orders: orderMetrics?.today_orders || 0,
+    today_revenue: orderMetrics?.today_revenue || 0,
+    today_visits: visitMetrics?.today_visits || 0,
+    today_completed_visits: visitMetrics?.today_completed_visits || 0
+  };
   
   res.json({
     success: true,
@@ -191,8 +203,8 @@ router.get('/advanced', asyncHandler(async (req, res) => {
       COUNT(DISTINCT o.customer_id) as unique_customers,
       COUNT(DISTINCT o.salesman_id) as active_agents
     FROM orders o
-    WHERE o.tenant_id = ?
-    AND o.order_date >= DATE('now', '-30 days')
+    WHERE o.tenant_id = $1
+    AND o.order_date >= CURRENT_DATE - INTERVAL '30 days'
     
     UNION ALL
     
@@ -204,19 +216,19 @@ router.get('/advanced', asyncHandler(async (req, res) => {
       0 as active_agents
     FROM products p
     LEFT JOIN inventory_stock i ON p.id = i.product_id
-    WHERE p.tenant_id = ?
+    WHERE p.tenant_id = $2
     
     UNION ALL
     
     SELECT 
       'customer_engagement' as metric_type,
       COUNT(DISTINCT c.id) as total_customers,
-      COUNT(DISTINCT CASE WHEN o.order_date >= DATE('now', '-30 days') THEN c.id END) as active_customers,
+      COUNT(DISTINCT CASE WHEN o.order_date >= CURRENT_DATE - INTERVAL '30 days' THEN c.id END) as active_customers,
       COUNT(DISTINCT c.area_id) as coverage_areas,
       0 as active_agents
     FROM customers c
     LEFT JOIN orders o ON c.id = o.customer_id
-    WHERE c.tenant_id = ?
+    WHERE c.tenant_id = $3
   `, [tenantId, tenantId, tenantId]);
 
   res.json({
@@ -252,11 +264,10 @@ router.get('/recent-activity', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as agent_name
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
-    LEFT JOIN agents a ON o.salesman_id = a.id
-    LEFT JOIN users u ON a.user_id = u.id
-    WHERE o.tenant_id = ?
+    LEFT JOIN users u ON o.salesman_id = u.id AND u.role = 'agent'
+    WHERE o.tenant_id = $1
     ORDER BY o.order_date DESC
-    LIMIT ?
+    LIMIT $2
   `, [tenantId, limit]);
   
   const recentVisits = await getQuery(`
@@ -269,11 +280,10 @@ router.get('/recent-activity', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as agent_name
     FROM visits v
     LEFT JOIN customers c ON v.customer_id = c.id
-    LEFT JOIN agents a ON v.agent_id = a.id
-    LEFT JOIN users u ON a.user_id = u.id
-    WHERE v.tenant_id = ?
+    LEFT JOIN users u ON v.agent_id = u.id AND u.role = 'agent'
+    WHERE v.tenant_id = $1
     ORDER BY v.visit_date DESC
-    LIMIT ?
+    LIMIT $2
   `, [tenantId, limit]);
   
   const allActivities = [...recentOrders, ...recentVisits]
@@ -293,20 +303,20 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const [businessMetrics, trends, topPerformers] = await Promise.all([
     getOneQuery(`
       SELECT 
-        (SELECT COUNT(*) FROM orders WHERE tenant_id = ?) as total_orders,
-        (SELECT SUM(total_amount) FROM orders WHERE tenant_id = ?) as total_revenue,
-        (SELECT COUNT(*) FROM visits WHERE tenant_id = ?) as total_visits,
-        (SELECT COUNT(DISTINCT customer_id) FROM orders WHERE tenant_id = ?) as unique_customers
-    `, [tenantId, tenantId, tenantId, tenantId]),
+        (SELECT COUNT(*) FROM orders WHERE tenant_id = $1) as total_orders,
+        (SELECT SUM(total_amount) FROM orders WHERE tenant_id = $1) as total_revenue,
+        (SELECT COUNT(*) FROM visits WHERE tenant_id = $1) as total_visits,
+        (SELECT COUNT(DISTINCT customer_id) FROM orders WHERE tenant_id = $1) as unique_customers
+    `, [tenantId]),
     
     getQuery(`
       SELECT 
-        DATE(o.created_at) as date,
+        o.created_at::date as date,
         COUNT(*) as order_count,
         SUM(o.total_amount) as daily_revenue
       FROM orders o
-      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
-      GROUP BY DATE(o.created_at)
+      WHERE o.tenant_id = $1 AND o.created_at >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY o.created_at::date
       ORDER BY date DESC
     `, [tenantId]),
     
@@ -318,8 +328,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
       FROM order_items oi
       INNER JOIN products p ON oi.product_id = p.id
       INNER JOIN orders o ON oi.order_id = o.id
-      WHERE o.tenant_id = ?
-      GROUP BY p.id
+      WHERE o.tenant_id = $1
+      GROUP BY p.id, p.name
       ORDER BY revenue DESC
       LIMIT 10
     `, [tenantId])
@@ -360,7 +370,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
     LEFT JOIN orders o ON u.id = o.salesman_id AND o.tenant_id = $1
     LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
     WHERE u.tenant_id = $1 
-      AND u.role IN ('agent', 'salesman', 'field_agent')
+      AND u.role = 'agent'
       AND u.status = 'active'
   `, [tenantId, dateFrom, dateTo]);
   
@@ -386,7 +396,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
       AND v.visit_date >= $2 
       AND v.visit_date <= $3
     WHERE u.tenant_id = $1 
-      AND u.role IN ('agent', 'salesman', 'field_agent')
+      AND u.role = 'agent'
       AND u.status = 'active'
     GROUP BY u.id, u.first_name, u.last_name
     HAVING COUNT(DISTINCT o.id) > 0 OR COUNT(DISTINCT v.id) > 0
@@ -415,7 +425,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
         AND o.order_date >= $2 
         AND o.order_date <= $3
       WHERE u.tenant_id = $1 
-        AND u.role IN ('agent', 'salesman', 'field_agent')
+        AND u.role = 'agent'
         AND u.status = 'active'
       GROUP BY u.id
     ) agent_totals
