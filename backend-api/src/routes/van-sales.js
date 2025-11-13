@@ -381,7 +381,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
       p.code as sku,
       COUNT(DISTINCT vsi.id) as total_sales,
       SUM(vsi.quantity) as total_quantity,
-      SUM(vsi.subtotal) as total_revenue
+      SUM(vsi.line_total) as total_revenue
     FROM products p
     INNER JOIN van_sale_items vsi ON p.id = vsi.product_id
     INNER JOIN van_sales vs ON vsi.van_sale_id = vs.id
