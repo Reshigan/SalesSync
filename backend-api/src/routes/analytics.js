@@ -431,11 +431,35 @@ router.get('/agents', asyncHandler(async (req, res) => {
     ) agent_totals
     GROUP BY 1
     ORDER BY 
-      CASE range
-        WHEN '0' THEN 1
-        WHEN '1-999' THEN 2
-        WHEN '1000-4999' THEN 3
-        WHEN '5000-9999' THEN 4
+      CASE 
+        WHEN CASE 
+          WHEN agent_sales = 0 THEN '0'
+          WHEN agent_sales < 1000 THEN '1-999'
+          WHEN agent_sales < 5000 THEN '1000-4999'
+          WHEN agent_sales < 10000 THEN '5000-9999'
+          ELSE '10000+'
+        END = '0' THEN 1
+        WHEN CASE 
+          WHEN agent_sales = 0 THEN '0'
+          WHEN agent_sales < 1000 THEN '1-999'
+          WHEN agent_sales < 5000 THEN '1000-4999'
+          WHEN agent_sales < 10000 THEN '5000-9999'
+          ELSE '10000+'
+        END = '1-999' THEN 2
+        WHEN CASE 
+          WHEN agent_sales = 0 THEN '0'
+          WHEN agent_sales < 1000 THEN '1-999'
+          WHEN agent_sales < 5000 THEN '1000-4999'
+          WHEN agent_sales < 10000 THEN '5000-9999'
+          ELSE '10000+'
+        END = '1000-4999' THEN 3
+        WHEN CASE 
+          WHEN agent_sales = 0 THEN '0'
+          WHEN agent_sales < 1000 THEN '1-999'
+          WHEN agent_sales < 5000 THEN '1000-4999'
+          WHEN agent_sales < 10000 THEN '5000-9999'
+          ELSE '10000+'
+        END = '5000-9999' THEN 4
         ELSE 5
       END
   `, [tenantId, dateFrom, dateTo]);
