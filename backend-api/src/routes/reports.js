@@ -10,13 +10,13 @@ router.post('/generate', asyncHandler(async (req, res) => {
   let query, params = [req.user.tenantId];
   
   if (type === 'sales') {
-    query = `SELECT created_at::date as date, COUNT(*)::int as count, SUM(amount)::float8 as total FROM orders WHERE tenant_id = ? AND created_at BETWEEN ? AND ? GROUP BY created_at::date`;
+    query = `SELECT created_at::date as date, COUNT(*)::int as count, SUM(amount)::float8 as total FROM orders WHERE tenant_id = $1 AND created_at BETWEEN $2 AND $3 GROUP BY created_at::date`;
     params.push(dateFrom, dateTo);
   } else if (type === 'commission') {
-    query = `SELECT agent_id, SUM(amount)::float8 as total FROM commissions WHERE tenant_id = ? AND date BETWEEN ? AND ? GROUP BY agent_id`;
+    query = `SELECT agent_id, SUM(amount)::float8 as total FROM commissions WHERE tenant_id = $1 AND date BETWEEN $2 AND $3 GROUP BY agent_id`;
     params.push(dateFrom, dateTo);
   } else if (type === 'visits') {
-    query = `SELECT visit_date::date as date, COUNT(*)::int as count FROM visits WHERE tenant_id = ? AND visit_date BETWEEN ? AND ? GROUP BY visit_date::date`;
+    query = `SELECT visit_date::date as date, COUNT(*)::int as count FROM visits WHERE tenant_id = $1 AND visit_date BETWEEN $2 AND $3 GROUP BY visit_date::date`;
     params.push(dateFrom, dateTo);
   }
   
@@ -81,16 +81,16 @@ router.get('/analytics', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
   
   const [revenue, agents, boards, visits, topAgents] = await Promise.all([
-    getOneQuery(`SELECT COALESCE(SUM(amount), 0)::float8 as total FROM orders WHERE tenant_id = ? AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
-    getOneQuery(`SELECT COUNT(*)::int as count FROM users WHERE tenant_id = ? AND role = 'agent'`, [tenantId]),
-    getOneQuery(`SELECT COUNT(*)::int as count FROM board_placements WHERE tenant_id = ? AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
-    getOneQuery(`SELECT COUNT(*)::int as count FROM visits WHERE tenant_id = ? AND visit_date >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getOneQuery(`SELECT COALESCE(SUM(amount), 0)::float8 as total FROM orders WHERE tenant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM users WHERE tenant_id = $1 AND role = 'agent'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM board_placements WHERE tenant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM visits WHERE tenant_id = $1 AND visit_date >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
     getQuery(`
       SELECT u.first_name || ' ' || u.last_name as name, COUNT(v.id)::int as visits, COALESCE(SUM(c.amount), 0)::float8 as commission 
       FROM users u 
       LEFT JOIN visits v ON v.agent_id = u.id 
       LEFT JOIN commissions c ON c.agent_id = u.id 
-      WHERE u.tenant_id = ? AND u.role = 'agent'
+      WHERE u.tenant_id = $1 AND u.role = 'agent'
       GROUP BY u.id, u.first_name, u.last_name
       ORDER BY commission DESC 
       LIMIT 5
@@ -132,7 +132,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_reports,
         COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_reports,
         COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END)::int as recent_reports
-      FROM generated_reports WHERE tenant_id = ?
+      FROM generated_reports WHERE tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
@@ -140,7 +140,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         report_type,
         COUNT(*)::int as count
       FROM generated_reports
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
       GROUP BY report_type
       ORDER BY count DESC
     `, [tenantId]),
@@ -151,7 +151,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         u.first_name || ' ' || u.last_name as generated_by
       FROM generated_reports r
       LEFT JOIN users u ON r.user_id = u.id
-      WHERE r.tenant_id = ?
+      WHERE r.tenant_id = $1
       ORDER BY r.created_at DESC
       LIMIT 10
     `, [tenantId])
@@ -179,9 +179,9 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
       COALESCE(AVG(o.total_amount), 0)::float8 as avg_order_value,
       COUNT(DISTINCT o.customer_id)::int as unique_customers
     FROM orders o
-    WHERE o.tenant_id = ?
-      AND o.order_date >= ?
-      AND o.order_date <= ?
+    WHERE o.tenant_id = $1
+      AND o.order_date >= $2
+      AND o.order_date <= $3
     GROUP BY o.order_date::date
     ORDER BY date DESC
   `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
@@ -209,10 +209,10 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
     LEFT JOIN users u ON o.salesman_id = u.id
-    WHERE o.tenant_id = ?
+    WHERE o.tenant_id = $1
       AND o.total_amount > 10000
-      AND o.order_date >= ?
-      AND o.order_date <= ?
+      AND o.order_date >= $2
+      AND o.order_date <= $3
     ORDER BY o.order_date DESC
   `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
 
@@ -237,11 +237,11 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
         THEN EXTRACT(EPOCH FROM (v.check_out_time - v.check_in_time)) / 60
         ELSE NULL END), 0)::float8 as avg_visit_duration_minutes
     FROM users u
-    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?
-    WHERE u.tenant_id = ?
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
+    WHERE u.tenant_id = $2
       AND u.role = 'agent'
-      AND (v.visit_date >= ? OR v.visit_date IS NULL)
-      AND (v.visit_date <= ? OR v.visit_date IS NULL)
+      AND (v.visit_date >= $3 OR v.visit_date IS NULL)
+      AND (v.visit_date <= $4 OR v.visit_date IS NULL)
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY completed_visits DESC
   `, [tenantId, tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
@@ -272,9 +272,9 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
       END as stock_status,
       COALESCE(s.updated_at, p.created_at) as last_updated
     FROM products p
-    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = ?
-    WHERE p.tenant_id = ?
-      ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
+    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = $1
+    WHERE p.tenant_id = $2
+      ${warehouseId $3 'AND s.warehouse_id = $4' : ''}
     ORDER BY stock_status DESC, p.name ASC
   `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
 
@@ -298,12 +298,12 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
       COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END), 0)::float8 as pending_commission,
       COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END), 0)::float8 as paid_commission
     FROM users u
-    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = ?
-    WHERE u.tenant_id = ?
+    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = $1
+    WHERE u.tenant_id = $2
       AND u.role = 'agent'
-      ${agentId ? 'AND u.id = ?' : ''}
-      AND (c.created_at >= ? OR c.created_at IS NULL)
-      AND (c.created_at <= ? OR c.created_at IS NULL)
+      ${agentId $3 'AND u.id = $4' : ''}
+      AND (c.created_at >= $5 OR c.created_at IS NULL)
+      AND (c.created_at <= $6 OR c.created_at IS NULL)
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY total_commission DESC
   `, agentId 
