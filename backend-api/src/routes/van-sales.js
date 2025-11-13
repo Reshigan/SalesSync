@@ -295,19 +295,22 @@ router.get('/stats', asyncHandler(async (req, res) => {
   `;
   
   const topVansParams = [tenantId];
+  let topVansParamIndex = 2;
   
   if (start_date) {
-    topVansQuery += ` AND vs.sale_date >= $1`;
+    topVansQuery += ` AND vs.sale_date >= $${topVansParamIndex}`;
     topVansParams.push(start_date);
+    topVansParamIndex++;
   }
   
   if (end_date) {
-    topVansQuery += ` AND vs.sale_date <= $1`;
+    topVansQuery += ` AND vs.sale_date <= $${topVansParamIndex}`;
     topVansParams.push(end_date);
+    topVansParamIndex++;
   }
   
   topVansQuery += `
-    WHERE v.tenant_id = $1
+    WHERE v.tenant_id = $${topVansParamIndex}
     GROUP BY v.id, v.registration_number
     ORDER BY total_revenue DESC
     LIMIT 5
