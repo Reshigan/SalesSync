@@ -170,6 +170,121 @@ router.get('/status/:status', asyncHandler(async (req, res) => {
   });
 }));
 
+// Get field operations stats
+router.get('/stats', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { start_date, end_date } = req.query;
+  
+  let dateFilter = '';
+  const params = [tenantId];
+  
+  if (start_date) {
+    dateFilter += ' AND v.visit_date >= $2';
+    params.push(start_date);
+  }
+  if (end_date) {
+    dateFilter += ` AND v.visit_date <= $${params.length + 1}`;
+    params.push(end_date);
+  }
+  
+  const stats = await getOneQuery(`
+    SELECT 
+      COUNT(*)::int as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits,
+      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END)::int as in_progress_visits,
+      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END)::int as scheduled_visits,
+      COUNT(DISTINCT v.agent_id)::int as active_agents,
+      COUNT(DISTINCT v.customer_id)::int as customers_visited
+    FROM visits v
+    WHERE v.tenant_id = $1${dateFilter}
+  `, params);
+
+  res.json({
+    success: true,
+    data: stats || {}
+  });
+}));
+
+// Get field agents list
+router.get('/agents', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { status } = req.query;
+  
+  let statusFilter = '';
+  const params = [tenantId];
+  
+  if (status) {
+    statusFilter = ' AND u.status = $2';
+    params.push(status);
+  }
+  
+  const agents = await getQuery(`
+    SELECT 
+      u.id,
+      u.first_name || ' ' || u.last_name as name,
+      u.email,
+      u.phone,
+      u.status,
+      COUNT(v.id)::int as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits
+    FROM users u
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
+    WHERE u.tenant_id = $1 AND u.role = 'agent'${statusFilter}
+    GROUP BY u.id, u.first_name, u.last_name, u.email, u.phone, u.status
+    ORDER BY u.first_name, u.last_name
+  `, params);
+
+  res.json({
+    success: true,
+    data: agents || []
+  });
+}));
+
+// Get field operations analytics/performance
+router.get('/analytics/performance', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { start_date, end_date } = req.query;
+  
+  let dateFilter = '';
+  const params = [tenantId];
+  
+  if (start_date) {
+    dateFilter += ' AND v.visit_date >= $2';
+    params.push(start_date);
+  }
+  if (end_date) {
+    dateFilter += ` AND v.visit_date <= $${params.length + 1}`;
+    params.push(end_date);
+  }
+  
+  const performance = await getQuery(`
+    SELECT 
+      u.id as agent_id,
+      u.first_name || ' ' || u.last_name as agent_name,
+      COUNT(v.id)::int as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits,
+      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END)::int as in_progress_visits,
+      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END)::int as scheduled_visits,
+      ROUND(
+        CASE 
+          WHEN COUNT(v.id) > 0 
+          THEN (COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::float / COUNT(v.id)::float * 100)
+          ELSE 0 
+        END, 2
+      ) as completion_rate
+    FROM users u
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1${dateFilter}
+    WHERE u.tenant_id = $1 AND u.role = 'agent'
+    GROUP BY u.id, u.first_name, u.last_name
+    ORDER BY completed_visits DESC
+  `, params);
+
+  res.json({
+    success: true,
+    data: performance || []
+  });
+}));
+
 // Test endpoint
 router.get('/test/health', asyncHandler(async (req, res) => {
   res.json({
