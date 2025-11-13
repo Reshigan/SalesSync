@@ -24,6 +24,11 @@ import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
 
 // Trade Marketing Pages
 import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
+import ActivationWorkflowPage from './pages/trade-marketing/ActivationWorkflowPage'
+import CampaignManagementPage from './pages/trade-marketing/CampaignManagementPage'
+import MerchandisingCompliancePage from './pages/trade-marketing/MerchandisingCompliancePage'
+import PromoterManagementPage from './pages/trade-marketing/PromoterManagementPage'
+import TradeMarketingAnalyticsPage from './pages/trade-marketing/TradeMarketingAnalyticsPage'
 
 // Events Pages
 import EventsPage from './pages/events/EventsPage'
@@ -179,6 +184,11 @@ function App() {
 
             {/* Trade Marketing Routes */}
             <Route path="trade-marketing" element={<TradeMarketingPage />} />
+            <Route path="trade-marketing/activation" element={<ActivationWorkflowPage />} />
+            <Route path="trade-marketing/campaigns" element={<CampaignManagementPage />} />
+            <Route path="trade-marketing/merchandising" element={<MerchandisingCompliancePage />} />
+            <Route path="trade-marketing/promoters" element={<PromoterManagementPage />} />
+            <Route path="trade-marketing/analytics" element={<TradeMarketingAnalyticsPage />} />
 
             {/* Events Routes */}
             <Route path="events" element={<EventsPage />} />
