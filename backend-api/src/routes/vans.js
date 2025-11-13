@@ -21,7 +21,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -43,7 +43,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -83,7 +83,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             values.push(conditions[key]);
           });
@@ -105,7 +105,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -227,7 +227,7 @@ router.get('/:id', async (req, res) => {
         FROM vans v
         LEFT JOIN users a ON v.assigned_salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.id = $1 AND v.tenant_id = $2
+        WHERE v.id = ? AND v.tenant_id = $2
       `, [id, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -248,7 +248,7 @@ router.get('/:id', async (req, res) => {
         FROM van_loads vl
         LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.van_id = $1 AND vl.tenant_id = $2
+        WHERE vl.van_id = ? AND vl.tenant_id = $2
         ORDER BY vl.load_date DESC
         LIMIT 10
       `, [id, tenantId], (err, rows) => {
@@ -305,7 +305,7 @@ router.put('/:id', async (req, res) => {
     const updateData = {};
     if (registration_number) updateData.registration_number = registration_number;
     if (model) updateData.model = model;
-    if (capacity_units !== undefined) updateData.capacity_units = capacity_units $1 parseInt(capacity_units) : null;
+    if (capacity_units !== undefined) updateData.capacity_units = capacity_units ? parseInt(capacity_units) : null;
     if (assigned_salesman_id !== undefined) updateData.assigned_salesman_id = assigned_salesman_id;
     if (status) updateData.status = status;
     
@@ -512,7 +512,7 @@ router.put('/loads/:loadId', async (req, res) => {
     const updateData = {};
     if (stock_returned) updateData.stock_returned = JSON.stringify(stock_returned);
     if (stock_sold) updateData.stock_sold = JSON.stringify(stock_sold);
-    if (cash_collected !== undefined) updateData.cash_collected = cash_collected $1 parseFloat(cash_collected) : null;
+    if (cash_collected !== undefined) updateData.cash_collected = cash_collected ? parseFloat(cash_collected) : null;
     if (status) updateData.status = status;
     
     await updateQuery('van_loads', updateData, { id: loadId }, tenantId);
@@ -540,7 +540,7 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
         LEFT JOIN vans v ON vl.van_id = v.id
         LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.id = $1 AND vl.tenant_id = $2
+        WHERE vl.id = ? AND vl.tenant_id = $2
       `, [loadId, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
