@@ -274,7 +274,7 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
     FROM products p
     LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = $1
     WHERE p.tenant_id = $2
-      ${warehouseId $3 'AND s.warehouse_id = $4' : ''}
+      ${warehouseId ? 'AND s.warehouse_id = $3' : ''}
     ORDER BY stock_status DESC, p.name ASC
   `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
 
@@ -301,9 +301,9 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
     LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = $1
     WHERE u.tenant_id = $2
       AND u.role = 'agent'
-      ${agentId $3 'AND u.id = $4' : ''}
-      AND (c.created_at >= $5 OR c.created_at IS NULL)
-      AND (c.created_at <= $6 OR c.created_at IS NULL)
+      ${agentId ? 'AND u.id = $3' : ''}
+      AND (c.created_at >= ${agentId ? '$4' : '$3'} OR c.created_at IS NULL)
+      AND (c.created_at <= ${agentId ? '$5' : '$4'} OR c.created_at IS NULL)
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY total_commission DESC
   `, agentId 
