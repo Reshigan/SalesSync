@@ -510,13 +510,13 @@ async function startServer() {
     app.use('/api/field-operations/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/field-operations/trends', authTenantMiddleware, trendsRoutes);
     app.use('/api/field-operations/agents', authTenantMiddleware, agentRoutes);
-    app.use('/api/field-operations/visits', authTenantMiddleware, visitsRoutes);
+    app.use('/api/field-operations/visits', authTenantMiddleware, visitRoutes);
     app.use('/api/field-operations/performance', authTenantMiddleware, performanceRoutes);
     
     app.use('/api/van-sales/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/van-sales/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/van-sales/trends', authTenantMiddleware, trendsRoutes);
-    app.use('/api/van-sales/routes', authTenantMiddleware, routesRoutes);
+    app.use('/api/van-sales/routes', authTenantMiddleware, routeRoutes);
     app.use('/api/van-sales/orders', authTenantMiddleware, ordersRoutes);
     
     app.use('/api/trade-marketing/stats', authTenantMiddleware, statsRoutes);
