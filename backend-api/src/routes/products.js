@@ -242,7 +242,7 @@ router.get('/', async (req, res) => {
           LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN brands b ON p.brand_id = b.id
           LEFT JOIN inventory_stock i ON p.id = i.product_id
-          WHERE p.tenant_id = $1 
+          WHERE p.tenant_id = ? 
             AND (p.name LIKE ? OR p.code LIKE ? OR p.barcode LIKE ?)
           GROUP BY p.id
           ORDER BY p.name
@@ -393,7 +393,7 @@ router.post('/', async (req, res) => {
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
-        WHERE p.tenant_id = $1 AND p.code = $2
+        WHERE p.tenant_id = ? AND p.code = $2
       `, [tenantId, code], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -458,7 +458,7 @@ router.get('/stats', async (req, res) => {
       // Active products count
       new Promise((resolve, reject) => {
         db.get(
-          'SELECT COUNT(*) as count FROM products WHERE tenant_id = $1 AND status = $2',
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = $2',
           [tenantId, 'active'],
           (err, row) => err ? reject(err) : resolve(row.count)
         );
@@ -470,7 +470,7 @@ router.get('/stats', async (req, res) => {
           `SELECT COUNT(DISTINCT p.id) as count 
            FROM products p
            LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = $1 
+           WHERE p.tenant_id = ? 
            AND p.status = 'active'
            AND COALESCE(i.quantity_on_hand, 0) > 0
            AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
@@ -485,7 +485,7 @@ router.get('/stats', async (req, res) => {
           `SELECT COUNT(DISTINCT p.id) as count 
            FROM products p
            LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = $1 
+           WHERE p.tenant_id = ? 
            AND p.status = 'active'
            AND COALESCE(i.quantity_on_hand, 0) = 0`,
           [tenantId],
@@ -574,7 +574,7 @@ router.get('/:id', async (req, res) => {
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
         LEFT JOIN inventory_stock i ON p.id = i.product_id
-        WHERE p.tenant_id = $1 AND p.id = $2
+        WHERE p.tenant_id = ? AND p.id = $2
         GROUP BY p.id
       `, [tenantId, id], (err, row) => {
         if (err) reject(err);
@@ -595,7 +595,7 @@ router.get('/:id', async (req, res) => {
         SELECT i.*, w.name as warehouse_name
         FROM inventory_stock i
         JOIN warehouses w ON i.warehouse_id = w.id
-        WHERE i.tenant_id = $1 AND i.product_id = $2
+        WHERE i.tenant_id = ? AND i.product_id = $2
         ORDER BY w.name
       `, [tenantId, id], (err, rows) => {
         if (err) reject(err);
@@ -688,9 +688,9 @@ router.put('/:id', async (req, res) => {
     if (category_id !== undefined) updateData.category_id = category_id;
     if (brand_id !== undefined) updateData.brand_id = brand_id;
     if (unit_of_measure) updateData.unit_of_measure = unit_of_measure;
-    if (selling_price !== undefined) updateData.selling_price = selling_price $1 parseFloat(selling_price) : null;
-    if (cost_price !== undefined) updateData.cost_price = cost_price $1 parseFloat(cost_price) : null;
-    if (tax_rate !== undefined) updateData.tax_rate = tax_rate $1 parseFloat(tax_rate) : 0;
+    if (selling_price !== undefined) updateData.selling_price = selling_price ? parseFloat(selling_price) : null;
+    if (cost_price !== undefined) updateData.cost_price = cost_price ? parseFloat(cost_price) : null;
+    if (tax_rate !== undefined) updateData.tax_rate = tax_rate ? parseFloat(tax_rate) : 0;
     if (status) updateData.status = status;
     
     await updateQuery('products', updateData, { id }, tenantId);
@@ -702,7 +702,7 @@ router.put('/:id', async (req, res) => {
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
-        WHERE p.tenant_id = $1 AND p.id = $2
+        WHERE p.tenant_id = ? AND p.id = $2
       `, [tenantId, id], (err, row) => {
         if (err) reject(err);
         else resolve(row);
