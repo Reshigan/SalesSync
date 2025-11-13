@@ -2,61 +2,39 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { getDatabase } = require('../database/init');
-
-function getQuery(sql, params = []) {
-  const db = getDatabase();
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-}
-
-function getOneQuery(sql, params = []) {
-  const db = getDatabase();
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-}
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // Generate Report
-router.post('/generate', async (req, res) => {
-  try {
-    const { type, dateFrom, dateTo, groupBy } = req.body;
-    let query, params = [req.user.tenantId];
-    
-    if (type === 'sales') {
-      query = `SELECT DATE(created_at) as date, COUNT(*) as count, SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at BETWEEN ? AND ? GROUP BY DATE(created_at)`;
-      params.push(dateFrom, dateTo);
-    } else if (type === 'commission') {
-      query = `SELECT agent_id, SUM(amount) as total FROM commissions WHERE tenant_id = ? AND date BETWEEN ? AND ? GROUP BY agent_id`;
-      params.push(dateFrom, dateTo);
-    } else if (type === 'visits') {
-      query = `SELECT DATE(visit_date) as date, COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date BETWEEN ? AND ? GROUP BY DATE(visit_date)`;
-      params.push(dateFrom, dateTo);
-    }
-    
-    const data = req.db.prepare(query).all(...params);
-    const totalRecords = data.length;
-    const totalValue = data.reduce((sum, row) => sum + (row.total || 0), 0);
-    const average = totalValue / (totalRecords || 1);
-    
-    res.json({
-      success: true,
-      totalRecords,
-      totalValue,
-      average: Math.round(average),
-      growth: Math.random() * 20 - 5,
-      headers: Object.keys(data[0] || {}),
-      rows: data.map(row => Object.values(row))
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+router.post('/generate', asyncHandler(async (req, res) => {
+  const { type, dateFrom, dateTo, groupBy } = req.body;
+  let query, params = [req.user.tenantId];
+  
+  if (type === 'sales') {
+    query = `SELECT created_at::date as date, COUNT(*)::int as count, SUM(amount)::float8 as total FROM orders WHERE tenant_id = $1 AND created_at BETWEEN $2 AND $3 GROUP BY created_at::date`;
+    params.push(dateFrom, dateTo);
+  } else if (type === 'commission') {
+    query = `SELECT agent_id, SUM(amount)::float8 as total FROM commissions WHERE tenant_id = $1 AND date BETWEEN $2 AND $3 GROUP BY agent_id`;
+    params.push(dateFrom, dateTo);
+  } else if (type === 'visits') {
+    query = `SELECT visit_date::date as date, COUNT(*)::int as count FROM visits WHERE tenant_id = $1 AND visit_date BETWEEN $2 AND $3 GROUP BY visit_date::date`;
+    params.push(dateFrom, dateTo);
+  }
+  
+  const data = await getQuery(query, params);
+  const totalRecords = data.length;
+  const totalValue = data.reduce((sum, row) => sum + (row.total || 0), 0);
+  const average = totalValue / (totalRecords || 1);
+  
+  res.json({
+    success: true,
+    totalRecords,
+    totalValue,
+    average: Math.round(average),
+    growth: Math.random() * 20 - 5,
+    headers: Object.keys(data[0] || {}),
+    rows: data.map(row => Object.values(row))
+  });
+}));
 
 // Export Report
 router.post('/export', async (req, res) => {
@@ -99,48 +77,49 @@ router.post('/templates/:id/run', async (req, res) => {
 });
 
 // Analytics Dashboard
-router.get('/analytics', async (req, res) => {
-  try {
-    const revenue = req.db.prepare(`SELECT SUM(amount) as total FROM orders WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')`).get(req.user.tenantId);
-    const agents = req.db.prepare(`SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND role = 'agent'`).get(req.user.tenantId);
-    const boards = req.db.prepare(`SELECT COUNT(*) as count FROM board_placements WHERE tenant_id = ? AND created_at >= DATE('now', '-30 days')`).get(req.user.tenantId);
-    const visits = req.db.prepare(`SELECT COUNT(*) as count FROM visits WHERE tenant_id = ? AND visit_date >= DATE('now', '-30 days')`).get(req.user.tenantId);
-    
-    const topAgents = req.db.prepare(`
-      SELECT u.name, COUNT(v.id) as visits, SUM(c.amount) as commission 
+router.get('/analytics', asyncHandler(async (req, res) => {
+  const tenantId = req.user.tenantId;
+  
+  const [revenue, agents, boards, visits, topAgents] = await Promise.all([
+    getOneQuery(`SELECT COALESCE(SUM(amount), 0)::float8 as total FROM orders WHERE tenant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM users WHERE tenant_id = $1 AND role = 'agent'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM board_placements WHERE tenant_id = $1 AND created_at >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getOneQuery(`SELECT COUNT(*)::int as count FROM visits WHERE tenant_id = $1 AND visit_date >= CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+    getQuery(`
+      SELECT u.first_name || ' ' || u.last_name as name, COUNT(v.id)::int as visits, COALESCE(SUM(c.amount), 0)::float8 as commission 
       FROM users u 
       LEFT JOIN visits v ON v.agent_id = u.id 
       LEFT JOIN commissions c ON c.agent_id = u.id 
-      WHERE u.tenant_id = ? AND u.role = 'agent'
-      GROUP BY u.id 
+      WHERE u.tenant_id = $1 AND u.role = 'agent'
+      GROUP BY u.id, u.first_name, u.last_name
       ORDER BY commission DESC 
       LIMIT 5
-    `).all(req.user.tenantId);
-    
-    const salesTrend = Array(30).fill(0).map((_, i) => ({
-      label: new Date(Date.now() - (29 - i) * 86400000).getDate().toString(),
-      value: Math.floor(Math.random() * 100000 + 50000)
-    }));
-    
-    res.json({
-      revenue: revenue?.total || 0,
-      revenueChange: 12.5,
-      agents: agents?.count || 0,
-      agentsChange: 5.2,
-      boards: boards?.count || 0,
-      boardsChange: 8.7,
-      visits: visits?.count || 0,
-      visitsChange: 15.3,
-      topAgents,
-      recentActivity: [
-        { title: 'New board placement', description: 'Agent A placed 2 billboards', timestamp: '5 mins ago' },
-        { title: 'Commission payout', description: '₹50,000 paid to 10 agents', timestamp: '1 hour ago' },
-        { title: 'Campaign started', description: 'Q4 Campaign activated', timestamp: '3 hours ago' }
-      ],
-      salesTrend
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
-});
+    `, [tenantId])
+  ]);
+  
+  const salesTrend = Array(30).fill(0).map((_, i) => ({
+    label: new Date(Date.now() - (29 - i) * 86400000).getDate().toString(),
+    value: Math.floor(Math.random() * 100000 + 50000)
+  }));
+  
+  res.json({
+    revenue: revenue?.total || 0,
+    revenueChange: 12.5,
+    agents: agents?.count || 0,
+    agentsChange: 5.2,
+    boards: boards?.count || 0,
+    boardsChange: 8.7,
+    visits: visits?.count || 0,
+    visitsChange: 15.3,
+    topAgents: topAgents || [],
+    recentActivity: [
+      { title: 'New board placement', description: 'Agent A placed 2 billboards', timestamp: '5 mins ago' },
+      { title: 'Commission payout', description: '₹50,000 paid to 10 agents', timestamp: '1 hour ago' },
+      { title: 'Campaign started', description: 'Q4 Campaign activated', timestamp: '3 hours ago' }
+    ],
+    salesTrend
+  });
+}));
 
 // GET /api/reports/stats - Report generation statistics
 router.get('/stats', asyncHandler(async (req, res) => {
@@ -149,19 +128,19 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const [reportCounts, typeBreakdown, recentReports] = await Promise.all([
     getOneQuery(`
       SELECT 
-        COUNT(*) as total_reports,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_reports,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_reports,
-        COUNT(CASE WHEN created_at >= DATE('now', '-30 days') THEN 1 END) as recent_reports
-      FROM generated_reports WHERE tenant_id = ?
+        COUNT(*)::int as total_reports,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_reports,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_reports,
+        COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END)::int as recent_reports
+      FROM generated_reports WHERE tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
       SELECT 
         report_type,
-        COUNT(*) as count
+        COUNT(*)::int as count
       FROM generated_reports
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
       GROUP BY report_type
       ORDER BY count DESC
     `, [tenantId]),
@@ -169,10 +148,10 @@ router.get('/stats', asyncHandler(async (req, res) => {
     getQuery(`
       SELECT 
         r.id, r.report_type, r.status, r.created_at,
-        u.name as generated_by
+        u.first_name || ' ' || u.last_name as generated_by
       FROM generated_reports r
       LEFT JOIN users u ON r.user_id = u.id
-      WHERE r.tenant_id = ?
+      WHERE r.tenant_id = $1
       ORDER BY r.created_at DESC
       LIMIT 10
     `, [tenantId])
@@ -181,9 +160,9 @@ router.get('/stats', asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
-      counts: reportCounts,
-      typeBreakdown,
-      recent: recentReports
+      counts: reportCounts || { total_reports: 0, completed_reports: 0, pending_reports: 0, recent_reports: 0 },
+      typeBreakdown: typeBreakdown || [],
+      recent: recentReports || []
     }
   });
 }));
@@ -194,22 +173,22 @@ router.get('/sales/summary', asyncHandler(async (req, res) => {
 
   const salesData = await getQuery(`
     SELECT 
-      DATE(o.order_date) as date,
-      COUNT(o.id) as total_orders,
-      SUM(o.total_amount) as total_revenue,
-      AVG(o.total_amount) as avg_order_value,
-      COUNT(DISTINCT o.customer_id) as unique_customers
+      o.order_date::date as date,
+      COUNT(o.id)::int as total_orders,
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+      COALESCE(AVG(o.total_amount), 0)::float8 as avg_order_value,
+      COUNT(DISTINCT o.customer_id)::int as unique_customers
     FROM orders o
-    WHERE o.tenant_id = ?
-      AND o.order_date >= ?
-      AND o.order_date <= ?
-    GROUP BY DATE(o.order_date)
+    WHERE o.tenant_id = $1
+      AND o.order_date >= $2
+      AND o.order_date <= $3
+    GROUP BY o.order_date::date
     ORDER BY date DESC
   `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
 
   res.json({
     success: true,
-    data: salesData
+    data: salesData || []
   });
 }));
 
@@ -230,10 +209,10 @@ router.get('/sales/exceptions', asyncHandler(async (req, res) => {
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
     LEFT JOIN users u ON o.salesman_id = u.id
-    WHERE o.tenant_id = ?
+    WHERE o.tenant_id = $1
       AND o.total_amount > 10000
-      AND o.order_date >= ?
-      AND o.order_date <= ?
+      AND o.order_date >= $2
+      AND o.order_date <= $3
     ORDER BY o.order_date DESC
   `, [tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
 
@@ -251,25 +230,25 @@ router.get('/operations/productivity', asyncHandler(async (req, res) => {
     SELECT 
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
-      COUNT(DISTINCT v.id) as total_visits,
-      COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
-      COUNT(DISTINCT v.customer_id) as unique_customers,
-      AVG(CASE WHEN v.check_out_time IS NOT NULL 
-        THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
-        ELSE NULL END) as avg_visit_duration_minutes
+      COUNT(DISTINCT v.id)::int as total_visits,
+      COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END)::int as completed_visits,
+      COUNT(DISTINCT v.customer_id)::int as unique_customers,
+      COALESCE(AVG(CASE WHEN v.check_out_time IS NOT NULL 
+        THEN EXTRACT(EPOCH FROM (v.check_out_time - v.check_in_time)) / 60
+        ELSE NULL END), 0)::float8 as avg_visit_duration_minutes
     FROM users u
-    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?
-    WHERE u.tenant_id = ?
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
+    WHERE u.tenant_id = $2
       AND u.role = 'agent'
-      AND (v.visit_date >= ? OR v.visit_date IS NULL)
-      AND (v.visit_date <= ? OR v.visit_date IS NULL)
+      AND (v.visit_date >= $3 OR v.visit_date IS NULL)
+      AND (v.visit_date <= $4 OR v.visit_date IS NULL)
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY completed_visits DESC
   `, [tenantId, tenantId, startDate || '2024-01-01', endDate || '2025-12-31']);
 
   res.json({
     success: true,
-    data: productivity
+    data: productivity || []
   });
 }));
 
@@ -293,9 +272,9 @@ router.get('/inventory/snapshot', asyncHandler(async (req, res) => {
       END as stock_status,
       COALESCE(s.updated_at, p.created_at) as last_updated
     FROM products p
-    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = ?
-    WHERE p.tenant_id = ?
-      ${warehouseId ? 'AND s.warehouse_id = ?' : ''}
+    LEFT JOIN inventory_stock s ON p.id = s.product_id AND s.tenant_id = $1
+    WHERE p.tenant_id = $2
+      ${warehouseId ? 'AND s.warehouse_id = $3' : ''}
     ORDER BY stock_status DESC, p.name ASC
   `, warehouseId ? [tenantId, tenantId, warehouseId] : [tenantId, tenantId]);
 
@@ -313,18 +292,18 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
     SELECT 
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
-      COUNT(c.id) as total_transactions,
-      COALESCE(SUM(c.commission_amount), 0) as total_commission,
-      COALESCE(SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END), 0) as approved_commission,
-      COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END), 0) as pending_commission,
-      COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END), 0) as paid_commission
+      COUNT(c.id)::int as total_transactions,
+      COALESCE(SUM(c.commission_amount), 0)::float8 as total_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'approved' THEN c.commission_amount ELSE 0 END), 0)::float8 as approved_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'pending' THEN c.commission_amount ELSE 0 END), 0)::float8 as pending_commission,
+      COALESCE(SUM(CASE WHEN c.status = 'paid' THEN c.commission_amount ELSE 0 END), 0)::float8 as paid_commission
     FROM users u
-    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = ?
-    WHERE u.tenant_id = ?
+    LEFT JOIN commissions c ON u.id = c.agent_id AND c.tenant_id = $1
+    WHERE u.tenant_id = $2
       AND u.role = 'agent'
-      ${agentId ? 'AND u.id = ?' : ''}
-      AND (c.created_at >= ? OR c.created_at IS NULL)
-      AND (c.created_at <= ? OR c.created_at IS NULL)
+      ${agentId ? 'AND u.id = $3' : ''}
+      AND (c.created_at >= ${agentId ? '$4' : '$3'} OR c.created_at IS NULL)
+      AND (c.created_at <= ${agentId ? '$5' : '$4'} OR c.created_at IS NULL)
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY total_commission DESC
   `, agentId 
@@ -333,7 +312,7 @@ router.get('/finance/commissions', asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    data: commissions
+    data: commissions || []
   });
 }));
 

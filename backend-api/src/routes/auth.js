@@ -84,8 +84,11 @@ const registerSchema = Joi.object({
  *         description: Authentication failed - invalid tenant or credentials
  */
 router.post('/login', asyncHandler(async (req, res, next) => {
-  // Lazy-load database functions
-  const { getOneQuery, getQuery, runQuery } = require('../database/init');
+  // Lazy-load database functions - use postgres-init in production
+  const dbModule = process.env.NODE_ENV === 'production' && process.env.DB_TYPE === 'postgres'
+    ? require('../database/postgres-init')
+    : require('../database/init');
+  const { getOneQuery, getQuery, runQuery } = dbModule;
   
   // SECURITY FIX: Require X-Tenant-Code header (can also accept X-Tenant-ID for backwards compatibility)
   const tenantCode = req.headers['x-tenant-code'] || req.headers['x-tenant-id'];
@@ -105,22 +108,47 @@ router.post('/login', asyncHandler(async (req, res, next) => {
   try {
     // SECURITY FIX: Validate tenant exists and is active
     // Accept either tenant code or UUID
-    const tenant = await getOneQuery(
-      'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
-      [tenantCode.toUpperCase(), tenantCode, 'active']
-    );
+    // Check if tenantCode is a valid UUID format to avoid PostgreSQL type errors
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantCode);
+    
+    let tenant;
+    if (process.env.DB_TYPE === 'postgres') {
+      if (isUUID) {
+        tenant = await getOneQuery(
+          'SELECT * FROM tenants WHERE (code = $1 OR id = $2) AND status = $3',
+          [tenantCode.toUpperCase(), tenantCode, 'active']
+        );
+      } else {
+        tenant = await getOneQuery(
+          'SELECT * FROM tenants WHERE code = $1 AND status = $2',
+          [tenantCode.toUpperCase(), 'active']
+        );
+      }
+    } else {
+      tenant = await getOneQuery(
+        'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
+        [tenantCode.toUpperCase(), tenantCode, 'active']
+      );
+    }
     
     if (!tenant) {
       return next(new AppError('Invalid or inactive tenant', 401, 'INVALID_TENANT'));
     }
     
     // SECURITY FIX: Find user by email AND tenant_id (case-insensitive email)
-    const user = await getOneQuery(`
-      SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
-      FROM users u
-      JOIN tenants t ON t.id = u.tenant_id
-      WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
-    `, [email, tenant.id]);
+    const user = process.env.DB_TYPE === 'postgres'
+      ? await getOneQuery(`
+          SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
+          FROM users u
+          JOIN tenants t ON t.id = u.tenant_id
+          WHERE LOWER(u.email) = LOWER($1) AND u.tenant_id = $2 AND u.status = 'active' AND t.status = 'active'
+        `, [email, tenant.id])
+      : await getOneQuery(`
+          SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
+          FROM users u
+          JOIN tenants t ON t.id = u.tenant_id
+          WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
+        `, [email, tenant.id]);
     
     if (!user) {
       return next(new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS'));
@@ -164,16 +192,28 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     });
     
     // Update last login
-    await runQuery(
-      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-      [user.id]
-    );
+    if (process.env.DB_TYPE === 'postgres') {
+      await runQuery(
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+        [user.id]
+      );
+    } else {
+      await runQuery(
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
+        [user.id]
+      );
+    }
     
     // Get full tenant data
-    const tenantData = await getOneQuery(
-      'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
-      [user.tenant_id]
-    );
+    const tenantData = process.env.DB_TYPE === 'postgres'
+      ? await getOneQuery(
+          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = $1',
+          [user.tenant_id]
+        )
+      : await getOneQuery(
+          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
+          [user.tenant_id]
+        );
     
     // Parse features JSON if it's a string
     if (tenantData && typeof tenantData.features === 'string') {
@@ -181,20 +221,35 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     }
     
     // Load user permissions
-    const permissions = await getQuery(`
-      SELECT
-        m.code as module,
-        MAX(rp.can_view) as can_view,
-        MAX(rp.can_create) as can_create,
-        MAX(rp.can_edit) as can_edit,
-        MAX(rp.can_delete) as can_delete,
-        MAX(rp.can_approve) as can_approve,
-        MAX(rp.can_export) as can_export
-      FROM role_permissions rp
-      JOIN modules m ON m.id = rp.module_id
-      WHERE rp.tenant_id = ? AND rp.role = ?
-      GROUP BY m.code
-    `, [user.tenant_id, user.role]);
+    const permissions = process.env.DB_TYPE === 'postgres'
+      ? await getQuery(`
+          SELECT
+            m.code as module,
+            BOOL_OR(rp.can_view) as can_view,
+            BOOL_OR(rp.can_create) as can_create,
+            BOOL_OR(rp.can_edit) as can_edit,
+            BOOL_OR(rp.can_delete) as can_delete,
+            BOOL_OR(rp.can_approve) as can_approve,
+            BOOL_OR(rp.can_export) as can_export
+          FROM role_permissions rp
+          JOIN modules m ON m.id = rp.module_id
+          WHERE rp.tenant_id = $1 AND rp.role = $2
+          GROUP BY m.code
+        `, [user.tenant_id, user.role])
+      : await getQuery(`
+          SELECT
+            m.code as module,
+            MAX(rp.can_view) as can_view,
+            MAX(rp.can_create) as can_create,
+            MAX(rp.can_edit) as can_edit,
+            MAX(rp.can_delete) as can_delete,
+            MAX(rp.can_approve) as can_approve,
+            MAX(rp.can_export) as can_export
+          FROM role_permissions rp
+          JOIN modules m ON m.id = rp.module_id
+          WHERE rp.tenant_id = ? AND rp.role = ?
+          GROUP BY m.code
+        `, [user.tenant_id, user.role]);
 
     // Format permissions for frontend
     const formattedPermissions = permissions.map(p => ({
@@ -350,7 +405,7 @@ router.post('/register', tenantMiddleware, asyncHandler(async (req, res, next) =
       `INSERT INTO users (
         email, password, first_name, last_name, role, 
         tenant_id, tenant_code, tenant_name, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)`,
       [email, hashedPassword, firstName, lastName, role, tenant.id, tenantCode, tenant.name]
     );
 

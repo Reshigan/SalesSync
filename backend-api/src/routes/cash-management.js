@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const getDatabase = () => require('../utils/database').getDatabase();
 
@@ -30,16 +31,15 @@ router.get('/collections', async (req, res) => {
   try {
     const { agent_id, from_date, to_date, status } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT cc.*, u.first_name || ' ' || u.last_name as agent_name, r.route_number FROM cash_collections cc
       LEFT JOIN users u ON cc.agent_id = u.id
       LEFT JOIN van_sales_routes r ON cc.route_id = r.id
-      WHERE cc.tenant_id = ?`;
+      WHERE cc.tenant_id = $1`;
     const params = [tenantId];
 
     if (agent_id) { sql += ' AND cc.agent_id = ?'; params.push(agent_id); }
-    if (from_date) { sql += ' AND cc.collection_date >= ?'; params.push(from_date); }
+    if (from_date) { sql += ' AND cc.collection_date >= $1'; params.push(from_date); }
     if (to_date) { sql += ' AND cc.collection_date <= ?'; params.push(to_date); }
     if (status) { sql += ' AND cc.status = ?'; params.push(status); }
 
@@ -60,7 +60,6 @@ router.post('/collections', async (req, res) => {
     const { route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!agent_id || !amount) {
       return res.status(400).json({ error: 'Missing required fields: agent_id, amount' });
@@ -68,7 +67,7 @@ router.post('/collections', async (req, res) => {
 
     const receiptNumber = `RCPT-${Date.now()}`;
     db.run(`INSERT INTO cash_collections (tenant_id, receipt_number, route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, CURRENT_TIMESTAMP)`,
       [tenantId, receiptNumber, route_id, agent_id, customer_id, collection_date || new Date().toISOString().split('T')[0], amount, payment_method || 'cash', reference, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to record collection' });
@@ -86,13 +85,12 @@ router.post('/reconciliations', async (req, res) => {
     const { route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance_reason, denominations } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const refNumber = `REC-${Date.now()}`;
     const variance = actual_cash - expected_cash;
 
     db.run(`INSERT INTO cash_reconciliations (tenant_id, reference_number, route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance, variance_reason, denominations, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, route_id, agent_id, reconciliation_date || new Date().toISOString().split('T')[0], expected_cash, actual_cash, variance, variance_reason, JSON.stringify(denominations), userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create reconciliation' });
@@ -110,9 +108,8 @@ router.post('/reconciliations/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
-    db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = ?, approved_at = datetime('now') WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to approve reconciliation' });
@@ -130,7 +127,6 @@ router.post('/deposits', async (req, res) => {
     const { deposit_date, bank_name, account_number, amount, deposit_slip, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     if (!deposit_date || !bank_name || !amount) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -138,7 +134,7 @@ router.post('/deposits', async (req, res) => {
 
     const refNumber = `DEP-${Date.now()}`;
     db.run(`INSERT INTO bank_deposits (tenant_id, reference_number, deposit_date, bank_name, account_number, amount, deposit_slip, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, deposit_date, bank_name, account_number, amount, deposit_slip, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to record deposit' });
@@ -155,11 +151,10 @@ router.get('/summary', async (req, res) => {
   try {
     const { from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
-    let sql = `SELECT SUM(amount) as total_collected, COUNT(*) as collection_count FROM cash_collections WHERE tenant_id = ?`;
+    let sql = `SELECT SUM(amount) as total_collected, COUNT(*) as collection_count FROM cash_collections WHERE tenant_id = $1`;
     const params = [tenantId];
-    if (from_date) { sql += ' AND collection_date >= ?'; params.push(from_date); }
+    if (from_date) { sql += ' AND collection_date >= $1'; params.push(from_date); }
     if (to_date) { sql += ' AND collection_date <= ?'; params.push(to_date); }
 
     db.get(sql, params, (err, summary) => {

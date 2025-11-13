@@ -28,7 +28,7 @@ export default function HRDashboard() {
       setLoading(true);
       const [empRes, attRes] = await Promise.all([
         axios.get(`${API_URL}/api/users`).catch(() => ({ data: { users: [] } })),
-        axios.get(`${API_URL}/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
       ]);
       
       setEmployees(empRes.data.users || []);

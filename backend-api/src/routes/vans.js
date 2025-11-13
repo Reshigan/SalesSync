@@ -1,22 +1,22 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
 const getDatabase = () => require('../utils/database').getDatabase();
-const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => {
+const { insertQuery, updateQuery, deleteQuery } = (() => {
   try {
     return require('../database/queries');
   } catch (error) {
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -33,13 +33,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -58,11 +57,10 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -73,15 +71,14 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -98,13 +95,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -129,16 +125,14 @@ router.get('/', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { status, assigned_salesman_id } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name,
              COUNT(vl.id) as load_count
       FROM vans v
-      LEFT JOIN agents a ON v.assigned_salesman_id = a.id
+      LEFT JOIN users a ON v.assigned_salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN van_loads vl ON v.id = vl.van_id AND DATE(vl.load_date) = DATE('now')
-      WHERE v.tenant_id = ?
+      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = DATE('now')
+      WHERE v.tenant_id = $1
     `;
     const params = [tenantId];
     
@@ -227,15 +221,13 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const van = await new Promise((resolve, reject) => {
       db.get(`
         SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
         FROM vans v
-        LEFT JOIN agents a ON v.assigned_salesman_id = a.id
+        LEFT JOIN users a ON v.assigned_salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.id = ? AND v.tenant_id = ?
+        WHERE v.id = ? AND v.tenant_id = $2
       `, [id, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -254,9 +246,9 @@ router.get('/:id', async (req, res) => {
       db.all(`
         SELECT vl.*, u.first_name || ' ' || u.last_name as salesman_name
         FROM van_loads vl
-        LEFT JOIN agents a ON vl.salesman_id = a.id
+        LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.van_id = ? AND vl.tenant_id = ?
+        WHERE vl.van_id = ? AND vl.tenant_id = $2
         ORDER BY vl.load_date DESC
         LIMIT 10
       `, [id, tenantId], (err, rows) => {
@@ -347,9 +339,8 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if van has load history
-    const db = getDatabase();
     const loadCount = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM van_loads WHERE van_id = ?', [id], (err, row) => {
+      db.get('SELECT COUNT(*) as count FROM van_loads WHERE van_id = $1', [id], (err, row) => {
         if (err) reject(err);
         else resolve(row.count);
       });
@@ -381,16 +372,14 @@ router.get('/loads/list', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { van_id, salesman_id, status, date_from, date_to, page = 1, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT vl.*, v.registration_number as van_registration,
              u.first_name || ' ' || u.last_name as salesman_name
       FROM van_loads vl
       LEFT JOIN vans v ON vl.van_id = v.id
-      LEFT JOIN agents a ON vl.salesman_id = a.id
+      LEFT JOIN users a ON vl.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE vl.tenant_id = ?
+      WHERE vl.tenant_id = $1
     `;
     const params = [tenantId];
     
@@ -543,17 +532,15 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { loadId } = req.params;
-    
-    const db = getDatabase();
     const load = await new Promise((resolve, reject) => {
       db.get(`
         SELECT vl.*, v.registration_number as van_registration,
                u.first_name || ' ' || u.last_name as salesman_name
         FROM van_loads vl
         LEFT JOIN vans v ON vl.van_id = v.id
-        LEFT JOIN agents a ON vl.salesman_id = a.id
+        LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.id = ? AND vl.tenant_id = ?
+        WHERE vl.id = ? AND vl.tenant_id = $2
       `, [loadId, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);

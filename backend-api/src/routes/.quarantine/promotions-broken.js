@@ -339,7 +339,7 @@ router.get('/campaigns/:id', async (req, res) => {
              u.first_name || ' ' || u.last_name as promoter_name,
              c.name as customer_name
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON pa.customer_id = c.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
@@ -420,7 +420,7 @@ router.get('/activities', async (req, res) => {
              c.name as customer_name,
              c.address as customer_address
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN promotional_campaigns pc ON pa.campaign_id = pc.id
       LEFT JOIN customers c ON pa.customer_id = c.id
@@ -633,7 +633,7 @@ router.get('/dashboard', async (req, res) => {
         COALESCE(SUM(pa.samples_distributed), 0) as samples_distributed_today,
         COALESCE(SUM(pa.contacts_made), 0) as contacts_made_today
       FROM promotional_campaigns pc
-      LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id AND DATE(pa.activity_date) = DATE('now')
+      LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id AND pa.activity_date::date = DATE('now')
       WHERE pc.tenant_id = ?
     `, [req.user.tenantId]);
     
@@ -645,7 +645,7 @@ router.get('/dashboard', async (req, res) => {
              pc.name as campaign_name,
              c.name as customer_name
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN promotional_campaigns pc ON pa.campaign_id = pc.id
       LEFT JOIN customers c ON pa.customer_id = c.id
@@ -658,7 +658,7 @@ router.get('/dashboard', async (req, res) => {
     const activitiesByType = await getQuery(`
       SELECT activity_type, COUNT(*) as count
       FROM promoter_activities
-      WHERE tenant_id = ? AND DATE(activity_date) = DATE('now')
+      WHERE tenant_id = ? AND activity_date::date = DATE('now')
       GROUP BY activity_type
     `, [req.user.tenantId]);
     

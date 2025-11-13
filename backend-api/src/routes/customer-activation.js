@@ -156,7 +156,7 @@ router.post('/', requireFunction, async (req, res) => {
       INSERT INTO customer_activations (
         customer_id, agent_id, activation_type, product_id, target_date,
         priority, notes, campaign_id, status, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       customer_id, agent_id, activation_type, product_id, target_date,
       priority || 'medium', notes, campaign_id, 'initiated', req.user.id
@@ -170,7 +170,7 @@ router.post('/', requireFunction, async (req, res) => {
         INSERT INTO activation_steps (
           activation_id, step_name, step_description, step_order, 
           is_mandatory, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         result.lastInsertRowid, step.name, step.description, i + 1,
         step.mandatory, 'pending'
@@ -208,8 +208,8 @@ router.patch('/:id/status', requireFunction, async (req, res) => {
       UPDATE customer_activations 
       SET status = ?, 
           completion_notes = COALESCE(?, completion_notes),
-          completed_at = CASE WHEN ? = 'completed' THEN datetime('now') ELSE completed_at END,
-          updated_at = datetime('now')
+          completed_at = CASE WHEN ? = 'completed' THEN CURRENT_TIMESTAMP ELSE completed_at END,
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(status, completion_notes, status, id);
     
@@ -219,7 +219,7 @@ router.patch('/:id/status', requireFunction, async (req, res) => {
         INSERT OR REPLACE INTO activation_metrics (
           activation_id, success_score, engagement_level, conversion_rate,
           time_to_activation, follow_up_required, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         id, success_metrics.success_score, success_metrics.engagement_level,
         success_metrics.conversion_rate, success_metrics.time_to_activation,
@@ -251,7 +251,7 @@ router.patch('/:id/steps/:stepId', requireFunction, async (req, res) => {
       SET status = ?, 
           completion_notes = COALESCE(?, completion_notes),
           completion_date = COALESCE(?, completion_date),
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND activation_id = ?
     `).run(status, completion_notes, completion_date, stepId, id);
     
@@ -270,7 +270,7 @@ router.patch('/:id/steps/:stepId', requireFunction, async (req, res) => {
     if (pendingMandatory.count === 0) {
       db.prepare(`
         UPDATE customer_activations 
-        SET status = 'completed', completed_at = datetime('now')
+        SET status = 'completed', completed_at = CURRENT_TIMESTAMP
         WHERE id = ? AND status != 'completed'
       `).run(id);
     }

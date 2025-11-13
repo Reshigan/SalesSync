@@ -67,7 +67,7 @@ router.get('/', async (req, res, next) => {
     
     const agents = await getQuery(
       `SELECT a.*, u.first_name, u.last_name, u.email, u.phone, u.status
-       FROM agents a
+       FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
        JOIN users u ON a.user_id = u.id
        WHERE a.tenant_id = ? AND a.agent_type = 'field_marketing'
        ORDER BY u.first_name, u.last_name`,
@@ -471,7 +471,7 @@ router.get('/:agentId/visits', async (req, res, next) => {
              u.name as agent_name
       FROM visits v
       JOIN customers c ON v.customer_id = c.id
-      JOIN agents a ON v.agent_id = a.id
+      JOIN users a ON v.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE v.tenant_id = ? AND v.agent_id = ?
     `;
@@ -509,76 +509,64 @@ router.get('/:agentId/visits', async (req, res, next) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
+    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [agentCount, agentPerformance, topPerformers, territoryStats] = await Promise.all([
-      // Total agent counts
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_agents,
-            COUNT(CASE WHEN a.status = 'active' THEN 1 END) as active_agents,
-            COUNT(CASE WHEN a.status = 'inactive' THEN 1 END) as inactive_agents
-          FROM agents a
-          WHERE a.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_agents,
+          COUNT(CASE WHEN a.status = 'active' THEN 1 END)::int as active_agents,
+          COUNT(CASE WHEN a.status = 'inactive' THEN 1 END)::int as inactive_agents
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
+        WHERE a.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      // Overall performance metrics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT v.id) as total_visits,
-            COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
-            COUNT(DISTINCT o.id) as total_orders,
-            SUM(o.total_amount) as total_revenue,
-            AVG(o.total_amount) as avg_order_value
-          FROM agents a
-          LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
-          LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = ?
-          WHERE a.tenant_id = ?
-        `, [tenantId, tenantId, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT v.id)::int as total_visits,
+          COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END)::int as completed_visits,
+          COUNT(DISTINCT o.id)::int as total_orders,
+          SUM(o.total_amount)::float8 as total_revenue,
+          AVG(o.total_amount)::float8 as avg_order_value
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
+        LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = $1
+        LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = $2
+        WHERE a.tenant_id = $3
+      `, [tenantId, tenantId, tenantId]).then(row => row || {}),
       
-      // Top performing agents
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            a.id,
-            u.first_name || ' ' || u.last_name as agent_name,
-            a.code as agent_code,
-            COUNT(DISTINCT v.id) as visit_count,
-            COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as completed_visits,
-            COUNT(DISTINCT o.id) as order_count,
-            COALESCE(SUM(o.total_amount), 0) as total_revenue,
-            COUNT(DISTINCT v.customer_id) as unique_customers
-          FROM agents a
-          LEFT JOIN users u ON a.user_id = u.id
-          LEFT JOIN visits v ON a.id = v.agent_id
-          LEFT JOIN orders o ON a.id = o.salesman_id
-          WHERE a.tenant_id = ?
-          GROUP BY a.id, agent_name, agent_code
-          ORDER BY total_revenue DESC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
+      getQuery(`
+        SELECT 
+          a.id,
+          u.first_name || ' ' || u.last_name as agent_name,
+          a.code as agent_code,
+          COUNT(DISTINCT v.id)::int as visit_count,
+          COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END)::int as completed_visits,
+          COUNT(DISTINCT o.id)::int as order_count,
+          COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+          COUNT(DISTINCT v.customer_id)::int as unique_customers
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
+        LEFT JOIN users u ON a.user_id = u.id
+        LEFT JOIN visits v ON a.id = v.agent_id
+        LEFT JOIN orders o ON a.id = o.salesman_id
+        WHERE a.tenant_id = $1
+        GROUP BY a.id, u.first_name, u.last_name, a.code
+        ORDER BY total_revenue DESC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || []),
       
-      // Territory coverage
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            a.territory,
-            COUNT(DISTINCT a.id) as agent_count,
-            COUNT(DISTINCT v.id) as visit_count,
-            COUNT(DISTINCT v.customer_id) as customer_count
-          FROM agents a
-          LEFT JOIN visits v ON a.id = v.agent_id
-          WHERE a.tenant_id = ?
-          AND a.territory IS NOT NULL
-          GROUP BY a.territory
-          ORDER BY agent_count DESC
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          a.territory,
+          COUNT(DISTINCT a.id)::int as agent_count,
+          COUNT(DISTINCT v.id)::int as visit_count,
+          COUNT(DISTINCT v.customer_id)::int as customer_count
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
+        LEFT JOIN visits v ON a.id = v.agent_id
+        WHERE a.tenant_id = $1
+        AND a.territory IS NOT NULL
+        GROUP BY a.territory
+        ORDER BY agent_count DESC
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({
@@ -613,70 +601,58 @@ router.get('/:id/performance', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const { months = 3 } = req.query;
-    const db = getDatabase();
+    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [agentInfo, visitStats, orderStats, monthlyTrend] = await Promise.all([
-      // Agent information
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT a.*, u.first_name || ' ' || u.last_name as agent_name
-          FROM agents a
-          LEFT JOIN users u ON a.user_id = u.id
-          WHERE a.id = ? AND a.tenant_id = ?
-        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row));
-      }),
+      getOneQuery(`
+        SELECT a.*, u.first_name || ' ' || u.last_name as agent_name
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
+        LEFT JOIN users u ON a.user_id = u.id
+        WHERE a.id = $1 AND a.tenant_id = $2
+      `, [id, tenantId]),
       
-      // Visit statistics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_visits,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_visits,
-            COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_visits,
-            COUNT(DISTINCT customer_id) as unique_customers,
-            AVG(CASE 
-              WHEN check_out_time IS NOT NULL AND check_in_time IS NOT NULL 
-              THEN (julianday(check_out_time) - julianday(check_in_time)) * 24 * 60 
-            END) as avg_visit_duration_minutes
-          FROM visits
-          WHERE agent_id = ? AND tenant_id = ?
-          AND DATE(visit_date) >= DATE('now', '-${parseInt(months)} months')
-        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_visits,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_visits,
+          COUNT(CASE WHEN status = 'cancelled' THEN 1 END)::int as cancelled_visits,
+          COUNT(DISTINCT customer_id)::int as unique_customers,
+          AVG(CASE 
+            WHEN check_out_time IS NOT NULL AND check_in_time IS NOT NULL 
+            THEN EXTRACT(EPOCH FROM (check_out_time - check_in_time)) / 60
+          END)::float8 as avg_visit_duration_minutes
+        FROM visits
+        WHERE agent_id = $1 AND tenant_id = $2
+        AND visit_date >= CURRENT_DATE - INTERVAL '${parseInt(months)} months'
+      `, [id, tenantId]).then(row => row || {}),
       
-      // Order statistics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_orders,
-            SUM(total_amount) as total_revenue,
-            AVG(total_amount) as avg_order_value,
-            MAX(total_amount) as max_order_value,
-            COUNT(DISTINCT customer_id) as unique_customers
-          FROM orders
-          WHERE salesman_id = ? AND tenant_id = ?
-          AND DATE(order_date) >= DATE('now', '-${parseInt(months)} months')
-        `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_orders,
+          SUM(total_amount)::float8 as total_revenue,
+          AVG(total_amount)::float8 as avg_order_value,
+          MAX(total_amount)::float8 as max_order_value,
+          COUNT(DISTINCT customer_id)::int as unique_customers
+        FROM orders
+        WHERE salesman_id = $1 AND tenant_id = $2
+        AND order_date >= CURRENT_DATE - INTERVAL '${parseInt(months)} months'
+      `, [id, tenantId]).then(row => row || {}),
       
-      // Monthly performance trend
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            strftime('%Y-%m', v.visit_date) as month,
-            COUNT(DISTINCT v.id) as visit_count,
-            COUNT(DISTINCT o.id) as order_count,
-            COALESCE(SUM(o.total_amount), 0) as revenue
-          FROM visits v
-          LEFT JOIN orders o ON v.customer_id = o.customer_id 
-            AND DATE(o.order_date) = DATE(v.visit_date)
-            AND o.salesman_id = ?
-          WHERE v.agent_id = ? AND v.tenant_id = ?
-          AND DATE(v.visit_date) >= DATE('now', '-${parseInt(months)} months')
-          GROUP BY month
-          ORDER BY month DESC
-        `, [id, id, tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          to_char(v.visit_date, 'YYYY-MM') as month,
+          COUNT(DISTINCT v.id)::int as visit_count,
+          COUNT(DISTINCT o.id)::int as order_count,
+          COALESCE(SUM(o.total_amount), 0)::float8 as revenue
+        FROM visits v
+        LEFT JOIN orders o ON v.customer_id = o.customer_id 
+          AND o.order_date::date = v.visit_date::date
+          AND o.salesman_id = $1
+        WHERE v.agent_id = $2 AND v.tenant_id = $3
+        AND v.visit_date >= CURRENT_DATE - INTERVAL '${parseInt(months)} months'
+        GROUP BY to_char(v.visit_date, 'YYYY-MM')
+        ORDER BY month DESC
+      `, [id, id, tenantId]).then(rows => rows || [])
     ]);
     
     if (!agentInfo) {

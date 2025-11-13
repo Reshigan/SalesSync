@@ -283,6 +283,34 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
  *       404:
  *         description: Customer not found
  */
+router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
+  const { getOneQuery } = require('../database/init');
+  
+  try {
+    const stats = getOneQuery(`
+      SELECT 
+        COUNT(*) as total_customers,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_customers,
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_customers,
+        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) as suspended_customers,
+        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
+        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
+        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
+        SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 ELSE 0 END) as new_customers_30d,
+        SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 ELSE 0 END) as new_customers_7d
+      FROM customers
+      WHERE tenant_id = ? AND deleted_at IS NULL
+    `, [req.tenantId]);
+    
+    res.json({
+      success: true,
+      data: stats || {}
+    });
+  } catch (error) {
+    next(error);
+  }
+}));
+
 router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
   const { getOneQuery, getQuery } = require('../database/init');
@@ -330,7 +358,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
         v.id, v.visit_date, v.visit_type, v.outcome,
         u.first_name, u.last_name
       FROM visits v
-      JOIN agents a ON a.id = v.agent_id
+      JOIN users a ON a.id = v.agent_id
       JOIN users u ON u.id = a.user_id
       WHERE v.customer_id = ? 
       ORDER BY v.visit_date DESC 
@@ -617,7 +645,7 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
         u.first_name as salesman_first_name,
         u.last_name as salesman_last_name
       FROM orders o
-      LEFT JOIN agents a ON a.id = o.salesman_id
+      LEFT JOIN users a ON a.id = o.salesman_id
       LEFT JOIN users u ON u.id = a.user_id
       WHERE o.customer_id = ?
       ORDER BY o.order_date DESC
@@ -979,33 +1007,7 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
  *     security:
  *       - bearerAuth: []
  */
-router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery } = require('../database/init');
-  
-  try {
-    const stats = getOneQuery(`
-      SELECT 
-        COUNT(*) as total_customers,
-        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_customers,
-        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_customers,
-        SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) as suspended_customers,
-        SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
-        SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
-        SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
-        SUM(CASE WHEN created_at >= date('now', '-30 days') THEN 1 ELSE 0 END) as new_customers_30d,
-        SUM(CASE WHEN created_at >= date('now', '-7 days') THEN 1 ELSE 0 END) as new_customers_7d
-      FROM customers
-      WHERE tenant_id = ? AND deleted_at IS NULL
-    `, [req.tenantId]);
-    
-    res.json({
-      success: true,
-      data: stats || {}
-    });
-  } catch (error) {
-    next(error);
-  }
-}));
+
 
 /**
  * Get customer visits history
@@ -1064,7 +1066,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
     const noteId = uuidv4();
     runQuery(`
       INSERT INTO customer_notes (id, customer_id, tenant_id, user_id, note, created_at)
-      VALUES (?, ?, ?, ?, ?, datetime('now'))
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [noteId, req.params.id, req.tenantId, req.userId, note]);
     
     res.json({ success: true, data: { id: noteId, note, created_at: new Date().toISOString() } });
@@ -1163,7 +1165,7 @@ router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async 
             UPDATE customers
             SET name = ?, type = ?, phone = ?, email = ?, address = ?,
                 latitude = ?, longitude = ?, credit_limit = ?, payment_terms = ?,
-                updated_at = datetime('now')
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = ? AND tenant_id = ?
           `, [
             customerData.name, customerData.type || 'retail', customerData.phone,
@@ -1179,7 +1181,7 @@ router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async 
             INSERT INTO customers (
               id, tenant_id, code, name, type, phone, email, address,
               latitude, longitude, credit_limit, payment_terms, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)
           `, [
             customerId, req.tenantId, customerData.code, customerData.name,
             customerData.type || 'retail', customerData.phone, customerData.email,

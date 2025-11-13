@@ -1,33 +1,25 @@
 const express = require('express');
 const router = express.Router();
-
-// Lazy load database functions to avoid circular dependencies
-const getDatabase = () => require('../utils/database').getDatabase();
+const { getQuery } = require('../utils/database');
 
 // Get all regions (areas)
 router.get('/', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
-    const regions = await new Promise((resolve, reject) => {
-      db.all(`
-        SELECT 
-          id,
-          name,
-          code,
-          region_id,
-          manager_id,
-          status,
-          created_at
-        FROM areas
-        WHERE tenant_id = ? AND status = 'active'
-        ORDER BY name ASC
-      `, [tenantId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+    const regions = await getQuery(`
+      SELECT 
+        id,
+        name,
+        code,
+        region_id,
+        manager_id,
+        status,
+        created_at
+      FROM areas
+      WHERE tenant_id = $1 AND status = 'active'
+      ORDER BY name ASC
+    `, [tenantId]);
     
     res.json({
       success: true,

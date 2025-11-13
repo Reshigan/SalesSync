@@ -169,7 +169,7 @@ router.post('/user-layout', authenticateToken, (req, res) => {
   db.run(
     `INSERT INTO dashboard_layouts (user_id, layout_data) 
      VALUES (?, ?)
-     ON CONFLICT(user_id) DO UPDATE SET layout_data = ?, updated_at = datetime('now')`,
+     ON CONFLICT(user_id) DO UPDATE SET layout_data = ?, updated_at = CURRENT_TIMESTAMP`,
     [req.user.id, layoutData, layoutData],
     function(err) {
       if (err) {
@@ -257,11 +257,11 @@ router.get('/:widgetId/data', authenticateToken, async (req, res) => {
         data = await new Promise((resolve, reject) => {
           db.all(
             `SELECT 
-              DATE(order_date) as date,
+              order_date::date as date,
               SUM(total_amount) as revenue
             FROM orders
-            WHERE order_date >= date('now', '-30 days')
-            GROUP BY DATE(order_date)
+            WHERE order_date >= CURRENT_DATE - INTERVAL '30 day'
+            GROUP BY order_date::date
             ORDER BY date`,
             [],
             (err, rows) => err ? reject(err) : resolve(rows)
@@ -273,11 +273,11 @@ router.get('/:widgetId/data', authenticateToken, async (req, res) => {
         data = await new Promise((resolve, reject) => {
           db.all(
             `SELECT 
-              DATE(created_at) as date,
+              created_at::date as date,
               COUNT(*) as new_customers
             FROM customers
-            WHERE created_at >= date('now', '-30 days')
-            GROUP BY DATE(created_at)
+            WHERE created_at >= CURRENT_DATE - INTERVAL '30 day'
+            GROUP BY created_at::date
             ORDER BY date`,
             [],
             (err, rows) => err ? reject(err) : resolve(rows)

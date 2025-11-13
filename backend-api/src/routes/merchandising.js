@@ -55,7 +55,7 @@ router.get('/visits', requireFunction('merchandising', 'view'), async (req, res)
         COUNT(DISTINCT pc.id) as compliance_checks,
         COUNT(DISTINCT mp.id) as photos_count
       FROM merchandising_visits mv
-      LEFT JOIN agents a ON mv.merchandiser_id = a.id
+      LEFT JOIN users a ON mv.merchandiser_id = a.id
       LEFT JOIN customers c ON mv.customer_id = c.id
       LEFT JOIN shelf_share_data ssd ON mv.id = ssd.visit_id
       LEFT JOIN planogram_compliance pc ON mv.id = pc.visit_id
@@ -81,7 +81,7 @@ router.get('/visits', requireFunction('merchandising', 'view'), async (req, res)
     }
     
     if (start_date && end_date) {
-      query += ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
+      query += ' AND mv.visit_date::date BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -110,7 +110,7 @@ router.get('/visits', requireFunction('merchandising', 'view'), async (req, res)
     }
     
     if (start_date && end_date) {
-      countQuery += ' AND DATE(visit_date) BETWEEN ? AND ?';
+      countQuery += ' AND visit_date::date BETWEEN ? AND ?';
       countParams.push(start_date, end_date);
     }
     
@@ -165,7 +165,7 @@ router.post('/visits', requireFunction('merchandising', 'create'), async (req, r
         a.name as merchandiser_name,
         c.name as customer_name
       FROM merchandising_visits mv
-      LEFT JOIN agents a ON mv.merchandiser_id = a.id
+      LEFT JOIN users a ON mv.merchandiser_id = a.id
       LEFT JOIN customers c ON mv.customer_id = c.id
       WHERE mv.id = ?
     `, [visitId]);
@@ -190,7 +190,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
         c.name as customer_name,
         c.address as customer_address
       FROM merchandising_visits mv
-      LEFT JOIN agents a ON mv.merchandiser_id = a.id
+      LEFT JOIN users a ON mv.merchandiser_id = a.id
       LEFT JOIN customers c ON mv.customer_id = c.id
       WHERE mv.id = ? AND mv.tenant_id = ?
     `, [req.params.id, req.user.tenantId]);
@@ -371,7 +371,7 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
+      dateFilter = ' AND mv.visit_date::date BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -441,13 +441,13 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     // Trend analysis
     const trendAnalysis = await db.all(`
       SELECT 
-        DATE(mv.visit_date) as visit_date,
+        mv.visit_date::date as visit_date,
         AVG(ssd.shelf_share_percentage) as avg_shelf_share,
         COUNT(DISTINCT mv.customer_id) as stores_visited
       FROM shelf_share_data ssd
       JOIN merchandising_visits mv ON ssd.visit_id = mv.id
       WHERE ssd.tenant_id = ?${dateFilter}
-      GROUP BY DATE(mv.visit_date)
+      GROUP BY mv.visit_date::date
       ORDER BY visit_date DESC
       LIMIT 30
     `, params);
@@ -476,7 +476,7 @@ router.get('/analytics/competitors', requireFunction('merchandising', 'view'), a
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
+      dateFilter = ' AND mv.visit_date::date BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -616,7 +616,7 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND DATE(visit_date) BETWEEN ? AND ?';
+      dateFilter = ' AND visit_date::date BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -667,7 +667,7 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
         a.name as merchandiser_name,
         c.name as customer_name
       FROM merchandising_visits mv
-      LEFT JOIN agents a ON mv.merchandiser_id = a.id
+      LEFT JOIN users a ON mv.merchandiser_id = a.id
       LEFT JOIN customers c ON mv.customer_id = c.id
       WHERE mv.tenant_id = ?${dateFilter}
       ORDER BY mv.visit_date DESC

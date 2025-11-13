@@ -55,7 +55,7 @@ router.get('/submissions', requireFunction('kyc', 'view'), async (req, res) => {
         COUNT(kd.id) as document_count
       FROM kyc_submissions ks
       LEFT JOIN customers c ON ks.customer_id = c.id
-      LEFT JOIN agents a ON ks.agent_id = a.id
+      LEFT JOIN users a ON ks.agent_id = a.id
       LEFT JOIN products p ON ks.product_id = p.id
       LEFT JOIN kyc_documents kd ON ks.id = kd.submission_id
       WHERE ks.tenant_id = ?
@@ -209,7 +209,7 @@ router.get('/submissions/:id', requireFunction('kyc', 'view'), async (req, res) 
         p.name as product_name
       FROM kyc_submissions ks
       LEFT JOIN customers c ON ks.customer_id = c.id
-      LEFT JOIN agents a ON ks.agent_id = a.id
+      LEFT JOIN users a ON ks.agent_id = a.id
       LEFT JOIN products p ON ks.product_id = p.id
       WHERE ks.id = ? AND ks.tenant_id = ?
     `, [req.params.id, req.user.tenantId]);
@@ -513,13 +513,13 @@ router.get('/analytics', requireFunction('kyc', 'view'), async (req, res) => {
     // Monthly trends
     const monthlyTrends = await db.all(`
       SELECT 
-        strftime('%Y-%m', submitted_at) as month,
+        to_char(submitted_at, 'YYYY-MM') as month,
         COUNT(*) as submissions,
         SUM(CASE WHEN verification_status = 'approved' THEN 1 ELSE 0 END) as approved,
         SUM(CASE WHEN verification_status = 'rejected' THEN 1 ELSE 0 END) as rejected
       FROM kyc_submissions 
       WHERE tenant_id = ?${dateFilter}
-      GROUP BY strftime('%Y-%m', submitted_at)
+      GROUP BY to_char(submitted_at, 'YYYY-MM')
       ORDER BY month DESC
       LIMIT 12
     `, params);

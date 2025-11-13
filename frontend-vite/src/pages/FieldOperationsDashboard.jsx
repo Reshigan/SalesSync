@@ -8,9 +8,7 @@ import {
   Person, CheckCircle, Schedule, LocationOn, 
   TrendingUp, Assignment, Group
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../config/api.config';
 
 export default function FieldOperationsDashboard() {
   const [tab, setTab] = useState(0);
@@ -27,9 +25,9 @@ export default function FieldOperationsDashboard() {
     try {
       setLoading(true);
       const [agentsRes, visitsRes, perfRes] = await Promise.all([
-        axios.get(`${API_URL}/api/field-operations/agents`).catch(() => ({ data: { agents: [] } })),
-        axios.get(`${API_URL}/api/field-operations/visits`).catch(() => ({ data: { visits: [] } })),
-        axios.get(`${API_URL}/api/field-operations/performance`).catch(() => ({ data: { performance: {} } }))
+        apiClient.get('/api/field-operations/agents').catch(() => ({ data: { agents: [] } })),
+        apiClient.get('/api/field-operations/visits').catch(() => ({ data: { visits: [] } })),
+        apiClient.get('/api/field-operations/performance').catch(() => ({ data: { performance: {} } }))
       ]);
       
       setAgents(agentsRes.data.agents || []);

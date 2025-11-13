@@ -69,7 +69,7 @@ router.post('/', requireFunction('customer_activation', 'create'), async (req, r
       INSERT INTO customer_activations (
         tenant_id, customer_id, agent_id, activation_type, 
         target_products, expected_value, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [
       req.tenantId, customer_id, req.user.id, activation_type,
       JSON.stringify(target_products || []), expected_value || 0, 'initiated'
@@ -103,7 +103,7 @@ router.put('/:id/status', requireFunction('customer_activation', 'edit'), async 
     
     await runQuery(`
       UPDATE customer_activations 
-      SET status = ?, notes = COALESCE(?, notes), updated_at = datetime('now')
+      SET status = ?, notes = COALESCE(?, notes), updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND tenant_id = ?
     `, [status, notes, id, req.tenantId]);
     

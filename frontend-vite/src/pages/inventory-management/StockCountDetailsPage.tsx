@@ -1,6 +1,6 @@
 import React from 'react'
-import { useQuery } from '@tantml:invoke>
-<parameter name="useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { useParams } from 'react-router-dom'
 import { inventoryService } from '../../services/inventory.service'
 import { ArrowLeft, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 

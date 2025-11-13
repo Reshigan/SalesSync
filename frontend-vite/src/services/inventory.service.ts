@@ -53,7 +53,7 @@ class InventoryService {
 
   async getStock(filter?: any): Promise<{ data: StockItem[], total: number }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/stock`, { params: filter })
+      const response = await apiClient.get(this.baseUrl, { params: filter })
       return { data: response.data.data || [], total: response.data.total || 0 }
     } catch (error) {
       console.error('Failed to fetch stock:', error)
@@ -61,9 +61,49 @@ class InventoryService {
     }
   }
 
+  async getProductInventory(productId: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/product/${productId}`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch product inventory:', error)
+      return null
+    }
+  }
+
+  async updateInventory(id: string, data: any): Promise<any> {
+    try {
+      const response = await apiClient.put(`${this.baseUrl}/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update inventory:', error)
+      throw error
+    }
+  }
+
+  async createInventory(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(this.baseUrl, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create inventory:', error)
+      throw error
+    }
+  }
+
+  async getLowStock(): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/low-stock`)
+      return response.data.data || []
+    } catch (error) {
+      console.error('Failed to fetch low stock:', error)
+      return []
+    }
+  }
+
   async getStockMovements(filter?: any): Promise<{ data: StockMovement[], total: number }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/movements`, { params: filter })
+      const response = await apiClient.get(`${this.baseUrl}-enhanced/transactions`, { params: filter })
       return { data: response.data.data || [], total: response.data.total || 0 }
     } catch (error) {
       console.error('Failed to fetch stock movements:', error)
@@ -73,10 +113,20 @@ class InventoryService {
 
   async createStockMovement(data: Partial<StockMovement>): Promise<StockMovement> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/movements`, data)
+      const response = await apiClient.post(`${this.baseUrl}-enhanced/adjust`, data)
       return response.data.data
     } catch (error) {
       console.error('Failed to create stock movement:', error)
+      throw error
+    }
+  }
+
+  async transferStock(data: { from_warehouse_id: string, to_warehouse_id: string, product_id: string, quantity: number, notes?: string }): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}-enhanced/transfer`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transfer stock:', error)
       throw error
     }
   }

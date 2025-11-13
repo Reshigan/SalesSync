@@ -86,7 +86,7 @@ router.post('/mobile-login', async (req, res) => {
       SELECT 
         a.id, a.mobile_number, a.mobile_pin, 
         a.status, a.user_id, u.role, u.email, u.first_name, u.last_name
-      FROM agents a
+      FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
       LEFT JOIN users u ON a.user_id = u.id
       WHERE a.tenant_id = ? 
       AND a.mobile_number = ?
@@ -217,8 +217,7 @@ router.post('/mobile-change-pin', async (req, res) => {
 
     // Find agent
     const agent = await getOneQuery(`
-      SELECT id, mobile_pin FROM agents 
-      WHERE tenant_id = ? AND mobile_number = ?
+      SELECT id, mobile_pin FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') WHERE tenant_id = ? AND mobile_number = ?
     `, [tenant.id, normalizedMobile]);
 
     if (!agent) {
@@ -303,7 +302,7 @@ router.post('/mobile-reset-pin', async (req, res) => {
 
     // Check if agent exists
     const agent = await getOneQuery(`
-      SELECT id FROM agents WHERE id = ? AND tenant_id = ?
+      SELECT id FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') WHERE id = ? AND tenant_id = ?
     `, [agentId, tenant.id]);
 
     if (!agent) {

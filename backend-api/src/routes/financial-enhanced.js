@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Module 3: Financial Management - Backend Enhancement (60% → 100%)
@@ -12,7 +13,6 @@ const getDatabase = () => require('../utils/database').getDatabase();
 router.get('/ar/summary', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const summary = await new Promise((resolve, reject) => {
       db.get(`
@@ -20,10 +20,10 @@ router.get('/ar/summary', async (req, res) => {
           COUNT(DISTINCT customer_id) as total_customers,
           SUM(CASE WHEN status = 'unpaid' THEN amount ELSE 0 END) as total_outstanding,
           SUM(CASE WHEN status = 'overdue' THEN amount ELSE 0 END) as total_overdue,
-          SUM(CASE WHEN DATE(due_date) <= DATE('now', '+30 days') THEN amount ELSE 0 END) as due_30_days,
+          SUM(CASE WHEN due_date::date <= DATE('now', '+30 days') THEN amount ELSE 0 END) as due_30_days,
           AVG(JULIANDAY('now') - JULIANDAY(invoice_date)) as avg_collection_days
         FROM invoices
-        WHERE tenant_id = ? AND status != 'paid'
+        WHERE tenant_id = $1 AND status != 'paid'
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -39,7 +39,6 @@ router.get('/ar/summary', async (req, res) => {
 router.get('/ar/aging', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const aging = await new Promise((resolve, reject) => {
       db.all(`
@@ -54,7 +53,7 @@ router.get('/ar/aging', async (req, res) => {
           SUM(CASE WHEN JULIANDAY('now') - JULIANDAY(i.due_date) > 90 THEN i.amount ELSE 0 END) as days_90_plus
         FROM customers c
         JOIN invoices i ON c.id = i.customer_id
-        WHERE i.tenant_id = ? AND i.status != 'paid'
+        WHERE i.tenant_id = $1 AND i.status != 'paid'
         GROUP BY c.id
         ORDER BY total_amount DESC
       `, [tenantId], (err, rows) => {
@@ -73,7 +72,6 @@ router.post('/ar/payment', async (req, res) => {
   try {
     const { customerId, amount, paymentMethod, reference, invoiceAllocations } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Create payment record
     const paymentId = await new Promise((resolve, reject) => {
@@ -81,7 +79,7 @@ router.post('/ar/payment', async (req, res) => {
         INSERT INTO payments (
           customer_id, amount, payment_method, reference, 
           payment_date, created_by, tenant_id
-        ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+        ) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, $5, $6)
       `, [customerId, amount, paymentMethod, reference, req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -95,7 +93,7 @@ router.post('/ar/payment', async (req, res) => {
         db.run(`
           INSERT INTO payment_allocations (
             payment_id, invoice_id, amount, tenant_id
-          ) VALUES (?, ?, ?, ?)
+          ) VALUES ($1, $2, $3, $4)
         `, [paymentId, alloc.invoiceId, alloc.amount, tenantId], (err) => {
           if (err) reject(err);
           else resolve();
@@ -111,7 +109,7 @@ router.post('/ar/payment', async (req, res) => {
                 WHEN paid_amount + ? >= amount THEN 'paid'
                 ELSE 'partially_paid'
               END
-          WHERE id = ? AND tenant_id = ?
+          WHERE id = $1 AND tenant_id = $2
         `, [alloc.amount, alloc.amount, alloc.invoiceId, tenantId], (err) => {
           if (err) reject(err);
           else resolve();
@@ -132,17 +130,16 @@ router.post('/ar/payment', async (req, res) => {
 router.get('/ap/summary', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const summary = await new Promise((resolve, reject) => {
       db.get(`
         SELECT 
           COUNT(*) as total_bills,
           SUM(CASE WHEN status = 'unpaid' THEN amount ELSE 0 END) as total_outstanding,
-          SUM(CASE WHEN DATE(due_date) <= DATE('now', '+7 days') THEN amount ELSE 0 END) as due_this_week,
-          SUM(CASE WHEN DATE(due_date) < DATE('now') THEN amount ELSE 0 END) as overdue
+          SUM(CASE WHEN due_date::date <= DATE('now', '+7 days') THEN amount ELSE 0 END) as due_this_week,
+          SUM(CASE WHEN due_date::date < DATE('now') THEN amount ELSE 0 END) as overdue
         FROM bills
-        WHERE tenant_id = ? AND status != 'paid'
+        WHERE tenant_id = $1 AND status != 'paid'
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -159,14 +156,13 @@ router.post('/ap/payment', async (req, res) => {
   try {
     const { billId, amount, paymentMethod, reference, paymentDate } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
         INSERT INTO vendor_payments (
           bill_id, amount, payment_method, reference,
           payment_date, created_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       `, [billId, amount, paymentMethod, reference, paymentDate, req.user.userId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -182,7 +178,7 @@ router.post('/ap/payment', async (req, res) => {
               WHEN paid_amount + ? >= amount THEN 'paid'
               ELSE 'partially_paid'
             END
-        WHERE id = ? AND tenant_id = ?
+        WHERE id = $1 AND tenant_id = $2
       `, [amount, amount, billId, tenantId], (err) => {
         if (err) reject(err);
         else resolve();
@@ -203,7 +199,6 @@ router.post('/bank/import', async (req, res) => {
   try {
     const { bankAccountId, transactions } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     let imported = 0;
     for (const txn of transactions) {
@@ -212,7 +207,7 @@ router.post('/bank/import', async (req, res) => {
           INSERT INTO bank_transactions (
             bank_account_id, transaction_date, description,
             amount, balance, reference, tenant_id
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
           ON CONFLICT(bank_account_id, reference, tenant_id) DO NOTHING
         `, [bankAccountId, txn.date, txn.description, txn.amount, 
             txn.balance, txn.reference, tenantId],
@@ -236,12 +231,11 @@ router.get('/bank/unmatched', async (req, res) => {
   try {
     const { bankAccountId } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const unmatched = await new Promise((resolve, reject) => {
       db.all(`
         SELECT * FROM bank_transactions
-        WHERE bank_account_id = ? 
+        WHERE bank_account_id = $1 
           AND tenant_id = ?
           AND matched = 0
         ORDER BY transaction_date DESC
@@ -261,14 +255,13 @@ router.post('/bank/match', async (req, res) => {
   try {
     const { bankTransactionId, transactionType, transactionId } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
         INSERT INTO reconciliation_matches (
           bank_transaction_id, transaction_type, transaction_id, 
           matched_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5)
       `, [bankTransactionId, transactionType, transactionId, req.user.userId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -280,7 +273,7 @@ router.post('/bank/match', async (req, res) => {
       db.run(`
         UPDATE bank_transactions 
         SET matched = 1 
-        WHERE id = ? AND tenant_id = ?
+        WHERE id = $1 AND tenant_id = $2
       `, [bankTransactionId, tenantId], (err) => {
         if (err) reject(err);
         else resolve();
@@ -301,17 +294,16 @@ router.get('/credit/:customerId', async (req, res) => {
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const credit = await new Promise((resolve, reject) => {
       db.get(`
         SELECT 
           cl.*,
-          (SELECT SUM(amount) FROM invoices WHERE customer_id = ? AND status != 'paid' AND tenant_id = ?) as outstanding,
+          (SELECT SUM(amount) FROM invoices WHERE customer_id = $1 AND status != 'paid' AND tenant_id = $2) as outstanding,
           c.name as customer_name
         FROM credit_limits cl
         JOIN customers c ON cl.customer_id = c.id
-        WHERE cl.customer_id = ? AND cl.tenant_id = ?
+        WHERE cl.customer_id = $1 AND cl.tenant_id = $2
       `, [customerId, tenantId, customerId, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -330,14 +322,13 @@ router.post('/credit/limit', async (req, res) => {
   try {
     const { customerId, creditLimit, paymentTerms, notes } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     await new Promise((resolve, reject) => {
       db.run(`
         INSERT INTO credit_limits (
           customer_id, credit_limit, payment_terms, notes,
           approved_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT(customer_id, tenant_id) DO UPDATE SET
           credit_limit = ?,
           payment_terms = ?,
@@ -366,15 +357,14 @@ router.get('/reports/profit-loss', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     // Revenue
     const revenue = await new Promise((resolve, reject) => {
       db.get(`
         SELECT SUM(total) as total_revenue
         FROM orders
-        WHERE tenant_id = ? 
-          AND DATE(created_at) BETWEEN ? AND ?
+        WHERE tenant_id = $1 
+          AND created_at::date BETWEEN ? AND ?
           AND status = 'completed'
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
@@ -389,8 +379,8 @@ router.get('/reports/profit-loss', async (req, res) => {
         FROM order_items oi
         JOIN orders o ON oi.order_id = o.id
         JOIN products p ON oi.product_id = p.id
-        WHERE o.tenant_id = ?
-          AND DATE(o.created_at) BETWEEN ? AND ?
+        WHERE o.tenant_id = $1
+          AND o.created_at::date BETWEEN ? AND ?
           AND o.status = 'completed'
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
@@ -420,14 +410,13 @@ router.get('/reports/cash-flow', async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
 
     const cashIn = await new Promise((resolve, reject) => {
       db.get(`
         SELECT SUM(amount) as total
         FROM payments
-        WHERE tenant_id = ?
-          AND DATE(payment_date) BETWEEN ? AND ?
+        WHERE tenant_id = $1
+          AND payment_date::date BETWEEN ? AND ?
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
         else resolve(row?.total || 0);
@@ -438,8 +427,8 @@ router.get('/reports/cash-flow', async (req, res) => {
       db.get(`
         SELECT SUM(amount) as total
         FROM vendor_payments
-        WHERE tenant_id = ?
-          AND DATE(payment_date) BETWEEN ? AND ?
+        WHERE tenant_id = $1
+          AND payment_date::date BETWEEN ? AND ?
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
         else resolve(row?.total || 0);

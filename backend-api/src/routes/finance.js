@@ -126,7 +126,7 @@ router.post('/invoices', asyncHandler(async (req, res) => {
   // Create invoice
   const result = await runQuery(`
     INSERT INTO invoices (customer_id, invoice_number, invoice_date, due_date, subtotal, tax, discount, total, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   `, [customer_id, invoice_number, invoice_date, due_date, subtotal || 0, tax || 0, discount || 0, total, status]);
 
   const invoiceId = result.lastID;
@@ -136,7 +136,7 @@ router.post('/invoices', asyncHandler(async (req, res) => {
     for (const item of items) {
       await runQuery(`
         INSERT INTO invoice_items (invoice_id, product_id, description, quantity, unit_price, total, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `, [invoiceId, item.product_id, item.description, item.quantity, item.unit_price, item.total]);
     }
   }
@@ -181,7 +181,7 @@ router.put('/invoices/:id', asyncHandler(async (req, res) => {
         discount = COALESCE(?, discount),
         total = COALESCE(?, total),
         status = COALESCE(?, status),
-        updated_at = datetime('now')
+        updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
   `, [customer_id, invoice_number, invoice_date, due_date, subtotal, tax, discount, total, status, id]);
 
@@ -279,7 +279,7 @@ router.post('/payments', asyncHandler(async (req, res) => {
 
   const result = await runQuery(`
     INSERT INTO payments (customer_id, invoice_id, payment_date, amount, payment_method, reference_number, notes, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
   `, [customer_id, invoice_id, payment_date, amount, payment_method, reference_number, notes, status]);
 
   const payment = await getOneQuery('SELECT * FROM payments WHERE id = ?', [result.lastID]);
@@ -298,13 +298,13 @@ router.get('/summary', asyncHandler(async (req, res) => {
   // Calculate date filter based on period
   let dateFilter = '';
   if (period === 'day') {
-    dateFilter = "AND date(invoice_date) = date('now')";
+    dateFilter = "AND date(invoice_date) = CURRENT_DATE";
   } else if (period === 'week') {
-    dateFilter = "AND date(invoice_date) >= date('now', '-7 days')";
+    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '7 day'";
   } else if (period === 'month') {
-    dateFilter = "AND date(invoice_date) >= date('now', '-30 days')";
+    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '30 day'";
   } else if (period === 'year') {
-    dateFilter = "AND date(invoice_date) >= date('now', '-365 days')";
+    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '365 day'";
   }
 
   // Get invoice summary

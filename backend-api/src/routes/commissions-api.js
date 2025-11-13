@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const getDatabase = () => require('../utils/database').getDatabase();
 
@@ -12,16 +13,15 @@ router.get('/', async (req, res) => {
   try {
     const { agent_id, period, status, from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `SELECT c.*, u.first_name || ' ' || u.last_name as agent_name FROM agent_commissions c
-      LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ?`;
+      LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = $1`;
     const params = [tenantId];
 
     if (agent_id) { sql += ' AND c.agent_id = ?'; params.push(agent_id); }
     if (period) { sql += ' AND c.period = ?'; params.push(period); }
     if (status) { sql += ' AND c.status = ?'; params.push(status); }
-    if (from_date) { sql += ' AND c.period_start >= ?'; params.push(from_date); }
+    if (from_date) { sql += ' AND c.period_start >= $1'; params.push(from_date); }
     if (to_date) { sql += ' AND c.period_end <= ?'; params.push(to_date); }
 
     sql += ' ORDER BY c.period_start DESC';
@@ -41,11 +41,10 @@ router.post('/calculate', async (req, res) => {
     const { agent_id, period_start, period_end, commission_rate } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Calculate total sales for period
     db.get(`SELECT SUM(total_amount) as total_sales, COUNT(*) as order_count FROM orders
-      WHERE agent_id = ? AND order_date BETWEEN ? AND ? AND tenant_id = ?`,
+      WHERE agent_id = $1 AND order_date BETWEEN $2 AND $3 AND tenant_id = $4`,
       [agent_id, period_start, period_end, tenantId],
       (err, sales) => {
         if (err) return res.status(500).json({ error: 'Failed to calculate sales' });
@@ -56,7 +55,7 @@ router.post('/calculate', async (req, res) => {
 
         const refNumber = `COM-${Date.now()}`;
         db.run(`INSERT INTO commissions (tenant_id, commission_number, agent_id, period_start, period_end, total_sales, order_count, commission_rate, commission_amount, status, created_by, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'calculated', ?, datetime('now'))`,
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'calculated', $10, CURRENT_TIMESTAMP)`,
           [tenantId, refNumber, agent_id, period_start, period_end, totalSales, orderCount, commission_rate, commissionAmount, userId],
           function(err) {
             if (err) return res.status(500).json({ error: 'Failed to save commission' });
@@ -76,9 +75,8 @@ router.post('/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
-    db.run(`UPDATE commissions SET status = 'approved', approved_by = ?, approved_at = datetime('now') WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE commissions SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to approve commission' });
@@ -97,9 +95,8 @@ router.post('/:id/pay', async (req, res) => {
     const { payment_method, payment_reference } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
-    db.run(`UPDATE commissions SET status = 'paid', payment_method = ?, payment_reference = ?, paid_by = ?, paid_at = datetime('now') WHERE id = ? AND tenant_id = ? AND status = 'approved'`,
+    db.run(`UPDATE commissions SET status = 'paid', payment_method = $1, payment_reference = $2, paid_by = $3, paid_at = CURRENT_TIMESTAMP WHERE id = $4 AND tenant_id = $5 AND status = 'approved'`,
       [payment_method, payment_reference, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to mark as paid' });
@@ -116,9 +113,8 @@ router.get('/summary', async (req, res) => {
   try {
     const { agent_id } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
-    let sql = `SELECT status, COUNT(*) as count, SUM(commission_amount) as total FROM commissions WHERE tenant_id = ?`;
+    let sql = `SELECT status, COUNT(*) as count, SUM(commission_amount) as total FROM commissions WHERE tenant_id = $1`;
     const params = [tenantId];
     if (agent_id) { sql += ' AND agent_id = ?'; params.push(agent_id); }
     sql += ' GROUP BY status';

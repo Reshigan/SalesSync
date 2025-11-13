@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Finance Service
  * Handles invoices, payments, and financial operations
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Invoice {
   id: string
@@ -55,9 +55,6 @@ export interface FinanceStats {
 class FinanceService {
   private readonly baseUrl = '/finance'
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
   private paymentsUrl = '/api/payments'
 
   // Invoices

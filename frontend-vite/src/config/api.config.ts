@@ -135,6 +135,22 @@ export const API_CONFIG = {
       INVENTORY: (id: string) => `/warehouses/${id}/inventory`,
     },
     
+    PURCHASE_ORDERS: {
+      BASE: '/purchase-orders',
+      BY_ID: (id: string) => `/purchase-orders/${id}`,
+      APPROVE: (id: string) => `/purchase-orders/${id}/approve`,
+      RECEIVE: (id: string) => `/purchase-orders/${id}/receive`,
+      STATS: '/purchase-orders/stats/summary',
+    },
+    
+    INVENTORY_ENHANCED: {
+      MULTI_LOCATION: '/inventory-enhanced/multi-location',
+      TRANSFER: '/inventory-enhanced/transfer',
+      TRANSACTIONS: '/inventory-enhanced/transactions',
+      ADJUST: '/inventory-enhanced/adjust',
+      ANALYTICS: '/inventory-enhanced/analytics',
+    },
+    
     // AI Services
     AI: {
       CHAT: '/ai/chat',

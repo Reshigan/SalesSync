@@ -396,12 +396,12 @@ router.get('/events', async (req, res) => {
     }
     
     if (date_from) {
-      query += ' AND DATE(e.start_date) >= ?';
+      query += ' AND e.start_date::date >= ?';
       params.push(date_from);
     }
     
     if (date_to) {
-      query += ' AND DATE(e.end_date) <= ?';
+      query += ' AND e.end_date::date <= ?';
       params.push(date_to);
     }
     

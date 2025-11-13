@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions
@@ -22,7 +23,6 @@ router.get('/', async (req, res) => {
       status 
     } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT sm.*, 
@@ -35,7 +35,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN warehouses fw ON sm.from_warehouse_id = fw.id
       LEFT JOIN warehouses tw ON sm.to_warehouse_id = tw.id
       LEFT JOIN users u ON sm.created_by = u.id
-      WHERE sm.tenant_id = ?
+      WHERE sm.tenant_id = $1
     `;
     
     const params = [tenantId];
@@ -49,7 +49,7 @@ router.get('/', async (req, res) => {
       params.push(product_id);
     }
     if (from_warehouse_id) {
-      sql += ' AND sm.from_warehouse_id = ?';
+      sql += ' AND sm.from_warehouse_id = $1';
       params.push(from_warehouse_id);
     }
     if (to_warehouse_id) {
@@ -89,7 +89,6 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     const sql = `
       SELECT sm.*, 
@@ -106,7 +105,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON sm.created_by = u.id
       LEFT JOIN users ua ON sm.approved_by = ua.id
       LEFT JOIN users ur ON sm.received_by = ur.id
-      WHERE sm.id = ? AND sm.tenant_id = ?
+      WHERE sm.id = $1 AND sm.tenant_id = $2
     `;
 
     db.get(sql, [id, tenantId], (err, row) => {
@@ -142,7 +141,6 @@ router.post('/', async (req, res) => {
 
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Validation
     if (!movement_type || !product_id || !quantity) {
@@ -171,7 +169,7 @@ router.post('/', async (req, res) => {
         tenant_id, movement_type, product_id, from_warehouse_id, to_warehouse_id,
         quantity, movement_date, reference_number, reason, notes, status,
         created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
     db.run(sql, [
@@ -202,7 +200,6 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
@@ -217,8 +214,8 @@ router.put('/:id', async (req, res) => {
 
     const sql = `
       UPDATE stock_movements 
-      SET ${setClause}, updated_at = datetime('now')
-      WHERE tenant_id = ? AND id = ? AND status = 'pending'
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
+      WHERE tenant_id = $1 AND id = $2 AND status = 'pending'
     `;
 
     db.run(sql, values, function(err) {
@@ -251,15 +248,14 @@ router.post('/:id/approve', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     const sql = `
       UPDATE stock_movements 
       SET status = 'approved', 
           approved_by = ?, 
-          approved_at = datetime('now'),
-          updated_at = datetime('now')
-      WHERE tenant_id = ? AND id = ? AND status = 'pending'
+          approved_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE tenant_id = $1 AND id = $2 AND status = 'pending'
     `;
 
     db.run(sql, [userId, tenantId, id], function(err) {
@@ -292,12 +288,11 @@ router.post('/:id/complete', async (req, res) => {
     const { received_quantity, notes } = req.body;
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
-    const db = getDatabase();
 
     // Get movement details
     const getSql = `
       SELECT * FROM stock_movements 
-      WHERE id = ? AND tenant_id = ? AND status = 'approved'
+      WHERE id = $1 AND tenant_id = $2 AND status = 'approved'
     `;
 
     db.get(getSql, [id, tenantId], (err, movement) => {
@@ -323,9 +318,9 @@ router.post('/:id/complete', async (req, res) => {
             variance = ?,
             completion_notes = ?,
             received_by = ?, 
-            received_at = datetime('now'),
-            updated_at = datetime('now')
-        WHERE id = ?
+            received_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
       `;
 
       db.run(updateSql, [actualQuantity, variance, notes, userId, id], function(err) {
@@ -362,14 +357,13 @@ router.post('/:id/cancel', async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     const sql = `
       UPDATE stock_movements 
       SET status = 'cancelled', 
           cancellation_reason = ?,
-          updated_at = datetime('now')
-      WHERE tenant_id = ? AND id = ? AND status IN ('pending', 'approved')
+          updated_at = CURRENT_TIMESTAMP
+      WHERE tenant_id = $1 AND id = $2 AND status IN ('pending', 'approved')
     `;
 
     db.run(sql, [reason, tenantId, id], function(err) {
@@ -400,7 +394,6 @@ router.get('/stats/summary', async (req, res) => {
   try {
     const { from_date, to_date, warehouse_id } = req.query;
     const tenantId = req.tenantId || 1;
-    const db = getDatabase();
 
     let sql = `
       SELECT 
@@ -409,7 +402,7 @@ router.get('/stats/summary', async (req, res) => {
         COUNT(*) as count,
         SUM(quantity) as total_quantity
       FROM stock_movements
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
     `;
 
     const params = [tenantId];
@@ -423,7 +416,7 @@ router.get('/stats/summary', async (req, res) => {
       params.push(to_date);
     }
     if (warehouse_id) {
-      sql += ' AND (from_warehouse_id = ? OR to_warehouse_id = ?)';
+      sql += ' AND (from_warehouse_id = $1 OR to_warehouse_id = $2)';
       params.push(warehouse_id, warehouse_id);
     }
 

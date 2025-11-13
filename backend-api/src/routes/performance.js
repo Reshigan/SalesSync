@@ -132,19 +132,19 @@ router.get('/leaderboard', async (req, res) => {
     let dateFilter = '';
     switch (period) {
       case 'today':
-        dateFilter = "AND metric_date = date('now')";
+        dateFilter = "AND metric_date = CURRENT_DATE";
         break;
       case 'week':
-        dateFilter = "AND metric_date >= date('now', '-7 days')";
+        dateFilter = "AND metric_date >= CURRENT_DATE - INTERVAL '7 days'";
         break;
       case 'month':
-        dateFilter = "AND metric_date >= date('now', '-30 days')";
+        dateFilter = "AND metric_date >= CURRENT_DATE - INTERVAL '30 days'";
         break;
       case 'quarter':
-        dateFilter = "AND metric_date >= date('now', '-90 days')";
+        dateFilter = "AND metric_date >= CURRENT_DATE - INTERVAL '90 days'";
         break;
       case 'year':
-        dateFilter = "AND metric_date >= date('now', '-365 days')";
+        dateFilter = "AND metric_date >= CURRENT_DATE - INTERVAL '365 days'";
         break;
     }
     
@@ -158,7 +158,7 @@ router.get('/leaderboard', async (req, res) => {
         AVG(pm.score) as avg_score,
         MAX(pm.score) as best_score
       FROM performance_metrics pm
-      JOIN agents a ON pm.agent_id = a.id
+      JOIN users a ON pm.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pm.tenant_id = ?
         AND pm.metric_type = ?
@@ -220,7 +220,7 @@ router.get('/dashboard', async (req, res) => {
         SUM(CASE WHEN score < 60 THEN 1 ELSE 0 END) as needs_improvement_count
       FROM performance_metrics
       WHERE tenant_id = ?
-        AND metric_date = date('now')
+        AND metric_date = CURRENT_DATE
       GROUP BY metric_type
     `, [req.user.tenantId]);
     
@@ -233,7 +233,7 @@ router.get('/dashboard', async (req, res) => {
         COUNT(*) as metric_count
       FROM performance_metrics
       WHERE tenant_id = ?
-        AND metric_date >= date('now', '-7 days')
+        AND metric_date >= CURRENT_DATE - INTERVAL '7 days'
       GROUP BY metric_date, metric_type
       ORDER BY metric_date DESC
     `, [req.user.tenantId]);
@@ -246,10 +246,10 @@ router.get('/dashboard', async (req, res) => {
         AVG(pm.score) as overall_score,
         COUNT(DISTINCT pm.metric_type) as metrics_tracked
       FROM performance_metrics pm
-      JOIN agents a ON pm.agent_id = a.id
+      JOIN users a ON pm.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pm.tenant_id = ?
-        AND pm.metric_date >= date('now', '-30 days')
+        AND pm.metric_date >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY pm.agent_id, agent_name
       ORDER BY overall_score DESC
       LIMIT 5
@@ -263,10 +263,10 @@ router.get('/dashboard', async (req, res) => {
         AVG(pm.score) as overall_score,
         pm.metric_type as weakest_metric
       FROM performance_metrics pm
-      JOIN agents a ON pm.agent_id = a.id
+      JOIN users a ON pm.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pm.tenant_id = ?
-        AND pm.metric_date >= date('now', '-7 days')
+        AND pm.metric_date >= CURRENT_DATE - INTERVAL '7 days'
         AND pm.score < 60
       GROUP BY pm.agent_id, agent_name, pm.metric_type
       ORDER BY overall_score ASC
@@ -370,7 +370,7 @@ router.get('/analytics', async (req, res) => {
         (AVG(CASE WHEN pm.metric_type = 'sales' THEN pm.value ELSE 0 END) / 
          NULLIF(AVG(CASE WHEN pm.metric_type = 'visits' THEN pm.value ELSE 1 END), 0)) as sales_per_visit
       FROM performance_metrics pm
-      JOIN agents a ON pm.agent_id = a.id
+      JOIN users a ON pm.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pm.tenant_id = ?
         AND pm.metric_date >= date('now', '-${days} days')

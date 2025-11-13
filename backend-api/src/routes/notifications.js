@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
       SELECT n.*,
              u.first_name || ' ' || u.last_name as agent_name
       FROM notifications n
-      LEFT JOIN agents a ON n.agent_id = a.id
+      LEFT JOIN users a ON n.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE n.tenant_id = ?
     `;

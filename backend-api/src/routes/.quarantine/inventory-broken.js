@@ -1,22 +1,22 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions
 const getDatabase = () => require('../utils/database').getDatabase();
-const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => {
+const { insertQuery, updateQuery, deleteQuery } = (() => {
   try {
     return require('../database/queries');
   } catch (error) {
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -33,13 +33,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -58,11 +57,10 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -73,15 +71,14 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -98,13 +95,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const values = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -239,8 +235,6 @@ router.get('/stock', async (req, res) => {
   try {
     const tenantId = req.user?.tenantId;
     
-    const db = getDatabase();
-    
     const { warehouse_id, low_stock, product_id } = req.query;
     
     let query = `
@@ -262,7 +256,7 @@ router.get('/stock', async (req, res) => {
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
       JOIN warehouses w ON i.warehouse_id = w.id
-      WHERE i.tenant_id = ?
+      WHERE i.tenant_id = $1
     `;
     
     const params = [tenantId];
@@ -300,7 +294,7 @@ router.get('/stock', async (req, res) => {
           COUNT(CASE WHEN i.quantity_on_hand <= 10 THEN 1 END) as low_stock_items,
           COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock_items
         FROM inventory_stock i
-        WHERE i.tenant_id = ?
+        WHERE i.tenant_id = $1
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);

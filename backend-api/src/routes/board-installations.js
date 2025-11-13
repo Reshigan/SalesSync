@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Calculate storefront coverage (simplified - real implementation would use image recognition)
 function calculateCoverage(storefrontArea, boardWidth, boardHeight) {
@@ -64,14 +64,12 @@ router.post('/', authMiddleware, async (req, res) => {
       });
     }
 
-    const db = getDatabase();
-
     // Get board details and commission rate
     db.get(
       `SELECT b.*, bb.coverage_standard, bb.visibility_standard
        FROM boards b
-       LEFT JOIN brand_boards bb ON b.id = bb.board_id AND bb.brand_id = ?
-       WHERE b.id = ? AND b.tenant_id = ?`,
+       LEFT JOIN brand_boards bb ON b.id = bb.board_id AND bb.brand_id = $1
+       WHERE b.id = $1 AND b.tenant_id = $2`,
       [brand_id, board_id, tenantId],
       async (err, board) => {
         if (err) {
@@ -109,7 +107,7 @@ router.post('/', authMiddleware, async (req, res) => {
             before_photo_url, after_photo_url, storefront_area_sqm, board_area_sqm,
             coverage_percentage, visibility_score, optimal_position, quality_score,
             commission_amount, status, notes, created_at, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             installationId, tenantId, agentId, customer_id, board_id, brand_id, visit_id,
             latitude, longitude, gps_accuracy,
@@ -139,7 +137,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 `INSERT INTO commission_transactions (
                   id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
                   base_amount, total_amount, calculation_details, status, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
                 [
                   commissionId, tenantId, agentId, 'board_installation',
                   'board_installation', installationId,
@@ -160,7 +158,7 @@ router.post('/', authMiddleware, async (req, res) => {
                LEFT JOIN boards b ON bi.board_id = b.id
                LEFT JOIN customers c ON bi.customer_id = c.id
                LEFT JOIN brands br ON bi.brand_id = br.id
-               WHERE bi.id = ?`,
+               WHERE bi.id = $1`,
               [installationId],
               (err, installation) => {
                 if (err) {
@@ -193,9 +191,9 @@ router.get('/', authMiddleware, async (req, res) => {
       LEFT JOIN boards b ON bi.board_id = b.id
       LEFT JOIN customers c ON bi.customer_id = c.id
       LEFT JOIN brands br ON bi.brand_id = br.id
-      LEFT JOIN agents a ON bi.agent_id = a.id
+      LEFT JOIN users a ON bi.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE bi.tenant_id = ?
+      WHERE bi.tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -225,8 +223,6 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY bi.installation_date DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, installations) => {
       if (err) {
         console.error('Error fetching installations:', err);
@@ -245,8 +241,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT bi.*, b.board_name, b.board_type, b.width_cm, b.height_cm,
               c.name as customer_name, c.address as customer_address,
@@ -256,9 +250,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN customers c ON bi.customer_id = c.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       LEFT JOIN agents a ON bi.agent_id = a.id
+       LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE bi.id = ? AND bi.tenant_id = ?`,
+       WHERE bi.id = $1 AND bi.tenant_id = $2`,
       [id, tenantId],
       (err, installation) => {
         if (err) {
@@ -289,8 +283,6 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
       optimal_position,
       quality_score
     } = req.body;
-
-    const db = getDatabase();
     db.run(
       `UPDATE board_installations SET
         storefront_area_sqm = COALESCE(?, storefront_area_sqm),
@@ -298,8 +290,8 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
         visibility_score = COALESCE(?, visibility_score),
         optimal_position = COALESCE(?, optimal_position),
         quality_score = COALESCE(?, quality_score),
-        updated_at = datetime('now')
-      WHERE id = ? AND tenant_id = ?`,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $1 AND tenant_id = $2`,
       [
         storefront_area_sqm,
         coverage_percentage,
@@ -320,7 +312,7 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
 
         // Fetch updated installation
         db.get(
-          'SELECT * FROM board_installations WHERE id = ?',
+          'SELECT * FROM board_installations WHERE id = $1',
           [id],
           (err, installation) => {
             if (err) {
@@ -343,15 +335,13 @@ router.get('/agent/:agentId', authMiddleware, async (req, res) => {
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT bi.*, b.board_name, b.board_type, c.name as customer_name, br.name as brand_name
        FROM board_installations bi
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN customers c ON bi.customer_id = c.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       WHERE bi.agent_id = ? AND bi.tenant_id = ?
+       WHERE bi.agent_id = $1 AND bi.tenant_id = $2
        ORDER BY bi.installation_date DESC`,
       [agentId, tenantId],
       (err, installations) => {
@@ -373,17 +363,15 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT bi.*, b.board_name, b.board_type, br.name as brand_name,
               u.first_name || ' ' || u.last_name as agent_name
        FROM board_installations bi
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       LEFT JOIN agents a ON bi.agent_id = a.id
+       LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE bi.customer_id = ? AND bi.tenant_id = ?
+       WHERE bi.customer_id = $1 AND bi.tenant_id = $2
        ORDER BY bi.installation_date DESC`,
       [customerId, tenantId],
       (err, installations) => {
@@ -415,7 +403,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
         SUM(commission_amount) as total_commissions,
         SUM(CASE WHEN optimal_position = 1 THEN 1 ELSE 0 END) as optimal_placements
       FROM board_installations
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -435,8 +423,6 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
       query += ' AND brand_id = ?';
       params.push(brand_id);
     }
-
-    const db = getDatabase();
     db.get(query, params, (err, summary) => {
       if (err) {
         console.error('Error fetching analytics summary:', err);

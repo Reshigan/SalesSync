@@ -157,7 +157,7 @@ router.post('/', async (req, res) => {
         title, description, type, start_date, end_date, location,
         latitude, longitude, max_participants, budget, objectives,
         target_audience, organizer_id, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       title, description, type, start_date, end_date, location,
       latitude, longitude, max_participants, budget, objectives,
@@ -215,7 +215,7 @@ router.put('/:id', async (req, res) => {
           objectives = COALESCE(?, objectives),
           target_audience = COALESCE(?, target_audience),
           status = COALESCE(?, status),
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
       title, description, type, start_date, end_date, location,
@@ -276,7 +276,7 @@ router.post('/:id/participants', async (req, res) => {
     const result = db.prepare(`
       INSERT INTO event_participants (
         event_id, participant_id, role, notes, attendance_status, registered_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(id, participant_id, role, notes, 'registered');
     
     res.status(201).json({
@@ -341,7 +341,7 @@ router.post('/:id/resources', async (req, res) => {
     const result = db.prepare(`
       INSERT INTO event_resources (
         event_id, resource_id, quantity, notes, allocated_at
-      ) VALUES (?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(id, resource_id, quantity, notes);
     
     res.status(201).json({
@@ -455,7 +455,7 @@ router.post('/:id/performance', async (req, res) => {
             feedback_summary = COALESCE(?, feedback_summary),
             roi_score = COALESCE(?, roi_score),
             follow_up_actions = COALESCE(?, follow_up_actions),
-            updated_at = datetime('now')
+            updated_at = CURRENT_TIMESTAMP
         WHERE event_id = ?
       `).run(
         attendance_count, satisfaction_score, objectives_met,
@@ -467,7 +467,7 @@ router.post('/:id/performance', async (req, res) => {
         INSERT INTO event_performance (
           event_id, attendance_count, satisfaction_score, objectives_met,
           feedback_summary, roi_score, follow_up_actions, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         id, attendance_count, satisfaction_score, objectives_met,
         feedback_summary, roi_score, follow_up_actions
@@ -485,50 +485,44 @@ router.post('/:id/performance', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const db = getDatabase();
     
     const [eventCounts, typeBreakdown, attendance, upcomingEvents] = await Promise.all([
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_events,
-            COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_events,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_events,
-            COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_events
-          FROM events WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT type, COUNT(*) as count
-          FROM events WHERE tenant_id = ?
-          GROUP BY type
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT ea.id) as total_attendees,
-            COUNT(DISTINCT ea.customer_id) as unique_customers,
-            AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END) as avg_attendance_rate
-          FROM events e
-          LEFT JOIN event_attendees ea ON e.id = ea.event_id
-          WHERE e.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            e.id, e.name, e.type, e.event_date, e.location,
-            COUNT(ea.id) as attendee_count
-          FROM events e
-          LEFT JOIN event_attendees ea ON e.id = ea.event_id
-          WHERE e.tenant_id = ? AND e.event_date >= DATE('now')
-          GROUP BY e.id
-          ORDER BY e.event_date ASC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_events,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_events,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_events,
+          COUNT(CASE WHEN status = 'cancelled' THEN 1 END)::int as cancelled_events
+        FROM events WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT type, COUNT(*)::int as count
+        FROM events WHERE tenant_id = $1
+        GROUP BY type
+      `, [tenantId]).then(rows => rows || []),
+      
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT ea.id)::int as total_attendees,
+          COUNT(DISTINCT ea.customer_id)::int as unique_customers,
+          AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END)::float8 as avg_attendance_rate
+        FROM events e
+        LEFT JOIN event_attendees ea ON e.id = ea.event_id
+        WHERE e.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT 
+          e.id, e.name, e.type, e.event_date, e.location,
+          COUNT(ea.id)::int as attendee_count
+        FROM events e
+        LEFT JOIN event_attendees ea ON e.id = ea.event_id
+        WHERE e.tenant_id = $1 AND e.event_date >= CURRENT_DATE
+        GROUP BY e.id, e.name, e.type, e.event_date, e.location
+        ORDER BY e.event_date ASC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({

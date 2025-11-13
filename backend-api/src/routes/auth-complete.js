@@ -84,7 +84,7 @@ router.post('/register', (req, res) => {
           username, email, password, full_name, phone, role, 
           email_verification_token, email_verification_expires, 
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `;
 
       db.run(

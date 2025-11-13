@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Haversine formula to calculate distance between two GPS coordinates
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -33,11 +33,9 @@ router.post('/validate-proximity', authMiddleware, async (req, res) => {
       });
     }
 
-    const db = getDatabase();
-
     // Get customer location
     db.get(
-      'SELECT id, name, latitude, longitude, gps_accuracy FROM customers WHERE id = ? AND tenant_id = ?',
+      'SELECT id, name, latitude, longitude, gps_accuracy FROM customers WHERE id = $1 AND tenant_id = $2',
       [customer_id, tenantId],
       (err, customer) => {
         if (err) {
@@ -75,7 +73,7 @@ router.post('/validate-proximity', authMiddleware, async (req, res) => {
           `INSERT INTO agent_gps_logs (
             id, tenant_id, agent_id, latitude, longitude, accuracy,
             timestamp, activity_type, reference_type, reference_id
-          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9)`,
           [logId, tenantId, agentId, latitude, longitude, accuracy, 
            'proximity_check', 'customer', customer_id],
           (err) => {
@@ -134,14 +132,13 @@ router.post('/log', authMiddleware, async (req, res) => {
     }
 
     const logId = uuidv4();
-    const db = getDatabase();
 
     db.run(
       `INSERT INTO agent_gps_logs (
         id, tenant_id, agent_id, latitude, longitude, accuracy,
         altitude, speed, bearing, timestamp, activity_type,
         reference_type, reference_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, $10, $11, $12)`,
       [
         logId, tenantId, agentId, latitude, longitude, accuracy,
         altitude, speed, bearing, activity_type, reference_type, reference_id
@@ -173,7 +170,7 @@ router.get('/agent-track/:agentId', authMiddleware, async (req, res) => {
 
     let query = `
       SELECT * FROM agent_gps_logs
-      WHERE agent_id = ? AND tenant_id = ?
+      WHERE agent_id = $1 AND tenant_id = $2
     `;
     const params = [agentId, tenantId];
 
@@ -191,8 +188,6 @@ router.get('/agent-track/:agentId', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY timestamp DESC LIMIT 1000';
-
-    const db = getDatabase();
     db.all(query, params, (err, logs) => {
       if (err) {
         console.error('Error fetching GPS track:', err);
@@ -219,11 +214,9 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
       });
     }
 
-    const db = getDatabase();
-
     // Check if customer exists
     db.get(
-      'SELECT id, name, latitude as old_latitude, longitude as old_longitude FROM customers WHERE id = ? AND tenant_id = ?',
+      'SELECT id, name, latitude as old_latitude, longitude as old_longitude FROM customers WHERE id = $1 AND tenant_id = $2',
       [customer_id, tenantId],
       (err, customer) => {
         if (err) {
@@ -241,7 +234,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
             `INSERT INTO customer_location_history (
               id, tenant_id, customer_id, latitude, longitude, accuracy,
               updated_by, update_reason, timestamp
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
             [
               historyId, tenantId, customer_id, customer.old_latitude,
               customer.old_longitude, null, userId, 'Previous location before update'
@@ -261,8 +254,8 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
             latitude = ?,
             longitude = ?,
             gps_accuracy = ?,
-            gps_updated_at = datetime('now')
-          WHERE id = ? AND tenant_id = ?`,
+            gps_updated_at = CURRENT_TIMESTAMP
+          WHERE id = $1 AND tenant_id = $2`,
           [latitude, longitude, accuracy, customer_id, tenantId],
           function(err) {
             if (err) {
@@ -276,7 +269,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
               `INSERT INTO customer_location_history (
                 id, tenant_id, customer_id, latitude, longitude, accuracy,
                 updated_by, update_reason, timestamp
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
               [
                 newHistoryId, tenantId, customer_id, latitude, longitude,
                 accuracy, userId, update_reason || 'Location updated by field agent'
@@ -291,7 +284,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
 
             // Fetch updated customer
             db.get(
-              'SELECT * FROM customers WHERE id = ?',
+              'SELECT * FROM customers WHERE id = $1',
               [customer_id],
               (err, updated) => {
                 if (err) {
@@ -319,13 +312,11 @@ router.get('/customer-location-history/:customerId', authMiddleware, async (req,
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.all(
       `SELECT clh.*, u.first_name || ' ' || u.last_name as updated_by_name
        FROM customer_location_history clh
        LEFT JOIN users u ON clh.updated_by = u.id
-       WHERE clh.customer_id = ? AND clh.tenant_id = ?
+       WHERE clh.customer_id = $1 AND clh.tenant_id = $2
        ORDER BY clh.timestamp DESC`,
       [customerId, tenantId],
       (err, history) => {
@@ -352,13 +343,11 @@ router.post('/nearby-customers', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
 
-    const db = getDatabase();
-
     // Get all customers with GPS coordinates
     db.all(
       `SELECT id, name, code, phone, address, latitude, longitude, type, status
        FROM customers
-       WHERE tenant_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL AND status = 'active'`,
+       WHERE tenant_id = $1 AND latitude IS NOT NULL AND longitude IS NOT NULL AND status = 'active'`,
       [tenantId],
       (err, customers) => {
         if (err) {
@@ -402,11 +391,9 @@ router.get('/agent-current-location/:agentId', authMiddleware, async (req, res) 
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-
-    const db = getDatabase();
     db.get(
       `SELECT * FROM agent_gps_logs
-       WHERE agent_id = ? AND tenant_id = ?
+       WHERE agent_id = $1 AND tenant_id = $2
        ORDER BY timestamp DESC
        LIMIT 1`,
       [agentId, tenantId],

@@ -1,22 +1,22 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
 const getDatabase = () => require('../utils/database').getDatabase();
-const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => {
+const { insertQuery, updateQuery, deleteQuery } = (() => {
   try {
     return require('../database/queries');
   } catch (error) {
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -33,13 +33,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -58,11 +57,10 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -73,15 +71,14 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -98,13 +95,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -237,7 +233,6 @@ router.get('/', async (req, res) => {
     // Get products with search
     let products;
     if (search) {
-      const db = getDatabase();
       const searchTerm = `%${search}%`;
       products = await new Promise((resolve, reject) => {
         db.all(`
@@ -259,7 +254,6 @@ router.get('/', async (req, res) => {
         });
       });
     } else {
-      const db = getDatabase();
       products = await new Promise((resolve, reject) => {
         let sql = `
           SELECT p.*, c.name as category_name, b.name as brand_name,
@@ -268,7 +262,7 @@ router.get('/', async (req, res) => {
           LEFT JOIN categories c ON p.category_id = c.id
           LEFT JOIN brands b ON p.brand_id = b.id
           LEFT JOIN inventory_stock i ON p.id = i.product_id
-          WHERE p.tenant_id = ?
+          WHERE p.tenant_id = $1
         `;
         const params = [tenantId];
         
@@ -294,9 +288,8 @@ router.get('/', async (req, res) => {
     ]);
     
     // Get total count
-    const db = getDatabase();
     const totalCount = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?', [tenantId], (err, row) => {
+      db.get('SELECT COUNT(*) as count FROM products WHERE tenant_id = $1', [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row.count);
       });
@@ -394,14 +387,13 @@ router.post('/', async (req, res) => {
     const result = await insertQuery('products', productData);
     
     // Get the created product with related data
-    const db = getDatabase();
     const newProduct = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
-        WHERE p.tenant_id = ? AND p.code = ?
+        WHERE p.tenant_id = ? AND p.code = $2
       `, [tenantId, code], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -440,12 +432,139 @@ router.post('/', async (req, res) => {
  *       404:
  *         description: Product not found
  */
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    
+    // Get all statistics in parallel for performance
+    const [
+      totalProducts,
+      activeProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalValue,
+      byCategory,
+      byBrand
+    ] = await Promise.all([
+      // Total products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = $1',
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Active products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = $2',
+          [tenantId, 'active'],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Low stock products (less than reorder level or less than 10)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) > 0
+           AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Out of stock products
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) = 0`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Total inventory value (cost_price * quantity)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT SUM(p.cost_price * COALESCE(i.quantity_on_hand, 0)) as total
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = $1`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.total || 0)
+        );
+      }),
+      
+      // Products by category
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT c.id, c.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM categories c
+           LEFT JOIN products p ON c.id = p.category_id AND p.tenant_id = c.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE c.tenant_id = $1
+           GROUP BY c.id, c.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      }),
+      
+      // Products by brand
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT b.id, b.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM brands b
+           LEFT JOIN products p ON b.id = p.brand_id AND p.tenant_id = b.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE b.tenant_id = $1
+           GROUP BY b.id, b.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        totalProducts,
+        activeProducts,
+        inactiveProducts: totalProducts - activeProducts,
+        lowStockProducts,
+        outOfStockProducts,
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        byCategory,
+        byBrand
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching product stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch product statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const product = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name,
@@ -455,7 +574,7 @@ router.get('/:id', async (req, res) => {
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
         LEFT JOIN inventory_stock i ON p.id = i.product_id
-        WHERE p.tenant_id = ? AND p.id = ?
+        WHERE p.tenant_id = ? AND p.id = $2
         GROUP BY p.id
       `, [tenantId, id], (err, row) => {
         if (err) reject(err);
@@ -476,7 +595,7 @@ router.get('/:id', async (req, res) => {
         SELECT i.*, w.name as warehouse_name
         FROM inventory_stock i
         JOIN warehouses w ON i.warehouse_id = w.id
-        WHERE i.tenant_id = ? AND i.product_id = ?
+        WHERE i.tenant_id = ? AND i.product_id = $2
         ORDER BY w.name
       `, [tenantId, id], (err, rows) => {
         if (err) reject(err);
@@ -577,14 +696,13 @@ router.put('/:id', async (req, res) => {
     await updateQuery('products', updateData, { id }, tenantId);
     
     // Get updated product
-    const db = getDatabase();
     const updatedProduct = await new Promise((resolve, reject) => {
       db.get(`
         SELECT p.*, c.name as category_name, b.name as brand_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
-        WHERE p.tenant_id = ? AND p.id = ?
+        WHERE p.tenant_id = ? AND p.id = $2
       `, [tenantId, id], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -638,9 +756,8 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if product is used in orders
-    const db = getDatabase();
     const orderItems = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?', [id], (err, row) => {
+      db.get('SELECT COUNT(*) as count FROM order_items WHERE product_id = $1', [id], (err, row) => {
         if (err) reject(err);
         else resolve(row.count);
       });
@@ -735,135 +852,7 @@ router.get('/brands/list', async (req, res) => {
  *                     byBrand:
  *                       type: array
  */
-router.get('/stats', async (req, res) => {
-  try {
-    const tenantId = req.user.tenantId;
-    const db = getDatabase();
-    
-    // Get all statistics in parallel for performance
-    const [
-      totalProducts,
-      activeProducts,
-      lowStockProducts,
-      outOfStockProducts,
-      totalValue,
-      byCategory,
-      byBrand
-    ] = await Promise.all([
-      // Total products count
-      new Promise((resolve, reject) => {
-        db.get(
-          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ?',
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Active products count
-      new Promise((resolve, reject) => {
-        db.get(
-          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?',
-          [tenantId, 'active'],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Low stock products (less than reorder level or less than 10)
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT COUNT(DISTINCT p.id) as count 
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ? 
-           AND p.status = 'active'
-           AND COALESCE(i.quantity_on_hand, 0) > 0
-           AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Out of stock products
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT COUNT(DISTINCT p.id) as count 
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ? 
-           AND p.status = 'active'
-           AND COALESCE(i.quantity_on_hand, 0) = 0`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Total inventory value (cost_price * quantity)
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT SUM(p.cost_price * COALESCE(i.quantity_on_hand, 0)) as total
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ?`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.total || 0)
-        );
-      }),
-      
-      // Products by category
-      new Promise((resolve, reject) => {
-        db.all(
-          `SELECT c.id, c.name, COUNT(p.id) as productCount,
-                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
-           FROM categories c
-           LEFT JOIN products p ON c.id = p.category_id AND p.tenant_id = c.tenant_id
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE c.tenant_id = ?
-           GROUP BY c.id, c.name
-           ORDER BY productCount DESC`,
-          [tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      }),
-      
-      // Products by brand
-      new Promise((resolve, reject) => {
-        db.all(
-          `SELECT b.id, b.name, COUNT(p.id) as productCount,
-                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
-           FROM brands b
-           LEFT JOIN products p ON b.id = p.brand_id AND p.tenant_id = b.tenant_id
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE b.tenant_id = ?
-           GROUP BY b.id, b.name
-           ORDER BY productCount DESC`,
-          [tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      })
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        totalProducts,
-        activeProducts,
-        inactiveProducts: totalProducts - activeProducts,
-        lowStockProducts,
-        outOfStockProducts,
-        totalValue: parseFloat(totalValue.toFixed(2)),
-        byCategory,
-        byBrand
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching product stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch product statistics',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+
 
 /**
  * @swagger
@@ -904,7 +893,6 @@ router.get('/:id/stock-history', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const { start_date, end_date, warehouse_id, limit = 50 } = req.query;
-    const db = getDatabase();
     
     // Verify product exists
     const product = await getOneQuery('products', { id }, tenantId);
@@ -947,7 +935,7 @@ router.get('/:id/stock-history', async (req, res) => {
       FROM inventory_movements im
       LEFT JOIN warehouses w ON im.warehouse_id = w.id
       LEFT JOIN users u ON im.created_by = u.id
-      WHERE im.product_id = ?
+      WHERE im.product_id = $1
       AND im.tenant_id = ?
     `;
     
@@ -955,12 +943,12 @@ router.get('/:id/stock-history', async (req, res) => {
     
     // Add filters
     if (start_date) {
-      sql += ' AND DATE(im.created_at) >= DATE(?)';
+      sql += ' AND im.created_at::date >= DATE(?)';
       params.push(start_date);
     }
     
     if (end_date) {
-      sql += ' AND DATE(im.created_at) <= DATE(?)';
+      sql += ' AND im.created_at::date <= DATE(?)';
       params.push(end_date);
     }
     
@@ -988,7 +976,7 @@ router.get('/:id/stock-history', async (req, res) => {
           i.last_updated
         FROM inventory_stock i
         LEFT JOIN warehouses w ON i.warehouse_id = w.id
-        WHERE i.product_id = ?
+        WHERE i.product_id = $1
         AND i.tenant_id = ?
         ${warehouse_id ? 'AND i.warehouse_id = ?' : ''}
         ORDER BY w.name`,
@@ -1069,7 +1057,6 @@ router.get('/:id/sales-data', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     const { period = 'monthly', months = 12 } = req.query;
-    const db = getDatabase();
     
     const product = await getOneQuery('products', { id }, tenantId);
     if (!product) {
@@ -1096,7 +1083,7 @@ router.get('/:id/sales-data', async (req, res) => {
             AVG(oi.unit_price) as avg_price
           FROM orders o
           INNER JOIN order_items oi ON o.id = oi.order_id
-          WHERE oi.product_id = ?
+          WHERE oi.product_id = $1
           AND o.tenant_id = ?
           AND o.status != 'cancelled'
           AND date(o.order_date) >= date('now', '-${parseInt(months)} months')
@@ -1121,7 +1108,7 @@ router.get('/:id/sales-data', async (req, res) => {
           FROM customers c
           INNER JOIN orders o ON c.id = o.customer_id
           INNER JOIN order_items oi ON o.id = oi.order_id
-          WHERE oi.product_id = ?
+          WHERE oi.product_id = $1
           AND o.tenant_id = ?
           AND o.status != 'cancelled'
           GROUP BY c.id, c.name, c.code
@@ -1146,7 +1133,7 @@ router.get('/:id/sales-data', async (req, res) => {
             MAX(o.order_date) as last_sale_date
           FROM orders o
           INNER JOIN order_items oi ON o.id = oi.order_id
-          WHERE oi.product_id = ?
+          WHERE oi.product_id = $1
           AND o.tenant_id = ?
           AND o.status != 'cancelled'`,
           [id, tenantId],

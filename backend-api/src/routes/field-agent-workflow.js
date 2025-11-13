@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get field agent dashboard
 router.get('/dashboard', authMiddleware, async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const agentId = req.user.userId;
-
-    const db = getDatabase();
     
     // Get today's scheduled visits
     const today = new Date().toISOString().split('T')[0];
@@ -20,7 +18,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
               c.latitude, c.longitude, c.address
        FROM visits v
        LEFT JOIN customers c ON v.customer_id = c.id
-       WHERE v.agent_id = ? AND v.tenant_id = ? AND date(v.scheduled_date) = date(?)
+       WHERE v.agent_id = $1 AND v.tenant_id = $2 AND date(v.scheduled_date) = date($3)
        ORDER BY v.scheduled_date`,
       [agentId, tenantId, today],
       (err, visits) => {
@@ -34,7 +32,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
           `SELECT COUNT(*) as pending_tasks
            FROM visit_tasks vt
            INNER JOIN visits v ON vt.visit_id = v.id
-           WHERE v.agent_id = ? AND v.tenant_id = ? AND vt.status = 'pending'`,
+           WHERE v.agent_id = $1 AND v.tenant_id = $2 AND vt.status = 'pending'`,
           [agentId, tenantId],
           (err, taskCount) => {
             if (err) {
@@ -53,7 +51,7 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
                 SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid
                FROM commission_transactions
-               WHERE agent_id = ? AND tenant_id = ? AND created_at >= ?`,
+               WHERE agent_id = $1 AND tenant_id = $2 AND created_at >= $3`,
               [agentId, tenantId, firstDayOfMonth.toISOString()],
               (err, commissions) => {
                 if (err) {
@@ -64,9 +62,9 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
                 // Get today's activity stats
                 db.get(
                   `SELECT 
-                    (SELECT COUNT(*) FROM visits WHERE agent_id = ? AND tenant_id = ? AND date(check_in_time) = date('now')) as visits_completed,
-                    (SELECT COUNT(*) FROM board_installations WHERE agent_id = ? AND tenant_id = ? AND date(installation_date) = date('now')) as boards_installed,
-                    (SELECT COUNT(*) FROM product_distributions WHERE agent_id = ? AND tenant_id = ? AND date(distribution_date) = date('now')) as products_distributed`,
+                    (SELECT COUNT(*) FROM visits WHERE agent_id = $1 AND tenant_id = $2 AND date(check_in_time) = CURRENT_DATE) as visits_completed,
+                    (SELECT COUNT(*) FROM board_installations WHERE agent_id = $1 AND tenant_id = $2 AND date(installation_date) = CURRENT_DATE) as boards_installed,
+                    (SELECT COUNT(*) FROM product_distributions WHERE agent_id = $1 AND tenant_id = $2 AND date(distribution_date) = CURRENT_DATE) as products_distributed`,
                   [agentId, tenantId, agentId, tenantId, agentId, tenantId],
                   (err, stats) => {
                     if (err) {
@@ -116,8 +114,6 @@ router.post('/check-in', authMiddleware, async (req, res) => {
       });
     }
 
-    const db = getDatabase();
-
     // Create or update visit
     const visitId = uuidv4();
     
@@ -125,7 +121,7 @@ router.post('/check-in', authMiddleware, async (req, res) => {
       `INSERT INTO visits (
         id, tenant_id, agent_id, customer_id, visit_type, scheduled_date,
         check_in_time, check_in_latitude, check_in_longitude, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?, datetime('now'))`,
+      ) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, $6, $7, $8, CURRENT_TIMESTAMP)`,
       [visitId, tenantId, agentId, customer_id, 'field_visit', latitude, longitude, 'in_progress'],
       function(err) {
         if (err) {
@@ -139,7 +135,7 @@ router.post('/check-in', authMiddleware, async (req, res) => {
           `INSERT INTO agent_gps_logs (
             id, tenant_id, agent_id, latitude, longitude, accuracy,
             timestamp, activity_type, reference_type, reference_id
-          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9)`,
           [gpsLogId, tenantId, agentId, latitude, longitude, accuracy, 
            'check_in', 'visit', visitId],
           (err) => {
@@ -170,14 +166,12 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
     const tenantId = req.user.tenantId;
     const { brand_ids } = req.query; // Comma-separated brand IDs
 
-    const db = getDatabase();
-
     // Get visit details
     db.get(
       `SELECT v.*, c.name as customer_name, c.type as customer_type
        FROM visits v
        LEFT JOIN customers c ON v.customer_id = c.id
-       WHERE v.id = ? AND v.tenant_id = ?`,
+       WHERE v.id = $1 AND v.tenant_id = $2`,
       [visitId, tenantId],
       async (err, visit) => {
         if (err) {
@@ -190,7 +184,7 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
 
         // Get existing tasks for this visit
         db.all(
-          `SELECT * FROM visit_tasks WHERE visit_id = ? AND tenant_id = ? ORDER BY sequence_order, is_mandatory DESC`,
+          `SELECT * FROM visit_tasks WHERE visit_id = $1 AND tenant_id = $2 ORDER BY sequence_order, is_mandatory DESC`,
           [visitId, tenantId],
           (err, existingTasks) => {
             if (err) {
@@ -212,10 +206,10 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
 
             // Get mandatory surveys for selected brands
             if (brands.length > 0) {
-              const placeholders = brands.map(() => '?').join(',');
+              const placeholders = brands.map(() => '$1').join(',');
               db.all(
                 `SELECT * FROM surveys 
-                 WHERE tenant_id = ? AND brand_id IN (${placeholders}) AND is_mandatory = 1 AND status = 'active'`,
+                 WHERE tenant_id = $1 AND brand_id IN (${placeholders}) AND is_mandatory = 1 AND status = 'active'`,
                 [tenantId, ...brands],
                 (err, surveys) => {
                   if (err) {
@@ -295,7 +289,7 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
                           id, tenant_id, visit_id, task_type, task_name, task_description,
                           is_mandatory, sequence_order, brand_id, survey_id, board_id, product_id,
                           status, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CURRENT_TIMESTAMP)`,
                         [
                           task.id, task.tenant_id, task.visit_id, task.task_type,
                           task.task_name, task.task_description, task.is_mandatory,
@@ -351,15 +345,13 @@ router.post('/visit-task/complete', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Task ID is required' });
     }
 
-    const db = getDatabase();
-
     db.run(
       `UPDATE visit_tasks SET
         status = 'completed',
-        completed_at = datetime('now'),
+        completed_at = CURRENT_TIMESTAMP,
         completed_by = ?,
         result_data = ?
-      WHERE id = ? AND tenant_id = ?`,
+      WHERE id = $1 AND tenant_id = $2`,
       [agentId, result_data ? JSON.stringify(result_data) : null, task_id, tenantId],
       function(err) {
         if (err) {
@@ -372,7 +364,7 @@ router.post('/visit-task/complete', authMiddleware, async (req, res) => {
 
         // Fetch updated task
         db.get(
-          'SELECT * FROM visit_tasks WHERE id = ?',
+          'SELECT * FROM visit_tasks WHERE id = $1',
           [task_id],
           (err, task) => {
             if (err) {
@@ -404,13 +396,11 @@ router.post('/check-out', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Visit ID is required' });
     }
 
-    const db = getDatabase();
-
     // Check if all mandatory tasks are completed
     db.get(
       `SELECT COUNT(*) as incomplete_mandatory
        FROM visit_tasks
-       WHERE visit_id = ? AND tenant_id = ? AND is_mandatory = 1 AND status != 'completed'`,
+       WHERE visit_id = $1 AND tenant_id = $2 AND is_mandatory = 1 AND status != 'completed'`,
       [visit_id, tenantId],
       (err, result) => {
         if (err) {
@@ -428,13 +418,13 @@ router.post('/check-out', authMiddleware, async (req, res) => {
         // Update visit
         db.run(
           `UPDATE visits SET
-            check_out_time = datetime('now'),
+            check_out_time = CURRENT_TIMESTAMP,
             check_out_latitude = ?,
             check_out_longitude = ?,
             status = 'completed',
             notes = COALESCE(?, notes),
             rating = ?
-          WHERE id = ? AND tenant_id = ? AND agent_id = ?`,
+          WHERE id = $1 AND tenant_id = $2 AND agent_id = $3`,
           [latitude, longitude, notes, rating, visit_id, tenantId, agentId],
           function(err) {
             if (err) {
@@ -452,7 +442,7 @@ router.post('/check-out', authMiddleware, async (req, res) => {
                 `INSERT INTO agent_gps_logs (
                   id, tenant_id, agent_id, latitude, longitude, accuracy,
                   timestamp, activity_type, reference_type, reference_id
-                ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+                ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, $7, $8, $9)`,
                 [gpsLogId, tenantId, agentId, latitude, longitude, accuracy, 
                  'check_out', 'visit', visit_id],
                 (err) => {
@@ -490,7 +480,7 @@ router.get('/my-visits', authMiddleware, async (req, res) => {
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE v.agent_id = ? AND v.tenant_id = ?
+      WHERE v.agent_id = $1 AND v.tenant_id = $2
     `;
     const params = [agentId, tenantId];
 
@@ -508,8 +498,6 @@ router.get('/my-visits', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY v.scheduled_date DESC';
-
-    const db = getDatabase();
     db.all(query, params, (err, visits) => {
       if (err) {
         console.error('Error fetching visits:', err);

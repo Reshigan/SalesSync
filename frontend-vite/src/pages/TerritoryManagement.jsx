@@ -26,7 +26,7 @@ export default function TerritoryManagement() {
       setLoading(true);
       const [terrRes, assignRes] = await Promise.all([
         axios.get(`${API_URL}/api/territories`).catch(() => ({ data: { territories: [] } })),
-        axios.get(`${API_URL}/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
       ]);
       
       setTerritories(terrRes.data.territories || []);

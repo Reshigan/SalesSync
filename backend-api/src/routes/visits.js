@@ -1,22 +1,22 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
 const getDatabase = () => require('../utils/database').getDatabase();
-const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => {
+const { insertQuery, updateQuery, deleteQuery } = (() => {
   try {
     return require('../database/queries');
   } catch (error) {
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -33,13 +33,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -58,11 +57,10 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -73,15 +71,14 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -98,13 +95,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -129,19 +125,17 @@ router.get('/', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { agent_id, customer_id, visit_type, status, date_from, date_to, page = 1, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, c.name as customer_name, c.phone as customer_phone,
              u.first_name || ' ' || u.last_name as agent_name,
              r.name as route_name, a.name as area_name
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      LEFT JOIN agents ag ON v.agent_id = ag.id
+      LEFT JOIN users ag ON v.agent_id = ag.id
       LEFT JOIN users u ON ag.user_id = u.id
       LEFT JOIN routes r ON c.route_id = r.id
       LEFT JOIN areas a ON r.area_id = a.id
-      WHERE v.tenant_id = ?
+      WHERE v.tenant_id = $1
     `;
     const params = [tenantId];
     
@@ -188,13 +182,13 @@ router.get('/', async (req, res) => {
       db.get(`
         SELECT 
           COUNT(*) as total_visits,
-          SUM(CASE WHEN DATE(visit_date) = DATE('now') THEN 1 ELSE 0 END) as today_visits,
+          SUM(CASE WHEN visit_date::date = CURRENT_DATE THEN 1 ELSE 0 END) as today_visits,
           SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
           AVG(CASE WHEN check_in_time IS NOT NULL AND check_out_time IS NOT NULL 
               THEN (julianday(check_out_time) - julianday(check_in_time)) * 24 * 60 
               ELSE NULL END) as avg_duration_minutes
         FROM visits 
-        WHERE tenant_id = ? AND DATE(visit_date) >= DATE('now', '-7 days')
+        WHERE tenant_id = ? AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -287,8 +281,6 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    
-    const db = getDatabase();
     const visit = await new Promise((resolve, reject) => {
       db.get(`
         SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address,
@@ -296,11 +288,11 @@ router.get('/:id', async (req, res) => {
                r.name as route_name, a.name as area_name
         FROM visits v
         LEFT JOIN customers c ON v.customer_id = c.id
-        LEFT JOIN agents ag ON v.agent_id = ag.id
+        LEFT JOIN users ag ON v.agent_id = ag.id
         LEFT JOIN users u ON ag.user_id = u.id
         LEFT JOIN routes r ON c.route_id = r.id
         LEFT JOIN areas a ON r.area_id = a.id
-        WHERE v.id = ? AND v.tenant_id = ?
+        WHERE v.id = ? AND v.tenant_id = $2
       `, [id, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -505,18 +497,16 @@ router.get('/agent/:agentId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { agentId } = req.params;
     const { date, status } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE v.tenant_id = ? AND v.agent_id = ?
+      WHERE v.tenant_id = ? AND v.agent_id = $2
     `;
     const params = [tenantId, agentId];
     
     if (date) {
-      sql += ' AND DATE(v.visit_date) = ?';
+      sql += ' AND v.visit_date::date = ?';
       params.push(date);
     }
     if (status) {
@@ -549,15 +539,13 @@ router.get('/customer/:customerId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { customerId } = req.params;
     const { limit = 10 } = req.query;
-    
-    const db = getDatabase();
     const visits = await new Promise((resolve, reject) => {
       db.all(`
         SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
         FROM visits v
-        LEFT JOIN agents a ON v.agent_id = a.id
+        LEFT JOIN users a ON v.agent_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.tenant_id = ? AND v.customer_id = ?
+        WHERE v.tenant_id = ? AND v.customer_id = $2
         ORDER BY v.visit_date DESC
         LIMIT ?
       `, [tenantId, customerId, parseInt(limit)], (err, rows) => {
@@ -581,21 +569,20 @@ router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, agent_id } = req.query;
-    const db = getDatabase();
     
-    let whereClause = 'WHERE v.tenant_id = ?';
+    let whereClause = 'WHERE v.tenant_id = $1';
     const params = [tenantId];
     
     if (date_from) {
-      whereClause += ' AND DATE(v.visit_date) >= ?';
+      whereClause += ' AND v.visit_date::date >= $1';
       params.push(date_from);
     }
     if (date_to) {
-      whereClause += ' AND DATE(v.visit_date) <= ?';
+      whereClause += ' AND v.visit_date::date <= $1';
       params.push(date_to);
     }
     if (agent_id) {
-      whereClause += ' AND v.agent_id = ?';
+      whereClause += ' AND v.agent_id = $1';
       params.push(agent_id);
     }
     
@@ -648,7 +635,7 @@ router.get('/stats', async (req, res) => {
             END) as avg_duration_minutes,
             COUNT(DISTINCT v.customer_id) as unique_customers
           FROM visits v
-          LEFT JOIN agents a ON v.agent_id = a.id
+          LEFT JOIN users a ON v.agent_id = a.id
           LEFT JOIN users u ON a.user_id = u.id
           ${whereClause}
           GROUP BY v.agent_id, agent_name
@@ -661,14 +648,14 @@ router.get('/stats', async (req, res) => {
       new Promise((resolve, reject) => {
         db.all(`
           SELECT 
-            DATE(v.visit_date) as date,
+            v.visit_date::date as date,
             COUNT(*) as total_visits,
             COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
             COUNT(DISTINCT v.agent_id) as active_agents
           FROM visits v
-          WHERE v.tenant_id = ?
-          AND DATE(v.visit_date) >= DATE('now', '-30 days')
-          GROUP BY DATE(v.visit_date)
+          WHERE v.tenant_id = $1
+          AND v.visit_date::date >= CURRENT_DATE - INTERVAL '30 days'
+          GROUP BY v.visit_date::date
           ORDER BY date DESC
         `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
       })

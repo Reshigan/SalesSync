@@ -1,22 +1,22 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
 const getDatabase = () => require('../utils/database').getDatabase();
-const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => {
+const { insertQuery, updateQuery, deleteQuery } = (() => {
   try {
     return require('../database/queries');
   } catch (error) {
     console.warn('Queries module not found, using fallback functions');
     return {
       getQuery: (table, conditions = {}, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -33,13 +33,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       getOneQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `SELECT * FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -58,11 +57,10 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       insertQuery: (table, data) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -73,15 +71,14 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       updateQuery: (table, data, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
@@ -98,13 +95,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         });
       },
       deleteQuery: (table, conditions, tenantId) => {
-        const db = getDatabase();
         return new Promise((resolve, reject) => {
           let sql = `DELETE FROM ${table}`;
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
@@ -200,14 +196,13 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
 
 // Generate order number
 const generateOrderNumber = async (tenantId) => {
-  const db = getDatabase();
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   
   return new Promise((resolve, reject) => {
     db.get(`
       SELECT COUNT(*) as count 
       FROM orders 
-      WHERE tenant_id = ? AND DATE(created_at) = DATE('now')
+      WHERE tenant_id = ? AND created_at::date = DATE('now')
     `, [tenantId], (err, row) => {
       if (err) reject(err);
       else {
@@ -276,18 +271,16 @@ router.get('/', async (req, res) => {
       page = 1, 
       limit = 50 
     } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT o.*, c.name as customer_name, c.phone as customer_phone,
              u.first_name || ' ' || u.last_name as salesman_name,
              COUNT(oi.id) as item_count
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN agents a ON o.salesman_id = a.id
+      LEFT JOIN users a ON o.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.tenant_id = ?
+      WHERE o.tenant_id = $1
     `;
     const params = [tenantId];
     
@@ -332,7 +325,7 @@ router.get('/', async (req, res) => {
     });
     
     // Get total count
-    let countSql = 'SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?';
+    let countSql = 'SELECT COUNT(*) as count FROM orders WHERE tenant_id = $1';
     const countParams = [tenantId];
     
     if (customer_id) {
@@ -378,7 +371,7 @@ router.get('/', async (req, res) => {
           SUM(total_amount) as total_value,
           AVG(total_amount) as average_order_value
         FROM orders 
-        WHERE tenant_id = ? AND DATE(order_date) = DATE('now')
+        WHERE tenant_id = ? AND order_date::date = DATE('now')
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -471,12 +464,10 @@ router.post('/', async (req, res) => {
     let tax_amount = 0;
     let discount_amount = 0;
     
-    const db = getDatabase();
-    
     // Validate products and calculate amounts
     for (const item of items) {
       const product = await new Promise((resolve, reject) => {
-        db.get('SELECT * FROM products WHERE id = ? AND tenant_id = ?', 
+        db.get('SELECT * FROM products WHERE id = ? AND tenant_id = $2', 
           [item.product_id, tenantId], (err, row) => {
             if (err) reject(err);
             else resolve(row);
@@ -538,7 +529,7 @@ router.post('/', async (req, res) => {
     
     // Get the order ID from the result
     const newOrder = await new Promise((resolve, reject) => {
-      db.get('SELECT * FROM orders WHERE order_number = ? AND tenant_id = ?', 
+      db.get('SELECT * FROM orders WHERE order_number = ? AND tenant_id = $2', 
         [order_number, tenantId], (err, row) => {
           if (err) reject(err);
           else resolve(row);
@@ -598,7 +589,6 @@ router.post('/', async (req, res) => {
 
 // Helper function to get order with details
 const getOrderWithDetails = async (orderId, tenantId) => {
-  const db = getDatabase();
   
   const order = await new Promise((resolve, reject) => {
     db.get(`
@@ -606,9 +596,9 @@ const getOrderWithDetails = async (orderId, tenantId) => {
              u.first_name || ' ' || u.last_name as salesman_name
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN agents a ON o.salesman_id = a.id
+      LEFT JOIN users a ON o.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE o.id = ? AND o.tenant_id = ?
+      WHERE o.id = ? AND o.tenant_id = $2
     `, [orderId, tenantId], (err, row) => {
       if (err) reject(err);
       else resolve(row);
@@ -620,7 +610,7 @@ const getOrderWithDetails = async (orderId, tenantId) => {
       SELECT oi.*, p.name as product_name, p.code as product_code, p.unit_of_measure
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
-      WHERE oi.order_id = ?
+      WHERE oi.order_id = $1
       ORDER BY p.name
     `, [orderId], (err, rows) => {
       if (err) reject(err);
@@ -816,14 +806,12 @@ router.get('/customer/:customerId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { customerId } = req.params;
     const { limit = 10 } = req.query;
-    
-    const db = getDatabase();
     const orders = await new Promise((resolve, reject) => {
       db.all(`
         SELECT o.*, COUNT(oi.id) as item_count
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi.order_id
-        WHERE o.tenant_id = ? AND o.customer_id = ?
+        WHERE o.tenant_id = ? AND o.customer_id = $2
         GROUP BY o.id
         ORDER BY o.created_at DESC
         LIMIT ?
@@ -848,14 +836,12 @@ router.get('/salesman/:salesmanId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { salesmanId } = req.params;
     const { date_from, date_to, limit = 50 } = req.query;
-    
-    const db = getDatabase();
     let sql = `
       SELECT o.*, c.name as customer_name, COUNT(oi.id) as item_count
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
       LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.tenant_id = ? AND o.salesman_id = ?
+      WHERE o.tenant_id = ? AND o.salesman_id = $2
     `;
     const params = [tenantId, salesmanId];
     
@@ -892,11 +878,10 @@ router.get('/salesman/:salesmanId', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     const [totalOrders, ordersByStatus, revenueStats, topCustomers] = await Promise.all([
       new Promise((resolve, reject) => {
-        db.get('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [tenantId],
+        db.get('SELECT COUNT(*) as count FROM orders WHERE tenant_id = $1', [tenantId],
           (err, row) => err ? reject(err) : resolve(row.count));
       }),
       new Promise((resolve, reject) => {
@@ -906,7 +891,7 @@ router.get('/stats', async (req, res) => {
       }),
       new Promise((resolve, reject) => {
         db.get(`SELECT SUM(total_amount) as total_revenue, AVG(total_amount) as average_order_value
-                FROM orders WHERE tenant_id = ?`, [tenantId],
+                FROM orders WHERE tenant_id = $1`, [tenantId],
           (err, row) => err ? reject(err) : resolve(row || {}));
       }),
       new Promise((resolve, reject) => {
@@ -933,7 +918,6 @@ router.put('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     const validStatuses = ['draft', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed', 'cancelled'];
     if (!status || !validStatuses.includes(status)) {
@@ -941,7 +925,7 @@ router.put('/:id/status', async (req, res) => {
     }
     
     await new Promise((resolve, reject) => {
-      db.run('UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?',
+      db.run('UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3',
         [status, id, tenantId], function(err) {
           if (err) reject(err);
           else if (this.changes === 0) reject(new Error('Order not found'));

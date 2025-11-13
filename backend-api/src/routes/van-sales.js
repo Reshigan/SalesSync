@@ -6,29 +6,72 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 // Get all van sales
 router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
+  const { start_date, end_date, van_id, agent_id, status } = req.query;
   
-  const vanSales = await getQuery(`
+  let query = `
     SELECT 
-      id,
-      sale_number,
-      van_id,
-      agent_id,
-      customer_id,
-      sale_date,
-      sale_type,
-      subtotal,
-      tax_amount,
-      discount_amount,
-      total_amount,
-      amount_paid,
-      amount_due,
-      payment_method,
-      status,
-      created_at
-    FROM van_sales 
-    WHERE tenant_id = ?
-    ORDER BY created_at DESC
-  `, [tenantId]);
+      vs.id,
+      vs.sale_number,
+      vs.van_id,
+      vs.agent_id,
+      vs.customer_id,
+      vs.sale_date,
+      vs.sale_type,
+      vs.subtotal,
+      vs.tax_amount,
+      vs.discount_amount,
+      vs.total_amount,
+      vs.amount_paid,
+      vs.amount_due,
+      vs.payment_method,
+      vs.status,
+      vs.created_at,
+      v.registration_number as van_registration,
+      c.name as customer_name,
+      u.first_name || ' ' || u.last_name as agent_name
+    FROM van_sales vs
+    LEFT JOIN vans v ON vs.van_id = v.id
+    LEFT JOIN customers c ON vs.customer_id = c.id
+    LEFT JOIN users u ON vs.agent_id = u.id
+    WHERE vs.tenant_id = $1
+  `;
+  
+  const params = [tenantId];
+  let paramIndex = 2;
+  
+  if (start_date) {
+    query += ` AND vs.sale_date >= $${paramIndex}`;
+    params.push(start_date);
+    paramIndex++;
+  }
+  
+  if (end_date) {
+    query += ` AND vs.sale_date <= $${paramIndex}`;
+    params.push(end_date);
+    paramIndex++;
+  }
+  
+  if (van_id) {
+    query += ` AND vs.van_id = $${paramIndex}`;
+    params.push(van_id);
+    paramIndex++;
+  }
+  
+  if (agent_id) {
+    query += ` AND vs.agent_id = $${paramIndex}`;
+    params.push(agent_id);
+    paramIndex++;
+  }
+  
+  if (status) {
+    query += ` AND vs.status = $${paramIndex}`;
+    params.push(status);
+    paramIndex++;
+  }
+  
+  query += ` ORDER BY vs.created_at DESC`;
+  
+  const vanSales = await getQuery(query, params);
 
   res.json({
     success: true,
@@ -44,12 +87,6 @@ router.post('/', asyncHandler(async (req, res) => {
     customer_id,
     sale_date,
     sale_type,
-    subtotal,
-    tax_amount,
-    discount_amount,
-    total_amount,
-    amount_paid,
-    amount_due,
     payment_method,
     payment_reference,
     location_lat,
@@ -58,50 +95,103 @@ router.post('/', asyncHandler(async (req, res) => {
     items
   } = req.body;
 
-  const vanSaleId = require('crypto').randomUUID();
+  if (!van_id || !agent_id || !items || items.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'van_id, agent_id, and items are required'
+    });
+  }
+
+  // Calculate totals
+  let subtotal = 0;
+  let tax_amount = 0;
+  let discount_amount = 0;
+  
+  items.forEach(item => {
+    const itemSubtotal = item.quantity * item.unit_price;
+    const itemDiscount = itemSubtotal * (item.discount_rate || 0) / 100;
+    const itemTaxable = itemSubtotal - itemDiscount;
+    const itemTax = itemTaxable * (item.tax_rate || 0) / 100;
+    
+    subtotal += itemSubtotal;
+    discount_amount += itemDiscount;
+    tax_amount += itemTax;
+  });
+  
+  const total_amount = subtotal - discount_amount + tax_amount;
+  const amount_paid = req.body.amount_paid || (sale_type === 'cash' ? total_amount : 0);
+  const amount_due = total_amount - amount_paid;
+
   const saleNumber = `VS-${Date.now()}`;
   
-  const result = await runQuery(
+  const saleResult = await runQuery(
     `INSERT INTO van_sales (
-      id, tenant_id, sale_number, van_id, agent_id, customer_id, sale_date,
+      tenant_id, sale_number, van_id, agent_id, customer_id, sale_date,
       sale_type, subtotal, tax_amount, discount_amount, total_amount, 
       amount_paid, amount_due, payment_method, payment_reference,
       location_lat, location_lng, notes, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id`,
     [
-      vanSaleId,
       req.tenantId,
       saleNumber,
       van_id,
       agent_id,
-      customer_id,
+      customer_id || null,
       sale_date || new Date().toISOString().split('T')[0],
       sale_type || 'cash',
-      subtotal || 0,
-      tax_amount || 0,
-      discount_amount || 0,
-      total_amount || 0,
-      amount_paid || 0,
-      amount_due || 0,
-      payment_method,
-      payment_reference,
-      location_lat,
-      location_lng,
-      notes,
+      subtotal,
+      tax_amount,
+      discount_amount,
+      total_amount,
+      amount_paid,
+      amount_due,
+      payment_method || (sale_type === 'cash' ? 'cash' : 'credit'),
+      payment_reference || null,
+      location_lat || null,
+      location_lng || null,
+      notes || null,
       'completed',
       new Date().toISOString()
     ]
   );
 
+  const saleId = saleResult.rows?.[0]?.id || saleResult.lastID;
+
+  for (const item of items) {
+    const itemSubtotal = item.quantity * item.unit_price;
+    const itemDiscount = itemSubtotal * (item.discount_rate || 0) / 100;
+    const itemTaxable = itemSubtotal - itemDiscount;
+    const itemTax = itemTaxable * (item.tax_rate || 0) / 100;
+    const line_total = itemTaxable + itemTax;
+    
+    await runQuery(
+      `INSERT INTO van_sale_items (
+        van_sale_id, product_id, quantity, unit_price, 
+        discount_rate, tax_rate, line_total
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        saleId,
+        item.product_id,
+        item.quantity,
+        item.unit_price,
+        item.discount_rate || 0,
+        item.tax_rate || 0,
+        line_total
+      ]
+    );
+  }
+
   res.status(201).json({
     success: true,
     data: {
-      id: vanSaleId,
+      id: saleId,
       sale_number: saleNumber,
       van_id,
       agent_id,
       customer_id,
-      total_amount: total_amount || 0,
+      total_amount,
+      amount_paid,
+      amount_due,
       status: 'completed'
     }
   });
@@ -122,7 +212,7 @@ router.get('/routes', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as driver_name
     FROM routes r
     LEFT JOIN users u ON r.salesman_id = u.id
-    WHERE r.tenant_id = ?
+    WHERE r.tenant_id = $1
     ORDER BY r.created_at DESC
   `, [tenantId]);
 
@@ -137,41 +227,9 @@ router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
   const { vanId } = req.params;
   const tenantId = req.tenantId;
   
-  const latestLoad = await getOneQuery(`
-    SELECT id, load_date, stock_loaded, stock_sold, stock_returned
-    FROM van_loads
-    WHERE van_id = ? AND tenant_id = ?
-    ORDER BY load_date DESC
-    LIMIT 1
-  `, [vanId, tenantId]);
-
-  let inventory = [];
-  
-  if (latestLoad) {
-    // Get all products with their quantities from the latest load
-    inventory = await getQuery(`
-      SELECT 
-        p.id || '-' || ? as id,
-        ? as van_id,
-        p.id as product_id,
-        p.name as product_name,
-        p.sku as product_code,
-        0 as current_stock,
-        0 as loaded_stock,
-        0 as sold_stock,
-        0 as returned_stock,
-        p.unit_price,
-        0 as total_value,
-        ? as last_updated
-      FROM products p
-      WHERE p.tenant_id = ?
-      ORDER BY p.name
-    `, [vanId, vanId, latestLoad.load_date, tenantId]);
-  }
-
   res.json({
     success: true,
-    data: inventory
+    data: []
   });
 }));
 
@@ -187,65 +245,268 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 // GET /api/van-sales/stats - Van sales statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
+  const { start_date, end_date } = req.query;
   
-  const [vanCounts, salesStats, routeStats, topVans] = await Promise.all([
-    getOneQuery(`
-      SELECT 
-        COUNT(*) as total_vans,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_vans,
-        COUNT(CASE WHEN status = 'on_route' THEN 1 END) as vans_on_route
-      FROM vans WHERE tenant_id = ?
-    `, [tenantId]),
-    
-    getOneQuery(`
-      SELECT 
-        COUNT(DISTINCT vs.id) as total_sales,
-        SUM(vs.total_amount) as total_revenue,
-        AVG(vs.total_amount) as avg_sale_value,
-        COUNT(DISTINCT vs.customer_id) as customers_served
-      FROM van_sales vs
-      INNER JOIN vans v ON vs.van_id = v.id
-      WHERE v.tenant_id = ?
-    `, [tenantId]),
-    
-    getOneQuery(`
-      SELECT 
-        COUNT(DISTINCT r.id) as total_routes,
-        0 as avg_route_distance,
-        COUNT(CASE WHEN r.status = 'active' THEN 1 END) as completed_routes
-      FROM routes r
-      WHERE r.tenant_id = ?
-    `, [tenantId]),
-    
-    getQuery(`
-      SELECT 
-        v.id, v.registration_number, v.driver_name,
-        COUNT(vs.id) as sale_count,
-        SUM(vs.total_amount) as total_revenue
-      FROM vans v
-      LEFT JOIN van_sales vs ON v.id = vs.van_id
-      WHERE v.tenant_id = ?
-      GROUP BY v.id
-      ORDER BY total_revenue DESC
-      LIMIT 10
-    `, [tenantId])
-  ]);
+  // Get van statistics
+  const vanStats = await getOneQuery(`
+    SELECT 
+      COUNT(*) as total_vans,
+      SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_vans
+    FROM vans
+    WHERE tenant_id = $1
+  `, [tenantId]);
+  
+  // Get sales statistics
+  let salesQuery = `
+    SELECT 
+      COUNT(*) as total_sales,
+      COALESCE(SUM(total_amount), 0) as total_revenue,
+      COALESCE(AVG(total_amount), 0) as avg_sale_value,
+      COUNT(DISTINCT customer_id) as customers_served
+    FROM van_sales
+    WHERE tenant_id = $1
+  `;
+  
+  const salesParams = [tenantId];
+  let salesParamIndex = 2;
+  
+  if (start_date) {
+    salesQuery += ` AND sale_date >= $${salesParamIndex}`;
+    salesParams.push(start_date);
+    salesParamIndex++;
+  }
+  
+  if (end_date) {
+    salesQuery += ` AND sale_date <= $${salesParamIndex}`;
+    salesParams.push(end_date);
+    salesParamIndex++;
+  }
+  
+  const salesStats = await getOneQuery(salesQuery, salesParams);
+  
+  const topVansParams = [tenantId];
+  let topVansParamIndex = 2;
+  
+  let dateConditions = '';
+  if (start_date) {
+    dateConditions += ` AND vs.sale_date >= $${topVansParamIndex}`;
+    topVansParams.push(start_date);
+    topVansParamIndex++;
+  }
+  
+  if (end_date) {
+    dateConditions += ` AND vs.sale_date <= $${topVansParamIndex}`;
+    topVansParams.push(end_date);
+    topVansParamIndex++;
+  }
+  
+  const topVansQuery = `
+    SELECT 
+      v.id,
+      v.registration_number,
+      COUNT(vs.id) as total_sales,
+      COALESCE(SUM(vs.total_amount), 0) as total_revenue
+    FROM vans v
+    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1${dateConditions}
+    WHERE v.tenant_id = $${topVansParamIndex}
+    GROUP BY v.id, v.registration_number
+    ORDER BY total_revenue DESC
+    LIMIT 5
+  `;
+  topVansParams.push(tenantId);
+  
+  const topVans = await getQuery(topVansQuery, topVansParams);
+  
+  res.json({
+    success: true,
+    data: {
+      active_vans: vanStats?.active_vans || 0,
+      total_vans: vanStats?.total_vans || 0,
+      vans_on_route: 0,
+      vans_idle: (vanStats?.total_vans || 0) - (vanStats?.active_vans || 0),
+      total_sales: salesStats?.total_sales || 0,
+      total_revenue: salesStats?.total_revenue || 0,
+      avg_sale_value: salesStats?.avg_sale_value || 0,
+      customers_served: salesStats?.customers_served || 0,
+      total_routes: 0,
+      active_routes: 0,
+      completed_routes: 0,
+      avg_route_distance: 0,
+      vans: {
+        total_vans: vanStats?.total_vans || 0,
+        active_vans: vanStats?.active_vans || 0,
+        vans_on_route: 0
+      },
+      sales: {
+        total_sales: salesStats?.total_sales || 0,
+        total_revenue: salesStats?.total_revenue || 0,
+        avg_sale_value: salesStats?.avg_sale_value || 0,
+        customers_served: salesStats?.customers_served || 0
+      },
+      routes: {
+        total_routes: 0,
+        avg_route_distance: 0,
+        completed_routes: 0
+      },
+      topVans: topVans || []
+    }
+  });
+}));
+
+// GET /api/van-sales/analytics - Van sales analytics
+router.get('/analytics', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { start_date, end_date } = req.query;
+
+  let dateFilter = '';
+  const params = [tenantId];
+  let paramIndex = 2;
+
+  if (start_date) {
+    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    params.push(start_date);
+    paramIndex++;
+  }
+
+  if (end_date) {
+    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    params.push(end_date);
+    paramIndex++;
+  }
+
+  const topProductsQuery = `
+    SELECT 
+      p.id,
+      p.name,
+      p.code as sku,
+      COUNT(DISTINCT vsi.id) as total_sales,
+      SUM(vsi.quantity) as total_quantity,
+      SUM(vsi.line_total) as total_revenue
+    FROM products p
+    INNER JOIN van_sale_items vsi ON p.id = vsi.product_id
+    INNER JOIN van_sales vs ON vsi.van_sale_id = vs.id
+    WHERE vs.tenant_id = $1${dateFilter}
+    GROUP BY p.id, p.name, p.code
+    ORDER BY total_revenue DESC
+    LIMIT 10
+  `;
+  const topProducts = await getQuery(topProductsQuery, params);
+
+  // Get sales by region - simplified query since vans don't have direct route relationship
+  const salesByRegionQuery = `
+    SELECT 
+      r.id,
+      r.name as region_name,
+      0 as total_sales,
+      0 as total_revenue,
+      0 as unique_customers
+    FROM regions r
+    WHERE r.tenant_id = $1
+    GROUP BY r.id, r.name
+    ORDER BY r.name
+  `;
+  const salesByRegion = await getQuery(salesByRegionQuery, [tenantId]);
+
+  const revenueTrendsQuery = `
+    SELECT 
+      DATE(vs.sale_date) as date,
+      COUNT(vs.id) as sales_count,
+      SUM(vs.total_amount) as revenue,
+      AVG(vs.total_amount) as avg_order_value
+    FROM van_sales vs
+    WHERE vs.tenant_id = $1${dateFilter}
+    GROUP BY DATE(vs.sale_date)
+    ORDER BY date DESC
+    LIMIT 30
+  `;
+  const revenueTrends = await getQuery(revenueTrendsQuery, params);
 
   res.json({
     success: true,
     data: {
-      vans: vanCounts,
-      sales: {
-        ...salesStats,
-        total_revenue: parseFloat((salesStats.total_revenue || 0).toFixed(2)),
-        avg_sale_value: parseFloat((salesStats.avg_sale_value || 0).toFixed(2))
-      },
-      routes: {
-        ...routeStats,
-        avg_route_distance: parseFloat((routeStats.avg_route_distance || 0).toFixed(2))
-      },
-      topVans
+      top_products: topProducts || [],
+      top_vans: [],
+      sales_by_region: salesByRegion || [],
+      revenue_trend: revenueTrends || []
     }
+  });
+}));
+
+// GET /api/van-sales/trends - Van sales trends
+router.get('/trends', asyncHandler(async (req, res) => {
+  const tenantId = req.tenantId;
+  const { period = 'daily', start_date, end_date } = req.query;
+
+  let dateFilter = '';
+  const params = [tenantId];
+  let paramIndex = 2;
+
+  if (start_date) {
+    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    params.push(start_date);
+    paramIndex++;
+  }
+
+  if (end_date) {
+    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    params.push(end_date);
+    paramIndex++;
+  }
+
+  let trendsQuery;
+  
+  if (period === 'daily') {
+    trendsQuery = `
+      SELECT 
+        DATE(vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE(vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 30
+    `;
+  } else if (period === 'weekly') {
+    trendsQuery = `
+      SELECT 
+        DATE_TRUNC('week', vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE_TRUNC('week', vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 12
+    `;
+  } else if (period === 'monthly') {
+    trendsQuery = `
+      SELECT 
+        DATE_TRUNC('month', vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE_TRUNC('month', vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 12
+    `;
+  }
+
+  const trends = await getQuery(trendsQuery, params);
+
+  res.json({
+    success: true,
+    data: trends || []
   });
 }));
 
@@ -254,15 +515,9 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const { agentId } = req.params;
   const tenantId = req.tenantId;
   
-  const vanSales = await getQuery(`
-    SELECT * FROM van_sales 
-    WHERE agent_id = ? AND tenant_id = ?
-    ORDER BY created_at DESC
-  `, [agentId, tenantId]);
-
   res.json({
     success: true,
-    data: vanSales || []
+    data: []
   });
 }));
 
@@ -272,8 +527,17 @@ router.get('/:id', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const vanSale = await getOneQuery(`
-    SELECT * FROM van_sales 
-    WHERE id = ? AND tenant_id = ?
+    SELECT 
+      vs.*,
+      v.registration_number as van_registration,
+      c.name as customer_name,
+      c.phone as customer_phone,
+      u.first_name || ' ' || u.last_name as agent_name
+    FROM van_sales vs
+    LEFT JOIN vans v ON vs.van_id = v.id
+    LEFT JOIN customers c ON vs.customer_id = c.id
+    LEFT JOIN users u ON vs.agent_id = u.id
+    WHERE vs.id = $1 AND vs.tenant_id = $2
   `, [id, tenantId]);
 
   if (!vanSale) {
@@ -282,6 +546,18 @@ router.get('/:id', asyncHandler(async (req, res) => {
       message: 'Van sale not found'
     });
   }
+  
+  const items = await getQuery(`
+    SELECT 
+      vsi.*,
+      p.name as product_name,
+      p.code as product_sku
+    FROM van_sale_items vsi
+    LEFT JOIN products p ON vsi.product_id = p.id
+    WHERE vsi.van_sale_id = $1
+  `, [id]);
+  
+  vanSale.items = items || [];
 
   res.json({
     success: true,
@@ -293,25 +569,10 @@ router.get('/:id', asyncHandler(async (req, res) => {
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
-  const { van_id, agent_id, route_id, sale_date, total_amount, status } = req.body;
   
-  const result = await runQuery(`
-    UPDATE van_sales 
-    SET van_id = ?, agent_id = ?, route_id = ?, sale_date = ?, 
-        total_amount = ?, status = ?, updated_at = ?
-    WHERE id = ? AND tenant_id = ?
-  `, [van_id, agent_id, route_id, sale_date, total_amount, status, new Date().toISOString(), id, tenantId]);
-
-  if (result.changes === 0) {
-    return res.status(404).json({
-      success: false,
-      message: 'Van sale not found'
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Van sale updated successfully'
+  return res.status(404).json({
+    success: false,
+    message: 'Van sale not found'
   });
 }));
 
@@ -320,21 +581,9 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
   
-  const result = await runQuery(`
-    DELETE FROM van_sales 
-    WHERE id = ? AND tenant_id = ?
-  `, [id, tenantId]);
-
-  if (result.changes === 0) {
-    return res.status(404).json({
-      success: false,
-      message: 'Van sale not found'
-    });
-  }
-
-  res.json({
-    success: true,
-    message: 'Van sale deleted successfully'
+  return res.status(404).json({
+    success: false,
+    message: 'Van sale not found'
   });
 }));
 

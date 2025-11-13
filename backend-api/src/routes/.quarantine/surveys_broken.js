@@ -164,7 +164,7 @@ router.post('/', requireFunction, async (req, res) => {
       INSERT INTO surveys (
         title, description, type, category, start_date, end_date,
         is_mandatory, target_audience, status, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       title, description, type, category, start_date, end_date,
       is_mandatory || false, target_audience, 'draft', req.user.id
@@ -179,7 +179,7 @@ router.post('/', requireFunction, async (req, res) => {
         INSERT INTO survey_questions (
           survey_id, question_text, question_type, is_required,
           question_order, options, validation_rules, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         surveyId, question.text, question.type, question.required || false,
         i + 1, JSON.stringify(question.options || []), 
@@ -230,7 +230,7 @@ router.put('/:id', requireFunction, async (req, res) => {
           is_mandatory = COALESCE(?, is_mandatory),
           target_audience = COALESCE(?, target_audience),
           status = COALESCE(?, status),
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
       title, description, type, category, start_date, end_date,
@@ -272,7 +272,7 @@ router.post('/:id/assign', requireFunction, async (req, res) => {
         const result = db.prepare(`
           INSERT INTO survey_assignments (
             survey_id, assignee_id, due_date, notes, status, assigned_at
-          ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+          ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         `).run(id, assigneeId, due_date, notes, 'assigned');
         
         assignments.push({ id: result.lastInsertRowid, assignee_id: assigneeId });
@@ -324,7 +324,7 @@ router.post('/:id/responses', requireFunction, async (req, res) => {
       INSERT INTO survey_responses (
         survey_id, respondent_id, responses, completion_time_minutes,
         status, submitted_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       id, req.user.id, JSON.stringify(responses), 
       completion_time_minutes, 'completed'
@@ -333,7 +333,7 @@ router.post('/:id/responses', requireFunction, async (req, res) => {
     // Update assignment status if exists
     db.prepare(`
       UPDATE survey_assignments 
-      SET status = 'completed', completed_at = datetime('now')
+      SET status = 'completed', completed_at = CURRENT_TIMESTAMP
       WHERE survey_id = ? AND assignee_id = ?
     `).run(id, req.user.id);
     

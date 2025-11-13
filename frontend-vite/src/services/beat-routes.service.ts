@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Beat Routes Service
  * Handles sales beat and route management
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface BeatRoute {
   id: string
@@ -52,9 +52,6 @@ export interface RouteCustomer {
 class BeatRoutesService {
   private readonly baseUrl = API_CONFIG.ENDPOINTS.BEAT_ROUTES.BASE
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   async getBeatRoutes(filter?: any): Promise<{ routes: BeatRoute[], total: number }> {
     try {

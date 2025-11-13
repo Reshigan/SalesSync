@@ -27,7 +27,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
         visit_code, agent_id, store_id, visit_type, visit_status,
         check_in_time, check_in_latitude, check_in_longitude,
         entrance_photo_url, store_traffic, store_cleanliness
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)`,
       [
         visitCode, req.user.id, storeId, visitType, 'in_progress',
         checkInLatitude, checkInLongitude, entrancePhotoUrl,
@@ -70,12 +70,12 @@ router.get('/visits', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND DATE(tmv.check_in_time) >= ?`;
+      sql += ` AND tmv.check_in_time::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND DATE(tmv.check_in_time) <= ?`;
+      sql += ` AND tmv.check_in_time::date <= ?`;
       params.push(endDate);
     }
     
@@ -160,12 +160,12 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
     await db.run(
       `UPDATE trade_marketing_visits 
        SET visit_status = 'completed', 
-           check_out_time = datetime('now'),
+           check_out_time = CURRENT_TIMESTAMP,
            check_out_latitude = ?,
            check_out_longitude = ?,
            exit_photo_url = ?,
            visit_notes = ?,
-           submitted_at = datetime('now')
+           submitted_at = CURRENT_TIMESTAMP
        WHERE id = ? AND agent_id = ?`,
       [checkOutLatitude, checkOutLongitude, exitPhotoUrl, visitNotes, req.params.id, req.user.id]
     );
@@ -395,7 +395,7 @@ router.post('/brand-activations', authMiddleware, async (req, res) => {
         activation_type, activation_status, setup_photo_url, activity_photos,
         samples_distributed, consumers_engaged, feedback_collected,
         store_manager_signature_url, activation_notes, activation_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         activationCode, visitId, campaignId, storeId, req.user.id,
         activationType, 'completed', setupPhotoUrl, JSON.stringify(activityPhotos),
@@ -459,12 +459,12 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     const params = [req.user.id];
     
     if (startDate) {
-      dateFilter += ` AND DATE(tmv.check_in_time) >= ?`;
+      dateFilter += ` AND tmv.check_in_time::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      dateFilter += ` AND DATE(tmv.check_in_time) <= ?`;
+      dateFilter += ` AND tmv.check_in_time::date <= ?`;
       params.push(endDate);
     }
     
@@ -608,60 +608,48 @@ router.get('/pos-materials', authMiddleware, async (req, res) => {
 router.get('/campaigns/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
+    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [campaignCounts, statusBreakdown, performance, topCampaigns] = await Promise.all([
-      // Campaign counts
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_campaigns,
-            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_campaigns,
-            COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns
-          FROM campaigns WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_campaigns,
+          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_campaigns,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_campaigns,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_campaigns
+        FROM campaigns WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      // Status breakdown
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT status, COUNT(*) as count
-          FROM campaigns WHERE tenant_id = ?
-          GROUP BY status
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
+      getQuery(`
+        SELECT status, COUNT(*)::int as count
+        FROM campaigns WHERE tenant_id = $1
+        GROUP BY status
+      `, [tenantId]).then(rows => rows || []),
       
-      // Performance metrics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT ce.id) as total_executions,
-            COUNT(DISTINCT ce.customer_id) as customers_reached,
-            SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END) as completed_executions,
-            AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END) as avg_conversion_value
-          FROM campaigns c
-          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-          WHERE c.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT ce.id)::int as total_executions,
+          COUNT(DISTINCT ce.customer_id)::int as customers_reached,
+          SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END)::int as completed_executions,
+          AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END)::float8 as avg_conversion_value
+        FROM campaigns c
+        LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+        WHERE c.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      // Top performing campaigns
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            c.id, c.name, c.type, c.status,
-            COUNT(DISTINCT ce.id) as execution_count,
-            COUNT(DISTINCT ce.customer_id) as customer_count,
-            SUM(COALESCE(ce.conversion_value, 0)) as total_conversion
-          FROM campaigns c
-          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-          WHERE c.tenant_id = ?
-          GROUP BY c.id, c.name, c.type, c.status
-          ORDER BY total_conversion DESC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          c.id, c.name, c.type, c.status,
+          COUNT(DISTINCT ce.id)::int as execution_count,
+          COUNT(DISTINCT ce.customer_id)::int as customer_count,
+          SUM(COALESCE(ce.conversion_value, 0))::float8 as total_conversion
+        FROM campaigns c
+        LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+        WHERE c.tenant_id = $1
+        GROUP BY c.id, c.name, c.type, c.status
+        ORDER BY total_conversion DESC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({

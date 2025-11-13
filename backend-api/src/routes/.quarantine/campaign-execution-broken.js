@@ -431,7 +431,7 @@ router.get('/:id/activities', async (req, res, next) => {
         pa.photos,
         pa.survey_data
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON pa.customer_id = c.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
@@ -690,14 +690,14 @@ router.get('/:id/performance', async (req, res, next) => {
     // Get daily performance trend
     const dailyTrend = await getQuery(
       `SELECT 
-        DATE(pa.activity_date) as date,
+        pa.activity_date::date as date,
         COUNT(pa.id) as activities,
         COUNT(CASE WHEN pa.status = 'completed' THEN 1 END) as completed,
         COALESCE(SUM(pa.samples_distributed), 0) as samples,
         COALESCE(SUM(pa.contacts_made), 0) as contacts
       FROM promoter_activities pa
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
-      GROUP BY DATE(pa.activity_date)
+      GROUP BY pa.activity_date::date
       ORDER BY date DESC
       LIMIT 30`,
       [id, req.tenantId]
@@ -714,7 +714,7 @@ router.get('/:id/performance', async (req, res, next) => {
         COALESCE(SUM(pa.contacts_made), 0) as contacts_made,
         AVG(CASE WHEN pa.status = 'completed' THEN 1.0 ELSE 0.0 END) * 100 as completion_rate
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
       GROUP BY pa.promoter_id, u.name

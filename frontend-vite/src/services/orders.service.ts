@@ -28,18 +28,22 @@ export interface Order {
 }
 
 export interface OrderItem {
-  id: string
-  order_id: string
+  id?: string
+  order_id?: string
   product_id: string
+  product_name?: string
+  product_code?: string
+  unit_of_measure?: string
   quantity: number
   unit_price: number
-  discount_amount: number
-  tax_amount: number
-  total_amount: number
+  discount_percentage?: number
+  tax_percentage?: number
+  line_total: number
   product?: {
     id: string
     name: string
     sku?: string
+    code?: string
   }
 }
 
@@ -73,7 +77,7 @@ class OrdersService {
   async getOrder(id: string): Promise<Order | null> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${id}`)
-      return response.data
+      return response.data.data?.order || response.data.data || null
     } catch (error) {
       console.error('Failed to fetch order:', error)
       return null
@@ -83,7 +87,7 @@ class OrdersService {
   async createOrder(order: Omit<Order, 'id' | 'created_at'>): Promise<Order> {
     try {
       const response = await apiClient.post(this.baseUrl, order)
-      return response.data
+      return response.data.data?.order || response.data.data
     } catch (error) {
       console.error('Failed to create order:', error)
       throw error
@@ -93,7 +97,7 @@ class OrdersService {
   async updateOrder(id: string, updates: Partial<Order>): Promise<Order> {
     try {
       const response = await apiClient.put(`${this.baseUrl}/${id}`, updates)
-      return response.data
+      return response.data.data?.order || response.data.data
     } catch (error) {
       console.error('Failed to update order:', error)
       throw error
@@ -111,11 +115,54 @@ class OrdersService {
 
   async getOrderItems(orderId: string): Promise<OrderItem[]> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/${orderId}/items`)
-      return response.data
+      const order = await this.getOrder(orderId)
+      return order?.items || []
     } catch (error) {
       console.error('Failed to fetch order items:', error)
       return []
+    }
+  }
+
+  async getCustomerOrders(customerId: string, limit: number = 10): Promise<Order[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/customer/${customerId}`, {
+        params: { limit }
+      })
+      return response.data.data?.orders || []
+    } catch (error) {
+      console.error('Failed to fetch customer orders:', error)
+      return []
+    }
+  }
+
+  async getSalesmanOrders(salesmanId: string, filters?: { date_from?: string, date_to?: string, limit?: number }): Promise<Order[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/salesman/${salesmanId}`, {
+        params: filters
+      })
+      return response.data.data?.orders || []
+    } catch (error) {
+      console.error('Failed to fetch salesman orders:', error)
+      return []
+    }
+  }
+
+  async getOrderStats(): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stats`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch order stats:', error)
+      return null
+    }
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<void> {
+    try {
+      await apiClient.put(`${this.baseUrl}/${id}/status`, { status })
+    } catch (error) {
+      console.error('Failed to update order status:', error)
+      throw error
     }
   }
 

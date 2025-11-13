@@ -296,22 +296,22 @@ class VanSalesService extends ApiService {
       }
     })
 
-    const response = await this.get(`${this.baseUrl}/sales?${params.toString()}`)
+    const response = await this.get(`${this.baseUrl}?${params.toString()}`)
     return response.data
   }
 
   async getVanSale(id: string) {
-    const response = await this.get(`${this.baseUrl}/sales/${id}`)
+    const response = await this.get(`${this.baseUrl}/${id}`)
     return response.data
   }
 
   async createVanSale(sale: Partial<VanSale>) {
-    const response = await this.post(`${this.baseUrl}/sales`, sale)
+    const response = await this.post(`${this.baseUrl}`, sale)
     return response.data
   }
 
   async updateVanSale(id: string, sale: Partial<VanSale>) {
-    const response = await this.put(`${this.baseUrl}/sales/${id}`, sale)
+    const response = await this.put(`${this.baseUrl}/${id}`, sale)
     return response.data
   }
 

@@ -143,7 +143,7 @@ router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
       INSERT INTO sample_distributions (
         product_id, agent_id, customer_id, quantity, distribution_date,
         notes, campaign_id, status, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       product_id, agent_id, customer_id, quantity, distribution_date || new Date().toISOString(),
       notes, campaign_id, 'allocated', req.user.id
@@ -158,7 +158,7 @@ router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
       INSERT INTO inventory_movements (
         product_id, movement_type, quantity, reference_type, reference_id,
         notes, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       product_id, 'sample_out', -quantity, 'sample_distribution', result.lastInsertRowid,
       `Sample distribution to agent ${agent.name}`, req.user.id
@@ -193,7 +193,7 @@ router.patch('/:id/status', requireFunction("general", "view"), async (req, res)
     // Update distribution status
     db.prepare(`
       UPDATE sample_distributions 
-      SET status = ?, notes = COALESCE(?, notes), feedback = ?, updated_at = datetime('now')
+      SET status = ?, notes = COALESCE(?, notes), feedback = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(status, notes, feedback, id);
     
@@ -207,7 +207,7 @@ router.patch('/:id/status', requireFunction("general", "view"), async (req, res)
         INSERT INTO inventory_movements (
           product_id, movement_type, quantity, reference_type, reference_id,
           notes, created_by, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         distribution.product_id, 'sample_return', distribution.quantity, 'sample_distribution', id,
         'Sample distribution cancelled - inventory returned', req.user.id
@@ -336,7 +336,7 @@ router.post('/bulk-allocate', requireFunction("campaigns", "view"), async (req, 
           INSERT INTO sample_distributions (
             product_id, agent_id, customer_id, quantity, distribution_date,
             notes, campaign_id, status, created_by, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         `).run(
           product_id, agent_id, customer_id, quantity, new Date().toISOString(),
           notes, campaign_id, 'allocated', req.user.id

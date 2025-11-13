@@ -68,7 +68,7 @@ router.post('/', requireFunction('surveys', 'create'), async (req, res) => {
       INSERT INTO surveys (
         tenant_id, title, description, type, category, 
         status, created_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [req.tenantId, title, description, type, category, 'draft', req.user.id]);
     
     const surveyId = result.lastInsertRowid;
@@ -80,7 +80,7 @@ router.post('/', requireFunction('surveys', 'create'), async (req, res) => {
         INSERT INTO survey_questions (
           tenant_id, survey_id, question_text, question_type, 
           is_required, question_order, options, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `, [
         req.tenantId, surveyId, question.text, question.type, 
         question.required || false, i + 1, JSON.stringify(question.options || [])
@@ -123,7 +123,7 @@ router.post('/:id/responses', requireFunction('surveys', 'create'), async (req, 
       INSERT INTO survey_responses (
         tenant_id, survey_id, respondent_id, responses, 
         status, submitted_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [req.tenantId, id, req.user.id, JSON.stringify(responses), 'completed']);
     
     res.status(201).json({

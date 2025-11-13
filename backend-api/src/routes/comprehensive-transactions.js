@@ -193,7 +193,7 @@ router.get('/transactions', async (req, res) => {
              0 as total_paid
       FROM transactions t
       LEFT JOIN customers c ON t.customer_id = c.id
-      LEFT JOIN agents a ON t.agent_id = a.id
+      LEFT JOIN users a ON t.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN currencies curr ON t.currency_id = curr.id
       LEFT JOIN transaction_items ti ON t.id = ti.transaction_id
@@ -233,12 +233,12 @@ router.get('/transactions', async (req, res) => {
     }
     
     if (date_from) {
-      query += ' AND DATE(t.transaction_date) >= ?';
+      query += ' AND t.transaction_date::date >= ?';
       params.push(date_from);
     }
     
     if (date_to) {
-      query += ' AND DATE(t.transaction_date) <= ?';
+      query += ' AND t.transaction_date::date <= ?';
       params.push(date_to);
     }
     
@@ -292,11 +292,11 @@ router.get('/transactions', async (req, res) => {
       countParams.push(payment_method);
     }
     if (date_from) {
-      countQuery += ' AND DATE(t.transaction_date) >= ?';
+      countQuery += ' AND t.transaction_date::date >= ?';
       countParams.push(date_from);
     }
     if (date_to) {
-      countQuery += ' AND DATE(t.transaction_date) <= ?';
+      countQuery += ' AND t.transaction_date::date <= ?';
       countParams.push(date_to);
     }
     if (amount_min) {
@@ -519,7 +519,7 @@ router.get('/transactions/:id', async (req, res) => {
              curr.decimal_places
       FROM transactions t
       LEFT JOIN customers c ON t.customer_id = c.id
-      LEFT JOIN agents a ON t.agent_id = a.id
+      LEFT JOIN users a ON t.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN currencies curr ON t.currency_id = curr.id
       WHERE t.id = ? AND t.tenant_id = ?
@@ -1090,14 +1090,14 @@ router.get('/dashboard', async (req, res) => {
     
     // Get daily transaction trends (last 30 days)
     const dailyTrends = await getQuery(`
-      SELECT DATE(transaction_date) as date,
+      SELECT transaction_date::date as date,
              COUNT(*) as transaction_count,
              COALESCE(SUM(total_amount), 0) as daily_revenue
       FROM transactions
       WHERE tenant_id = ? 
-        AND transaction_date >= DATE('now', '-30 days')
+        AND transaction_date >= CURRENT_DATE - INTERVAL '30 days'
         AND status = 'completed'
-      GROUP BY DATE(transaction_date)
+      GROUP BY transaction_date::date
       ORDER BY date DESC
     `, [req.user.tenantId]);
     

@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Commissions Service
  * Handles commission tracking and calculations
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Commission {
   id: string
@@ -54,9 +54,6 @@ export interface CommissionStats {
 class CommissionsService {
   private readonly baseUrl = API_CONFIG.ENDPOINTS.COMMISSIONS.BASE
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   async getCommissions(filter?: any): Promise<{ commissions: Commission[], total: number }> {
     try {

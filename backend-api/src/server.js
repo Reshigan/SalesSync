@@ -253,6 +253,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api/version', require('./routes/version'));
+
 // API Documentation will be set up after database initialization
 
 // Routes will be set up after database initialization
@@ -313,7 +315,7 @@ async function startServer() {
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
     const fieldOperationsRoutes = require('./routes/field-operations');
-    const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks');
+    // const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks'); // File doesn't exist
     const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
@@ -370,6 +372,8 @@ async function startServer() {
     const paymentRoutes = require('./routes/payments');
     const quoteRoutes = require('./routes/quotes');
     const approvalRoutes = require('./routes/approvals');
+    
+    const individualsRoutes = require('./routes/individuals');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -444,7 +448,7 @@ async function startServer() {
       logger.info('Using legacy field-operations route');
       app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
     }
-    app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes);
+    // app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes); // File doesn't exist on production
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
@@ -471,7 +475,6 @@ async function startServer() {
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
     
-    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
     const cashReconciliationEnhancedRoutes = require('./routes/cash-reconciliation-enhanced');
     const dashboardsRoutes = require('./routes/dashboards');
     app.use('/api/orders-enhanced', authTenantMiddleware, ordersEnhancedRoutes);
@@ -487,8 +490,38 @@ async function startServer() {
     app.use('/api/gps-tracking', authTenantMiddleware, gpsTrackingRoutes);
     app.use('/api/currency-system', authTenantMiddleware, currencySystemRoutes);
     app.use('/api/comprehensive-transactions', authTenantMiddleware, comprehensiveTransactionsRoutes);
-    app.use('/api/performance', performanceRoutes);
-    app.use('/api/notifications', notificationsRoutes);
+    app.use('/api/performance', authTenantMiddleware, performanceRoutes);
+    app.use('/api/notifications', authTenantMiddleware, notificationsRoutes);
+    
+    const statsRoutes = require('./routes/stats');
+    app.use('/api/stats', authTenantMiddleware, statsRoutes);
+    
+    const trendsRoutes = require('./routes/trends');
+    app.use('/api/trends', authTenantMiddleware, trendsRoutes);
+    
+    const agentLocationsRoutes = require('./routes/agent-locations');
+    app.use('/api/agent-locations', authTenantMiddleware, agentLocationsRoutes);
+    
+    const activeVisitsRoutes = require('./routes/active-visits');
+    app.use('/api/active-visits', authTenantMiddleware, activeVisitsRoutes);
+    
+    // Namespaced route aliases for module-specific endpoints
+    app.use('/api/field-operations/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/field-operations/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/field-operations/trends', authTenantMiddleware, trendsRoutes);
+    app.use('/api/field-operations/agents', authTenantMiddleware, agentsRoutes);
+    app.use('/api/field-operations/visits', authTenantMiddleware, visitsRoutes);
+    app.use('/api/field-operations/performance', authTenantMiddleware, performanceRoutes);
+    
+    app.use('/api/van-sales/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/van-sales/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/van-sales/trends', authTenantMiddleware, trendsRoutes);
+    app.use('/api/van-sales/routes', authTenantMiddleware, routesRoutes);
+    app.use('/api/van-sales/orders', authTenantMiddleware, ordersRoutes);
+    
+    app.use('/api/trade-marketing/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/trade-marketing/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/trade-marketing/trends', authTenantMiddleware, trendsRoutes);
     
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
@@ -499,9 +532,8 @@ async function startServer() {
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
 
     // Monitoring routes
-    const { router: monitoringRoutes, trackRequest } = require('./routes/monitoring');
-    app.use(trackRequest); // Global request tracking
-    app.use('/api/monitoring', monitoringRoutes);
+    const monitoringRoutes = require('./routes/monitoring');
+    app.use('/api/monitoring', authTenantMiddleware, monitoringRoutes);
 
     // Backup routes
     const backupRoutes = require('./routes/backup');
@@ -512,6 +544,9 @@ async function startServer() {
     app.use('/api/payments', authTenantMiddleware, paymentRoutes);
     app.use('/api/quotes', authTenantMiddleware, quoteRoutes);
     app.use('/api/approvals', authTenantMiddleware, approvalRoutes);
+    
+    logger.info('Mounting fraud prevention routes...');
+    app.use('/api/individuals', authTenantMiddleware, individualsRoutes);
 
     logger.info('Routes configured successfully');
 
@@ -570,6 +605,7 @@ async function startServer() {
       }
     });
   } catch (error) {
+    console.error('Failed to start server:', error);
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
