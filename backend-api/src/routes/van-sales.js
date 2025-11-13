@@ -37,30 +37,36 @@ router.get('/', asyncHandler(async (req, res) => {
   `;
   
   const params = [tenantId];
+  let paramIndex = 2;
   
   if (start_date) {
-    query += ` AND vs.sale_date >= $1`;
+    query += ` AND vs.sale_date >= $${paramIndex}`;
     params.push(start_date);
+    paramIndex++;
   }
   
   if (end_date) {
-    query += ` AND vs.sale_date <= $1`;
+    query += ` AND vs.sale_date <= $${paramIndex}`;
     params.push(end_date);
+    paramIndex++;
   }
   
   if (van_id) {
-    query += ` AND vs.van_id = $1`;
+    query += ` AND vs.van_id = $${paramIndex}`;
     params.push(van_id);
+    paramIndex++;
   }
   
   if (agent_id) {
-    query += ` AND vs.agent_id = $1`;
+    query += ` AND vs.agent_id = $${paramIndex}`;
     params.push(agent_id);
+    paramIndex++;
   }
   
   if (status) {
-    query += ` AND vs.status = $1`;
+    query += ` AND vs.status = $${paramIndex}`;
     params.push(status);
+    paramIndex++;
   }
   
   query += ` ORDER BY vs.created_at DESC`;
@@ -124,7 +130,7 @@ router.post('/', asyncHandler(async (req, res) => {
       sale_type, subtotal, tax_amount, discount_amount, total_amount, 
       amount_paid, amount_due, payment_method, payment_reference,
       location_lat, location_lng, notes, status, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id`,
     [
       req.tenantId,
       saleNumber,
@@ -149,7 +155,7 @@ router.post('/', asyncHandler(async (req, res) => {
     ]
   );
 
-  const saleId = saleResult.lastID;
+  const saleId = saleResult.rows?.[0]?.id || saleResult.lastID;
 
   for (const item of items) {
     const itemSubtotal = item.quantity * item.unit_price;
@@ -262,15 +268,18 @@ router.get('/stats', asyncHandler(async (req, res) => {
   `;
   
   const salesParams = [tenantId];
+  let salesParamIndex = 2;
   
   if (start_date) {
-    salesQuery += ` AND sale_date >= $1`;
+    salesQuery += ` AND sale_date >= $${salesParamIndex}`;
     salesParams.push(start_date);
+    salesParamIndex++;
   }
   
   if (end_date) {
-    salesQuery += ` AND sale_date <= $1`;
+    salesQuery += ` AND sale_date <= $${salesParamIndex}`;
     salesParams.push(end_date);
+    salesParamIndex++;
   }
   
   const salesStats = await getOneQuery(salesQuery, salesParams);
