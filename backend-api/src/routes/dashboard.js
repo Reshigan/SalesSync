@@ -37,7 +37,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
       getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [req.tenantId]),
       getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE', [req.tenantId]),
       getOneQuery('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE AND order_status != "cancelled"', [req.tenantId]),
-      getOneQuery('SELECT COUNT(*) as count FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND status = ?', [req.tenantId, 'active'])
+      getOneQuery("SELECT COUNT(*) as count FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND status = ?", [req.tenantId, 'active'])
     ]);
 
     // Get recent orders
