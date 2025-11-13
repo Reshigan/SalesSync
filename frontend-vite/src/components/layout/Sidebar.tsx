@@ -23,153 +23,368 @@ import {
 } from 'lucide-react'
 import { useAuthStore, hasPermission } from '../../store/auth.store'
 import { PERMISSIONS } from '../../types/auth.types'
-import { useModule } from '../../contexts/ModuleContext'
-import ModuleSwitcher from './ModuleSwitcher'
-import CollapsibleSection from './CollapsibleSection'
-import type { ModuleType } from '../../contexts/ModuleContext'
 
-const moduleNavigation: Record<ModuleType, any> = {
-  operations: {
-    workflows: [
-      { name: 'Van Sales Workflow', href: '/van-sales/workflow', permission: PERMISSIONS.VIEW_VAN_SALES },
-      { name: 'Agent Workflow', href: '/field-agents/workflow', permission: PERMISSIONS.VIEW_FIELD_OPERATIONS },
-      { name: 'Stock Count Workflow', href: '/inventory/stock-count', permission: PERMISSIONS.VIEW_INVENTORY },
-    ],
-    transactions: [
-      { name: 'Van Sales Orders', href: '/van-sales/management', permission: PERMISSIONS.MANAGE_VAN_SALES },
-      { name: 'Field Visits', href: '/field-operations/visits', permission: PERMISSIONS.VIEW_FIELD_OPERATIONS },
-      { name: 'Board Placements', href: '/field-operations/boards', permission: PERMISSIONS.MANAGE_BOARD_PLACEMENTS },
-      { name: 'Product Distributions', href: '/field-operations/products', permission: PERMISSIONS.MANAGE_PRODUCT_DISTRIBUTION },
-      { name: 'Inventory Management', href: '/inventory/management', permission: PERMISSIONS.MANAGE_INVENTORY },
-    ],
-    masters: [
-      { name: 'Warehouses', href: '/inventory/warehouses', permission: PERMISSIONS.MANAGE_INVENTORY },
-      { name: 'Routes', href: '/van-sales/routes', permission: PERMISSIONS.MANAGE_ROUTES },
-      { name: 'Field Agents', href: '/field-operations/agents', permission: PERMISSIONS.MANAGE_FIELD_AGENTS },
-      { name: 'Customers', href: '/customers', permission: PERMISSIONS.VIEW_CUSTOMERS },
-      { name: 'Products', href: '/products', permission: PERMISSIONS.VIEW_PRODUCTS },
-      { name: 'Territories', href: '/admin/territories', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'Brands', href: '/admin/brands', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-    ],
-    configuration: [
-      { name: 'Visit Task Templates', href: '/admin/visit-task-templates', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'Commission Rules', href: '/admin/commission-rules', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'GPS Thresholds', href: '/admin/gps-thresholds', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'Survey Builder', href: '/admin/surveys', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'Product Types', href: '/admin/product-types', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-    ],
-    reports: [
-      { name: 'Van Sales Dashboard', href: '/van-sales/dashboard', permission: PERMISSIONS.VIEW_VAN_SALES },
-      { name: 'Field Operations Dashboard', href: '/field-operations/dashboard', permission: PERMISSIONS.VIEW_FIELD_OPERATIONS },
-      { name: 'Live Mapping', href: '/field-operations/mapping', permission: PERMISSIONS.VIEW_AGENT_LOCATIONS },
-      { name: 'Commission Tracking', href: '/field-operations/commission', permission: PERMISSIONS.VIEW_COMMISSIONS },
-      { name: 'Inventory Reports', href: '/inventory/reports', permission: PERMISSIONS.VIEW_INVENTORY_REPORTS },
+const navigation = [
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    permission: null,
+  },
+  {
+    name: 'Analytics',
+    href: '/analytics',
+    icon: BarChart3,
+    permission: PERMISSIONS.VIEW_ANALYTICS,
+  },
+  {
+    name: 'Van Sales',
+    href: '/van-sales',
+    icon: Truck,
+    permission: PERMISSIONS.VIEW_VAN_SALES,
+    children: [
+      {
+        name: 'Sales Workflow',
+        href: '/van-sales/workflow',
+        permission: PERMISSIONS.VIEW_VAN_SALES,
+      },
+      {
+        name: 'Dashboard',
+        href: '/van-sales/dashboard',
+        permission: PERMISSIONS.VIEW_VAN_SALES,
+      },
+      {
+        name: 'Management',
+        href: '/van-sales/management',
+        permission: PERMISSIONS.MANAGE_VAN_SALES,
+      },
+      {
+        name: 'Route Management',
+        href: '/van-sales/routes',
+        permission: PERMISSIONS.MANAGE_ROUTES,
+      },
+      {
+        name: 'Inventory Tracking',
+        href: '/van-sales/inventory',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
     ],
   },
-  sales: {
-    workflows: [],
-    transactions: [
-      { name: 'Orders', href: '/orders', permission: PERMISSIONS.VIEW_ORDERS },
-      { name: 'Invoices', href: '/finance/invoices', permission: PERMISSIONS.VIEW_ORDERS },
-      { name: 'Payments', href: '/finance/payments', permission: PERMISSIONS.VIEW_ORDERS },
-    ],
-    masters: [],
-    reports: [
-      { name: 'Sales Dashboard', href: '/sales/dashboard', permission: PERMISSIONS.VIEW_ORDERS },
-      { name: 'Order Analytics', href: '/orders/dashboard', permission: PERMISSIONS.VIEW_ORDERS },
-    ],
-  },
-  marketing: {
-    workflows: [
-      { name: 'Activation Workflow', href: '/trade-marketing/activation', permission: PERMISSIONS.VIEW_TRADE_MARKETING },
-    ],
-    transactions: [
-      { name: 'Trade Marketing', href: '/trade-marketing/promotions', permission: PERMISSIONS.MANAGE_PROMOTIONS },
-      { name: 'Retailer Incentives', href: '/trade-marketing/incentives', permission: PERMISSIONS.MANAGE_INCENTIVES },
-      { name: 'Promotions', href: '/promotions/management', permission: PERMISSIONS.MANAGE_PROMOTIONS },
-      { name: 'Campaigns', href: '/campaigns/management', permission: PERMISSIONS.MANAGE_CAMPAIGNS },
-    ],
-    masters: [
-      { name: 'Target Audiences', href: '/campaigns/audiences', permission: PERMISSIONS.MANAGE_AUDIENCES },
-    ],
-    reports: [
-      { name: 'Market Analysis', href: '/trade-marketing/analysis', permission: PERMISSIONS.VIEW_MARKET_ANALYSIS },
-      { name: 'Trade Spend', href: '/trade-marketing/spend', permission: PERMISSIONS.MANAGE_TRADE_SPEND },
-      { name: 'Promotions Dashboard', href: '/promotions/dashboard', permission: PERMISSIONS.VIEW_PROMOTIONS },
-      { name: 'Campaign Performance', href: '/campaigns/performance', permission: PERMISSIONS.VIEW_CAMPAIGN_PERFORMANCE },
-      { name: 'A/B Testing', href: '/campaigns/testing', permission: PERMISSIONS.MANAGE_AB_TESTING },
-    ],
-  },
-  crm: {
-    workflows: [],
-    transactions: [
-      { name: 'Customers', href: '/customers', permission: PERMISSIONS.VIEW_CUSTOMERS },
-      { name: 'KYC Cases', href: '/kyc/management', permission: PERMISSIONS.MANAGE_KYC },
-      { name: 'Surveys', href: '/surveys/management', permission: PERMISSIONS.MANAGE_SURVEYS },
-    ],
-    masters: [],
-    reports: [
-      { name: 'Customer Dashboard', href: '/customers/dashboard', permission: PERMISSIONS.VIEW_CUSTOMERS },
-      { name: 'KYC Dashboard', href: '/kyc/dashboard', permission: PERMISSIONS.VIEW_KYC },
-      { name: 'KYC Reports', href: '/kyc/reports', permission: PERMISSIONS.VIEW_KYC_REPORTS },
-      { name: 'Survey Dashboard', href: '/surveys/dashboard', permission: PERMISSIONS.VIEW_SURVEYS },
-    ],
-  },
-  finance: {
-    workflows: [],
-    transactions: [
-      { name: 'Commission Payouts', href: '/field-operations/commission', permission: PERMISSIONS.VIEW_COMMISSIONS },
-    ],
-    masters: [],
-    reports: [
-      { name: 'Finance Dashboard', href: '/finance/dashboard', permission: PERMISSIONS.VIEW_ANALYTICS },
+  {
+    name: 'Field Operations',
+    href: '/field-operations',
+    icon: Route,
+    permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+    children: [
+      {
+        name: 'Agent Workflow',
+        href: '/field-agents/workflow',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+      },
+      {
+        name: 'Dashboard',
+        href: '/field-operations/dashboard',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+      },
+      {
+        name: 'Agent Management',
+        href: '/field-operations/agents',
+        permission: PERMISSIONS.MANAGE_FIELD_AGENTS,
+      },
+      {
+        name: 'Visit Management',
+        href: '/field-operations/visits',
+        permission: PERMISSIONS.VIEW_FIELD_OPERATIONS,
+      },
+      {
+        name: 'Live Mapping',
+        href: '/field-operations/mapping',
+        permission: PERMISSIONS.VIEW_AGENT_LOCATIONS,
+      },
+      {
+        name: 'Board Placement',
+        href: '/field-operations/boards',
+        permission: PERMISSIONS.MANAGE_BOARD_PLACEMENTS,
+      },
+      {
+        name: 'Product Distribution',
+        href: '/field-operations/products',
+        permission: PERMISSIONS.MANAGE_PRODUCT_DISTRIBUTION,
+      },
+      {
+        name: 'Commission Tracking',
+        href: '/field-operations/commission',
+        permission: PERMISSIONS.VIEW_COMMISSIONS,
+      },
     ],
   },
-  admin: {
-    workflows: [],
-    transactions: [
-      { name: 'User Management', href: '/admin/users', permission: PERMISSIONS.VIEW_USERS },
-      { name: 'System Settings', href: '/admin/settings', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-    ],
-    masters: [],
-    reports: [
-      { name: 'Admin Dashboard', href: '/admin/dashboard', permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS },
-      { name: 'Audit Logs', href: '/admin/audit', permission: PERMISSIONS.VIEW_AUDIT_LOGS },
-      { name: 'SuperAdmin', href: '/superadmin/tenants', permission: null, requiresRole: 'superadmin' },
+  {
+    name: 'KYC Management',
+    href: '/kyc',
+    icon: CreditCard,
+    permission: PERMISSIONS.VIEW_KYC,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/kyc/dashboard',
+        permission: PERMISSIONS.VIEW_KYC,
+      },
+      {
+        name: 'Management',
+        href: '/kyc/management',
+        permission: PERMISSIONS.MANAGE_KYC,
+      },
+      {
+        name: 'Reports',
+        href: '/kyc/reports',
+        permission: PERMISSIONS.VIEW_KYC_REPORTS,
+      },
     ],
   },
-}
-
-const globalNavigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: null },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3, permission: PERMISSIONS.VIEW_ANALYTICS },
+  {
+    name: 'Surveys',
+    href: '/surveys',
+    icon: MessageSquare,
+    permission: PERMISSIONS.VIEW_SURVEYS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/surveys/dashboard',
+        permission: PERMISSIONS.VIEW_SURVEYS,
+      },
+      {
+        name: 'Management',
+        href: '/surveys/management',
+        permission: PERMISSIONS.MANAGE_SURVEYS,
+      },
+    ],
+  },
+  {
+    name: 'Inventory',
+    href: '/inventory',
+    icon: Package,
+    permission: PERMISSIONS.VIEW_INVENTORY,
+    children: [
+      {
+        name: 'Stock Count Workflow',
+        href: '/inventory/stock-count',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
+      {
+        name: 'Dashboard',
+        href: '/inventory/dashboard',
+        permission: PERMISSIONS.VIEW_INVENTORY,
+      },
+      {
+        name: 'Management',
+        href: '/inventory/management',
+        permission: PERMISSIONS.MANAGE_INVENTORY,
+      },
+      {
+        name: 'Reports',
+        href: '/inventory/reports',
+        permission: PERMISSIONS.VIEW_INVENTORY_REPORTS,
+      },
+    ],
+  },
+  {
+    name: 'Promotions',
+    href: '/promotions',
+    icon: Gift,
+    permission: PERMISSIONS.VIEW_PROMOTIONS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/promotions/dashboard',
+        permission: PERMISSIONS.VIEW_PROMOTIONS,
+      },
+      {
+        name: 'Management',
+        href: '/promotions/management',
+        permission: PERMISSIONS.MANAGE_PROMOTIONS,
+      },
+    ],
+  },
+  {
+    name: 'Trade Marketing',
+    href: '/trade-marketing',
+    icon: TrendingUp,
+    permission: PERMISSIONS.VIEW_TRADE_MARKETING,
+    children: [
+      {
+        name: 'Activation Workflow',
+        href: '/trade-marketing/activation',
+        permission: PERMISSIONS.VIEW_TRADE_MARKETING,
+      },
+      {
+        name: 'Promotions',
+        href: '/trade-marketing/promotions',
+        permission: PERMISSIONS.MANAGE_PROMOTIONS,
+      },
+      {
+        name: 'Retailer Incentives',
+        href: '/trade-marketing/incentives',
+        permission: PERMISSIONS.MANAGE_INCENTIVES,
+      },
+      {
+        name: 'Market Analysis',
+        href: '/trade-marketing/analysis',
+        permission: PERMISSIONS.VIEW_MARKET_ANALYSIS,
+      },
+      {
+        name: 'Trade Spend',
+        href: '/trade-marketing/spend',
+        permission: PERMISSIONS.MANAGE_TRADE_SPEND,
+      },
+    ],
+  },
+  {
+    name: 'Campaigns',
+    href: '/campaigns',
+    icon: Megaphone,
+    permission: PERMISSIONS.VIEW_CAMPAIGNS,
+    children: [
+      {
+        name: 'Campaign Management',
+        href: '/campaigns/management',
+        permission: PERMISSIONS.MANAGE_CAMPAIGNS,
+      },
+      {
+        name: 'Target Audiences',
+        href: '/campaigns/audiences',
+        permission: PERMISSIONS.MANAGE_AUDIENCES,
+      },
+      {
+        name: 'Performance Tracking',
+        href: '/campaigns/performance',
+        permission: PERMISSIONS.VIEW_CAMPAIGN_PERFORMANCE,
+      },
+      {
+        name: 'A/B Testing',
+        href: '/campaigns/testing',
+        permission: PERMISSIONS.MANAGE_AB_TESTING,
+      },
+    ],
+  },
+  {
+    name: 'Finance',
+    href: '/finance',
+    icon: DollarSign,
+    permission: PERMISSIONS.VIEW_ANALYTICS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/finance/dashboard',
+        permission: PERMISSIONS.VIEW_ANALYTICS,
+      },
+      {
+        name: 'Invoices',
+        href: '/finance/invoices',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Payments',
+        href: '/finance/payments',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+    ],
+  },
+  {
+    name: 'Sales',
+    href: '/sales',
+    icon: TrendingUp,
+    permission: PERMISSIONS.VIEW_ORDERS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/sales/dashboard',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Orders',
+        href: '/orders',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Order Analytics',
+        href: '/orders/dashboard',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+    ],
+  },
+  {
+    name: 'Customers',
+    href: '/customers',
+    icon: Building2,
+    permission: PERMISSIONS.VIEW_CUSTOMERS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/customers/dashboard',
+        permission: PERMISSIONS.VIEW_CUSTOMERS,
+      },
+      {
+        name: 'All Customers',
+        href: '/customers',
+        permission: PERMISSIONS.VIEW_CUSTOMERS,
+      },
+    ],
+  },
+  {
+    name: 'Products',
+    href: '/products',
+    icon: Package,
+    permission: PERMISSIONS.VIEW_PRODUCTS,
+  },
+  {
+    name: 'SuperAdmin',
+    href: '/superadmin/tenants',
+    icon: Shield,
+    permission: null, // We'll check role directly in the component
+    requiresRole: 'superadmin',
+  },
+  {
+    name: 'Administration',
+    href: '/admin',
+    icon: Settings,
+    permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+    children: [
+      {
+        name: 'Dashboard',
+        href: '/admin/dashboard',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'User Management',
+        href: '/admin/users',
+        permission: PERMISSIONS.VIEW_USERS,
+      },
+      {
+        name: 'System Settings',
+        href: '/admin/settings',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Audit Logs',
+        href: '/admin/audit',
+        permission: PERMISSIONS.VIEW_AUDIT_LOGS,
+      },
+    ],
+  },
 ]
 
 export default function Sidebar() {
   const { user } = useAuthStore()
-  const { currentModule, setCurrentModule } = useModule()
 
   const isNavItemVisible = (item: any) => {
+    // Check if item requires specific role
     if (item.requiresRole && user?.role !== item.requiresRole) {
       return false
     }
+    // Check permission
     if (!item.permission) return true
     return hasPermission(item.permission)
   }
-
-  const renderNavLink = (item: any) => (
-    <NavLink
-      key={item.name}
-      to={item.href}
-      className={({ isActive }) =>
-        `nav-link text-sm ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
-      }
-    >
-      {item.name}
-    </NavLink>
-  )
-
-  const currentModuleNav = moduleNavigation[currentModule]
 
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white border-r border-gray-200">
@@ -183,84 +398,47 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Module Switcher */}
-      <div className="px-4 py-3 border-b border-gray-200">
-        <ModuleSwitcher 
-          currentModule={currentModule} 
-          onModuleChange={setCurrentModule} 
-        />
-      </div>
-
       {/* Navigation */}
       <div className="flex-1 flex flex-col overflow-y-auto">
-        <nav className="flex-1 px-2 py-4 space-y-2">
-          {/* Global Navigation */}
-          {globalNavigation.map((item) => {
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          {navigation.map((item) => {
             if (!isNavItemVisible(item)) return null
 
             return (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  `nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
-                }
-              >
-                <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                {item.name}
-              </NavLink>
+              <div key={item.name}>
+                <NavLink
+                  to={item.href}
+                  className={({ isActive }) =>
+                    `nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
+                  }
+                >
+                  <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                  {item.name}
+                </NavLink>
+
+                {/* Sub-navigation */}
+                {item.children && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {item.children.map((child) => {
+                      if (!isNavItemVisible(child)) return null
+
+                      return (
+                        <NavLink
+                          key={child.name}
+                          to={child.href}
+                          className={({ isActive }) =>
+                            `nav-link text-sm ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
+                          }
+                        >
+                          {child.name}
+                        </NavLink>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )
           })}
-
-          {/* Module-specific Navigation */}
-          {currentModuleNav && (
-            <>
-              {/* Workflows Section */}
-              {currentModuleNav.workflows.length > 0 && (
-                <CollapsibleSection title="Workflows" defaultExpanded={true}>
-                  {currentModuleNav.workflows
-                    .filter(isNavItemVisible)
-                    .map(renderNavLink)}
-                </CollapsibleSection>
-              )}
-
-              {/* Transactions Section */}
-              {currentModuleNav.transactions.length > 0 && (
-                <CollapsibleSection title="Transactions" defaultExpanded={false}>
-                  {currentModuleNav.transactions
-                    .filter(isNavItemVisible)
-                    .map(renderNavLink)}
-                </CollapsibleSection>
-              )}
-
-              {/* Masters/Setup Section */}
-              {currentModuleNav.masters.length > 0 && (
-                <CollapsibleSection title="Masters/Setup" defaultExpanded={false}>
-                  {currentModuleNav.masters
-                    .filter(isNavItemVisible)
-                    .map(renderNavLink)}
-                </CollapsibleSection>
-              )}
-
-              {/* Configuration Section */}
-              {currentModuleNav.configuration && currentModuleNav.configuration.length > 0 && (
-                <CollapsibleSection title="Configuration" defaultExpanded={false}>
-                  {currentModuleNav.configuration
-                    .filter(isNavItemVisible)
-                    .map(renderNavLink)}
-                </CollapsibleSection>
-              )}
-
-              {/* Reports Section */}
-              {currentModuleNav.reports.length > 0 && (
-                <CollapsibleSection title="Reports" defaultExpanded={false}>
-                  {currentModuleNav.reports
-                    .filter(isNavItemVisible)
-                    .map(renderNavLink)}
-                </CollapsibleSection>
-              )}
-            </>
-          )}
         </nav>
 
         {/* User info */}

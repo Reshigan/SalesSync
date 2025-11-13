@@ -440,6 +440,136 @@ router.post('/', async (req, res) => {
  *       404:
  *         description: Product not found
  */
+router.get('/stats', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const db = getDatabase();
+    
+    // Get all statistics in parallel for performance
+    const [
+      totalProducts,
+      activeProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      totalValue,
+      byCategory,
+      byBrand
+    ] = await Promise.all([
+      // Total products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ?',
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Active products count
+      new Promise((resolve, reject) => {
+        db.get(
+          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?',
+          [tenantId, 'active'],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Low stock products (less than reorder level or less than 10)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) > 0
+           AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Out of stock products
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT COUNT(DISTINCT p.id) as count 
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ? 
+           AND p.status = 'active'
+           AND COALESCE(i.quantity_on_hand, 0) = 0`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.count)
+        );
+      }),
+      
+      // Total inventory value (cost_price * quantity)
+      new Promise((resolve, reject) => {
+        db.get(
+          `SELECT SUM(p.cost_price * COALESCE(i.quantity_on_hand, 0)) as total
+           FROM products p
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE p.tenant_id = ?`,
+          [tenantId],
+          (err, row) => err ? reject(err) : resolve(row.total || 0)
+        );
+      }),
+      
+      // Products by category
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT c.id, c.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM categories c
+           LEFT JOIN products p ON c.id = p.category_id AND p.tenant_id = c.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE c.tenant_id = ?
+           GROUP BY c.id, c.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      }),
+      
+      // Products by brand
+      new Promise((resolve, reject) => {
+        db.all(
+          `SELECT b.id, b.name, COUNT(p.id) as productCount,
+                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
+           FROM brands b
+           LEFT JOIN products p ON b.id = p.brand_id AND p.tenant_id = b.tenant_id
+           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
+           WHERE b.tenant_id = ?
+           GROUP BY b.id, b.name
+           ORDER BY productCount DESC`,
+          [tenantId],
+          (err, rows) => err ? reject(err) : resolve(rows || [])
+        );
+      })
+    ]);
+    
+    res.json({
+      success: true,
+      data: {
+        totalProducts,
+        activeProducts,
+        inactiveProducts: totalProducts - activeProducts,
+        lowStockProducts,
+        outOfStockProducts,
+        totalValue: parseFloat(totalValue.toFixed(2)),
+        byCategory,
+        byBrand
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching product stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch product statistics',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
@@ -735,135 +865,7 @@ router.get('/brands/list', async (req, res) => {
  *                     byBrand:
  *                       type: array
  */
-router.get('/stats', async (req, res) => {
-  try {
-    const tenantId = req.user.tenantId;
-    const db = getDatabase();
-    
-    // Get all statistics in parallel for performance
-    const [
-      totalProducts,
-      activeProducts,
-      lowStockProducts,
-      outOfStockProducts,
-      totalValue,
-      byCategory,
-      byBrand
-    ] = await Promise.all([
-      // Total products count
-      new Promise((resolve, reject) => {
-        db.get(
-          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ?',
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Active products count
-      new Promise((resolve, reject) => {
-        db.get(
-          'SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?',
-          [tenantId, 'active'],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Low stock products (less than reorder level or less than 10)
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT COUNT(DISTINCT p.id) as count 
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ? 
-           AND p.status = 'active'
-           AND COALESCE(i.quantity_on_hand, 0) > 0
-           AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Out of stock products
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT COUNT(DISTINCT p.id) as count 
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ? 
-           AND p.status = 'active'
-           AND COALESCE(i.quantity_on_hand, 0) = 0`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.count)
-        );
-      }),
-      
-      // Total inventory value (cost_price * quantity)
-      new Promise((resolve, reject) => {
-        db.get(
-          `SELECT SUM(p.cost_price * COALESCE(i.quantity_on_hand, 0)) as total
-           FROM products p
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE p.tenant_id = ?`,
-          [tenantId],
-          (err, row) => err ? reject(err) : resolve(row.total || 0)
-        );
-      }),
-      
-      // Products by category
-      new Promise((resolve, reject) => {
-        db.all(
-          `SELECT c.id, c.name, COUNT(p.id) as productCount,
-                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
-           FROM categories c
-           LEFT JOIN products p ON c.id = p.category_id AND p.tenant_id = c.tenant_id
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE c.tenant_id = ?
-           GROUP BY c.id, c.name
-           ORDER BY productCount DESC`,
-          [tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      }),
-      
-      // Products by brand
-      new Promise((resolve, reject) => {
-        db.all(
-          `SELECT b.id, b.name, COUNT(p.id) as productCount,
-                  SUM(COALESCE(i.quantity_on_hand, 0)) as totalStock
-           FROM brands b
-           LEFT JOIN products p ON b.id = p.brand_id AND p.tenant_id = b.tenant_id
-           LEFT JOIN inventory_stock i ON p.id = i.product_id AND i.tenant_id = p.tenant_id
-           WHERE b.tenant_id = ?
-           GROUP BY b.id, b.name
-           ORDER BY productCount DESC`,
-          [tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      })
-    ]);
-    
-    res.json({
-      success: true,
-      data: {
-        totalProducts,
-        activeProducts,
-        inactiveProducts: totalProducts - activeProducts,
-        lowStockProducts,
-        outOfStockProducts,
-        totalValue: parseFloat(totalValue.toFixed(2)),
-        byCategory,
-        byBrand
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching product stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch product statistics',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
+
 
 /**
  * @swagger

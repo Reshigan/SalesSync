@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
-  Navigation, ShoppingCart, DollarSign, FileText, WifiOff, Wifi
+  Navigation, ShoppingCart, DollarSign, FileText
 } from 'lucide-react';
 import { apiClient } from '../../services/api.service';
-import { useOnlineStatus } from '../../hooks/useOnlineStatus';
-import { offlineQueueService } from '../../services/offline-queue.service';
 
 interface Customer {
   id: string;
@@ -37,11 +35,9 @@ interface OrderItem {
 
 const VanSalesWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
-  const isOnline = useOnlineStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [queuedOrdersCount, setQueuedOrdersCount] = useState(0);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -79,37 +75,15 @@ const VanSalesWorkflowPage: React.FC = () => {
     }
   }, [currentStep]);
 
-  useEffect(() => {
-    const updateQueueCount = () => {
-      setQueuedOrdersCount(offlineQueueService.getQueueCount());
-    };
-    
-    updateQueueCount();
-    const interval = setInterval(updateQueueCount, 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (isOnline && queuedOrdersCount > 0) {
-      console.log('🔄 Back online! Processing queued orders...');
-      offlineQueueService.processQueue(apiClient).then(() => {
-        setQueuedOrdersCount(offlineQueueService.getQueueCount());
-      });
-    }
-  }, [isOnline, queuedOrdersCount]);
-
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await apiClient.get('/customers', {
+      const response = await apiClient.get('/api/customers', {
         params: { limit: 100 }
       });
       setCustomers(response.data.customers || []);
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to load customers';
-      setError(`${errorMessage}. Please check your connection and try again.`);
+      setError(err.message || 'Failed to load customers');
     } finally {
       setLoading(false);
     }
@@ -118,14 +92,12 @@ const VanSalesWorkflowPage: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      setError(null);
-      const response = await apiClient.get('/products', {
+      const response = await apiClient.get('/api/products', {
         params: { limit: 100 }
       });
       setProducts(response.data.products || []);
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to load products';
-      setError(`${errorMessage}. Please check your connection and try again.`);
+      setError(err.message || 'Failed to load products');
     } finally {
       setLoading(false);
     }
@@ -147,12 +119,6 @@ const VanSalesWorkflowPage: React.FC = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         setGpsLocation({ lat: latitude, lng: longitude, accuracy });
-
-        if (accuracy > 100) {
-          setError(`GPS accuracy is low (${accuracy.toFixed(0)}m). Please wait for better signal or move to an open area.`);
-          setLoading(false);
-          return;
-        }
 
         if (selectedCustomer) {
           const dist = calculateDistance(
@@ -197,13 +163,6 @@ const VanSalesWorkflowPage: React.FC = () => {
 
   const handleAddProduct = (product: Product) => {
     const existingItem = orderItems.find(item => item.product_id === product.id);
-    const currentQuantity = existingItem ? existingItem.quantity : 0;
-    const newQuantity = currentQuantity + 1;
-    
-    if (newQuantity > product.stock_quantity) {
-      setError(`Insufficient stock. Only ${product.stock_quantity} units available for ${product.name}.`);
-      return;
-    }
     
     if (existingItem) {
       setOrderItems(orderItems.map(item =>
@@ -229,12 +188,6 @@ const VanSalesWorkflowPage: React.FC = () => {
   const handleUpdateQuantity = (productId: string, quantity: number) => {
     if (quantity <= 0) {
       handleRemoveProduct(productId);
-      return;
-    }
-
-    const product = products.find(p => p.id === productId);
-    if (product && quantity > product.stock_quantity) {
-      setError(`Insufficient stock. Only ${product.stock_quantity} units available for ${product.name}.`);
       return;
     }
 
@@ -264,34 +217,8 @@ const VanSalesWorkflowPage: React.FC = () => {
   };
 
   const handleSubmitOrder = async () => {
-    if (!selectedCustomer) {
-      setError('Please select a customer');
-      return;
-    }
-    
-    if (!gpsLocation) {
-      setError('Please verify GPS location');
-      return;
-    }
-    
-    if (orderItems.length === 0) {
-      setError('Please add at least one product to the order');
-      return;
-    }
-    
-    if (!deliveryPhoto) {
-      setError('Please capture a delivery photo');
-      return;
-    }
-
-    const availableCredit = (selectedCustomer.credit_limit || 0) - (selectedCustomer.outstanding_balance || 0);
-    if (paymentMethod === 'credit' && orderTotal > availableCredit) {
-      setError(`Credit limit exceeded. Customer has R ${availableCredit.toFixed(2)} available credit. Order total is R ${orderTotal.toFixed(2)}.`);
-      return;
-    }
-
-    if (paymentMethod === 'cash' && cashReceived < orderTotal) {
-      setError(`Insufficient cash received. Order total is R ${orderTotal.toFixed(2)}, but only R ${cashReceived.toFixed(2)} was received.`);
+    if (!selectedCustomer || !gpsLocation || orderItems.length === 0) {
+      setError('Please complete all required steps');
       return;
     }
 
@@ -314,26 +241,12 @@ const VanSalesWorkflowPage: React.FC = () => {
         gps_lng: gpsLocation.lng
       };
 
-      const response = await apiClient.post('/van-sales/orders', orderData);
+      const response = await apiClient.post('/api/van-sales/orders', orderData);
       
       setOrderSummary(response.data);
       setCurrentStep(5);
     } catch (err: any) {
-      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
-        const queueId = offlineQueueService.addToQueue('/van-sales/orders', 'POST', orderData);
-        setQueuedOrdersCount(offlineQueueService.getQueueCount());
-        setError('You are offline. Order has been queued and will be submitted when connection is restored.');
-        
-        setOrderSummary({ 
-          id: queueId, 
-          order_id: queueId,
-          status: 'queued',
-          message: 'Order queued for submission'
-        });
-        setCurrentStep(5);
-      } else {
-        setError(err.message || 'Failed to submit order');
-      }
+      setError(err.message || 'Failed to submit order');
     } finally {
       setLoading(false);
     }
@@ -357,30 +270,6 @@ const VanSalesWorkflowPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Online/Offline Status Banner */}
-      {!isOnline && (
-        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <WifiOff className="w-4 h-4 text-yellow-600 mr-2" />
-            <span className="text-sm text-yellow-800">You are offline</span>
-          </div>
-          {queuedOrdersCount > 0 && (
-            <span className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-              {queuedOrdersCount} order{queuedOrdersCount !== 1 ? 's' : ''} queued
-            </span>
-          )}
-        </div>
-      )}
-      
-      {isOnline && queuedOrdersCount > 0 && (
-        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center">
-            <Wifi className="w-4 h-4 text-blue-600 mr-2 animate-pulse" />
-            <span className="text-sm text-blue-800">Syncing {queuedOrdersCount} queued order{queuedOrdersCount !== 1 ? 's' : ''}...</span>
-          </div>
-        </div>
-      )}
-
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Van Sales Order</h1>
@@ -417,28 +306,14 @@ const VanSalesWorkflowPage: React.FC = () => {
       {error && (
         <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
           <AlertCircle className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
+          <div>
             <p className="text-sm text-red-800">{error}</p>
-            <div className="flex items-center space-x-3 mt-2">
-              <button
-                onClick={() => setError(null)}
-                className="text-sm text-red-600 underline"
-              >
-                Dismiss
-              </button>
-              {(error.includes('Failed to load') || error.includes('connection')) && (
-                <button
-                  onClick={() => {
-                    setError(null);
-                    if (currentStep === 1) loadCustomers();
-                    else if (currentStep === 3) loadProducts();
-                  }}
-                  className="text-sm text-red-600 underline"
-                >
-                  Retry
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-sm text-red-600 underline mt-1"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       )}
@@ -454,59 +329,24 @@ const VanSalesWorkflowPage: React.FC = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3"
             />
-            
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+            <div className="space-y-3">
+              {filteredCustomers.map((customer) => (
+                <button
+                  key={customer.id}
+                  onClick={() => handleCustomerSelect(customer)}
+                  className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                >
+                  <h3 className="font-medium text-gray-900">{customer.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{customer.address}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm text-gray-500">{customer.phone}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      Credit: R {customer.credit_limit?.toLocaleString() || 0}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : filteredCustomers.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <ShoppingCart className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {searchTerm ? 'No customers found' : 'No customers available'}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  {searchTerm 
-                    ? `No customers match "${searchTerm}". Try a different search term.`
-                    : 'There are no customers in your route yet. Contact your manager to add customers.'}
-                </p>
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Clear Search
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredCustomers.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => handleCustomerSelect(customer)}
-                    className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
-                  >
-                    <h3 className="font-medium text-gray-900">{customer.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{customer.address}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-sm text-gray-500">{customer.phone}</span>
-                      <span className="text-sm font-medium text-gray-900">
-                        Credit: R {customer.credit_limit?.toLocaleString() || 0}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -583,67 +423,26 @@ const VanSalesWorkflowPage: React.FC = () => {
               </div>
             )}
 
-            {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-white border border-gray-200 rounded-lg p-4 animate-pulse">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-                      </div>
-                      <div className="text-right">
-                        <div className="h-4 bg-gray-200 rounded w-16 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-12"></div>
-                      </div>
+            <div className="space-y-3">
+              {filteredProducts.map((product) => (
+                <button
+                  key={product.id}
+                  onClick={() => handleAddProduct(product)}
+                  className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{product.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">SKU: {product.sku}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">R {product.price.toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">Stock: {product.stock_quantity}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {productSearchTerm ? 'No products found' : 'No products available'}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  {productSearchTerm 
-                    ? `No products match "${productSearchTerm}". Try a different search term.`
-                    : 'There are no products available for sale. Contact your manager to load inventory.'}
-                </p>
-                {productSearchTerm && (
-                  <button
-                    onClick={() => setProductSearchTerm('')}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Clear Search
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredProducts.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleAddProduct(product)}
-                    className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{product.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">SKU: {product.sku}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">R {product.price.toFixed(2)}</p>
-                        <p className="text-sm text-gray-600">Stock: {product.stock_quantity}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+                </button>
+              ))}
+            </div>
 
             {orderItems.length > 0 && (
               <button
@@ -747,121 +546,42 @@ const VanSalesWorkflowPage: React.FC = () => {
 
         {/* Step 5: Order Summary */}
         {currentStep === 5 && orderSummary && (
-          <div className="bg-white rounded-lg p-6">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {orderSummary.status === 'queued' ? 'Order Queued!' : 'Order Complete!'}
-              </h2>
-              <p className="text-sm text-gray-600">
-                {orderSummary.status === 'queued' 
-                  ? 'Order will be submitted when connection is restored'
-                  : `Order ID: ${orderSummary.order_id || orderSummary.id}`}
-              </p>
+          <div className="bg-white rounded-lg p-6 text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Order Complete!</h2>
+            <p className="text-sm text-gray-600 mb-6">
+              Order ID: {orderSummary.order_id || orderSummary.id}
+            </p>
 
-            {/* Order Details */}
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Order Details</h3>
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
               <div className="space-y-2">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Customer:</span>
                   <span className="font-medium text-gray-900">{selectedCustomer?.name}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between">
                   <span className="text-gray-600">Items:</span>
-                  <span className="font-medium text-gray-900">{orderItems.length} product{orderItems.length !== 1 ? 's' : ''}</span>
+                  <span className="font-medium text-gray-900">{orderItems.length}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total Amount:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total:</span>
                   <span className="font-medium text-gray-900">R {orderTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Payment Method:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Payment:</span>
                   <span className="font-medium text-gray-900">{paymentMethod === 'cash' ? 'Cash' : 'Credit'}</span>
                 </div>
-                {paymentMethod === 'cash' && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Cash Received:</span>
-                      <span className="font-medium text-gray-900">R {cashReceived.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Change Given:</span>
-                      <span className="font-medium text-green-600">R {changeGiven.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
 
-            {/* Commission Preview */}
-            {orderSummary.status !== 'queued' && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-900">Commission Earned</h3>
-                    <p className="text-xs text-blue-700 mt-1">
-                      {((orderTotal * 0.05)).toFixed(2)} (5% of order value)
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">
-                      R {(orderTotal * 0.05).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Item Breakdown */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Items Ordered</h3>
-              <div className="space-y-2">
-                {orderItems.map((item, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm bg-white p-3 rounded border border-gray-200">
-                    <div>
-                      <p className="font-medium text-gray-900">{item.product_name}</p>
-                      <p className="text-xs text-gray-600">Qty: {item.quantity} × R {item.price.toFixed(2)}</p>
-                    </div>
-                    <p className="font-medium text-gray-900">R {item.total.toFixed(2)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={() => {
-                  setCurrentStep(1);
-                  setSelectedCustomer(null);
-                  setGpsLocation(null);
-                  setGpsValidated(false);
-                  setOrderItems([]);
-                  setDeliveryPhoto(null);
-                  setSignature(null);
-                  setPaymentMethod('cash');
-                  setCashReceived(0);
-                  setOrderSummary(null);
-                  setSearchTerm('');
-                  setProductSearchTerm('');
-                }}
-                className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Create Another Order
-              </button>
-
-              <button
-                onClick={() => navigate('/van-sales')}
-                className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-200"
-              >
-                Back to Van Sales Dashboard
-              </button>
-            </div>
+            <button
+              onClick={() => navigate('/van-sales')}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700"
+            >
+              Back to Van Sales
+            </button>
           </div>
         )}
       </div>

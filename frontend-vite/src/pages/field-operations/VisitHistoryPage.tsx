@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tantml:invoke>
-<parameter name="fieldOperationsService } from '../../services/fieldOperations.service'
+import { useQuery } from '@tanstack/react-query'
+import { fieldOperationsService } from '../../services/fieldOperations.service'
 import { Calendar, MapPin, Clock, FileText } from 'lucide-react'
 
 export default function VisitHistoryPage() {

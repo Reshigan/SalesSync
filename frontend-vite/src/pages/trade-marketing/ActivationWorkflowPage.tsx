@@ -2,11 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Package, MapPin, CheckCircle, Camera, AlertCircle, 
-  Navigation, Gift, Users, TrendingUp, WifiOff, Wifi, Refresh
+  Navigation, Gift, Users, TrendingUp
 } from 'lucide-react';
-import { useOnlineStatus } from '../../hooks/useOnlineStatus';
-import { offlineQueueService } from '../../services/offline-queue.service';
-import { apiClient } from '../../services/api';
+import { apiClient } from '../../services/api.service';
 
 interface Campaign {
   id: string;
@@ -45,15 +43,9 @@ interface SampleAllocation {
 
 const ActivationWorkflowPage: React.FC = () => {
   const navigate = useNavigate();
-  const isOnline = useOnlineStatus();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [campaignsLoading, setCampaignsLoading] = useState(true);
-  const [customersLoading, setCustomersLoading] = useState(false);
-  const [tasksLoading, setTasksLoading] = useState(false);
-  const [samplesLoading, setSamplesLoading] = useState(false);
-  const [queuedActivationsCount, setQueuedActivationsCount] = useState(0);
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
@@ -104,51 +96,55 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const loadCampaigns = async () => {
     try {
-      setCampaignsLoading(true);
-      const response = await apiClient.get('/trade-marketing/campaigns', {
-        params: { status: 'active' }
+      setLoading(true);
+      const response = await apiClient.get('/api/campaigns', {
+        params: { status: 'active', limit: 100 }
       });
-      setCampaigns(response.data.data || []);
-      setCampaignsLoading(false);
+      setCampaigns(response.data.campaigns || []);
     } catch (err: any) {
-      setError('Failed to load campaigns. Please check your connection and try again.');
-      setCampaignsLoading(false);
+      setError(err.message || 'Failed to load campaigns');
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadCustomers = async () => {
     try {
-      setCustomersLoading(true);
-      const response = await apiClient.get('/customers');
-      setCustomers(response.data.data || []);
-      setCustomersLoading(false);
+      setLoading(true);
+      const response = await apiClient.get('/api/customers', {
+        params: { limit: 100 }
+      });
+      setCustomers(response.data.customers || []);
     } catch (err: any) {
-      setError('Failed to load customers. Please check your connection and try again.');
-      setCustomersLoading(false);
+      setError(err.message || 'Failed to load customers');
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadActivationTasks = async () => {
     try {
-      setTasksLoading(true);
-      const response = await apiClient.get(`/trade-marketing/campaigns/${selectedCampaign?.id}/tasks`);
-      setTasks(response.data.data || []);
-      setTasksLoading(false);
+      setLoading(true);
+      const response = await apiClient.get(`/api/campaigns/${selectedCampaign?.id}/tasks`);
+      setTasks(response.data.tasks || []);
     } catch (err: any) {
-      setError('Failed to load activation tasks. Please check your connection and try again.');
-      setTasksLoading(false);
+      setError(err.message || 'Failed to load tasks');
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadSampleAllocations = async () => {
     try {
-      setSamplesLoading(true);
-      const response = await apiClient.get('/samples/allocations');
-      setSampleAllocations(response.data.data || []);
-      setSamplesLoading(false);
+      setLoading(true);
+      const response = await apiClient.get('/api/samples/allocations', {
+        params: { status: 'active' }
+      });
+      setSampleAllocations(response.data.allocations || []);
     } catch (err: any) {
-      setError('Failed to load sample allocations. Please check your connection and try again.');
-      setSamplesLoading(false);
+      setError(err.message || 'Failed to load sample allocations');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,7 +160,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const handleGPSValidation = () => {
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser. Please enable location services and try again.');
+      setError('Geolocation is not supported by your browser');
       return;
     }
 
@@ -173,12 +169,6 @@ const ActivationWorkflowPage: React.FC = () => {
       (position) => {
         const { latitude, longitude, accuracy } = position.coords;
         setGpsLocation({ lat: latitude, lng: longitude, accuracy });
-
-        if (accuracy > 100) {
-          setError('GPS accuracy is poor (> 100m). Please move to an area with better GPS signal or wait for better accuracy.');
-          setLoading(false);
-          return;
-        }
 
         if (selectedCustomer) {
           const dist = calculateDistance(
@@ -193,13 +183,13 @@ const ActivationWorkflowPage: React.FC = () => {
             setGpsValidated(true);
             setCurrentStep(4);
           } else {
-            setError(`You are ${dist.toFixed(0)}m away from customer. Please move closer (max 10m) or request manager override.`);
+            setError(`You are ${dist.toFixed(0)}m away from customer. Please move closer (max 10m).`);
           }
         }
         setLoading(false);
       },
       (error) => {
-        setError(`GPS error: ${error.message}. Please enable location services and try again.`);
+        setError(`GPS error: ${error.message}`);
         setLoading(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -241,7 +231,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
   const handleSubmitActivation = async () => {
     if (!selectedCampaign || !selectedCustomer || !gpsLocation) {
-      setError('Please complete all required steps: campaign, customer, and GPS validation.');
+      setError('Please complete all required steps');
       return;
     }
 
@@ -250,30 +240,8 @@ const ActivationWorkflowPage: React.FC = () => {
     );
 
     if (incompleteTasks.length > 0) {
-      setError(`Please complete all mandatory tasks with photos. ${incompleteTasks.length} task(s) remaining.`);
+      setError('Please complete all mandatory tasks with photos');
       return;
-    }
-
-    const totalSamplesDistributed = Object.values(sampleDistributions).reduce((sum, qty) => sum + qty, 0);
-    
-    if (sampleAllocations.length > 0 && totalSamplesDistributed === 0) {
-      setError('Please distribute at least one sample before completing the activation.');
-      return;
-    }
-
-    for (const allocationId in sampleDistributions) {
-      const allocation = sampleAllocations.find(a => a.id === allocationId);
-      const distributedQty = sampleDistributions[allocationId];
-      
-      if (allocation && distributedQty > allocation.remaining_quantity) {
-        setError(`Cannot distribute ${distributedQty} samples of ${allocation.product_name}. Only ${allocation.remaining_quantity} remaining.`);
-        return;
-      }
-      
-      if (distributedQty < 0) {
-        setError('Sample quantity cannot be negative. Please enter a valid number.');
-        return;
-      }
     }
 
     try {
@@ -282,77 +250,32 @@ const ActivationWorkflowPage: React.FC = () => {
       const activationData = {
         campaign_id: selectedCampaign.id,
         customer_id: selectedCustomer.id,
-        gps_lat: gpsLocation.lat,
-        gps_lng: gpsLocation.lng,
-        gps_accuracy: gpsLocation.accuracy,
         tasks: tasks.map(task => ({
           task_id: task.id,
           photo: taskPhotos[task.id],
           notes: taskNotes[task.id],
-          status: taskPhotos[task.id] ? 'completed' : 'skipped'
+          status: taskPhotos[task.id] ? 'completed' : 'pending'
         })),
         samples: Object.entries(sampleDistributions).map(([allocationId, quantity]) => ({
           allocation_id: allocationId,
-          quantity_distributed: quantity
+          quantity,
+          recipient_name: recipientInfo.name,
+          recipient_phone: recipientInfo.phone,
+          age_group: recipientInfo.age_group,
+          gender: recipientInfo.gender,
+          feedback: recipientInfo.feedback
         })),
-        recipient_info: recipientInfo,
-        idempotency_key: `activation-${Date.now()}`,
+        gps_lat: gpsLocation.lat,
+        gps_lng: gpsLocation.lng
       };
 
-      const response = await apiClient.post('/trade-marketing/activations', activationData);
-
-      const summary = {
-        activation_id: response.data.data?.id || `ACT-${Date.now()}`,
-        campaign: selectedCampaign.name,
-        customer: selectedCustomer.name,
-        tasks_completed: Object.keys(taskPhotos).length,
-        total_tasks: tasks.length,
-        samples_distributed: totalSamplesDistributed,
-        reach_estimate: response.data.data?.reach_estimate || 0
-      };
-
-      setActivationSummary(summary);
-      setCurrentStep(6);
-      setLoading(false);
-    } catch (err: any) {
-      if (!isOnline || err.message?.includes('Network') || err.message?.includes('connection')) {
-        const queueId = offlineQueueService.addToQueue('/trade-marketing/activations', 'POST', {
-          campaign_id: selectedCampaign.id,
-          customer_id: selectedCustomer.id,
-          gps_lat: gpsLocation.lat,
-          gps_lng: gpsLocation.lng,
-          gps_accuracy: gpsLocation.accuracy,
-          tasks: tasks.map(task => ({
-            task_id: task.id,
-            photo: taskPhotos[task.id],
-            notes: taskNotes[task.id],
-            status: taskPhotos[task.id] ? 'completed' : 'skipped'
-          })),
-          samples: Object.entries(sampleDistributions).map(([allocationId, quantity]) => ({
-            allocation_id: allocationId,
-            quantity_distributed: quantity
-          })),
-          recipient_info: recipientInfo,
-          idempotency_key: `activation-${Date.now()}`,
-        });
-        setQueuedActivationsCount(offlineQueueService.getQueueCount());
-        
-        const summary = {
-          activation_id: queueId,
-          campaign: selectedCampaign.name,
-          customer: selectedCustomer.name,
-          tasks_completed: Object.keys(taskPhotos).length,
-          total_tasks: tasks.length,
-          samples_distributed: totalSamplesDistributed,
-          queued: true
-        };
-        setActivationSummary(summary);
-        setCurrentStep(6);
-        setLoading(false);
-        return;
-      }
+      const response = await apiClient.post('/api/trade-marketing/activations', activationData);
       
-      setError(err.response?.data?.message || 'Failed to submit activation. Please try again.');
+      setActivationSummary(response.data);
+      setCurrentStep(6);
+    } catch (err: any) {
+      setError(err.message || 'Failed to submit activation');
+    } finally {
       setLoading(false);
     }
   };

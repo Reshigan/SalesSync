@@ -59,15 +59,10 @@ export interface CustomerStats {
 
 class CustomersService {
   private readonly baseUrl = API_CONFIG.ENDPOINTS.CUSTOMERS.BASE
-  // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   async getCustomers(filter?: CustomerFilter): Promise<{ customers: Customer[], pagination: any }> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.BASE)
-      const response = await apiClient.get(url, { params: filter })
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.CUSTOMERS.BASE, { params: filter })
       return {
         customers: response.data.data?.customers || response.data.data || [],
         pagination: response.data.data?.pagination || {}
@@ -80,7 +75,7 @@ class CustomersService {
 
   async getCustomer(id: string): Promise<Customer | null> {
     try {
-      const response = await apiClient.get(this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id)))
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id))
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch customer:', error)
@@ -90,7 +85,7 @@ class CustomersService {
 
   async createCustomer(customer: Omit<Customer, 'id' | 'created_at' | 'total_orders' | 'total_sales'>): Promise<Customer> {
     try {
-      const response = await apiClient.post(this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.BASE), customer)
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.CUSTOMERS.BASE, customer)
       return response.data.data
     } catch (error) {
       console.error('Failed to create customer:', error)
@@ -100,7 +95,7 @@ class CustomersService {
 
   async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer> {
     try {
-      const response = await apiClient.put(this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id)), updates)
+      const response = await apiClient.put(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id), updates)
       return response.data.data
     } catch (error) {
       console.error('Failed to update customer:', error)
@@ -110,7 +105,7 @@ class CustomersService {
 
   async deleteCustomer(id: string): Promise<void> {
     try {
-      await apiClient.delete(this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id)))
+      await apiClient.delete(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id))
     } catch (error) {
       console.error('Failed to delete customer:', error)
       throw error
@@ -119,7 +114,7 @@ class CustomersService {
 
   async getCustomerStats(): Promise<CustomerStats> {
     try {
-      const response = await apiClient.get(this.buildUrl(API_CONFIG.ENDPOINTS.CUSTOMERS.STATS))
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.CUSTOMERS.STATS)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch customer stats:', error)

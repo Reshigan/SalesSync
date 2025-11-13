@@ -4,7 +4,7 @@
  */
 
 const crypto = require('crypto');
-const { getDatabase } = require('../database/connection');
+const { getDatabase } = require('../database/init');
 
 /**
  * Calculate distance between two GPS coordinates using Haversine formula

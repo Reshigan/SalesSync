@@ -49,94 +49,399 @@ The Field Marketing Agent System is a mobile-first application designed to manag
 2. Enters credentials (email + password) with tenant code
 3. System validates and issues JWT tokens
 4. Agent profile loaded with assigned area/route
+5. Dashboard shows:
+   - Today's visits scheduled
+   - Pending commissions
+   - Recent activities
+   - Quick action buttons: "Start Visit" | "My Commissions"
+
+---
 
 #### B. Customer Visit - Existing Customer Flow
 
-**Step 1: Customer Selection**
+**Step 1: Customer Identification**
 - Agent taps "Start Visit"
-- Chooses "Existing Customer"
+- System presents choice:
+  - **"Existing Customer"** → Proceed to Step 2
+  - **"New Customer"** → Jump to Section C (New Customer Flow)
+
+**Step 2: Customer Selection**
+- Agent chooses "Existing Customer"
 - Search/filter customers by:
-  - Customer name
+  - Customer name (autocomplete)
   - Store name
   - Phone number
   - Customer code
+  - GPS proximity (show nearest 10)
 - System displays customer list with:
   - Store name
-  - Address
+  - Physical address
+  - Distance from current location
   - Last visit date
-  - Associated brands
+  - Associated brands (icons/logos)
+  - Customer type (Retail/Wholesale/Distributor)
+- Agent selects customer from list
 
-**Step 2: GPS Verification** (10-meter threshold)
+**Step 3: GPS Verification** (10-meter threshold)
 ```
-Process:
-1. System captures current GPS coordinates
+Automatic Process:
+1. System captures current GPS coordinates (lat, lng)
 2. Retrieves customer's registered GPS from database
 3. Calculates distance using Haversine formula
-4. IF distance <=10m → PROCEED to brand selection
-5. IF distance > 10m → SHOW WARNING with options:
-   - Cancel Visit
-   - Update Customer Location (requires justification)
-   - Proceed Anyway (flags visit with distance variance)
+4. IF distance ≤ 10m:
+   → PASS verification
+   → PROCEED to brand selection
+5. IF distance > 10m:
+   → SHOW WARNING with distance variance
+   → Present options:
+      a) Cancel Visit (return to dashboard)
+      b) Update Customer Location (requires text justification)
+      c) Proceed Anyway (flags visit with distance variance for audit)
+   → All out-of-range visits logged for admin review
 ```
 
-**Step 3: Brand Selection**
-- Display all brands associated with customer
-- Agent selects one or multiple brands (checkboxes)
-- Shows brand logo, name, last visit date per brand
+**Step 4: Brand Selection**
+- Display all brands associated with selected customer
+- Multi-select interface (checkboxes)
+- For each brand show:
+  - Brand logo (thumbnail)
+  - Brand name
+  - Last visit date for this brand
+  - Status: Active/Inactive
+- Agent selects one or multiple brands
+- Minimum: 1 brand required
+- Tap "Continue" to proceed
 
-**Step 4: Visit List Generation**
+**Step 5: Visit List Generation**
 
-System automatically generates visit list containing:
+System automatically generates a visit list containing:
 
-**a) Mandatory Surveys**
-- Brand-specific questions (cannot skip)
-- Example: Stock availability, competitor presence, pricing verification
+**a) Mandatory Surveys** (Cannot skip - blocks visit completion)
+- Brand-specific questions (configured per brand)
+- Multi-type questions:
+  - Multiple choice
+  - Yes/No
+  - Text input
+  - Number input
+  - Photo upload
+- Examples:
+  - "Stock availability of [Product X]?"
+  - "Competitor presence detected?"
+  - "Current shelf pricing for [Product Y]?"
+  - "Store cleanliness rating (1-5)"
+- Each answer recorded with timestamp
+- Can be combined (one survey for all brands) OR separate per brand
 
-**b) Ad-hoc Surveys** (Optional)
+**b) Ad-hoc Surveys** (Optional - can skip)
 - Campaign-specific questions
 - Quality checks
-- Can be skipped
+- Seasonal promotions verification
+- Market research questions
+- Same question types as mandatory surveys
 
 **c) Board Placement Activity**
 ```
-IF board placement is required:
-1. Select available board from agent's inventory
-2. Verify customer consent for placement
-3. Open camera to capture placement photo
-4. System performs automatic analysis:
-   - Detects board in image
-   - Detects storefront
-   - Calculates board area vs storefront area
-   - Computes coverage percentage = (Board Area / Storefront Area) × 100
-5. Displays analysis results:
-   - Coverage percentage (must be 5-80%)
-   - Visibility score (clear/partially obscured/obscured)
-   - Quality score (0-10)
-6. Agent confirms installation
-7. System:
-   - Stores photo (original + annotated)
-   - Updates board status to "installed"
-   - Creates installation record
-   - Generates commission record (pending approval)
-8. Shows success message with commission amount
+DETAILED BOARD PLACEMENT PROCESS:
+
+1. Board Selection
+   - System displays boards available for placement
+   - Each brand can have multiple board types (configured by admin)
+   - Show for each board:
+     * Board name/type (e.g., "Coca-Cola Large Billboard 2m x 1.5m")
+     * Brand logo
+     * Dimensions
+     * Commission amount per placement
+     * Remaining quantity in agent inventory
+   - Agent selects board(s) to place
+
+2. Placement Location
+   - Select placement position:
+     * "Outside Store" (most common - for storefront)
+     * "Inside Store" (window display)
+     * "On Store Roof"
+     * "Adjacent to Store" (with distance note)
+   - GPS coordinates auto-captured for placement location
+
+3. Photo Capture Process
+   - Agent positions camera to capture:
+     * Full storefront in frame
+     * Placed board clearly visible
+     * Good lighting and clear visibility
+   - Camera interface shows guides:
+     * Center alignment guide
+     * Horizontal level indicator
+     * Minimum distance warning
+   - Agent takes photo (can retake multiple times)
+   - Option to take multiple angles (up to 5 photos per board)
+
+4. Automated Coverage Analysis (TensorFlow.js / CV)
+   Process:
+   a) Image Pre-processing
+      - Resize to standard dimensions
+      - Normalize brightness/contrast
+      - Edge detection
+   
+   b) Object Detection
+      - Detect storefront boundaries (using storefront detection model)
+      - Detect board/signage area (using custom-trained model)
+      - Calculate pixel areas:
+        * Storefront Area (in pixels) = width × height of detected storefront
+        * Board Area (in pixels) = width × height of detected board
+   
+   c) Coverage Calculation
+      Coverage % = (Board Area / Storefront Area) × 100
+      
+   d) Validation Rules
+      - Minimum coverage: 5%
+      - Maximum coverage: 80%
+      - IF outside range: Flag for manual review
+      - IF board not detected: Request retake
+   
+   e) Quality Scoring (0-10)
+      Factors:
+      - Image clarity (sharpness) - 30%
+      - Lighting conditions - 20%
+      - Board visibility (not obscured) - 30%
+      - Alignment/straightness - 20%
+
+5. Results Display
+   - Shows analysis overlay:
+     * Green box around detected board
+     * Blue box around detected storefront
+     * Coverage percentage badge (color-coded)
+       - Green: 15-50% (ideal)
+       - Yellow: 5-15% or 50-70% (acceptable)
+       - Red: <5% or >70% (requires review)
+     * Quality score: ⭐⭐⭐⭐⭐ (star rating)
+     * Visibility status: ✅ Clear / ⚠️ Partial / ❌ Obscured
+
+6. Agent Confirmation
+   - Review analysis results
+   - Options:
+     * "Accept & Continue" → Proceed to save
+     * "Retake Photo" → Return to camera
+     * "Manual Override" → Enter reason and override analysis
+   - Add optional notes (e.g., "Placed above entrance", "Shared wall with competitor")
+
+7. Commission Generation
+   - System creates commission record:
+     * Commission Type: "Board Placement"
+     * Amount: Per board configuration (set by admin)
+     * Status: "Pending Approval"
+     * Attached: Photo, GPS, Coverage %, Quality Score, Timestamp
+   - Shows success message: "Commission earned: R150.00 (pending approval)"
+   - Updates agent's pending commissions total
+
+8. Data Storage
+   - Original photo saved (full resolution)
+   - Annotated photo saved (with detection boxes)
+   - Metadata stored:
+     * visit_id, customer_id, brand_id, board_id
+     * placement_gps (lat, lng, accuracy)
+     * coverage_percentage
+     * quality_score
+     * visibility_status
+     * placed_by (agent_id)
+     * placed_at (timestamp)
+     * analysis_data (JSON with full CV results)
 ```
 
-**d) Product Distribution** (if applicable)
-- Select product from agent's inventory
-- Enter quantity
-- Complete product-specific form (see Product Distribution section)
-- Capture recipient signature
-- Generate commission record
+**d) Product Distribution** (SIM Cards, Phones, Other Products)
+```
+DETAILED PRODUCT DISTRIBUTION PROCESS:
 
-**Step 5: Visit Completion**
-- System shows visit summary:
-  - Surveys completed
-  - Boards installed
-  - Products distributed
-  - Total commissions earned (pending)
-- Agent confirms completion
-- Data synced to server (or queued if offline)
-- Visit record closed
+1. Product Selection
+   - Display available products in agent inventory
+   - Categories:
+     * SIM Cards (prepaid, contract)
+     * Mobile Phones (prepaid, contract)
+     * Accessories (chargers, cases, etc.)
+     * Promotional Items (t-shirts, caps, brochures)
+     * Other (custom products)
+   - Show for each:
+     * Product name
+     * Brand
+     * Commission per unit
+     * Stock remaining in agent inventory
+     * Requires serial/ICCID tracking: Yes/No
+     * Requires recipient ID: Yes/No
+
+2. Dynamic Form Generation (Based on Product Type)
+
+   FOR SIM CARDS:
+   ----------------
+   Required Fields:
+   - Recipient Full Name *
+   - Recipient ID Number * (SA ID or Passport)
+   - Recipient Phone Number *
+   - ICCID Number * (20-digit SIM serial)
+   - Network Provider *
+   - SIM Type * (Prepaid/Contract)
+   - Quantity *
+   
+   Optional Fields:
+   - Alternative Contact Number
+   - Email Address
+   - Physical Address
+   - Employment Status
+   - Purpose (Personal/Business)
+   
+   Captures:
+   - Photo of ID Document *
+   - Photo of SIM Card Package *
+   - Recipient Signature * (touch signature pad)
+   
+   Validation:
+   - ID Number format validation
+   - ICCID uniqueness check (no duplicates)
+   - Phone number format (10 digits)
+   
+   Commission: Per SIM activated
+
+   FOR MOBILE PHONES:
+   ------------------
+   Required Fields:
+   - Recipient Full Name *
+   - Recipient ID Number * (SA ID or Passport)
+   - Recipient Phone Number *
+   - Device IMEI Number * (15 digits - scanned or manual)
+   - Device Serial Number *
+   - Phone Model *
+   - Phone Brand *
+   - Purchase Type * (Cash/Contract/Promotion)
+   - Quantity * (usually 1)
+   
+   Optional Fields:
+   - Contract Duration (if contract)
+   - Monthly Payment Amount
+   - Deposit Amount
+   - Warranty Registration
+   
+   Captures:
+   - Photo of ID Document *
+   - Photo of Phone IMEI (on box/device) *
+   - Photo of Device (unboxed) *
+   - Recipient Signature *
+   
+   Validation:
+   - IMEI format validation (Luhn algorithm)
+   - IMEI uniqueness check
+   - Serial number uniqueness check
+   
+   Commission: Per device sold
+
+   FOR OTHER PRODUCTS:
+   -------------------
+   Required Fields:
+   - Recipient Name (if individual distribution) *
+   - Product Quantity *
+   - Distribution Type (Individual/Bulk to Store) *
+   
+   Optional Fields:
+   - Recipient Phone
+   - Purpose/Campaign
+   - Notes
+   
+   Captures:
+   - Photo of distributed products
+   - Signature (if required)
+   
+   Commission: Per unit or per batch
+
+3. Form Validation
+   - Real-time validation as user types
+   - Highlight missing required fields
+   - Format validation (ID numbers, IMEI, phone numbers)
+   - Duplicate checking for serial numbers
+   - Prevent submission until all required fields complete
+
+4. Photo Captures
+   - Use CameraCapture component
+   - For each required photo:
+     * Clear instructions shown
+     * Photo preview with retake option
+     * Auto-orientation
+     * Compression for upload
+
+5. Signature Capture
+   - Touch-friendly signature pad
+   - Clear/Redo option
+   - "I confirm receipt of the above items" declaration
+   - Signature saved as image
+
+6. Distribution Confirmation
+   - Review screen showing all entered data
+   - Edit option for each section
+   - Final confirmation: "Confirm Distribution"
+
+7. Commission Generation
+   - Create commission record:
+     * Type: "Product Distribution - [Product Type]"
+     * Amount: Based on product configuration
+     * Status: "Pending Approval"
+     * Attached: All photos, signature, recipient details
+   - Update inventory (reduce agent stock)
+   - Generate distribution certificate (PDF)
+   - Show success: "Distribution recorded. Commission: R50.00 (pending)"
+
+8. Data Storage
+   - All form data stored with encryption for sensitive fields (ID numbers)
+   - Photos stored with reference IDs
+   - Signature image saved
+   - Inventory movement logged
+   - Audit trail created
+```
+
+**Step 6: Visit Completion & Summary**
+```
+1. Visit Summary Screen
+   Display complete summary of visit:
+   
+   📋 Surveys Completed:
+   - Mandatory surveys: 2/2 ✅
+   - Ad-hoc surveys: 1/2 (1 skipped)
+   
+   🎯 Boards Placed:
+   - Coca-Cola Billboard (Coverage: 32%, Quality: 8/10) - R150.00
+   - MTN Signage (Coverage: 18%, Quality: 9/10) - R100.00
+   
+   📦 Products Distributed:
+   - MTN SIM Cards × 5 - R250.00 (R50 each)
+   - Samsung Phone × 1 - R500.00
+   
+   💰 Total Commissions Earned (Pending):
+   R1,000.00
+   
+   ⏱️ Visit Duration: 28 minutes
+   📍 Location Verified: ✅ Within 5m
+   
+2. Additional Actions (Optional)
+   - Add visit notes/comments
+   - Flag customer for follow-up
+   - Schedule next visit
+   - Report issues/problems
+
+3. Final Confirmation
+   - "Complete Visit" button
+   - Cannot be undone warning
+   - Agent confirms completion
+
+4. Data Synchronization
+   - IF online: Immediate sync to server
+   - IF offline: Queue for sync when connection available
+   - Show sync status: "Synced ✅" or "Queued 🔄"
+   
+5. Visit Record Closure
+   - Visit status: "Completed"
+   - Timestamp recorded
+   - All data locked (cannot edit)
+   - Commissions moved to "Pending Approval" queue
+   
+6. Return to Dashboard
+   - Update dashboard stats
+   - Show next scheduled visit (if any)
+   - Display updated pending commissions total
+```
 
 #### C. Customer Visit - New Customer Flow
 
@@ -455,13 +760,106 @@ Documents:
 6. Notification sent to agent
 7. Commission moves to approved/rejected state
 
-### Agent Commission View
-- See all commissions (pending, approved, rejected, paid)
-- Filter by status, date range
-- Total pending amount
-- Total approved amount
-- Total paid amount
-- Payment history
+### Agent Commission View ("My Commissions" Screen)
+
+**Dashboard Overview:**
+```
+💰 My Commissions
+
+Totals:
+- Pending Approval: R2,450.00 (12 items)
+- Approved (Unpaid): R8,900.00 (34 items)
+- Paid This Month: R15,200.00
+- Total Earned (All Time): R145,600.00
+
+Quick Stats:
+- This Week: R3,450.00 (pending)
+- This Month: R12,800.00 (pending + approved)
+- Last Payment: R15,200.00 on 15 Oct 2025
+```
+
+**Commission List View:**
+
+Tabs:
+1. **Pending (12)** - Awaiting manager approval
+2. **Approved (34)** - Approved but not yet paid
+3. **Paid (156)** - Payment received
+4. **Rejected (3)** - Rejected with reasons
+5. **All (205)** - Complete history
+
+**For Each Commission Item Display:**
+```
+[Icon] Board Placement / Product Distribution / New Customer
+Customer: ABC Spaza Shop
+Date: 20 Oct 2025, 14:32
+Amount: R150.00
+Status Badge: [Pending] / [Approved] / [Paid] / [Rejected]
+
+Tap to view details →
+```
+
+**Commission Detail View:**
+```
+Commission Details
+
+Type: Board Placement
+Brand: Coca-Cola
+Board: Large Billboard (2m x 1.5m)
+
+Customer Information:
+- Name: ABC Spaza Shop
+- Address: 123 Main St, Soweto
+- Visit Date: 20 Oct 2025, 14:32
+
+Installation Details:
+- Coverage: 32%
+- Quality Score: 8/10
+- GPS Verified: ✅ Within 5m
+- Photos: [View 3 photos]
+
+Commission:
+- Amount: R150.00
+- Status: Pending Approval
+- Submitted: 20 Oct 2025, 14:35
+- [Approval Pending Since: 2 days]
+
+Actions:
+- View Photos
+- View Location on Map
+- Contact Manager (if rejected)
+- Dispute (if rejected)
+```
+
+**Filters & Sorting:**
+- Date range picker
+- Status filter (multi-select)
+- Commission type filter
+- Amount range slider
+- Sort by: Date (newest/oldest), Amount (high/low), Status
+
+**Export Options:**
+- Export to PDF (for records)
+- Export to Excel (for analysis)
+- Email summary to self
+
+**Payment History View:**
+```
+Payment History
+
+October 2025: R15,200.00 ✅ Paid
+- Payment Date: 15 Oct 2025
+- Payment Method: EFT
+- Reference: PAY-2025-10-001
+- Items: 45 commissions
+- [View Details] [Download Receipt]
+
+September 2025: R18,450.00 ✅ Paid
+- Payment Date: 15 Sep 2025
+- Payment Method: EFT
+- Reference: PAY-2025-09-001
+- Items: 52 commissions
+- [View Details] [Download Receipt]
+```
 
 ---
 

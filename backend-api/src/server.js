@@ -253,6 +253,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.use('/api/version', require('./routes/version'));
+
 // API Documentation will be set up after database initialization
 
 // Routes will be set up after database initialization
@@ -313,7 +315,7 @@ async function startServer() {
     const supplierRoutes = require('./routes/suppliers');
     const vanSalesRoutes = require('./routes/van-sales');
     const fieldOperationsRoutes = require('./routes/field-operations');
-    const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks');
+    // const fieldOperationsTasksRoutes = require('./routes/field-operations-tasks'); // File doesn't exist
     const fieldOperationsEnhancedRoutes = require('./routes/field-operations-enhanced');
     const categoriesRoutes = require('./routes/categories');
     const brandsRoutes = require('./routes/brands');
@@ -370,6 +372,8 @@ async function startServer() {
     const paymentRoutes = require('./routes/payments');
     const quoteRoutes = require('./routes/quotes');
     const approvalRoutes = require('./routes/approvals');
+    
+    const individualsRoutes = require('./routes/individuals');
 
     // Test route
     app.get('/api/test', (req, res) => {
@@ -444,7 +448,7 @@ async function startServer() {
       logger.info('Using legacy field-operations route');
       app.use('/api/field-operations', authTenantMiddleware, fieldOperationsRoutes);
     }
-    app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes);
+    // app.use('/api/field-operations/tasks', authTenantMiddleware, fieldOperationsTasksRoutes); // File doesn't exist on production
     app.use('/api/categories', authTenantMiddleware, categoriesRoutes);
     app.use('/api/brands', authTenantMiddleware, brandsRoutes);
     app.use('/api/regions', authTenantMiddleware, regionsRoutes);
@@ -471,7 +475,6 @@ async function startServer() {
     app.use('/api/integrations', authTenantMiddleware, integrationsRoutes);
     app.use('/api/mobile', authTenantMiddleware, mobileRoutes);
     
-    const ordersEnhancedRoutes = require('./routes/orders-enhanced');
     const cashReconciliationEnhancedRoutes = require('./routes/cash-reconciliation-enhanced');
     const dashboardsRoutes = require('./routes/dashboards');
     app.use('/api/orders-enhanced', authTenantMiddleware, ordersEnhancedRoutes);
@@ -512,6 +515,9 @@ async function startServer() {
     app.use('/api/payments', authTenantMiddleware, paymentRoutes);
     app.use('/api/quotes', authTenantMiddleware, quoteRoutes);
     app.use('/api/approvals', authTenantMiddleware, approvalRoutes);
+    
+    logger.info('Mounting fraud prevention routes...');
+    app.use('/api/individuals', authTenantMiddleware, individualsRoutes);
 
     logger.info('Routes configured successfully');
 

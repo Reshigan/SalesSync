@@ -159,6 +159,9 @@ async function initializeApp() {
     const filesRoutes = require('./routes/files');
     const exportsRoutes = require('./routes/exports');
     const widgetsRoutes = require('./routes/widgets');
+    
+    console.log('Loading fraud prevention routes...');
+    const individualsRoutes = require('./routes/individuals');
 
     // Mount routes
     app.use('/api/auth', authRoutes);
@@ -270,6 +273,10 @@ async function initializeApp() {
     app.use('/api/files', filesRoutes);
     app.use('/api/exports', exportsRoutes);
     app.use('/api/widgets', widgetsRoutes);
+    
+    // Mount Fraud Prevention routes
+    console.log('Mounting fraud prevention routes...');
+    app.use('/api/individuals', individualsRoutes);
 
     // Error handling middleware
     app.use(notFoundHandler);

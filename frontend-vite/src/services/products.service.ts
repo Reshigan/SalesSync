@@ -83,13 +83,11 @@ export interface ProductStats {
 
 class ProductsService {
   // Build full URL using centralized config
-  private buildUrl(endpoint: string): string {
-    return `${API_CONFIG.BASE_URL}${endpoint}`
-  }
 
   async getProducts(filter?: ProductFilter): Promise<{ products: Product[], categories: Category[], brands: Brand[], pagination: any }> {
     try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.PRODUCTS.BASE, { params: filter })
+      const url = API_CONFIG.ENDPOINTS.PRODUCTS.BASE
+      const response = await apiClient.get(url, { params: filter })
       return {
         products: response.data.data?.products || response.data.data || [],
         categories: response.data.data?.categories || [],
@@ -104,7 +102,8 @@ class ProductsService {
 
   async getProduct(id: string): Promise<Product | null> {
     try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id))
+      const url = API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id)
+      const response = await apiClient.get(url)
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch product:', error)
@@ -114,7 +113,7 @@ class ProductsService {
 
   async createProduct(product: Omit<Product, 'id' | 'created_at' | 'total_stock'>): Promise<Product> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.BASE)
+      const url = API_CONFIG.ENDPOINTS.PRODUCTS.BASE
       const response = await apiClient.post(url, product)
       return response.data.data
     } catch (error) {
@@ -125,7 +124,7 @@ class ProductsService {
 
   async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id))
+      const url = API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id)
       const response = await apiClient.put(url, updates)
       return response.data.data
     } catch (error) {
@@ -136,7 +135,7 @@ class ProductsService {
 
   async deleteProduct(id: string): Promise<void> {
     try {
-      const url = this.buildUrl(API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id))
+      const url = API_CONFIG.ENDPOINTS.PRODUCTS.BY_ID(id)
       await apiClient.delete(url)
     } catch (error) {
       console.error('Failed to delete product:', error)
@@ -156,7 +155,7 @@ class ProductsService {
 
   async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get('/categories')
+      const response = await apiClient.get('/api/categories')
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch categories:', error)
@@ -166,7 +165,7 @@ class ProductsService {
 
   async getBrands(): Promise<Brand[]> {
     try {
-      const response = await apiClient.get('/brands')
+      const response = await apiClient.get('/api/brands')
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch brands:', error)
@@ -176,7 +175,7 @@ class ProductsService {
 
   async updateStock(productId: string, stockData: { quantity: number, type: 'add' | 'subtract', reason?: string }): Promise<Product> {
     try {
-      const response = await apiClient.post(this.buildUrl(`/products/${productId}/stock`), stockData)
+      const response = await apiClient.post(`/products/${productId}/stock`, stockData)
       return response.data.data
     } catch (error) {
       console.error('Failed to update stock:', error)
@@ -186,7 +185,7 @@ class ProductsService {
 
   async getStockMovements(productId: string, filter?: any): Promise<any[]> {
     try {
-      const response = await apiClient.get(this.buildUrl(`/products/${productId}/movements`), { params: filter })
+      const response = await apiClient.get(`/products/${productId}/movements`, { params: filter })
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch stock movements:', error)
@@ -196,7 +195,7 @@ class ProductsService {
 
   async exportProducts(filter?: ProductFilter, format: 'csv' | 'excel' | 'pdf' = 'csv'): Promise<Blob> {
     try {
-      const response = await apiClient.get(this.buildUrl('/products/export'), {
+      const response = await apiClient.get('/products/export', {
         params: { ...filter, format },
         responseType: 'blob'
       })
@@ -209,7 +208,7 @@ class ProductsService {
 
   async bulkUpdateProducts(updates: Array<{ id: string; updates: Partial<Product> }>): Promise<Product[]> {
     try {
-      const response = await apiClient.put(this.buildUrl('/products/bulk'), { updates })
+      const response = await apiClient.put('/products/bulk', { updates })
       return response.data.data
     } catch (error) {
       console.error('Failed to bulk update products:', error)
@@ -222,7 +221,7 @@ class ProductsService {
       const formData = new FormData()
       formData.append('file', file)
       
-      const response = await apiClient.post(this.buildUrl('/products/import'), formData, {
+      const response = await apiClient.post('/products/import', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -239,7 +238,7 @@ class ProductsService {
       const formData = new FormData()
       formData.append('image', file)
       
-      const response = await apiClient.post(this.buildUrl(`/products/${productId}/image`), formData, {
+      const response = await apiClient.post(`/products/${productId}/image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -253,7 +252,7 @@ class ProductsService {
 
   async getStockHistory(productId: string): Promise<any[]> {
     try {
-      const response = await apiClient.get(this.buildUrl(`/products/${productId}/stock-history`))
+      const response = await apiClient.get(`/products/${productId}/stock-history`)
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch stock history:', error)
@@ -263,7 +262,7 @@ class ProductsService {
 
   async getProductSalesData(productId: string): Promise<any[]> {
     try {
-      const response = await apiClient.get(this.buildUrl(`/products/${productId}/sales-data`))
+      const response = await apiClient.get(`/products/${productId}/sales-data`)
       return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch product sales data:', error)
