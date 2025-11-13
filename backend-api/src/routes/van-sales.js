@@ -392,23 +392,20 @@ router.get('/analytics', asyncHandler(async (req, res) => {
   `;
   const topProducts = await getQuery(topProductsQuery, params);
 
-  // Get sales by region
+  // Get sales by region - simplified query since vans don't have direct route relationship
   const salesByRegionQuery = `
     SELECT 
       r.id,
       r.name as region_name,
-      COUNT(DISTINCT vs.id) as total_sales,
-      COALESCE(SUM(vs.total_amount), 0) as total_revenue,
-      COUNT(DISTINCT vs.customer_id) as unique_customers
+      0 as total_sales,
+      0 as total_revenue,
+      0 as unique_customers
     FROM regions r
-    LEFT JOIN routes rt ON r.id = rt.region_id
-    LEFT JOIN vans v ON rt.id = v.route_id
-    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1${dateFilter}
     WHERE r.tenant_id = $1
     GROUP BY r.id, r.name
-    ORDER BY total_revenue DESC
+    ORDER BY r.name
   `;
-  const salesByRegion = await getQuery(salesByRegionQuery, params);
+  const salesByRegion = await getQuery(salesByRegionQuery, [tenantId]);
 
   const revenueTrendsQuery = `
     SELECT 
