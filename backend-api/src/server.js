@@ -509,7 +509,7 @@ async function startServer() {
     app.use('/api/field-operations/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/field-operations/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/field-operations/trends', authTenantMiddleware, trendsRoutes);
-    app.use('/api/field-operations/agents', authTenantMiddleware, agentsRoutes);
+    app.use('/api/field-operations/agents', authTenantMiddleware, agentRoutes);
     app.use('/api/field-operations/visits', authTenantMiddleware, visitsRoutes);
     app.use('/api/field-operations/performance', authTenantMiddleware, performanceRoutes);
     
