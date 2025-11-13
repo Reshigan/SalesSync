@@ -350,56 +350,48 @@ router.delete('/:id', async (req, res, next) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
+    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [warehouseCounts, inventoryStats, transferStats, capacityUtilization] = await Promise.all([
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_warehouses,
-            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_warehouses,
-            SUM(CASE WHEN capacity IS NOT NULL THEN capacity ELSE 0 END) as total_capacity
-          FROM warehouses WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_warehouses,
+          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_warehouses,
+          SUM(CASE WHEN capacity IS NOT NULL THEN capacity ELSE 0 END)::int as total_capacity
+        FROM warehouses WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT i.product_id) as total_products,
-            SUM(i.quantity_on_hand) as total_quantity,
-            SUM(i.quantity_on_hand * i.cost_price) as total_value
-          FROM inventory_stock i
-          WHERE i.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT i.product_id)::int as total_products,
+          SUM(i.quantity_on_hand)::int as total_quantity,
+          SUM(i.quantity_on_hand * i.cost_price)::float8 as total_value
+        FROM inventory_stock i
+        WHERE i.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_transfers,
-            COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_transfers,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_transfers,
-            SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END) as total_transferred_quantity
-          FROM stock_transfers
-          WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_transfers,
+          COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_transfers,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_transfers,
+          SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END)::int as total_transferred_quantity
+        FROM stock_transfers
+        WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            w.id, w.name, w.capacity,
-            COUNT(DISTINCT i.product_id) as product_count,
-            SUM(i.quantity_on_hand) as current_quantity,
-            SUM(i.quantity_on_hand * i.cost_price) as inventory_value
-          FROM warehouses w
-          LEFT JOIN inventory_stock i ON w.id = i.warehouse_id
-          WHERE w.tenant_id = ?
-          GROUP BY w.id
-          ORDER BY inventory_value DESC
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          w.id, w.name, w.capacity,
+          COUNT(DISTINCT i.product_id)::int as product_count,
+          SUM(i.quantity_on_hand)::int as current_quantity,
+          SUM(i.quantity_on_hand * i.cost_price)::float8 as inventory_value
+        FROM warehouses w
+        LEFT JOIN inventory_stock i ON w.id = i.warehouse_id
+        WHERE w.tenant_id = $1
+        GROUP BY w.id, w.name, w.capacity
+        ORDER BY inventory_value DESC
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({
