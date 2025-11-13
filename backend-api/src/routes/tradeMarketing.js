@@ -608,60 +608,48 @@ router.get('/pos-materials', authMiddleware, async (req, res) => {
 router.get('/campaigns/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
+    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [campaignCounts, statusBreakdown, performance, topCampaigns] = await Promise.all([
-      // Campaign counts
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_campaigns,
-            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_campaigns,
-            COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns
-          FROM campaigns WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_campaigns,
+          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_campaigns,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_campaigns,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_campaigns
+        FROM campaigns WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      // Status breakdown
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT status, COUNT(*) as count
-          FROM campaigns WHERE tenant_id = ?
-          GROUP BY status
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
+      getQuery(`
+        SELECT status, COUNT(*)::int as count
+        FROM campaigns WHERE tenant_id = $1
+        GROUP BY status
+      `, [tenantId]).then(rows => rows || []),
       
-      // Performance metrics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT ce.id) as total_executions,
-            COUNT(DISTINCT ce.customer_id) as customers_reached,
-            SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END) as completed_executions,
-            AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END) as avg_conversion_value
-          FROM campaigns c
-          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-          WHERE c.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT ce.id)::int as total_executions,
+          COUNT(DISTINCT ce.customer_id)::int as customers_reached,
+          SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END)::int as completed_executions,
+          AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END)::float8 as avg_conversion_value
+        FROM campaigns c
+        LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+        WHERE c.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
       
-      // Top performing campaigns
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            c.id, c.name, c.type, c.status,
-            COUNT(DISTINCT ce.id) as execution_count,
-            COUNT(DISTINCT ce.customer_id) as customer_count,
-            SUM(COALESCE(ce.conversion_value, 0)) as total_conversion
-          FROM campaigns c
-          LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-          WHERE c.tenant_id = ?
-          GROUP BY c.id, c.name, c.type, c.status
-          ORDER BY total_conversion DESC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          c.id, c.name, c.type, c.status,
+          COUNT(DISTINCT ce.id)::int as execution_count,
+          COUNT(DISTINCT ce.customer_id)::int as customer_count,
+          SUM(COALESCE(ce.conversion_value, 0))::float8 as total_conversion
+        FROM campaigns c
+        LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
+        WHERE c.tenant_id = $1
+        GROUP BY c.id, c.name, c.type, c.status
+        ORDER BY total_conversion DESC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({
