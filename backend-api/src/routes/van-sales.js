@@ -284,32 +284,30 @@ router.get('/stats', asyncHandler(async (req, res) => {
   
   const salesStats = await getOneQuery(salesQuery, salesParams);
   
-  let topVansQuery = `
+  const topVansParams = [tenantId];
+  let topVansParamIndex = 2;
+  
+  let dateConditions = '';
+  if (start_date) {
+    dateConditions += ` AND vs.sale_date >= $${topVansParamIndex}`;
+    topVansParams.push(start_date);
+    topVansParamIndex++;
+  }
+  
+  if (end_date) {
+    dateConditions += ` AND vs.sale_date <= $${topVansParamIndex}`;
+    topVansParams.push(end_date);
+    topVansParamIndex++;
+  }
+  
+  const topVansQuery = `
     SELECT 
       v.id,
       v.registration_number,
       COUNT(vs.id) as total_sales,
       COALESCE(SUM(vs.total_amount), 0) as total_revenue
     FROM vans v
-    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1
-  `;
-  
-  const topVansParams = [tenantId];
-  let topVansParamIndex = 2;
-  
-  if (start_date) {
-    topVansQuery += ` AND vs.sale_date >= $${topVansParamIndex}`;
-    topVansParams.push(start_date);
-    topVansParamIndex++;
-  }
-  
-  if (end_date) {
-    topVansQuery += ` AND vs.sale_date <= $${topVansParamIndex}`;
-    topVansParams.push(end_date);
-    topVansParamIndex++;
-  }
-  
-  topVansQuery += `
+    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1${dateConditions}
     WHERE v.tenant_id = $${topVansParamIndex}
     GROUP BY v.id, v.registration_number
     ORDER BY total_revenue DESC
