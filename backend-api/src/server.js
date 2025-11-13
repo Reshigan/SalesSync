@@ -490,8 +490,11 @@ async function startServer() {
     app.use('/api/gps-tracking', authTenantMiddleware, gpsTrackingRoutes);
     app.use('/api/currency-system', authTenantMiddleware, currencySystemRoutes);
     app.use('/api/comprehensive-transactions', authTenantMiddleware, comprehensiveTransactionsRoutes);
-    app.use('/api/performance', performanceRoutes);
-    app.use('/api/notifications', notificationsRoutes);
+    app.use('/api/performance', authTenantMiddleware, performanceRoutes);
+    app.use('/api/notifications', authTenantMiddleware, notificationsRoutes);
+    
+    const statsRoutes = require('./routes/stats');
+    app.use('/api/stats', authTenantMiddleware, statsRoutes);
     
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
