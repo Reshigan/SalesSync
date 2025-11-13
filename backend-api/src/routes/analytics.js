@@ -13,10 +13,10 @@ router.get('/sales', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (date_from && date_to) {
-    dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+    dateFilter = `AND o.order_date BETWEEN $${params.length + 1} AND $${params.length + 2}`;
     params.push(date_from, date_to);
   } else {
-    dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    dateFilter = `AND o.order_date >= CURRENT_DATE - INTERVAL '30 days'`;
   }
   
   // Sales summary
@@ -28,7 +28,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
       COUNT(DISTINCT o.customer_id) as unique_customers,
       COUNT(DISTINCT o.salesman_id) as active_agents
     FROM orders o
-    WHERE o.tenant_id = ? ${dateFilter}
+    WHERE o.tenant_id = $1 ${dateFilter}
   `, params);
   
   // Daily sales trend
@@ -38,7 +38,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
       COUNT(*) as orders,
       COALESCE(SUM(o.total_amount), 0) as revenue
     FROM orders o
-    WHERE o.tenant_id = ? ${dateFilter}
+    WHERE o.tenant_id = $1 ${dateFilter}
     GROUP BY DATE(o.order_date)
     ORDER BY DATE(o.order_date)
   `, params);
@@ -52,7 +52,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
     FROM order_items oi
     JOIN orders o ON oi.order_id = o.id
     JOIN products p ON oi.product_id = p.id
-    WHERE o.tenant_id = ? ${dateFilter}
+    WHERE o.tenant_id = $1 ${dateFilter}
     GROUP BY p.id, p.name
     ORDER BY total_revenue DESC
     LIMIT 10
@@ -67,7 +67,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
     FROM orders o
     JOIN agents a ON o.salesman_id = a.id
     JOIN users u ON a.user_id = u.id
-    WHERE o.tenant_id = ? ${dateFilter}
+    WHERE o.tenant_id = $1 ${dateFilter}
     GROUP BY a.id, u.first_name, u.last_name
     ORDER BY total_revenue DESC
     LIMIT 10
@@ -93,10 +93,10 @@ router.get('/visits', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (date_from && date_to) {
-    dateFilter = 'AND v.visit_date BETWEEN ? AND ?';
+    dateFilter = `AND v.visit_date BETWEEN $${params.length + 1} AND $${params.length + 2}`;
     params.push(date_from, date_to);
   } else {
-    dateFilter = 'AND v.visit_date >= DATE("now", "-30 days")';
+    dateFilter = `AND v.visit_date >= CURRENT_DATE - INTERVAL '30 days'`;
   }
   
   // Visit summary
@@ -105,12 +105,12 @@ router.get('/visits', asyncHandler(async (req, res) => {
       COUNT(*) as total_visits,
       SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
       COALESCE(AVG(CASE WHEN v.check_in_time IS NOT NULL AND v.check_out_time IS NOT NULL 
-          THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
+          THEN EXTRACT(EPOCH FROM (v.check_out_time - v.check_in_time)) / 60
           ELSE NULL END), 0) as avg_duration_minutes,
       COUNT(DISTINCT v.agent_id) as active_agents,
       COUNT(DISTINCT v.customer_id) as customers_visited
     FROM visits v
-    WHERE v.tenant_id = ? ${dateFilter}
+    WHERE v.tenant_id = $1 ${dateFilter}
   `, params);
   
   res.json({
@@ -130,10 +130,10 @@ router.get('/revenue', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (date_from && date_to) {
-    dateFilter = 'AND o.order_date BETWEEN ? AND ?';
+    dateFilter = `AND o.order_date BETWEEN $${params.length + 1} AND $${params.length + 2}`;
     params.push(date_from, date_to);
   } else {
-    dateFilter = 'AND o.order_date >= DATE("now", "-30 days")';
+    dateFilter = `AND o.order_date >= CURRENT_DATE - INTERVAL '30 days'`;
   }
   
   const revenueData = await getOneQuery(`
@@ -143,7 +143,7 @@ router.get('/revenue', asyncHandler(async (req, res) => {
       COALESCE(AVG(o.total_amount), 0) as avg_order_value,
       COUNT(DISTINCT o.customer_id) as unique_customers
     FROM orders o
-    WHERE o.tenant_id = ? ${dateFilter}
+    WHERE o.tenant_id = $1 ${dateFilter}
   `, params);
   
   res.json({
@@ -161,13 +161,13 @@ router.get('/dashboard', asyncHandler(async (req, res) => {
   // Today's metrics
   const todayMetrics = await getOneQuery(`
     SELECT 
-      COUNT(DISTINCT CASE WHEN DATE(o.order_date) = DATE('now') THEN o.id END) as today_orders,
-      COALESCE(SUM(CASE WHEN DATE(o.order_date) = DATE('now') THEN o.total_amount ELSE 0 END), 0) as today_revenue,
-      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = DATE('now') THEN v.id END) as today_visits,
-      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = DATE('now') AND v.status = 'completed' THEN v.id END) as today_completed_visits
+      COUNT(DISTINCT CASE WHEN DATE(o.order_date) = CURRENT_DATE THEN o.id END) as today_orders,
+      COALESCE(SUM(CASE WHEN DATE(o.order_date) = CURRENT_DATE THEN o.total_amount ELSE 0 END), 0) as today_revenue,
+      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = CURRENT_DATE THEN v.id END) as today_visits,
+      COUNT(DISTINCT CASE WHEN DATE(v.visit_date) = CURRENT_DATE AND v.status = 'completed' THEN v.id END) as today_completed_visits
     FROM orders o
     CROSS JOIN visits v
-    WHERE o.tenant_id = ? AND v.tenant_id = ?
+    WHERE o.tenant_id = $1 AND v.tenant_id = $2
   `, [tenantId, tenantId]);
   
   res.json({
@@ -402,7 +402,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
         WHEN agent_sales < 5000 THEN '1000-4999'
         WHEN agent_sales < 10000 THEN '5000-9999'
         ELSE '10000+'
-      END as range,
+      END as "range",
       COUNT(*) as count,
       ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1) as percentage
     FROM (
@@ -419,9 +419,9 @@ router.get('/agents', asyncHandler(async (req, res) => {
         AND u.status = 'active'
       GROUP BY u.id
     ) agent_totals
-    GROUP BY range
+    GROUP BY "range"
     ORDER BY 
-      CASE range
+      CASE "range"
         WHEN '0' THEN 1
         WHEN '1-999' THEN 2
         WHEN '1000-4999' THEN 3
@@ -507,7 +507,7 @@ router.get('/customers', asyncHandler(async (req, res) => {
       active_customers: customerMetrics?.active_customers || 0,
       new_customers: customerMetrics?.new_customers || 0,
       customer_retention_rate: customerMetrics?.customer_retention_rate || 0,
-      customer_lifetime_value: parseFloat((customerMetrics?.customer_lifetime_value || 0).toFixed(2)),
+      customer_lifetime_value: parseFloat((parseFloat(customerMetrics?.customer_lifetime_value) || 0).toFixed(2)),
       customers_by_type: customersByType || []
     }
   });
