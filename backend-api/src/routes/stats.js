@@ -5,7 +5,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 
 // GET /api/stats - Dashboard stats endpoint
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user?.tenantId || req.tenantId;
   const { start_date, end_date } = req.query;
   
   res.json({

@@ -6,7 +6,7 @@ const { getQuery } = require('../utils/database');
 
 // GET /api/agent-locations - Get current agent locations
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user?.tenantId || req.tenantId;
   
   // Get latest GPS locations for all active agents
   const locations = await getQuery(`

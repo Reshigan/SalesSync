@@ -6,7 +6,7 @@ const { getQuery } = require('../utils/database');
 
 // GET /api/trends - Get trends data
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user?.tenantId || req.tenantId;
   const { start_date, end_date } = req.query;
   
   const startDate = start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];

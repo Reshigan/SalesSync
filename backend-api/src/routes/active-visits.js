@@ -6,7 +6,7 @@ const { getQuery } = require('../utils/database');
 
 // GET /api/active-visits - Get currently active visits
 router.get('/', asyncHandler(async (req, res) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.user?.tenantId || req.tenantId;
   
   // Get all visits that are currently in progress (checked in but not checked out)
   const activeVisits = await getQuery(`

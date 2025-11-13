@@ -3,6 +3,83 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const router = express.Router();
 const { getQuery, getOneQuery } = require('../utils/database');
 
+router.get('/', asyncHandler(async (req, res) => {
+  const tenantId = req.user?.tenantId || req.tenantId;
+  const { start_date, end_date } = req.query;
+  
+  const startDate = start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const endDate = end_date || new Date().toISOString().split('T')[0];
+  
+  const [salesMetrics, visitMetrics, customerMetrics, productMetrics] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*)::int as total_orders,
+        COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+        COALESCE(AVG(o.total_amount), 0)::float8 as avg_order_value
+      FROM orders o
+      WHERE o.tenant_id = $1 
+        AND o.order_date >= $2 
+        AND o.order_date <= $3
+    `, [tenantId, startDate, endDate]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(*)::int as total_visits,
+        SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END)::int as completed_visits
+      FROM visits v
+      WHERE v.tenant_id = $1 
+        AND v.visit_date >= $2 
+        AND v.visit_date <= $3
+    `, [tenantId, startDate, endDate]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT c.id)::int as total_customers,
+        COUNT(DISTINCT CASE WHEN o.order_date >= $2 AND o.order_date <= $3 THEN c.id END)::int as active_customers
+      FROM customers c
+      LEFT JOIN orders o ON c.id = o.customer_id AND o.tenant_id = $1
+      WHERE c.tenant_id = $1 AND c.status = 'active'
+    `, [tenantId, startDate, endDate]),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT p.id)::int as total_products,
+        COUNT(DISTINCT oi.product_id)::int as products_sold
+      FROM products p
+      LEFT JOIN order_items oi ON p.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id AND o.tenant_id = $1 AND o.order_date >= $2 AND o.order_date <= $3
+      WHERE p.tenant_id = $1 AND p.status = 'active'
+    `, [tenantId, startDate, endDate])
+  ]);
+  
+  res.json({
+    success: true,
+    data: {
+      sales: {
+        total_orders: salesMetrics?.total_orders || 0,
+        total_revenue: salesMetrics?.total_revenue || 0,
+        avg_order_value: salesMetrics?.avg_order_value || 0
+      },
+      visits: {
+        total_visits: visitMetrics?.total_visits || 0,
+        completed_visits: visitMetrics?.completed_visits || 0
+      },
+      customers: {
+        total_customers: customerMetrics?.total_customers || 0,
+        active_customers: customerMetrics?.active_customers || 0
+      },
+      products: {
+        total_products: productMetrics?.total_products || 0,
+        products_sold: productMetrics?.products_sold || 0
+      },
+      period: {
+        start_date: startDate,
+        end_date: endDate
+      }
+    }
+  });
+}));
+
 // Sales Analytics
 router.get('/sales', asyncHandler(async (req, res) => {
   const tenantId = req.user.tenantId;
