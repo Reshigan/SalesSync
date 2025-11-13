@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Commissions Service
  * Handles commission tracking and calculations
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Commission {
   id: string

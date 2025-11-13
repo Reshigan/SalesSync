@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Finance Service
  * Handles invoices, payments, and financial operations
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Invoice {
   id: string

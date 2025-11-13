@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Beat Routes Service
  * Handles sales beat and route management
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface BeatRoute {
   id: string
