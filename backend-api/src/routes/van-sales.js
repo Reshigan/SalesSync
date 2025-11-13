@@ -33,33 +33,33 @@ router.get('/', asyncHandler(async (req, res) => {
     LEFT JOIN vans v ON vs.van_id = v.id
     LEFT JOIN customers c ON vs.customer_id = c.id
     LEFT JOIN users u ON vs.agent_id = u.id
-    WHERE vs.tenant_id = ?
+    WHERE vs.tenant_id = $1
   `;
   
   const params = [tenantId];
   
   if (start_date) {
-    query += ` AND vs.sale_date >= ?`;
+    query += ` AND vs.sale_date >= $1`;
     params.push(start_date);
   }
   
   if (end_date) {
-    query += ` AND vs.sale_date <= ?`;
+    query += ` AND vs.sale_date <= $1`;
     params.push(end_date);
   }
   
   if (van_id) {
-    query += ` AND vs.van_id = ?`;
+    query += ` AND vs.van_id = $1`;
     params.push(van_id);
   }
   
   if (agent_id) {
-    query += ` AND vs.agent_id = ?`;
+    query += ` AND vs.agent_id = $1`;
     params.push(agent_id);
   }
   
   if (status) {
-    query += ` AND vs.status = ?`;
+    query += ` AND vs.status = $1`;
     params.push(status);
   }
   
@@ -113,7 +113,7 @@ router.post('/', asyncHandler(async (req, res) => {
   });
   
   const total_amount = subtotal - discount_amount + tax_amount;
-  const amount_paid = req.body.amount_paid || (sale_type === 'cash' ? total_amount : 0);
+  const amount_paid = req.body.amount_paid || (sale_type === 'cash' $1 total_amount : 0);
   const amount_due = total_amount - amount_paid;
 
   const saleNumber = `VS-${Date.now()}`;
@@ -124,7 +124,7 @@ router.post('/', asyncHandler(async (req, res) => {
       sale_type, subtotal, tax_amount, discount_amount, total_amount, 
       amount_paid, amount_due, payment_method, payment_reference,
       location_lat, location_lng, notes, status, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`,
     [
       req.tenantId,
       saleNumber,
@@ -162,7 +162,7 @@ router.post('/', asyncHandler(async (req, res) => {
       `INSERT INTO van_sale_items (
         van_sale_id, product_id, quantity, unit_price, 
         discount_rate, tax_rate, line_total
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         saleId,
         item.product_id,
@@ -247,7 +247,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COUNT(*) as total_vans,
       SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_vans
     FROM vans
-    WHERE tenant_id = ?
+    WHERE tenant_id = $1
   `, [tenantId]);
   
   // Get sales statistics
@@ -258,18 +258,18 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COALESCE(AVG(total_amount), 0) as avg_sale_value,
       COUNT(DISTINCT customer_id) as customers_served
     FROM van_sales
-    WHERE tenant_id = ?
+    WHERE tenant_id = $1
   `;
   
   const salesParams = [tenantId];
   
   if (start_date) {
-    salesQuery += ` AND sale_date >= ?`;
+    salesQuery += ` AND sale_date >= $1`;
     salesParams.push(start_date);
   }
   
   if (end_date) {
-    salesQuery += ` AND sale_date <= ?`;
+    salesQuery += ` AND sale_date <= $1`;
     salesParams.push(end_date);
   }
   
@@ -282,23 +282,23 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COUNT(vs.id) as total_sales,
       COALESCE(SUM(vs.total_amount), 0) as total_revenue
     FROM vans v
-    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = ?
+    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1
   `;
   
   const topVansParams = [tenantId];
   
   if (start_date) {
-    topVansQuery += ` AND vs.sale_date >= ?`;
+    topVansQuery += ` AND vs.sale_date >= $1`;
     topVansParams.push(start_date);
   }
   
   if (end_date) {
-    topVansQuery += ` AND vs.sale_date <= ?`;
+    topVansQuery += ` AND vs.sale_date <= $1`;
     topVansParams.push(end_date);
   }
   
   topVansQuery += `
-    WHERE v.tenant_id = ?
+    WHERE v.tenant_id = $1
     GROUP BY v.id, v.registration_number
     ORDER BY total_revenue DESC
     LIMIT 5
@@ -406,7 +406,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     LEFT JOIN vans v ON vs.van_id = v.id
     LEFT JOIN customers c ON vs.customer_id = c.id
     LEFT JOIN users u ON vs.agent_id = u.id
-    WHERE vs.id = ? AND vs.tenant_id = ?
+    WHERE vs.id = $1 AND vs.tenant_id = $2
   `, [id, tenantId]);
 
   if (!vanSale) {
@@ -423,7 +423,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
       p.sku as product_sku
     FROM van_sale_items vsi
     LEFT JOIN products p ON vsi.product_id = p.id
-    WHERE vsi.van_sale_id = ?
+    WHERE vsi.van_sale_id = $1
   `, [id]);
   
   vanSale.items = items || [];
