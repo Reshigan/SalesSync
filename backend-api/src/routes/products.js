@@ -21,7 +21,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -43,7 +43,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -83,7 +83,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             values.push(conditions[key]);
           });
@@ -105,7 +105,7 @@ const { insertQuery, updateQuery, deleteQuery } = (() => {
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId $1 ' AND' : ' WHERE';
+            sql += tenantId ? ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
