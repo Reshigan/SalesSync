@@ -412,7 +412,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
         WHEN agent_sales < 5000 THEN '1000-4999'
         WHEN agent_sales < 10000 THEN '5000-9999'
         ELSE '10000+'
-      END as "range",
+      END as range,
       COUNT(*) as count,
       ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1) as percentage
     FROM (
@@ -429,9 +429,9 @@ router.get('/agents', asyncHandler(async (req, res) => {
         AND u.status = 'active'
       GROUP BY u.id
     ) agent_totals
-    GROUP BY "range"
+    GROUP BY 1
     ORDER BY 
-      CASE "range"
+      CASE range
         WHEN '0' THEN 1
         WHEN '1-999' THEN 2
         WHEN '1000-4999' THEN 3
