@@ -165,50 +165,44 @@ router.get('/test/health', asyncHandler(async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const db = getDatabase();
     
     const [promotionCounts, typeBreakdown, redemptions, topPromotions] = await Promise.all([
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_promotions,
-            COUNT(CASE WHEN status = 'active' THEN 1 END) as active_promotions,
-            COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_promotions
-          FROM promotions WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT type, COUNT(*) as count
-          FROM promotions WHERE tenant_id = ?
-          GROUP BY type
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_redemptions,
-            SUM(discount_amount) as total_discount_given,
-            AVG(discount_amount) as avg_discount
-          FROM promotion_redemptions pr
-          INNER JOIN promotions p ON pr.promotion_id = p.id
-          WHERE p.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            p.id, p.name, p.type, p.discount_value,
-            COUNT(pr.id) as redemption_count,
-            SUM(pr.discount_amount) as total_discount
-          FROM promotions p
-          LEFT JOIN promotion_redemptions pr ON p.id = pr.promotion_id
-          WHERE p.tenant_id = ?
-          GROUP BY p.id
-          ORDER BY redemption_count DESC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_promotions,
+          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_promotions,
+          COUNT(CASE WHEN status = 'expired' THEN 1 END)::int as expired_promotions
+        FROM promotions WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT type, COUNT(*)::int as count
+        FROM promotions WHERE tenant_id = $1
+        GROUP BY type
+      `, [tenantId]).then(rows => rows || []),
+      
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_redemptions,
+          SUM(discount_amount)::float8 as total_discount_given,
+          AVG(discount_amount)::float8 as avg_discount
+        FROM promotion_redemptions pr
+        INNER JOIN promotions p ON pr.promotion_id = p.id
+        WHERE p.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT 
+          p.id, p.name, p.type, p.discount_value,
+          COUNT(pr.id)::int as redemption_count,
+          SUM(pr.discount_amount)::float8 as total_discount
+        FROM promotions p
+        LEFT JOIN promotion_redemptions pr ON p.id = pr.promotion_id
+        WHERE p.tenant_id = $1
+        GROUP BY p.id, p.name, p.type, p.discount_value
+        ORDER BY redemption_count DESC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({

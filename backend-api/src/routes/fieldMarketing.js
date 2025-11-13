@@ -466,7 +466,7 @@ router.get('/commissions', authMiddleware, async (req, res) => {
 router.get('/board-installations', authMiddleware, async (req, res) => {
   try {
     const { status, startDate, endDate } = req.query;
-    const db = getDatabase();
+    const { getQuery } = require('../utils/database');
     
     let sql = `
       SELECT 
@@ -480,41 +480,37 @@ router.get('/board-installations', authMiddleware, async (req, res) => {
       JOIN field_marketing_boards fmb ON bp.board_id = fmb.id
       JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN field_visits fv ON bp.visit_id = fv.id
-      WHERE bp.agent_id = ?
+      WHERE bp.agent_id = $1
     `;
     
     const params = [req.user.id];
+    let paramIndex = 2;
     
     if (status) {
-      sql += ` AND bp.placement_status = ?`;
+      sql += ` AND bp.placement_status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     
     if (startDate) {
-      sql += ` AND bp.created_at::date >= ?`;
+      sql += ` AND bp.created_at::date >= $${paramIndex}`;
       params.push(startDate);
+      paramIndex++;
     }
     
     if (endDate) {
-      sql += ` AND bp.created_at::date <= ?`;
+      sql += ` AND bp.created_at::date <= $${paramIndex}`;
       params.push(endDate);
+      paramIndex++;
     }
     
     sql += ` ORDER BY bp.created_at DESC LIMIT 100`;
     
-    db.all(sql, params, (err, installations) => {
-      if (err) {
-        console.error('Get board installations error:', err);
-        return res.status(500).json({ 
-          success: false,
-          error: 'Failed to fetch board installations' 
-        });
-      }
-      
-      res.json({ 
-        success: true,
-        data: installations || []
-      });
+    const installations = await getQuery(sql, params);
+    
+    res.json({ 
+      success: true,
+      data: installations || []
     });
   } catch (error) {
     console.error('Get board installations error:', error);

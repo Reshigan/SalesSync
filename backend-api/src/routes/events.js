@@ -485,50 +485,44 @@ router.post('/:id/performance', async (req, res) => {
 router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const db = getDatabase();
     
     const [eventCounts, typeBreakdown, attendance, upcomingEvents] = await Promise.all([
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_events,
-            COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_events,
-            COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_events,
-            COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_events
-          FROM events WHERE tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT type, COUNT(*) as count
-          FROM events WHERE tenant_id = ?
-          GROUP BY type
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(DISTINCT ea.id) as total_attendees,
-            COUNT(DISTINCT ea.customer_id) as unique_customers,
-            AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END) as avg_attendance_rate
-          FROM events e
-          LEFT JOIN event_attendees ea ON e.id = ea.event_id
-          WHERE e.tenant_id = ?
-        `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            e.id, e.name, e.type, e.event_date, e.location,
-            COUNT(ea.id) as attendee_count
-          FROM events e
-          LEFT JOIN event_attendees ea ON e.id = ea.event_id
-          WHERE e.tenant_id = ? AND e.event_date >= DATE('now')
-          GROUP BY e.id
-          ORDER BY e.event_date ASC
-          LIMIT 10
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getOneQuery(`
+        SELECT 
+          COUNT(*)::int as total_events,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_events,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_events,
+          COUNT(CASE WHEN status = 'cancelled' THEN 1 END)::int as cancelled_events
+        FROM events WHERE tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT type, COUNT(*)::int as count
+        FROM events WHERE tenant_id = $1
+        GROUP BY type
+      `, [tenantId]).then(rows => rows || []),
+      
+      getOneQuery(`
+        SELECT 
+          COUNT(DISTINCT ea.id)::int as total_attendees,
+          COUNT(DISTINCT ea.customer_id)::int as unique_customers,
+          AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END)::float8 as avg_attendance_rate
+        FROM events e
+        LEFT JOIN event_attendees ea ON e.id = ea.event_id
+        WHERE e.tenant_id = $1
+      `, [tenantId]).then(row => row || {}),
+      
+      getQuery(`
+        SELECT 
+          e.id, e.name, e.type, e.event_date, e.location,
+          COUNT(ea.id)::int as attendee_count
+        FROM events e
+        LEFT JOIN event_attendees ea ON e.id = ea.event_id
+        WHERE e.tenant_id = $1 AND e.event_date >= CURRENT_DATE
+        GROUP BY e.id, e.name, e.type, e.event_date, e.location
+        ORDER BY e.event_date ASC
+        LIMIT 10
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({
