@@ -39,8 +39,8 @@ router.post('/orders', asyncHandler(async (req, res) => {
   }
   
   const agent = await getOneQuery(
-    'SELECT id FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') WHERE user_id = ? AND tenant_id = ?',
-    [req.user.userId, tenantId]
+    'SELECT id FROM users WHERE role IN ($1, $2, $3) AND user_id = $4 AND tenant_id = $5',
+    ['agent', 'sales_agent', 'field_agent', req.user.userId, tenantId]
   );
   
   if (!agent) {

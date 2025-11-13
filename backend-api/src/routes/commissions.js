@@ -206,8 +206,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 // GET /api/commissions/stats - Commission statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
-  const { getOneQuery, getQuery } = require('../database/init');
-const { getQuery, getOneQuery, runQuery } = require('../utils/database');
+  const { getQuery, getOneQuery, runQuery } = require('../utils/database');
   
   const [commissionStats, topEarners, monthlyTrends] = await Promise.all([
     getOneQuery(`
