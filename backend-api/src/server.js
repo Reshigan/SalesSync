@@ -505,6 +505,24 @@ async function startServer() {
     const activeVisitsRoutes = require('./routes/active-visits');
     app.use('/api/active-visits', authTenantMiddleware, activeVisitsRoutes);
     
+    // Namespaced route aliases for module-specific endpoints
+    app.use('/api/field-operations/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/field-operations/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/field-operations/trends', authTenantMiddleware, trendsRoutes);
+    app.use('/api/field-operations/agents', authTenantMiddleware, agentsRoutes);
+    app.use('/api/field-operations/visits', authTenantMiddleware, visitsRoutes);
+    app.use('/api/field-operations/performance', authTenantMiddleware, performanceRoutes);
+    
+    app.use('/api/van-sales/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/van-sales/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/van-sales/trends', authTenantMiddleware, trendsRoutes);
+    app.use('/api/van-sales/routes', authTenantMiddleware, routesRoutes);
+    app.use('/api/van-sales/orders', authTenantMiddleware, ordersRoutes);
+    
+    app.use('/api/trade-marketing/stats', authTenantMiddleware, statsRoutes);
+    app.use('/api/trade-marketing/analytics', authTenantMiddleware, analyticsRoutes);
+    app.use('/api/trade-marketing/trends', authTenantMiddleware, trendsRoutes);
+    
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
     app.use('/api/board-installations', authTenantMiddleware, boardInstallationsRoutes);
