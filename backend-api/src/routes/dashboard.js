@@ -86,16 +86,15 @@ router.get('/', asyncHandler(async (req, res, next) => {
     // Get agent performance
     const agentPerformance = await getQuery(`
       SELECT 
-        u.first_name, u.last_name, a.agent_type,
+        u.first_name, u.last_name, u.role as agent_type,
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales,
         COUNT(DISTINCT v.id) as visit_count
-      FROM agents a
-      JOIN users u ON u.id = a.user_id
-      LEFT JOIN orders o ON o.salesman_id = a.id AND o.order_status != 'cancelled'
-      LEFT JOIN visits v ON v.agent_id = a.id
-      WHERE a.tenant_id = ? AND a.status = 'active'
-      GROUP BY a.id
+      FROM users u
+      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status != 'cancelled'
+      LEFT JOIN visits v ON v.agent_id = u.id
+      WHERE u.tenant_id = ? AND u.status = 'active' AND u.role IN ('agent', 'sales_agent', 'field_agent')
+      GROUP BY u.id
       ORDER BY total_sales DESC
       LIMIT 5
     `, [req.tenantId]);
@@ -494,18 +493,18 @@ router.get('/alerts', asyncHandler(async (req, res, next) => {
     // 3. Inactive Agents
     const inactiveAgents = await getQuery(`
       SELECT 
-        a.id, u.first_name, u.last_name, u.email,
+        u.id, u.first_name, u.last_name, u.email,
         MAX(v.created_at) as last_visit_date,
         'inactive_agent' as alert_type,
         'medium' as severity,
         'Agent ' || u.first_name || ' ' || u.last_name || ' has been inactive for more than 7 days' as message,
         CURRENT_TIMESTAMP as created_at
-      FROM agents a
-      JOIN users u ON u.id = a.user_id
-      LEFT JOIN visits v ON v.agent_id = a.id
-      WHERE a.tenant_id = ? 
-        AND a.status = 'active'
-      GROUP BY a.id
+      FROM users u
+      LEFT JOIN visits v ON v.agent_id = u.id
+      WHERE u.tenant_id = ? 
+        AND u.status = 'active'
+        AND u.role IN ('agent', 'sales_agent', 'field_agent')
+      GROUP BY u.id
       HAVING last_visit_date IS NULL OR last_visit_date < CURRENT_DATE - INTERVAL '7 days'
       ORDER BY last_visit_date ASC NULLS FIRST
       LIMIT 5
