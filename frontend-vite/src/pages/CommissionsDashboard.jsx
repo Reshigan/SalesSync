@@ -27,7 +27,7 @@ export default function CommissionsDashboard() {
       setLoading(true);
       const [commRes, agentRes] = await Promise.all([
         axios.get(`${API_URL}/api/commissions`).catch(() => ({ data: { commissions: [] } })),
-        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        axios.get(`${API_URL}/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
       ]);
       
       setCommissions(commRes.data.commissions || []);
