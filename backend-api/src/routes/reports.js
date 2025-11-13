@@ -2,27 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { getDatabase } = require('../database/init');
-
-function getQuery(sql, params = []) {
-  const db = getDatabase();
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
-}
-
-function getOneQuery(sql, params = []) {
-  const db = getDatabase();
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
-}
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // Generate Report
 router.post('/generate', async (req, res) => {
