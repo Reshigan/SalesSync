@@ -218,7 +218,6 @@ router.get('/:id', async (req, res) => {
  */
 router.post('/', async (req, res) => {
   try {
-    const db = getDatabase();
     const { 
       code, name, area_id, agent_id, description, status = 'active',
       visit_frequency = 'weekly', estimated_duration, target_calls
@@ -233,7 +232,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if code already exists
-    const existingRoute = db.prepare('SELECT id FROM routes WHERE code = ? AND tenant_id = ?').get(code, req.tenantId);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE code = $1 AND tenant_id = $2', [code, req.tenantId]);
     if (existingRoute) {
       return res.status(400).json({
         success: false,
@@ -244,20 +243,18 @@ router.post('/', async (req, res) => {
     const id = uuidv4();
     const now = new Date().toISOString();
     
-    const insertQuery = `
+    await runQuery(`
       INSERT INTO routes (
         id, tenant_id, code, name, area_id, agent_id, description, status,
         visit_frequency, estimated_duration, target_calls, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    
-    db.prepare(insertQuery).run(
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    `, [
       id, req.tenantId, code, name, area_id, agent_id || null, description || null, status,
       visit_frequency, estimated_duration || null, target_calls || null, now, now
-    );
+    ]);
     
     // Fetch the created route with joined data
-    const query = `
+    const route = await getOneQuery(`
       SELECT 
         r.*,
         a.name as area_name,
@@ -267,10 +264,8 @@ router.post('/', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = ?
-    `;
-    
-    const route = db.prepare(query).get(id);
+      WHERE r.id = $1
+    `, [id]);
     
     res.status(201).json({
       success: true,
@@ -334,7 +329,6 @@ router.post('/', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
     const { id } = req.params;
     const { 
       code, name, area_id, agent_id, description, status,
@@ -342,7 +336,7 @@ router.put('/:id', async (req, res) => {
     } = req.body;
     
     // Check if route exists
-    const existingRoute = db.prepare('SELECT id FROM routes WHERE id = ? AND tenant_id = ?').get(id, req.tenantId);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
     if (!existingRoute) {
       return res.status(404).json({
         success: false,
@@ -352,7 +346,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if code already exists (excluding current route)
     if (code) {
-      const duplicateRoute = db.prepare('SELECT id FROM routes WHERE code = ? AND tenant_id = ? AND id != ?').get(code, req.tenantId, id);
+      const duplicateRoute = await getOneQuery('SELECT id FROM routes WHERE code = $1 AND tenant_id = $2 AND id != $3', [code, req.tenantId, id]);
       if (duplicateRoute) {
         return res.status(400).json({
           success: false,
@@ -363,28 +357,26 @@ router.put('/:id', async (req, res) => {
     
     const now = new Date().toISOString();
     
-    const updateQuery = `
+    await runQuery(`
       UPDATE routes SET
-        code = COALESCE(?, code),
-        name = COALESCE(?, name),
-        area_id = COALESCE(?, area_id),
-        agent_id = ?,
-        description = ?,
-        status = COALESCE(?, status),
-        visit_frequency = COALESCE(?, visit_frequency),
-        estimated_duration = ?,
-        target_calls = ?,
-        updated_at = ?
-      WHERE id = ? AND tenant_id = ?
-    `;
-    
-    db.prepare(updateQuery).run(
+        code = COALESCE($1, code),
+        name = COALESCE($2, name),
+        area_id = COALESCE($3, area_id),
+        agent_id = $4,
+        description = $5,
+        status = COALESCE($6, status),
+        visit_frequency = COALESCE($7, visit_frequency),
+        estimated_duration = $8,
+        target_calls = $9,
+        updated_at = $10
+      WHERE id = $11 AND tenant_id = $12
+    `, [
       code, name, area_id, agent_id || null, description || null, status,
       visit_frequency, estimated_duration || null, target_calls || null, now, id, req.tenantId
-    );
+    ]);
     
     // Fetch the updated route with joined data
-    const query = `
+    const route = await getOneQuery(`
       SELECT 
         r.*,
         a.name as area_name,
@@ -394,10 +386,8 @@ router.put('/:id', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = ?
-    `;
-    
-    const route = db.prepare(query).get(id);
+      WHERE r.id = $1
+    `, [id]);
     
     res.json({
       success: true,
@@ -436,11 +426,10 @@ router.put('/:id', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const db = getDatabase();
     const { id } = req.params;
     
     // Check if route exists
-    const existingRoute = db.prepare('SELECT id FROM routes WHERE id = ? AND tenant_id = ?').get(id, req.tenantId);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
     if (!existingRoute) {
       return res.status(404).json({
         success: false,
@@ -449,7 +438,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if route has associated customers
-    const customerCount = db.prepare('SELECT COUNT(*) as count FROM customers WHERE route_id = ?').get(id);
+    const customerCount = await getOneQuery('SELECT COUNT(*)::int as count FROM customers WHERE route_id = $1', [id]);
     if (customerCount.count > 0) {
       return res.status(400).json({
         success: false,
@@ -457,7 +446,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    db.prepare('DELETE FROM routes WHERE id = ? AND tenant_id = ?').run(id, req.tenantId);
+    await runQuery('DELETE FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
     
     res.json({
       success: true,
