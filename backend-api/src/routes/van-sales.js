@@ -378,7 +378,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
     SELECT 
       p.id,
       p.name,
-      p.sku,
+      p.code as sku,
       COUNT(DISTINCT vsi.id) as total_sales,
       SUM(vsi.quantity) as total_quantity,
       SUM(vsi.subtotal) as total_revenue
@@ -386,7 +386,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
     INNER JOIN van_sale_items vsi ON p.id = vsi.product_id
     INNER JOIN van_sales vs ON vsi.van_sale_id = vs.id
     WHERE vs.tenant_id = $1${dateFilter}
-    GROUP BY p.id, p.name, p.sku
+    GROUP BY p.id, p.name, p.code
     ORDER BY total_revenue DESC
     LIMIT 10
   `;
@@ -554,7 +554,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     SELECT 
       vsi.*,
       p.name as product_name,
-      p.sku as product_sku
+      p.code as product_sku
     FROM van_sale_items vsi
     LEFT JOIN products p ON vsi.product_id = p.id
     WHERE vsi.van_sale_id = $1
