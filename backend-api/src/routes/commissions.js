@@ -191,7 +191,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
         }
 
         db.get(
-          'SELECT total_commission_earned, total_commission_paid, commission_balance FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND id = ? AND tenant_id = ?',
+          "SELECT total_commission_earned, total_commission_paid, commission_balance FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND id = ? AND tenant_id = ?",
           [agentId, tenantId],
           (err, agent) => {
             if (err) console.error('Error fetching agent:', err);
