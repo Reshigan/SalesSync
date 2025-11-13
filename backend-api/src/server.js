@@ -496,6 +496,15 @@ async function startServer() {
     const statsRoutes = require('./routes/stats');
     app.use('/api/stats', authTenantMiddleware, statsRoutes);
     
+    const trendsRoutes = require('./routes/trends');
+    app.use('/api/trends', authTenantMiddleware, trendsRoutes);
+    
+    const agentLocationsRoutes = require('./routes/agent-locations');
+    app.use('/api/agent-locations', authTenantMiddleware, agentLocationsRoutes);
+    
+    const activeVisitsRoutes = require('./routes/active-visits');
+    app.use('/api/active-visits', authTenantMiddleware, activeVisitsRoutes);
+    
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
     app.use('/api/board-installations', authTenantMiddleware, boardInstallationsRoutes);
