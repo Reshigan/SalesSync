@@ -107,7 +107,7 @@ router.get('/', async (req, res) => {
         0 as performance_rating,
         NULL as last_activity
       FROM users u
-      WHERE u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'van_sales_agent')
+      WHERE u.tenant_id = $1 AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'van_sales_agent', 'agent')
       ORDER BY u.first_name, u.last_name
     `;
     
@@ -160,7 +160,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
       LEFT JOIN users mgr ON u.manager_id = mgr.id
-      WHERE u.id = ? AND u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor')
+      WHERE u.id = $1 AND u.tenant_id = $2 AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'agent')
     `;
     
     const agent = await getOneQuery(query, [id, req.tenantId]);
