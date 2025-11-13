@@ -3,6 +3,7 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { v4: uuidv4 } = require('uuid');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Get all commissions
 router.get('/', authMiddleware, async (req, res) => {
@@ -16,35 +17,31 @@ router.get('/', authMiddleware, async (req, res) => {
       FROM commission_transactions ct
       LEFT JOIN users a ON ct.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE ct.tenant_id = ?
+      WHERE ct.tenant_id = $1
     `;
     const params = [tenantId];
+    let paramIndex = 1;
 
     if (agent_id) {
-      query += ' AND ct.agent_id = ?';
+      query += ` AND ct.agent_id = $${++paramIndex}`;
       params.push(agent_id);
     }
     if (status) {
-      query += ' AND ct.payment_status = ?';
+      query += ` AND ct.payment_status = $${++paramIndex}`;
       params.push(status);
     }
     if (from_date) {
-      query += ' AND date(ct.transaction_date) >= date(?)';
+      query += ` AND ct.transaction_date::date >= $${++paramIndex}::date`;
       params.push(from_date);
     }
     if (to_date) {
-      query += ' AND date(ct.transaction_date) <= date(?)';
+      query += ` AND ct.transaction_date::date <= $${++paramIndex}::date`;
       params.push(to_date);
     }
 
     query += ' ORDER BY ct.transaction_date DESC LIMIT 100';
-    db.all(query, params, (err, commissions) => {
-      if (err) {
-        console.error('Error fetching commissions:', err);
-        return res.status(500).json({ success: false, error: 'Failed to fetch commissions' });
-      }
-      res.json({ success: true, data: commissions || [] });
-    });
+    const commissions = await getQuery(query, params);
+    res.json({ success: true, data: commissions || [] });
   } catch (error) {
     console.error('Error in get commissions:', error);
     res.status(500).json({ success: false, error: 'Internal server error' });
@@ -56,7 +53,8 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId;
-    db.get(
+    
+    const commission = await getOneQuery(
       `SELECT ct.*, 
               u.first_name || ' ' || u.last_name as agent_name, u.email as agent_email,
               approver.first_name || ' ' || approver.last_name as approved_by_name,
@@ -66,19 +64,14 @@ router.get('/:id', authMiddleware, async (req, res) => {
        LEFT JOIN users u ON a.user_id = u.id
        LEFT JOIN users approver ON ct.approved_by = approver.id
        LEFT JOIN users rejecter ON ct.rejected_by = rejecter.id
-       WHERE ct.id = ? AND ct.tenant_id = ?`,
-      [id, tenantId],
-      (err, commission) => {
-        if (err) {
-          console.error('Error fetching commission:', err);
-          return res.status(500).json({ error: 'Failed to fetch commission' });
-        }
-        if (!commission) {
-          return res.status(404).json({ error: 'Commission not found' });
-        }
-        res.json(commission);
-      }
+       WHERE ct.id = $1 AND ct.tenant_id = $2`,
+      [id, tenantId]
     );
+    
+    if (!commission) {
+      return res.status(404).json({ error: 'Commission not found' });
+    }
+    res.json(commission);
   } catch (error) {
     console.error('Error in get commission:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -95,51 +88,42 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
     if (req.user.role !== 'admin' && req.user.role !== 'manager') {
       return res.status(403).json({ error: 'Insufficient permissions to approve commissions' });
     }
-    db.get(
-      'SELECT * FROM commission_transactions WHERE id = ? AND tenant_id = ?',
-      [id, tenantId],
-      (err, commission) => {
-        if (err) {
-          console.error('Error fetching commission:', err);
-          return res.status(500).json({ error: 'Failed to approve commission' });
-        }
-        if (!commission) {
-          return res.status(404).json({ error: 'Commission not found' });
-        }
-        if (commission.status !== 'pending') {
-          return res.status(400).json({ error: 'Commission is not in pending status' });
-        }
-
-        db.run(
-          `UPDATE commission_transactions SET
-            status = 'approved',
-            approved_by = ?,
-            approved_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND tenant_id = ?`,
-          [userId, id, tenantId],
-          function(err) {
-            if (err) {
-              console.error('Error approving commission:', err);
-              return res.status(500).json({ error: 'Failed to approve commission' });
-            }
-
-            db.run(
-              `UPDATE agents SET
-                total_commission_earned = total_commission_earned + ?,
-                commission_balance = commission_balance + ?
-              WHERE id = ? AND tenant_id = ?`,
-              [commission.total_amount, commission.total_amount, commission.agent_id, tenantId],
-              (err) => {
-                if (err) console.error('Error updating agent balance:', err);
-              }
-            );
-
-            res.json({ message: 'Commission approved successfully', commission_id: id });
-          }
-        );
-      }
+    
+    const commission = await getOneQuery(
+      'SELECT * FROM commission_transactions WHERE id = $1 AND tenant_id = $2',
+      [id, tenantId]
     );
+    
+    if (!commission) {
+      return res.status(404).json({ error: 'Commission not found' });
+    }
+    if (commission.status !== 'pending') {
+      return res.status(400).json({ error: 'Commission is not in pending status' });
+    }
+
+    await runQuery(
+      `UPDATE commission_transactions SET
+        status = 'approved',
+        approved_by = $1,
+        approved_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2 AND tenant_id = $3`,
+      [userId, id, tenantId]
+    );
+
+    try {
+      await runQuery(
+        `UPDATE users SET
+          total_commission_earned = COALESCE(total_commission_earned, 0) + $1,
+          commission_balance = COALESCE(commission_balance, 0) + $2
+        WHERE id = $3 AND tenant_id = $4 AND role IN ('agent', 'sales_agent', 'field_agent')`,
+        [commission.total_amount, commission.total_amount, commission.agent_id, tenantId]
+      );
+    } catch (err) {
+      console.error('Error updating agent balance (column may not exist):', err);
+    }
+
+    res.json({ message: 'Commission approved successfully', commission_id: id });
   } catch (error) {
     console.error('Error in approve commission:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -155,16 +139,18 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 
     let dateFilter = '';
     const params = [agentId, tenantId];
+    let paramIndex = 2;
 
     if (from_date) {
-      dateFilter += ' AND date(created_at) >= date(?)';
+      dateFilter += ` AND created_at::date >= $${++paramIndex}::date`;
       params.push(from_date);
     }
     if (to_date) {
-      dateFilter += ' AND date(created_at) <= date(?)';
+      dateFilter += ` AND created_at::date <= $${++paramIndex}::date`;
       params.push(to_date);
     }
-    db.get(
+    
+    const summary = await getOneQuery(
       `SELECT 
         SUM(CASE WHEN payment_status = 'pending' THEN commission_amount ELSE 0 END) as pending_total,
         SUM(CASE WHEN payment_status = 'approved' THEN commission_amount ELSE 0 END) as approved_total,
@@ -173,30 +159,21 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
         COUNT(CASE WHEN payment_status = 'approved' THEN 1 END) as approved_count,
         COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count
        FROM commission_transactions
-       WHERE agent_id = ? AND tenant_id = ?${dateFilter}`,
-      params,
-      (err, summary) => {
-        if (err) {
-          console.error('Error fetching summary:', err);
-          return res.status(500).json({ error: 'Failed to fetch commission summary' });
-        }
-
-        db.get(
-          "SELECT total_commission_earned, total_commission_paid, commission_balance FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND id = ? AND tenant_id = ?",
-          [agentId, tenantId],
-          (err, agent) => {
-            if (err) console.error('Error fetching agent:', err);
-
-            res.json({
-              summary: summary,
-              current_balance: agent?.commission_balance || 0,
-              lifetime_earned: agent?.total_commission_earned || 0,
-              lifetime_paid: agent?.total_commission_paid || 0
-            });
-          }
-        );
-      }
+       WHERE agent_id = $1 AND tenant_id = $2${dateFilter}`,
+      params
     );
+
+    const agent = await getOneQuery(
+      "SELECT total_commission_earned, total_commission_paid, commission_balance FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND id = $1 AND tenant_id = $2",
+      [agentId, tenantId]
+    );
+
+    res.json({
+      summary: summary,
+      current_balance: agent?.commission_balance || 0,
+      lifetime_earned: agent?.total_commission_earned || 0,
+      lifetime_paid: agent?.total_commission_paid || 0
+    });
   } catch (error) {
     console.error('Error in get agent summary:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -206,7 +183,6 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
 // GET /api/commissions/stats - Commission statistics
 router.get('/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
-  const { getQuery, getOneQuery, runQuery } = require('../utils/database');
   
   const [commissionStats, topEarners, monthlyTrends] = await Promise.all([
     getOneQuery(`
