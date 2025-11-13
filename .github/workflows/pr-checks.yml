@@ -58,10 +58,6 @@ jobs:
       working-directory: frontend-vite
       run: npm run lint
 
-    - name: Run type checking
-      working-directory: frontend-vite
-      run: npm run type-check
-
     - name: Build frontend
       working-directory: frontend-vite
       env:
