@@ -157,12 +157,12 @@ router.get('/visits', async (req, res) => {
     }
     
     if (date_from) {
-      query += ' AND DATE(v.scheduled_date) >= ?';
+      query += ' AND v.scheduled_date::date >= ?';
       params.push(date_from);
     }
     
     if (date_to) {
-      query += ' AND DATE(v.scheduled_date) <= ?';
+      query += ' AND v.scheduled_date::date <= ?';
       params.push(date_to);
     }
     
@@ -903,7 +903,7 @@ router.get('/dashboard', async (req, res) => {
         COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_visits,
         COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as active_visits,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_visits,
-        COUNT(CASE WHEN DATE(scheduled_date) = DATE('now') THEN 1 END) as today_visits
+        COUNT(CASE WHEN scheduled_date::date = DATE('now') THEN 1 END) as today_visits
       FROM visits
       WHERE tenant_id = ?
     `, [req.user.tenantId]);
@@ -928,7 +928,7 @@ router.get('/dashboard', async (req, res) => {
       LEFT JOIN customers c ON v.customer_id = c.id
       LEFT JOIN users a ON v.assigned_agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE v.tenant_id = ? AND DATE(v.scheduled_date) = DATE('now')
+      WHERE v.tenant_id = ? AND v.scheduled_date::date = DATE('now')
       ORDER BY v.scheduled_date ASC
       LIMIT 10
     `, [req.user.tenantId]);

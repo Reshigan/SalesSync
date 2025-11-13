@@ -690,14 +690,14 @@ router.get('/:id/performance', async (req, res, next) => {
     // Get daily performance trend
     const dailyTrend = await getQuery(
       `SELECT 
-        DATE(pa.activity_date) as date,
+        pa.activity_date::date as date,
         COUNT(pa.id) as activities,
         COUNT(CASE WHEN pa.status = 'completed' THEN 1 END) as completed,
         COALESCE(SUM(pa.samples_distributed), 0) as samples,
         COALESCE(SUM(pa.contacts_made), 0) as contacts
       FROM promoter_activities pa
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
-      GROUP BY DATE(pa.activity_date)
+      GROUP BY pa.activity_date::date
       ORDER BY date DESC
       LIMIT 30`,
       [id, req.tenantId]

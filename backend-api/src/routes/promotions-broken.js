@@ -633,7 +633,7 @@ router.get('/dashboard', async (req, res) => {
         COALESCE(SUM(pa.samples_distributed), 0) as samples_distributed_today,
         COALESCE(SUM(pa.contacts_made), 0) as contacts_made_today
       FROM promotional_campaigns pc
-      LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id AND DATE(pa.activity_date) = DATE('now')
+      LEFT JOIN promoter_activities pa ON pc.id = pa.campaign_id AND pa.activity_date::date = DATE('now')
       WHERE pc.tenant_id = ?
     `, [req.user.tenantId]);
     
@@ -658,7 +658,7 @@ router.get('/dashboard', async (req, res) => {
     const activitiesByType = await getQuery(`
       SELECT activity_type, COUNT(*) as count
       FROM promoter_activities
-      WHERE tenant_id = ? AND DATE(activity_date) = DATE('now')
+      WHERE tenant_id = ? AND activity_date::date = DATE('now')
       GROUP BY activity_type
     `, [req.user.tenantId]);
     

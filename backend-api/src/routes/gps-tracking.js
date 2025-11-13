@@ -471,12 +471,12 @@ router.get('/agents/:id/track', async (req, res) => {
     const params = [id, req.user.tenantId];
     
     if (date_from) {
-      query += ' AND DATE(al.recorded_at) >= ?';
+      query += ' AND al.recorded_at::date >= ?';
       params.push(date_from);
     }
     
     if (date_to) {
-      query += ' AND DATE(al.recorded_at) <= ?';
+      query += ' AND al.recorded_at::date <= ?';
       params.push(date_to);
     }
     

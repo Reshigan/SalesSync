@@ -315,12 +315,12 @@ router.get('/transactions', async (req, res) => {
     }
 
     if (startDate) {
-      sql += ' AND DATE(it.created_at) >= ?';
+      sql += ' AND it.created_at::date >= ?';
       params.push(startDate);
     }
 
     if (endDate) {
-      sql += ' AND DATE(it.created_at) <= ?';
+      sql += ' AND it.created_at::date <= ?';
       params.push(endDate);
     }
 
@@ -791,12 +791,12 @@ router.get('/analytics', async (req, res) => {
     const velocityParams = [tenantId];
 
     if (startDate) {
-      velocitySql += ' AND DATE(it.created_at) >= ?';
+      velocitySql += ' AND it.created_at::date >= ?';
       velocityParams.push(startDate);
     }
 
     if (endDate) {
-      velocitySql += ' AND DATE(it.created_at) <= ?';
+      velocitySql += ' AND it.created_at::date <= ?';
       velocityParams.push(endDate);
     }
 

@@ -49,7 +49,7 @@ router.post('/', async (req, res) => {
 
     const txnNumber = `TXN-${Date.now()}`;
     db.run(`INSERT INTO transactions (tenant_id, transaction_number, transaction_type, customer_id, order_id, amount, payment_method, reference, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
       [tenantId, txnNumber, transaction_type, customer_id, order_id, amount, payment_method || 'cash', reference, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create transaction' });
@@ -71,7 +71,7 @@ router.post('/refunds', async (req, res) => {
 
     const refNumber = `REF-${Date.now()}`;
     db.run(`INSERT INTO refunds (tenant_id, refund_number, original_transaction_id, amount, reason, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, original_transaction_id, amount, reason, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create refund' });

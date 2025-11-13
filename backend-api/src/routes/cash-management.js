@@ -68,7 +68,7 @@ router.post('/collections', async (req, res) => {
 
     const receiptNumber = `RCPT-${Date.now()}`;
     db.run(`INSERT INTO cash_collections (tenant_id, receipt_number, route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
       [tenantId, receiptNumber, route_id, agent_id, customer_id, collection_date || new Date().toISOString().split('T')[0], amount, payment_method || 'cash', reference, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to record collection' });
@@ -92,7 +92,7 @@ router.post('/reconciliations', async (req, res) => {
     const variance = actual_cash - expected_cash;
 
     db.run(`INSERT INTO cash_reconciliations (tenant_id, reference_number, route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance, variance_reason, denominations, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, route_id, agent_id, reconciliation_date || new Date().toISOString().split('T')[0], expected_cash, actual_cash, variance, variance_reason, JSON.stringify(denominations), userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create reconciliation' });
@@ -112,7 +112,7 @@ router.post('/reconciliations/:id/approve', async (req, res) => {
     const userId = req.userId || 1;
     const db = getDatabase();
 
-    db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = ?, approved_at = datetime('now') WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to approve reconciliation' });
@@ -138,7 +138,7 @@ router.post('/deposits', async (req, res) => {
 
     const refNumber = `DEP-${Date.now()}`;
     db.run(`INSERT INTO bank_deposits (tenant_id, reference_number, deposit_date, bank_name, account_number, amount, deposit_slip, notes, status, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, deposit_date, bank_name, account_number, amount, deposit_slip, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to record deposit' });

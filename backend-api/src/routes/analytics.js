@@ -34,13 +34,13 @@ router.get('/sales', asyncHandler(async (req, res) => {
   // Daily sales trend
   const dailySales = await getQuery(`
     SELECT 
-      DATE(o.order_date) as date,
+      o.order_date::date as date,
       COUNT(*)::int as orders,
       COALESCE(SUM(o.total_amount), 0)::float8 as revenue
     FROM orders o
     WHERE o.tenant_id = $1 ${dateFilter}
-    GROUP BY DATE(o.order_date)
-    ORDER BY DATE(o.order_date)
+    GROUP BY o.order_date::date
+    ORDER BY o.order_date::date
   `, params);
   
   // Top products

@@ -957,12 +957,12 @@ router.get('/:id/stock-history', async (req, res) => {
     
     // Add filters
     if (start_date) {
-      sql += ' AND DATE(im.created_at) >= DATE(?)';
+      sql += ' AND im.created_at::date >= DATE(?)';
       params.push(start_date);
     }
     
     if (end_date) {
-      sql += ' AND DATE(im.created_at) <= DATE(?)';
+      sql += ' AND im.created_at::date <= DATE(?)';
       params.push(end_date);
     }
     

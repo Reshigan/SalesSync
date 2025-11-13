@@ -315,12 +315,12 @@ router.get('/stats', asyncHandler(async (req, res) => {
     
     getQuery(`
       SELECT 
-        DATE(payment_date) as date,
+        payment_date::date as date,
         COUNT(*) as payment_count,
         SUM(amount) as daily_total
       FROM payments
       WHERE tenant_id = ? AND payment_date >= DATE('now', '-30 days')
-      GROUP BY DATE(payment_date)
+      GROUP BY payment_date::date
       ORDER BY date DESC
     `, [tenantId])
   ]);

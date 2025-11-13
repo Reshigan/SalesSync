@@ -211,12 +211,12 @@ router.get('/assignments', async (req, res) => {
     }
     
     if (due_date_from) {
-      query += ' AND DATE(pa.due_date) >= ?';
+      query += ' AND pa.due_date::date >= ?';
       params.push(due_date_from);
     }
     
     if (due_date_to) {
-      query += ' AND DATE(pa.due_date) <= ?';
+      query += ' AND pa.due_date::date <= ?';
       params.push(due_date_to);
     }
     
@@ -746,7 +746,7 @@ router.get('/dashboard', async (req, res) => {
       SELECT 
         COUNT(p.id) as total_pictures,
         COALESCE(SUM(p.file_size), 0) as total_file_size,
-        COUNT(CASE WHEN DATE(p.captured_at) = DATE('now') THEN 1 END) as today_pictures
+        COUNT(CASE WHEN p.captured_at::date = DATE('now') THEN 1 END) as today_pictures
       FROM pictures p
       JOIN picture_assignments pa ON p.assignment_id = pa.id
       WHERE pa.tenant_id = ?

@@ -137,7 +137,7 @@ router.get('/', async (req, res) => {
       FROM vans v
       LEFT JOIN users a ON v.assigned_salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN van_loads vl ON v.id = vl.van_id AND DATE(vl.load_date) = DATE('now')
+      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = DATE('now')
       WHERE v.tenant_id = ?
     `;
     const params = [tenantId];

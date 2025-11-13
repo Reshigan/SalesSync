@@ -75,7 +75,7 @@ router.post('/validate-proximity', authMiddleware, async (req, res) => {
           `INSERT INTO agent_gps_logs (
             id, tenant_id, agent_id, latitude, longitude, accuracy,
             timestamp, activity_type, reference_type, reference_id
-          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`,
           [logId, tenantId, agentId, latitude, longitude, accuracy, 
            'proximity_check', 'customer', customer_id],
           (err) => {
@@ -141,7 +141,7 @@ router.post('/log', authMiddleware, async (req, res) => {
         id, tenant_id, agent_id, latitude, longitude, accuracy,
         altitude, speed, bearing, timestamp, activity_type,
         reference_type, reference_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`,
       [
         logId, tenantId, agentId, latitude, longitude, accuracy,
         altitude, speed, bearing, activity_type, reference_type, reference_id
@@ -241,7 +241,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
             `INSERT INTO customer_location_history (
               id, tenant_id, customer_id, latitude, longitude, accuracy,
               updated_by, update_reason, timestamp
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [
               historyId, tenantId, customer_id, customer.old_latitude,
               customer.old_longitude, null, userId, 'Previous location before update'
@@ -261,7 +261,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
             latitude = ?,
             longitude = ?,
             gps_accuracy = ?,
-            gps_updated_at = datetime('now')
+            gps_updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND tenant_id = ?`,
           [latitude, longitude, accuracy, customer_id, tenantId],
           function(err) {
@@ -276,7 +276,7 @@ router.put('/update-customer-location', authMiddleware, async (req, res) => {
               `INSERT INTO customer_location_history (
                 id, tenant_id, customer_id, latitude, longitude, accuracy,
                 updated_by, update_reason, timestamp
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
               [
                 newHistoryId, tenantId, customer_id, latitude, longitude,
                 accuracy, userId, update_reason || 'Location updated by field agent'

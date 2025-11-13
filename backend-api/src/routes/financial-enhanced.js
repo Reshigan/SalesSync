@@ -20,7 +20,7 @@ router.get('/ar/summary', async (req, res) => {
           COUNT(DISTINCT customer_id) as total_customers,
           SUM(CASE WHEN status = 'unpaid' THEN amount ELSE 0 END) as total_outstanding,
           SUM(CASE WHEN status = 'overdue' THEN amount ELSE 0 END) as total_overdue,
-          SUM(CASE WHEN DATE(due_date) <= DATE('now', '+30 days') THEN amount ELSE 0 END) as due_30_days,
+          SUM(CASE WHEN due_date::date <= DATE('now', '+30 days') THEN amount ELSE 0 END) as due_30_days,
           AVG(JULIANDAY('now') - JULIANDAY(invoice_date)) as avg_collection_days
         FROM invoices
         WHERE tenant_id = ? AND status != 'paid'
@@ -139,8 +139,8 @@ router.get('/ap/summary', async (req, res) => {
         SELECT 
           COUNT(*) as total_bills,
           SUM(CASE WHEN status = 'unpaid' THEN amount ELSE 0 END) as total_outstanding,
-          SUM(CASE WHEN DATE(due_date) <= DATE('now', '+7 days') THEN amount ELSE 0 END) as due_this_week,
-          SUM(CASE WHEN DATE(due_date) < DATE('now') THEN amount ELSE 0 END) as overdue
+          SUM(CASE WHEN due_date::date <= DATE('now', '+7 days') THEN amount ELSE 0 END) as due_this_week,
+          SUM(CASE WHEN due_date::date < DATE('now') THEN amount ELSE 0 END) as overdue
         FROM bills
         WHERE tenant_id = ? AND status != 'paid'
       `, [tenantId], (err, row) => {
@@ -374,7 +374,7 @@ router.get('/reports/profit-loss', async (req, res) => {
         SELECT SUM(total) as total_revenue
         FROM orders
         WHERE tenant_id = ? 
-          AND DATE(created_at) BETWEEN ? AND ?
+          AND created_at::date BETWEEN ? AND ?
           AND status = 'completed'
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
@@ -390,7 +390,7 @@ router.get('/reports/profit-loss', async (req, res) => {
         JOIN orders o ON oi.order_id = o.id
         JOIN products p ON oi.product_id = p.id
         WHERE o.tenant_id = ?
-          AND DATE(o.created_at) BETWEEN ? AND ?
+          AND o.created_at::date BETWEEN ? AND ?
           AND o.status = 'completed'
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
@@ -427,7 +427,7 @@ router.get('/reports/cash-flow', async (req, res) => {
         SELECT SUM(amount) as total
         FROM payments
         WHERE tenant_id = ?
-          AND DATE(payment_date) BETWEEN ? AND ?
+          AND payment_date::date BETWEEN ? AND ?
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
         else resolve(row?.total || 0);
@@ -439,7 +439,7 @@ router.get('/reports/cash-flow', async (req, res) => {
         SELECT SUM(amount) as total
         FROM vendor_payments
         WHERE tenant_id = ?
-          AND DATE(payment_date) BETWEEN ? AND ?
+          AND payment_date::date BETWEEN ? AND ?
       `, [tenantId, startDate, endDate], (err, row) => {
         if (err) reject(err);
         else resolve(row?.total || 0);

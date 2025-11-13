@@ -27,7 +27,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
         visit_code, agent_id, store_id, visit_type, visit_status,
         check_in_time, check_in_latitude, check_in_longitude,
         entrance_photo_url, store_traffic, store_cleanliness
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?)`,
       [
         visitCode, req.user.id, storeId, visitType, 'in_progress',
         checkInLatitude, checkInLongitude, entrancePhotoUrl,
@@ -70,12 +70,12 @@ router.get('/visits', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND DATE(tmv.check_in_time) >= ?`;
+      sql += ` AND tmv.check_in_time::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND DATE(tmv.check_in_time) <= ?`;
+      sql += ` AND tmv.check_in_time::date <= ?`;
       params.push(endDate);
     }
     
@@ -160,12 +160,12 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
     await db.run(
       `UPDATE trade_marketing_visits 
        SET visit_status = 'completed', 
-           check_out_time = datetime('now'),
+           check_out_time = CURRENT_TIMESTAMP,
            check_out_latitude = ?,
            check_out_longitude = ?,
            exit_photo_url = ?,
            visit_notes = ?,
-           submitted_at = datetime('now')
+           submitted_at = CURRENT_TIMESTAMP
        WHERE id = ? AND agent_id = ?`,
       [checkOutLatitude, checkOutLongitude, exitPhotoUrl, visitNotes, req.params.id, req.user.id]
     );
@@ -395,7 +395,7 @@ router.post('/brand-activations', authMiddleware, async (req, res) => {
         activation_type, activation_status, setup_photo_url, activity_photos,
         samples_distributed, consumers_engaged, feedback_collected,
         store_manager_signature_url, activation_notes, activation_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [
         activationCode, visitId, campaignId, storeId, req.user.id,
         activationType, 'completed', setupPhotoUrl, JSON.stringify(activityPhotos),
@@ -459,12 +459,12 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     const params = [req.user.id];
     
     if (startDate) {
-      dateFilter += ` AND DATE(tmv.check_in_time) >= ?`;
+      dateFilter += ` AND tmv.check_in_time::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      dateFilter += ` AND DATE(tmv.check_in_time) <= ?`;
+      dateFilter += ` AND tmv.check_in_time::date <= ?`;
       params.push(endDate);
     }
     

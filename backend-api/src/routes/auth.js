@@ -405,7 +405,7 @@ router.post('/register', tenantMiddleware, asyncHandler(async (req, res, next) =
       `INSERT INTO users (
         email, password, first_name, last_name, role, 
         tenant_id, tenant_code, tenant_name, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP)`,
       [email, hashedPassword, firstName, lastName, role, tenant.id, tenantCode, tenant.name]
     );
 

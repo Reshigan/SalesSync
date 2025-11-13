@@ -614,7 +614,7 @@ router.get('/dashboard', async (req, res) => {
         COUNT(DISTINCT CASE WHEN vl.status = 'in_field' THEN vl.id END) as loads_in_field,
         COALESCE(SUM(vl.cash_collected), 0) as total_cash_collected_today
       FROM vans v
-      LEFT JOIN van_loads vl ON v.id = vl.van_id AND DATE(vl.load_date) = DATE('now')
+      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = DATE('now')
       WHERE v.tenant_id = ?
     `, [req.user.tenantId]);
     
@@ -636,7 +636,7 @@ router.get('/dashboard', async (req, res) => {
     const loadsByStatus = await getQuery(`
       SELECT status, COUNT(*) as count
       FROM van_loads
-      WHERE tenant_id = ? AND DATE(load_date) = DATE('now')
+      WHERE tenant_id = ? AND load_date::date = DATE('now')
       GROUP BY status
     `, [req.user.tenantId]);
     

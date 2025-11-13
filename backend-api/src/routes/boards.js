@@ -96,7 +96,7 @@ router.post('/', authMiddleware, async (req, res) => {
         id, tenant_id, board_name, board_type, width_cm, height_cm,
         cost_price, installation_cost, commission_rate, reference_image_url,
         description, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         boardId,
         tenantId,
@@ -183,7 +183,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
             reference_image_url = COALESCE(?, reference_image_url),
             description = COALESCE(?, description),
             status = COALESCE(?, status),
-            updated_at = datetime('now')
+            updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND tenant_id = ?`,
           [
             board_name,
@@ -328,7 +328,7 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
                 `INSERT INTO brand_boards (
                   id, tenant_id, brand_id, board_id,
                   coverage_standard, visibility_standard, is_active, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 1, datetime('now'))`,
+                ) VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
                 [
                   assignmentId,
                   tenantId,

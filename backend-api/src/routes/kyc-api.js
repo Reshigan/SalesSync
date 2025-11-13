@@ -71,7 +71,7 @@ router.post('/', async (req, res) => {
 
     const refNumber = `KYC-${Date.now()}`;
     db.run(`INSERT INTO kyc_documents (tenant_id, reference_number, customer_id, document_type, document_number, document_url, expiry_date, notes, status, uploaded_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'))`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, customer_id, document_type, document_number, document_url, expiry_date, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to upload document' });
@@ -92,7 +92,7 @@ router.post('/:id/verify', async (req, res) => {
     const userId = req.userId || 1;
     const db = getDatabase();
 
-    db.run(`UPDATE kyc_documents SET status = 'verified', verification_notes = ?, verified_by = ?, verified_at = datetime('now') WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
+    db.run(`UPDATE kyc_documents SET status = 'verified', verification_notes = ?, verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
       [verification_notes, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to verify document' });
@@ -117,7 +117,7 @@ router.post('/:id/reject', async (req, res) => {
       return res.status(400).json({ error: 'Rejection reason is required' });
     }
 
-    db.run(`UPDATE kyc_documents SET status = 'rejected', rejection_reason = ?, verified_by = ?, verified_at = datetime('now') WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
+    db.run(`UPDATE kyc_documents SET status = 'rejected', rejection_reason = ?, verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
       [rejection_reason, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to reject document' });

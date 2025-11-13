@@ -34,13 +34,13 @@ router.get('/sales', asyncHandler(async (req, res) => {
   // Daily sales trend
   const dailySales = await getQuery(`
     SELECT 
-      DATE(o.order_date) as date,
+      o.order_date::date as date,
       COUNT(*) as orders,
       COALESCE(SUM(o.total_amount), 0) as revenue
     FROM orders o
     WHERE o.tenant_id = ? ${dateFilter}
-    GROUP BY DATE(o.order_date)
-    ORDER BY DATE(o.order_date)
+    GROUP BY o.order_date::date
+    ORDER BY o.order_date::date
   `, params);
   
   // Top products
@@ -116,13 +116,13 @@ router.get('/visits', asyncHandler(async (req, res) => {
   // Daily visit trend
   const dailyVisits = await getQuery(`
     SELECT 
-      DATE(v.visit_date) as date,
+      v.visit_date::date as date,
       COUNT(*) as total_visits,
       SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END) as completed_visits
     FROM visits v
     WHERE v.tenant_id = ? ${dateFilter}
-    GROUP BY DATE(v.visit_date)
-    ORDER BY DATE(v.visit_date)
+    GROUP BY v.visit_date::date
+    ORDER BY v.visit_date::date
   `, params);
   
   // Agent performance
@@ -410,9 +410,9 @@ router.get('/dashboard', async (req, res) => {
           COUNT(DISTINCT v.id) as today_visits,
           COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END) as today_completed_visits
         FROM orders o
-        FULL OUTER JOIN visits v ON DATE(o.order_date) = DATE(v.visit_date) AND o.tenant_id = v.tenant_id
+        FULL OUTER JOIN visits v ON o.order_date::date = v.visit_date::date AND o.tenant_id = v.tenant_id
         WHERE (o.tenant_id = ? OR v.tenant_id = ?) 
-          AND (DATE(o.order_date) = DATE('now') OR DATE(v.visit_date) = DATE('now'))
+          AND (o.order_date::date = DATE('now') OR v.visit_date::date = DATE('now'))
       `, [tenantId, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -510,13 +510,13 @@ router.get('/revenue', async (req, res) => {
     const dailyRevenue = await new Promise((resolve, reject) => {
       db.all(`
         SELECT 
-          DATE(o.order_date) as date,
+          o.order_date::date as date,
           SUM(o.total_amount) as revenue,
           COUNT(*) as orders
         FROM orders o
         WHERE o.tenant_id = ? ${dateFilter}
-        GROUP BY DATE(o.order_date)
-        ORDER BY DATE(o.order_date)
+        GROUP BY o.order_date::date
+        ORDER BY o.order_date::date
       `, params, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);

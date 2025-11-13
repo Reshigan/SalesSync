@@ -56,7 +56,7 @@ router.post('/calculate', async (req, res) => {
 
         const refNumber = `COM-${Date.now()}`;
         db.run(`INSERT INTO commissions (tenant_id, commission_number, agent_id, period_start, period_end, total_sales, order_count, commission_rate, commission_amount, status, created_by, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'calculated', ?, datetime('now'))`,
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'calculated', ?, CURRENT_TIMESTAMP)`,
           [tenantId, refNumber, agent_id, period_start, period_end, totalSales, orderCount, commission_rate, commissionAmount, userId],
           function(err) {
             if (err) return res.status(500).json({ error: 'Failed to save commission' });
@@ -78,7 +78,7 @@ router.post('/:id/approve', async (req, res) => {
     const userId = req.userId || 1;
     const db = getDatabase();
 
-    db.run(`UPDATE commissions SET status = 'approved', approved_by = ?, approved_at = datetime('now') WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE commissions SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to approve commission' });
@@ -99,7 +99,7 @@ router.post('/:id/pay', async (req, res) => {
     const userId = req.userId || 1;
     const db = getDatabase();
 
-    db.run(`UPDATE commissions SET status = 'paid', payment_method = ?, payment_reference = ?, paid_by = ?, paid_at = datetime('now') WHERE id = ? AND tenant_id = ? AND status = 'approved'`,
+    db.run(`UPDATE commissions SET status = 'paid', payment_method = ?, payment_reference = ?, paid_by = ?, paid_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'approved'`,
       [payment_method, payment_reference, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to mark as paid' });

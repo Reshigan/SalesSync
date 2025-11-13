@@ -111,7 +111,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
       `INSERT INTO field_visits (
         visit_code, agent_id, customer_id, visit_type, visit_status,
         start_time, start_latitude, start_longitude, selected_brands, gps_validation_passed
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?)`,
       [
         visitCode,
         req.user.id,
@@ -157,12 +157,12 @@ router.get('/visits', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND DATE(fv.start_time) >= ?`;
+      sql += ` AND fv.start_time::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND DATE(fv.start_time) <= ?`;
+      sql += ` AND fv.start_time::date <= ?`;
       params.push(endDate);
     }
     
@@ -240,7 +240,7 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
     await db.run(
       `UPDATE field_visits 
        SET visit_status = 'completed', 
-           end_time = datetime('now'),
+           end_time = CURRENT_TIMESTAMP,
            end_latitude = ?,
            end_longitude = ?,
            visit_notes = ?
@@ -335,7 +335,7 @@ router.post('/board-placements', authMiddleware, async (req, res) => {
         `INSERT INTO agent_commissions (
           agent_id, visit_id, commission_type, reference_type, reference_id,
           commission_amount, commission_status, earned_date
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
         [
           req.user.id, visitId, 'board_placement', 'board_placement',
           result.lastID, board.commission_rate, 'pending'
@@ -432,12 +432,12 @@ router.get('/commissions', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND DATE(ac.earned_date) >= ?`;
+      sql += ` AND ac.earned_date::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND DATE(ac.earned_date) <= ?`;
+      sql += ` AND ac.earned_date::date <= ?`;
       params.push(endDate);
     }
     
@@ -491,12 +491,12 @@ router.get('/board-installations', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND DATE(bp.created_at) >= ?`;
+      sql += ` AND bp.created_at::date >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND DATE(bp.created_at) <= ?`;
+      sql += ` AND bp.created_at::date <= ?`;
       params.push(endDate);
     }
     
@@ -543,7 +543,7 @@ router.post('/surveys/submit', authMiddleware, async (req, res) => {
         visit_id, survey_id, agent_id, customer_id, survey_type,
         survey_scope, brand_id, completion_status, responses,
         started_at, completed_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         visitId, surveyId, req.user.id, customerId, surveyType,
         surveyScope, brandId, 'completed', JSON.stringify(responses)

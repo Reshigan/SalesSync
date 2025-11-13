@@ -284,7 +284,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
     await runQuery(
       `UPDATE individuals SET
         name = ?, phone = ?, phone_normalized = ?, id_type = ?, id_number = ?, id_hash = ?,
-        address = ?, lat = ?, lng = ?, status = ?, updated_at = datetime('now')
+        address = ?, lat = ?, lng = ?, status = ?, updated_at = CURRENT_TIMESTAMP
        WHERE id = ? AND tenant_id = ?`,
       [
         name || existing.name,

@@ -640,7 +640,7 @@ router.get('/:id/performance', async (req, res) => {
             END) as avg_visit_duration_minutes
           FROM visits
           WHERE agent_id = ? AND tenant_id = ?
-          AND DATE(visit_date) >= DATE('now', '-${parseInt(months)} months')
+          AND visit_date::date >= DATE('now', '-${parseInt(months)} months')
         `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
       }),
       
@@ -655,7 +655,7 @@ router.get('/:id/performance', async (req, res) => {
             COUNT(DISTINCT customer_id) as unique_customers
           FROM orders
           WHERE salesman_id = ? AND tenant_id = ?
-          AND DATE(order_date) >= DATE('now', '-${parseInt(months)} months')
+          AND order_date::date >= DATE('now', '-${parseInt(months)} months')
         `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
       }),
       
@@ -663,16 +663,16 @@ router.get('/:id/performance', async (req, res) => {
       new Promise((resolve, reject) => {
         db.all(`
           SELECT 
-            strftime('%Y-%m', v.visit_date) as month,
+            to_char(v.visit_date, 'YYYY-MM') as month,
             COUNT(DISTINCT v.id) as visit_count,
             COUNT(DISTINCT o.id) as order_count,
             COALESCE(SUM(o.total_amount), 0) as revenue
           FROM visits v
           LEFT JOIN orders o ON v.customer_id = o.customer_id 
-            AND DATE(o.order_date) = DATE(v.visit_date)
+            AND o.order_date::date = v.visit_date::date
             AND o.salesman_id = ?
           WHERE v.agent_id = ? AND v.tenant_id = ?
-          AND DATE(v.visit_date) >= DATE('now', '-${parseInt(months)} months')
+          AND v.visit_date::date >= DATE('now', '-${parseInt(months)} months')
           GROUP BY month
           ORDER BY month DESC
         `, [id, id, tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));

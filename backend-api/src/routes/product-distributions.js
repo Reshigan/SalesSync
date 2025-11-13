@@ -115,7 +115,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 imei_number, id_photo_url, proof_photo_url, signature_url, kyc_data,
                 activation_status, commission_amount, follow_up_date, status, notes,
                 created_at, updated_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
               [
                 distributionId, tenantId, agentId, customer_id, recipient_name, recipient_id_number,
                 recipient_phone, recipient_email, product_id, product_type, quantity,
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, async (req, res) => {
                     `INSERT INTO commission_transactions (
                       id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
                       base_amount, total_amount, calculation_details, status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
                     [
                       commissionId, tenantId, agentId, 'product_distribution',
                       'product_distribution', distributionId,
@@ -340,7 +340,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
             `INSERT INTO commission_transactions (
               id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
               base_amount, total_amount, bonus_amount, calculation_details, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [
               commissionId, tenantId, distribution.agent_id, 'activation_bonus',
               'product_distribution', id,
@@ -360,7 +360,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
           `UPDATE product_distributions SET
             activation_status = ?,
             activation_date = ?,
-            updated_at = datetime('now')
+            updated_at = CURRENT_TIMESTAMP
           WHERE id = ? AND tenant_id = ?`,
           [activation_status, activationDateTime.toISOString(), id, tenantId],
           function(err) {
@@ -408,7 +408,7 @@ router.post('/:id/follow-up', authMiddleware, async (req, res) => {
         follow_up_date = ?,
         follow_up_status = COALESCE(?, follow_up_status),
         notes = COALESCE(?, notes),
-        updated_at = datetime('now')
+        updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND tenant_id = ?`,
       [follow_up_date, follow_up_status, notes, id, tenantId],
       function(err) {

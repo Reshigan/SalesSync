@@ -157,7 +157,7 @@ router.post('/', async (req, res) => {
         title, description, type, start_date, end_date, location,
         latitude, longitude, max_participants, budget, objectives,
         target_audience, organizer_id, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(
       title, description, type, start_date, end_date, location,
       latitude, longitude, max_participants, budget, objectives,
@@ -215,7 +215,7 @@ router.put('/:id', async (req, res) => {
           objectives = COALESCE(?, objectives),
           target_audience = COALESCE(?, target_audience),
           status = COALESCE(?, status),
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
       title, description, type, start_date, end_date, location,
@@ -276,7 +276,7 @@ router.post('/:id/participants', async (req, res) => {
     const result = db.prepare(`
       INSERT INTO event_participants (
         event_id, participant_id, role, notes, attendance_status, registered_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(id, participant_id, role, notes, 'registered');
     
     res.status(201).json({
@@ -341,7 +341,7 @@ router.post('/:id/resources', async (req, res) => {
     const result = db.prepare(`
       INSERT INTO event_resources (
         event_id, resource_id, quantity, notes, allocated_at
-      ) VALUES (?, ?, ?, ?, datetime('now'))
+      ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
     `).run(id, resource_id, quantity, notes);
     
     res.status(201).json({
@@ -455,7 +455,7 @@ router.post('/:id/performance', async (req, res) => {
             feedback_summary = COALESCE(?, feedback_summary),
             roi_score = COALESCE(?, roi_score),
             follow_up_actions = COALESCE(?, follow_up_actions),
-            updated_at = datetime('now')
+            updated_at = CURRENT_TIMESTAMP
         WHERE event_id = ?
       `).run(
         attendance_count, satisfaction_score, objectives_met,
@@ -467,7 +467,7 @@ router.post('/:id/performance', async (req, res) => {
         INSERT INTO event_performance (
           event_id, attendance_count, satisfaction_score, objectives_met,
           feedback_summary, roi_score, follow_up_actions, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
       `).run(
         id, attendance_count, satisfaction_score, objectives_met,
         feedback_summary, roi_score, follow_up_actions

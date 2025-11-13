@@ -188,7 +188,7 @@ router.post('/', async (req, res, next) => {
       `INSERT INTO warehouses (
         id, tenant_id, name, code, address, city, state, postal_code, country,
         capacity, current_stock, manager_id, phone, email, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         warehouseId,
         req.tenantId,
@@ -275,7 +275,7 @@ router.put('/:id', async (req, res, next) => {
     await runQuery(
       `UPDATE warehouses SET 
         name = ?, code = ?, address = ?, city = ?, state = ?, postal_code = ?, country = ?,
-        capacity = ?, manager_id = ?, phone = ?, email = ?, status = ?, updated_at = datetime('now')
+        capacity = ?, manager_id = ?, phone = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND tenant_id = ?`,
       [
         name || warehouse.name,

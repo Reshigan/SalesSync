@@ -171,7 +171,7 @@ router.post('/', async (req, res) => {
         tenant_id, movement_type, product_id, from_warehouse_id, to_warehouse_id,
         quantity, movement_date, reference_number, reason, notes, status,
         created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
     db.run(sql, [
@@ -217,7 +217,7 @@ router.put('/:id', async (req, res) => {
 
     const sql = `
       UPDATE stock_movements 
-      SET ${setClause}, updated_at = datetime('now')
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ? AND status = 'pending'
     `;
 
@@ -257,8 +257,8 @@ router.post('/:id/approve', async (req, res) => {
       UPDATE stock_movements 
       SET status = 'approved', 
           approved_by = ?, 
-          approved_at = datetime('now'),
-          updated_at = datetime('now')
+          approved_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ? AND status = 'pending'
     `;
 
@@ -323,8 +323,8 @@ router.post('/:id/complete', async (req, res) => {
             variance = ?,
             completion_notes = ?,
             received_by = ?, 
-            received_at = datetime('now'),
-            updated_at = datetime('now')
+            received_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `;
 
@@ -368,7 +368,7 @@ router.post('/:id/cancel', async (req, res) => {
       UPDATE stock_movements 
       SET status = 'cancelled', 
           cancellation_reason = ?,
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ? AND status IN ('pending', 'approved')
     `;
 

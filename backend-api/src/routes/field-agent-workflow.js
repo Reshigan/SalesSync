@@ -64,9 +64,9 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
                 // Get today's activity stats
                 db.get(
                   `SELECT 
-                    (SELECT COUNT(*) FROM visits WHERE agent_id = ? AND tenant_id = ? AND date(check_in_time) = date('now')) as visits_completed,
-                    (SELECT COUNT(*) FROM board_installations WHERE agent_id = ? AND tenant_id = ? AND date(installation_date) = date('now')) as boards_installed,
-                    (SELECT COUNT(*) FROM product_distributions WHERE agent_id = ? AND tenant_id = ? AND date(distribution_date) = date('now')) as products_distributed`,
+                    (SELECT COUNT(*) FROM visits WHERE agent_id = ? AND tenant_id = ? AND date(check_in_time) = CURRENT_DATE) as visits_completed,
+                    (SELECT COUNT(*) FROM board_installations WHERE agent_id = ? AND tenant_id = ? AND date(installation_date) = CURRENT_DATE) as boards_installed,
+                    (SELECT COUNT(*) FROM product_distributions WHERE agent_id = ? AND tenant_id = ? AND date(distribution_date) = CURRENT_DATE) as products_distributed`,
                   [agentId, tenantId, agentId, tenantId, agentId, tenantId],
                   (err, stats) => {
                     if (err) {
@@ -125,7 +125,7 @@ router.post('/check-in', authMiddleware, async (req, res) => {
       `INSERT INTO visits (
         id, tenant_id, agent_id, customer_id, visit_type, scheduled_date,
         check_in_time, check_in_latitude, check_in_longitude, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'), ?, ?, ?, datetime('now'))`,
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [visitId, tenantId, agentId, customer_id, 'field_visit', latitude, longitude, 'in_progress'],
       function(err) {
         if (err) {
@@ -139,7 +139,7 @@ router.post('/check-in', authMiddleware, async (req, res) => {
           `INSERT INTO agent_gps_logs (
             id, tenant_id, agent_id, latitude, longitude, accuracy,
             timestamp, activity_type, reference_type, reference_id
-          ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`,
           [gpsLogId, tenantId, agentId, latitude, longitude, accuracy, 
            'check_in', 'visit', visitId],
           (err) => {
@@ -295,7 +295,7 @@ router.get('/visit-list/:visitId', authMiddleware, async (req, res) => {
                           id, tenant_id, visit_id, task_type, task_name, task_description,
                           is_mandatory, sequence_order, brand_id, survey_id, board_id, product_id,
                           status, created_at
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
                         [
                           task.id, task.tenant_id, task.visit_id, task.task_type,
                           task.task_name, task.task_description, task.is_mandatory,
@@ -356,7 +356,7 @@ router.post('/visit-task/complete', authMiddleware, async (req, res) => {
     db.run(
       `UPDATE visit_tasks SET
         status = 'completed',
-        completed_at = datetime('now'),
+        completed_at = CURRENT_TIMESTAMP,
         completed_by = ?,
         result_data = ?
       WHERE id = ? AND tenant_id = ?`,
@@ -428,7 +428,7 @@ router.post('/check-out', authMiddleware, async (req, res) => {
         // Update visit
         db.run(
           `UPDATE visits SET
-            check_out_time = datetime('now'),
+            check_out_time = CURRENT_TIMESTAMP,
             check_out_latitude = ?,
             check_out_longitude = ?,
             status = 'completed',
@@ -452,7 +452,7 @@ router.post('/check-out', authMiddleware, async (req, res) => {
                 `INSERT INTO agent_gps_logs (
                   id, tenant_id, agent_id, latitude, longitude, accuracy,
                   timestamp, activity_type, reference_type, reference_id
-                ) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)`,
+                ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?)`,
                 [gpsLogId, tenantId, agentId, latitude, longitude, accuracy, 
                  'check_out', 'visit', visit_id],
                 (err) => {

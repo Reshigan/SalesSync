@@ -513,13 +513,13 @@ router.get('/analytics', requireFunction('kyc', 'view'), async (req, res) => {
     // Monthly trends
     const monthlyTrends = await db.all(`
       SELECT 
-        strftime('%Y-%m', submitted_at) as month,
+        to_char(submitted_at, 'YYYY-MM') as month,
         COUNT(*) as submissions,
         SUM(CASE WHEN verification_status = 'approved' THEN 1 ELSE 0 END) as approved,
         SUM(CASE WHEN verification_status = 'rejected' THEN 1 ELSE 0 END) as rejected
       FROM kyc_submissions 
       WHERE tenant_id = ?${dateFilter}
-      GROUP BY strftime('%Y-%m', submitted_at)
+      GROUP BY to_char(submitted_at, 'YYYY-MM')
       ORDER BY month DESC
       LIMIT 12
     `, params);

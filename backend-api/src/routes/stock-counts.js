@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
     }
 
     const refNumber = `CNT-${Date.now()}`;
-    db.run(`INSERT INTO stock_counts (tenant_id, reference_number, warehouse_id, count_date, count_type, status, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, datetime('now'))`,
+    db.run(`INSERT INTO stock_counts (tenant_id, reference_number, warehouse_id, count_date, count_type, status, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, warehouse_id, count_date || new Date().toISOString().split('T')[0], count_type || 'cycle', notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create stock count' });
@@ -85,7 +85,7 @@ router.post('/', async (req, res) => {
 
         let inserted = 0;
         items.forEach(item => {
-          db.run(`INSERT INTO stock_count_items (stock_count_id, product_id, system_quantity, counted_quantity, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))`,
+          db.run(`INSERT INTO stock_count_items (stock_count_id, product_id, system_quantity, counted_quantity, notes, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
             [countId, item.product_id, item.system_quantity, item.counted_quantity || null, item.notes || null],
             () => { if (++inserted === items.length) res.status(201).json({ success: true, data: { id: countId, reference_number: refNumber } }); }
           );
@@ -105,7 +105,7 @@ router.post('/:id/complete', async (req, res) => {
     const userId = req.userId || 1;
     const db = getDatabase();
 
-    db.run(`UPDATE stock_counts SET status = 'completed', completed_by = ?, completed_at = datetime('now') WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE stock_counts SET status = 'completed', completed_by = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to complete stock count' });

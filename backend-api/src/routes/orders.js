@@ -207,7 +207,7 @@ const generateOrderNumber = async (tenantId) => {
     db.get(`
       SELECT COUNT(*) as count 
       FROM orders 
-      WHERE tenant_id = ? AND DATE(created_at) = DATE('now')
+      WHERE tenant_id = ? AND created_at::date = DATE('now')
     `, [tenantId], (err, row) => {
       if (err) reject(err);
       else {
@@ -378,7 +378,7 @@ router.get('/', async (req, res) => {
           SUM(total_amount) as total_value,
           AVG(total_amount) as average_order_value
         FROM orders 
-        WHERE tenant_id = ? AND DATE(order_date) = DATE('now')
+        WHERE tenant_id = ? AND order_date::date = DATE('now')
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);

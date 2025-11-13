@@ -162,7 +162,7 @@ router.post('/', async (req, res) => {
         tenant_id, po_number, supplier_id, warehouse_id, order_date, 
         expected_delivery_date, payment_terms, status, notes, tax_rate, 
         discount, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, datetime('now'), datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
     db.run(poSql, [
@@ -183,7 +183,7 @@ router.post('/', async (req, res) => {
         INSERT INTO purchase_order_items (
           purchase_order_id, product_id, quantity, unit_price, 
           notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `;
 
       let insertedItems = 0;
@@ -245,7 +245,7 @@ router.put('/:id', async (req, res) => {
 
     const sql = `
       UPDATE purchase_orders 
-      SET ${setClause}, updated_at = datetime('now')
+      SET ${setClause}, updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ?
     `;
 
@@ -284,8 +284,8 @@ router.post('/:id/approve', async (req, res) => {
       UPDATE purchase_orders 
       SET status = 'approved', 
           approved_by = ?, 
-          approved_at = datetime('now'),
-          updated_at = datetime('now')
+          approved_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ? AND status = 'draft'
     `;
 
@@ -330,9 +330,9 @@ router.post('/:id/receive', async (req, res) => {
       UPDATE purchase_orders 
       SET status = 'received', 
           received_by = ?, 
-          received_at = datetime('now'),
+          received_at = CURRENT_TIMESTAMP,
           receive_notes = ?,
-          updated_at = datetime('now')
+          updated_at = CURRENT_TIMESTAMP
       WHERE tenant_id = ? AND id = ? AND status = 'approved'
     `;
 
@@ -357,7 +357,7 @@ router.post('/:id/receive', async (req, res) => {
           UPDATE purchase_order_items 
           SET received_quantity = ?, 
               receive_notes = ?,
-              updated_at = datetime('now')
+              updated_at = CURRENT_TIMESTAMP
           WHERE purchase_order_id = ? AND product_id = ?
         `;
 
