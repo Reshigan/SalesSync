@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
-const { getDatabase } = require('../database/init');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 
 // Cash reconciliation workflow: Collection → Counting → Reconciliation → Deposit
@@ -53,14 +52,11 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
   const { closing_cash, denominations, notes } = req.body;
   const tenantId = req.tenantId;
   const userId = req.user.userId;
-  const db = getDatabase();
 
-  await new Promise((resolve, reject) => {
-    db.run('BEGIN TRANSACTION', (err) => { if (err) reject(err); else resolve(); });
-  });
+  await runQuery('BEGIN');
 
   try {
-    const session = await getOneQuery('SELECT * FROM cash_sessions WHERE id = ? AND tenant_id = ?', [id, tenantId]);
+    const session = await getOneQuery('SELECT * FROM cash_sessions WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
     if (!session) throw new Error('Cash session not found');
     if (session.status !== 'open') throw new Error('Cash session is not open');
 
@@ -73,15 +69,13 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
 
     await runQuery(
       `UPDATE cash_sessions 
-       SET closing_cash = ?, expected_cash = ?, variance = ?, variance_percentage = ?, 
-           denominations = ?, notes = ?, status = ?, closed_by = ?, closed_at = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       SET closing_cash = $1, expected_cash = $2, variance = $3, variance_percentage = $4, 
+           denominations = $5, notes = $6, status = $7, closed_by = $8, closed_at = CURRENT_TIMESTAMP
+       WHERE id = $9`,
       [closing_cash, expectedCash, variance, variancePercentage, JSON.stringify(denominations), notes, status, userId, id]
     );
 
-    await new Promise((resolve, reject) => {
-      db.run('COMMIT', (err) => { if (err) reject(err); else resolve(); });
-    });
+    await runQuery('COMMIT');
 
     res.json({
       success: true,
@@ -95,7 +89,7 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
       }
     });
   } catch (error) {
-    await new Promise((resolve) => { db.run('ROLLBACK', () => resolve()); });
+    await runQuery('ROLLBACK');
     throw error;
   }
 }));
@@ -124,34 +118,29 @@ router.post('/deposits', asyncHandler(async (req, res) => {
   const { session_ids, bank_account, deposit_amount, deposit_slip_number, deposit_date } = req.body;
   const tenantId = req.tenantId;
   const userId = req.user.userId;
-  const db = getDatabase();
 
-  await new Promise((resolve, reject) => {
-    db.run('BEGIN TRANSACTION', (err) => { if (err) reject(err); else resolve(); });
-  });
+  await runQuery('BEGIN');
 
   try {
     const depositId = require('crypto').randomBytes(16).toString('hex');
     await runQuery(
       `INSERT INTO bank_deposits (id, tenant_id, bank_account, amount, deposit_slip_number, deposit_date, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
       [depositId, tenantId, bank_account, deposit_amount, deposit_slip_number, deposit_date, userId]
     );
 
     for (const sessionId of session_ids) {
       await runQuery(
-        'UPDATE cash_sessions SET deposit_id = ?, deposited_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?',
+        'UPDATE cash_sessions SET deposit_id = $1, deposited_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3',
         [depositId, sessionId, tenantId]
       );
     }
 
-    await new Promise((resolve, reject) => {
-      db.run('COMMIT', (err) => { if (err) reject(err); else resolve(); });
-    });
+    await runQuery('COMMIT');
 
     res.status(201).json({ success: true, data: { deposit_id: depositId } });
   } catch (error) {
-    await new Promise((resolve) => { db.run('ROLLBACK', () => resolve()); });
+    await runQuery('ROLLBACK');
     throw error;
   }
 }));
