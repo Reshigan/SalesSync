@@ -119,7 +119,7 @@ router.post('/', asyncHandler(async (req, res) => {
   });
   
   const total_amount = subtotal - discount_amount + tax_amount;
-  const amount_paid = req.body.amount_paid || (sale_type === 'cash' $1 total_amount : 0);
+  const amount_paid = req.body.amount_paid || (sale_type === 'cash' ? total_amount : 0);
   const amount_due = total_amount - amount_paid;
 
   const saleNumber = `VS-${Date.now()}`;
