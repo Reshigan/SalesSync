@@ -505,9 +505,8 @@ async function startServer() {
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
 
     // Monitoring routes
-    const { router: monitoringRoutes, trackRequest } = require('./routes/monitoring');
-    app.use(trackRequest); // Global request tracking
-    app.use('/api/monitoring', monitoringRoutes);
+    const monitoringRoutes = require('./routes/monitoring');
+    app.use('/api/monitoring', authTenantMiddleware, monitoringRoutes);
 
     // Backup routes
     const backupRoutes = require('./routes/backup');
