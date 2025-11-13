@@ -3,7 +3,7 @@ const router = express.Router();
 const apmService = require('../services/apm.service');
 const cacheService = require('../services/cache.service');
 const backupService = require('../services/backup.service');
-const { authTenantMiddleware } = require('../middleware/auth');
+const { authTenantMiddleware } = require('../middleware/authTenantMiddleware');
 
 router.get('/metrics', authTenantMiddleware, async (req, res) => {
   try {
