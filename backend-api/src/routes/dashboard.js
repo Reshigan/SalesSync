@@ -1135,13 +1135,13 @@ router.get('/admin', asyncHandler(async (req, res, next) => {
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales,
         COUNT(v.id) as visit_count
-      FROM agents a
-      JOIN users u ON u.id = a.user_id
-      LEFT JOIN orders o ON o.salesman_id = a.id AND o.order_status NOT IN ('cancelled', 'rejected')
-      LEFT JOIN visits v ON v.agent_id = a.id
-      WHERE a.tenant_id = ?
-      AND a.status = 'active'
-      GROUP BY a.id
+      FROM users u
+      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status NOT IN ('cancelled', 'rejected')
+      LEFT JOIN visits v ON v.agent_id = u.id
+      WHERE u.tenant_id = $1
+      AND u.status = 'active'
+      AND u.role IN ('agent', 'sales_agent', 'field_agent')
+      GROUP BY u.id
       ORDER BY total_sales DESC
       LIMIT 10
     `, [tenantId]);
