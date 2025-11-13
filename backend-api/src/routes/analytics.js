@@ -22,11 +22,11 @@ router.get('/sales', asyncHandler(async (req, res) => {
   // Sales summary
   const salesSummary = await getOneQuery(`
     SELECT 
-      COUNT(*) as total_orders,
-      COALESCE(SUM(o.total_amount), 0) as total_revenue,
-      COALESCE(AVG(o.total_amount), 0) as avg_order_value,
-      COUNT(DISTINCT o.customer_id) as unique_customers,
-      COUNT(DISTINCT o.salesman_id) as active_agents
+      COUNT(*)::int as total_orders,
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+      COALESCE(AVG(o.total_amount), 0)::float8 as avg_order_value,
+      COUNT(DISTINCT o.customer_id)::int as unique_customers,
+      COUNT(DISTINCT o.salesman_id)::int as active_agents
     FROM orders o
     WHERE o.tenant_id = $1 ${dateFilter}
   `, params);
@@ -35,8 +35,8 @@ router.get('/sales', asyncHandler(async (req, res) => {
   const dailySales = await getQuery(`
     SELECT 
       DATE(o.order_date) as date,
-      COUNT(*) as orders,
-      COALESCE(SUM(o.total_amount), 0) as revenue
+      COUNT(*)::int as orders,
+      COALESCE(SUM(o.total_amount), 0)::float8 as revenue
     FROM orders o
     WHERE o.tenant_id = $1 ${dateFilter}
     GROUP BY DATE(o.order_date)
@@ -47,8 +47,8 @@ router.get('/sales', asyncHandler(async (req, res) => {
   const topProducts = await getQuery(`
     SELECT 
       p.name as product_name,
-      SUM(oi.quantity) as total_quantity,
-      COALESCE(SUM(oi.line_total), 0) as total_revenue
+      SUM(oi.quantity)::float8 as total_quantity,
+      COALESCE(SUM(oi.line_total), 0)::float8 as total_revenue
     FROM order_items oi
     JOIN orders o ON oi.order_id = o.id
     JOIN products p ON oi.product_id = p.id
@@ -62,8 +62,8 @@ router.get('/sales', asyncHandler(async (req, res) => {
   const topAgents = await getQuery(`
     SELECT 
       u.first_name || ' ' || u.last_name as agent_name,
-      COUNT(o.id) as total_orders,
-      COALESCE(SUM(o.total_amount), 0) as total_revenue
+      COUNT(o.id)::int as total_orders,
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue
     FROM orders o
     JOIN users u ON o.salesman_id = u.id
     WHERE o.tenant_id = $1 ${dateFilter}
@@ -102,13 +102,13 @@ router.get('/visits', asyncHandler(async (req, res) => {
   // Visit summary
   const visitSummary = await getOneQuery(`
     SELECT 
-      COUNT(*) as total_visits,
-      SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
+      COUNT(*)::int as total_visits,
+      SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END)::int as completed_visits,
       COALESCE(AVG(CASE WHEN v.check_in_time IS NOT NULL AND v.check_out_time IS NOT NULL 
           THEN EXTRACT(EPOCH FROM (v.check_out_time - v.check_in_time)) / 60
-          ELSE NULL END), 0) as avg_duration_minutes,
-      COUNT(DISTINCT v.agent_id) as active_agents,
-      COUNT(DISTINCT v.customer_id) as customers_visited
+          ELSE NULL END), 0)::float8 as avg_duration_minutes,
+      COUNT(DISTINCT v.agent_id)::int as active_agents,
+      COUNT(DISTINCT v.customer_id)::int as customers_visited
     FROM visits v
     WHERE v.tenant_id = $1 ${dateFilter}
   `, params);
@@ -138,10 +138,10 @@ router.get('/revenue', asyncHandler(async (req, res) => {
   
   const revenueData = await getOneQuery(`
     SELECT 
-      COALESCE(SUM(o.total_amount), 0) as total_revenue,
-      COUNT(*) as total_orders,
-      COALESCE(AVG(o.total_amount), 0) as avg_order_value,
-      COUNT(DISTINCT o.customer_id) as unique_customers
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+      COUNT(*)::int as total_orders,
+      COALESCE(AVG(o.total_amount), 0)::float8 as avg_order_value,
+      COUNT(DISTINCT o.customer_id)::int as unique_customers
     FROM orders o
     WHERE o.tenant_id = $1 ${dateFilter}
   `, params);
@@ -161,16 +161,16 @@ router.get('/dashboard', asyncHandler(async (req, res) => {
   // Today's metrics - separate queries to avoid CROSS JOIN inflation
   const orderMetrics = await getOneQuery(`
     SELECT 
-      COUNT(*) FILTER (WHERE o.order_date = CURRENT_DATE) as today_orders,
-      COALESCE(SUM(o.total_amount) FILTER (WHERE o.order_date = CURRENT_DATE), 0) as today_revenue
+      COUNT(*) FILTER (WHERE o.order_date = CURRENT_DATE)::int as today_orders,
+      COALESCE(SUM(o.total_amount) FILTER (WHERE o.order_date = CURRENT_DATE), 0)::float8 as today_revenue
     FROM orders o
     WHERE o.tenant_id = $1
   `, [tenantId]);
   
   const visitMetrics = await getOneQuery(`
     SELECT 
-      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE) as today_visits,
-      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE AND v.status = 'completed') as today_completed_visits
+      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE)::int as today_visits,
+      COUNT(*) FILTER (WHERE v.visit_date::date = CURRENT_DATE AND v.status = 'completed')::int as today_completed_visits
     FROM visits v
     WHERE v.tenant_id = $1
   `, [tenantId]);
@@ -198,10 +198,10 @@ router.get('/advanced', asyncHandler(async (req, res) => {
   const advancedMetrics = await getQuery(`
     SELECT 
       'sales_performance' as metric_type,
-      COUNT(DISTINCT o.id) as total_orders,
-      COALESCE(SUM(o.total_amount), 0) as total_revenue,
-      COUNT(DISTINCT o.customer_id) as unique_customers,
-      COUNT(DISTINCT o.salesman_id) as active_agents
+      COUNT(DISTINCT o.id)::int as total_orders,
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
+      COUNT(DISTINCT o.customer_id)::int as unique_customers,
+      COUNT(DISTINCT o.salesman_id)::int as active_agents
     FROM orders o
     WHERE o.tenant_id = $1
     AND o.order_date >= CURRENT_DATE - INTERVAL '30 days'
@@ -210,9 +210,9 @@ router.get('/advanced', asyncHandler(async (req, res) => {
     
     SELECT 
       'inventory_turnover' as metric_type,
-      COUNT(DISTINCT p.id) as total_products,
-      COALESCE(SUM(i.quantity_on_hand), 0) as total_stock,
-      COUNT(DISTINCT i.warehouse_id) as warehouses,
+      COUNT(DISTINCT p.id)::int as total_products,
+      COALESCE(SUM(i.quantity_on_hand), 0)::float8 as total_stock,
+      COUNT(DISTINCT i.warehouse_id)::int as warehouses,
       0 as active_agents
     FROM products p
     LEFT JOIN inventory_stock i ON p.id = i.product_id
@@ -222,9 +222,9 @@ router.get('/advanced', asyncHandler(async (req, res) => {
     
     SELECT 
       'customer_engagement' as metric_type,
-      COUNT(DISTINCT c.id) as total_customers,
-      COUNT(DISTINCT CASE WHEN o.order_date >= CURRENT_DATE - INTERVAL '30 days' THEN c.id END) as active_customers,
-      COUNT(DISTINCT c.area_id) as coverage_areas,
+      COUNT(DISTINCT c.id)::int as total_customers,
+      COUNT(DISTINCT CASE WHEN o.order_date >= CURRENT_DATE - INTERVAL '30 days' THEN c.id END)::int as active_customers,
+      COUNT(DISTINCT c.area_id)::int as coverage_areas,
       0 as active_agents
     FROM customers c
     LEFT JOIN orders o ON c.id = o.customer_id
@@ -303,17 +303,17 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const [businessMetrics, trends, topPerformers] = await Promise.all([
     getOneQuery(`
       SELECT 
-        (SELECT COUNT(*) FROM orders WHERE tenant_id = $1) as total_orders,
-        (SELECT SUM(total_amount) FROM orders WHERE tenant_id = $1) as total_revenue,
-        (SELECT COUNT(*) FROM visits WHERE tenant_id = $1) as total_visits,
-        (SELECT COUNT(DISTINCT customer_id) FROM orders WHERE tenant_id = $1) as unique_customers
+        (SELECT COUNT(*)::int FROM orders WHERE tenant_id = $1) as total_orders,
+        (SELECT SUM(total_amount)::float8 FROM orders WHERE tenant_id = $1) as total_revenue,
+        (SELECT COUNT(*)::int FROM visits WHERE tenant_id = $1) as total_visits,
+        (SELECT COUNT(DISTINCT customer_id)::int FROM orders WHERE tenant_id = $1) as unique_customers
     `, [tenantId]),
     
     getQuery(`
       SELECT 
         o.created_at::date as date,
-        COUNT(*) as order_count,
-        SUM(o.total_amount) as daily_revenue
+        COUNT(*)::int as order_count,
+        SUM(o.total_amount)::float8 as daily_revenue
       FROM orders o
       WHERE o.tenant_id = $1 AND o.created_at >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY o.created_at::date
@@ -323,8 +323,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
     getQuery(`
       SELECT 
         p.id, p.name,
-        SUM(oi.quantity) as total_sold,
-        SUM(oi.quantity * oi.unit_price) as revenue
+        SUM(oi.quantity)::float8 as total_sold,
+        SUM(oi.quantity * oi.unit_price)::float8 as revenue
       FROM order_items oi
       INNER JOIN products p ON oi.product_id = p.id
       INNER JOIN orders o ON oi.order_id = o.id
@@ -361,11 +361,11 @@ router.get('/agents', asyncHandler(async (req, res) => {
   
   const agentCounts = await getOneQuery(`
     SELECT 
-      COUNT(DISTINCT u.id) as total_agents,
+      COUNT(DISTINCT u.id)::int as total_agents,
       COUNT(DISTINCT CASE 
         WHEN o.order_date >= $2 AND o.order_date <= $3 THEN u.id 
         WHEN v.visit_date >= $2 AND v.visit_date <= $3 THEN u.id 
-      END) as active_agents
+      END)::int as active_agents
     FROM users u
     LEFT JOIN orders o ON u.id = o.salesman_id AND o.tenant_id = $1
     LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
@@ -378,14 +378,15 @@ router.get('/agents', asyncHandler(async (req, res) => {
     SELECT 
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
-      COALESCE(SUM(o.total_amount), 0) as total_sales,
-      COUNT(DISTINCT v.id) as total_visits,
+      COALESCE(SUM(o.total_amount), 0)::float8 as total_sales,
+      COUNT(DISTINCT v.id)::int as total_visits,
       CASE 
         WHEN COUNT(DISTINCT v.id) > 0 
-        THEN (COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END)::DECIMAL / COUNT(DISTINCT v.id)::DECIMAL * 100)
+        THEN (COUNT(DISTINCT CASE WHEN v.status = 'completed' THEN v.id END)::DECIMAL / COUNT(DISTINCT v.id)::DECIMAL * 100)::float8
         ELSE 0 
       END as success_rate,
-      0 as commission_earned
+      0 as commission_earned,
+      0::float8 as conversion_rate
     FROM users u
     LEFT JOIN orders o ON u.id = o.salesman_id 
       AND o.tenant_id = $1 
@@ -413,12 +414,12 @@ router.get('/agents', asyncHandler(async (req, res) => {
         WHEN agent_sales < 10000 THEN '5000-9999'
         ELSE '10000+'
       END as range,
-      COUNT(*) as count,
-      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1) as percentage
+      COUNT(*)::int as count,
+      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1)::float8 as percentage
     FROM (
       SELECT 
         u.id,
-        COALESCE(SUM(o.total_amount), 0) as agent_sales
+        COALESCE(SUM(o.total_amount), 0)::float8 as agent_sales
       FROM users u
       LEFT JOIN orders o ON u.id = o.salesman_id 
         AND o.tenant_id = $1 
@@ -467,8 +468,8 @@ router.get('/agents', asyncHandler(async (req, res) => {
   const agentActivities = await getQuery(`
     SELECT 
       activity_type,
-      COUNT(*) as count,
-      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1) as percentage
+      COUNT(*)::int as count,
+      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1)::float8 as percentage
     FROM (
       SELECT 'order' as activity_type FROM orders 
       WHERE tenant_id = $1 AND order_date >= $2 AND order_date <= $3
@@ -503,19 +504,19 @@ router.get('/customers', asyncHandler(async (req, res) => {
   
   const customerMetrics = await getOneQuery(`
     SELECT 
-      COUNT(DISTINCT c.id) as total_customers,
+      COUNT(DISTINCT c.id)::int as total_customers,
       COUNT(DISTINCT CASE 
         WHEN o.order_date >= $2 AND o.order_date <= $3 THEN c.id 
-      END) as active_customers,
+      END)::int as active_customers,
       COUNT(DISTINCT CASE 
         WHEN c.created_at >= $2 AND c.created_at <= $3 THEN c.id 
-      END) as new_customers,
+      END)::int as new_customers,
       0 as customer_retention_rate,
-      COALESCE(AVG(customer_value.total_value), 0) as customer_lifetime_value
+      COALESCE(AVG(customer_value.total_value), 0)::float8 as customer_lifetime_value
     FROM customers c
     LEFT JOIN orders o ON c.id = o.customer_id AND o.tenant_id = $1
     LEFT JOIN (
-      SELECT customer_id, SUM(total_amount) as total_value
+      SELECT customer_id, SUM(total_amount)::float8 as total_value
       FROM orders
       WHERE tenant_id = $1
       GROUP BY customer_id
@@ -526,8 +527,8 @@ router.get('/customers', asyncHandler(async (req, res) => {
   const customersByType = await getQuery(`
     SELECT 
       COALESCE(c.type, 'unknown') as type,
-      COUNT(*) as count,
-      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1) as percentage
+      COUNT(*)::int as count,
+      ROUND((COUNT(*)::DECIMAL / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100)::NUMERIC, 1)::float8 as percentage
     FROM customers c
     WHERE c.tenant_id = $1 AND c.status = 'active'
     GROUP BY c.type
@@ -559,8 +560,8 @@ router.get('/products', asyncHandler(async (req, res) => {
   
   const productCounts = await getOneQuery(`
     SELECT 
-      COUNT(DISTINCT p.id) as total_products,
-      COUNT(DISTINCT oi.product_id) as products_sold,
+      COUNT(DISTINCT p.id)::int as total_products,
+      COUNT(DISTINCT oi.product_id)::int as products_sold,
       0 as inventory_turnover
     FROM products p
     LEFT JOIN order_items oi ON p.id = oi.product_id
@@ -575,8 +576,8 @@ router.get('/products', asyncHandler(async (req, res) => {
     SELECT 
       p.id as product_id,
       p.name as product_name,
-      SUM(oi.quantity) as quantity_sold,
-      COALESCE(SUM(oi.line_total), 0) as revenue,
+      SUM(oi.quantity)::float8 as quantity_sold,
+      COALESCE(SUM(oi.line_total), 0)::float8 as revenue,
       0 as growth_rate
     FROM products p
     INNER JOIN order_items oi ON p.id = oi.product_id
@@ -593,8 +594,8 @@ router.get('/products', asyncHandler(async (req, res) => {
     SELECT 
       p.id as product_id,
       p.name as product_name,
-      COALESCE(SUM(oi.quantity), 0) as quantity_sold,
-      COALESCE(SUM(oi.line_total), 0) as revenue,
+      COALESCE(SUM(oi.quantity), 0)::float8 as quantity_sold,
+      COALESCE(SUM(oi.line_total), 0)::float8 as revenue,
       0 as growth_rate
     FROM products p
     LEFT JOIN order_items oi ON p.id = oi.product_id
@@ -613,7 +614,7 @@ router.get('/products', asyncHandler(async (req, res) => {
     SELECT 
       p.id as product_id,
       p.name as product_name,
-      COALESCE(SUM(inv.quantity_on_hand), 0) as current_stock,
+      COALESCE(SUM(inv.quantity_on_hand), 0)::float8 as current_stock,
       10 as minimum_stock,
       CASE 
         WHEN COALESCE(SUM(inv.quantity_on_hand), 0) = 0 THEN 'out_of_stock'

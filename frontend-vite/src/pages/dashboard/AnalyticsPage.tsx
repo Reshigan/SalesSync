@@ -253,7 +253,8 @@ export default function AnalyticsPage() {
   }
 
   const formatPercentage = (value: number) => {
-    return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`
+    const num = Number(value);
+    return `${num > 0 ? '+' : ''}${Number.isFinite(num) ? num.toFixed(1) : '0.0'}%`
   }
 
   const exportData = () => {
@@ -622,7 +623,7 @@ export default function AnalyticsPage() {
                           style={{ width: `${agent.conversion_rate}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm text-gray-900">{agent.conversion_rate.toFixed(1)}%</span>
+                      <span className="text-sm text-gray-900">{Number.isFinite(Number(agent.conversion_rate)) ? Number(agent.conversion_rate).toFixed(1) : '0.0'}%</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
