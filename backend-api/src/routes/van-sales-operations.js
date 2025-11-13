@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const getDatabase = () => require('../utils/database').getDatabase();
 
@@ -32,7 +33,7 @@ router.get('/routes', async (req, res) => {
 
     let sql = `SELECT vsr.*, u.first_name || ' ' || u.last_name as agent_name, v.plate_number FROM van_sales_routes vsr
       LEFT JOIN users u ON vsr.agent_id = u.id LEFT JOIN vans v ON vsr.van_id = v.id
-      WHERE vsr.tenant_id = ?`;
+      WHERE vsr.tenant_id = $1`;
     const params = [tenantId];
 
     if (status) { sql += ' AND vsr.status = ?'; params.push(status); }
@@ -64,7 +65,7 @@ router.post('/routes', async (req, res) => {
 
     const routeNumber = `ROUTE-${Date.now()}`;
     db.run(`INSERT INTO van_sales_routes (tenant_id, route_number, agent_id, van_id, route_date, route_name, start_time, status, created_by, created_at) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'planned', ?, CURRENT_TIMESTAMP)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'planned', $8, CURRENT_TIMESTAMP)`,
       [tenantId, routeNumber, agent_id, van_id, route_date, route_name, start_time, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create route' });
@@ -72,7 +73,7 @@ router.post('/routes', async (req, res) => {
 
         let inserted = 0;
         customers.forEach((customer, idx) => {
-          db.run(`INSERT INTO route_customers (route_id, customer_id, sequence, planned_arrival, notes) VALUES (?, ?, ?, ?, ?)`,
+          db.run(`INSERT INTO route_customers (route_id, customer_id, sequence, planned_arrival, notes) VALUES ($1, $2, $3, $4, $5)`,
             [routeId, customer.customer_id, idx + 1, customer.planned_arrival, customer.notes],
             () => { if (++inserted === customers.length) res.status(201).json({ success: true, data: { id: routeId, route_number: routeNumber } }); }
           );
@@ -91,7 +92,7 @@ router.post('/routes/:id/start', async (req, res) => {
     const { start_odometer } = req.body;
     const tenantId = req.tenantId || 1;
 
-    db.run(`UPDATE van_sales_routes SET status = 'in_progress', start_time = CURRENT_TIMESTAMP, start_odometer = ? WHERE id = ? AND tenant_id = ? AND status = 'planned'`,
+    db.run(`UPDATE van_sales_routes SET status = 'in_progress', start_time = CURRENT_TIMESTAMP, start_odometer = $1 WHERE id = $2 AND tenant_id = $3 AND status = 'planned'`,
       [start_odometer, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to start route' });
@@ -110,7 +111,7 @@ router.post('/routes/:id/complete', async (req, res) => {
     const { end_odometer, total_cash, total_orders } = req.body;
     const tenantId = req.tenantId || 1;
 
-    db.run(`UPDATE van_sales_routes SET status = 'completed', end_time = CURRENT_TIMESTAMP, end_odometer = ?, total_cash = ?, total_orders = ? WHERE id = ? AND tenant_id = ? AND status = 'in_progress'`,
+    db.run(`UPDATE van_sales_routes SET status = 'completed', end_time = CURRENT_TIMESTAMP, end_odometer = $1, total_cash = $2, total_orders = $3 WHERE id = $4 AND tenant_id = $5 AND status = 'in_progress'`,
       [end_odometer, total_cash, total_orders, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to complete route' });
@@ -134,7 +135,7 @@ router.post('/loading', async (req, res) => {
     }
 
     const loadNumber = `LOAD-${Date.now()}`;
-    db.run(`INSERT INTO van_loadings (tenant_id, load_number, route_id, warehouse_id, loading_date, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'completed', ?, CURRENT_TIMESTAMP)`,
+    db.run(`INSERT INTO van_loadings (tenant_id, load_number, route_id, warehouse_id, loading_date, status, created_by, created_at) VALUES ($1, $2, $3, $4, $5, 'completed', $6, CURRENT_TIMESTAMP)`,
       [tenantId, loadNumber, route_id, warehouse_id, loading_date || new Date().toISOString().split('T')[0], userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create loading record' });
@@ -142,7 +143,7 @@ router.post('/loading', async (req, res) => {
 
         let inserted = 0;
         items.forEach(item => {
-          db.run(`INSERT INTO van_loading_items (loading_id, product_id, quantity, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
+          db.run(`INSERT INTO van_loading_items (loading_id, product_id, quantity, created_at) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)`,
             [loadId, item.product_id, item.quantity],
             function(err) { 
               if (err) console.error('Error inserting item:', err);
@@ -164,7 +165,7 @@ router.post('/customer-visit', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
 
-    db.run(`INSERT INTO route_visits (tenant_id, route_id, customer_id, visit_time, order_created, order_amount, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    db.run(`INSERT INTO route_visits (tenant_id, route_id, customer_id, visit_time, order_created, order_amount, notes, created_by, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)`,
       [tenantId, route_id, customer_id, visit_time || new Date().toISOString(), order_created || false, order_amount || 0, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to record visit' });

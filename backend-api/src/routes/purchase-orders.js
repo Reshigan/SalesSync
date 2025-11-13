@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions
@@ -27,7 +28,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN warehouses w ON po.warehouse_id = w.id
       LEFT JOIN users u ON po.created_by = u.id
       LEFT JOIN purchase_order_items poi ON po.id = poi.purchase_order_id
-      WHERE po.tenant_id = ?
+      WHERE po.tenant_id = $1
     `;
     
     const params = [tenantId];
@@ -84,7 +85,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN suppliers s ON po.supplier_id = s.id
       LEFT JOIN warehouses w ON po.warehouse_id = w.id
       LEFT JOIN users u ON po.created_by = u.id
-      WHERE po.id = ? AND po.tenant_id = ?
+      WHERE po.id = $1 AND po.tenant_id = $2
     `;
 
     db.get(poSql, [id, tenantId], (err, po) => {
@@ -101,7 +102,7 @@ router.get('/:id', async (req, res) => {
         SELECT poi.*, p.name as product_name, p.sku
         FROM purchase_order_items poi
         LEFT JOIN products p ON poi.product_id = p.id
-        WHERE poi.purchase_order_id = ?
+        WHERE poi.purchase_order_id = $1
         ORDER BY poi.id
       `;
 
@@ -159,7 +160,7 @@ router.post('/', async (req, res) => {
         tenant_id, po_number, supplier_id, warehouse_id, order_date, 
         expected_delivery_date, payment_terms, status, notes, tax_rate, 
         discount, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'draft', $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
     db.run(poSql, [
@@ -180,7 +181,7 @@ router.post('/', async (req, res) => {
         INSERT INTO purchase_order_items (
           purchase_order_id, product_id, quantity, unit_price, 
           notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       `;
 
       let insertedItems = 0;
@@ -242,7 +243,7 @@ router.put('/:id', async (req, res) => {
     const sql = `
       UPDATE purchase_orders 
       SET ${setClause}, updated_at = CURRENT_TIMESTAMP
-      WHERE tenant_id = ? AND id = ?
+      WHERE tenant_id = $1 AND id = $2
     `;
 
     db.run(sql, values, function(err) {
@@ -281,7 +282,7 @@ router.post('/:id/approve', async (req, res) => {
           approved_by = ?, 
           approved_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
-      WHERE tenant_id = ? AND id = ? AND status = 'draft'
+      WHERE tenant_id = $1 AND id = $2 AND status = 'draft'
     `;
 
     db.run(sql, [userId, tenantId, id], function(err) {
@@ -327,7 +328,7 @@ router.post('/:id/receive', async (req, res) => {
           received_at = CURRENT_TIMESTAMP,
           receive_notes = ?,
           updated_at = CURRENT_TIMESTAMP
-      WHERE tenant_id = ? AND id = ? AND status = 'approved'
+      WHERE tenant_id = $1 AND id = $2 AND status = 'approved'
     `;
 
     db.run(poSql, [userId, notes, tenantId, id], function(err) {
@@ -352,7 +353,7 @@ router.post('/:id/receive', async (req, res) => {
           SET received_quantity = ?, 
               receive_notes = ?,
               updated_at = CURRENT_TIMESTAMP
-          WHERE purchase_order_id = ? AND product_id = ?
+          WHERE purchase_order_id = $1 AND product_id = $2
         `;
 
         db.run(itemSql, [
@@ -402,7 +403,7 @@ router.delete('/:id', async (req, res) => {
       DELETE FROM purchase_order_items 
       WHERE purchase_order_id IN (
         SELECT id FROM purchase_orders 
-        WHERE id = ? AND tenant_id = ? AND status = 'draft'
+        WHERE id = $1 AND tenant_id = $2 AND status = 'draft'
       )
     `;
 
@@ -415,7 +416,7 @@ router.delete('/:id', async (req, res) => {
       // Delete PO header
       const deletePoSql = `
         DELETE FROM purchase_orders 
-        WHERE id = ? AND tenant_id = ? AND status = 'draft'
+        WHERE id = $1 AND tenant_id = $2 AND status = 'draft'
       `;
 
       db.run(deletePoSql, [id, tenantId], function(err) {
@@ -456,7 +457,7 @@ router.get('/stats/summary', async (req, res) => {
         SUM(CASE WHEN status = 'received' THEN 1 ELSE 0 END) as received,
         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
       FROM purchase_orders
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
     `;
 
     const params = [tenantId];

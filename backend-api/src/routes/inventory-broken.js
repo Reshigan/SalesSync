@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions
@@ -15,12 +16,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += (tenantId || index > 0) ? ' AND' : ' WHERE';
+            sql += (tenantId || index > 0) $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -37,12 +38,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += (tenantId || index > 0) ? ' AND' : ' WHERE';
+            sql += (tenantId || index > 0) $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -59,7 +60,7 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -71,18 +72,18 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
       },
       updateQuery: (table, data, conditions, tenantId) => {
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += (tenantId || index > 0) ? ' AND' : ' WHERE';
+            sql += (tenantId || index > 0) $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             values.push(conditions[key]);
           });
@@ -99,12 +100,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const values = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += (tenantId || index > 0) ? ' AND' : ' WHERE';
+            sql += (tenantId || index > 0) $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             values.push(conditions[key]);
           });
@@ -255,7 +256,7 @@ router.get('/stock', async (req, res) => {
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
       JOIN warehouses w ON i.warehouse_id = w.id
-      WHERE i.tenant_id = ?
+      WHERE i.tenant_id = $1
     `;
     
     const params = [tenantId];
@@ -293,7 +294,7 @@ router.get('/stock', async (req, res) => {
           COUNT(CASE WHEN i.quantity_on_hand <= 10 THEN 1 END) as low_stock_items,
           COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock_items
         FROM inventory_stock i
-        WHERE i.tenant_id = ?
+        WHERE i.tenant_id = $1
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);

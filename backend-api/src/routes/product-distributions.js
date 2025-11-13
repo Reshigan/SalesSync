@@ -70,7 +70,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // Get product details
     db.get(
-      'SELECT * FROM products WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM products WHERE id = $1 AND tenant_id = $2',
       [product_id, tenantId],
       async (err, product) => {
         if (err) {
@@ -89,7 +89,7 @@ router.post('/', authMiddleware, async (req, res) => {
         db.get(
           `SELECT SUM(quantity) as monthly_volume
            FROM product_distributions
-           WHERE agent_id = ? AND product_id = ? AND distribution_date >= ?`,
+           WHERE agent_id = $1 AND product_id = $2 AND distribution_date >= $3`,
           [agentId, product_id, startOfMonth.toISOString()],
           (err, volumeResult) => {
             if (err) {
@@ -113,7 +113,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 imei_number, id_photo_url, proof_photo_url, signature_url, kyc_data,
                 activation_status, commission_amount, follow_up_date, status, notes,
                 created_at, updated_at
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
               [
                 distributionId, tenantId, agentId, customer_id, recipient_name, recipient_id_number,
                 recipient_phone, recipient_email, product_id, product_type, quantity,
@@ -134,7 +134,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 db.run(
                   `UPDATE inventory_stock 
                    SET quantity_on_hand = quantity_on_hand - ?
-                   WHERE product_id = ? AND tenant_id = ? AND quantity_on_hand >= ?`,
+                   WHERE product_id = $1 AND tenant_id = $2 AND quantity_on_hand >= $3`,
                   [quantity, product_id, tenantId, quantity],
                   (err) => {
                     if (err) {
@@ -159,7 +159,7 @@ router.post('/', authMiddleware, async (req, res) => {
                     `INSERT INTO commission_transactions (
                       id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
                       base_amount, total_amount, calculation_details, status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
                     [
                       commissionId, tenantId, agentId, 'product_distribution',
                       'product_distribution', distributionId,
@@ -180,7 +180,7 @@ router.post('/', authMiddleware, async (req, res) => {
                    FROM product_distributions pd
                    LEFT JOIN products p ON pd.product_id = p.id
                    LEFT JOIN customers c ON pd.customer_id = c.id
-                   WHERE pd.id = ?`,
+                   WHERE pd.id = $1`,
                   [distributionId],
                   (err, distribution) => {
                     if (err) {
@@ -217,7 +217,7 @@ router.get('/', authMiddleware, async (req, res) => {
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN users a ON pd.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE pd.tenant_id = ?
+      WHERE pd.tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -278,7 +278,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
        LEFT JOIN customers c ON pd.customer_id = c.id
        LEFT JOIN users a ON pd.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE pd.id = ? AND pd.tenant_id = ?`,
+       WHERE pd.id = $1 AND pd.tenant_id = $2`,
       [id, tenantId],
       (err, distribution) => {
         if (err) {
@@ -310,7 +310,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
 
     // Check if activation is within 24 hours for bonus
     db.get(
-      'SELECT pd.*, p.activation_bonus FROM product_distributions pd LEFT JOIN products p ON pd.product_id = p.id WHERE pd.id = ? AND pd.tenant_id = ?',
+      'SELECT pd.*, p.activation_bonus FROM product_distributions pd LEFT JOIN products p ON pd.product_id = p.id WHERE pd.id = $1 AND pd.tenant_id = $2',
       [id, tenantId],
       (err, distribution) => {
         if (err) {
@@ -332,7 +332,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
             `INSERT INTO commission_transactions (
               id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
               base_amount, total_amount, bonus_amount, calculation_details, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)`,
             [
               commissionId, tenantId, distribution.agent_id, 'activation_bonus',
               'product_distribution', id,
@@ -353,7 +353,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
             activation_status = ?,
             activation_date = ?,
             updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND tenant_id = ?`,
+          WHERE id = $1 AND tenant_id = $2`,
           [activation_status, activationDateTime.toISOString(), id, tenantId],
           function(err) {
             if (err) {
@@ -363,7 +363,7 @@ router.put('/:id/activate', authMiddleware, async (req, res) => {
 
             // Fetch updated distribution
             db.get(
-              'SELECT * FROM product_distributions WHERE id = ?',
+              'SELECT * FROM product_distributions WHERE id = $1',
               [id],
               (err, updated) => {
                 if (err) {
@@ -399,7 +399,7 @@ router.post('/:id/follow-up', authMiddleware, async (req, res) => {
         follow_up_status = COALESCE(?, follow_up_status),
         notes = COALESCE(?, notes),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND tenant_id = ?`,
+      WHERE id = $1 AND tenant_id = $2`,
       [follow_up_date, follow_up_status, notes, id, tenantId],
       function(err) {
         if (err) {
@@ -412,7 +412,7 @@ router.post('/:id/follow-up', authMiddleware, async (req, res) => {
 
         // Fetch updated distribution
         db.get(
-          'SELECT * FROM product_distributions WHERE id = ?',
+          'SELECT * FROM product_distributions WHERE id = $1',
           [id],
           (err, distribution) => {
             if (err) {
@@ -440,7 +440,7 @@ router.get('/agent/:agentId', authMiddleware, async (req, res) => {
        FROM product_distributions pd
        LEFT JOIN products p ON pd.product_id = p.id
        LEFT JOIN customers c ON pd.customer_id = c.id
-       WHERE pd.agent_id = ? AND pd.tenant_id = ?
+       WHERE pd.agent_id = $1 AND pd.tenant_id = $2
        ORDER BY pd.distribution_date DESC`,
       [agentId, tenantId],
       (err, distributions) => {
@@ -471,7 +471,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
         COUNT(CASE WHEN activation_status = 'activated' THEN 1 END) as activated_count,
         COUNT(CASE WHEN activation_status = 'pending' THEN 1 END) as pending_activations
       FROM product_distributions
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
     `;
     const params = [tenantId];
 

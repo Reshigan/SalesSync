@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const getDatabase = () => require('../utils/database').getDatabase();
 
@@ -20,13 +21,13 @@ router.get('/', async (req, res) => {
       LEFT JOIN warehouses w ON sc.warehouse_id = w.id
       LEFT JOIN users u ON sc.created_by = u.id
       LEFT JOIN stock_count_items sci ON sc.id = sci.stock_count_id
-      WHERE sc.tenant_id = ?
+      WHERE sc.tenant_id = $1
     `;
     const params = [tenantId];
 
     if (warehouse_id) { sql += ' AND sc.warehouse_id = ?'; params.push(warehouse_id); }
     if (status) { sql += ' AND sc.status = ?'; params.push(status); }
-    if (from_date) { sql += ' AND sc.count_date >= ?'; params.push(from_date); }
+    if (from_date) { sql += ' AND sc.count_date >= $1'; params.push(from_date); }
     if (to_date) { sql += ' AND sc.count_date <= ?'; params.push(to_date); }
 
     sql += ' GROUP BY sc.id ORDER BY sc.count_date DESC';
@@ -46,11 +47,11 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId || 1;
 
-    db.get(`SELECT sc.*, w.name as warehouse_name FROM stock_counts sc LEFT JOIN warehouses w ON sc.warehouse_id = w.id WHERE sc.id = ? AND sc.tenant_id = ?`, [id, tenantId], (err, count) => {
+    db.get(`SELECT sc.*, w.name as warehouse_name FROM stock_counts sc LEFT JOIN warehouses w ON sc.warehouse_id = w.id WHERE sc.id = $1 AND sc.tenant_id = $2`, [id, tenantId], (err, count) => {
       if (err) return res.status(500).json({ error: 'Failed to fetch stock count' });
       if (!count) return res.status(404).json({ error: 'Stock count not found' });
 
-      db.all(`SELECT sci.*, p.name as product_name, p.sku FROM stock_count_items sci LEFT JOIN products p ON sci.product_id = p.id WHERE sci.stock_count_id = ?`, [id], (err, items) => {
+      db.all(`SELECT sci.*, p.name as product_name, p.sku FROM stock_count_items sci LEFT JOIN products p ON sci.product_id = p.id WHERE sci.stock_count_id = $1`, [id], (err, items) => {
         if (err) return res.status(500).json({ error: 'Failed to fetch items' });
         count.items = items || [];
         count.total_variance = items.reduce((sum, item) => sum + (item.counted_quantity - item.system_quantity), 0);
@@ -74,7 +75,7 @@ router.post('/', async (req, res) => {
     }
 
     const refNumber = `CNT-${Date.now()}`;
-    db.run(`INSERT INTO stock_counts (tenant_id, reference_number, warehouse_id, count_date, count_type, status, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, CURRENT_TIMESTAMP)`,
+    db.run(`INSERT INTO stock_counts (tenant_id, reference_number, warehouse_id, count_date, count_type, status, notes, created_by, created_at) VALUES ($1, $2, $3, $4, $5, 'draft', $6, $7, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, warehouse_id, count_date || new Date().toISOString().split('T')[0], count_type || 'cycle', notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to create stock count' });
@@ -82,7 +83,7 @@ router.post('/', async (req, res) => {
 
         let inserted = 0;
         items.forEach(item => {
-          db.run(`INSERT INTO stock_count_items (stock_count_id, product_id, system_quantity, counted_quantity, notes, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          db.run(`INSERT INTO stock_count_items (stock_count_id, product_id, system_quantity, counted_quantity, notes, created_at) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
             [countId, item.product_id, item.system_quantity, item.counted_quantity || null, item.notes || null],
             () => { if (++inserted === items.length) res.status(201).json({ success: true, data: { id: countId, reference_number: refNumber } }); }
           );
@@ -101,7 +102,7 @@ router.post('/:id/complete', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
 
-    db.run(`UPDATE stock_counts SET status = 'completed', completed_by = ?, completed_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
+    db.run(`UPDATE stock_counts SET status = 'completed', completed_by = $1, completed_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3`,
       [userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to complete stock count' });

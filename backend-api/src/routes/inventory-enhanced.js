@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Module 2: Inventory & Products - Backend Enhancement (55% → 100%)
@@ -45,7 +46,7 @@ router.get('/multi-location', async (req, res) => {
       FROM inventory_locations il
       JOIN products p ON il.product_id = p.id
       JOIN warehouses w ON il.warehouse_id = w.id
-      WHERE il.tenant_id = ?
+      WHERE il.tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -102,7 +103,7 @@ router.post('/transfer', async (req, res) => {
     const sourceInventory = await new Promise((resolve, reject) => {
       db.get(
         `SELECT * FROM inventory_locations 
-         WHERE product_id = ? AND warehouse_id = ? AND tenant_id = ?`,
+         WHERE product_id = $1 AND warehouse_id = $2 AND tenant_id = $3`,
         [productId, fromWarehouseId, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -125,7 +126,7 @@ router.post('/transfer', async (req, res) => {
         `INSERT INTO inventory_transfers (
           product_id, from_warehouse_id, to_warehouse_id, quantity,
           status, reason, notes, initiated_by, tenant_id
-        ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8)`,
         [productId, fromWarehouseId, toWarehouseId, quantity, reason, notes, req.user.userId, tenantId],
         function(err) {
           if (err) reject(err);
@@ -141,7 +142,7 @@ router.post('/transfer', async (req, res) => {
          SET available_quantity = available_quantity - ?,
              reserved_quantity = reserved_quantity + ?,
              updated_at = CURRENT_TIMESTAMP
-         WHERE product_id = ? AND warehouse_id = ? AND tenant_id = ?`,
+         WHERE product_id = $1 AND warehouse_id = $2 AND tenant_id = $3`,
         [quantity, quantity, productId, fromWarehouseId, tenantId],
         (err) => {
           if (err) reject(err);
@@ -180,7 +181,7 @@ router.post('/transfer/:id/complete', async (req, res) => {
     // Get transfer details
     const transfer = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM inventory_transfers WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM inventory_transfers WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -206,7 +207,7 @@ router.post('/transfer/:id/complete', async (req, res) => {
          SET reserved_quantity = reserved_quantity - ?,
              quantity = quantity - ?,
              updated_at = CURRENT_TIMESTAMP
-         WHERE product_id = ? AND warehouse_id = ? AND tenant_id = ?`,
+         WHERE product_id = $1 AND warehouse_id = $2 AND tenant_id = $3`,
         [transfer.quantity, transfer.quantity, transfer.product_id, transfer.from_warehouse_id, tenantId],
         (err) => {
           if (err) reject(err);
@@ -220,7 +221,7 @@ router.post('/transfer/:id/complete', async (req, res) => {
       db.run(
         `INSERT INTO inventory_locations (
           product_id, warehouse_id, quantity, available_quantity, tenant_id
-        ) VALUES (?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT(product_id, warehouse_id, tenant_id) DO UPDATE SET
           quantity = quantity + ?,
           available_quantity = available_quantity + ?,
@@ -242,7 +243,7 @@ router.post('/transfer/:id/complete', async (req, res) => {
         `UPDATE inventory_transfers 
          SET status = 'completed', received_quantity = ?, 
              completed_at = CURRENT_TIMESTAMP, completed_by = ?, completion_notes = ?
-         WHERE id = ? AND tenant_id = ?`,
+         WHERE id = $1 AND tenant_id = $2`,
         [actualQuantity, req.user.userId, notes, id, tenantId],
         (err) => {
           if (err) reject(err);
@@ -291,7 +292,7 @@ router.get('/transactions', async (req, res) => {
       JOIN products p ON it.product_id = p.id
       LEFT JOIN warehouses w ON it.warehouse_id = w.id
       LEFT JOIN users u ON it.created_by = u.id
-      WHERE it.tenant_id = ?
+      WHERE it.tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -355,7 +356,7 @@ router.post('/adjust', async (req, res) => {
       // For correction, quantity is the new total
       const current = await new Promise((resolve, reject) => {
         db.get(
-          'SELECT quantity FROM inventory_locations WHERE product_id = ? AND warehouse_id = ? AND tenant_id = ?',
+          'SELECT quantity FROM inventory_locations WHERE product_id = $1 AND warehouse_id = $2 AND tenant_id = $3',
           [productId, warehouseId, tenantId],
           (err, row) => {
             if (err) reject(err);
@@ -372,7 +373,7 @@ router.post('/adjust', async (req, res) => {
         `INSERT INTO inventory_adjustments (
           product_id, warehouse_id, adjustment_type, quantity_change,
           reason, notes, adjusted_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [productId, warehouseId, adjustmentType, quantityChange, reason, notes, req.user.userId, tenantId],
         function(err) {
           if (err) reject(err);
@@ -386,7 +387,7 @@ router.post('/adjust', async (req, res) => {
       db.run(
         `INSERT INTO inventory_locations (
           product_id, warehouse_id, quantity, available_quantity, tenant_id
-        ) VALUES (?, ?, ?, ?, ?)
+        ) VALUES ($1, $2, $3, $4, $5)
         ON CONFLICT(product_id, warehouse_id, tenant_id) DO UPDATE SET
           quantity = quantity + ?,
           available_quantity = available_quantity + ?,
@@ -437,7 +438,7 @@ router.post('/products/:id/variants', async (req, res) => {
       db.run(
         `INSERT INTO product_variants (
           parent_product_id, name, sku, attributes, price, cost, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [parentId, name, sku, JSON.stringify(attributes), price, cost, tenantId],
         function(err) {
           if (err) reject(err);
@@ -470,7 +471,7 @@ router.get('/products/:id/variants', async (req, res) => {
     const variants = await new Promise((resolve, reject) => {
       db.all(
         `SELECT * FROM product_variants 
-         WHERE parent_product_id = ? AND tenant_id = ? AND is_active = 1`,
+         WHERE parent_product_id = $1 AND tenant_id = $2 AND is_active = 1`,
         [id, tenantId],
         (err, rows) => {
           if (err) reject(err);
@@ -508,7 +509,7 @@ router.post('/lots', async (req, res) => {
         `INSERT INTO inventory_lots (
           product_id, lot_number, quantity, available_quantity,
           manufacture_date, expiry_date, warehouse_id, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [productId, lotNumber, quantity, quantity, manufactureDate, expiryDate, warehouseId, tenantId],
         function(err) {
           if (err) reject(err);
@@ -548,7 +549,7 @@ router.get('/lots', async (req, res) => {
       FROM inventory_lots l
       JOIN products p ON l.product_id = p.id
       LEFT JOIN warehouses w ON l.warehouse_id = w.id
-      WHERE l.tenant_id = ? AND l.available_quantity > 0
+      WHERE l.tenant_id = $1 AND l.available_quantity > 0
     `;
     const params = [tenantId];
 
@@ -609,7 +610,7 @@ router.get('/reorder-suggestions', async (req, res) => {
       FROM inventory_locations il
       JOIN products p ON il.product_id = p.id
       JOIN warehouses w ON il.warehouse_id = w.id
-      WHERE il.tenant_id = ?
+      WHERE il.tenant_id = $1
         AND il.available_quantity <= il.reorder_point
         AND il.reorder_point > 0
     `;
@@ -658,7 +659,7 @@ router.post('/auto-reorder', async (req, res) => {
       // Get product and supplier info
       const product = await new Promise((resolve, reject) => {
         db.get(
-          'SELECT * FROM products WHERE id = ? AND tenant_id = ?',
+          'SELECT * FROM products WHERE id = $1 AND tenant_id = $2',
           [item.productId, tenantId],
           (err, row) => {
             if (err) reject(err);
@@ -681,7 +682,7 @@ router.post('/auto-reorder', async (req, res) => {
         db.run(
           `INSERT INTO purchase_orders (
             supplier_id, status, notes, created_by, tenant_id
-          ) VALUES (?, 'draft', 'Auto-generated reorder', ?, ?)`,
+          ) VALUES ($1, 'draft', 'Auto-generated reorder', $2, $3)`,
           [product.supplier_id, req.user.userId, tenantId],
           function(err) {
             if (err) reject(err);
@@ -695,7 +696,7 @@ router.post('/auto-reorder', async (req, res) => {
         db.run(
           `INSERT INTO purchase_order_items (
             po_id, product_id, quantity, unit_price, tenant_id
-          ) VALUES (?, ?, ?, ?, ?)`,
+          ) VALUES ($1, $2, $3, $4, $5)`,
           [poId, item.productId, item.quantity, product.cost, tenantId],
           (err) => {
             if (err) reject(err);
@@ -748,7 +749,7 @@ router.get('/analytics', async (req, res) => {
         SUM(il.quantity * p.cost) as inventory_value
       FROM inventory_locations il
       JOIN products p ON il.product_id = p.id
-      WHERE il.tenant_id = ?
+      WHERE il.tenant_id = $1
     `;
     const stockParams = [tenantId];
 
@@ -774,7 +775,7 @@ router.get('/analytics', async (req, res) => {
         COUNT(*) as transaction_count
       FROM inventory_transactions it
       JOIN products p ON it.product_id = p.id
-      WHERE it.tenant_id = ?
+      WHERE it.tenant_id = $1
     `;
     const velocityParams = [tenantId];
 
@@ -807,7 +808,7 @@ router.get('/analytics', async (req, res) => {
         END as status,
         COUNT(*) as count
       FROM inventory_locations
-      WHERE tenant_id = ?
+      WHERE tenant_id = $1
       ${warehouseId ? 'AND warehouse_id = ?' : ''}
       GROUP BY status
     `;
@@ -842,7 +843,7 @@ async function logInventoryTransaction(productId, warehouseId, quantityChange, t
       `INSERT INTO inventory_transactions (
         product_id, warehouse_id, quantity_change, transaction_type,
         description, reference_id, tenant_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [productId, warehouseId, quantityChange, type, description, referenceId, tenantId],
       function(err) {
         if (err) reject(err);

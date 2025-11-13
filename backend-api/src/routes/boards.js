@@ -10,7 +10,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const tenantId = req.user.tenantId;
     const { status, board_type } = req.query;
 
-    let query = 'SELECT * FROM boards WHERE tenant_id = ?';
+    let query = 'SELECT * FROM boards WHERE tenant_id = $1';
     const params = [tenantId];
 
     if (status) {
@@ -43,7 +43,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
     db.get(
-      'SELECT * FROM boards WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM boards WHERE id = $1 AND tenant_id = $2',
       [id, tenantId],
       (err, board) => {
         if (err) {
@@ -91,7 +91,7 @@ router.post('/', authMiddleware, async (req, res) => {
         id, tenant_id, board_name, board_type, width_cm, height_cm,
         cost_price, installation_cost, commission_rate, reference_image_url,
         description, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         boardId,
         tenantId,
@@ -114,7 +114,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
         // Fetch the created board
         db.get(
-          'SELECT * FROM boards WHERE id = ?',
+          'SELECT * FROM boards WHERE id = $1',
           [boardId],
           (err, board) => {
             if (err) {
@@ -152,7 +152,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     // Check if board exists
     db.get(
-      'SELECT id FROM boards WHERE id = ? AND tenant_id = ?',
+      'SELECT id FROM boards WHERE id = $1 AND tenant_id = $2',
       [id, tenantId],
       (err, board) => {
         if (err) {
@@ -177,7 +177,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
             description = COALESCE(?, description),
             status = COALESCE(?, status),
             updated_at = CURRENT_TIMESTAMP
-          WHERE id = ? AND tenant_id = ?`,
+          WHERE id = $1 AND tenant_id = $2`,
           [
             board_name,
             board_type,
@@ -200,7 +200,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
             // Fetch updated board
             db.get(
-              'SELECT * FROM boards WHERE id = ?',
+              'SELECT * FROM boards WHERE id = $1',
               [id],
               (err, updatedBoard) => {
                 if (err) {
@@ -228,7 +228,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
     // Check if board exists
     db.get(
-      'SELECT id FROM boards WHERE id = ? AND tenant_id = ?',
+      'SELECT id FROM boards WHERE id = $1 AND tenant_id = $2',
       [id, tenantId],
       (err, board) => {
         if (err) {
@@ -241,7 +241,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
         // Delete board
         db.run(
-          'DELETE FROM boards WHERE id = ? AND tenant_id = ?',
+          'DELETE FROM boards WHERE id = $1 AND tenant_id = $2',
           [id, tenantId],
           function(err) {
             if (err) {
@@ -272,7 +272,7 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
 
     // Check if board exists
     db.get(
-      'SELECT id FROM boards WHERE id = ? AND tenant_id = ?',
+      'SELECT id FROM boards WHERE id = $1 AND tenant_id = $2',
       [id, tenantId],
       (err, board) => {
         if (err) {
@@ -285,7 +285,7 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
 
         // Check if assignment already exists
         db.get(
-          'SELECT id FROM brand_boards WHERE board_id = ? AND brand_id = ? AND tenant_id = ?',
+          'SELECT id FROM brand_boards WHERE board_id = $1 AND brand_id = $2 AND tenant_id = $3',
           [id, brand_id, tenantId],
           (err, existing) => {
             if (err) {
@@ -300,7 +300,7 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
                   coverage_standard = ?,
                   visibility_standard = ?,
                   is_active = 1
-                WHERE id = ?`,
+                WHERE id = $1`,
                 [coverage_standard || null, visibility_standard || null, existing.id],
                 function(err) {
                   if (err) {
@@ -317,7 +317,7 @@ router.post('/:id/assign-brand', authMiddleware, async (req, res) => {
                 `INSERT INTO brand_boards (
                   id, tenant_id, brand_id, board_id,
                   coverage_standard, visibility_standard, is_active, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
+                ) VALUES ($1, $2, $3, $4, $5, $6, 1, CURRENT_TIMESTAMP)`,
                 [
                   assignmentId,
                   tenantId,
@@ -354,7 +354,7 @@ router.get('/brand/:brandId', authMiddleware, async (req, res) => {
       `SELECT b.*, bb.coverage_standard, bb.visibility_standard, bb.is_active as assigned
       FROM boards b
       INNER JOIN brand_boards bb ON b.id = bb.board_id
-      WHERE bb.brand_id = ? AND bb.tenant_id = ? AND bb.is_active = 1 AND b.status = 'active'
+      WHERE bb.brand_id = $1 AND bb.tenant_id = $2 AND bb.is_active = 1 AND b.status = 'active'
       ORDER BY b.board_name`,
       [brandId, tenantId],
       (err, boards) => {
@@ -377,7 +377,7 @@ router.delete('/:id/assign-brand/:brandId', authMiddleware, async (req, res) => 
     const { id, brandId } = req.params;
     const tenantId = req.user.tenantId;
     db.run(
-      'UPDATE brand_boards SET is_active = 0 WHERE board_id = ? AND brand_id = ? AND tenant_id = ?',
+      'UPDATE brand_boards SET is_active = 0 WHERE board_id = $1 AND brand_id = $2 AND tenant_id = $3',
       [id, brandId, tenantId],
       function(err) {
         if (err) {

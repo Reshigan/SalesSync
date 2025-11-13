@@ -18,7 +18,7 @@ router.get('/', authTenantMiddleware, async (req, res) => {
         b.name as brand_name
       FROM brand_pictures bp
       LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE bp.tenant_id = ?
+      WHERE bp.tenant_id = $1
       ORDER BY bp.created_at DESC
     `).all(tenantId);
 
@@ -43,7 +43,7 @@ router.get('/brand/:brandId', authTenantMiddleware, async (req, res) => {
     const pictures = db.prepare(`
       SELECT *
       FROM brand_pictures
-      WHERE tenant_id = ? AND brand_id = ?
+      WHERE tenant_id = $1 AND brand_id = $2
       ORDER BY version DESC, created_at DESC
     `).all(tenantId, brandId);
 
@@ -71,7 +71,7 @@ router.get('/active/:pictureType', authTenantMiddleware, async (req, res) => {
         b.name as brand_name
       FROM brand_pictures bp
       LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE bp.tenant_id = ? 
+      WHERE bp.tenant_id = $1 
         AND bp.picture_type = ?
         AND bp.is_active = 1
         AND (bp.valid_to IS NULL OR bp.valid_to >= DATE('now'))
@@ -123,7 +123,7 @@ router.post('/', authTenantMiddleware, async (req, res) => {
     const currentVersion = db.prepare(`
       SELECT MAX(version) as max_version
       FROM brand_pictures
-      WHERE tenant_id = ? AND brand_id = ? AND picture_type = ?
+      WHERE tenant_id = $1 AND brand_id = $2 AND picture_type = $3
     `).get(tenantId, brand_id, picture_type);
 
     const version = (currentVersion?.max_version || 0) + 1;
@@ -134,7 +134,7 @@ router.post('/', authTenantMiddleware, async (req, res) => {
       INSERT INTO brand_pictures (
         id, tenant_id, brand_id, picture_url, picture_type, version,
         is_active, valid_from, metadata, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).run(
       pictureId,
       tenantId,
@@ -149,7 +149,7 @@ router.post('/', authTenantMiddleware, async (req, res) => {
     );
 
     const picture = db.prepare(`
-      SELECT * FROM brand_pictures WHERE id = ?
+      SELECT * FROM brand_pictures WHERE id = $1
     `).get(pictureId);
 
     res.json({
@@ -173,11 +173,11 @@ router.put('/:id/deactivate', authTenantMiddleware, async (req, res) => {
     db.prepare(`
       UPDATE brand_pictures
       SET is_active = 0, valid_to = DATE('now'), updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND tenant_id = ?
+      WHERE id = $1 AND tenant_id = $2
     `).run(id, tenantId);
 
     const picture = db.prepare(`
-      SELECT * FROM brand_pictures WHERE id = ?
+      SELECT * FROM brand_pictures WHERE id = $1
     `).get(id);
 
     res.json({
@@ -207,7 +207,7 @@ router.get('/comparisons', authTenantMiddleware, async (req, res) => {
       FROM picture_comparison_results pcr
       LEFT JOIN brand_pictures bp ON pcr.reference_picture_id = bp.id
       LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE pcr.tenant_id = ?
+      WHERE pcr.tenant_id = $1
     `;
     
     const params = [tenantId];
@@ -265,7 +265,7 @@ router.post('/compare', authTenantMiddleware, async (req, res) => {
     }
 
     const referencePicture = db.prepare(`
-      SELECT * FROM brand_pictures WHERE id = ? AND tenant_id = ?
+      SELECT * FROM brand_pictures WHERE id = $1 AND tenant_id = $2
     `).get(reference_picture_id, tenantId);
 
     if (!referencePicture) {
@@ -281,7 +281,7 @@ router.post('/compare', authTenantMiddleware, async (req, res) => {
                             coveragePercentage >= 60 ? 'partial' : 'non_compliant';
 
     const brand = db.prepare(`
-      SELECT * FROM brands WHERE id = ?
+      SELECT * FROM brands WHERE id = $1
     `).get(referencePicture.brand_id);
 
     const analysisMetadata = {
@@ -302,7 +302,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
         id, tenant_id, reference_picture_id, captured_picture_url, comparison_type,
         similarity_score, coverage_percentage, compliance_status, analysis_metadata,
         related_entity_type, related_entity_id, analyzed_at, analyzed_by, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, $12, CURRENT_TIMESTAMP)
     `).run(
       comparisonId,
       tenantId,
@@ -327,7 +327,7 @@ const { getQuery, getOneQuery, runQuery } = require('../utils/database');
       FROM picture_comparison_results pcr
       LEFT JOIN brand_pictures bp ON pcr.reference_picture_id = bp.id
       LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE pcr.id = ?
+      WHERE pcr.id = $1
     `).get(comparisonId);
 
     res.json({

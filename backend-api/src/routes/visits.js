@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Lazy load database functions to avoid circular dependencies
@@ -15,12 +16,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
+            sql += tenantId $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -37,12 +38,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
+            sql += tenantId $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -59,7 +60,7 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
         return new Promise((resolve, reject) => {
           const keys = Object.keys(data);
           const values = Object.values(data);
-          const placeholders = keys.map(() => '?').join(', ');
+          const placeholders = keys.map(() => '$1').join(', ');
           
           const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
           
@@ -71,18 +72,18 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
       },
       updateQuery: (table, data, conditions, tenantId) => {
         return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = ?`).join(', ');
+          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
           const values = Object.values(data);
           
           let sql = `UPDATE ${table} SET ${setClause}`;
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             values.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
+            sql += tenantId $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             values.push(conditions[key]);
           });
@@ -99,12 +100,12 @@ const { getQuery, getOneQuery, insertQuery, updateQuery, deleteQuery } = (() => 
           const params = [];
           
           if (tenantId) {
-            sql += ' WHERE tenant_id = ?';
+            sql += ' WHERE tenant_id = $1';
             params.push(tenantId);
           }
           
           Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
+            sql += tenantId $1 ' AND' : ' WHERE';
             sql += ` ${key} = ?`;
             params.push(conditions[key]);
           });
@@ -134,7 +135,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN users u ON ag.user_id = u.id
       LEFT JOIN routes r ON c.route_id = r.id
       LEFT JOIN areas a ON r.area_id = a.id
-      WHERE v.tenant_id = ?
+      WHERE v.tenant_id = $1
     `;
     const params = [tenantId];
     
@@ -187,7 +188,7 @@ router.get('/', async (req, res) => {
               THEN (julianday(check_out_time) - julianday(check_in_time)) * 24 * 60 
               ELSE NULL END) as avg_duration_minutes
         FROM visits 
-        WHERE tenant_id = ? AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
+        WHERE tenant_id = $1 AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
       `, [tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -291,7 +292,7 @@ router.get('/:id', async (req, res) => {
         LEFT JOIN users u ON ag.user_id = u.id
         LEFT JOIN routes r ON c.route_id = r.id
         LEFT JOIN areas a ON r.area_id = a.id
-        WHERE v.id = ? AND v.tenant_id = ?
+        WHERE v.id = $1 AND v.tenant_id = $2
       `, [id, tenantId], (err, row) => {
         if (err) reject(err);
         else resolve(row);
@@ -345,8 +346,8 @@ router.put('/:id', async (req, res) => {
     const updateData = {};
     if (check_in_time) updateData.check_in_time = check_in_time;
     if (check_out_time) updateData.check_out_time = check_out_time;
-    if (latitude !== undefined) updateData.latitude = latitude ? parseFloat(latitude) : null;
-    if (longitude !== undefined) updateData.longitude = longitude ? parseFloat(longitude) : null;
+    if (latitude !== undefined) updateData.latitude = latitude $1 parseFloat(latitude) : null;
+    if (longitude !== undefined) updateData.longitude = longitude $1 parseFloat(longitude) : null;
     if (outcome) updateData.outcome = outcome;
     if (notes !== undefined) updateData.notes = notes;
     if (photos) updateData.photos = JSON.stringify(photos);
@@ -500,7 +501,7 @@ router.get('/agent/:agentId', async (req, res) => {
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE v.tenant_id = ? AND v.agent_id = ?
+      WHERE v.tenant_id = $1 AND v.agent_id = $2
     `;
     const params = [tenantId, agentId];
     
@@ -544,7 +545,7 @@ router.get('/customer/:customerId', async (req, res) => {
         FROM visits v
         LEFT JOIN users a ON v.agent_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.tenant_id = ? AND v.customer_id = ?
+        WHERE v.tenant_id = $1 AND v.customer_id = $2
         ORDER BY v.visit_date DESC
         LIMIT ?
       `, [tenantId, customerId, parseInt(limit)], (err, rows) => {
@@ -569,19 +570,19 @@ router.get('/stats', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, agent_id } = req.query;
     
-    let whereClause = 'WHERE v.tenant_id = ?';
+    let whereClause = 'WHERE v.tenant_id = $1';
     const params = [tenantId];
     
     if (date_from) {
-      whereClause += ' AND v.visit_date::date >= ?';
+      whereClause += ' AND v.visit_date::date >= $1';
       params.push(date_from);
     }
     if (date_to) {
-      whereClause += ' AND v.visit_date::date <= ?';
+      whereClause += ' AND v.visit_date::date <= $1';
       params.push(date_to);
     }
     if (agent_id) {
-      whereClause += ' AND v.agent_id = ?';
+      whereClause += ' AND v.agent_id = $1';
       params.push(agent_id);
     }
     
@@ -652,7 +653,7 @@ router.get('/stats', async (req, res) => {
             COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
             COUNT(DISTINCT v.agent_id) as active_agents
           FROM visits v
-          WHERE v.tenant_id = ?
+          WHERE v.tenant_id = $1
           AND v.visit_date::date >= CURRENT_DATE - INTERVAL '30 days'
           GROUP BY v.visit_date::date
           ORDER BY date DESC

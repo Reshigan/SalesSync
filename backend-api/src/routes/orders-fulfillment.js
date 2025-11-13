@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 
 // Module 1: Sales & Orders - Backend Enhancement (75% → 100%)
@@ -27,7 +28,7 @@ router.post('/:id/status-transition', async (req, res) => {
     // Get current order
     const order = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -99,7 +100,7 @@ router.post('/:id/status-transition', async (req, res) => {
     // Update order status
     await new Promise((resolve, reject) => {
       db.run(
-        `UPDATE orders SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
+        `UPDATE orders SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3`,
         [to_status, id, tenantId],
         function(err) {
           if (err) reject(err);
@@ -114,7 +115,7 @@ router.post('/:id/status-transition', async (req, res) => {
         `INSERT INTO order_status_history (
           order_id, from_status, to_status, action, 
           metadata, notes, changed_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           id, currentStatus, to_status, action,
           JSON.stringify(metadata || {}), notes, req.user.userId, tenantId
@@ -129,7 +130,7 @@ router.post('/:id/status-transition', async (req, res) => {
     // Get updated order
     const updatedOrder = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -170,7 +171,7 @@ router.get('/:id/status-history', async (req, res) => {
         `SELECT h.*, u.username as changed_by_name 
          FROM order_status_history h
          LEFT JOIN users u ON h.changed_by = u.id
-         WHERE h.order_id = ? AND h.tenant_id = ?
+         WHERE h.order_id = $1 AND h.tenant_id = $2
          ORDER BY h.created_at DESC`,
         [id, tenantId],
         (err, rows) => {
@@ -204,7 +205,7 @@ router.get('/:id/financial-summary', async (req, res) => {
     // Get order
     const order = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -220,7 +221,7 @@ router.get('/:id/financial-summary', async (req, res) => {
     // Get related invoices
     const invoices = await new Promise((resolve, reject) => {
       db.all(
-        'SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ?',
+        'SELECT * FROM invoices WHERE order_id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, rows) => {
           if (err) reject(err);
@@ -234,7 +235,7 @@ router.get('/:id/financial-summary', async (req, res) => {
       db.all(
         `SELECT p.* FROM payments p
          JOIN invoices i ON p.invoice_id = i.id
-         WHERE i.order_id = ? AND p.tenant_id = ?
+         WHERE i.order_id = $1 AND p.tenant_id = $2
          ORDER BY p.payment_date DESC`,
         [id, tenantId],
         (err, rows) => {
@@ -304,7 +305,7 @@ router.post('/:id/partial-fulfill', async (req, res) => {
     // Get order
     const order = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -322,7 +323,7 @@ router.post('/:id/partial-fulfill', async (req, res) => {
       db.run(
         `INSERT INTO order_shipments (
           order_id, shipment_type, status, notes, tenant_id
-        ) VALUES (?, 'partial', 'preparing', ?, ?)`,
+        ) VALUES ($1, 'partial', 'preparing', $2, $3)`,
         [id, notes, tenantId],
         function(err) {
           if (err) reject(err);
@@ -337,7 +338,7 @@ router.post('/:id/partial-fulfill', async (req, res) => {
         db.run(
           `INSERT INTO shipment_items (
             shipment_id, product_id, quantity, tenant_id
-          ) VALUES (?, ?, ?, ?)`,
+          ) VALUES ($1, $2, $3, $4)`,
           [shipmentId, item.productId, item.quantity, tenantId],
           function(err) {
             if (err) reject(err);
@@ -356,7 +357,7 @@ router.post('/:id/partial-fulfill', async (req, res) => {
         db.run(
           `INSERT INTO order_backorders (
             order_id, product_id, quantity, expected_date, status, tenant_id
-          ) VALUES (?, ?, ?, ?, 'pending', ?)`,
+          ) VALUES ($1, $2, $3, $4, 'pending', $5)`,
           [id, item.productId, item.quantity, item.expectedDate, tenantId],
           function(err) {
             if (err) reject(err);
@@ -370,7 +371,7 @@ router.post('/:id/partial-fulfill', async (req, res) => {
     await new Promise((resolve, reject) => {
       db.run(
         `UPDATE orders SET status = 'partially_fulfilled', updated_at = CURRENT_TIMESTAMP 
-         WHERE id = ? AND tenant_id = ?`,
+         WHERE id = $1 AND tenant_id = $2`,
         [id, tenantId],
         function(err) {
           if (err) reject(err);
@@ -408,7 +409,7 @@ router.get('/:id/backorders', async (req, res) => {
         `SELECT b.*, p.name as product_name, p.sku
          FROM order_backorders b
          JOIN products p ON b.product_id = p.id
-         WHERE b.order_id = ? AND b.tenant_id = ?
+         WHERE b.order_id = $1 AND b.tenant_id = $2
          ORDER BY b.expected_date ASC`,
         [id, tenantId],
         (err, rows) => {
@@ -443,7 +444,7 @@ router.post('/:id/modify', async (req, res) => {
     // Get order
     const order = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -496,7 +497,7 @@ router.post('/:id/modify', async (req, res) => {
       db.run(
         `INSERT INTO order_modifications (
           order_id, action, details, reason, modified_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6)`,
         [
           id, action, JSON.stringify(item), reason, req.user.userId, tenantId
         ],
@@ -515,7 +516,7 @@ router.post('/:id/modify', async (req, res) => {
     // Get updated order
     const updatedOrder = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+        'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
         [id, tenantId],
         (err, row) => {
           if (err) reject(err);
@@ -552,7 +553,7 @@ router.get('/:id/modifications', async (req, res) => {
         `SELECT m.*, u.username as modified_by_name
          FROM order_modifications m
          LEFT JOIN users u ON m.modified_by = u.id
-         WHERE m.order_id = ? AND m.tenant_id = ?
+         WHERE m.order_id = $1 AND m.tenant_id = $2
          ORDER BY m.created_at DESC`,
         [id, tenantId],
         (err, rows) => {
@@ -598,7 +599,7 @@ router.post('/recurring', async (req, res) => {
         `INSERT INTO recurring_orders (
           customer_id, schedule, billing_day, start_date, end_date,
           shipping_address, status, notes, created_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?, ?, 'active', ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, $8, $9)`,
         [
           customerId, schedule, billingDay, startDate, endDate,
           JSON.stringify(shippingAddress), notes, req.user.userId, tenantId
@@ -616,7 +617,7 @@ router.post('/recurring', async (req, res) => {
         db.run(
           `INSERT INTO recurring_order_items (
             recurring_order_id, product_id, quantity, unit_price, tenant_id
-          ) VALUES (?, ?, ?, ?, ?)`,
+          ) VALUES ($1, $2, $3, $4, $5)`,
           [
             recurringOrderId, item.productId, item.quantity,
             item.unitPrice, tenantId
@@ -656,7 +657,7 @@ router.get('/recurring', async (req, res) => {
       SELECT ro.*, c.name as customer_name
       FROM recurring_orders ro
       JOIN customers c ON ro.customer_id = c.id
-      WHERE ro.tenant_id = ?
+      WHERE ro.tenant_id = $1
     `;
     const params = [tenantId];
 
@@ -700,8 +701,8 @@ router.post('/recurring/:id/pause', async (req, res) => {
     await new Promise((resolve, reject) => {
       db.run(
         `UPDATE recurring_orders 
-         SET status = 'paused', pause_reason = ?, pause_until = ?, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ? AND tenant_id = ?`,
+         SET status = 'paused', pause_reason = $1, pause_until = $2, updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1 AND tenant_id = $2`,
         [reason, pauseUntil, id, tenantId],
         function(err) {
           if (err) reject(err);
@@ -735,7 +736,7 @@ router.post('/recurring/:id/resume', async (req, res) => {
       db.run(
         `UPDATE recurring_orders 
          SET status = 'active', pause_reason = NULL, pause_until = NULL, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ? AND tenant_id = ?`,
+         WHERE id = $1 AND tenant_id = $2`,
         [id, tenantId],
         function(err) {
           if (err) reject(err);
@@ -773,7 +774,7 @@ router.post('/:id/notes', async (req, res) => {
       db.run(
         `INSERT INTO order_notes (
           order_id, note, visibility, created_by, tenant_id
-        ) VALUES (?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5)`,
         [id, note, visibility || 'internal', req.user.userId, tenantId],
         function(err) {
           if (err) reject(err);
@@ -808,7 +809,7 @@ router.get('/:id/notes', async (req, res) => {
         `SELECT n.*, u.username as created_by_name
          FROM order_notes n
          LEFT JOIN users u ON n.created_by = u.id
-         WHERE n.order_id = ? AND n.tenant_id = ?
+         WHERE n.order_id = $1 AND n.tenant_id = $2
          ORDER BY n.created_at DESC`,
         [id, tenantId],
         (err, rows) => {
@@ -840,7 +841,7 @@ router.get('/:id/history', async (req, res) => {
       db.all(
         `SELECT 'status_change' as type, from_status, to_status, action, created_at, changed_by as user_id
          FROM order_status_history
-         WHERE order_id = ? AND tenant_id = ?`,
+         WHERE order_id = $1 AND tenant_id = $2`,
         [id, tenantId],
         (err, rows) => {
           if (err) reject(err);
@@ -853,7 +854,7 @@ router.get('/:id/history', async (req, res) => {
       db.all(
         `SELECT 'modification' as type, action, details, reason, created_at, modified_by as user_id
          FROM order_modifications
-         WHERE order_id = ? AND tenant_id = ?`,
+         WHERE order_id = $1 AND tenant_id = $2`,
         [id, tenantId],
         (err, rows) => {
           if (err) reject(err);
@@ -866,7 +867,7 @@ router.get('/:id/history', async (req, res) => {
       db.all(
         `SELECT 'note' as type, note, visibility, created_at, created_by as user_id
          FROM order_notes
-         WHERE order_id = ? AND tenant_id = ?`,
+         WHERE order_id = $1 AND tenant_id = $2`,
         [id, tenantId],
         (err, rows) => {
           if (err) reject(err);
@@ -894,7 +895,7 @@ async function reserveInventoryForOrder(orderId, tenantId, db) {
   // Get order items
   const items = await new Promise((resolve, reject) => {
     db.all(
-      'SELECT * FROM order_items WHERE order_id = ? AND tenant_id = ?',
+      'SELECT * FROM order_items WHERE order_id = $1 AND tenant_id = $2',
       [orderId, tenantId],
       (err, rows) => {
         if (err) reject(err);
@@ -909,7 +910,7 @@ async function reserveInventoryForOrder(orderId, tenantId, db) {
       db.run(
         `INSERT INTO inventory_reservations (
           order_id, product_id, quantity, expires_at, tenant_id
-        ) VALUES (?, ?, ?, datetime('now', '+24 hours'), ?)`,
+        ) VALUES ($1, $2, $3, datetime('now', '+24 hours'), $4)`,
         [orderId, item.product_id, item.quantity, tenantId],
         function(err) {
           if (err) reject(err);
@@ -923,7 +924,7 @@ async function reserveInventoryForOrder(orderId, tenantId, db) {
 async function releaseInventoryReservations(orderId, tenantId, db) {
   await new Promise((resolve, reject) => {
     db.run(
-      `DELETE FROM inventory_reservations WHERE order_id = ? AND tenant_id = ?`,
+      `DELETE FROM inventory_reservations WHERE order_id = $1 AND tenant_id = $2`,
       [orderId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -939,7 +940,7 @@ async function validateInventoryAvailability(orderId, tenantId, db) {
       `SELECT oi.*, i.available_quantity
        FROM order_items oi
        JOIN inventory_stock i ON oi.product_id = i.product_id AND oi.tenant_id = i.tenant_id
-       WHERE oi.order_id = ? AND oi.tenant_id = ?`,
+       WHERE oi.order_id = $1 AND oi.tenant_id = $2`,
       [orderId, tenantId],
       (err, rows) => {
         if (err) reject(err);
@@ -958,7 +959,7 @@ async function validateInventoryAvailability(orderId, tenantId, db) {
 async function commitInventoryForOrder(orderId, tenantId, db) {
   const items = await new Promise((resolve, reject) => {
     db.all(
-      'SELECT * FROM order_items WHERE order_id = ? AND tenant_id = ?',
+      'SELECT * FROM order_items WHERE order_id = $1 AND tenant_id = $2',
       [orderId, tenantId],
       (err, rows) => {
         if (err) reject(err);
@@ -978,8 +979,8 @@ async function deductInventory(productId, quantity, tenantId, db) {
   await new Promise((resolve, reject) => {
     db.run(
       `UPDATE inventory_stock 
-       SET available_quantity = available_quantity - ?, updated_at = CURRENT_TIMESTAMP
-       WHERE product_id = ? AND tenant_id = ?`,
+       SET available_quantity = available_quantity - $1, updated_at = CURRENT_TIMESTAMP
+       WHERE product_id = $1 AND tenant_id = $2`,
       [quantity, productId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -994,7 +995,7 @@ async function finalizeOrder(orderId, tenantId, db) {
     db.run(
       `UPDATE orders 
        SET completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ? AND tenant_id = ?`,
+       WHERE id = $1 AND tenant_id = $2`,
       [orderId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -1009,7 +1010,7 @@ async function addOrderItem(orderId, item, tenantId, db) {
     db.run(
       `INSERT INTO order_items (
         order_id, product_id, quantity, unit_price, total, tenant_id
-      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6)`,
       [
         orderId, item.productId, item.quantity,
         item.unitPrice, item.quantity * item.unitPrice, tenantId
@@ -1027,7 +1028,7 @@ async function addOrderItem(orderId, item, tenantId, db) {
 async function removeOrderItem(orderId, orderItemId, tenantId, db) {
   await new Promise((resolve, reject) => {
     db.run(
-      `DELETE FROM order_items WHERE id = ? AND order_id = ? AND tenant_id = ?`,
+      `DELETE FROM order_items WHERE id = $1 AND order_id = $2 AND tenant_id = $3`,
       [orderItemId, orderId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -1043,7 +1044,7 @@ async function changeOrderItemQuantity(orderId, orderItemId, newQuantity, tenant
   // Get current item
   const item = await new Promise((resolve, reject) => {
     db.get(
-      `SELECT * FROM order_items WHERE id = ? AND order_id = ? AND tenant_id = ?`,
+      `SELECT * FROM order_items WHERE id = $1 AND order_id = $2 AND tenant_id = $3`,
       [orderItemId, orderId, tenantId],
       (err, row) => {
         if (err) reject(err);
@@ -1060,7 +1061,7 @@ async function changeOrderItemQuantity(orderId, orderItemId, newQuantity, tenant
 
   await new Promise((resolve, reject) => {
     db.run(
-      `UPDATE order_items SET quantity = ?, total = ? WHERE id = ? AND tenant_id = ?`,
+      `UPDATE order_items SET quantity = $1, total = $2 WHERE id = $3 AND tenant_id = $4`,
       [newQuantity, newTotal, orderItemId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -1075,8 +1076,8 @@ async function changeOrderItemQuantity(orderId, orderItemId, newQuantity, tenant
 async function updateOrderShipping(orderId, shippingInfo, tenantId, db) {
   await new Promise((resolve, reject) => {
     db.run(
-      `UPDATE orders SET shipping_address = ?, shipping_method = ?, shipping_cost = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE orders SET shipping_address = $1, shipping_method = $2, shipping_cost = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND tenant_id = $2`,
       [
         JSON.stringify(shippingInfo.address),
         shippingInfo.method,
@@ -1097,7 +1098,7 @@ async function updateOrderShipping(orderId, shippingInfo, tenantId, db) {
 async function recalculateOrderTotals(orderId, tenantId, db) {
   const items = await new Promise((resolve, reject) => {
     db.all(
-      'SELECT * FROM order_items WHERE order_id = ? AND tenant_id = ?',
+      'SELECT * FROM order_items WHERE order_id = $1 AND tenant_id = $2',
       [orderId, tenantId],
       (err, rows) => {
         if (err) reject(err);
@@ -1111,7 +1112,7 @@ async function recalculateOrderTotals(orderId, tenantId, db) {
   // Get current order for tax and shipping
   const order = await new Promise((resolve, reject) => {
     db.get(
-      'SELECT * FROM orders WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM orders WHERE id = $1 AND tenant_id = $2',
       [orderId, tenantId],
       (err, row) => {
         if (err) reject(err);
@@ -1127,8 +1128,8 @@ async function recalculateOrderTotals(orderId, tenantId, db) {
 
   await new Promise((resolve, reject) => {
     db.run(
-      `UPDATE orders SET subtotal = ?, tax = ?, total = ?, updated_at = CURRENT_TIMESTAMP
-       WHERE id = ? AND tenant_id = ?`,
+      `UPDATE orders SET subtotal = $1, tax = $2, total = $3, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND tenant_id = $2`,
       [subtotal, tax, total, orderId, tenantId],
       function(err) {
         if (err) reject(err);

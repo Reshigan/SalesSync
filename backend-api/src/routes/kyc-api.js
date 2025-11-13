@@ -1,4 +1,5 @@
 const express = require('express');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const router = express.Router();
 const getDatabase = () => require('../utils/database').getDatabase();
 
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
     const tenantId = req.tenantId || 1;
 
     let sql = `SELECT k.*, c.name as customer_name, c.email, c.phone FROM kyc_documents k
-      LEFT JOIN customers c ON k.customer_id = c.id WHERE k.tenant_id = ?`;
+      LEFT JOIN customers c ON k.customer_id = c.id WHERE k.tenant_id = $1`;
     const params = [tenantId];
 
     if (customer_id) { sql += ' AND k.customer_id = ?'; params.push(customer_id); }
@@ -42,7 +43,7 @@ router.get('/:id', async (req, res) => {
       u.first_name || ' ' || u.last_name as verified_by_name FROM kyc_documents k
       LEFT JOIN customers c ON k.customer_id = c.id
       LEFT JOIN users u ON k.verified_by = u.id
-      WHERE k.id = ? AND k.tenant_id = ?`,
+      WHERE k.id = $1 AND k.tenant_id = $2`,
       [id, tenantId],
       (err, row) => {
         if (err) return res.status(500).json({ error: 'Failed to fetch KYC record' });
@@ -68,7 +69,7 @@ router.post('/', async (req, res) => {
 
     const refNumber = `KYC-${Date.now()}`;
     db.run(`INSERT INTO kyc_documents (tenant_id, reference_number, customer_id, document_type, document_number, document_url, expiry_date, notes, status, uploaded_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, CURRENT_TIMESTAMP)`,
       [tenantId, refNumber, customer_id, document_type, document_number, document_url, expiry_date, notes, userId],
       function(err) {
         if (err) return res.status(500).json({ error: 'Failed to upload document' });
@@ -88,7 +89,7 @@ router.post('/:id/verify', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
 
-    db.run(`UPDATE kyc_documents SET status = 'verified', verification_notes = ?, verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
+    db.run(`UPDATE kyc_documents SET status = 'verified', verification_notes = $1, verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE id = $3 AND tenant_id = $4 AND status = 'pending'`,
       [verification_notes, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to verify document' });
@@ -112,7 +113,7 @@ router.post('/:id/reject', async (req, res) => {
       return res.status(400).json({ error: 'Rejection reason is required' });
     }
 
-    db.run(`UPDATE kyc_documents SET status = 'rejected', rejection_reason = ?, verified_by = ?, verified_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ? AND status = 'pending'`,
+    db.run(`UPDATE kyc_documents SET status = 'rejected', rejection_reason = $1, verified_by = $2, verified_at = CURRENT_TIMESTAMP WHERE id = $3 AND tenant_id = $4 AND status = 'pending'`,
       [rejection_reason, userId, id, tenantId],
       function(err) {
         if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to reject document' });
@@ -135,7 +136,7 @@ router.get('/stats/summary', async (req, res) => {
       SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
       SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
       SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
-      FROM kyc_documents WHERE tenant_id = ?`,
+      FROM kyc_documents WHERE tenant_id = $1`,
       [tenantId],
       (err, summary) => {
         if (err) return res.status(500).json({ error: 'Failed to fetch summary' });

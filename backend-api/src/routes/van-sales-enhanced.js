@@ -51,7 +51,7 @@ router.post('/orders', asyncHandler(async (req, res) => {
 
   if (idempotency_key) {
     const existingOrder = await getOneQuery(
-      'SELECT * FROM van_sales WHERE tenant_id = ? AND id = ?',
+      'SELECT * FROM van_sales WHERE tenant_id = $1 AND id = $2',
       [tenantId, idempotency_key]
     );
     
@@ -71,7 +71,7 @@ router.post('/orders', asyncHandler(async (req, res) => {
   try {
     for (const item of items) {
       const product = await getOneQuery(
-        'SELECT id, name, stock_quantity FROM products WHERE id = ? AND tenant_id = ?',
+        'SELECT id, name, stock_quantity FROM products WHERE id = $1 AND tenant_id = $2',
         [item.product_id, tenantId]
       );
       
@@ -102,7 +102,7 @@ router.post('/orders', asyncHandler(async (req, res) => {
         sale_type, subtotal, tax_amount, discount_amount, total_amount, 
         amount_paid, amount_due, payment_method, payment_reference,
         location_lat, location_lng, notes, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`,
       [
         orderId,
         tenantId,
@@ -134,7 +134,7 @@ router.post('/orders', asyncHandler(async (req, res) => {
         `INSERT INTO stock_movements (
           id, tenant_id, product_id, movement_type, quantity, 
           reference_type, reference_id, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           movementId,
           tenantId,
@@ -156,7 +156,7 @@ router.post('/orders', asyncHandler(async (req, res) => {
       db.run('COMMIT', (err) => { if (err) reject(err); else resolve(); });
     });
 
-    const order = await getOneQuery('SELECT * FROM van_sales WHERE id = ?', [orderId]);
+    const order = await getOneQuery('SELECT * FROM van_sales WHERE id = $1', [orderId]);
     
     res.status(201).json({
       success: true,
@@ -192,7 +192,7 @@ router.patch('/orders/:id/fulfill', asyncHandler(async (req, res) => {
 
   try {
     const order = await getOneQuery(
-      'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM van_sales WHERE id = $1 AND tenant_id = $2',
       [id, tenantId]
     );
     
@@ -207,27 +207,27 @@ router.patch('/orders/:id/fulfill', asyncHandler(async (req, res) => {
     await runQuery(
       `UPDATE van_sales 
        SET status = 'completed', amount_paid = ?, payment_method = ?, 
-           payment_reference = ?, updated_at = ?
-       WHERE id = ? AND tenant_id = ?`,
+           payment_reference = $1, updated_at = $2
+       WHERE id = $1 AND tenant_id = $2`,
       [amount_paid || order.total_amount, payment_method, payment_reference, 
        new Date().toISOString(), id, tenantId]
     );
 
     await runQuery(
       `UPDATE stock_movements 
-       SET status = 'completed', updated_at = ?
-       WHERE reference_id = ? AND reference_type = 'van_sale' AND status = 'reserved'`,
+       SET status = 'completed', updated_at = $1
+       WHERE reference_id = $1 AND reference_type = 'van_sale' AND status = 'reserved'`,
       [new Date().toISOString(), id]
     );
 
     const movements = await getQuery(
-      'SELECT product_id, quantity FROM stock_movements WHERE reference_id = ? AND reference_type = ?',
+      'SELECT product_id, quantity FROM stock_movements WHERE reference_id = $1 AND reference_type = $2',
       [id, 'van_sale']
     );
     
     for (const movement of movements) {
       await runQuery(
-        'UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ? AND tenant_id = ?',
+        'UPDATE products SET stock_quantity = stock_quantity + $1 WHERE id = $2 AND tenant_id = $3',
         [movement.quantity, movement.product_id, tenantId]
       );
     }
@@ -252,7 +252,7 @@ router.patch('/orders/:id/fulfill', asyncHandler(async (req, res) => {
       db.run('COMMIT', (err) => { if (err) reject(err); else resolve(); });
     });
 
-    const updatedOrder = await getOneQuery('SELECT * FROM van_sales WHERE id = ?', [id]);
+    const updatedOrder = await getOneQuery('SELECT * FROM van_sales WHERE id = $1', [id]);
     
     res.json({
       success: true,
@@ -288,7 +288,7 @@ router.patch('/orders/:id/cancel', asyncHandler(async (req, res) => {
 
   try {
     const order = await getOneQuery(
-      'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM van_sales WHERE id = $1 AND tenant_id = $2',
       [id, tenantId]
     );
     
@@ -302,14 +302,14 @@ router.patch('/orders/:id/cancel', asyncHandler(async (req, res) => {
 
     await runQuery(
       `UPDATE van_sales 
-       SET status = 'cancelled', notes = ?, updated_at = ?
-       WHERE id = ? AND tenant_id = ?`,
+       SET status = 'cancelled', notes = $1, updated_at = $2
+       WHERE id = $1 AND tenant_id = $2`,
       [cancellation_reason || order.notes, new Date().toISOString(), id, tenantId]
     );
 
     await runQuery(
       `DELETE FROM stock_movements 
-       WHERE reference_id = ? AND reference_type = 'van_sale' AND status = 'reserved'`,
+       WHERE reference_id = $1 AND reference_type = 'van_sale' AND status = 'reserved'`,
       [id]
     );
 
@@ -317,7 +317,7 @@ router.patch('/orders/:id/cancel', asyncHandler(async (req, res) => {
       db.run('COMMIT', (err) => { if (err) reject(err); else resolve(); });
     });
 
-    const updatedOrder = await getOneQuery('SELECT * FROM van_sales WHERE id = ?', [id]);
+    const updatedOrder = await getOneQuery('SELECT * FROM van_sales WHERE id = $1', [id]);
     
     res.json({
       success: true,
@@ -339,7 +339,7 @@ router.get('/orders/:id', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   
   const order = await getOneQuery(
-    'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+    'SELECT * FROM van_sales WHERE id = $1 AND tenant_id = $2',
     [id, tenantId]
   );
 
@@ -362,12 +362,12 @@ router.get('/orders/:id', asyncHandler(async (req, res) => {
       sm.status
     FROM stock_movements sm
     JOIN products p ON sm.product_id = p.id
-    WHERE sm.reference_id = ? AND sm.reference_type = 'van_sale'`,
+    WHERE sm.reference_id = $1 AND sm.reference_type = 'van_sale'`,
     [id]
   );
 
   const commission = await getOneQuery(
-    'SELECT * FROM commission_events WHERE event_ref_id = ? AND event_type = ?',
+    'SELECT * FROM commission_events WHERE event_ref_id = $1 AND event_type = $2',
     [id, 'order']
   );
 
