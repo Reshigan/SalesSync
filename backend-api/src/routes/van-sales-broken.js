@@ -122,7 +122,7 @@ router.get('/vans', async (req, res) => {
              COUNT(vl.id) as total_loads,
              MAX(vl.load_date) as last_load_date
       FROM vans v
-      LEFT JOIN agents a ON v.assigned_salesman_id = a.id
+      LEFT JOIN users a ON v.assigned_salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN van_loads vl ON v.id = vl.van_id
       WHERE v.tenant_id = ?
@@ -274,7 +274,7 @@ router.get('/loads', async (req, res) => {
              json_array_length(vl.stock_sold) as items_sold
       FROM van_loads vl
       JOIN vans v ON vl.van_id = v.id
-      JOIN agents a ON vl.salesman_id = a.id
+      JOIN users a ON vl.salesman_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE vl.tenant_id = ?
     `;
@@ -558,7 +558,7 @@ router.get('/loads/:id', async (req, res) => {
              u.phone as salesman_phone
       FROM van_loads vl
       JOIN vans v ON vl.van_id = v.id
-      JOIN agents a ON vl.salesman_id = a.id
+      JOIN users a ON vl.salesman_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE vl.id = ? AND vl.tenant_id = ?
     `, [id, req.user.tenantId]);
@@ -625,7 +625,7 @@ router.get('/dashboard', async (req, res) => {
              u.first_name || ' ' || u.last_name as salesman_name
       FROM van_loads vl
       JOIN vans v ON vl.van_id = v.id
-      JOIN agents a ON vl.salesman_id = a.id
+      JOIN users a ON vl.salesman_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE vl.tenant_id = ?
       ORDER BY vl.created_at DESC

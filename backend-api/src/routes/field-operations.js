@@ -85,7 +85,7 @@ router.get('/live/agent-locations', asyncHandler(async (req, res) => {
       v.status,
       c.name as customer_name,
       c.id as customer_id
-    FROM agents a
+    FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
     LEFT JOIN users u ON a.user_id = u.id
     LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
     LEFT JOIN customers c ON v.customer_id = c.id

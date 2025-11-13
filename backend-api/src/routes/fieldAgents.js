@@ -67,7 +67,7 @@ router.get('/', async (req, res, next) => {
     
     const agents = await getQuery(
       `SELECT a.*, u.first_name, u.last_name, u.email, u.phone, u.status
-       FROM agents a
+       FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
        JOIN users u ON a.user_id = u.id
        WHERE a.tenant_id = ? AND a.agent_type = 'field_marketing'
        ORDER BY u.first_name, u.last_name`,
@@ -471,7 +471,7 @@ router.get('/:agentId/visits', async (req, res, next) => {
              u.name as agent_name
       FROM visits v
       JOIN customers c ON v.customer_id = c.id
-      JOIN agents a ON v.agent_id = a.id
+      JOIN users a ON v.agent_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE v.tenant_id = ? AND v.agent_id = ?
     `;
@@ -519,7 +519,7 @@ router.get('/stats', async (req, res) => {
             COUNT(*) as total_agents,
             COUNT(CASE WHEN a.status = 'active' THEN 1 END) as active_agents,
             COUNT(CASE WHEN a.status = 'inactive' THEN 1 END) as inactive_agents
-          FROM agents a
+          FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
           WHERE a.tenant_id = ?
         `, [tenantId], (err, row) => err ? reject(err) : resolve(row || {}));
       }),
@@ -533,7 +533,7 @@ router.get('/stats', async (req, res) => {
             COUNT(DISTINCT o.id) as total_orders,
             SUM(o.total_amount) as total_revenue,
             AVG(o.total_amount) as avg_order_value
-          FROM agents a
+          FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
           LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
           LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = ?
           WHERE a.tenant_id = ?
@@ -552,7 +552,7 @@ router.get('/stats', async (req, res) => {
             COUNT(DISTINCT o.id) as order_count,
             COALESCE(SUM(o.total_amount), 0) as total_revenue,
             COUNT(DISTINCT v.customer_id) as unique_customers
-          FROM agents a
+          FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
           LEFT JOIN users u ON a.user_id = u.id
           LEFT JOIN visits v ON a.id = v.agent_id
           LEFT JOIN orders o ON a.id = o.salesman_id
@@ -571,7 +571,7 @@ router.get('/stats', async (req, res) => {
             COUNT(DISTINCT a.id) as agent_count,
             COUNT(DISTINCT v.id) as visit_count,
             COUNT(DISTINCT v.customer_id) as customer_count
-          FROM agents a
+          FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
           LEFT JOIN visits v ON a.id = v.agent_id
           WHERE a.tenant_id = ?
           AND a.territory IS NOT NULL
@@ -620,7 +620,7 @@ router.get('/:id/performance', async (req, res) => {
       new Promise((resolve, reject) => {
         db.get(`
           SELECT a.*, u.first_name || ' ' || u.last_name as agent_name
-          FROM agents a
+          FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
           LEFT JOIN users u ON a.user_id = u.id
           WHERE a.id = ? AND a.tenant_id = ?
         `, [id, tenantId], (err, row) => err ? reject(err) : resolve(row));

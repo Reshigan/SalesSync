@@ -580,7 +580,7 @@ router.get('/surveys', async (req, res) => {
       LEFT JOIN brands b ON s.brand_id = b.id
       LEFT JOIN survey_assignments sa ON s.id = sa.survey_id
       LEFT JOIN survey_responses sr ON s.id = sr.survey_id
-      LEFT JOIN agents a ON sa.agent_id = a.id
+      LEFT JOIN users a ON sa.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE s.tenant_id = ?
     `;
@@ -926,7 +926,7 @@ router.get('/dashboard', async (req, res) => {
              u.first_name || ' ' || u.last_name as agent_name
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      LEFT JOIN agents a ON v.assigned_agent_id = a.id
+      LEFT JOIN users a ON v.assigned_agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE v.tenant_id = ? AND DATE(v.scheduled_date) = DATE('now')
       ORDER BY v.scheduled_date ASC

@@ -284,7 +284,7 @@ router.get('/', async (req, res) => {
              COUNT(oi.id) as item_count
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN agents a ON o.salesman_id = a.id
+      LEFT JOIN users a ON o.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN order_items oi ON o.id = oi.order_id
       WHERE o.tenant_id = ?
@@ -606,7 +606,7 @@ const getOrderWithDetails = async (orderId, tenantId) => {
              u.first_name || ' ' || u.last_name as salesman_name
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN agents a ON o.salesman_id = a.id
+      LEFT JOIN users a ON o.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE o.id = ? AND o.tenant_id = ?
     `, [orderId, tenantId], (err, row) => {

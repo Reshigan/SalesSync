@@ -339,7 +339,7 @@ router.get('/campaigns/:id', async (req, res) => {
              u.first_name || ' ' || u.last_name as promoter_name,
              c.name as customer_name
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON pa.customer_id = c.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
@@ -420,7 +420,7 @@ router.get('/activities', async (req, res) => {
              c.name as customer_name,
              c.address as customer_address
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN promotional_campaigns pc ON pa.campaign_id = pc.id
       LEFT JOIN customers c ON pa.customer_id = c.id
@@ -645,7 +645,7 @@ router.get('/dashboard', async (req, res) => {
              pc.name as campaign_name,
              c.name as customer_name
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN promotional_campaigns pc ON pa.campaign_id = pc.id
       LEFT JOIN customers c ON pa.customer_id = c.id

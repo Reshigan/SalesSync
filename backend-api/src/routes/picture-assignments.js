@@ -176,7 +176,7 @@ router.get('/assignments', async (req, res) => {
              COUNT(p.id) as total_pictures,
              COUNT(CASE WHEN p.id IS NOT NULL THEN 1 END) as completed_pictures
       FROM picture_assignments pa
-      LEFT JOIN agents a ON pa.assigned_agent_id = a.id
+      LEFT JOIN users a ON pa.assigned_agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON pa.customer_id = c.id
       LEFT JOIN pictures p ON pa.id = p.assignment_id
@@ -766,7 +766,7 @@ router.get('/dashboard', async (req, res) => {
       SELECT pa.id, pa.title, pa.assignment_type, pa.status, pa.due_date,
              u.first_name || ' ' || u.last_name as agent_name
       FROM picture_assignments pa
-      LEFT JOIN agents a ON pa.assigned_agent_id = a.id
+      LEFT JOIN users a ON pa.assigned_agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE pa.tenant_id = ?
       ORDER BY pa.created_at DESC

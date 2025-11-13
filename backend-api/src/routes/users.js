@@ -298,7 +298,7 @@ router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, re
         u.id, u.email, u.first_name, u.last_name, u.phone, u.role, u.status, u.last_login, u.created_at,
         a.id as agent_id, a.agent_type, a.employee_code, a.hire_date
       FROM users u
-      LEFT JOIN agents a ON a.user_id = u.id AND a.tenant_id = u.tenant_id
+      LEFT JOIN users a ON a.user_id = u.id AND a.tenant_id = u.tenant_id
       WHERE u.id = ? AND u.tenant_id = ?
     `, [id, req.tenantId]);
     

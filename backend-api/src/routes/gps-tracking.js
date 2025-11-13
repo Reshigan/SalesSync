@@ -180,7 +180,7 @@ router.get('/agents/:id/location', async (req, res) => {
              a.last_location_update, a.current_activity,
              u.first_name || ' ' || u.last_name as agent_name,
              u.phone as agent_phone
-      FROM agents a
+      FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
       JOIN users u ON a.user_id = u.id
       WHERE a.id = ? AND a.tenant_id = ?
     `, [id, req.user.tenantId]);
@@ -245,8 +245,7 @@ router.get('/agents/:id/nearby-customers', async (req, res) => {
     // Get agent's current location
     const agent = await getOneQuery(`
       SELECT current_latitude, current_longitude
-      FROM agents
-      WHERE id = ? AND tenant_id = ?
+      FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') WHERE id = ? AND tenant_id = ?
     `, [id, req.user.tenantId]);
     
     if (!agent || !agent.current_latitude || !agent.current_longitude) {
@@ -562,7 +561,7 @@ router.get('/live-agents', async (req, res) => {
              u.phone as agent_phone,
              u.email as agent_email,
              c.name as current_customer
-      FROM agents a
+      FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON a.current_customer_id = c.id
       WHERE a.tenant_id = ?
@@ -697,7 +696,7 @@ router.get('/locations', async (req, res) => {
              u.first_name || ' ' || u.last_name as agent_name,
              c.name as customer_name
       FROM agent_locations al
-      LEFT JOIN agents a ON al.agent_id = a.id
+      LEFT JOIN users a ON al.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON al.customer_id = c.id
       WHERE al.tenant_id = ?

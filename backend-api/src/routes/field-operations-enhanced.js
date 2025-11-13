@@ -294,7 +294,7 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
   const locations = await getQuery(
     `SELECT a.id as agent_id, u.first_name || ' ' || u.last_name as agent_name, u.phone, u.email,
             v.latitude, v.longitude, v.visit_date as timestamp, v.status, c.name as customer_name, c.id as customer_id
-     FROM agents a
+     FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
      LEFT JOIN users u ON a.user_id = u.id
      LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
      LEFT JOIN customers c ON v.customer_id = c.id

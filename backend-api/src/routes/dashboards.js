@@ -9,7 +9,7 @@ router.get('/real-time-operations', asyncHandler(async (req, res) => {
   
   const activeAgents = await getOneQuery(
     `SELECT COUNT(DISTINCT a.id) as count 
-     FROM agents a 
+     FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a 
      JOIN visits v ON a.id = v.agent_id 
      WHERE a.tenant_id = ? AND v.status = 'in_progress' 
      AND DATE(v.visit_date) = DATE('now')`,

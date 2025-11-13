@@ -431,7 +431,7 @@ router.get('/:id/activities', async (req, res, next) => {
         pa.photos,
         pa.survey_data
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       LEFT JOIN customers c ON pa.customer_id = c.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
@@ -714,7 +714,7 @@ router.get('/:id/performance', async (req, res, next) => {
         COALESCE(SUM(pa.contacts_made), 0) as contacts_made,
         AVG(CASE WHEN pa.status = 'completed' THEN 1.0 ELSE 0.0 END) * 100 as completion_rate
       FROM promoter_activities pa
-      JOIN agents a ON pa.promoter_id = a.id
+      JOIN users a ON pa.promoter_id = a.id
       JOIN users u ON a.user_id = u.id
       WHERE pa.campaign_id = ? AND pa.tenant_id = ?
       GROUP BY pa.promoter_id, u.name

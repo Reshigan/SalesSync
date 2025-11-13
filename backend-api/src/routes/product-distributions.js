@@ -217,7 +217,7 @@ router.get('/', authMiddleware, async (req, res) => {
       FROM product_distributions pd
       LEFT JOIN products p ON pd.product_id = p.id
       LEFT JOIN customers c ON pd.customer_id = c.id
-      LEFT JOIN agents a ON pd.agent_id = a.id
+      LEFT JOIN users a ON pd.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE pd.tenant_id = ?
     `;
@@ -282,7 +282,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
        FROM product_distributions pd
        LEFT JOIN products p ON pd.product_id = p.id
        LEFT JOIN customers c ON pd.customer_id = c.id
-       LEFT JOIN agents a ON pd.agent_id = a.id
+       LEFT JOIN users a ON pd.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
        WHERE pd.id = ? AND pd.tenant_id = ?`,
       [id, tenantId],

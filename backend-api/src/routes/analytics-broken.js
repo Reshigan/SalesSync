@@ -65,7 +65,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
       COUNT(o.id) as total_orders,
       COALESCE(SUM(o.total_amount), 0) as total_revenue
     FROM orders o
-    JOIN agents a ON o.salesman_id = a.id
+    JOIN users a ON o.salesman_id = a.id
     JOIN users u ON a.user_id = u.id
     WHERE o.tenant_id = ? ${dateFilter}
     GROUP BY a.id, u.first_name, u.last_name
@@ -135,7 +135,7 @@ router.get('/visits', asyncHandler(async (req, res) => {
           THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
           ELSE NULL END), 2), 0) as avg_duration_minutes
     FROM visits v
-    JOIN agents a ON v.agent_id = a.id
+    JOIN users a ON v.agent_id = a.id
     JOIN users u ON a.user_id = u.id
     WHERE v.tenant_id = ? ${dateFilter}
     GROUP BY a.id, u.first_name, u.last_name
@@ -449,7 +449,7 @@ router.get('/dashboard', async (req, res) => {
           v.created_at
         FROM visits v
         JOIN customers c ON v.customer_id = c.id
-        JOIN agents a ON v.agent_id = a.id
+        JOIN users a ON v.agent_id = a.id
         JOIN users u ON a.user_id = u.id
         WHERE v.tenant_id = ?
         ORDER BY v.created_at DESC
@@ -739,7 +739,7 @@ router.get('/agent-performance', async (req, res) => {
           AVG(o.total_amount) as avg_order_value,
           COUNT(DISTINCT o.customer_id) as unique_customers,
           COUNT(DISTINCT v.id) as total_visits
-        FROM agents a
+        FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
         JOIN users u ON a.user_id = u.id
         LEFT JOIN orders o ON a.id = o.salesman_id AND o.tenant_id = ? ${dateFilter}
         LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ? ${dateFilter.replace('o.order_date', 'v.visit_date')}

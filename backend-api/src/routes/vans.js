@@ -135,7 +135,7 @@ router.get('/', async (req, res) => {
       SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name,
              COUNT(vl.id) as load_count
       FROM vans v
-      LEFT JOIN agents a ON v.assigned_salesman_id = a.id
+      LEFT JOIN users a ON v.assigned_salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       LEFT JOIN van_loads vl ON v.id = vl.van_id AND DATE(vl.load_date) = DATE('now')
       WHERE v.tenant_id = ?
@@ -233,7 +233,7 @@ router.get('/:id', async (req, res) => {
       db.get(`
         SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
         FROM vans v
-        LEFT JOIN agents a ON v.assigned_salesman_id = a.id
+        LEFT JOIN users a ON v.assigned_salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
         WHERE v.id = ? AND v.tenant_id = ?
       `, [id, tenantId], (err, row) => {
@@ -254,7 +254,7 @@ router.get('/:id', async (req, res) => {
       db.all(`
         SELECT vl.*, u.first_name || ' ' || u.last_name as salesman_name
         FROM van_loads vl
-        LEFT JOIN agents a ON vl.salesman_id = a.id
+        LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
         WHERE vl.van_id = ? AND vl.tenant_id = ?
         ORDER BY vl.load_date DESC
@@ -388,7 +388,7 @@ router.get('/loads/list', async (req, res) => {
              u.first_name || ' ' || u.last_name as salesman_name
       FROM van_loads vl
       LEFT JOIN vans v ON vl.van_id = v.id
-      LEFT JOIN agents a ON vl.salesman_id = a.id
+      LEFT JOIN users a ON vl.salesman_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
       WHERE vl.tenant_id = ?
     `;
@@ -551,7 +551,7 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
                u.first_name || ' ' || u.last_name as salesman_name
         FROM van_loads vl
         LEFT JOIN vans v ON vl.van_id = v.id
-        LEFT JOIN agents a ON vl.salesman_id = a.id
+        LEFT JOIN users a ON vl.salesman_id = a.id
         LEFT JOIN users u ON a.user_id = u.id
         WHERE vl.id = ? AND vl.tenant_id = ?
       `, [loadId, tenantId], (err, row) => {
