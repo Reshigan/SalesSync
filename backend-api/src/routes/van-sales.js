@@ -356,19 +356,81 @@ router.get('/stats', asyncHandler(async (req, res) => {
 // GET /api/van-sales/analytics - Van sales analytics
 router.get('/analytics', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
-  
+  const { start_date, end_date } = req.query;
+
+  let dateFilter = '';
+  const params = [tenantId];
+  let paramIndex = 2;
+
+  if (start_date) {
+    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    params.push(start_date);
+    paramIndex++;
+  }
+
+  if (end_date) {
+    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    params.push(end_date);
+    paramIndex++;
+  }
+
+  const topProductsQuery = `
+    SELECT 
+      p.id,
+      p.name,
+      p.sku,
+      COUNT(DISTINCT vsi.id) as total_sales,
+      SUM(vsi.quantity) as total_quantity,
+      SUM(vsi.subtotal) as total_revenue
+    FROM products p
+    INNER JOIN van_sale_items vsi ON p.id = vsi.product_id
+    INNER JOIN van_sales vs ON vsi.van_sale_id = vs.id
+    WHERE vs.tenant_id = $1${dateFilter}
+    GROUP BY p.id, p.name, p.sku
+    ORDER BY total_revenue DESC
+    LIMIT 10
+  `;
+  const topProducts = await getQuery(topProductsQuery, params);
+
+  // Get sales by region
+  const salesByRegionQuery = `
+    SELECT 
+      r.id,
+      r.name as region_name,
+      COUNT(DISTINCT vs.id) as total_sales,
+      COALESCE(SUM(vs.total_amount), 0) as total_revenue,
+      COUNT(DISTINCT vs.customer_id) as unique_customers
+    FROM regions r
+    LEFT JOIN routes rt ON r.id = rt.region_id
+    LEFT JOIN vans v ON rt.id = v.route_id
+    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1${dateFilter}
+    WHERE r.tenant_id = $1
+    GROUP BY r.id, r.name
+    ORDER BY total_revenue DESC
+  `;
+  const salesByRegion = await getQuery(salesByRegionQuery, params);
+
+  const revenueTrendsQuery = `
+    SELECT 
+      DATE(vs.sale_date) as date,
+      COUNT(vs.id) as sales_count,
+      SUM(vs.total_amount) as revenue,
+      AVG(vs.total_amount) as avg_order_value
+    FROM van_sales vs
+    WHERE vs.tenant_id = $1${dateFilter}
+    GROUP BY DATE(vs.sale_date)
+    ORDER BY date DESC
+    LIMIT 30
+  `;
+  const revenueTrends = await getQuery(revenueTrendsQuery, params);
+
   res.json({
     success: true,
     data: {
-      total_sales: 0,
-      total_revenue: 0,
-      avg_order_value: 0,
-      total_orders: 0,
-      total_customers: 0,
-      top_products: [],
+      top_products: topProducts || [],
       top_vans: [],
-      sales_by_region: [],
-      revenue_trend: []
+      sales_by_region: salesByRegion || [],
+      revenue_trend: revenueTrends || []
     }
   });
 }));
@@ -376,16 +438,78 @@ router.get('/analytics', asyncHandler(async (req, res) => {
 // GET /api/van-sales/trends - Van sales trends
 router.get('/trends', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
-  const { start_date, end_date } = req.query;
+  const { period = 'daily', start_date, end_date } = req.query;
+
+  let dateFilter = '';
+  const params = [tenantId];
+  let paramIndex = 2;
+
+  if (start_date) {
+    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    params.push(start_date);
+    paramIndex++;
+  }
+
+  if (end_date) {
+    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    params.push(end_date);
+    paramIndex++;
+  }
+
+  let trendsQuery;
   
+  if (period === 'daily') {
+    trendsQuery = `
+      SELECT 
+        DATE(vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE(vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 30
+    `;
+  } else if (period === 'weekly') {
+    trendsQuery = `
+      SELECT 
+        DATE_TRUNC('week', vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE_TRUNC('week', vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 12
+    `;
+  } else if (period === 'monthly') {
+    trendsQuery = `
+      SELECT 
+        DATE_TRUNC('month', vs.sale_date) as period,
+        COUNT(vs.id) as sales_count,
+        SUM(vs.total_amount) as total_revenue,
+        AVG(vs.total_amount) as avg_order_value,
+        COUNT(DISTINCT vs.customer_id) as unique_customers,
+        COUNT(DISTINCT vs.van_id) as active_vans
+      FROM van_sales vs
+      WHERE vs.tenant_id = $1${dateFilter}
+      GROUP BY DATE_TRUNC('month', vs.sale_date)
+      ORDER BY period DESC
+      LIMIT 12
+    `;
+  }
+
+  const trends = await getQuery(trendsQuery, params);
+
   res.json({
     success: true,
-    data: {
-      daily_sales: [],
-      daily_revenue: [],
-      weekly_summary: [],
-      monthly_summary: []
-    }
+    data: trends || []
   });
 }));
 
