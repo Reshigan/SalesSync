@@ -1,10 +1,10 @@
 /**
-import { API_CONFIG } from '../config/api.config'
  * Warehouses Service
  * Handles warehouse management and operations
  */
 
 import { apiClient } from './api.service'
+import { API_CONFIG } from '../config/api.config'
 
 export interface Warehouse {
   id: string
