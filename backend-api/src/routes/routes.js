@@ -146,7 +146,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = ? AND r.tenant_id = ?
+      WHERE r.id = $1 AND r.tenant_id = $2
     `;
     
     const route = await getOneQuery(query, [id, req.tenantId]);
