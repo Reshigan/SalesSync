@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Truck, MapPin, Package, DollarSign, TrendingUp, Clock } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { useNavigate } from 'react-router-dom'
 
 interface VanSalesMetrics {
   totalVans: number
@@ -26,6 +27,7 @@ interface VanPerformance {
 }
 
 export default function VanSalesPage() {
+  const navigate = useNavigate()
   const [metrics, setMetrics] = useState<VanSalesMetrics>({
     totalVans: 0,
     activeRoutes: 0,
@@ -37,6 +39,13 @@ export default function VanSalesPage() {
   
   const [vanPerformance, setVanPerformance] = useState<VanPerformance[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddVanModal, setShowAddVanModal] = useState(false)
+  const [newVanData, setNewVanData] = useState({
+    registration_number: '',
+    model: '',
+    capacity_units: '',
+    status: 'active'
+  })
 
   useEffect(() => {
     fetchVanSalesData()
@@ -118,6 +127,46 @@ export default function VanSalesPage() {
     }
   }
 
+  const handleAddVan = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
+      
+      const response = await fetch('/api/vans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+          'X-Tenant-Code': tenantCode
+        },
+        body: JSON.stringify({
+          registration_number: newVanData.registration_number,
+          model: newVanData.model,
+          capacity_units: newVanData.capacity_units ? parseInt(newVanData.capacity_units) : null,
+          status: newVanData.status
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setShowAddVanModal(false)
+        setNewVanData({
+          registration_number: '',
+          model: '',
+          capacity_units: '',
+          status: 'active'
+        })
+        fetchVanSalesData() // Refresh the data
+      } else {
+        alert(data.message || 'Failed to create van')
+      }
+    } catch (error) {
+      console.error('Error creating van:', error)
+      alert('Failed to create van')
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100'
@@ -143,7 +192,7 @@ export default function VanSalesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Van Sales Management</h1>
           <p className="text-gray-600">Monitor and manage your van sales operations</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowAddVanModal(true)}>
           <Truck className="h-4 w-4 mr-2" />
           Add New Van
         </Button>
@@ -308,6 +357,89 @@ export default function VanSalesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Van Modal */}
+      {showAddVanModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">Add New Van</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Registration Number *
+                </label>
+                <input
+                  type="text"
+                  value={newVanData.registration_number}
+                  onChange={(e) => setNewVanData({ ...newVanData, registration_number: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., VAN-001"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Model
+                </label>
+                <input
+                  type="text"
+                  value={newVanData.model}
+                  onChange={(e) => setNewVanData({ ...newVanData, model: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Toyota Hiace"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Capacity (units)
+                </label>
+                <input
+                  type="number"
+                  value={newVanData.capacity_units}
+                  onChange={(e) => setNewVanData({ ...newVanData, capacity_units: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., 1000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={newVanData.status}
+                  onChange={(e) => setNewVanData({ ...newVanData, status: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="maintenance">Maintenance</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowAddVanModal(false)
+                  setNewVanData({
+                    registration_number: '',
+                    model: '',
+                    capacity_units: '',
+                    status: 'active'
+                  })
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddVan}
+                disabled={!newVanData.registration_number}
+              >
+                Create Van
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
