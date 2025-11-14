@@ -1,124 +1,7 @@
 const express = require('express');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
+const { selectOne, selectMany, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
 const router = express.Router();
-
-// Lazy load database functions to avoid circular dependencies
-const getDatabase = () => require('../utils/database').getDatabase();
-const { insertQuery, updateQuery, deleteQuery } = (() => {
-  try {
-    return require('../database/queries');
-  } catch (error) {
-    console.warn('Queries module not found, using fallback functions');
-    return {
-      getQuery: (table, conditions = {}, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `SELECT * FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-          });
-        });
-      },
-      getOneQuery: (table, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `SELECT * FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          sql += ' LIMIT 1';
-          
-          db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-          });
-        });
-      },
-      insertQuery: (table, data) => {
-        return new Promise((resolve, reject) => {
-          const keys = Object.keys(data);
-          const values = Object.values(data);
-          const placeholders = keys.map(() => '$1').join(', ');
-          
-          const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-          
-          db.run(sql, values, function(err) {
-            if (err) reject(err);
-            else resolve({ id: this.lastID, changes: this.changes });
-          });
-        });
-      },
-      updateQuery: (table, data, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
-          const values = Object.values(data);
-          
-          let sql = `UPDATE ${table} SET ${setClause}`;
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            values.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            values.push(conditions[key]);
-          });
-          
-          db.run(sql, values, function(err) {
-            if (err) reject(err);
-            else resolve({ changes: this.changes });
-          });
-        });
-      },
-      deleteQuery: (table, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `DELETE FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          db.run(sql, params, function(err) {
-            if (err) reject(err);
-            else resolve({ changes: this.changes });
-          });
-        });
-      }
-    };
-  }
-})();
 
 // Get all vans
 router.get('/', async (req, res) => {
@@ -129,30 +12,27 @@ router.get('/', async (req, res) => {
       SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name,
              COUNT(vl.id) as load_count
       FROM vans v
-      LEFT JOIN users a ON v.assigned_salesman_id = a.id
-      LEFT JOIN users u ON a.user_id = u.id
-      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = DATE('now')
+      LEFT JOIN users u ON v.assigned_salesman_id = u.id
+      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = CURRENT_DATE
       WHERE v.tenant_id = $1
     `;
     const params = [tenantId];
+    let paramIndex = 2;
     
     if (status) {
-      sql += ' AND v.status = ?';
+      sql += ` AND v.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     if (assigned_salesman_id) {
-      sql += ' AND v.assigned_salesman_id = ?';
+      sql += ` AND v.assigned_salesman_id = $${paramIndex}`;
       params.push(assigned_salesman_id);
+      paramIndex++;
     }
     
-    sql += ' GROUP BY v.id ORDER BY v.registration_number';
+    sql += ' GROUP BY v.id, u.first_name, u.last_name ORDER BY v.registration_number';
     
-    const vans = await new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+    const vans = await getQuery(sql, params);
     
     res.json({
       success: true,
@@ -184,7 +64,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if registration number already exists
-    const existingVan = await getOneQuery('vans', { registration_number }, tenantId);
+    const existingVan = await selectOne('vans', { registration_number }, tenantId);
     if (existingVan) {
       return res.status(400).json({ 
         success: false, 
@@ -193,7 +73,6 @@ router.post('/', async (req, res) => {
     }
     
     const vanData = {
-      tenant_id: tenantId,
       registration_number,
       model,
       capacity_units: capacity_units ? parseInt(capacity_units) : null,
@@ -201,9 +80,7 @@ router.post('/', async (req, res) => {
       status
     };
     
-    await insertQuery('vans', vanData);
-    
-    const newVan = await getOneQuery('vans', { registration_number }, tenantId);
+    const newVan = await insertRow('vans', vanData, tenantId);
     
     res.status(201).json({
       success: true,
@@ -221,18 +98,12 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    const van = await new Promise((resolve, reject) => {
-      db.get(`
-        SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
-        FROM vans v
-        LEFT JOIN users a ON v.assigned_salesman_id = a.id
-        LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.id = ? AND v.tenant_id = $2
-      `, [id, tenantId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const van = await getOneQuery(`
+      SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
+      FROM vans v
+      LEFT JOIN users u ON v.assigned_salesman_id = u.id
+      WHERE v.id = $1 AND v.tenant_id = $2
+    `, [id, tenantId]);
     
     if (!van) {
       return res.status(404).json({ 
@@ -242,20 +113,14 @@ router.get('/:id', async (req, res) => {
     }
     
     // Get recent loads
-    const recentLoads = await new Promise((resolve, reject) => {
-      db.all(`
-        SELECT vl.*, u.first_name || ' ' || u.last_name as salesman_name
-        FROM van_loads vl
-        LEFT JOIN users a ON vl.salesman_id = a.id
-        LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.van_id = ? AND vl.tenant_id = $2
-        ORDER BY vl.load_date DESC
-        LIMIT 10
-      `, [id, tenantId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+    const recentLoads = await getQuery(`
+      SELECT vl.*, u.first_name || ' ' || u.last_name as salesman_name
+      FROM van_loads vl
+      LEFT JOIN users u ON vl.salesman_id = u.id
+      WHERE vl.van_id = $1 AND vl.tenant_id = $2
+      ORDER BY vl.load_date DESC
+      LIMIT 10
+    `, [id, tenantId]);
     
     res.json({
       success: true,
@@ -283,7 +148,7 @@ router.put('/:id', async (req, res) => {
       status
     } = req.body;
     
-    const existingVan = await getOneQuery('vans', { id }, tenantId);
+    const existingVan = await selectOne('vans', { id }, tenantId);
     if (!existingVan) {
       return res.status(404).json({ 
         success: false, 
@@ -293,7 +158,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if registration number is being changed and already exists
     if (registration_number && registration_number !== existingVan.registration_number) {
-      const regExists = await getOneQuery('vans', { registration_number }, tenantId);
+      const regExists = await selectOne('vans', { registration_number }, tenantId);
       if (regExists) {
         return res.status(400).json({ 
           success: false, 
@@ -309,9 +174,8 @@ router.put('/:id', async (req, res) => {
     if (assigned_salesman_id !== undefined) updateData.assigned_salesman_id = assigned_salesman_id;
     if (status) updateData.status = status;
     
-    await updateQuery('vans', updateData, { id }, tenantId);
-    
-    const updatedVan = await getOneQuery('vans', { id }, tenantId);
+    const updatedRows = await updateRow('vans', updateData, { id }, tenantId);
+    const updatedVan = updatedRows[0];
     
     res.json({
       success: true,
@@ -330,7 +194,7 @@ router.delete('/:id', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
     
-    const existingVan = await getOneQuery('vans', { id }, tenantId);
+    const existingVan = await selectOne('vans', { id }, tenantId);
     if (!existingVan) {
       return res.status(404).json({ 
         success: false, 
@@ -339,23 +203,22 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if van has load history
-    const loadCount = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM van_loads WHERE van_id = $1', [id], (err, row) => {
-        if (err) reject(err);
-        else resolve(row.count);
-      });
-    });
+    const loadCountResult = await getOneQuery(
+      'SELECT COUNT(*) as count FROM van_loads WHERE van_id = $1',
+      [id]
+    );
+    const loadCount = loadCountResult ? loadCountResult.count : 0;
     
     if (loadCount > 0) {
       // Soft delete - mark as inactive
-      await updateQuery('vans', { status: 'inactive' }, { id }, tenantId);
+      await updateRow('vans', { status: 'inactive' }, { id }, tenantId);
       res.json({
         success: true,
         message: 'Van marked as inactive (has load history)'
       });
     } else {
       // Hard delete
-      await deleteQuery('vans', { id }, tenantId);
+      await deleteRow('vans', { id }, tenantId);
       res.json({
         success: true,
         message: 'Van deleted successfully'
@@ -377,47 +240,48 @@ router.get('/loads/list', async (req, res) => {
              u.first_name || ' ' || u.last_name as salesman_name
       FROM van_loads vl
       LEFT JOIN vans v ON vl.van_id = v.id
-      LEFT JOIN users a ON vl.salesman_id = a.id
-      LEFT JOIN users u ON a.user_id = u.id
+      LEFT JOIN users u ON vl.salesman_id = u.id
       WHERE vl.tenant_id = $1
     `;
     const params = [tenantId];
+    let paramIndex = 2;
     
     if (van_id) {
-      sql += ' AND vl.van_id = ?';
+      sql += ` AND vl.van_id = $${paramIndex}`;
       params.push(van_id);
+      paramIndex++;
     }
     if (salesman_id) {
-      sql += ' AND vl.salesman_id = ?';
+      sql += ` AND vl.salesman_id = $${paramIndex}`;
       params.push(salesman_id);
+      paramIndex++;
     }
     if (status) {
-      sql += ' AND vl.status = ?';
+      sql += ` AND vl.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     if (date_from) {
-      sql += ' AND vl.load_date >= ?';
+      sql += ` AND vl.load_date >= $${paramIndex}`;
       params.push(date_from);
+      paramIndex++;
     }
     if (date_to) {
-      sql += ' AND vl.load_date <= ?';
+      sql += ` AND vl.load_date <= $${paramIndex}`;
       params.push(date_to);
+      paramIndex++;
     }
     
-    sql += ` ORDER BY vl.load_date DESC LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY vl.load_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
-    const loads = await new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows.map(row => ({
-          ...row,
-          stock_loaded: row.stock_loaded ? JSON.parse(row.stock_loaded) : null,
-          stock_returned: row.stock_returned ? JSON.parse(row.stock_returned) : null,
-          stock_sold: row.stock_sold ? JSON.parse(row.stock_sold) : null
-        })));
-      });
-    });
+    const rows = await getQuery(sql, params);
+    const loads = rows.map(row => ({
+      ...row,
+      stock_loaded: row.stock_loaded ? JSON.parse(row.stock_loaded) : null,
+      stock_returned: row.stock_returned ? JSON.parse(row.stock_returned) : null,
+      stock_sold: row.stock_sold ? JSON.parse(row.stock_sold) : null
+    }));
     
     res.json({
       success: true,
@@ -450,7 +314,7 @@ router.post('/loads', async (req, res) => {
     }
     
     // Validate van exists
-    const van = await getOneQuery('vans', { id: van_id }, tenantId);
+    const van = await selectOne('vans', { id: van_id }, tenantId);
     if (!van) {
       return res.status(400).json({ 
         success: false, 
@@ -458,8 +322,8 @@ router.post('/loads', async (req, res) => {
       });
     }
     
-    // Validate salesman exists
-    const salesman = await getOneQuery('agents', { id: salesman_id }, tenantId);
+    // Validate salesman exists (check users table instead of agents)
+    const salesman = await selectOne('users', { id: salesman_id }, tenantId);
     if (!salesman) {
       return res.status(400).json({ 
         success: false, 
@@ -468,7 +332,6 @@ router.post('/loads', async (req, res) => {
     }
     
     const loadData = {
-      tenant_id: tenantId,
       van_id,
       salesman_id,
       load_date,
@@ -477,10 +340,11 @@ router.post('/loads', async (req, res) => {
       status
     };
     
-    await insertQuery('van_loads', loadData);
+    const newLoad = await insertRow('van_loads', loadData, tenantId);
     
     res.status(201).json({
       success: true,
+      data: { load: newLoad },
       message: 'Van load created successfully'
     });
   } catch (error) {
@@ -501,7 +365,7 @@ router.put('/loads/:loadId', async (req, res) => {
       status
     } = req.body;
     
-    const existingLoad = await getOneQuery('van_loads', { id: loadId }, tenantId);
+    const existingLoad = await selectOne('van_loads', { id: loadId }, tenantId);
     if (!existingLoad) {
       return res.status(404).json({ 
         success: false, 
@@ -515,10 +379,12 @@ router.put('/loads/:loadId', async (req, res) => {
     if (cash_collected !== undefined) updateData.cash_collected = cash_collected ? parseFloat(cash_collected) : null;
     if (status) updateData.status = status;
     
-    await updateQuery('van_loads', updateData, { id: loadId }, tenantId);
+    const updatedRows = await updateRow('van_loads', updateData, { id: loadId }, tenantId);
+    const updatedLoad = updatedRows[0];
     
     res.json({
       success: true,
+      data: { load: updatedLoad },
       message: 'Van load updated successfully'
     });
   } catch (error) {
@@ -532,20 +398,14 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { loadId } = req.params;
-    const load = await new Promise((resolve, reject) => {
-      db.get(`
-        SELECT vl.*, v.registration_number as van_registration,
-               u.first_name || ' ' || u.last_name as salesman_name
-        FROM van_loads vl
-        LEFT JOIN vans v ON vl.van_id = v.id
-        LEFT JOIN users a ON vl.salesman_id = a.id
-        LEFT JOIN users u ON a.user_id = u.id
-        WHERE vl.id = ? AND vl.tenant_id = $2
-      `, [loadId, tenantId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const load = await getOneQuery(`
+      SELECT vl.*, v.registration_number as van_registration,
+             u.first_name || ' ' || u.last_name as salesman_name
+      FROM van_loads vl
+      LEFT JOIN vans v ON vl.van_id = v.id
+      LEFT JOIN users u ON vl.salesman_id = u.id
+      WHERE vl.id = $1 AND vl.tenant_id = $2
+    `, [loadId, tenantId]);
     
     if (!load) {
       return res.status(404).json({ 
