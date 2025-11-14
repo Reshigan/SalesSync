@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 // Layout Components
 import AuthLayout from './components/layout/AuthLayout'
@@ -94,12 +94,28 @@ import ProtectedRoute from './components/auth/ProtectedRoute'
 
 function App() {
   const { isAuthenticated, isLoading, initialize } = useAuthStore()
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    initialize()
+    const unsubscribe = useAuthStore.persist.onRehydrateStorage(() => {
+      return (state, error) => {
+        if (error) {
+          console.error('Failed to hydrate auth store:', error)
+        }
+        initialize()
+        setHydrated(true)
+      }
+    })
+
+    if (useAuthStore.persist.hasHydrated()) {
+      initialize()
+      setHydrated(true)
+    }
+
+    return unsubscribe
   }, [initialize])
 
-  if (isLoading) {
+  if (!hydrated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingSpinner size="lg" />
