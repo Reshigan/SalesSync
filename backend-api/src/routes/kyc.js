@@ -18,7 +18,7 @@ router.get('/', asyncHandler(async (req, res) => {
       verified_at as reviewed_at,
       submitted_at as created_at
     FROM kyc_submissions 
-    WHERE tenant_id = ?
+    WHERE tenant_id = $1
     ORDER BY submitted_at DESC
     LIMIT 100
   `, [tenantId]);
@@ -44,7 +44,7 @@ router.post('/', asyncHandler(async (req, res) => {
     `INSERT INTO kyc_submissions (
       id, tenant_id, customer_id, product_id, agent_id,
       submission_data, verification_status, submitted_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
     [
       kycId,
       req.tenantId,
@@ -76,7 +76,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   
   const kycSubmission = await getOneQuery(`
     SELECT * FROM kyc_submissions 
-    WHERE id = ? AND tenant_id = ?
+    WHERE id = $1 AND tenant_id = $2
   `, [id, tenantId]);
 
   if (!kycSubmission) {
@@ -100,8 +100,8 @@ router.put('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     UPDATE kyc_submissions 
-    SET verification_status = ?, verified_at = ?
-    WHERE id = ? AND tenant_id = ?
+    SET verification_status = $1, verified_at = $2
+    WHERE id = $3 AND tenant_id = $4
   `, [status, new Date().toISOString(), id, tenantId]);
 
   if (result.changes === 0) {
@@ -124,7 +124,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     DELETE FROM kyc_submissions 
-    WHERE id = ? AND tenant_id = ?
+    WHERE id = $1 AND tenant_id = $2
   `, [id, tenantId]);
 
   if (result.changes === 0) {
@@ -160,12 +160,12 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(CASE WHEN verification_status = 'pending' THEN 1 END) as pending_reviews,
         COUNT(CASE WHEN verification_status = 'approved' THEN 1 END) as approved_count,
         COUNT(CASE WHEN verification_status = 'rejected' THEN 1 END) as rejected_count
-      FROM kyc_submissions WHERE tenant_id = ?
+      FROM kyc_submissions WHERE tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
       SELECT verification_status as status, COUNT(*) as count
-      FROM kyc_submissions WHERE tenant_id = ?
+      FROM kyc_submissions WHERE tenant_id = $1
       GROUP BY verification_status
     `, [tenantId]),
     
@@ -175,7 +175,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         k.verification_status as status, k.submitted_at, k.verified_at as reviewed_at
       FROM kyc_submissions k
       LEFT JOIN customers c ON k.customer_id = c.id
-      WHERE k.tenant_id = ?
+      WHERE k.tenant_id = $1
       ORDER BY k.submitted_at DESC
       LIMIT 10
     `, [tenantId])
