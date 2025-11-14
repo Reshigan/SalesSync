@@ -86,28 +86,33 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
   const { type, routeId, status, search } = req.query;
   
   try {
-    let whereClause = 'WHERE c.tenant_id = ?';
+    let whereClause = 'WHERE c.tenant_id = $1';
     let params = [req.tenantId];
+    let paramIndex = 2;
     
     if (type) {
-      whereClause += ' AND c.type = ?';
+      whereClause += ` AND c.type = $${paramIndex}`;
       params.push(type);
+      paramIndex++;
     }
     
     if (routeId) {
-      whereClause += ' AND c.route_id = ?';
+      whereClause += ` AND c.route_id = $${paramIndex}`;
       params.push(routeId);
+      paramIndex++;
     }
     
     if (status) {
-      whereClause += ' AND c.status = ?';
+      whereClause += ` AND c.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     
     if (search) {
-      whereClause += ' AND (c.name LIKE ? OR c.code LIKE ? OR c.phone LIKE ?)';
+      whereClause += ` AND (c.name LIKE $${paramIndex} OR c.code LIKE $${paramIndex + 1} OR c.phone LIKE $${paramIndex + 2})`;
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
+      paramIndex += 3;
     }
     
     // Get customers with route information
@@ -126,9 +131,9 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
       LEFT JOIN regions reg ON reg.id = a.region_id
       LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status != 'cancelled'
       ${whereClause}
-      GROUP BY c.id
+      GROUP BY c.id, c.created_at, c.name, c.code, c.type, c.phone, c.email, c.address, c.latitude, c.longitude, c.route_id, c.credit_limit, c.payment_terms, c.status, c.tenant_id, r.name, r.code, a.name, reg.name
       ORDER BY c.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `, [...params, limit, offset]);
     
     // Get total count
