@@ -7,9 +7,7 @@ import {
 import {
   AccountBalance, TrendingUp, TrendingDown, Refresh, Payment
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function FinancialDashboard() {
   const [activeTab, setActiveTab] = useState(0);
@@ -28,28 +26,19 @@ export default function FinancialDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        'X-Tenant-Code': 'DEFAULT'
-      };
-
       switch (activeTab) {
         case 0: // AR
-          const arRes = await axios.get(`${API_URL}/api/finance/ar/summary`, { headers });
+          const arRes = await apiClient.get('/finance/ar/summary');
           setArSummary(arRes.data.summary);
-          const agingRes = await axios.get(`${API_URL}/api/finance/ar/aging`, { headers });
+          const agingRes = await apiClient.get('/finance/ar/aging');
           setArAging(agingRes.data.aging || []);
           break;
         case 1: // AP
-          const apRes = await axios.get(`${API_URL}/api/finance/ap/summary`, { headers });
+          const apRes = await apiClient.get('/finance/ap/summary');
           setApSummary(apRes.data.summary);
           break;
         case 2: // Reports
-          const plRes = await axios.get(
-            `${API_URL}/api/finance/reports/profit-loss?startDate=2025-01-01&endDate=2025-12-31`, 
-            { headers }
-          );
+          const plRes = await apiClient.get('/finance/reports/profit-loss?startDate=2025-01-01&endDate=2025-12-31');
           setProfitLoss(plRes.data.report);
           break;
       }

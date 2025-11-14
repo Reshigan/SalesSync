@@ -7,9 +7,7 @@ import {
 import {
   AttachMoney, TrendingUp, People, Timeline
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function CommissionsDashboard() {
   const [tab, setTab] = useState(0);
@@ -26,8 +24,8 @@ export default function CommissionsDashboard() {
     try {
       setLoading(true);
       const [commRes, agentRes] = await Promise.all([
-        axios.get(`${API_URL}/api/commissions`).catch(() => ({ data: { commissions: [] } })),
-        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        apiClient.get('/commissions').catch(() => ({ data: { commissions: [] } })),
+        apiClient.get('/field-operations/agents').catch(() => ({ data: { agents: [] } }))
       ]);
       
       setCommissions(commRes.data.commissions || []);

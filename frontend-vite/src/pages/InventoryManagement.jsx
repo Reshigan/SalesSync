@@ -9,9 +9,7 @@ import {
   Inventory, Warehouse, SwapHoriz, TrendingUp, Warning, Add,
   Refresh, FileDownload, QrCode, LocalShipping
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function InventoryManagement() {
   const [activeTab, setActiveTab] = useState(0);
@@ -48,27 +46,21 @@ export default function InventoryManagement() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        'X-Tenant-Code': 'DEFAULT'
-      };
-
       switch (activeTab) {
         case 0: // Multi-location
-          const invRes = await axios.get(`${API_URL}/api/inventory/multi-location`, { headers });
+          const invRes = await apiClient.get('/inventory/multi-location');
           setInventory(invRes.data.inventory || []);
           break;
         case 1: // Analytics
-          const analyticsRes = await axios.get(`${API_URL}/api/inventory/analytics?warehouseId=1`, { headers });
+          const analyticsRes = await apiClient.get('/inventory/analytics?warehouseId=1');
           setAnalytics(analyticsRes.data);
           break;
         case 2: // Reorder
-          const reorderRes = await axios.get(`${API_URL}/api/inventory/reorder-suggestions`, { headers });
+          const reorderRes = await apiClient.get('/inventory/reorder-suggestions');
           setReorderSuggestions(reorderRes.data.suggestions || []);
           break;
         case 3: // Lots
-          const lotsRes = await axios.get(`${API_URL}/api/inventory/lots?expiringWithinDays=90`, { headers });
+          const lotsRes = await apiClient.get('/inventory/lots?expiringWithinDays=90');
           setLots(lotsRes.data || []);
           break;
       }
@@ -81,13 +73,7 @@ export default function InventoryManagement() {
 
   const handleTransfer = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API_URL}/api/inventory/transfer`, transferForm, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'X-Tenant-Code': 'DEFAULT'
-        }
-      });
+      await apiClient.post('/inventory/transfer', transferForm);
       setTransferDialog(false);
       setTransferForm({ productId: '', fromWarehouseId: 1, toWarehouseId: 2, quantity: 0, reason: '', notes: '' });
       loadData();

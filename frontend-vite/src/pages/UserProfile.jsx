@@ -36,9 +36,7 @@ import {
   Badge as BadgeIcon,
   History as HistoryIcon
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../services/api.service';
 
 function TabPanel({ children, value, index }) {
   return (
@@ -91,10 +89,7 @@ export default function UserProfile() {
 
   const fetchUserData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/auth/me');
 
       if (response.data.success) {
         const userData = response.data.user;
@@ -116,10 +111,7 @@ export default function UserProfile() {
 
   const fetchLoginHistory = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/users/login-history`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/users/login-history');
 
       if (response.data.success) {
         setLoginHistory(response.data.history || []);
@@ -131,12 +123,7 @@ export default function UserProfile() {
 
   const handleProfileUpdate = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(
-        `${API_URL}/api/users/${user.id}`,
-        profileForm,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await apiClient.put(`/users/${user.id}`, profileForm);
 
       if (response.data.success) {
         showSnackbar('Profile updated successfully', 'success');
@@ -159,15 +146,10 @@ export default function UserProfile() {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/auth/change-password`,
-        {
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await apiClient.post('/auth/change-password', {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword
+      });
 
       if (response.data.success) {
         showSnackbar('Password changed successfully', 'success');
@@ -180,12 +162,7 @@ export default function UserProfile() {
 
   const handleNotificationPrefsUpdate = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(
-        `${API_URL}/api/notifications/preferences`,
-        notificationPrefs,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await apiClient.put('/notifications/preferences', notificationPrefs);
 
       if (response.data.success) {
         showSnackbar('Notification preferences updated', 'success');
@@ -205,12 +182,9 @@ export default function UserProfile() {
     formData.append('resource_id', user.id);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/files/upload`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
-      );
+      const response = await apiClient.post('/files/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
       if (response.data.success) {
         showSnackbar('Avatar uploaded successfully', 'success');

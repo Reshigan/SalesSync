@@ -7,9 +7,7 @@ import {
 import {
   Map, People, LocationOn, TrendingUp
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function TerritoryManagement() {
   const [tab, setTab] = useState(0);
@@ -25,8 +23,8 @@ export default function TerritoryManagement() {
     try {
       setLoading(true);
       const [terrRes, assignRes] = await Promise.all([
-        axios.get(`${API_URL}/api/territories`).catch(() => ({ data: { territories: [] } })),
-        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        apiClient.get('/territories').catch(() => ({ data: { territories: [] } })),
+        apiClient.get('/field-operations/agents').catch(() => ({ data: { agents: [] } }))
       ]);
       
       setTerritories(terrRes.data.territories || []);

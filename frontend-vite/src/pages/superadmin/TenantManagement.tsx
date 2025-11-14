@@ -35,9 +35,7 @@ import {
   Pause as SuspendIcon,
   Refresh as RefreshIcon
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+import { apiClient } from '../../services/api.service';
 
 interface Tenant {
   id: number;
@@ -95,10 +93,7 @@ const TenantManagement: React.FC = () => {
   const fetchTenants = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/tenants`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/tenants');
       setTenants(response.data.data);
     } catch (error: any) {
       showSnackbar('Failed to fetch tenants: ' + error.message, 'error');
@@ -151,26 +146,16 @@ const TenantManagement: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
       if (editingTenant) {
-        await axios.put(
-          `${API_BASE_URL}/tenants/${editingTenant.id}`,
-          {
-            name: formData.name,
-            domain: formData.domain,
-            subscriptionPlan: formData.subscriptionPlan,
-            maxUsers: formData.maxUsers
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await apiClient.put(`/tenants/${editingTenant.id}`, {
+          name: formData.name,
+          domain: formData.domain,
+          subscriptionPlan: formData.subscriptionPlan,
+          maxUsers: formData.maxUsers
+        });
         showSnackbar('Tenant updated successfully', 'success');
       } else {
-        await axios.post(
-          `${API_BASE_URL}/tenants`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await apiClient.post('/tenants', formData);
         showSnackbar('Tenant created successfully', 'success');
       }
       
@@ -183,20 +168,14 @@ const TenantManagement: React.FC = () => {
 
   const handleStatusChange = async (tenantId: number, action: 'activate' | 'suspend' | 'delete') => {
     try {
-      const token = localStorage.getItem('token');
-      
       if (action === 'delete') {
         if (!window.confirm('Are you sure you want to delete this tenant?')) {
           return;
         }
-        await axios.delete(`${API_BASE_URL}/tenants/${tenantId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.delete(`/tenants/${tenantId}`);
         showSnackbar('Tenant deleted successfully', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/tenants/${tenantId}/${action}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await apiClient.post(`/tenants/${tenantId}/${action}`, {});
         showSnackbar(`Tenant ${action}d successfully`, 'success');
       }
       

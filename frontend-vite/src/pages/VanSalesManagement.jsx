@@ -9,9 +9,7 @@ import {
   LocalShipping, Route, Inventory, AttachMoney, 
   PlayArrow, Stop, CheckCircle, Timeline
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function VanSalesManagement() {
   const [tab, setTab] = useState(0);
@@ -31,7 +29,7 @@ export default function VanSalesManagement() {
 
   const loadTrips = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/van-sales-operations/trips`);
+      const res = await apiClient.get('/van-sales-operations/trips');
       setTrips(res.data.trips || []);
     } catch (error) {
       console.error('Error loading trips:', error);
@@ -40,7 +38,7 @@ export default function VanSalesManagement() {
 
   const loadRoutes = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/van-sales-operations/routes`);
+      const res = await apiClient.get('/van-sales-operations/routes');
       setRoutes(res.data.routes || []);
     } catch (error) {
       console.error('Error loading routes:', error);
@@ -49,7 +47,7 @@ export default function VanSalesManagement() {
 
   const loadVehicles = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/van-sales-operations/vehicles`);
+      const res = await apiClient.get('/van-sales-operations/vehicles');
       setVehicles(res.data.vehicles || []);
     } catch (error) {
       console.error('Error loading vehicles:', error);
@@ -58,7 +56,7 @@ export default function VanSalesManagement() {
 
   const loadAnalytics = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/van-sales-operations/analytics`);
+      const res = await apiClient.get('/van-sales-operations/analytics');
       setAnalytics(res.data.analytics || {});
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -67,7 +65,7 @@ export default function VanSalesManagement() {
 
   const startTrip = async (tripId) => {
     try {
-      await axios.post(`${API_URL}/api/van-sales-operations/trips/${tripId}/start`, {
+      await apiClient.post(`/van-sales-operations/trips/${tripId}/start`, {
         start_odometer: 0
       });
       loadTrips();
@@ -78,7 +76,7 @@ export default function VanSalesManagement() {
 
   const completeTrip = async (tripId) => {
     try {
-      await axios.post(`${API_URL}/api/van-sales-operations/trips/${tripId}/complete`, {
+      await apiClient.post(`/van-sales-operations/trips/${tripId}/complete`, {
         end_odometer: 0,
         fuel_cost: 0
       });

@@ -7,9 +7,7 @@ import {
 import {
   LocalShipping, Inventory2, CheckCircle, Refresh
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function WarehouseManagement() {
   const [activeTab, setActiveTab] = useState(0);
@@ -27,23 +25,17 @@ export default function WarehouseManagement() {
     setLoading(true);
     setError(null);
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        Authorization: `Bearer ${token}`,
-        'X-Tenant-Code': 'DEFAULT'
-      };
-
       switch (activeTab) {
         case 0: // Receiving
-          const recRes = await axios.get(`${API_URL}/api/warehouse/receiving/pending?warehouseId=1`, { headers });
+          const recRes = await apiClient.get('/warehouse/receiving/pending?warehouseId=1');
           setReceiving(recRes.data.pending || []);
           break;
         case 1: // Picking
-          const pickRes = await axios.get(`${API_URL}/api/warehouse/pick/active?warehouseId=1`, { headers });
+          const pickRes = await apiClient.get('/warehouse/pick/active?warehouseId=1');
           setPicking(pickRes.data.active || []);
           break;
         case 2: // Analytics
-          const analyticsRes = await axios.get(`${API_URL}/api/warehouse/analytics?warehouseId=1`, { headers });
+          const analyticsRes = await apiClient.get('/warehouse/analytics?warehouseId=1');
           setAnalytics(analyticsRes.data.metrics);
           break;
       }

@@ -7,9 +7,7 @@ import {
 import {
   AccountTree, PlayArrow, CheckCircle, Schedule, Add
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function WorkflowsDashboard() {
   const [tab, setTab] = useState(0);
@@ -25,8 +23,8 @@ export default function WorkflowsDashboard() {
     try {
       setLoading(true);
       const [wfRes, instRes] = await Promise.all([
-        axios.get(`${API_URL}/api/workflows`).catch(() => ({ data: { workflows: [] } })),
-        axios.get(`${API_URL}/api/workflows/instances`).catch(() => ({ data: { instances: [] } }))
+        apiClient.get('/workflows').catch(() => ({ data: { workflows: [] } })),
+        apiClient.get('/workflows/instances').catch(() => ({ data: { instances: [] } }))
       ]);
       
       setWorkflows(wfRes.data.workflows || []);

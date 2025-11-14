@@ -8,9 +8,7 @@ import {
   People, AccountBalance, CalendarToday, TrendingUp,
   Visibility, Edit
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function HRDashboard() {
   const [tab, setTab] = useState(0);
@@ -27,8 +25,8 @@ export default function HRDashboard() {
     try {
       setLoading(true);
       const [empRes, attRes] = await Promise.all([
-        axios.get(`${API_URL}/api/users`).catch(() => ({ data: { users: [] } })),
-        apiClient.get('/api/field-operations/agents`).catch(() => ({ data: { agents: [] } }))
+        apiClient.get('/users').catch(() => ({ data: { users: [] } })),
+        apiClient.get('/field-operations/agents').catch(() => ({ data: { agents: [] } }))
       ]);
       
       setEmployees(empRes.data.users || []);

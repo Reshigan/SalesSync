@@ -8,9 +8,7 @@ import {
   ShoppingBag, Inventory, LocalShipping, AttachMoney,
   Visibility, Add
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function ProcurementDashboard() {
   const [tab, setTab] = useState(0);
@@ -27,8 +25,8 @@ export default function ProcurementDashboard() {
     try {
       setLoading(true);
       const [poRes, suppRes] = await Promise.all([
-        axios.get(`${API_URL}/api/purchase-orders`).catch(() => ({ data: { orders: [] } })),
-        axios.get(`${API_URL}/api/suppliers`).catch(() => ({ data: { suppliers: [] } }))
+        apiClient.get('/purchase-orders').catch(() => ({ data: { orders: [] } })),
+        apiClient.get('/suppliers').catch(() => ({ data: { suppliers: [] } }))
       ]);
       
       setPurchaseOrders(poRes.data.orders || []);

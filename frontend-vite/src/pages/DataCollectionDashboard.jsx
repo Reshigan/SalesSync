@@ -8,9 +8,7 @@ import {
   Assignment, BarChart, People, TrendingUp,
   Visibility, Edit, Add
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function DataCollectionDashboard() {
   const [tab, setTab] = useState(0);
@@ -27,8 +25,8 @@ export default function DataCollectionDashboard() {
     try {
       setLoading(true);
       const [surveyRes, responseRes] = await Promise.all([
-        axios.get(`${API_URL}/api/surveys`).catch(() => ({ data: { surveys: [] } })),
-        axios.get(`${API_URL}/api/surveys/responses`).catch(() => ({ data: { responses: [] } }))
+        apiClient.get('/surveys').catch(() => ({ data: { surveys: [] } })),
+        apiClient.get('/surveys/responses').catch(() => ({ data: { responses: [] } }))
       ]);
       
       setSurveys(surveyRes.data.surveys || []);
