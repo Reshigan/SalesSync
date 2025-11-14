@@ -281,8 +281,8 @@ export default function CustomersPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Customer Types</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.customers_by_type.retail + stats.customers_by_type.wholesale}</p>
-                <p className="text-sm text-gray-500">{stats.customers_by_type.retail} retail, {stats.customers_by_type.wholesale} wholesale</p>
+                <p className="text-2xl font-semibold text-gray-900">{(stats.customers_by_type?.retail || 0) + (stats.customers_by_type?.wholesale || 0)}</p>
+                <p className="text-sm text-gray-500">{stats.customers_by_type?.retail || 0} retail, {stats.customers_by_type?.wholesale || 0} wholesale</p>
               </div>
             </div>
           </div>
