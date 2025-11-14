@@ -316,7 +316,7 @@ router.get('/stats', async (req, res) => {
       // Active products count
       getOneQuery('SELECT COUNT(*) as count FROM products WHERE tenant_id = $1 AND status = $2', [tenantId, 'active']),
       
-      // Low stock products (less than reorder level or less than 10)
+      // Low stock products (less than 10 units)
       getOneQuery(
         `SELECT COUNT(DISTINCT p.id) as count 
          FROM products p
@@ -324,7 +324,7 @@ router.get('/stats', async (req, res) => {
          WHERE p.tenant_id = $1 
          AND p.status = 'active'
          AND COALESCE(i.quantity_on_hand, 0) > 0
-         AND COALESCE(i.quantity_on_hand, 0) <= COALESCE(p.reorder_level, 10)`,
+         AND COALESCE(i.quantity_on_hand, 0) <= 10`,
         [tenantId]
       ),
       
