@@ -14,7 +14,7 @@ const getDatabase = () => require('../utils/database').getDatabase();
 router.get('/', async (req, res) => {
   try {
     const { status, supplier_id, warehouse_id, from_date, to_date } = req.query;
-    const tenantId = req.tenantId || 1;
+    const tenantId = req.tenantId;
 
     let sql = `
       SELECT po.*, 
@@ -32,37 +32,33 @@ router.get('/', async (req, res) => {
     `;
     
     const params = [tenantId];
+    let paramIndex = 1;
 
     if (status) {
-      sql += ' AND po.status = ?';
+      sql += ` AND po.status = $${++paramIndex}`;
       params.push(status);
     }
     if (supplier_id) {
-      sql += ' AND po.supplier_id = ?';
+      sql += ` AND po.supplier_id = $${++paramIndex}`;
       params.push(supplier_id);
     }
     if (warehouse_id) {
-      sql += ' AND po.warehouse_id = ?';
+      sql += ` AND po.warehouse_id = $${++paramIndex}`;
       params.push(warehouse_id);
     }
     if (from_date) {
-      sql += ' AND po.order_date >= ?';
+      sql += ` AND po.order_date >= $${++paramIndex}`;
       params.push(from_date);
     }
     if (to_date) {
-      sql += ' AND po.order_date <= ?';
+      sql += ` AND po.order_date <= $${++paramIndex}`;
       params.push(to_date);
     }
 
-    sql += ' GROUP BY po.id ORDER BY po.created_at DESC';
+    sql += ' GROUP BY po.id, s.name, w.name, u.first_name, u.last_name ORDER BY po.created_at DESC';
 
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        console.error('Error fetching purchase orders:', err);
-        return res.status(500).json({ error: 'Failed to fetch purchase orders' });
-      }
-      res.json({ success: true, data: rows || [] });
-    });
+    const rows = await getQuery(sql, params);
+    res.json({ success: true, data: rows || [] });
   } catch (error) {
     console.error('Error in GET /purchase-orders:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -73,7 +69,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || 1;
+    const tenantId = req.tenantId;
 
     // Get PO header
     const poSql = `
@@ -88,38 +84,29 @@ router.get('/:id', async (req, res) => {
       WHERE po.id = $1 AND po.tenant_id = $2
     `;
 
-    db.get(poSql, [id, tenantId], (err, po) => {
-      if (err) {
-        console.error('Error fetching purchase order:', err);
-        return res.status(500).json({ error: 'Failed to fetch purchase order' });
-      }
-      if (!po) {
-        return res.status(404).json({ error: 'Purchase order not found' });
-      }
+    const po = await getOneQuery(poSql, [id, tenantId]);
+    
+    if (!po) {
+      return res.status(404).json({ error: 'Purchase order not found' });
+    }
 
-      // Get PO items
-      const itemsSql = `
-        SELECT poi.*, p.name as product_name, p.sku
-        FROM purchase_order_items poi
-        LEFT JOIN products p ON poi.product_id = p.id
-        WHERE poi.purchase_order_id = $1
-        ORDER BY poi.id
-      `;
+    // Get PO items
+    const itemsSql = `
+      SELECT poi.*, p.name as product_name, p.sku
+      FROM purchase_order_items poi
+      LEFT JOIN products p ON poi.product_id = p.id
+      WHERE poi.purchase_order_id = $1
+      ORDER BY poi.id
+    `;
 
-      db.all(itemsSql, [id], (err, items) => {
-        if (err) {
-          console.error('Error fetching PO items:', err);
-          return res.status(500).json({ error: 'Failed to fetch PO items' });
-        }
+    const items = await getQuery(itemsSql, [id]);
 
-        po.items = items || [];
-        po.subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-        po.tax_amount = po.subtotal * (po.tax_rate || 0) / 100;
-        po.total = po.subtotal + po.tax_amount - (po.discount || 0);
+    po.items = items || [];
+    po.subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+    po.tax_amount = po.subtotal * (po.tax_rate || 0) / 100;
+    po.total = po.subtotal + po.tax_amount - (po.discount || 0);
 
-        res.json({ success: true, data: po });
-      });
-    });
+    res.json({ success: true, data: po });
   } catch (error) {
     console.error('Error in GET /purchase-orders/:id:', error);
     res.status(500).json({ error: 'Internal server error' });

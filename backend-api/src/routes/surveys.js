@@ -18,47 +18,49 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
     FROM surveys s
     LEFT JOIN survey_responses sr ON s.id = sr.survey_id
     LEFT JOIN survey_assignments sa ON s.id = sa.survey_id
-    WHERE s.tenant_id = ?
+    WHERE s.tenant_id = $1
   `;
   
   const params = [req.tenantId];
+  let paramIndex = 1;
   
   if (status) {
-    query += ' AND s.status = ?';
+    query += ` AND s.status = $${++paramIndex}`;
     params.push(status);
   }
   
   if (type) {
-    query += ' AND s.type = ?';
+    query += ` AND s.type = $${++paramIndex}`;
     params.push(type);
   }
   
   if (category) {
-    query += ' AND s.category = ?';
+    query += ` AND s.category = $${++paramIndex}`;
     params.push(category);
   }
   
-  query += ' GROUP BY s.id ORDER BY s.created_at DESC LIMIT ? OFFSET ?';
+  query += ` GROUP BY s.id ORDER BY s.created_at DESC LIMIT $${++paramIndex} OFFSET $${++paramIndex}`;
   params.push(parseInt(limit), offset);
   
   const surveys = await getQuery(query, params);
   
   // Get total count
-  let countQuery = 'SELECT COUNT(*) as total FROM surveys s WHERE s.tenant_id = ?';
+  let countQuery = 'SELECT COUNT(*) as total FROM surveys s WHERE s.tenant_id = $1';
   const countParams = [req.tenantId];
+  let countParamIndex = 1;
   
   if (status) {
-    countQuery += ' AND s.status = ?';
+    countQuery += ` AND s.status = $${++countParamIndex}`;
     countParams.push(status);
   }
   
   if (type) {
-    countQuery += ' AND s.type = ?';
+    countQuery += ` AND s.type = $${++countParamIndex}`;
     countParams.push(type);
   }
   
   if (category) {
-    countQuery += ' AND s.category = ?';
+    countQuery += ` AND s.category = $${++countParamIndex}`;
     countParams.push(category);
   }
   
@@ -89,7 +91,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
   const survey = await getOneQuery(`
     SELECT s.*
     FROM surveys s
-    WHERE s.id = ? AND s.tenant_id = ?
+    WHERE s.id = $1 AND s.tenant_id = $2
   `, [id, req.tenantId]);
   
   if (!survey) {
@@ -97,18 +99,18 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
   }
   
   // Get survey questions
-  const questions = getQuery(`
+  const questions = await getQuery(`
     SELECT * FROM survey_questions 
-    WHERE survey_id = ? 
+    WHERE survey_id = $1 
     ORDER BY question_order
   `, [id]);
   
   // Get survey assignments
-  const assignments = getQuery(`
+  const assignments = await getQuery(`
     SELECT sa.*, u.first_name || ' ' || u.last_name as assignee_name, u.phone as assignee_phone
     FROM survey_assignments sa
     LEFT JOIN users u ON sa.assignee_id = u.id
-    WHERE sa.survey_id = ?
+    WHERE sa.survey_id = $1
   `, [id]);
   
   // Get response summary
@@ -119,7 +121,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
       0 as in_progress_responses,
       0 as avg_completion_time
     FROM survey_responses sr
-    WHERE sr.survey_id = ?
+    WHERE sr.survey_id = $1
   `, [id]);
   
   res.json({
@@ -140,7 +142,10 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
 
 // GET /api/surveys/stats - Survey statistics
 router.get('/stats', asyncHandler(async (req, res) => {
-  const tenantId = req.user.tenantId;
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../utils/database');
+  
+  const tenantId = req.tenantId;
   
   const [surveyCounts, responseCounts, topSurveys] = await Promise.all([
     getOneQuery(`
@@ -148,7 +153,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as total_surveys,
         COUNT(CASE WHEN status = 'active' THEN 1 END) as active_surveys,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_surveys
-      FROM surveys WHERE tenant_id = ?
+      FROM surveys WHERE tenant_id = $1
     `, [tenantId]),
     
     getOneQuery(`
@@ -158,7 +163,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         AVG(CASE WHEN sr.completion_time IS NOT NULL THEN sr.completion_time END) as avg_completion_time
       FROM survey_responses sr
       INNER JOIN surveys s ON sr.survey_id = s.id
-      WHERE s.tenant_id = ?
+      WHERE s.tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
@@ -167,8 +172,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(sr.id) as response_count
       FROM surveys s
       LEFT JOIN survey_responses sr ON s.id = sr.survey_id
-      WHERE s.tenant_id = ?
-      GROUP BY s.id
+      WHERE s.tenant_id = $1
+      GROUP BY s.id, s.title, s.status
       ORDER BY response_count DESC
       LIMIT 10
     `, [tenantId])
