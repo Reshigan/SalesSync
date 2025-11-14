@@ -68,7 +68,7 @@ router.post('/process', asyncHandler(async (req, res) => {
     `INSERT INTO payments (
       tenant_id, customer_id, invoice_id, payment_date,
       amount, payment_method, reference_number, notes, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       tenantId,
       customerId,
@@ -83,7 +83,7 @@ router.post('/process', asyncHandler(async (req, res) => {
   );
 
   const payment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = ?',
+    'SELECT * FROM payments WHERE id = $1',
     [result.lastID]
   );
 
@@ -102,26 +102,27 @@ router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { customerId, status, startDate, endDate, limit = 50, offset = 0 } = req.query;
 
-  let whereClause = 'WHERE p.tenant_id = ?';
+  let whereClause = 'WHERE p.tenant_id = $1';
   let params = [tenantId];
+  let paramIndex = 1;
 
   if (customerId) {
-    whereClause += ' AND p.customer_id = ?';
+    whereClause += ` AND p.customer_id = $${++paramIndex}`;
     params.push(customerId);
   }
 
   if (status) {
-    whereClause += ' AND p.status = ?';
+    whereClause += ` AND p.status = $${++paramIndex}`;
     params.push(status);
   }
 
   if (startDate) {
-    whereClause += ' AND p.payment_date >= ?';
+    whereClause += ` AND p.payment_date >= $${++paramIndex}`;
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClause += ' AND p.payment_date <= ?';
+    whereClause += ` AND p.payment_date <= $${++paramIndex}`;
     params.push(endDate);
   }
 
@@ -133,7 +134,7 @@ router.get('/', asyncHandler(async (req, res) => {
     LEFT JOIN customers c ON p.customer_id = c.id
     ${whereClause}
     ORDER BY p.payment_date DESC
-    LIMIT ? OFFSET ?
+    LIMIT $${++paramIndex} OFFSET $${++paramIndex}
   `;
   params.push(parseInt(limit), parseInt(offset));
 
@@ -170,7 +171,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     FROM payments p
     LEFT JOIN customers c ON p.customer_id = c.id
     LEFT JOIN invoices i ON p.invoice_id = i.id
-    WHERE p.id = ? AND p.tenant_id = ?`,
+    WHERE p.id = $1 AND p.tenant_id = $2`,
     [id, tenantId]
   );
 
@@ -192,7 +193,7 @@ router.post('/:id/refund', asyncHandler(async (req, res) => {
   const { amount, reason } = req.body;
 
   const payment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = ? AND tenant_id = ?',
+    'SELECT * FROM payments WHERE id = $1 AND tenant_id = $2',
     [id, tenantId]
   );
 
@@ -222,13 +223,13 @@ router.post('/:id/refund', asyncHandler(async (req, res) => {
   await runQuery(
     `UPDATE payments 
      SET status = 'refunded', 
-         notes = COALESCE(notes, '') || '\nRefund: ' || ? || ' Amount: ' || ?
-     WHERE id = ?`,
+         notes = COALESCE(notes, '') || '\nRefund: ' || $1 || ' Amount: ' || $2
+     WHERE id = $3`,
     [reason || 'No reason provided', refundAmount, id]
   );
 
   const updatedPayment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = ?',
+    'SELECT * FROM payments WHERE id = $1',
     [id]
   );
 
@@ -247,16 +248,17 @@ router.get('/tenant/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { startDate, endDate } = req.query;
 
-  let whereClause = 'WHERE tenant_id = ?';
+  let whereClause = 'WHERE tenant_id = $1';
   let params = [tenantId];
+  let paramIndex = 1;
 
   if (startDate) {
-    whereClause += ' AND payment_date >= ?';
+    whereClause += ` AND payment_date >= $${++paramIndex}`;
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClause += ' AND payment_date <= ?';
+    whereClause += ` AND payment_date <= $${++paramIndex}`;
     params.push(endDate);
   }
 
@@ -300,7 +302,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         AVG(amount) as avg_payment,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments
-      FROM payments WHERE tenant_id = ?
+      FROM payments WHERE tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
@@ -308,7 +310,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         payment_method,
         COUNT(*) as count,
         SUM(amount) as total_amount
-      FROM payments WHERE tenant_id = ?
+      FROM payments WHERE tenant_id = $1
       GROUP BY payment_method
       ORDER BY total_amount DESC
     `, [tenantId]),
@@ -319,7 +321,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as payment_count,
         SUM(amount) as daily_total
       FROM payments
-      WHERE tenant_id = ? AND payment_date >= DATE('now', '-30 days')
+      WHERE tenant_id = $1 AND payment_date >= CURRENT_DATE - INTERVAL '30 days'
       GROUP BY payment_date::date
       ORDER BY date DESC
     `, [tenantId])
