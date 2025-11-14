@@ -57,15 +57,15 @@ export default function VanSalesPage() {
       setLoading(true)
       
       // Fetch vans data
-      const vansResponse = await apiClient.get('/api/vans')
+      const vansResponse = await apiClient.get('/vans')
       const vansData = vansResponse.data
       
       // Fetch van sales data
-      const salesResponse = await apiClient.get('/api/van-sales')
+      const salesResponse = await apiClient.get('/van-sales')
       const salesData = salesResponse.data
       
       // Fetch routes data
-      const routesResponse = await apiClient.get('/api/routes')
+      const routesResponse = await apiClient.get('/routes')
       const routesData = routesResponse.data
       
       // Calculate metrics from real data
@@ -113,7 +113,7 @@ export default function VanSalesPage() {
 
   const handleAddVan = async () => {
     try {
-      const response = await apiClient.post('/api/vans', {
+      const response = await apiClient.post('/vans', {
         registration_number: newVanData.registration_number,
         model: newVanData.model,
         capacity_units: newVanData.capacity_units ? parseInt(newVanData.capacity_units) : null,
