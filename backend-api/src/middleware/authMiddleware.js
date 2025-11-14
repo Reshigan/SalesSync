@@ -29,7 +29,6 @@ const authMiddleware = async (req, res, next) => {
     const permissions = await getQuery(`
       SELECT 
         m.code as module_code,
-        f.code as function_code,
         rp.can_view,
         rp.can_create,
         rp.can_edit,
@@ -38,17 +37,13 @@ const authMiddleware = async (req, res, next) => {
         rp.can_export
       FROM role_permissions rp
       JOIN modules m ON m.id = rp.module_id
-      JOIN functions f ON f.id = rp.function_id
       WHERE rp.tenant_id = $1 AND rp.role = $2
     `, [decoded.tenantId, user.role]);
     
     // Organize permissions by module
     const userPermissions = {};
     permissions.forEach(p => {
-      if (!userPermissions[p.module_code]) {
-        userPermissions[p.module_code] = {};
-      }
-      userPermissions[p.module_code][p.function_code] = {
+      userPermissions[p.module_code] = {
         view: p.can_view,
         create: p.can_create,
         edit: p.can_edit,
