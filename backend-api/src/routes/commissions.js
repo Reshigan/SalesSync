@@ -193,7 +193,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count,
         COUNT(CASE WHEN payment_status = 'pending' THEN 1 END) as pending_count,
         COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN commission_amount ELSE 0 END), 0) as pending_amount
-      FROM commission_transactions WHERE tenant_id = ?
+      FROM commission_transactions WHERE tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
@@ -204,8 +204,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
       FROM commission_transactions ct
       INNER JOIN users a ON ct.agent_id = a.id
       INNER JOIN users u ON a.user_id = u.id
-      WHERE ct.tenant_id = ?
-      GROUP BY u.id
+      WHERE ct.tenant_id = $1
+      GROUP BY u.id, u.first_name, u.last_name
       ORDER BY total_earned DESC
       LIMIT 10
     `, [tenantId]),
@@ -216,7 +216,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as count,
         COALESCE(SUM(ct.commission_amount), 0) as total_amount
       FROM commission_transactions ct
-      WHERE ct.tenant_id = ? AND ct.transaction_date >= CURRENT_DATE - INTERVAL '6 month'
+      WHERE ct.tenant_id = $1 AND ct.transaction_date >= CURRENT_DATE - INTERVAL '6 month'
       GROUP BY month
       ORDER BY month DESC
     `, [tenantId])
