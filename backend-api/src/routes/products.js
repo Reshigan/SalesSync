@@ -389,7 +389,7 @@ router.get('/stats', async (req, res) => {
         inactiveProducts: totalProducts - activeProducts,
         lowStockProducts,
         outOfStockProducts,
-        totalValue: parseFloat(totalValue.toFixed(2)),
+        totalValue: parseFloat(Number(totalValue).toFixed(2)),
         byCategory,
         byBrand
       }
