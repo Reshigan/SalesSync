@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
+  hydrated: boolean
 }
 
 interface AuthActions {
@@ -18,6 +19,7 @@ interface AuthActions {
   clearError: () => void
   initialize: () => void
   updateUser: (user: Partial<User>) => void
+  setHydrated: (hydrated: boolean) => void
 }
 
 type AuthStore = AuthState & AuthActions
@@ -31,8 +33,12 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      hydrated: false,
 
       // Actions
+      setHydrated: (hydrated: boolean) => {
+        set({ hydrated })
+      },
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null })
         
@@ -146,6 +152,14 @@ export const useAuthStore = create<AuthStore>()(
         tokens: state.tokens,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error('Failed to hydrate auth store:', error)
+        }
+        if (state) {
+          state.setHydrated(true)
+        }
+      },
     }
   )
 )
