@@ -12,7 +12,7 @@ const router = express.Router();
  * Create a new approval request
  */
 router.post('/', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const userId = req.user.id;
   
@@ -63,7 +63,7 @@ router.post('/', asyncHandler(async (req, res) => {
  * List approval requests
  */
 router.get('/', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const userId = req.user.id;
   const { status, entityType, limit = 50, offset = 0 } = req.query;
@@ -121,7 +121,7 @@ router.get('/', asyncHandler(async (req, res) => {
  * Get pending approvals assigned to current user
  */
 router.get('/pending', asyncHandler(async (req, res) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const userId = req.user.id;
 
@@ -150,7 +150,7 @@ router.get('/pending', asyncHandler(async (req, res) => {
  * Get approval request by ID
  */
 router.get('/:id', asyncHandler(async (req, res) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 
@@ -183,7 +183,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * Approve a request
  */
 router.post('/:id/approve', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const userId = req.user.id;
   const { id } = req.params;
@@ -239,7 +239,7 @@ router.post('/:id/approve', asyncHandler(async (req, res) => {
  * Reject a request
  */
 router.post('/:id/reject', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const userId = req.user.id;
   const { id } = req.params;
@@ -294,7 +294,7 @@ router.post('/:id/reject', asyncHandler(async (req, res) => {
  * Get approval statistics
  */
 router.get('/tenant/stats', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
 
   const stats = await getOneQuery(

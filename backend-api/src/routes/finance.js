@@ -13,7 +13,7 @@ router.get('/health', (req, res) => {
 
 // Get all invoices
 router.get('/invoices', asyncHandler(async (req, res) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   const { status, customer_id, date_from, date_to, limit = 50, offset = 0 } = req.query;
     
   let query = 'SELECT * FROM invoices WHERE 1=1';
@@ -81,7 +81,7 @@ router.get('/invoices', asyncHandler(async (req, res) => {
 
 // Get invoice by ID
 router.get('/invoices/:id', asyncHandler(async (req, res) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   const { id } = req.params;
 
   const invoice = await getOneQuery('SELECT * FROM invoices WHERE id = ?', [id]);
@@ -104,7 +104,7 @@ router.get('/invoices/:id', asyncHandler(async (req, res) => {
 
 // Create new invoice
 router.post('/invoices', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery, getQuery } = require('../database/init');
+  const { runQuery, getOneQuery, getQuery } = require('../utils/database');
   const {
     customer_id,
     invoice_number,
@@ -156,7 +156,7 @@ router.post('/invoices', asyncHandler(async (req, res) => {
 
 // Update invoice
 router.put('/invoices/:id', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery, getQuery } = require('../database/init');
+  const { runQuery, getOneQuery, getQuery } = require('../utils/database');
   const { id } = req.params;
   const {
     customer_id,
@@ -204,7 +204,7 @@ router.put('/invoices/:id', asyncHandler(async (req, res) => {
 
 // Delete invoice
 router.delete('/invoices/:id', asyncHandler(async (req, res) => {
-  const { runQuery } = require('../database/init');
+  const { runQuery } = require('../utils/database');
   const { id } = req.params;
 
   // Delete invoice items first
@@ -222,7 +222,7 @@ router.delete('/invoices/:id', asyncHandler(async (req, res) => {
 
 // Get all payments
 router.get('/payments', asyncHandler(async (req, res) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   const { status, customer_id, date_from, date_to, limit = 50, offset = 0 } = req.query;
     
   let query = 'SELECT * FROM payments WHERE 1=1';
@@ -261,7 +261,7 @@ router.get('/payments', asyncHandler(async (req, res) => {
 
 // Create payment
 router.post('/payments', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const {
     customer_id,
     invoice_id,
@@ -292,7 +292,7 @@ router.post('/payments', asyncHandler(async (req, res) => {
 
 // Get financial summary
 router.get('/summary', asyncHandler(async (req, res) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   const { period = 'month' } = req.query;
 
   // Calculate date filter based on period
@@ -365,7 +365,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
 
 // Get accounts receivable
 router.get('/accounts-receivable', asyncHandler(async (req, res) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   const receivables = await getQuery(`
     SELECT 
@@ -413,7 +413,7 @@ router.get('/invoices/:id/pdf', asyncHandler(async (req, res) => {
 // Email invoice
 router.post('/invoices/:id/email', asyncHandler(async (req, res) => {
   const emailService = require('../services/emailService');
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   const { id } = req.params;
   const { recipientEmail } = req.body;
   

@@ -70,7 +70,7 @@ const changePasswordSchema = Joi.object({
  */
 router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -174,7 +174,7 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
  */
 router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { error, value } = createUserSchema.validate(req.body);
   if (error) {
@@ -237,7 +237,7 @@ router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandl
  *         description: Unauthorized
  */
 router.get('/profile', asyncHandler(async (req, res) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   // req.user and req.tenant are already set by authTenantMiddleware
   const userId = req.user.id;
@@ -288,7 +288,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
  */
 router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -357,7 +357,7 @@ router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, re
  */
 router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = updateUserSchema.validate(req.body);
@@ -457,7 +457,7 @@ router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, re
  */
 router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -527,7 +527,7 @@ router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (re
  */
 router.post('/:id/change-password', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = changePasswordSchema.validate(req.body);

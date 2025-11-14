@@ -79,7 +79,7 @@ const { v4: uuidv4 } = require('uuid');
 router.get('/', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
     
     const warehouses = await getQuery(
       'SELECT * FROM warehouses WHERE tenant_id = ? ORDER BY name',
@@ -122,7 +122,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getOneQuery } = require('../database/init');
+    const { getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
       'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
@@ -162,7 +162,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery } = require('../database/init');
+    const { runQuery } = require('../utils/database');
     
     const {
       name,
@@ -246,7 +246,7 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery, getOneQuery } = require('../database/init');
+    const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
       'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
@@ -324,7 +324,7 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery, getOneQuery } = require('../database/init');
+    const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
       'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',

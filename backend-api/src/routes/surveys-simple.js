@@ -5,7 +5,7 @@ const { requireFunction } = require('../middleware/authMiddleware');
 // Get all surveys
 router.get('/', requireFunction('surveys', 'view'), async (req, res) => {
   try {
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
     
     const surveys = await getQuery(`
       SELECT s.*, u.name as created_by_name
@@ -25,7 +25,7 @@ router.get('/', requireFunction('surveys', 'view'), async (req, res) => {
 // Get survey by ID
 router.get('/:id', requireFunction('surveys', 'view'), async (req, res) => {
   try {
-    const { getOneQuery, getQuery } = require('../database/init');
+    const { getOneQuery, getQuery } = require('../utils/database');
     const { id } = req.params;
     
     const survey = await getOneQuery(`
@@ -56,7 +56,7 @@ router.get('/:id', requireFunction('surveys', 'view'), async (req, res) => {
 // Create new survey
 router.post('/', requireFunction('surveys', 'create'), async (req, res) => {
   try {
-    const { runQuery } = require('../database/init');
+    const { runQuery } = require('../utils/database');
     const { title, description, type, category, questions } = req.body;
     
     if (!title || !type || !questions || questions.length === 0) {
@@ -100,7 +100,7 @@ router.post('/', requireFunction('surveys', 'create'), async (req, res) => {
 // Submit survey response
 router.post('/:id/responses', requireFunction('surveys', 'create'), async (req, res) => {
   try {
-    const { getOneQuery, runQuery } = require('../database/init');
+    const { getOneQuery, runQuery } = require('../utils/database');
     const { id } = req.params;
     const { responses } = req.body;
     

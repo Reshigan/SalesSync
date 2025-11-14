@@ -78,7 +78,7 @@ const updateCustomerSchema = Joi.object({
  */
 router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -201,7 +201,7 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
  */
 router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { error, value } = createCustomerSchema.validate(req.body);
   if (error) {
@@ -284,7 +284,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
  *         description: Customer not found
  */
 router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   try {
     const stats = getOneQuery(`
@@ -313,7 +313,7 @@ router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (r
 
 router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -426,7 +426,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
  */
 router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = updateCustomerSchema.validate(req.body);
@@ -545,7 +545,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
  */
 router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -620,7 +620,7 @@ router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async
  */
 router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   const { id } = req.params;
   const page = parseInt(req.query.page) || 1;
@@ -691,7 +691,7 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
  *       - bearerAuth: []
  */
 router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const visits = getQuery('SELECT * FROM visits WHERE customer_id = ? AND tenant_id = ? ORDER BY visit_date DESC LIMIT 50', 
@@ -716,7 +716,7 @@ router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(asy
  *       - bearerAuth: []
  */
 router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const customer = getOneQuery('SELECT credit_limit, payment_terms FROM customers WHERE id = ? AND tenant_id = ?', 
@@ -765,7 +765,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
  *       - bearerAuth: []
  */
 router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const notes = getQuery(
@@ -796,7 +796,7 @@ router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(asyn
  *       - bearerAuth: []
  */
 router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   
   const noteSchema = Joi.object({
     note: Joi.string().required().min(1).max(5000),
@@ -854,7 +854,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
  *       - bearerAuth: []
  */
 router.post('/bulk', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
-  const { runQuery } = require('../database/init');
+  const { runQuery } = require('../utils/database');
   
   const bulkSchema = Joi.object({
     customer_ids: Joi.array().items(Joi.string()).required().min(1),
@@ -917,7 +917,7 @@ router.post('/bulk', requireFunction('customers', 'edit'), asyncHandler(async (r
  *       - bearerAuth: []
  */
 router.post('/export', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const { customer_ids, filters } = req.body;
@@ -1013,7 +1013,7 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
  * Get customer visits history
  */
 router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const visits = getQuery(`
@@ -1035,7 +1035,7 @@ router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(asy
  * Get customer KYC information
  */
 router.get('/:id/kyc', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   try {
     const kyc = getOneQuery(`
@@ -1055,7 +1055,7 @@ router.get('/:id/kyc', requireFunction('customers', 'view'), asyncHandler(async 
  * Add customer note
  */
 router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(async (req, res, next) => {
-  const { runQuery } = require('../database/init');
+  const { runQuery } = require('../utils/database');
   const { note } = req.body;
   
   if (!note) {
@@ -1079,7 +1079,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
  * Get customer notes
  */
 router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const notes = getQuery(`
@@ -1100,7 +1100,7 @@ router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(asyn
  * Get customer credit information
  */
 router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const customer = getOneQuery(`
@@ -1142,7 +1142,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
  * Bulk create/update customers
  */
 router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async (req, res, next) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const { customers } = req.body;
   
   if (!Array.isArray(customers) || customers.length === 0) {
@@ -1208,7 +1208,7 @@ router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async 
  * Export customers to CSV
  */
 router.post('/export', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const { type, status, routeId } = req.body;
@@ -1277,7 +1277,7 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
  * Get customer statistics
  */
 router.get('/stats/summary', requireFunction('customers', 'view'), asyncHandler(async (req, res, next) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   try {
     const stats = getOneQuery(`

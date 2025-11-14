@@ -46,7 +46,7 @@ router.post('/create-payment-intent', asyncHandler(async (req, res) => {
  * Process a payment (record in database)
  */
 router.post('/process', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const {
     customerId,
@@ -98,7 +98,7 @@ router.post('/process', asyncHandler(async (req, res) => {
  * List all payments for tenant
  */
 router.get('/', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { customerId, status, startDate, endDate, limit = 50, offset = 0 } = req.query;
 
@@ -158,7 +158,7 @@ router.get('/', asyncHandler(async (req, res) => {
  * Get payment by ID
  */
 router.get('/:id', asyncHandler(async (req, res) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 
@@ -186,7 +186,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * Process a refund
  */
 router.post('/:id/refund', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
   const { amount, reason } = req.body;
@@ -243,7 +243,7 @@ router.post('/:id/refund', asyncHandler(async (req, res) => {
  * Get payment statistics
  */
 router.get('/tenant/stats', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { startDate, endDate } = req.query;
 

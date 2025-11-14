@@ -6,7 +6,7 @@ const { authMiddleware, requireFunction } = require('../middleware/authMiddlewar
 // Get all surveys
 router.get('/', authMiddleware, asyncHandler(async (req, res) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const { page = 1, limit = 10, status, type, category } = req.query;
   const offset = (page - 1) * limit;
@@ -82,7 +82,7 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
 // Get survey by ID
 router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, res) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const { id } = req.params;
   
