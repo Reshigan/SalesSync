@@ -116,6 +116,8 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
     }
     
     // Get customers with route information
+    const limitParam = paramIndex;
+    const offsetParam = paramIndex + 1;
     const customers = await getQuery(`
       SELECT 
         c.*,
@@ -133,7 +135,7 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
       ${whereClause}
       GROUP BY c.id, c.created_at, c.name, c.code, c.type, c.phone, c.email, c.address, c.latitude, c.longitude, c.route_id, c.credit_limit, c.payment_terms, c.status, c.tenant_id, r.name, r.code, a.name, reg.name
       ORDER BY c.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      LIMIT $${limitParam} OFFSET $${offsetParam}
     `, [...params, limit, offset]);
     
     // Get total count
