@@ -92,8 +92,8 @@ router.get('/', async (req, res) => {
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
       LEFT JOIN customers c ON r.id = c.route_id
-      WHERE r.tenant_id = ?
-      GROUP BY r.id
+      WHERE r.tenant_id = $1
+      GROUP BY r.id, a.name, reg.name, u.first_name, u.last_name
       ORDER BY r.name
     `;
     
