@@ -75,6 +75,11 @@ export const formatCurrency = (
     compact?: boolean
   }
 ): string => {
+  // Handle null/undefined amounts
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    amount = 0
+  }
+
   let curr: Currency
   let opts: { showSymbol?: boolean; showCode?: boolean; compact?: boolean }
 
