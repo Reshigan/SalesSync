@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button'
 import { Truck, MapPin, Package, DollarSign, TrendingUp, Clock } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
 import { useNavigate } from 'react-router-dom'
+import { apiClient } from '../../services/api.service'
 
 interface VanSalesMetrics {
   totalVans: number
@@ -54,35 +55,18 @@ export default function VanSalesPage() {
   const fetchVanSalesData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
       
       // Fetch vans data
-      const vansResponse = await fetch('/api/vans', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const vansData = await vansResponse.json()
+      const vansResponse = await apiClient.get('/api/vans')
+      const vansData = vansResponse.data
       
       // Fetch van sales data
-      const salesResponse = await fetch('/api/van-sales', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const salesData = await salesResponse.json()
+      const salesResponse = await apiClient.get('/api/van-sales')
+      const salesData = salesResponse.data
       
       // Fetch routes data
-      const routesResponse = await fetch('/api/routes', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const routesData = await routesResponse.json()
+      const routesResponse = await apiClient.get('/api/routes')
+      const routesData = routesResponse.data
       
       // Calculate metrics from real data
       const vans = vansData.success ? vansData.data : []
@@ -129,25 +113,14 @@ export default function VanSalesPage() {
 
   const handleAddVan = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
-      
-      const response = await fetch('/api/vans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        },
-        body: JSON.stringify({
-          registration_number: newVanData.registration_number,
-          model: newVanData.model,
-          capacity_units: newVanData.capacity_units ? parseInt(newVanData.capacity_units) : null,
-          status: newVanData.status
-        })
+      const response = await apiClient.post('/api/vans', {
+        registration_number: newVanData.registration_number,
+        model: newVanData.model,
+        capacity_units: newVanData.capacity_units ? parseInt(newVanData.capacity_units) : null,
+        status: newVanData.status
       })
       
-      const data = await response.json()
+      const data = response.data
       
       if (data.success) {
         setShowAddVanModal(false)
