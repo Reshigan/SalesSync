@@ -20,15 +20,15 @@ export default function SmokeTestPage() {
   const providers = {
     customerId: async () => {
       const res = await apiClient.get('/customers?limit=1')
-      return res.data.data?.[0]?.id || res.data[0]?.id
+      return res.data.data?.customers?.[0]?.id || res.data.data?.[0]?.id || res.data[0]?.id
     },
     productId: async () => {
       const res = await apiClient.get('/products?limit=1')
-      return res.data.data?.[0]?.id || res.data[0]?.id
+      return res.data.data?.products?.[0]?.id || res.data.data?.[0]?.id || res.data[0]?.id
     },
     orderId: async () => {
       const res = await apiClient.get('/orders?limit=1')
-      return res.data.data?.[0]?.id || res.data[0]?.id
+      return res.data.data?.orders?.[0]?.id || res.data.data?.[0]?.id || res.data[0]?.id
     },
     vanId: async () => {
       const res = await apiClient.get('/vans?limit=1')
