@@ -321,11 +321,6 @@ async function startServer() {
     const brandsRoutes = require('./routes/brands');
     const regionsRoutes = require('./routes/regions');
     
-    const boardsRoutes = require('./routes/boards');
-    const boardPlacementsRoutes = require('./routes/board-placements');
-    const productDistributionsRoutes = require('./routes/product-distributions');
-    const commissionLedgersRoutes = require('./routes/commission-ledgers');
-    
     // New API routes
     const purchaseOrderRoutes = require('./routes/purchase-orders');
     const stockMovementRoutes = require('./routes/stock-movements');
@@ -363,7 +358,9 @@ async function startServer() {
     // Field Marketing System routes
     const boardsRoutes = require('./routes/boards');
     const boardInstallationsRoutes = require('./routes/board-installations');
+    const boardPlacementsRoutes = require('./routes/board-placements');
     const productDistributionsRoutes = require('./routes/product-distributions');
+    const commissionLedgersRoutes = require('./routes/commission-ledgers');
     const gpsLocationRoutes = require('./routes/gps-location');
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsFieldRoutes = require('./routes/commissions');
@@ -531,7 +528,9 @@ async function startServer() {
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
     app.use('/api/board-installations', authTenantMiddleware, boardInstallationsRoutes);
+    app.use('/api/board-placements', authTenantMiddleware, boardPlacementsRoutes);
     app.use('/api/product-distributions', authTenantMiddleware, productDistributionsRoutes);
+    app.use('/api/commission-ledgers', authTenantMiddleware, commissionLedgersRoutes);
     app.use('/api/gps-location', authTenantMiddleware, gpsLocationRoutes);
     app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
