@@ -365,6 +365,7 @@ async function startServer() {
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsFieldRoutes = require('./routes/commissions');
     const tradeMarketingRoutes = require('./routes/trade-marketing');
+    const filesRoutes = require('./routes/files');
     
     // NEW Field Marketing & Trade Marketing routes
     const fieldMarketingRoutes = require('./routes/fieldMarketing');
@@ -534,6 +535,7 @@ async function startServer() {
     app.use('/api/gps-location', authTenantMiddleware, gpsLocationRoutes);
     app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
+    app.use('/api/files', authTenantMiddleware, filesRoutes);
 
     // Monitoring routes
     const monitoringRoutes = require('./routes/monitoring');

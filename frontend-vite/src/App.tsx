@@ -45,6 +45,7 @@ import LiveMappingPage from './pages/field-agents/LiveMappingPage'
 import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
 import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
 import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
+import AgentCommissionDashboard from './pages/field-agents/AgentCommissionDashboard'
 
 // Field Marketing Pages
 import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
@@ -258,7 +259,7 @@ function App() {
             <Route path="field-operations/products" element={<ProductDistributionPage />} />
             <Route path="field-operations/products/create" element={<ProductDistributionFormPage />} />
             <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
-            <Route path="field-operations/commission" element={<CommissionTrackingPage />} />
+            <Route path="field-operations/commission" element={<AgentCommissionDashboard />} />
             <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
             <Route path="field-operations/visits/create" element={<VisitCreate />} />
             <Route path="field-operations/visits/:id" element={<VisitDetail />} />
@@ -331,7 +332,7 @@ function App() {
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
             <Route path="field-agents/products" element={<ProductDistributionPage />} />
-            <Route path="field-agents/commission" element={<CommissionTrackingPage />} />
+            <Route path="field-agents/commission" element={<AgentCommissionDashboard />} />
 
             {/* Business Routes */}
             <Route path="customers" element={<CustomersPage />} />
