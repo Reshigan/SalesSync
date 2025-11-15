@@ -161,6 +161,7 @@ import AdminPage from './pages/admin/AdminPage'
 import UserManagementPage from './pages/admin/UserManagementPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
+import SmokeTestPage from './pages/admin/SmokeTestPage'
 
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
@@ -378,6 +379,11 @@ function App() {
             <Route path="admin/audit" element={
               <ProtectedRoute requiredRole="admin">
                 <AuditLogsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/smoke-test" element={
+              <ProtectedRoute requiredRole="admin">
+                <SmokeTestPage />
               </ProtectedRoute>
             } />
 
