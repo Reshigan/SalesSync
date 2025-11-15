@@ -81,6 +81,78 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/surveys/stats - Survey statistics (MUST be before /:id route)
+router.get('/stats', asyncHandler(async (req, res) => {
+  // Lazy-load database functions
+  const { getQuery, getOneQuery } = require('../utils/database');
+  
+  const tenantId = req.tenantId;
+  
+  const [surveyCounts, responseCounts, topSurveys] = await Promise.all([
+    getOneQuery(`
+      SELECT 
+        COUNT(*) as total_surveys,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_surveys,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_surveys
+      FROM surveys WHERE tenant_id = $1
+    `, [tenantId]).then(row => row || {}),
+    
+    getOneQuery(`
+      SELECT 
+        COUNT(DISTINCT sr.id) as total_responses,
+        COUNT(DISTINCT sr.customer_id) as unique_respondents,
+        AVG(CASE WHEN sr.completion_time IS NOT NULL THEN sr.completion_time END) as avg_completion_time
+      FROM survey_responses sr
+      INNER JOIN surveys s ON sr.survey_id = s.id
+      WHERE s.tenant_id = $1
+    `, [tenantId]).then(row => row || {}),
+    
+    getQuery(`
+      SELECT 
+        s.id, s.title, s.status,
+        COUNT(sr.id) as response_count
+      FROM surveys s
+      LEFT JOIN survey_responses sr ON s.id = sr.survey_id
+      WHERE s.tenant_id = $1
+      GROUP BY s.id, s.title, s.status
+      ORDER BY response_count DESC
+      LIMIT 10
+    `, [tenantId]).then(rows => rows || [])
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      surveys: surveyCounts,
+      responses: {
+        ...responseCounts,
+        avg_completion_time: parseFloat((responseCounts.avg_completion_time || 0).toFixed(2))
+      },
+      topSurveys
+    }
+  });
+}));
+
+// GET /api/surveys/trends - Survey trends (MUST be before /:id route)
+router.get('/trends', asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      trends: []
+    }
+  });
+}));
+
+// GET /api/surveys/all/analytics - Survey analytics (MUST be before /:id route)
+router.get('/all/analytics', asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      analytics: []
+    }
+  });
+}));
+
 // Get survey by ID
 router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, res) => {
   // Lazy-load database functions
@@ -136,58 +208,6 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
         in_progress_responses: 0,
         avg_completion_time: 0
       }
-    }
-  });
-}));
-
-// GET /api/surveys/stats - Survey statistics
-router.get('/stats', asyncHandler(async (req, res) => {
-  // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../utils/database');
-  
-  const tenantId = req.tenantId;
-  
-  const [surveyCounts, responseCounts, topSurveys] = await Promise.all([
-    getOneQuery(`
-      SELECT 
-        COUNT(*) as total_surveys,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_surveys,
-        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_surveys
-      FROM surveys WHERE tenant_id = $1
-    `, [tenantId]),
-    
-    getOneQuery(`
-      SELECT 
-        COUNT(DISTINCT sr.id) as total_responses,
-        COUNT(DISTINCT sr.customer_id) as unique_respondents,
-        AVG(CASE WHEN sr.completion_time IS NOT NULL THEN sr.completion_time END) as avg_completion_time
-      FROM survey_responses sr
-      INNER JOIN surveys s ON sr.survey_id = s.id
-      WHERE s.tenant_id = $1
-    `, [tenantId]),
-    
-    getQuery(`
-      SELECT 
-        s.id, s.title, s.status,
-        COUNT(sr.id) as response_count
-      FROM surveys s
-      LEFT JOIN survey_responses sr ON s.id = sr.survey_id
-      WHERE s.tenant_id = $1
-      GROUP BY s.id, s.title, s.status
-      ORDER BY response_count DESC
-      LIMIT 10
-    `, [tenantId])
-  ]);
-
-  res.json({
-    success: true,
-    data: {
-      surveys: surveyCounts,
-      responses: {
-        ...responseCounts,
-        avg_completion_time: parseFloat((responseCounts.avg_completion_time || 0).toFixed(2))
-      },
-      topSurveys
     }
   });
 }));
