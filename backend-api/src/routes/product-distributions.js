@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
       SELECT pd.*, 
         c.name as customer_name,
         p.name as product_name,
-        u.name as agent_name
+        CONCAT(u.first_name, ' ', u.last_name) as agent_name
       FROM product_distributions pd
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN products p ON pd.product_id = p.id
@@ -86,7 +86,7 @@ router.get('/:id', async (req, res) => {
       SELECT pd.*, 
         c.name as customer_name,
         p.name as product_name,
-        u.name as agent_name
+        CONCAT(u.first_name, ' ', u.last_name) as agent_name
       FROM product_distributions pd
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN products p ON pd.product_id = p.id

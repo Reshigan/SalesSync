@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
 
     let query = `
       SELECT cl.*, 
-        u.name as agent_name,
+        CONCAT(u.first_name, ' ', u.last_name) as agent_name,
         u.email as agent_email
       FROM commission_ledgers cl
       LEFT JOIN users u ON cl.agent_id = u.id
@@ -132,7 +132,7 @@ router.get('/:id', async (req, res) => {
 
     const query = `
       SELECT cl.*, 
-        u.name as agent_name,
+        CONCAT(u.first_name, ' ', u.last_name) as agent_name,
         u.email as agent_email
       FROM commission_ledgers cl
       LEFT JOIN users u ON cl.agent_id = u.id
