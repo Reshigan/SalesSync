@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { customersService, Customer, CustomerFilter, CustomerStats } from '../../services/customers.service'
 import { formatCurrency, formatDate, formatPhoneNumber } from '../../utils/format'
 
 export default function CustomersPage() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<CustomerFilter>({
     page: 1,
     limit: 10,

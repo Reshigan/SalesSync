@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ordersService, Order, OrderFilter } from '../../services/orders.service'
 import { formatCurrency, formatDate } from '../../utils/format'
 
 export default function OrdersPage() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<OrderFilter>({
     page: 1,
     limit: 10
@@ -287,10 +289,16 @@ export default function OrdersPage() {
                       {order.items?.length || 0} items
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                      <button 
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      >
                         View
                       </button>
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button 
+                        onClick={() => navigate(`/orders/${order.id}`)}
+                        className="text-gray-600 hover:text-gray-900"
+                      >
                         Edit
                       </button>
                     </td>

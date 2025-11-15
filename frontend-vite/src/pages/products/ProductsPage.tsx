@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { 
   Package, 
   Plus, 
@@ -575,16 +576,24 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-gray-400 hover:text-gray-600">
+                        <button 
+                          onClick={() => navigate(`/products/${product.id}`)}
+                          className="text-gray-400 hover:text-gray-600"
+                          title="View Product"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-gray-600">
+                        <button 
+                          onClick={() => navigate(`/products/${product.id}`)}
+                          className="text-gray-400 hover:text-gray-600"
+                          title="Edit Product"
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-red-600">
+                        <button className="text-gray-400 hover:text-red-600" title="Delete Product">
                           <Trash2 className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-gray-600">
+                        <button className="text-gray-400 hover:text-gray-600" title="More Options">
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>
