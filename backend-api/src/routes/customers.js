@@ -306,7 +306,7 @@ router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (r
         SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 ELSE 0 END) as new_customers_30d,
         SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 ELSE 0 END) as new_customers_7d
       FROM customers
-      WHERE tenant_id = $1 AND deleted_at IS NULL
+      WHERE tenant_id = $1
     `, [req.tenantId]);
     
     res.json({
