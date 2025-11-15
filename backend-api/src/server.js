@@ -536,6 +536,15 @@ async function startServer() {
     app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
     app.use('/api/files', authTenantMiddleware, filesRoutes);
+    
+    app.use('/api/analytics/overview', authTenantMiddleware, require('./routes/analytics/overview'));
+    app.use('/api/analytics/orders', authTenantMiddleware, require('./routes/analytics/orders'));
+    app.use('/api/analytics/customers', authTenantMiddleware, require('./routes/analytics/customers'));
+    app.use('/api/analytics/field-ops', authTenantMiddleware, require('./routes/analytics/field-ops'));
+    app.use('/api/analytics/commissions', authTenantMiddleware, require('./routes/analytics/commissions'));
+    app.use('/api/analytics/visits', authTenantMiddleware, require('./routes/analytics/visits'));
+    app.use('/api/analytics/inventory', authTenantMiddleware, require('./routes/analytics/inventory'));
+    app.use('/api/analytics/agents', authTenantMiddleware, require('./routes/analytics/agents'));
 
     // Monitoring routes
     const monitoringRoutes = require('./routes/monitoring');
