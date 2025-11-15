@@ -365,8 +365,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
         v.id, v.visit_date, v.visit_type, v.outcome,
         u.first_name, u.last_name
       FROM visits v
-      JOIN users a ON a.id = v.agent_id
-      JOIN users u ON u.id = a.user_id
+      LEFT JOIN users u ON u.id = v.agent_id
       WHERE v.customer_id = $1
       ORDER BY v.visit_date DESC 
       LIMIT 5
