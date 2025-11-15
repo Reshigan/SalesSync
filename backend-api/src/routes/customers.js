@@ -655,8 +655,7 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
         u.first_name as salesman_first_name,
         u.last_name as salesman_last_name
       FROM orders o
-      LEFT JOIN users a ON a.id = o.salesman_id
-      LEFT JOIN users u ON u.id = a.user_id
+      LEFT JOIN users u ON u.id = o.salesman_id
       WHERE o.customer_id = $1
       ORDER BY o.order_date DESC
       LIMIT $2 OFFSET $3
