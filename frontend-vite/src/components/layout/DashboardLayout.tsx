@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Header from './Header'
@@ -7,6 +7,11 @@ import OfflineIndicator from '../ui/OfflineIndicator'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [location.pathname])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -17,7 +22,7 @@ export default function DashboardLayout() {
             className="fixed inset-0 bg-black bg-opacity-25"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="relative flex flex-col max-w-xs w-full bg-white h-screen overflow-y-auto">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 type="button"
@@ -27,14 +32,14 @@ export default function DashboardLayout() {
                 <X className="h-6 w-6 text-white" />
               </button>
             </div>
-            <Sidebar />
+            <Sidebar onNavigate={() => setSidebarOpen(false)} />
           </div>
         </div>
       )}
 
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <Sidebar />
+        <Sidebar onNavigate={() => {}} />
       </div>
 
       {/* Main content */}

@@ -438,7 +438,11 @@ const navigation = [
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void
+}
+
+export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { user } = useAuthStore()
 
   const isNavItemVisible = (item: any) => {
@@ -473,6 +477,7 @@ export default function Sidebar() {
               <div key={item.name}>
                 <NavLink
                   to={item.href}
+                  onClick={onNavigate}
                   className={({ isActive }) =>
                     `nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
                   }
@@ -491,6 +496,7 @@ export default function Sidebar() {
                         <NavLink
                           key={child.name}
                           to={child.href}
+                          onClick={onNavigate}
                           className={({ isActive }) =>
                             `nav-link text-sm ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
                           }
