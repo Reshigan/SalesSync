@@ -39,18 +39,20 @@ class FieldOperationsService {
 
   async getVisits(filter?: any): Promise<{ data: Visit[], total: number }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/visits`, { params: filter })
-      return { data: response.data.data || [], total: response.data.total || 0 }
+      const response = await apiClient.get('/visits', { params: filter })
+      const visits = Array.isArray(response.data.data?.visits) ? response.data.data.visits : 
+                     Array.isArray(response.data.data) ? response.data.data : []
+      return { data: visits, total: response.data.data?.stats?.total_visits || visits.length }
     } catch (error) {
       console.error('Failed to fetch visits:', error)
-      throw error
+      return { data: [], total: 0 }
     }
   }
 
   async getVisit(id: string): Promise<Visit> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/visits/${id}`)
-      return response.data.data
+      const response = await apiClient.get(`/visits/${id}`)
+      return response.data.data?.visit || response.data.data
     } catch (error) {
       console.error('Failed to fetch visit:', error)
       throw error
