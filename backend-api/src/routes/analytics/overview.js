@@ -63,7 +63,7 @@ router.get('/', async (req, res) => {
       dateGrouping = 'date_id';
     }
 
-    const ordersTrend = await getQuery(`
+    const ordersTrendRaw = await getQuery(`
       SELECT 
         ${dateGrouping} as date,
         SUM(order_count) as orders,
@@ -74,7 +74,7 @@ router.get('/', async (req, res) => {
       ORDER BY date
     `, [tenantId, fromDate, toDate]);
 
-    const commissionsTrend = await getQuery(`
+    const commissionsTrendRaw = await getQuery(`
       SELECT 
         ${dateGrouping} as date,
         SUM(total_commissions) as total_commissions,
@@ -86,6 +86,20 @@ router.get('/', async (req, res) => {
       GROUP BY ${dateGrouping}
       ORDER BY date
     `, [tenantId, fromDate, toDate]);
+
+    const ordersTrend = ordersTrendRaw.map(row => ({
+      date: row.date,
+      orders: parseInt(row.orders || 0),
+      revenue: parseFloat(row.revenue || 0)
+    }));
+
+    const commissionsTrend = commissionsTrendRaw.map(row => ({
+      date: row.date,
+      total_commissions: parseFloat(row.total_commissions || 0),
+      pending: parseFloat(row.pending || 0),
+      approved: parseFloat(row.approved || 0),
+      paid: parseFloat(row.paid || 0)
+    }));
 
     res.json({
       success: true,
