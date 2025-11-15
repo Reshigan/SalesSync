@@ -37,7 +37,7 @@ router.get('/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     
-    const [promotionCounts, typeBreakdown, redemptions, topPromotions] = await Promise.all([
+    const [promotionCounts, typeBreakdown] = await Promise.all([
       getOneQuery(`
         SELECT 
           COUNT(*)::int as total_promotions,
@@ -50,29 +50,6 @@ router.get('/stats', async (req, res) => {
         SELECT type, COUNT(*)::int as count
         FROM promotions WHERE tenant_id = $1
         GROUP BY type
-      `, [tenantId]).then(rows => rows || []),
-      
-      getOneQuery(`
-        SELECT 
-          COUNT(*)::int as total_redemptions,
-          SUM(discount_amount)::float8 as total_discount_given,
-          AVG(discount_amount)::float8 as avg_discount
-        FROM promotion_redemptions pr
-        INNER JOIN promotions p ON pr.promotion_id = p.id
-        WHERE p.tenant_id = $1
-      `, [tenantId]).then(row => row || {}),
-      
-      getQuery(`
-        SELECT 
-          p.id, p.name, p.type, p.discount_value,
-          COUNT(pr.id)::int as redemption_count,
-          SUM(pr.discount_amount)::float8 as total_discount
-        FROM promotions p
-        LEFT JOIN promotion_redemptions pr ON p.id = pr.promotion_id
-        WHERE p.tenant_id = $1
-        GROUP BY p.id, p.name, p.type, p.discount_value
-        ORDER BY redemption_count DESC
-        LIMIT 10
       `, [tenantId]).then(rows => rows || [])
     ]);
     
@@ -82,11 +59,11 @@ router.get('/stats', async (req, res) => {
         promotions: promotionCounts,
         typeBreakdown,
         redemptions: {
-          ...redemptions,
-          total_discount_given: parseFloat((redemptions.total_discount_given || 0).toFixed(2)),
-          avg_discount: parseFloat((redemptions.avg_discount || 0).toFixed(2))
+          total_redemptions: 0,
+          total_discount_given: 0,
+          avg_discount: 0
         },
-        topPromotions
+        topPromotions: []
       }
     });
   } catch (error) {
