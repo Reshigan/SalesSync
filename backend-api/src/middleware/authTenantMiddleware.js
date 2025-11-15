@@ -121,10 +121,11 @@ const authTenantMiddleware = async (req, res, next) => {
     };
     
     req.tenant = tenant;
+    req.userId = user.id;
     req.tenantId = decoded.tenantId;
     req.tenantFeatures = tenantFeatures;
     req.permissions = userPermissions;
-    req.tokenData = decoded; // Keep original token data for reference
+    req.tokenData = decoded;
 
     next();
   } catch (error) {
