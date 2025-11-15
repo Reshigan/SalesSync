@@ -48,6 +48,9 @@ import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
 
 // Field Marketing Pages
 import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
+
+import AgentWorkflowPageMobile from './pages/field-agents/AgentWorkflowPageMobile'
+import VanSalesWorkflowPageMobile from './pages/van-sales/VanSalesWorkflowPageMobile'
 import CustomerSelection from './pages/field-marketing/CustomerSelection'
 import GPSVerification from './pages/field-marketing/GPSVerification'
 import BrandSelection from './pages/field-marketing/BrandSelection'
