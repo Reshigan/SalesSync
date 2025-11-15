@@ -51,6 +51,8 @@ import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashb
 
 import AgentWorkflowPageMobile from './pages/field-agents/AgentWorkflowPageMobile'
 import VanSalesWorkflowPageMobile from './pages/van-sales/VanSalesWorkflowPageMobile'
+import BoardPlacementFormPage from './pages/field-operations/BoardPlacementFormPage'
+import ProductDistributionFormPage from './pages/field-operations/ProductDistributionFormPage'
 import CustomerSelection from './pages/field-marketing/CustomerSelection'
 import GPSVerification from './pages/field-marketing/GPSVerification'
 import BrandSelection from './pages/field-marketing/BrandSelection'
@@ -229,7 +231,7 @@ function App() {
             {/* Van Sales Routes */}
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
-            <Route path="van-sales/workflow" element={<VanSalesWorkflowPage />} />
+            <Route path="van-sales/workflow" element={<VanSalesWorkflowPageMobile />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
             <Route path="van-sales/routes/:id" element={<VanRouteDetailsPage />} />
@@ -251,10 +253,10 @@ function App() {
             <Route path="field-operations/agents" element={<FieldAgentsPage />} />
             <Route path="field-operations/mapping" element={<LiveMappingPage />} />
             <Route path="field-operations/boards" element={<BoardPlacementPage />} />
-            <Route path="field-operations/boards/create" element={<BoardPlacementCreate />} />
+            <Route path="field-operations/boards/create" element={<BoardPlacementFormPage />} />
             <Route path="field-operations/boards/:id" element={<BoardPlacementDetail />} />
             <Route path="field-operations/products" element={<ProductDistributionPage />} />
-            <Route path="field-operations/products/create" element={<ProductDistributionCreate />} />
+            <Route path="field-operations/products/create" element={<ProductDistributionFormPage />} />
             <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
             <Route path="field-operations/commission" element={<CommissionTrackingPage />} />
             <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
@@ -325,7 +327,7 @@ function App() {
 
             {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
-            <Route path="field-agents/workflow" element={<AgentWorkflowPage />} />
+            <Route path="field-agents/workflow" element={<AgentWorkflowPageMobile />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
             <Route path="field-agents/products" element={<ProductDistributionPage />} />
