@@ -16,6 +16,11 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/dashboard/DashboardPage'
 import AnalyticsPage from './pages/dashboard/AnalyticsPage'
 
+import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard'
+import OrdersAnalytics from './pages/analytics/OrdersAnalytics'
+import FieldOpsAnalytics from './pages/analytics/FieldOpsAnalytics'
+import CommissionsAnalytics from './pages/analytics/CommissionsAnalytics'
+
 // Van Sales Pages
 import VanSalesPage from './pages/van-sales/VanSalesPage'
 import VanSalesDashboard from './pages/van-sales/VanSalesDashboard'
@@ -228,6 +233,12 @@ function App() {
             {/* Dashboard Routes */}
             <Route path="dashboard" element={<DashboardPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
+            
+            {/* Analytics Routes */}
+            <Route path="analytics-dashboard" element={<AnalyticsDashboard />} />
+            <Route path="analytics-dashboard/orders" element={<OrdersAnalytics />} />
+            <Route path="analytics-dashboard/field-ops" element={<FieldOpsAnalytics />} />
+            <Route path="analytics-dashboard/commissions" element={<CommissionsAnalytics />} />
 
             {/* Van Sales Routes */}
             <Route path="van-sales" element={<VanSalesDashboard />} />
