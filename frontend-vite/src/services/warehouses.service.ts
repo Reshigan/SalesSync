@@ -59,7 +59,7 @@ export interface StockTransfer {
 }
 
 class WarehousesService {
-  // Build full URL using centralized config
+  private readonly baseUrl = API_CONFIG.ENDPOINTS.WAREHOUSES.BASE
 
   async getWarehouses(filter?: any): Promise<{ warehouses: Warehouse[], total: number }> {
     try {
