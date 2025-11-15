@@ -85,6 +85,77 @@ import OrderDetailsPage from './pages/orders/OrderDetailsPage'
 import ProductsPage from './pages/products/ProductsPage'
 import ProductDetailsPage from './pages/products/ProductDetailsPage'
 
+// Van Sales Detail Pages
+import VanOrderCreatePage from './pages/van-sales/VanOrderCreatePage'
+import VanRouteDetailsPage from './pages/van-sales/VanRouteDetailsPage'
+import VanSalesOrderCreate from './pages/van-sales/orders/VanSalesOrderCreate'
+import VanSalesOrderDetail from './pages/van-sales/orders/VanSalesOrderDetail'
+import VanSalesOrderEdit from './pages/van-sales/orders/VanSalesOrderEdit'
+import VanSalesReturnCreate from './pages/van-sales/returns/VanSalesReturnCreate'
+import VanSalesReturnDetail from './pages/van-sales/returns/VanSalesReturnDetail'
+import VanLoadCreate from './pages/van-sales/van-loads/VanLoadCreate'
+import VanLoadDetail from './pages/van-sales/van-loads/VanLoadDetail'
+import VanCashReconciliationCreate from './pages/van-sales/cash-reconciliation/CashReconciliationCreate'
+import VanCashReconciliationDetail from './pages/van-sales/cash-reconciliation/CashReconciliationDetail'
+
+// Inventory Detail Pages
+import StockCountDetailsPage from './pages/inventory-management/StockCountDetailsPage'
+import AdjustmentCreate from './pages/inventory/adjustments/AdjustmentCreate'
+import AdjustmentDetail from './pages/inventory/adjustments/AdjustmentDetail'
+import IssueCreate from './pages/inventory/issues/IssueCreate'
+import IssueDetail from './pages/inventory/issues/IssueDetail'
+import ReceiptCreate from './pages/inventory/receipts/ReceiptCreate'
+import ReceiptDetail from './pages/inventory/receipts/ReceiptDetail'
+import StockCountCreate from './pages/inventory/stock-counts/StockCountCreate'
+import StockCountDetail from './pages/inventory/stock-counts/StockCountDetail'
+import TransferCreate from './pages/inventory/transfers/TransferCreate'
+import TransferDetail from './pages/inventory/transfers/TransferDetail'
+
+import CreditNoteCreate from './pages/sales/credit-notes/CreditNoteCreate'
+import CreditNoteDetail from './pages/sales/credit-notes/CreditNoteDetail'
+import InvoiceCreate from './pages/sales/invoices/InvoiceCreate'
+import InvoiceDetail from './pages/sales/invoices/InvoiceDetail'
+import SalesOrderCreate from './pages/sales/orders/SalesOrderCreate'
+import SalesOrderDetail from './pages/sales/orders/SalesOrderDetail'
+import SalesOrderEdit from './pages/sales/orders/SalesOrderEdit'
+import PaymentCreate from './pages/sales/payments/PaymentCreate'
+import PaymentDetail from './pages/sales/payments/PaymentDetail'
+import SalesReturnCreate from './pages/sales/returns/SalesReturnCreate'
+import SalesReturnDetail from './pages/sales/returns/SalesReturnDetail'
+
+import ActivationCreate from './pages/marketing/activations/ActivationCreate'
+import ActivationDetail from './pages/marketing/activations/ActivationDetail'
+import CampaignCreate from './pages/marketing/campaigns/CampaignCreate'
+import CampaignDetail from './pages/marketing/campaigns/CampaignDetail'
+import CampaignEdit from './pages/marketing/campaigns/CampaignEdit'
+import EventCreate from './pages/marketing/events/EventCreate'
+import EventDetail from './pages/marketing/events/EventDetail'
+import EventEdit from './pages/marketing/events/EventEdit'
+import PromotionCreate from './pages/marketing/promotions/PromotionCreate'
+import PromotionDetail from './pages/marketing/promotions/PromotionDetail'
+
+// Field Operations Detail Pages
+import BoardPlacementCreate from './pages/field-operations/board-placements/BoardPlacementCreate'
+import BoardPlacementDetail from './pages/field-operations/board-placements/BoardPlacementDetail'
+import CommissionLedgerDetail from './pages/field-operations/commission-ledger/CommissionLedgerDetail'
+import ProductDistributionCreate from './pages/field-operations/product-distributions/ProductDistributionCreate'
+import ProductDistributionDetail from './pages/field-operations/product-distributions/ProductDistributionDetail'
+import VisitCreate from './pages/field-operations/visits/VisitCreate'
+import VisitDetail from './pages/field-operations/visits/VisitDetail'
+import VisitEdit from './pages/field-operations/visits/VisitEdit'
+
+import CRMCustomerCreate from './pages/crm/customers/CustomerCreate'
+import CRMCustomerDetail from './pages/crm/customers/CustomerDetail'
+import CRMCustomerEdit from './pages/crm/customers/CustomerEdit'
+import KYCCaseCreate from './pages/crm/kyc-cases/KYCCaseCreate'
+import KYCCaseDetail from './pages/crm/kyc-cases/KYCCaseDetail'
+import SurveyCreate from './pages/crm/surveys/SurveyCreate'
+import SurveyDetail from './pages/crm/surveys/SurveyDetail'
+
+import CashReconciliationCreate from './pages/finance/cash-reconciliation/CashReconciliationCreate'
+import CashReconciliationDetail from './pages/finance/cash-reconciliation/CashReconciliationDetail'
+import CommissionPayoutDetail from './pages/finance/commission-payouts/CommissionPayoutDetail'
+
 // Admin Pages
 import AdminPage from './pages/admin/AdminPage'
 import UserManagementPage from './pages/admin/UserManagementPage'
@@ -142,7 +213,18 @@ function App() {
             <Route path="van-sales/workflow" element={<VanSalesWorkflowPage />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
+            <Route path="van-sales/routes/:id" element={<VanRouteDetailsPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
+            <Route path="van-sales/orders/create" element={<VanOrderCreatePage />} />
+            <Route path="van-sales/orders/new" element={<VanSalesOrderCreate />} />
+            <Route path="van-sales/orders/:id" element={<VanSalesOrderDetail />} />
+            <Route path="van-sales/orders/:id/edit" element={<VanSalesOrderEdit />} />
+            <Route path="van-sales/returns/create" element={<VanSalesReturnCreate />} />
+            <Route path="van-sales/returns/:id" element={<VanSalesReturnDetail />} />
+            <Route path="van-sales/van-loads/create" element={<VanLoadCreate />} />
+            <Route path="van-sales/van-loads/:id" element={<VanLoadDetail />} />
+            <Route path="van-sales/cash-reconciliation/create" element={<VanCashReconciliationCreate />} />
+            <Route path="van-sales/cash-reconciliation/:id" element={<VanCashReconciliationDetail />} />
 
             {/* Field Operations Routes */}
             <Route path="field-operations" element={<FieldOperationsDashboard />} />
@@ -150,8 +232,16 @@ function App() {
             <Route path="field-operations/agents" element={<FieldAgentsPage />} />
             <Route path="field-operations/mapping" element={<LiveMappingPage />} />
             <Route path="field-operations/boards" element={<BoardPlacementPage />} />
+            <Route path="field-operations/boards/create" element={<BoardPlacementCreate />} />
+            <Route path="field-operations/boards/:id" element={<BoardPlacementDetail />} />
             <Route path="field-operations/products" element={<ProductDistributionPage />} />
+            <Route path="field-operations/products/create" element={<ProductDistributionCreate />} />
+            <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
             <Route path="field-operations/commission" element={<CommissionTrackingPage />} />
+            <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
+            <Route path="field-operations/visits/create" element={<VisitCreate />} />
+            <Route path="field-operations/visits/:id" element={<VisitDetail />} />
+            <Route path="field-operations/visits/:id/edit" element={<VisitEdit />} />
 
             {/* Field Marketing Routes */}
             <Route path="field-marketing" element={<FieldMarketingDashboard />} />
@@ -181,8 +271,19 @@ function App() {
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
             <Route path="inventory/stock-count" element={<StockCountWorkflowPage />} />
+            <Route path="inventory/stock-count/:id" element={<StockCountDetailsPage />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
             <Route path="inventory/reports" element={<InventoryReports />} />
+            <Route path="inventory/adjustments/create" element={<AdjustmentCreate />} />
+            <Route path="inventory/adjustments/:id" element={<AdjustmentDetail />} />
+            <Route path="inventory/issues/create" element={<IssueCreate />} />
+            <Route path="inventory/issues/:id" element={<IssueDetail />} />
+            <Route path="inventory/receipts/create" element={<ReceiptCreate />} />
+            <Route path="inventory/receipts/:id" element={<ReceiptDetail />} />
+            <Route path="inventory/stock-counts/create" element={<StockCountCreate />} />
+            <Route path="inventory/stock-counts/:id" element={<StockCountDetail />} />
+            <Route path="inventory/transfers/create" element={<TransferCreate />} />
+            <Route path="inventory/transfers/:id" element={<TransferDetail />} />
 
             {/* Promotions Routes */}
             <Route path="promotions" element={<PromotionsDashboard />} />
@@ -218,6 +319,45 @@ function App() {
             <Route path="orders/:id" element={<OrderDetailsPage />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/:id" element={<ProductDetailsPage />} />
+
+            {/* Sales Routes */}
+            <Route path="sales/orders/create" element={<SalesOrderCreate />} />
+            <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
+            <Route path="sales/orders/:id/edit" element={<SalesOrderEdit />} />
+            <Route path="sales/invoices/create" element={<InvoiceCreate />} />
+            <Route path="sales/invoices/:id" element={<InvoiceDetail />} />
+            <Route path="sales/payments/create" element={<PaymentCreate />} />
+            <Route path="sales/payments/:id" element={<PaymentDetail />} />
+            <Route path="sales/credit-notes/create" element={<CreditNoteCreate />} />
+            <Route path="sales/credit-notes/:id" element={<CreditNoteDetail />} />
+            <Route path="sales/returns/create" element={<SalesReturnCreate />} />
+            <Route path="sales/returns/:id" element={<SalesReturnDetail />} />
+
+            {/* Marketing Routes */}
+            <Route path="marketing/campaigns/create" element={<CampaignCreate />} />
+            <Route path="marketing/campaigns/:id" element={<CampaignDetail />} />
+            <Route path="marketing/campaigns/:id/edit" element={<CampaignEdit />} />
+            <Route path="marketing/events/create" element={<EventCreate />} />
+            <Route path="marketing/events/:id" element={<EventDetail />} />
+            <Route path="marketing/events/:id/edit" element={<EventEdit />} />
+            <Route path="marketing/activations/create" element={<ActivationCreate />} />
+            <Route path="marketing/activations/:id" element={<ActivationDetail />} />
+            <Route path="marketing/promotions/create" element={<PromotionCreate />} />
+            <Route path="marketing/promotions/:id" element={<PromotionDetail />} />
+
+            {/* CRM Routes */}
+            <Route path="crm/customers/create" element={<CRMCustomerCreate />} />
+            <Route path="crm/customers/:id" element={<CRMCustomerDetail />} />
+            <Route path="crm/customers/:id/edit" element={<CRMCustomerEdit />} />
+            <Route path="crm/kyc-cases/create" element={<KYCCaseCreate />} />
+            <Route path="crm/kyc-cases/:id" element={<KYCCaseDetail />} />
+            <Route path="crm/surveys/create" element={<SurveyCreate />} />
+            <Route path="crm/surveys/:id" element={<SurveyDetail />} />
+
+            {/* Finance Routes */}
+            <Route path="finance/cash-reconciliation/create" element={<CashReconciliationCreate />} />
+            <Route path="finance/cash-reconciliation/:id" element={<CashReconciliationDetail />} />
+            <Route path="finance/commission-payouts/:id" element={<CommissionPayoutDetail />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
