@@ -362,7 +362,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
     // Get recent visits
     const recentVisits = await getQuery(`
       SELECT 
-        v.id, v.visit_date, v.visit_type, v.outcome,
+        v.id, v.visit_date, v.visit_type, v.status,
         u.first_name, u.last_name
       FROM visits v
       LEFT JOIN users u ON u.id = v.agent_id
