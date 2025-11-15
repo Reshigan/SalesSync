@@ -50,22 +50,23 @@ interface Product {
 }
 
 interface ProductStats {
-  total_products: number
-  active_products: number
-  inactive_products: number
-  low_stock_products: number
-  out_of_stock_products: number
-  total_value: number
-  top_selling_products: Product[]
-  products_by_category: Array<{
-    category: string
-    count: number
-    value: number
+  totalProducts: number | string
+  activeProducts: number | string
+  inactiveProducts: number | string
+  lowStockProducts: number | string
+  outOfStockProducts: number | string
+  totalValue: number | string
+  byCategory?: Array<{
+    id: string
+    name: string
+    productcount: string
+    totalstock: string
   }>
-  products_by_brand: Array<{
-    brand: string
-    count: number
-    value: number
+  byBrand?: Array<{
+    id: string
+    name: string
+    productcount: string
+    totalstock: string
   }>
 }
 
@@ -281,8 +282,8 @@ export default function ProductsPage() {
               </div>
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-500">Total Products</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.total_products.toLocaleString()}</p>
-                <p className="text-sm text-blue-600">{stats.active_products} active</p>
+                <p className="text-2xl font-semibold text-gray-900">{Number(stats.totalProducts || 0).toLocaleString()}</p>
+                <p className="text-sm text-blue-600">{stats.activeProducts} active</p>
               </div>
             </div>
           </div>
@@ -313,7 +314,7 @@ export default function ProductsPage() {
               </div>
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-500">Low Stock</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.low_stock_products}</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.lowStockProducts}</p>
                 <p className="text-sm text-yellow-600">Needs attention</p>
               </div>
             </div>
@@ -328,7 +329,7 @@ export default function ProductsPage() {
               </div>
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-500">Total Value</p>
-                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(stats.total_value)}</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number(stats.totalValue || 0))}</p>
                 <p className="text-sm text-purple-600">Inventory worth</p>
               </div>
             </div>
