@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../database/db');
-const { selectMany, selectOne, insertRow, updateRow, deleteRow } = require('../database/pg-helpers');
+const { pool } = require('../config/database');
+const { selectMany, selectOne, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
 
 // GET /boards - List all boards
 router.get('/', async (req, res) => {
