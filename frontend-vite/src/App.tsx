@@ -158,10 +158,25 @@ import CommissionPayoutDetail from './pages/finance/commission-payouts/Commissio
 
 // Admin Pages
 import AdminPage from './pages/admin/AdminPage'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import UserManagementPage from './pages/admin/UserManagementPage'
+import RolePermissionsPage from './pages/admin/RolePermissionsPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
 import SmokeTestPage from './pages/admin/SmokeTestPage'
+import BrandManagementPage from './pages/admin/BrandManagementPage'
+import CampaignManagementPage from './pages/admin/CampaignManagementPage'
+import CommissionRuleBuilderPage from './pages/admin/CommissionRuleBuilderPage'
+import DataImportExportPage from './pages/admin/DataImportExportPage'
+import POSLibraryPage from './pages/admin/POSLibraryPage'
+import ProductTypeBuilderPage from './pages/admin/ProductTypeBuilderPage'
+import SurveyBuilderPage from './pages/admin/SurveyBuilderPage'
+import TerritoryManagementPage from './pages/admin/TerritoryManagementPage'
+import BoardManagementPage from './pages/admin/BoardManagementPage'
+
+import { BackupManagementPage } from './pages/admin-settings/BackupManagementPage'
+import { IntegrationsPage } from './pages/admin-settings/IntegrationsPage'
+import { SystemHealthPage } from './pages/admin-settings/SystemHealthPage'
 
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
@@ -366,9 +381,19 @@ function App() {
                 <AdminPage />
               </ProtectedRoute>
             } />
+            <Route path="admin/dashboard" element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="admin/users" element={
               <ProtectedRoute requiredRole="admin">
                 <UserManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/roles" element={
+              <ProtectedRoute requiredRole="admin">
+                <RolePermissionsPage />
               </ProtectedRoute>
             } />
             <Route path="admin/settings" element={
@@ -379,6 +404,66 @@ function App() {
             <Route path="admin/audit" element={
               <ProtectedRoute requiredRole="admin">
                 <AuditLogsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/brands" element={
+              <ProtectedRoute requiredRole="admin">
+                <BrandManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/campaigns" element={
+              <ProtectedRoute requiredRole="admin">
+                <CampaignManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/commissions" element={
+              <ProtectedRoute requiredRole="admin">
+                <CommissionRuleBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/data-import-export" element={
+              <ProtectedRoute requiredRole="admin">
+                <DataImportExportPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/pos-library" element={
+              <ProtectedRoute requiredRole="admin">
+                <POSLibraryPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/product-types" element={
+              <ProtectedRoute requiredRole="admin">
+                <ProductTypeBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/surveys" element={
+              <ProtectedRoute requiredRole="admin">
+                <SurveyBuilderPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/territories" element={
+              <ProtectedRoute requiredRole="admin">
+                <TerritoryManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/boards" element={
+              <ProtectedRoute requiredRole="admin">
+                <BoardManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/backup" element={
+              <ProtectedRoute requiredRole="admin">
+                <BackupManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/integrations" element={
+              <ProtectedRoute requiredRole="admin">
+                <IntegrationsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/system-health" element={
+              <ProtectedRoute requiredRole="admin">
+                <SystemHealthPage />
               </ProtectedRoute>
             } />
             <Route path="admin/smoke-test" element={
