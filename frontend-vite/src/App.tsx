@@ -19,6 +19,7 @@ import AnalyticsPage from './pages/dashboard/AnalyticsPage'
 // Van Sales Pages
 import VanSalesPage from './pages/van-sales/VanSalesPage'
 import VanSalesDashboard from './pages/van-sales/VanSalesDashboard'
+import VanSalesWorkflowPage from './pages/van-sales/VanSalesWorkflowPage'
 import RouteManagementPage from './pages/van-sales/RouteManagementPage'
 import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
 
@@ -38,6 +39,7 @@ import CampaignsPage from './pages/campaigns/CampaignsPage'
 
 // Field Operations Pages
 import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
+import AgentWorkflowPage from './pages/field-agents/AgentWorkflowPage'
 import FieldOperationsDashboard from './pages/field-operations/FieldOperationsDashboard'
 import LiveMappingPage from './pages/field-agents/LiveMappingPage'
 import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
@@ -136,6 +138,7 @@ function App() {
             {/* Van Sales Routes */}
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
+            <Route path="van-sales/workflow" element={<VanSalesWorkflowPage />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
             <Route path="van-sales/routes" element={<RouteManagementPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
@@ -200,6 +203,7 @@ function App() {
 
             {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
+            <Route path="field-agents/workflow" element={<AgentWorkflowPage />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
             <Route path="field-agents/products" element={<ProductDistributionPage />} />
