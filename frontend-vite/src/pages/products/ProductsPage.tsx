@@ -584,7 +584,7 @@ export default function ProductsPage() {
                           <Eye className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => navigate(`/products/${product.id}`)}
+                          onClick={() => navigate(`/products/${product.id}/edit`)}
                           className="text-gray-400 hover:text-gray-600"
                           title="Edit Product"
                         >

@@ -207,7 +207,7 @@ export default function CustomersPage() {
             </button>
           </div>
           <button 
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => navigate('/customers/create')}
             className="btn btn-primary"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -488,7 +488,7 @@ export default function CustomersPage() {
                         View
                       </button>
                       <button 
-                        onClick={() => navigate(`/customers/${customer.id}`)}
+                        onClick={() => navigate(`/customers/${customer.id}/edit`)}
                         className="text-gray-600 hover:text-gray-900 mr-3"
                       >
                         Edit
