@@ -298,7 +298,7 @@ export default function ProductsPage() {
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-gray-500">In Stock</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {(stats.total_products - stats.out_of_stock_products).toLocaleString()}
+                  {(Number(stats.totalProducts || 0) - Number(stats.outOfStockProducts || 0)).toLocaleString()}
                 </p>
                 <p className="text-sm text-green-600">Available for sale</p>
               </div>
