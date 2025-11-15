@@ -321,6 +321,11 @@ async function startServer() {
     const brandsRoutes = require('./routes/brands');
     const regionsRoutes = require('./routes/regions');
     
+    const boardsRoutes = require('./routes/boards');
+    const boardPlacementsRoutes = require('./routes/board-placements');
+    const productDistributionsRoutes = require('./routes/product-distributions');
+    const commissionLedgersRoutes = require('./routes/commission-ledgers');
+    
     // New API routes
     const purchaseOrderRoutes = require('./routes/purchase-orders');
     const stockMovementRoutes = require('./routes/stock-movements');
