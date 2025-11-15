@@ -479,10 +479,16 @@ export default function CustomersPage() {
                       {getStatusBadge(customer.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                      <button 
+                        onClick={() => navigate(`/customers/${customer.id}`)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      >
                         View
                       </button>
-                      <button className="text-gray-600 hover:text-gray-900 mr-3">
+                      <button 
+                        onClick={() => navigate(`/customers/${customer.id}`)}
+                        className="text-gray-600 hover:text-gray-900 mr-3"
+                      >
                         Edit
                       </button>
                       <button 
