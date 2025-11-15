@@ -97,7 +97,7 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadCampaigns = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/campaigns', {
+      const response = await apiClient.get('/campaigns', {
         params: { status: 'active', limit: 100 }
       });
       setCampaigns(response.data.campaigns || []);
@@ -111,7 +111,7 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/customers', {
+      const response = await apiClient.get('/customers', {
         params: { limit: 100 }
       });
       setCustomers(response.data.customers || []);
@@ -125,7 +125,7 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadActivationTasks = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/campaigns/${selectedCampaign?.id}/tasks`);
+      const response = await apiClient.get(`/campaigns/${selectedCampaign?.id}/tasks`);
       setTasks(response.data.tasks || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load tasks');
@@ -137,7 +137,7 @@ const ActivationWorkflowPage: React.FC = () => {
   const loadSampleAllocations = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/samples/allocations', {
+      const response = await apiClient.get('/samples/allocations', {
         params: { status: 'active' }
       });
       setSampleAllocations(response.data.allocations || []);
@@ -269,7 +269,7 @@ const ActivationWorkflowPage: React.FC = () => {
         gps_lng: gpsLocation.lng
       };
 
-      const response = await apiClient.post('/api/trade-marketing/activations', activationData);
+      const response = await apiClient.post('/trade-marketing/activations', activationData);
       
       setActivationSummary(response.data);
       setCurrentStep(6);

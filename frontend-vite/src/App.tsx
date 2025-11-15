@@ -71,6 +71,7 @@ import SurveysManagement from './pages/surveys/SurveysManagement'
 import InventoryDashboard from './pages/inventory/InventoryDashboard'
 import InventoryManagement from './pages/inventory/InventoryManagement'
 import InventoryReports from './pages/inventory/InventoryReports'
+import StockCountWorkflowPage from './pages/inventory/StockCountWorkflowPage'
 
 // Promotions Pages
 import PromotionsDashboard from './pages/promotions/PromotionsDashboard'
@@ -179,6 +180,7 @@ function App() {
             {/* Inventory Routes */}
             <Route path="inventory" element={<InventoryDashboard />} />
             <Route path="inventory/dashboard" element={<InventoryDashboard />} />
+            <Route path="inventory/stock-count" element={<StockCountWorkflowPage />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
             <Route path="inventory/reports" element={<InventoryReports />} />
 

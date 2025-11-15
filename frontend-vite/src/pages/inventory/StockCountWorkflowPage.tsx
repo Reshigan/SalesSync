@@ -72,7 +72,7 @@ const StockCountWorkflowPage: React.FC = () => {
   const loadWarehouses = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/warehouses', {
+      const response = await apiClient.get('/warehouses', {
         params: { limit: 100 }
       });
       setWarehouses(response.data.warehouses || []);
@@ -86,7 +86,7 @@ const StockCountWorkflowPage: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get('/api/products', {
+      const response = await apiClient.get('/products', {
         params: { limit: 100 }
       });
       const productsData = response.data.products || [];
@@ -241,7 +241,7 @@ const StockCountWorkflowPage: React.FC = () => {
         gps_lng: gpsLocation.lng
       };
 
-      const response = await apiClient.post('/api/inventory/stock-counts', countData);
+      const response = await apiClient.post('/inventory/stock-counts', countData);
       
       setCountSummary(response.data);
       setCurrentStep(5);
