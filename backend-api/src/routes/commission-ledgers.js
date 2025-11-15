@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../database/db');
-const { selectMany, selectOne, updateRow } = require('../database/pg-helpers');
+const { pool } = require('../config/database');
+const { selectMany, selectOne, updateRow } = require('../utils/pg-helpers');
 
 // GET /commission-ledgers - List commissions (admin)
 router.get('/', async (req, res) => {

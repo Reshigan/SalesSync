@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../database/db');
-const { selectMany, selectOne, insertRow } = require('../database/pg-helpers');
+const { pool } = require('../config/database');
+const { selectMany, selectOne, insertRow } = require('../utils/pg-helpers');
 
 // GET /board-placements - List placements
 router.get('/', async (req, res) => {
