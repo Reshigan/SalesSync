@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow } = require('../utils/pg-helpers');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // GET /board-placements - List placements
 router.get('/', async (req, res) => {
@@ -42,7 +43,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY bp.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
-    const placements = await selectMany(query, params);
+    const placements = await getQuery(query, params);
     
     res.json({ success: true, data: placements, total: placements.length });
   } catch (error) {
@@ -70,7 +71,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
       ORDER BY bp.created_at DESC
     `;
 
-    const placements = await selectMany(query, [tenantId, agentId]);
+    const placements = await getQuery(query, [tenantId, agentId]);
     
     res.json({ success: true, data: placements, total: placements.length });
   } catch (error) {
@@ -98,7 +99,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON bp.created_by = u.id
       WHERE bp.id = $1 AND bp.tenant_id = $2
     `;
-    const placement = await selectOne(query, [id, tenantId]);
+    const placement = await getOneQuery(query, [id, tenantId]);
 
     if (!placement) {
       return res.status(404).json({ success: false, error: 'Board placement not found' });

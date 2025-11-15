@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // GET /boards - List all boards
 router.get('/', async (req, res) => {
@@ -20,7 +21,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY b.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
-    const boards = await selectMany(query, params);
+    const boards = await getQuery(query, params);
     
     res.json({ success: true, data: boards, total: boards.length });
   } catch (error) {
@@ -36,7 +37,7 @@ router.get('/:id', async (req, res) => {
     const tenantId = req.tenantId;
 
     const query = 'SELECT b.*, br.name as brand_name FROM boards b LEFT JOIN brands br ON b.brand_id = br.id WHERE b.id = $1 AND b.tenant_id = $2';
-    const board = await selectOne(query, [id, tenantId]);
+    const board = await getOneQuery(query, [id, tenantId]);
 
     if (!board) {
       return res.status(404).json({ success: false, error: 'Board not found' });

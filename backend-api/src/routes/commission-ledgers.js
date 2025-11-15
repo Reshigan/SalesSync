@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { selectMany, selectOne, updateRow } = require('../utils/pg-helpers');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // GET /commission-ledgers - List commissions (admin)
 router.get('/', async (req, res) => {
@@ -37,7 +38,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY cl.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
-    const commissions = await selectMany(query, params);
+    const commissions = await getQuery(query, params);
     
     // Calculate totals
     const totalsQuery = `
@@ -52,7 +53,7 @@ router.get('/', async (req, res) => {
     `;
     
     const totalsParams = agent_id ? [tenantId, agent_id] : [tenantId];
-    const totals = await selectOne(totalsQuery, totalsParams);
+    const totals = await getOneQuery(totalsQuery, totalsParams);
     
     res.json({ success: true, data: commissions, total: commissions.length, totals });
   } catch (error) {
@@ -79,7 +80,7 @@ router.get('/my-earnings', async (req, res) => {
       ORDER BY cl.created_at DESC
     `;
 
-    const commissions = await selectMany(query, [tenantId, userId]);
+    const commissions = await getQuery(query, [tenantId, userId]);
     
     // Calculate totals
     const totalsQuery = `
@@ -92,7 +93,7 @@ router.get('/my-earnings', async (req, res) => {
       WHERE tenant_id = $1 AND agent_id = $2
     `;
     
-    const totals = await selectOne(totalsQuery, [tenantId, userId]);
+    const totals = await getOneQuery(totalsQuery, [tenantId, userId]);
     
     res.json({ success: true, data: commissions, totals });
   } catch (error) {
@@ -114,7 +115,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
       ORDER BY cl.created_at DESC
     `;
 
-    const commissions = await selectMany(query, [tenantId, agentId]);
+    const commissions = await getQuery(query, [tenantId, agentId]);
     
     res.json({ success: true, data: commissions, total: commissions.length });
   } catch (error) {
@@ -137,7 +138,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON cl.agent_id = u.id
       WHERE cl.id = $1 AND cl.tenant_id = $2
     `;
-    const commission = await selectOne(query, [id, tenantId]);
+    const commission = await getOneQuery(query, [id, tenantId]);
 
     if (!commission) {
       return res.status(404).json({ success: false, error: 'Commission not found' });

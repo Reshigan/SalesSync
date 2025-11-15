@@ -207,7 +207,8 @@ function validateTableName(table) {
     'individuals', 'dedupe_registry', 'survey_dedupe_registry',
     'vans', 'van_loads', 'van_sales', 'van_load_items', 'van_sales_items',
     'cash_reconciliation', 'agents', 'agent_locations', 'active_visits',
-    'billing_records', 'tenant_licenses', 'functions'
+    'billing_records', 'tenant_licenses', 'functions',
+    'boards', 'board_placements', 'product_distributions', 'commission_ledgers'
   ];
   
   if (!allowedTables.includes(table)) {
@@ -230,5 +231,7 @@ module.exports = {
   selectMany,
   insertRow,
   updateRow,
-  deleteRow
+  deleteRow,
+  validateTableName,
+  validateColumnName
 };

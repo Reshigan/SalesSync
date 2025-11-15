@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow } = require('../utils/pg-helpers');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // GET /product-distributions - List distributions
 router.get('/', async (req, res) => {
@@ -40,7 +41,7 @@ router.get('/', async (req, res) => {
     query += ` ORDER BY pd.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
-    const distributions = await selectMany(query, params);
+    const distributions = await getQuery(query, params);
     
     res.json({ success: true, data: distributions, total: distributions.length });
   } catch (error) {
@@ -66,7 +67,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
       ORDER BY pd.created_at DESC
     `;
 
-    const distributions = await selectMany(query, [tenantId, agentId]);
+    const distributions = await getQuery(query, [tenantId, agentId]);
     
     res.json({ success: true, data: distributions, total: distributions.length });
   } catch (error) {
@@ -92,7 +93,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON pd.created_by = u.id
       WHERE pd.id = $1 AND pd.tenant_id = $2
     `;
-    const distribution = await selectOne(query, [id, tenantId]);
+    const distribution = await getOneQuery(query, [id, tenantId]);
 
     if (!distribution) {
       return res.status(404).json({ success: false, error: 'Product distribution not found' });
