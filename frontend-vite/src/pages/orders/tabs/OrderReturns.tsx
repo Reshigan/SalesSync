@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, RotateCcw, AlertCircle } from 'lucide-react'
-import { orderService } from '../../../services/orders.service'
+import { ordersService as orderService } from '../../../services/orders.service'
 
 export default function OrderReturns() {
   const { id } = useParams<{ id: string }>()

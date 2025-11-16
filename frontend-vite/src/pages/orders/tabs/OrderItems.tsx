@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Package, DollarSign } from 'lucide-react'
-import { orderService } from '../../../services/orders.service'
+import { ordersService as orderService } from '../../../services/orders.service'
 import { EntityRefLink } from '../../../components/generic/EntityRefLink'
 
 export default function OrderItems() {

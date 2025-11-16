@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Truck, MapPin, Calendar, CheckCircle } from 'lucide-react'
-import { orderService } from '../../../services/orders.service'
+import { ordersService as orderService } from '../../../services/orders.service'
 
 export default function OrderDelivery() {
   const { id } = useParams<{ id: string }>()
