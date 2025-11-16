@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useQuery } from '@tantml:react-query'
+import { useQuery } from '@tanstack/react-query'
 import { customersService } from '../../services/customers.service'
 
 interface HierarchyNode {

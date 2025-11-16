@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tantml:function_calls>
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, Package, Target, FileText, LayoutGrid } from 'lucide-react'
 import { brandService } from '../../services/brand.service'
 import { EntityRefLink } from '../../components/generic/EntityRefLink'

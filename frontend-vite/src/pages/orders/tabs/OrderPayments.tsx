@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tantml:react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Plus, DollarSign, CreditCard } from 'lucide-react'
 import { paymentService } from '../../../services/payments.service'
 
