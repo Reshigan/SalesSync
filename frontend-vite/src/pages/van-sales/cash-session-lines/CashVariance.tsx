@@ -18,7 +18,12 @@ export default function CashVariance() {
 
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', sessionId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+  })
+
+  const oldSession = {
       id: sessionId,
       session_number: 'CASH-2024-001',
       agent_name: 'John Van Sales',

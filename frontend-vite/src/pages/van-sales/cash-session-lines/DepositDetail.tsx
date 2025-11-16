@@ -9,16 +9,19 @@ export default function DepositDetail() {
 
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
-    queryFn: async () => ({
-      id: sessionId,
-      session_number: 'CASH-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: deposit, isLoading } = useQuery({
     queryKey: ['deposit', sessionId, depositId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+  })
+
+  const oldDeposit = {
       id: depositId,
       session_id: sessionId,
       deposit_number: 'DEP-2024-001',

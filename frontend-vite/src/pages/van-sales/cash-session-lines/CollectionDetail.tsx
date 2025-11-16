@@ -9,16 +9,19 @@ export default function CollectionDetail() {
 
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
-    queryFn: async () => ({
-      id: sessionId,
-      session_number: 'CASH-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: collection, isLoading } = useQuery({
     queryKey: ['collection', sessionId, collectionId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+  })
+
+  const oldCollection = {
       id: collectionId,
       session_id: sessionId,
       customer_id: 'cust-1',

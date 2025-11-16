@@ -8,16 +8,19 @@ export default function RouteStopExceptions() {
 
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
-    queryFn: async () => ({
-      id: routeId,
-      route_number: 'ROUTE-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
-  const { data: exceptions, isLoading } = useQuery({
+  const { data: exceptions = [], isLoading } = useQuery({
     queryKey: ['route-exceptions', routeId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+  })
+
+  const oldExceptions = [
       {
         id: '1',
         stop_number: 2,
