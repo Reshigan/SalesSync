@@ -9,37 +9,16 @@ export default function ReturnItemList() {
 
   const { data: returnOrder } = useQuery({
     queryKey: ['return', returnId],
-    queryFn: async () => ({
-      id: returnId,
-      return_number: 'RET-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
-  const { data: items, isLoading } = useQuery({
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ['return-items', returnId],
-    queryFn: async () => [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        quantity_returned: 10,
-        unit_price: 15.00,
-        refund_amount: 150.00,
-        condition: 'damaged',
-        approval_status: 'pending',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        quantity_returned: 5,
-        unit_price: 14.00,
-        refund_amount: 70.00,
-        condition: 'new',
-        approval_status: 'approved',
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {

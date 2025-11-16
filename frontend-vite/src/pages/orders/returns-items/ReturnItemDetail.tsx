@@ -9,30 +9,16 @@ export default function ReturnItemDetail() {
 
   const { data: returnOrder } = useQuery({
     queryKey: ['return', returnId],
-    queryFn: async () => ({
-      id: returnId,
-      return_number: 'RET-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      return_id: returnId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity_returned: 10,
-      unit_price: 15.00,
-      refund_amount: 150.00,
-      reason: 'Damaged goods',
-      condition: 'damaged',
-      restockable: false,
-      approval_status: 'pending',
-      created_at: '2024-01-15T10:00:00Z',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {
