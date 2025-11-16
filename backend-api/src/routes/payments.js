@@ -430,4 +430,23 @@ router.put('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res
   });
 }));
 
+router.get('/:paymentId/status-history', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  const { paymentId } = req.params;
+  const tenantId = req.user?.tenantId;
+  
+  const history = await getQuery(`
+    SELECT psh.*, u.name as changed_by_name, u.email as changed_by_email
+    FROM payment_status_history psh
+    LEFT JOIN users u ON psh.changed_by = u.id
+    WHERE psh.payment_id = $1 AND psh.tenant_id = $2
+    ORDER BY psh.created_at DESC
+  `, [paymentId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { history }
+  });
+}));
+
 module.exports = router;

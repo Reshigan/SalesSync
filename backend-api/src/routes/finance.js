@@ -658,4 +658,44 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+// Get invoice status history
+router.get('/invoices/:invoiceId/status-history', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  const { invoiceId } = req.params;
+  const tenantId = req.user?.tenantId;
+  
+  const history = await getQuery(`
+    SELECT ish.*, u.name as changed_by_name, u.email as changed_by_email
+    FROM invoice_status_history ish
+    LEFT JOIN users u ON ish.changed_by = u.id
+    WHERE ish.invoice_id = $1 AND ish.tenant_id = $2
+    ORDER BY ish.created_at DESC
+  `, [invoiceId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { history }
+  });
+}));
+
+// Get invoice item history
+router.get('/invoices/:invoiceId/items/:itemId/history', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  const { invoiceId, itemId } = req.params;
+  const tenantId = req.user?.tenantId;
+  
+  const history = await getQuery(`
+    SELECT iih.*, u.name as changed_by_name, u.email as changed_by_email
+    FROM invoice_item_history iih
+    LEFT JOIN users u ON iih.changed_by = u.id
+    WHERE iih.invoice_id = $1 AND iih.item_id = $2 AND iih.tenant_id = $3
+    ORDER BY iih.created_at DESC
+  `, [invoiceId, itemId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { history }
+  });
+}));
+
 module.exports = router;
