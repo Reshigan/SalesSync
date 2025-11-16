@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { getOneQuery, runQuery } = require('../database/init');
+const { getOneQuery, runQuery } = require('../utils/database');
 
 // Simple logger (will be replaced by winston if available)
 const logger = {

@@ -12,7 +12,7 @@ const { AppError, asyncHandler } = require('../middleware/errorHandler');
  * Create a new quote
  */
 router.post('/', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const {
     customerId,
@@ -99,7 +99,7 @@ router.post('/', asyncHandler(async (req, res) => {
  * List all quotes for tenant
  */
 router.get('/', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { customerId, status, limit = 50, offset = 0 } = req.query;
 
@@ -149,7 +149,7 @@ router.get('/', asyncHandler(async (req, res) => {
  * Get quote by ID with items
  */
 router.get('/:id', asyncHandler(async (req, res) => {
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 
@@ -184,7 +184,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * Update quote
  */
 router.put('/:id', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery, getQuery } = require('../database/init');
+  const { runQuery, getOneQuery, getQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
   const {
@@ -282,7 +282,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
  * Send quote to customer (mark as sent)
  */
 router.post('/:id/send', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 
@@ -316,7 +316,7 @@ router.post('/:id/send', asyncHandler(async (req, res) => {
  * Accept quote (convert to order/invoice)
  */
 router.post('/:id/accept', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 
@@ -351,7 +351,7 @@ router.post('/:id/accept', asyncHandler(async (req, res) => {
  * Reject quote
  */
 router.post('/:id/reject', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
   const { reason } = req.body;
@@ -389,7 +389,7 @@ router.post('/:id/reject', asyncHandler(async (req, res) => {
  * Delete quote
  */
 router.delete('/:id', asyncHandler(async (req, res) => {
-  const { runQuery, getOneQuery } = require('../database/init');
+  const { runQuery, getOneQuery } = require('../utils/database');
   const tenantId = req.tenantId;
   const { id } = req.params;
 

@@ -101,7 +101,9 @@ async function initializeApp() {
     console.log('Loading field marketing system routes...');
     const boardsRoutes = require('./routes/boards');
     const boardInstallationsRoutes = require('./routes/board-installations');
+    const boardPlacementsRoutes = require('./routes/board-placements');
     const productDistributionsRoutes = require('./routes/product-distributions');
+    const commissionLedgersRoutes = require('./routes/commission-ledgers');
     const gpsLocationRoutes = require('./routes/gps-location');
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsRoutes = require('./routes/commissions');
@@ -215,7 +217,9 @@ async function initializeApp() {
     console.log('Mounting field marketing system routes...');
     app.use('/api/boards', boardsRoutes);
     app.use('/api/board-installations', boardInstallationsRoutes);
+    app.use('/api/board-placements', boardPlacementsRoutes);
     app.use('/api/product-distributions', productDistributionsRoutes);
+    app.use('/api/commission-ledgers', commissionLedgersRoutes);
     app.use('/api/gps-location', gpsLocationRoutes);
     app.use('/api/field-agent-workflow', fieldAgentWorkflowRoutes);
     app.use('/api/commissions', commissionsRoutes);

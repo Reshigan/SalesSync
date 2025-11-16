@@ -76,7 +76,7 @@ class CustomersService {
   async getCustomer(id: string): Promise<Customer | null> {
     try {
       const response = await apiClient.get(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id))
-      return response.data.data
+      return response.data.data?.customer || response.data.data
     } catch (error) {
       console.error('Failed to fetch customer:', error)
       return null
@@ -125,7 +125,8 @@ class CustomersService {
   async getCustomerOrders(customerId: string, filter?: any): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${customerId}/orders`, { params: filter })
-      return response.data.data || []
+      return Array.isArray(response.data.data?.orders) ? response.data.data.orders : 
+             Array.isArray(response.data.data) ? response.data.data : []
     } catch (error) {
       console.error('Failed to fetch customer orders:', error)
       return []
@@ -145,7 +146,7 @@ class CustomersService {
   async getCustomerVisits(customerId: string, filter?: any): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${customerId}/visits`, { params: filter })
-      return response.data.data || []
+      return Array.isArray(response.data.data) ? response.data.data : []
     } catch (error) {
       console.error('Failed to fetch customer visits:', error)
       return []

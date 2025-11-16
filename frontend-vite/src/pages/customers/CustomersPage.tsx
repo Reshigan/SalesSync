@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { customersService, Customer, CustomerFilter, CustomerStats } from '../../services/customers.service'
 import { formatCurrency, formatDate, formatPhoneNumber } from '../../utils/format'
 
 export default function CustomersPage() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<CustomerFilter>({
     page: 1,
     limit: 10,
@@ -205,7 +207,7 @@ export default function CustomersPage() {
             </button>
           </div>
           <button 
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => navigate('/customers/create')}
             className="btn btn-primary"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -281,8 +283,8 @@ export default function CustomersPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Customer Types</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.customers_by_type.retail + stats.customers_by_type.wholesale}</p>
-                <p className="text-sm text-gray-500">{stats.customers_by_type.retail} retail, {stats.customers_by_type.wholesale} wholesale</p>
+                <p className="text-2xl font-semibold text-gray-900">{(stats.customers_by_type?.retail || 0) + (stats.customers_by_type?.wholesale || 0)}</p>
+                <p className="text-sm text-gray-500">{stats.customers_by_type?.retail || 0} retail, {stats.customers_by_type?.wholesale || 0} wholesale</p>
               </div>
             </div>
           </div>
@@ -479,10 +481,16 @@ export default function CustomersPage() {
                       {getStatusBadge(customer.status)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button className="text-indigo-600 hover:text-indigo-900 mr-3">
+                      <button 
+                        onClick={() => navigate(`/customers/${customer.id}`)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      >
                         View
                       </button>
-                      <button className="text-gray-600 hover:text-gray-900 mr-3">
+                      <button 
+                        onClick={() => navigate(`/customers/${customer.id}/edit`)}
+                        className="text-gray-600 hover:text-gray-900 mr-3"
+                      >
                         Edit
                       </button>
                       <button 

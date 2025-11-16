@@ -25,9 +25,9 @@ export default function FieldOperationsDashboard() {
     try {
       setLoading(true);
       const [agentsRes, visitsRes, perfRes] = await Promise.all([
-        apiClient.get('/api/field-operations/agents').catch(() => ({ data: { agents: [] } })),
-        apiClient.get('/api/field-operations/visits').catch(() => ({ data: { visits: [] } })),
-        apiClient.get('/api/field-operations/performance').catch(() => ({ data: { performance: {} } }))
+        apiClient.get('/field-operations/agents').catch(() => ({ data: { agents: [] } })),
+        apiClient.get('/field-operations/visits').catch(() => ({ data: { visits: [] } })),
+        apiClient.get('/field-operations/performance').catch(() => ({ data: { performance: {} } }))
       ]);
       
       setAgents(agentsRes.data.agents || []);

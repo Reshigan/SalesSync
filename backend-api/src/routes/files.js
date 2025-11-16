@@ -4,7 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-const { authenticateToken } = require('./auth-complete');
+const { insertRow, selectMany, selectOne, updateRow, deleteRow } = require('../utils/pg-helpers');
+const { getQuery, getOneQuery } = require('../utils/database');
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -57,56 +58,47 @@ const upload = multer({
 });
 
 // POST /api/files/upload - Upload single file
-router.post('/upload', authenticateToken, upload.single('file'), (req, res) => {
-  const db = req.app.locals.db;
+router.post('/upload', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const userId = req.userId;
 
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-
-  const fileData = {
-    user_id: req.user.id,
-    original_name: req.file.originalname,
-    filename: req.file.filename,
-    filepath: req.file.path,
-    mimetype: req.file.mimetype,
-    size: req.file.size,
-    resource_type: req.body.resource_type || null,
-    resource_id: req.body.resource_id || null,
-    description: req.body.description || null
-  };
-
-  db.run(
-    `INSERT INTO files (user_id, original_name, filename, filepath, mimetype, size, resource_type, resource_id, description)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [fileData.user_id, fileData.original_name, fileData.filename, fileData.filepath, 
-     fileData.mimetype, fileData.size, fileData.resource_type, fileData.resource_id, fileData.description],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Error saving file metadata' });
-      }
-
-      // Log file upload
-      db.run(
-        'INSERT INTO audit_logs (user_id, action, resource_type, resource_id, details) VALUES (?, ?, ?, ?, ?)',
-        [req.user.id, 'file_uploaded', 'file', this.lastID, JSON.stringify({ filename: fileData.original_name })]
-      );
-
-      res.status(201).json({
-        success: true,
-        message: 'File uploaded successfully',
-        file: {
-          id: this.lastID,
-          ...fileData,
-          url: `/api/files/${this.lastID}`
-        }
-      });
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
-  );
+
+    const fileData = {
+      tenant_id: tenantId,
+      user_id: userId,
+      original_name: req.file.originalname,
+      filename: req.file.filename,
+      filepath: req.file.path,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      resource_type: req.body.resource_type || null,
+      resource_id: req.body.resource_id || null,
+      description: req.body.description || null
+    };
+
+    const file = await insertRow('files', fileData);
+
+    res.status(201).json({
+      success: true,
+      message: 'File uploaded successfully',
+      file: {
+        id: file.id,
+        ...fileData,
+        url: `/api/files/${file.id}`
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // POST /api/files/upload-multiple - Upload multiple files
-router.post('/upload-multiple', authenticateToken, upload.array('files', 10), (req, res) => {
+router.post('/upload-multiple', upload.array('files', 10), async (req, res) => {
   const db = req.app.locals.db;
 
   if (!req.files || req.files.length === 0) {
@@ -156,7 +148,7 @@ router.post('/upload-multiple', authenticateToken, upload.array('files', 10), (r
 });
 
 // GET /api/files - List all files (with pagination)
-router.get('/', authenticateToken, (req, res) => {
+router.get('/', async (req, res) => {
   const db = req.app.locals.db;
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
@@ -232,7 +224,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // GET /api/files/:id - Get file metadata
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', async (req, res) => {
   const db = req.app.locals.db;
   const { id } = req.params;
 
@@ -265,7 +257,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // GET /api/files/:id/download - Download file
-router.get('/:id/download', authenticateToken, (req, res) => {
+router.get('/:id/download', async (req, res) => {
   const db = req.app.locals.db;
   const { id } = req.params;
 
@@ -307,7 +299,7 @@ router.get('/:id/download', authenticateToken, (req, res) => {
 });
 
 // DELETE /api/files/:id - Delete file
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', async (req, res) => {
   const db = req.app.locals.db;
   const { id } = req.params;
 
@@ -355,7 +347,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
 });
 
 // PUT /api/files/:id - Update file metadata
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', async (req, res) => {
   const db = req.app.locals.db;
   const { id } = req.params;
   const { description, resource_type, resource_id } = req.body;
@@ -392,7 +384,7 @@ router.put('/:id', authenticateToken, (req, res) => {
 });
 
 // GET /api/files/stats - Get file statistics
-router.get('/statistics/overview', authenticateToken, (req, res) => {
+router.get('/statistics/overview', async (req, res) => {
   const db = req.app.locals.db;
 
   let query = 'SELECT COUNT(*) as total_files, SUM(size) as total_size FROM files';

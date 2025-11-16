@@ -18,7 +18,7 @@ const router = express.Router();
  */
 router.get('/', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     // Get basic counts
@@ -144,7 +144,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
  */
 router.get('/stats', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   const period = req.query.period || 'month';
   
@@ -254,7 +254,7 @@ router.get('/stats', asyncHandler(async (req, res, next) => {
  */
 router.get('/activities', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   const limit = parseInt(req.query.limit) || 20;
   
@@ -418,7 +418,7 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
  */
 router.get('/alerts', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const severity = req.query.severity;
   const limit = parseInt(req.query.limit) || 50;
@@ -646,7 +646,7 @@ router.get('/alerts', asyncHandler(async (req, res, next) => {
  *         description: Finance dashboard data retrieved successfully
  */
 router.get('/finance', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const tenantId = req.tenantId;
@@ -771,7 +771,7 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
  *         description: Sales dashboard data retrieved successfully
  */
 router.get('/sales', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const tenantId = req.tenantId;
@@ -883,7 +883,7 @@ router.get('/sales', asyncHandler(async (req, res, next) => {
  *         description: Customer dashboard data retrieved successfully
  */
 router.get('/customers', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const tenantId = req.tenantId;
@@ -1001,7 +1001,7 @@ router.get('/customers', asyncHandler(async (req, res, next) => {
  *         description: Orders dashboard data retrieved successfully
  */
 router.get('/orders', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const tenantId = req.tenantId;
@@ -1101,7 +1101,7 @@ router.get('/orders', asyncHandler(async (req, res, next) => {
  *         description: Admin dashboard data retrieved successfully
  */
 router.get('/admin', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
     const tenantId = req.tenantId;

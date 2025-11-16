@@ -13,48 +13,52 @@ router.get('/', asyncHandler(async (req, res) => {
     SELECT e.*, u.first_name || ' ' || u.last_name as organizer_name
     FROM events e
     LEFT JOIN users u ON e.organizer_id = u.id
-    WHERE e.tenant_id = ?
+    WHERE e.tenant_id = $1
   `;
   
   const params = [tenantId];
+  let paramIndex = 1;
   
   if (status) {
-    query += ' AND e.status = ?';
+    query += ` AND e.status = $${++paramIndex}`;
     params.push(status);
   }
   
   if (type) {
-    query += ' AND e.type = ?';
+    query += ` AND e.type = $${++paramIndex}`;
     params.push(type);
   }
   
   if (start_date && end_date) {
-    query += ' AND e.start_date >= ? AND e.end_date <= ?';
+    query += ` AND e.start_date >= $${++paramIndex} AND e.end_date <= $${++paramIndex}`;
     params.push(start_date, end_date);
+    paramIndex++;
   }
   
-  query += ' ORDER BY e.start_date DESC LIMIT ? OFFSET ?';
+  query += ` ORDER BY e.start_date DESC LIMIT $${++paramIndex} OFFSET $${++paramIndex}`;
   params.push(parseInt(limit), offset);
   
   const events = await getQuery(query, params);
   
   // Get total count
-  let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE e.tenant_id = ?';
+  let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE e.tenant_id = $1';
   const countParams = [tenantId];
+  let countParamIndex = 1;
   
   if (status) {
-    countQuery += ' AND e.status = ?';
+    countQuery += ` AND e.status = $${++countParamIndex}`;
     countParams.push(status);
   }
   
   if (type) {
-    countQuery += ' AND e.type = ?';
+    countQuery += ` AND e.type = $${++countParamIndex}`;
     countParams.push(type);
   }
   
   if (start_date && end_date) {
-    countQuery += ' AND e.start_date >= ? AND e.end_date <= ?';
+    countQuery += ` AND e.start_date >= $${++countParamIndex} AND e.end_date <= $${++countParamIndex}`;
     countParams.push(start_date, end_date);
+    countParamIndex++;
   }
   
   const countResult = await getOneQuery(countQuery, countParams);

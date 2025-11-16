@@ -86,7 +86,7 @@ const updateTenantSchema = Joi.object({
  */
 router.post('/', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { error, value } = createTenantSchema.validate(req.body);
   if (error) {
@@ -255,7 +255,7 @@ router.post('/', asyncHandler(async (req, res, next) => {
  */
 router.get('/', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -343,7 +343,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
  */
 router.get('/:id', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, getQuery } = require('../database/init');
+  const { getOneQuery, getQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -431,7 +431,7 @@ router.get('/:id', asyncHandler(async (req, res, next) => {
  */
 router.put('/:id', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = updateTenantSchema.validate(req.body);
@@ -521,7 +521,7 @@ router.put('/:id', asyncHandler(async (req, res, next) => {
  */
 router.post('/:id/billing', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -609,7 +609,7 @@ router.post('/:id/billing', asyncHandler(async (req, res, next) => {
  */
 router.post('/resolve', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   const { domain, path } = req.body;
   
@@ -732,7 +732,7 @@ router.post('/resolve', asyncHandler(async (req, res, next) => {
  */
 router.get('/mappings', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery } = require('../database/init');
+  const { getQuery } = require('../utils/database');
   
   try {
     const tenants = await getQuery(`
@@ -786,7 +786,7 @@ router.get('/mappings', asyncHandler(async (req, res, next) => {
  *         description: SuperAdmin access required
  */
 router.delete('/:id', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const tenantId = parseInt(req.params.id);
   
@@ -841,7 +841,7 @@ router.delete('/:id', asyncHandler(async (req, res, next) => {
  *         description: Tenant activated
  */
 router.post('/:id/activate', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const tenantId = parseInt(req.params.id);
   
@@ -879,7 +879,7 @@ router.post('/:id/activate', asyncHandler(async (req, res, next) => {
  *         description: Tenant suspended
  */
 router.post('/:id/suspend', asyncHandler(async (req, res, next) => {
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const tenantId = parseInt(req.params.id);
   

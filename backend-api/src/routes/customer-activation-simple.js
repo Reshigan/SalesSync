@@ -5,7 +5,7 @@ const { requireFunction } = require('../middleware/authMiddleware');
 // Get all customer activations
 router.get('/', requireFunction('customer_activation', 'view'), async (req, res) => {
   try {
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
     
     const activations = await getQuery(`
       SELECT ca.*, u.name as agent_name, c.name as customer_name
@@ -26,7 +26,7 @@ router.get('/', requireFunction('customer_activation', 'view'), async (req, res)
 // Get activation by ID
 router.get('/:id', requireFunction('customer_activation', 'view'), async (req, res) => {
   try {
-    const { getOneQuery, getQuery } = require('../database/init');
+    const { getOneQuery, getQuery } = require('../utils/database');
     const { id } = req.params;
     
     const activation = await getOneQuery(`
@@ -58,7 +58,7 @@ router.get('/:id', requireFunction('customer_activation', 'view'), async (req, r
 // Create new customer activation
 router.post('/', requireFunction('customer_activation', 'create'), async (req, res) => {
   try {
-    const { runQuery } = require('../database/init');
+    const { runQuery } = require('../utils/database');
     const { customer_id, activation_type, target_products, expected_value } = req.body;
     
     if (!customer_id || !activation_type) {
@@ -88,7 +88,7 @@ router.post('/', requireFunction('customer_activation', 'create'), async (req, r
 // Update activation status
 router.put('/:id/status', requireFunction('customer_activation', 'edit'), async (req, res) => {
   try {
-    const { runQuery, getOneQuery } = require('../database/init');
+    const { runQuery, getOneQuery } = require('../utils/database');
     const { id } = req.params;
     const { status, notes } = req.body;
     

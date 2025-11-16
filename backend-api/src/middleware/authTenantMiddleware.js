@@ -9,7 +9,7 @@ const { AppError } = require('./errorHandler');
 const authTenantMiddleware = async (req, res, next) => {
   try {
     // Lazy-load database functions to avoid circular dependencies
-    const { getOneQuery, getQuery } = require('../database/init');
+    const { getOneQuery, getQuery } = require('../utils/database');
     
     // Extract JWT token
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -121,10 +121,11 @@ const authTenantMiddleware = async (req, res, next) => {
     };
     
     req.tenant = tenant;
+    req.userId = user.id;
     req.tenantId = decoded.tenantId;
     req.tenantFeatures = tenantFeatures;
     req.permissions = userPermissions;
-    req.tokenData = decoded; // Keep original token data for reference
+    req.tokenData = decoded;
 
     next();
   } catch (error) {
@@ -162,7 +163,7 @@ const requireFeature = (featureName) => {
 const checkUserLimits = async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getOneQuery } = require('../database/init');
+    const { getOneQuery } = require('../utils/database');
     
     if (req.method === 'POST' && req.path.includes('/users')) {
       const userCount = await getOneQuery(

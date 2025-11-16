@@ -8,9 +8,7 @@ import {
   Campaign, BarChart, TrendingUp, People,
   PlayArrow, Pause, CheckCircle, Visibility
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function MarketingCampaigns() {
   const [tab, setTab] = useState(0);
@@ -26,8 +24,8 @@ export default function MarketingCampaigns() {
     try {
       setLoading(true);
       const [campaignsRes, analyticsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/field-marketing/campaigns`).catch(() => ({ data: { campaigns: [] } })),
-        axios.get(`${API_URL}/api/campaign-analytics/summary`).catch(() => ({ data: { analytics: {} } }))
+        apiClient.get('/field-marketing/campaigns').catch(() => ({ data: { campaigns: [] } })),
+        apiClient.get('/campaign-analytics/summary').catch(() => ({ data: { analytics: {} } }))
       ]);
       
       setCampaigns(campaignsRes.data.campaigns || []);

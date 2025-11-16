@@ -63,7 +63,7 @@ router.use(authTenantMiddleware);
  */
 router.get('/', async (req, res, next) => {
   try {
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
     
     const agents = await getQuery(
       `SELECT a.*, u.first_name, u.last_name, u.email, u.phone, u.status
@@ -119,7 +119,7 @@ router.get('/', async (req, res, next) => {
 router.post('/validate-location', async (req, res, next) => {
   try {
     const { agentLocation, customerId, radiusMeters = 10 } = req.body;
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
 
     // Get customer location
     const customer = await getQuery(
@@ -183,7 +183,7 @@ router.post('/validate-location', async (req, res, next) => {
 router.post('/nearby-customers', async (req, res, next) => {
   try {
     const { agentLocation, radiusMeters = 1000 } = req.body;
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
 
     // Get all customers with GPS coordinates
     const customers = await getQuery(
@@ -241,7 +241,7 @@ router.post('/nearby-customers', async (req, res, next) => {
 router.post('/start-visit', async (req, res, next) => {
   try {
     const { agentId, customerId, agentLocation, brands = [], visitType } = req.body;
-    const { getQuery, runQuery } = require('../database/init');
+    const { getQuery, runQuery } = require('../utils/database');
 
     // Get customer location
     const customer = await getQuery(
@@ -349,7 +349,7 @@ router.post('/start-visit', async (req, res, next) => {
 router.post('/complete-visit', async (req, res, next) => {
   try {
     const { visitId, activities = [], notes, photos = [] } = req.body;
-    const { runQuery, getQuery } = require('../database/init');
+    const { runQuery, getQuery } = require('../utils/database');
 
     // Update visit record
     await runQuery(
@@ -464,7 +464,7 @@ router.get('/:agentId/visits', async (req, res, next) => {
   try {
     const { agentId } = req.params;
     const { status, date_from, date_to } = req.query;
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
 
     let query = `
       SELECT v.*, c.name as customer_name, c.phone as customer_phone,

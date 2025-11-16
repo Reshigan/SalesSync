@@ -360,8 +360,28 @@ const navigation = [
         permission: PERMISSIONS.VIEW_USERS,
       },
       {
+        name: 'Role & Permissions',
+        href: '/admin/roles',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
         name: 'System Settings',
         href: '/admin/settings',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'System Health',
+        href: '/admin/system-health',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Backup Management',
+        href: '/admin/backup',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Integrations',
+        href: '/admin/integrations',
         permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
       },
       {
@@ -369,11 +389,60 @@ const navigation = [
         href: '/admin/audit',
         permission: PERMISSIONS.VIEW_AUDIT_LOGS,
       },
+      {
+        name: 'Data Import/Export',
+        href: '/admin/data-import-export',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Brand Management',
+        href: '/admin/brands',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Territory Management',
+        href: '/admin/territories',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Board Management',
+        href: '/admin/boards',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Campaign Management',
+        href: '/admin/campaigns',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Survey Builder',
+        href: '/admin/surveys',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Commission Rules',
+        href: '/admin/commissions',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'Product Types',
+        href: '/admin/product-types',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
+      {
+        name: 'POS Library',
+        href: '/admin/pos-library',
+        permission: PERMISSIONS.MANAGE_SYSTEM_SETTINGS,
+      },
     ],
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void
+}
+
+export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { user } = useAuthStore()
 
   const isNavItemVisible = (item: any) => {
@@ -408,6 +477,7 @@ export default function Sidebar() {
               <div key={item.name}>
                 <NavLink
                   to={item.href}
+                  onClick={onNavigate}
                   className={({ isActive }) =>
                     `nav-link ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
                   }
@@ -426,6 +496,7 @@ export default function Sidebar() {
                         <NavLink
                           key={child.name}
                           to={child.href}
+                          onClick={onNavigate}
                           className={({ isActive }) =>
                             `nav-link text-sm ${isActive ? 'nav-link-active' : 'nav-link-inactive'}`
                           }

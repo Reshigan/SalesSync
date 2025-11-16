@@ -8,9 +8,7 @@ import {
   People, TrendingUp, AttachMoney, Event,
   Phone, Email, LocationOn, Edit, Visibility
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function CRMDashboard() {
   const [tab, setTab] = useState(0);
@@ -28,10 +26,10 @@ export default function CRMDashboard() {
     try {
       setLoading(true);
       const [customersRes, leadsRes, oppRes, actRes] = await Promise.all([
-        axios.get(`${API_URL}/api/customers`).catch(() => ({ data: { customers: [] } })),
-        axios.get(`${API_URL}/api/customers?type=lead`).catch(() => ({ data: { customers: [] } })),
-        axios.get(`${API_URL}/api/customers?type=opportunity`).catch(() => ({ data: { customers: [] } })),
-        axios.get(`${API_URL}/api/visits`).catch(() => ({ data: { visits: [] } }))
+        apiClient.get('/customers').catch(() => ({ data: { customers: [] } })),
+        apiClient.get('/customers?type=lead').catch(() => ({ data: { customers: [] } })),
+        apiClient.get('/customers?type=opportunity').catch(() => ({ data: { customers: [] } })),
+        apiClient.get('/visits').catch(() => ({ data: { visits: [] } }))
       ]);
       
       setCustomers(customersRes.data.customers || []);

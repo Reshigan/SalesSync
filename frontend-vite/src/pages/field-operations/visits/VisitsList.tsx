@@ -18,9 +18,10 @@ export default function VisitsList() {
     setLoading(true)
     try {
       const response = await fieldOperationsService.getVisits()
-      setVisits(response.data || [])
+      setVisits(Array.isArray(response.data) ? response.data : [])
     } catch (error) {
       console.error('Failed to load visits:', error)
+      setVisits([])
     } finally {
       setLoading(false)
     }

@@ -70,7 +70,7 @@ const changePasswordSchema = Joi.object({
  */
 router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getQuery, getOneQuery } = require('../database/init');
+  const { getQuery, getOneQuery } = require('../utils/database');
   
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -78,23 +78,27 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
   const { role, status, search } = req.query;
   
   try {
-    let whereClause = 'WHERE tenant_id = ?';
+    let whereClause = 'WHERE tenant_id = $1';
     let params = [req.tenantId];
+    let paramIndex = 2;
     
     if (role) {
-      whereClause += ' AND role = ?';
+      whereClause += ` AND role = $${paramIndex}`;
       params.push(role);
+      paramIndex++;
     }
     
     if (status) {
-      whereClause += ' AND status = ?';
+      whereClause += ` AND status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     
     if (search) {
-      whereClause += ' AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)';
+      whereClause += ` AND (first_name LIKE $${paramIndex} OR last_name LIKE $${paramIndex+1} OR email LIKE $${paramIndex+2})`;
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
+      paramIndex += 3;
     }
     
     // Get users with pagination
@@ -104,7 +108,7 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
       FROM users 
       ${whereClause}
       ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT $${paramIndex} OFFSET $${paramIndex+1}
     `, [...params, limit, offset]);
     
     // Get total count
@@ -174,7 +178,7 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
  */
 router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { error, value } = createUserSchema.validate(req.body);
   if (error) {
@@ -237,7 +241,7 @@ router.post('/', requireFunction('users', 'create'), checkUserLimits, asyncHandl
  *         description: Unauthorized
  */
 router.get('/profile', asyncHandler(async (req, res) => {
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   // req.user and req.tenant are already set by authTenantMiddleware
   const userId = req.user.id;
@@ -288,7 +292,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
  */
 router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery } = require('../database/init');
+  const { getOneQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -357,7 +361,7 @@ router.get('/:id', requireFunction('users', 'view'), asyncHandler(async (req, re
  */
 router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = updateUserSchema.validate(req.body);
@@ -457,7 +461,7 @@ router.put('/:id', requireFunction('users', 'edit'), asyncHandler(async (req, re
  */
 router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   
@@ -527,7 +531,7 @@ router.delete('/:id', requireFunction('users', 'delete'), asyncHandler(async (re
  */
 router.post('/:id/change-password', asyncHandler(async (req, res, next) => {
   // Lazy-load database functions
-  const { getOneQuery, runQuery } = require('../database/init');
+  const { getOneQuery, runQuery } = require('../utils/database');
   
   const { id } = req.params;
   const { error, value } = changePasswordSchema.validate(req.body);

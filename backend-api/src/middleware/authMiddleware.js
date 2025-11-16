@@ -4,7 +4,7 @@ const { AppError } = require('./errorHandler');
 const authMiddleware = async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getOneQuery, getQuery } = require('../database/init');
+    const { getOneQuery, getQuery } = require('../utils/database');
     
     const token = req.headers.authorization?.replace('Bearer ', '');
     
@@ -17,7 +17,7 @@ const authMiddleware = async (req, res, next) => {
     
     // Get user from database using tenantId from JWT token
     const user = await getOneQuery(
-      'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
+      'SELECT * FROM users WHERE id = $1 AND tenant_id = $2 AND status = $3',
       [decoded.userId, decoded.tenantId, 'active']
     );
     
@@ -29,7 +29,6 @@ const authMiddleware = async (req, res, next) => {
     const permissions = await getQuery(`
       SELECT 
         m.code as module_code,
-        f.code as function_code,
         rp.can_view,
         rp.can_create,
         rp.can_edit,
@@ -38,17 +37,13 @@ const authMiddleware = async (req, res, next) => {
         rp.can_export
       FROM role_permissions rp
       JOIN modules m ON m.id = rp.module_id
-      JOIN functions f ON f.id = rp.function_id
-      WHERE rp.tenant_id = ? AND rp.role = ?
+      WHERE rp.tenant_id = $1 AND rp.role = $2
     `, [decoded.tenantId, user.role]);
     
     // Organize permissions by module
     const userPermissions = {};
     permissions.forEach(p => {
-      if (!userPermissions[p.module_code]) {
-        userPermissions[p.module_code] = {};
-      }
-      userPermissions[p.module_code][p.function_code] = {
+      userPermissions[p.module_code] = {
         view: p.can_view,
         create: p.can_create,
         edit: p.can_edit,
@@ -131,12 +126,13 @@ const requireFunction = (module, functionCode, action = 'view') => {
 // Optional auth middleware (for public endpoints that can benefit from user context)
 const optionalAuth = async (req, res, next) => {
   try {
+    const { getOneQuery } = require('../utils/database');
     const token = req.headers.authorization?.replace('Bearer ', '');
     
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await getOneQuery(
-        'SELECT * FROM users WHERE id = ? AND tenant_id = ? AND status = ?',
+        'SELECT * FROM users WHERE id = $1 AND tenant_id = $2 AND status = $3',
         [decoded.userId, req.tenantId, 'active']
       );
       

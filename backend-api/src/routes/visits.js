@@ -1,124 +1,7 @@
 const express = require('express');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
+const { selectOne, selectMany, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
 const router = express.Router();
-
-// Lazy load database functions to avoid circular dependencies
-const getDatabase = () => require('../utils/database').getDatabase();
-const { insertQuery, updateQuery, deleteQuery } = (() => {
-  try {
-    return require('../database/queries');
-  } catch (error) {
-    console.warn('Queries module not found, using fallback functions');
-    return {
-      getQuery: (table, conditions = {}, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `SELECT * FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          db.all(sql, params, (err, rows) => {
-            if (err) reject(err);
-            else resolve(rows);
-          });
-        });
-      },
-      getOneQuery: (table, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `SELECT * FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          sql += ' LIMIT 1';
-          
-          db.get(sql, params, (err, row) => {
-            if (err) reject(err);
-            else resolve(row);
-          });
-        });
-      },
-      insertQuery: (table, data) => {
-        return new Promise((resolve, reject) => {
-          const keys = Object.keys(data);
-          const values = Object.values(data);
-          const placeholders = keys.map(() => '$1').join(', ');
-          
-          const sql = `INSERT INTO ${table} (${keys.join(', ')}) VALUES (${placeholders})`;
-          
-          db.run(sql, values, function(err) {
-            if (err) reject(err);
-            else resolve({ id: this.lastID, changes: this.changes });
-          });
-        });
-      },
-      updateQuery: (table, data, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          const setClause = Object.keys(data).map(key => `${key} = $1`).join(', ');
-          const values = Object.values(data);
-          
-          let sql = `UPDATE ${table} SET ${setClause}`;
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            values.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            values.push(conditions[key]);
-          });
-          
-          db.run(sql, values, function(err) {
-            if (err) reject(err);
-            else resolve({ changes: this.changes });
-          });
-        });
-      },
-      deleteQuery: (table, conditions, tenantId) => {
-        return new Promise((resolve, reject) => {
-          let sql = `DELETE FROM ${table}`;
-          const params = [];
-          
-          if (tenantId) {
-            sql += ' WHERE tenant_id = $1';
-            params.push(tenantId);
-          }
-          
-          Object.keys(conditions).forEach((key, index) => {
-            sql += tenantId ? ' AND' : ' WHERE';
-            sql += ` ${key} = ?`;
-            params.push(conditions[key]);
-          });
-          
-          db.run(sql, params, function(err) {
-            if (err) reject(err);
-            else resolve({ changes: this.changes });
-          });
-        });
-      }
-    };
-  }
-})();
 
 // Get all visits
 router.get('/', async (req, res) => {
@@ -131,69 +14,66 @@ router.get('/', async (req, res) => {
              r.name as route_name, a.name as area_name
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      LEFT JOIN users ag ON v.agent_id = ag.id
-      LEFT JOIN users u ON ag.user_id = u.id
+      LEFT JOIN users u ON v.agent_id = u.id
       LEFT JOIN routes r ON c.route_id = r.id
       LEFT JOIN areas a ON r.area_id = a.id
       WHERE v.tenant_id = $1
     `;
     const params = [tenantId];
+    let paramIndex = 2;
     
     if (agent_id) {
-      sql += ' AND v.agent_id = ?';
+      sql += ` AND v.agent_id = $${paramIndex}`;
       params.push(agent_id);
+      paramIndex++;
     }
     if (customer_id) {
-      sql += ' AND v.customer_id = ?';
+      sql += ` AND v.customer_id = $${paramIndex}`;
       params.push(customer_id);
+      paramIndex++;
     }
     if (visit_type) {
-      sql += ' AND v.visit_type = ?';
+      sql += ` AND v.visit_type = $${paramIndex}`;
       params.push(visit_type);
+      paramIndex++;
     }
     if (status) {
-      sql += ' AND v.status = ?';
+      sql += ` AND v.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     if (date_from) {
-      sql += ' AND v.visit_date >= ?';
+      sql += ` AND v.visit_date >= $${paramIndex}`;
       params.push(date_from);
+      paramIndex++;
     }
     if (date_to) {
-      sql += ' AND v.visit_date <= ?';
+      sql += ` AND v.visit_date <= $${paramIndex}`;
       params.push(date_to);
+      paramIndex++;
     }
     
-    sql += ` ORDER BY v.visit_date DESC, v.check_in_time DESC LIMIT ? OFFSET ?`;
+    sql += ` ORDER BY v.visit_date DESC, v.check_in_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
     params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
-    const visits = await new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows.map(row => ({
-          ...row,
-          photos: row.photos ? JSON.parse(row.photos) : []
-        })));
-      });
-    });
+    const rows = await getQuery(sql, params);
+    const visits = rows.map(row => ({
+      ...row,
+      photos: row.photos ? JSON.parse(row.photos) : []
+    }));
     
     // Get summary stats
-    const stats = await new Promise((resolve, reject) => {
-      db.get(`
-        SELECT 
-          COUNT(*) as total_visits,
-          SUM(CASE WHEN visit_date::date = CURRENT_DATE THEN 1 ELSE 0 END) as today_visits,
-          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
-          AVG(CASE WHEN check_in_time IS NOT NULL AND check_out_time IS NOT NULL 
-              THEN (julianday(check_out_time) - julianday(check_in_time)) * 24 * 60 
-              ELSE NULL END) as avg_duration_minutes
-        FROM visits 
-        WHERE tenant_id = ? AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
-      `, [tenantId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const stats = await getOneQuery(`
+      SELECT 
+        COUNT(*) as total_visits,
+        SUM(CASE WHEN visit_date::date = CURRENT_DATE THEN 1 ELSE 0 END) as today_visits,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
+        AVG(CASE WHEN check_in_time IS NOT NULL AND check_out_time IS NOT NULL 
+            THEN EXTRACT(EPOCH FROM (check_out_time::timestamp - check_in_time::timestamp)) / 60
+            ELSE NULL END) as avg_duration_minutes
+      FROM visits 
+      WHERE tenant_id = $1 AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
+    `, [tenantId]);
     
     res.json({
       success: true,
@@ -235,7 +115,7 @@ router.post('/', async (req, res) => {
     }
     
     // Validate agent exists
-    const agent = await getOneQuery('agents', { id: agent_id }, tenantId);
+    const agent = await selectOne('users', { id: agent_id }, tenantId);
     if (!agent) {
       return res.status(400).json({ 
         success: false, 
@@ -244,7 +124,7 @@ router.post('/', async (req, res) => {
     }
     
     // Validate customer exists
-    const customer = await getOneQuery('customers', { id: customer_id }, tenantId);
+    const customer = await selectOne('customers', { id: customer_id }, tenantId);
     if (!customer) {
       return res.status(400).json({ 
         success: false, 
@@ -253,7 +133,6 @@ router.post('/', async (req, res) => {
     }
     
     const visitData = {
-      tenant_id: tenantId,
       agent_id,
       customer_id,
       visit_date,
@@ -264,10 +143,11 @@ router.post('/', async (req, res) => {
       status
     };
     
-    await insertQuery('visits', visitData);
+    const newVisit = await insertRow('visits', visitData, tenantId);
     
     res.status(201).json({
       success: true,
+      data: { visit: newVisit },
       message: 'Visit created successfully'
     });
   } catch (error) {
@@ -281,23 +161,17 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    const visit = await new Promise((resolve, reject) => {
-      db.get(`
-        SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address,
-               u.first_name || ' ' || u.last_name as agent_name,
-               r.name as route_name, a.name as area_name
-        FROM visits v
-        LEFT JOIN customers c ON v.customer_id = c.id
-        LEFT JOIN users ag ON v.agent_id = ag.id
-        LEFT JOIN users u ON ag.user_id = u.id
-        LEFT JOIN routes r ON c.route_id = r.id
-        LEFT JOIN areas a ON r.area_id = a.id
-        WHERE v.id = ? AND v.tenant_id = $2
-      `, [id, tenantId], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+    const visit = await getOneQuery(`
+      SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address,
+             u.first_name || ' ' || u.last_name as agent_name,
+             r.name as route_name, a.name as area_name
+      FROM visits v
+      LEFT JOIN customers c ON v.customer_id = c.id
+      LEFT JOIN users u ON v.agent_id = u.id
+      LEFT JOIN routes r ON c.route_id = r.id
+      LEFT JOIN areas a ON r.area_id = a.id
+      WHERE v.id = $1 AND v.tenant_id = $2
+    `, [id, tenantId]);
     
     if (!visit) {
       return res.status(404).json({ 
@@ -335,7 +209,7 @@ router.put('/:id', async (req, res) => {
       status
     } = req.body;
     
-    const existingVisit = await getOneQuery('visits', { id }, tenantId);
+    const existingVisit = await selectOne('visits', { id }, tenantId);
     if (!existingVisit) {
       return res.status(404).json({ 
         success: false, 
@@ -353,7 +227,7 @@ router.put('/:id', async (req, res) => {
     if (photos) updateData.photos = JSON.stringify(photos);
     if (status) updateData.status = status;
     
-    await updateQuery('visits', updateData, { id }, tenantId);
+    await updateRow('visits', updateData, { id }, tenantId);
     
     res.json({
       success: true,
@@ -371,7 +245,7 @@ router.delete('/:id', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
     
-    const existingVisit = await getOneQuery('visits', { id }, tenantId);
+    const existingVisit = await selectOne('visits', { id }, tenantId);
     if (!existingVisit) {
       return res.status(404).json({ 
         success: false, 
@@ -387,7 +261,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    await deleteQuery('visits', { id }, tenantId);
+    await deleteRow('visits', { id }, tenantId);
     
     res.json({
       success: true,
@@ -406,7 +280,7 @@ router.post('/:id/checkin', async (req, res) => {
     const { id } = req.params;
     const { latitude, longitude } = req.body;
     
-    const existingVisit = await getOneQuery('visits', { id }, tenantId);
+    const existingVisit = await selectOne('visits', { id }, tenantId);
     if (!existingVisit) {
       return res.status(404).json({ 
         success: false, 
@@ -429,7 +303,7 @@ router.post('/:id/checkin', async (req, res) => {
     if (latitude) updateData.latitude = parseFloat(latitude);
     if (longitude) updateData.longitude = parseFloat(longitude);
     
-    await updateQuery('visits', updateData, { id }, tenantId);
+    await updateRow('visits', updateData, { id }, tenantId);
     
     res.json({
       success: true,
@@ -448,7 +322,7 @@ router.post('/:id/checkout', async (req, res) => {
     const { id } = req.params;
     const { outcome, notes, photos } = req.body;
     
-    const existingVisit = await getOneQuery('visits', { id }, tenantId);
+    const existingVisit = await selectOne('visits', { id }, tenantId);
     if (!existingVisit) {
       return res.status(404).json({ 
         success: false, 
@@ -479,7 +353,7 @@ router.post('/:id/checkout', async (req, res) => {
     if (notes) updateData.notes = notes;
     if (photos) updateData.photos = JSON.stringify(photos);
     
-    await updateQuery('visits', updateData, { id }, tenantId);
+    await updateRow('visits', updateData, { id }, tenantId);
     
     res.json({
       success: true,
@@ -501,27 +375,25 @@ router.get('/agent/:agentId', async (req, res) => {
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE v.tenant_id = ? AND v.agent_id = $2
+      WHERE v.tenant_id = $1 AND v.agent_id = $2
     `;
     const params = [tenantId, agentId];
+    let paramIndex = 3;
     
     if (date) {
-      sql += ' AND v.visit_date::date = ?';
+      sql += ` AND v.visit_date::date = $${paramIndex}`;
       params.push(date);
+      paramIndex++;
     }
     if (status) {
-      sql += ' AND v.status = ?';
+      sql += ` AND v.status = $${paramIndex}`;
       params.push(status);
+      paramIndex++;
     }
     
     sql += ' ORDER BY v.visit_date DESC, v.check_in_time DESC';
     
-    const visits = await new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+    const visits = await getQuery(sql, params);
     
     res.json({
       success: true,
@@ -539,20 +411,14 @@ router.get('/customer/:customerId', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { customerId } = req.params;
     const { limit = 10 } = req.query;
-    const visits = await new Promise((resolve, reject) => {
-      db.all(`
-        SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
-        FROM visits v
-        LEFT JOIN users a ON v.agent_id = a.id
-        LEFT JOIN users u ON a.user_id = u.id
-        WHERE v.tenant_id = ? AND v.customer_id = $2
-        ORDER BY v.visit_date DESC
-        LIMIT ?
-      `, [tenantId, customerId, parseInt(limit)], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+    const visits = await getQuery(`
+      SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
+      FROM visits v
+      LEFT JOIN users u ON v.agent_id = u.id
+      WHERE v.tenant_id = $1 AND v.customer_id = $2
+      ORDER BY v.visit_date DESC
+      LIMIT $3
+    `, [tenantId, customerId, parseInt(limit)]);
     
     res.json({
       success: true,
@@ -572,93 +438,88 @@ router.get('/stats', async (req, res) => {
     
     let whereClause = 'WHERE v.tenant_id = $1';
     const params = [tenantId];
+    let paramIndex = 2;
     
     if (date_from) {
-      whereClause += ' AND v.visit_date::date >= $1';
+      whereClause += ` AND v.visit_date::date >= $${paramIndex}`;
       params.push(date_from);
+      paramIndex++;
     }
     if (date_to) {
-      whereClause += ' AND v.visit_date::date <= $1';
+      whereClause += ` AND v.visit_date::date <= $${paramIndex}`;
       params.push(date_to);
+      paramIndex++;
     }
     if (agent_id) {
-      whereClause += ' AND v.agent_id = $1';
+      whereClause += ` AND v.agent_id = $${paramIndex}`;
       params.push(agent_id);
+      paramIndex++;
     }
     
     const [overallStats, statusBreakdown, agentPerformance, dailyTrend] = await Promise.all([
       // Overall statistics
-      new Promise((resolve, reject) => {
-        db.get(`
-          SELECT 
-            COUNT(*) as total_visits,
-            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
-            COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END) as scheduled_visits,
-            COUNT(CASE WHEN v.status = 'cancelled' THEN 1 END) as cancelled_visits,
-            COUNT(CASE WHEN v.check_in_time IS NOT NULL THEN 1 END) as checked_in_visits,
-            AVG(CASE 
-              WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
-              THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
-            END) as avg_visit_duration_minutes,
-            COUNT(DISTINCT v.customer_id) as unique_customers,
-            COUNT(DISTINCT v.agent_id) as active_agents
-          FROM visits v
-          ${whereClause}
-        `, params, (err, row) => err ? reject(err) : resolve(row || {}));
-      }),
+      getOneQuery(`
+        SELECT 
+          COUNT(*) as total_visits,
+          COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+          COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END) as scheduled_visits,
+          COUNT(CASE WHEN v.status = 'cancelled' THEN 1 END) as cancelled_visits,
+          COUNT(CASE WHEN v.check_in_time IS NOT NULL THEN 1 END) as checked_in_visits,
+          AVG(CASE 
+            WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
+            THEN EXTRACT(EPOCH FROM (v.check_out_time::timestamp - v.check_in_time::timestamp)) / 60
+          END) as avg_visit_duration_minutes,
+          COUNT(DISTINCT v.customer_id) as unique_customers,
+          COUNT(DISTINCT v.agent_id) as active_agents
+        FROM visits v
+        ${whereClause}
+      `, params).then(row => row || {}),
       
       // Status breakdown
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            v.status,
-            COUNT(*) as count,
-            COUNT(DISTINCT v.agent_id) as agent_count
-          FROM visits v
-          ${whereClause}
-          GROUP BY v.status
-          ORDER BY count DESC
-        `, params, (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
+      getQuery(`
+        SELECT 
+          v.status,
+          COUNT(*) as count,
+          COUNT(DISTINCT v.agent_id) as agent_count
+        FROM visits v
+        ${whereClause}
+        GROUP BY v.status
+        ORDER BY count DESC
+      `, params).then(rows => rows || []),
       
       // Agent performance
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            v.agent_id,
-            u.first_name || ' ' || u.last_name as agent_name,
-            COUNT(*) as total_visits,
-            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
-            AVG(CASE 
-              WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
-              THEN (julianday(v.check_out_time) - julianday(v.check_in_time)) * 24 * 60 
-            END) as avg_duration_minutes,
-            COUNT(DISTINCT v.customer_id) as unique_customers
-          FROM visits v
-          LEFT JOIN users a ON v.agent_id = a.id
-          LEFT JOIN users u ON a.user_id = u.id
-          ${whereClause}
-          GROUP BY v.agent_id, agent_name
-          ORDER BY completed_visits DESC
-          LIMIT 10
-        `, params, (err, rows) => err ? reject(err) : resolve(rows || []));
-      }),
+      getQuery(`
+        SELECT 
+          v.agent_id,
+          u.first_name || ' ' || u.last_name as agent_name,
+          COUNT(*) as total_visits,
+          COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+          AVG(CASE 
+            WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
+            THEN EXTRACT(EPOCH FROM (v.check_out_time::timestamp - v.check_in_time::timestamp)) / 60
+          END) as avg_duration_minutes,
+          COUNT(DISTINCT v.customer_id) as unique_customers
+        FROM visits v
+        LEFT JOIN users u ON v.agent_id = u.id
+        ${whereClause}
+        GROUP BY v.agent_id, u.first_name, u.last_name
+        ORDER BY completed_visits DESC
+        LIMIT 10
+      `, params).then(rows => rows || []),
       
       // Daily trend (last 30 days)
-      new Promise((resolve, reject) => {
-        db.all(`
-          SELECT 
-            v.visit_date::date as date,
-            COUNT(*) as total_visits,
-            COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
-            COUNT(DISTINCT v.agent_id) as active_agents
-          FROM visits v
-          WHERE v.tenant_id = $1
-          AND v.visit_date::date >= CURRENT_DATE - INTERVAL '30 days'
-          GROUP BY v.visit_date::date
-          ORDER BY date DESC
-        `, [tenantId], (err, rows) => err ? reject(err) : resolve(rows || []));
-      })
+      getQuery(`
+        SELECT 
+          v.visit_date::date as date,
+          COUNT(*) as total_visits,
+          COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+          COUNT(DISTINCT v.agent_id) as active_agents
+        FROM visits v
+        WHERE v.tenant_id = $1
+        AND v.visit_date::date >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY v.visit_date::date
+        ORDER BY date DESC
+      `, [tenantId]).then(rows => rows || [])
     ]);
     
     res.json({

@@ -8,9 +8,7 @@ import {
   ShoppingCart, Inventory2, Assessment, Store,
   CheckCircle, Warning, Visibility
 } from '@mui/icons-material';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:12001';
+import { apiClient } from '../../services/api.service';
 
 export default function MerchandisingDashboard() {
   const [tab, setTab] = useState(0);
@@ -27,8 +25,8 @@ export default function MerchandisingDashboard() {
     try {
       setLoading(true);
       const [planoRes, stockRes] = await Promise.all([
-        axios.get(`${API_URL}/api/merchandising/planograms`).catch(() => ({ data: { planograms: [] } })),
-        axios.get(`${API_URL}/api/stock-counts`).catch(() => ({ data: { counts: [] } }))
+        apiClient.get('/merchandising/planograms').catch(() => ({ data: { planograms: [] } })),
+        apiClient.get('/stock-counts').catch(() => ({ data: { counts: [] } }))
       ]);
       
       setPlanograms(planoRes.data.planograms || []);

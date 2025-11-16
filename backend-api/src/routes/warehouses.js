@@ -79,10 +79,10 @@ const { v4: uuidv4 } = require('uuid');
 router.get('/', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getQuery } = require('../database/init');
+    const { getQuery } = require('../utils/database');
     
     const warehouses = await getQuery(
-      'SELECT * FROM warehouses WHERE tenant_id = ? ORDER BY name',
+      'SELECT * FROM warehouses WHERE tenant_id = $1 ORDER BY name',
       [req.tenantId]
     );
     
@@ -122,10 +122,10 @@ router.get('/', async (req, res, next) => {
 router.get('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { getOneQuery } = require('../database/init');
+    const { getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
       [req.params.id, req.tenantId]
     );
     
@@ -162,7 +162,7 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery } = require('../database/init');
+    const { runQuery } = require('../utils/database');
     
     const {
       name,
@@ -188,7 +188,7 @@ router.post('/', async (req, res, next) => {
       `INSERT INTO warehouses (
         id, tenant_id, name, code, address, city, state, postal_code, country,
         capacity, current_stock, manager_id, phone, email, status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         warehouseId,
         req.tenantId,
@@ -246,10 +246,10 @@ router.post('/', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery, getOneQuery } = require('../database/init');
+    const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
       [req.params.id, req.tenantId]
     );
     
@@ -274,9 +274,9 @@ router.put('/:id', async (req, res, next) => {
     
     await runQuery(
       `UPDATE warehouses SET 
-        name = ?, code = ?, address = ?, city = ?, state = ?, postal_code = ?, country = ?,
-        capacity = ?, manager_id = ?, phone = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ? AND tenant_id = ?`,
+        name = $1, code = $2, address = $3, city = $4, state = $5, postal_code = $6, country = $7,
+        capacity = $8, manager_id = $9, phone = $10, email = $11, status = $12, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $13 AND tenant_id = $14`,
       [
         name || warehouse.name,
         code || warehouse.code,
@@ -324,10 +324,10 @@ router.put('/:id', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     // Lazy-load database functions
-    const { runQuery, getOneQuery } = require('../database/init');
+    const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
+      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
       [req.params.id, req.tenantId]
     );
     
@@ -336,7 +336,7 @@ router.delete('/:id', async (req, res, next) => {
     }
     
     await runQuery(
-      'DELETE FROM warehouses WHERE id = ? AND tenant_id = ?',
+      'DELETE FROM warehouses WHERE id = $1 AND tenant_id = $2',
       [req.params.id, req.tenantId]
     );
     

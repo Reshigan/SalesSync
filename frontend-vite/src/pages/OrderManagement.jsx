@@ -38,7 +38,7 @@ import {
   Pending
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
-import axios from 'axios';
+import { apiClient } from '../services/api.service';
 
 /**
  * Order Management - Complete Order Lifecycle Management
@@ -77,10 +77,7 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/orders');
       setOrders(response.data);
       calculateStats(response.data);
     } catch (error) {
@@ -160,13 +157,12 @@ const OrderManagement = () => {
   // Handle order action
   const handleOrderAction = async (action, order) => {
     try {
-      const token = localStorage.getItem('token');
       let endpoint = '';
       let payload = {};
 
       switch (action) {
         case 'confirm':
-          endpoint = `/api/orders/${order.id}/status-transition`;
+          endpoint = `/orders/${order.id}/status-transition`;
           payload = {
             from_status: order.status,
             to_status: 'confirmed',
@@ -174,7 +170,7 @@ const OrderManagement = () => {
           };
           break;
         case 'process':
-          endpoint = `/api/orders/${order.id}/status-transition`;
+          endpoint = `/orders/${order.id}/status-transition`;
           payload = {
             from_status: order.status,
             to_status: 'processing',
@@ -182,7 +178,7 @@ const OrderManagement = () => {
           };
           break;
         case 'ship':
-          endpoint = `/api/orders/${order.id}/status-transition`;
+          endpoint = `/orders/${order.id}/status-transition`;
           payload = {
             from_status: order.status,
             to_status: 'shipped',
@@ -190,7 +186,7 @@ const OrderManagement = () => {
           };
           break;
         case 'complete':
-          endpoint = `/api/orders/${order.id}/status-transition`;
+          endpoint = `/orders/${order.id}/status-transition`;
           payload = {
             from_status: order.status,
             to_status: 'completed',
@@ -198,7 +194,7 @@ const OrderManagement = () => {
           };
           break;
         case 'cancel':
-          endpoint = `/api/orders/${order.id}/status-transition`;
+          endpoint = `/orders/${order.id}/status-transition`;
           payload = {
             from_status: order.status,
             to_status: 'cancelled',
@@ -210,9 +206,7 @@ const OrderManagement = () => {
           return;
       }
 
-      await axios.post(`${import.meta.env.VITE_API_URL}${endpoint}`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await apiClient.post(endpoint, payload);
 
       showSnackbar(`Order ${action}ed successfully`, 'success');
       fetchOrders();
@@ -618,11 +612,7 @@ const FinancialSummaryView = ({ orderId }) => {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/financial-summary`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await apiClient.get(`/orders/${orderId}/financial-summary`);
         setSummary(response.data);
       } catch (error) {
         console.error('Error fetching financial summary:', error);
@@ -701,11 +691,7 @@ const OrderHistoryView = ({ orderId }) => {
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/history`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await apiClient.get(`/orders/${orderId}/history`);
         setHistory(response.data);
       } catch (error) {
         console.error('Error fetching history:', error);
@@ -744,12 +730,7 @@ const AddNoteForm = ({ orderId, onClose }) => {
 
   const handleSubmit = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/orders/${orderId}/notes`,
-        { note, visibility },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await apiClient.post(`/orders/${orderId}/notes`, { note, visibility });
       onClose();
     } catch (error) {
       console.error('Error adding note:', error);

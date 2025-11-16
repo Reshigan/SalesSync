@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getQuery, getOneQuery, runQuery } = require('../database/init');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get AI dashboard overview

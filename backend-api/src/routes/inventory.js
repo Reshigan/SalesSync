@@ -22,7 +22,7 @@ router.get('/', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.tenant_id = ?
+    WHERE i.tenant_id = $1
     ORDER BY p.name
   `, [tenantId]);
 
@@ -51,7 +51,7 @@ router.get('/product/:productId', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.product_id = ? AND i.tenant_id = ?
+    WHERE i.product_id = $1 AND i.tenant_id = $2
   `, [productId, tenantId]);
 
   res.json({
@@ -68,8 +68,8 @@ router.put('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     UPDATE inventory_stock 
-    SET quantity_on_hand = ?, quantity_reserved = ?, cost_price = ?, last_updated = ?
-    WHERE id = ? AND tenant_id = ?
+    SET quantity_on_hand = $1, quantity_reserved = $2, cost_price = $3, updated_at = $4
+    WHERE id = $5 AND tenant_id = $6
   `, [quantity_on_hand, quantity_reserved || 0, cost_price, new Date().toISOString(), id, tenantId]);
 
   if (result.changes === 0) {
@@ -100,8 +100,8 @@ router.post('/', asyncHandler(async (req, res) => {
   const result = await runQuery(
     `INSERT INTO inventory_stock (
       id, tenant_id, product_id, warehouse_id, quantity_on_hand,
-      quantity_reserved, cost_price, last_updated, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      quantity_reserved, cost_price, updated_at, created_at
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
       inventoryId,
       req.user.tenantId,
@@ -144,7 +144,7 @@ router.get('/low-stock', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.tenant_id = ? AND i.quantity_on_hand <= ?
+    WHERE i.tenant_id = $1 AND i.quantity_on_hand <= $2
     ORDER BY i.quantity_on_hand ASC
   `, [tenantId, parseInt(threshold)]);
 
@@ -176,17 +176,17 @@ router.get('/stats', asyncHandler(async (req, res) => {
         SUM(i.quantity_on_hand * i.cost_price) as total_inventory_value,
         COUNT(DISTINCT i.warehouse_id) as warehouse_count
       FROM inventory_stock i
-      WHERE i.tenant_id = ?
+      WHERE i.tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
       SELECT 
         COUNT(CASE WHEN i.quantity_on_hand = 0 THEN 1 END) as out_of_stock,
-        COUNT(CASE WHEN i.quantity_on_hand > 0 AND i.quantity_on_hand <= p.reorder_level THEN 1 END) as low_stock,
-        COUNT(CASE WHEN i.quantity_on_hand > p.reorder_level THEN 1 END) as in_stock
+        COUNT(CASE WHEN i.quantity_on_hand > 0 AND i.quantity_on_hand <= 10 THEN 1 END) as low_stock,
+        COUNT(CASE WHEN i.quantity_on_hand > 10 THEN 1 END) as in_stock
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
-      WHERE i.tenant_id = ?
+      WHERE i.tenant_id = $1
     `, [tenantId]),
     
     getQuery(`
@@ -196,22 +196,22 @@ router.get('/stats', asyncHandler(async (req, res) => {
         SUM(i.quantity_on_hand * i.cost_price) as inventory_value
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
-      WHERE i.tenant_id = ?
-      GROUP BY p.id
+      WHERE i.tenant_id = $1
+      GROUP BY p.id, p.name, p.code
       ORDER BY inventory_value DESC
       LIMIT 10
     `, [tenantId]),
     
     getQuery(`
       SELECT 
-        w.id, w.name, w.location,
+        w.id, w.name, w.address as location,
         COUNT(DISTINCT i.product_id) as product_count,
         SUM(i.quantity_on_hand) as total_quantity,
         SUM(i.quantity_on_hand * i.cost_price) as inventory_value
       FROM inventory_stock i
       JOIN warehouses w ON i.warehouse_id = w.id
-      WHERE i.tenant_id = ?
-      GROUP BY w.id
+      WHERE i.tenant_id = $1
+      GROUP BY w.id, w.name, w.address
       ORDER BY inventory_value DESC
     `, [tenantId])
   ]);

@@ -307,6 +307,7 @@ async function startServer() {
     const fieldAgentRoutes = require('./routes/fieldAgents');
     const kycRoutes = require('./routes/kyc');
     const surveyRoutes = require('./routes/surveys');
+    const visitSurveysRoutes = require('./routes/visit-surveys');
     const analyticsRoutes = require('./routes/analytics');
     const financeRoutes = require('./routes/finance');
     const areaRoutes = require('./routes/areas');
@@ -358,11 +359,14 @@ async function startServer() {
     // Field Marketing System routes
     const boardsRoutes = require('./routes/boards');
     const boardInstallationsRoutes = require('./routes/board-installations');
+    const boardPlacementsRoutes = require('./routes/board-placements');
     const productDistributionsRoutes = require('./routes/product-distributions');
+    const commissionLedgersRoutes = require('./routes/commission-ledgers');
     const gpsLocationRoutes = require('./routes/gps-location');
     const fieldAgentWorkflowRoutes = require('./routes/field-agent-workflow');
     const commissionsFieldRoutes = require('./routes/commissions');
     const tradeMarketingRoutes = require('./routes/trade-marketing');
+    const filesRoutes = require('./routes/files');
     
     // NEW Field Marketing & Trade Marketing routes
     const fieldMarketingRoutes = require('./routes/fieldMarketing');
@@ -421,6 +425,7 @@ async function startServer() {
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
+    app.use('/api/visit-surveys', authTenantMiddleware, visitSurveysRoutes);
     app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
     
     // Finance routes - special handling for debugging
@@ -509,15 +514,15 @@ async function startServer() {
     app.use('/api/field-operations/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/field-operations/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/field-operations/trends', authTenantMiddleware, trendsRoutes);
-    app.use('/api/field-operations/agents', authTenantMiddleware, agentsRoutes);
-    app.use('/api/field-operations/visits', authTenantMiddleware, visitsRoutes);
+    app.use('/api/field-operations/agents', authTenantMiddleware, agentRoutes);
+    app.use('/api/field-operations/visits', authTenantMiddleware, visitRoutes);
     app.use('/api/field-operations/performance', authTenantMiddleware, performanceRoutes);
     
     app.use('/api/van-sales/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/van-sales/analytics', authTenantMiddleware, analyticsRoutes);
     app.use('/api/van-sales/trends', authTenantMiddleware, trendsRoutes);
-    app.use('/api/van-sales/routes', authTenantMiddleware, routesRoutes);
-    app.use('/api/van-sales/orders', authTenantMiddleware, ordersRoutes);
+    app.use('/api/van-sales/routes', authTenantMiddleware, routeRoutes);
+    app.use('/api/van-sales/orders', authTenantMiddleware, orderRoutes);
     
     app.use('/api/trade-marketing/stats', authTenantMiddleware, statsRoutes);
     app.use('/api/trade-marketing/analytics', authTenantMiddleware, analyticsRoutes);
@@ -526,10 +531,22 @@ async function startServer() {
     // Field Marketing System routes
     app.use('/api/boards', authTenantMiddleware, boardsRoutes);
     app.use('/api/board-installations', authTenantMiddleware, boardInstallationsRoutes);
+    app.use('/api/board-placements', authTenantMiddleware, boardPlacementsRoutes);
     app.use('/api/product-distributions', authTenantMiddleware, productDistributionsRoutes);
+    app.use('/api/commission-ledgers', authTenantMiddleware, commissionLedgersRoutes);
     app.use('/api/gps-location', authTenantMiddleware, gpsLocationRoutes);
     app.use('/api/field-agent-workflow', authTenantMiddleware, fieldAgentWorkflowRoutes);
     app.use('/api/field-commissions', authTenantMiddleware, commissionsFieldRoutes);
+    app.use('/api/files', authTenantMiddleware, filesRoutes);
+    
+    app.use('/api/analytics/overview', authTenantMiddleware, require('./routes/analytics/overview'));
+    app.use('/api/analytics/orders', authTenantMiddleware, require('./routes/analytics/orders'));
+    app.use('/api/analytics/customers', authTenantMiddleware, require('./routes/analytics/customers'));
+    app.use('/api/analytics/field-ops', authTenantMiddleware, require('./routes/analytics/field-ops'));
+    app.use('/api/analytics/commissions', authTenantMiddleware, require('./routes/analytics/commissions'));
+    app.use('/api/analytics/visits', authTenantMiddleware, require('./routes/analytics/visits'));
+    app.use('/api/analytics/inventory', authTenantMiddleware, require('./routes/analytics/inventory'));
+    app.use('/api/analytics/agents', authTenantMiddleware, require('./routes/analytics/agents'));
 
     // Monitoring routes
     const monitoringRoutes = require('./routes/monitoring');

@@ -63,7 +63,7 @@ export const getDefaultCurrency = (): Currency => {
 }
 
 export const formatCurrency = (
-  amount: number,
+  amount: number | string | null | undefined,
   currencyOrOptions?: Currency | {
     showSymbol?: boolean
     showCode?: boolean
@@ -75,6 +75,18 @@ export const formatCurrency = (
     compact?: boolean
   }
 ): string => {
+  // Handle null/undefined amounts and convert strings to numbers
+  let numAmount: number
+  if (amount === null || amount === undefined) {
+    numAmount = 0
+  } else if (typeof amount === 'string') {
+    numAmount = parseFloat(amount) || 0
+  } else if (isNaN(amount)) {
+    numAmount = 0
+  } else {
+    numAmount = amount
+  }
+
   let curr: Currency
   let opts: { showSymbol?: boolean; showCode?: boolean; compact?: boolean }
 
@@ -96,18 +108,18 @@ export const formatCurrency = (
   const config = CURRENCIES[curr]
   const { showSymbol = true, showCode = false, compact = false } = opts
 
-  if (compact && Math.abs(amount) >= 1000000) {
-    const millions = amount / 1000000
+  if (compact && Math.abs(numAmount) >= 1000000) {
+    const millions = numAmount / 1000000
     return `${showSymbol ? config.symbol : ''}${millions.toFixed(1)}M${showCode ? ` ${config.code}` : ''}`
   }
 
-  if (compact && Math.abs(amount) >= 1000) {
-    const thousands = amount / 1000
+  if (compact && Math.abs(numAmount) >= 1000) {
+    const thousands = numAmount / 1000
     return `${showSymbol ? config.symbol : ''}${thousands.toFixed(1)}K${showCode ? ` ${config.code}` : ''}`
   }
 
   // Format number with thousand separators and decimals
-  const formattedNumber = amount.toFixed(config.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const formattedNumber = numAmount.toFixed(config.decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   
   let result = formattedNumber
   

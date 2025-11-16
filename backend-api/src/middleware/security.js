@@ -131,10 +131,14 @@ const preventSQLInjection = (req, res, next) => {
   const checkForSQLInjection = (value) => {
     if (typeof value !== 'string') return false;
     
+    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('data:')) {
+      return false;
+    }
+    
     const sqlPatterns = [
       /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/gi,
       /(\b(OR|AND)\s+\d+\s*=\s*\d+)/gi,
-      /(--|\/\*|\*\/|;)/g,
+      /(--|\/\*|\*\/)/g, // Removed semicolon from this pattern
       /(\b(CHAR|NCHAR|VARCHAR|NVARCHAR)\s*\()/gi,
       /(\b(CAST|CONVERT|SUBSTRING|ASCII|CHAR_LENGTH)\s*\()/gi
     ];

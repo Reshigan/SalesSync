@@ -17,12 +17,39 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
+function getValidToken(): string | undefined {
+  // Try to get token from Zustand store first
+  const fromStore = getAuthToken()
+  if (typeof fromStore === 'string' && fromStore && fromStore !== 'null' && fromStore !== 'undefined') {
+    return fromStore
+  }
+  
+  if (typeof window !== 'undefined') {
+    try {
+      const persisted = localStorage.getItem('salessync-auth')
+      if (persisted) {
+        const parsed = JSON.parse(persisted)
+        const token = parsed?.state?.tokens?.access_token
+        if (typeof token === 'string' && token && token !== 'null' && token !== 'undefined') {
+          return token
+        }
+      }
+    } catch (error) {
+      console.error('Failed to read token from localStorage:', error)
+    }
+  }
+  
+  return undefined
+}
+
 // Request interceptor to add auth token and tenant header
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getAuthToken()
+    const token = getValidToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    } else {
+      delete config.headers.Authorization
     }
     // Add dynamic tenant header for multi-tenant support
     const tenantCode = tenantService.getTenantCode()
