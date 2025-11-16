@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tantml:react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, User, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
 

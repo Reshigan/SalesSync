@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tantml:react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, MapPin, User, Clock, FileText } from 'lucide-react'
 
 export default function MovementDetail() {
