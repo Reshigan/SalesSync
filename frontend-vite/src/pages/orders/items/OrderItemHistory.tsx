@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function OrderItemHistory() {
   const { orderId, itemId } = useParams<{ orderId: string; itemId: string }>()
@@ -8,10 +9,7 @@ export default function OrderItemHistory() {
 
   const { data: item } = useQuery({
     queryKey: ['order-item', orderId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      product_name: 'Coca-Cola 500ml',
-    }),
+    queryFn: async () => ordersService.getOrderItem(orderId!, itemId!),
   })
 
   const { data: history = [], isLoading } = useQuery({
