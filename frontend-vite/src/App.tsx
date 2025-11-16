@@ -77,6 +77,8 @@ import KYCReports from './pages/kyc/KYCReports'
 // Surveys Pages
 import SurveysDashboard from './pages/surveys/SurveysDashboard'
 import SurveysManagement from './pages/surveys/SurveysManagement'
+import SurveyCreate from './pages/surveys/SurveyCreate'
+import SurveyEdit from './pages/surveys/SurveyEdit'
 
 // Inventory Pages
 import InventoryDashboard from './pages/inventory/InventoryDashboard'

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Box, Typography, Paper, Grid, Checkbox, FormControlLabel, Button, Chip, Alert } from '@mui/material';
 import visitSurveysService, { Survey, SurveyAssignment } from '../../services/visitSurveys.service';
 import individualsService, { Individual } from '../../services/individuals.service';
+import apiClient from '../../services/api';
 
 interface SurveyAssignmentStepProps {
   customerId: string;
@@ -37,9 +38,17 @@ export default function SurveyAssignmentStep({
       setLoading(true);
       setError(null);
 
+      let customerBrandId = null;
+      try {
+        const customerRes = await apiClient.get(`/customers/${customerId}`);
+        customerBrandId = customerRes.data?.data?.brand_id;
+      } catch (err) {
+        console.warn('Could not fetch customer brand:', err);
+      }
+
       const [businessRes, individualRes, individualsRes] = await Promise.all([
-        visitSurveysService.getAvailableSurveys('business'),
-        visitSurveysService.getAvailableSurveys('individual'),
+        visitSurveysService.getAvailableSurveys('business', customerBrandId),
+        visitSurveysService.getAvailableSurveys('individual', customerBrandId),
         individualsService.getAll({ limit: 100 })
       ]);
 

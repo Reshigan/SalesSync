@@ -52,8 +52,10 @@ export interface SurveyAnswer {
 }
 
 const visitSurveysService = {
-  getAvailableSurveys: async (targetType?: 'business' | 'individual' | 'both') => {
-    const params = targetType ? { target_type: targetType } : {};
+  getAvailableSurveys: async (targetType?: 'business' | 'individual' | 'both', brandId?: string | null) => {
+    const params: any = {};
+    if (targetType) params.target_type = targetType;
+    if (brandId) params.brand_id = brandId;
     const response = await apiClient.get('/visit-surveys/available', { params });
     return response.data;
   },
