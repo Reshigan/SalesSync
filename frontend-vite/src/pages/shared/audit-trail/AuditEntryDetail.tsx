@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, User, Clock, Monitor, MapPin } from 'lucide-react'
+import { auditService } from '../../../services/audit.service'
 
 export default function AuditEntryDetail() {
   const { entityType, entityId, entryId } = useParams<{ entityType: string; entityId: string; entryId: string }>()
@@ -8,37 +9,7 @@ export default function AuditEntryDetail() {
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ['audit-entry', entityType, entityId, entryId],
-    queryFn: async () => ({
-      id: entryId,
-      action: 'update',
-      entity_type: entityType,
-      entity_id: entityId,
-      entity_name: `${entityType.toUpperCase()}-001`,
-      field_changed: 'status',
-      old_value: 'pending',
-      new_value: 'approved',
-      changed_by: 'John Doe',
-      changed_by_id: 'user-1',
-      changed_by_email: 'john.doe@company.com',
-      changed_by_role: 'Manager',
-      changed_at: '2024-01-20T14:30:00Z',
-      ip_address: '192.168.1.100',
-      user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
-      location: {
-        latitude: -1.2921,
-        longitude: 36.8219,
-        city: 'Nairobi',
-        country: 'Kenya',
-      },
-      session_id: 'sess-abc123',
-      request_id: 'req-xyz789',
-      notes: 'Approved after review of supporting documents',
-      metadata: {
-        approval_level: 'manager',
-        approval_reason: 'All requirements met',
-        supporting_docs: ['doc-1', 'doc-2'],
-      },
-    }),
+    queryFn: async () => auditService.getAuditEntry(entityType!, entityId!, entryId!),
   })
 
   if (isLoading) {

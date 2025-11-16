@@ -1,6 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, FileText, User, Clock, Filter } from 'lucide-react'
+import { auditService } from '../../../services/audit.service'
 
 interface AuditTrailProps {
   entityType: string
@@ -19,62 +20,13 @@ export default function AuditTrail() {
     queryKey: [entityType, entityId],
     queryFn: async () => ({
       id: entityId,
-      name: `${entityType.toUpperCase()}-001`,
+      name: `${entityType?.toUpperCase()}-001`,
     }),
   })
 
   const { data: auditLog, isLoading } = useQuery({
     queryKey: ['audit-trail', entityType, entityId, actionFilter, userFilter],
-    queryFn: async () => [
-      {
-        id: '1',
-        action: 'update',
-        entity_type: entityType,
-        entity_id: entityId,
-        field_changed: 'status',
-        old_value: 'pending',
-        new_value: 'approved',
-        changed_by: 'John Doe',
-        changed_by_id: 'user-1',
-        changed_by_role: 'Manager',
-        changed_at: '2024-01-20T14:30:00Z',
-        ip_address: '192.168.1.100',
-        user_agent: 'Chrome 120.0',
-        notes: 'Approved after review',
-      },
-      {
-        id: '2',
-        action: 'update',
-        entity_type: entityType,
-        entity_id: entityId,
-        field_changed: 'amount',
-        old_value: '1000',
-        new_value: '1500',
-        changed_by: 'Jane Smith',
-        changed_by_id: 'user-2',
-        changed_by_role: 'Sales Agent',
-        changed_at: '2024-01-20T10:15:00Z',
-        ip_address: '192.168.1.101',
-        user_agent: 'Mobile App v2.1',
-        notes: 'Customer requested price adjustment',
-      },
-      {
-        id: '3',
-        action: 'create',
-        entity_type: entityType,
-        entity_id: entityId,
-        field_changed: null,
-        old_value: null,
-        new_value: null,
-        changed_by: 'System',
-        changed_by_id: 'system',
-        changed_by_role: 'Automated',
-        changed_at: '2024-01-15T10:00:00Z',
-        ip_address: '10.0.0.1',
-        user_agent: 'Backend Service',
-        notes: 'Record created',
-      },
-    ],
+    queryFn: async () => auditService.getAuditTrail(entityType!, entityId!),
   })
 
   if (isLoading) {
