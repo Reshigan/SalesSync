@@ -8,7 +8,10 @@ export default function BoardComplianceChecks() {
 
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
@@ -17,7 +20,10 @@ export default function BoardComplianceChecks() {
 
   const { data: checks, isLoading } = useQuery({
     queryKey: ['board-compliance-checks', boardId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         check_type: 'brand_guidelines',

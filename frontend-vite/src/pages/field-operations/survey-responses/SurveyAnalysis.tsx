@@ -8,7 +8,10 @@ export default function SurveyAnalysis() {
 
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['survey-analysis', surveyId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       survey_id: surveyId,
       survey_title: 'Customer Satisfaction Survey',
       total_responses: 10,

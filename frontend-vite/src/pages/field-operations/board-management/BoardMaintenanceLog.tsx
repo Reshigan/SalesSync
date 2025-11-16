@@ -8,7 +8,10 @@ export default function BoardMaintenanceLog() {
 
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
@@ -17,7 +20,10 @@ export default function BoardMaintenanceLog() {
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ['board-maintenance-log', boardId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         maintenance_type: 'cleaning',

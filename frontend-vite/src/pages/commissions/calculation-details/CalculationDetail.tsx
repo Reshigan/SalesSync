@@ -9,7 +9,10 @@ export default function CalculationDetail() {
 
   const { data: calculation, isLoading } = useQuery({
     queryKey: ['commission-calculation', calculationId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: calculationId,
       agent_id: 'agent-1',
       agent_name: 'John Sales Agent',

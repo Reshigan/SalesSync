@@ -9,7 +9,10 @@ export default function ExceptionDetail() {
 
   const { data: exception, isLoading } = useQuery({
     queryKey: ['commission-exception', calculationId, exceptionId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: exceptionId,
       calculation_id: calculationId,
       exception_type: 'negative_commission',

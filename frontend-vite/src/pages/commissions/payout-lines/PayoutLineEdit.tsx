@@ -17,7 +17,10 @@ export default function PayoutLineEdit() {
 
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lineId,
       payout_id: payoutId,
       payment_method: 'bank_transfer',

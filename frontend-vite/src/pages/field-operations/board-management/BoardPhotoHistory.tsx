@@ -8,7 +8,10 @@ export default function BoardPhotoHistory() {
 
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
@@ -17,7 +20,10 @@ export default function BoardPhotoHistory() {
 
   const { data: photos, isLoading } = useQuery({
     queryKey: ['board-photo-history', boardId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',

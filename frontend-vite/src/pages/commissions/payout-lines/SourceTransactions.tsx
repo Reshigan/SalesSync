@@ -9,7 +9,10 @@ export default function SourceTransactions() {
 
   const { data: line } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lineId,
       agent_name: 'John Sales Agent',
       commission_amount: 2700.00,
@@ -18,7 +21,10 @@ export default function SourceTransactions() {
 
   const { data: transactions, isLoading } = useQuery({
     queryKey: ['payout-line-transactions', payoutId, lineId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         transaction_type: 'order',

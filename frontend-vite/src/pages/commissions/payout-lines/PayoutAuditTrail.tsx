@@ -8,7 +8,10 @@ export default function PayoutAuditTrail() {
 
   const { data: line } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lineId,
       agent_name: 'John Sales Agent',
     }),
@@ -16,7 +19,10 @@ export default function PayoutAuditTrail() {
 
   const { data: auditTrail, isLoading } = useQuery({
     queryKey: ['payout-line-audit', payoutId, lineId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         action: 'payout_completed',

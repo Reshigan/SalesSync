@@ -8,7 +8,10 @@ export default function BoardPlacementDetail() {
 
   const { data: placement, isLoading } = useQuery({
     queryKey: ['board-placement', visitId, placementId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: placementId,
       visit_id: visitId,
       board_id: 'board-1',

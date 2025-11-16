@@ -8,7 +8,10 @@ export default function RuleConditionDetail() {
 
   const { data: condition, isLoading } = useQuery({
     queryKey: ['commission-rule-condition', ruleId, conditionId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: conditionId,
       rule_id: ruleId,
       rule_name: 'High Volume Bonus',

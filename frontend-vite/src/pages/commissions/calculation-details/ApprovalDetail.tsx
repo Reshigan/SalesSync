@@ -9,7 +9,10 @@ export default function ApprovalDetail() {
 
   const { data: approval, isLoading } = useQuery({
     queryKey: ['commission-approval', calculationId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: '1',
       calculation_id: calculationId,
       agent_name: 'John Sales Agent',

@@ -8,7 +8,10 @@ export default function AdjustmentJustification() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',

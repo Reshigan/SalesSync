@@ -8,7 +8,10 @@ export default function ProductDistributionDetail() {
 
   const { data: distribution, isLoading } = useQuery({
     queryKey: ['product-distribution', visitId, distributionId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: distributionId,
       visit_id: visitId,
       distribution_type: 'samples',

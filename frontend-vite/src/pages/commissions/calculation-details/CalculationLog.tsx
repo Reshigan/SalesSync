@@ -9,7 +9,10 @@ export default function CalculationLog() {
 
   const { data: agent } = useQuery({
     queryKey: ['agent', agentId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: agentId,
       name: 'John Sales Agent',
     }),
@@ -17,7 +20,10 @@ export default function CalculationLog() {
 
   const { data: calculations, isLoading } = useQuery({
     queryKey: ['commission-calculations', agentId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         calculation_date: '2024-01-31T23:59:59Z',

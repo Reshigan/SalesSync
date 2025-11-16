@@ -9,7 +9,10 @@ export default function AdjustmentItemDetail() {
 
   const { data: adjustment } = useQuery({
     queryKey: ['adjustment', adjustmentId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: adjustmentId,
       adjustment_number: 'ADJ-2024-001',
       warehouse_name: 'Main Warehouse',
@@ -18,7 +21,10 @@ export default function AdjustmentItemDetail() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_id: 'prod-1',

@@ -18,7 +18,10 @@ export default function VisitTaskEdit() {
 
   const { data: task, isLoading } = useQuery({
     queryKey: ['visit-task', visitId, taskId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: taskId,
       visit_id: visitId,
       task_title: 'Install promotional board',

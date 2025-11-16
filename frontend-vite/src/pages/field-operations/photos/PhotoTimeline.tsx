@@ -8,7 +8,10 @@ export default function PhotoTimeline() {
 
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
@@ -17,7 +20,10 @@ export default function PhotoTimeline() {
 
   const { data: photos, isLoading } = useQuery({
     queryKey: ['visit-photos-timeline', visitId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',

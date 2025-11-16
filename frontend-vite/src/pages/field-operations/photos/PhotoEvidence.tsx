@@ -8,7 +8,10 @@ export default function PhotoEvidence() {
 
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
@@ -17,7 +20,10 @@ export default function PhotoEvidence() {
 
   const { data: evidence, isLoading } = useQuery({
     queryKey: ['visit-photo-evidence', visitId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       visit_id: visitId,
       total_photos: 5,
       verified_photos: 5,

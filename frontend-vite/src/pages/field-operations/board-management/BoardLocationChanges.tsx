@@ -8,7 +8,10 @@ export default function BoardLocationChanges() {
 
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
@@ -17,7 +20,10 @@ export default function BoardLocationChanges() {
 
   const { data: changes, isLoading } = useQuery({
     queryKey: ['board-location-changes', boardId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         from_location: 'XYZ Mart - Window Display',

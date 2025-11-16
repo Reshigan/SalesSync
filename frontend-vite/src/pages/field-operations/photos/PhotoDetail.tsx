@@ -8,7 +8,10 @@ export default function PhotoDetail() {
 
   const { data: photo, isLoading } = useQuery({
     queryKey: ['photo', visitId, photoId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: photoId,
       visit_id: visitId,
       photo_url: '/placeholder-photo.jpg',

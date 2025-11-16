@@ -9,7 +9,10 @@ export default function PayoutLineList() {
 
   const { data: payout } = useQuery({
     queryKey: ['payout', payoutId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: payoutId,
       payout_number: 'PAYOUT-2024-001',
       payout_date: '2024-02-05',
@@ -18,7 +21,10 @@ export default function PayoutLineList() {
 
   const { data: lines, isLoading } = useQuery({
     queryKey: ['payout-lines', payoutId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         agent_name: 'John Sales Agent',

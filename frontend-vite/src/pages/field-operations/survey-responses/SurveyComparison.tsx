@@ -8,7 +8,10 @@ export default function SurveyComparison() {
 
   const { data: comparison, isLoading } = useQuery({
     queryKey: ['survey-comparison', surveyId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       current_survey: {
         id: surveyId,
         title: 'Customer Satisfaction Survey - Q1 2024',

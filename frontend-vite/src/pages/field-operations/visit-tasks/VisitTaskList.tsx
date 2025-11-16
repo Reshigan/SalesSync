@@ -8,7 +8,10 @@ export default function VisitTaskList() {
 
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       agent_name: 'John Field Agent',
@@ -18,7 +21,10 @@ export default function VisitTaskList() {
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['visit-tasks', visitId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         task_type: 'board_placement',

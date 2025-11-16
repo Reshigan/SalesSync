@@ -8,7 +8,10 @@ export default function SurveyResponseDetail() {
 
   const { data: response, isLoading } = useQuery({
     queryKey: ['survey-response', surveyId, responseId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: responseId,
       survey_id: surveyId,
       question_text: 'How satisfied are you with our product quality?',
