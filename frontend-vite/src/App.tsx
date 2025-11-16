@@ -434,8 +434,8 @@ function App() {
             <Route index element={<Navigate to="login" replace />} />
           </Route>
 
-          {/* Protected Routes */}
-          <Route path="/*" element={
+          {/* Protected Routes - using pathless parent to avoid catch-all matching "/" */}
+          <Route element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
