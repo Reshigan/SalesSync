@@ -1,0 +1,133 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { ArrowLeft } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+
+interface StopFormData {
+  planned_arrival: string
+  planned_departure: string
+  notes: string
+}
+
+export default function RouteStopEdit() {
+  const { routeId, stopId } = useParams<{ routeId: string; stopId: string }>()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const { data: stop, isLoading } = useQuery({
+    queryKey: ['route-stop', routeId, stopId],
+    queryFn: async () => ({
+      id: stopId,
+      route_id: routeId,
+      customer_name: 'ABC Store',
+      planned_arrival: '2024-01-20T09:00:00',
+      planned_departure: '2024-01-20T09:30:00',
+      notes: 'Customer requested early delivery next time',
+    }),
+  })
+
+  const { register, handleSubmit, formState: { errors } } = useForm<StopFormData>({
+    values: stop,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: StopFormData) => {
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['route-stop', routeId, stopId] })
+      queryClient.invalidateQueries({ queryKey: ['route', routeId] })
+      toast.success('Stop updated successfully')
+      navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)
+    },
+    onError: () => {
+      toast.error('Failed to update stop')
+    },
+  })
+
+  if (isLoading) {
+    return <div className="p-6">Loading...</div>
+  }
+
+  if (!stop) {
+    return <div className="p-6">Stop not found</div>
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Stop
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Edit Route Stop</h1>
+        <p className="text-gray-600">{stop.customer_name}</p>
+      </div>
+
+      <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="bg-white rounded-lg shadow p-6">
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Planned Arrival Time *
+            </label>
+            <input
+              type="datetime-local"
+              {...register('planned_arrival', { required: 'Planned arrival is required' })}
+              className="input"
+            />
+            {errors.planned_arrival && (
+              <p className="mt-1 text-sm text-red-600">{errors.planned_arrival.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Planned Departure Time *
+            </label>
+            <input
+              type="datetime-local"
+              {...register('planned_departure', { required: 'Planned departure is required' })}
+              className="input"
+            />
+            {errors.planned_departure && (
+              <p className="mt-1 text-sm text-red-600">{errors.planned_departure.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Notes
+            </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              className="input"
+              placeholder="Any special instructions or notes..."
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="btn-primary"
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  )
+}
