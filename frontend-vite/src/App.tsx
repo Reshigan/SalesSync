@@ -251,6 +251,7 @@ import RolePermissionsPage from './pages/admin/RolePermissionsPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
 import SmokeTestPage from './pages/admin/SmokeTestPage'
+import RouteAuditPage from './pages/admin/RouteAuditPage'
 import BrandManagementPage from './pages/admin/BrandManagementPage'
 import CampaignManagementPage from './pages/admin/CampaignManagementPage'
 import CommissionRuleBuilderPage from './pages/admin/CommissionRuleBuilderPage'
@@ -883,6 +884,11 @@ function App() {
             <Route path="admin/smoke-test" element={
               <ProtectedRoute requiredRole="admin">
                 <SmokeTestPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/route-audit" element={
+              <ProtectedRoute requiredRole="admin">
+                <RouteAuditPage />
               </ProtectedRoute>
             } />
 

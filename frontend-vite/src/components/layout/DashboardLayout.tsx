@@ -13,6 +13,17 @@ export default function DashboardLayout() {
     setSidebarOpen(false)
   }, [location.pathname])
 
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [sidebarOpen])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar overlay */}
@@ -37,19 +48,14 @@ export default function DashboardLayout() {
         </div>
       )}
 
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
-        <Sidebar onNavigate={() => {}} />
-      </div>
-
-      {/* Main content */}
-      <div className="lg:pl-64 flex flex-col flex-1">
+      {/* Main content - no sidebar on desktop, mega menu is in header */}
+      <div className="flex flex-col flex-1">
         {/* Header */}
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
         <main className="flex-1 pb-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Outlet />
           </div>
         </main>
@@ -57,14 +63,14 @@ export default function DashboardLayout() {
         {/* Footer with GONXT branding */}
         <footer className="bg-white border-t border-gray-200 py-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
               <div className="flex items-center space-x-2 text-sm text-gray-500">
                 <span>A Product of</span>
                 <a href="https://www.gonxt.tech" target="_blank" rel="noopener noreferrer">
                   <img src="/gonxt-logo.svg" alt="GONXT" className="h-5" />
                 </a>
               </div>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-gray-500 text-center sm:text-right">
                 &copy; 2025 SalesSync by GONXT. All rights reserved.
               </div>
             </div>

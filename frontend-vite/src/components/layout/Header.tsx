@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
+import MegaMenu from './MegaMenu'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -26,7 +27,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <Menu className="h-6 w-6" />
       </button>
 
-      <div className="flex-1 px-4 flex justify-between">
+      {/* Logo on desktop */}
+      <div className="hidden lg:flex items-center px-4 border-r border-gray-200">
+        <img src="/salessync-logo.svg" alt="SalesSync" className="h-8" />
+      </div>
+
+      {/* Mega Menu - Desktop only */}
+      <MegaMenu />
+
+      <div className="flex-1 px-4 flex justify-end">
         {/* Search */}
         <div className="flex-1 flex">
           <div className="w-full flex md:ml-0">
