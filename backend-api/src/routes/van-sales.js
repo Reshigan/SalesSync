@@ -587,4 +587,78 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/van-sales/routes/:routeId/stops - Get route stops
+router.get('/routes/:routeId/stops', asyncHandler(async (req, res) => {
+  const { routeId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const stops = await getQuery(`
+    SELECT 
+      rs.*,
+      c.name as customer_name,
+      c.address,
+      o.total_amount as order_value
+    FROM route_stops rs
+    LEFT JOIN customers c ON rs.customer_id = c.id
+    LEFT JOIN orders o ON rs.order_id = o.id
+    WHERE rs.route_id = $1 AND rs.tenant_id = $2
+    ORDER BY rs.stop_number
+  `, [routeId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { stops: stops || [] }
+  });
+}));
+
+// GET /api/van-sales/routes/:routeId/exceptions - Get route exceptions
+router.get('/routes/:routeId/exceptions', asyncHandler(async (req, res) => {
+  const { routeId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const exceptions = await getQuery(`
+    SELECT 
+      re.*,
+      rs.stop_number,
+      c.name as customer_name
+    FROM route_exceptions re
+    LEFT JOIN route_stops rs ON re.stop_id = rs.id
+    LEFT JOIN customers c ON rs.customer_id = c.id
+    WHERE re.route_id = $1 AND re.tenant_id = $2
+    ORDER BY re.created_at DESC
+  `, [routeId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { exceptions: exceptions || [] }
+  });
+}));
+
+// GET /api/van-sales/loads/:loadId/items - Get van load items
+router.get('/loads/:loadId/items', asyncHandler(async (req, res) => {
+  const { loadId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const items = await getQuery(`
+    SELECT 
+      vli.*,
+      p.name as product_name,
+      p.code as product_sku,
+      COALESCE(vli.quantity, 0) as quantity_loaded,
+      COALESCE(vli.quantity_sold, 0) as quantity_sold,
+      COALESCE(vli.quantity_returned, 0) as quantity_returned,
+      COALESCE(vli.quantity - COALESCE(vli.quantity_sold, 0) - COALESCE(vli.quantity_returned, 0), 0) as quantity_remaining
+    FROM van_load_items vli
+    LEFT JOIN products p ON vli.product_id = p.id
+    JOIN van_loads vl ON vli.van_load_id = vl.id
+    WHERE vli.van_load_id = $1 AND vl.tenant_id = $2
+    ORDER BY p.name
+  `, [loadId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { items: items || [] }
+  });
+}));
+
 module.exports = router;
