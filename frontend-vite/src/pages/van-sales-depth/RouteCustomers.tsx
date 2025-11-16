@@ -1,0 +1,77 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, MapPin, Phone } from 'lucide-react'
+
+export default function RouteCustomers() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+
+  const { data: route } = useQuery({
+    queryKey: ['route', id],
+    queryFn: async () => ({ id, route_name: 'Route A - Johannesburg North' }),
+  })
+
+  const { data: customers, isLoading } = useQuery({
+    queryKey: ['route-customers', id],
+    queryFn: async () => [
+      { id: '1', name: 'ABC Store', address: '123 Main St', phone: '+27123456789', status: 'active', last_visit: '2024-01-15' },
+      { id: '2', name: 'XYZ Shop', address: '456 Oak Ave', phone: '+27987654321', status: 'active', last_visit: '2024-01-14' },
+    ],
+  })
+
+  if (isLoading) return <div className="p-6">Loading customers...</div>
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <button onClick={() => navigate(`/van-sales/routes/${id}`)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4">
+          <ArrowLeft className="h-5 w-5" />
+          Back to Route
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Route Customers</h1>
+        <p className="text-gray-600">{route?.route_name}</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Visit</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {customers?.map((customer) => (
+              <tr key={customer.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    {customer.address}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="flex items-center gap-1">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    {customer.phone}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    {customer.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {new Date(customer.last_visit).toLocaleDateString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
