@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tantml:invoke name="@tanstack/react-query'
 import { ArrowLeft, Package, DollarSign, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { ordersService } from '../../../services/orders.service'
 
 export default function OrderItemDetail() {
   const { orderId, itemId } = useParams<{ orderId: string; itemId: string }>()
@@ -9,38 +10,12 @@ export default function OrderItemDetail() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['order-item', orderId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      order_id: orderId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity: 100,
-      unit_price: 15.00,
-      discount_percent: 5,
-      discount_amount: 75.00,
-      tax_rate: 15,
-      tax_amount: 213.75,
-      line_total: 1500.00,
-      subtotal: 1425.00,
-      total: 1638.75,
-      fulfillment_status: 'partially_fulfilled',
-      fulfilled_quantity: 60,
-      pending_quantity: 40,
-      notes: 'Customer requested split delivery',
-      price_override_reason: 'Volume discount applied',
-      created_at: '2024-01-15T10:00:00Z',
-      updated_at: '2024-01-20T14:30:00Z',
-    }),
+    queryFn: async () => ordersService.getOrderItem(orderId!, itemId!),
   })
 
   if (isLoading) {
