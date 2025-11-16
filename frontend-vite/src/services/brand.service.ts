@@ -1,23 +1,67 @@
-import api from './api'
+import { apiClient } from './api'
+
+export interface Brand {
+  id: string
+  name: string
+  code: string
+  description?: string
+  status: 'active' | 'inactive'
+  product_count?: number
+  survey_count?: number
+  activation_count?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface BrandFormData {
+  name: string
+  code: string
+  description?: string
+  status: 'active' | 'inactive'
+}
 
 export const brandService = {
-  getBrands: async () => {
-    return api.get('/brands')
+  async getBrands(params?: { search?: string; status?: string }): Promise<Brand[]> {
+    const response = await apiClient.get('/brands', { params })
+    return response.data
   },
 
-  getBrand: async (id: string) => {
-    return api.get(`/brands/${id}`)
+  async getBrand(id: string): Promise<Brand> {
+    const response = await apiClient.get(`/brands/${id}`)
+    return response.data
   },
 
-  createBrand: async (data: any) => {
-    return api.post('/brands', data)
+  async createBrand(data: BrandFormData): Promise<Brand> {
+    const response = await apiClient.post('/brands', data)
+    return response.data
   },
 
-  updateBrand: async (id: string, data: any) => {
-    return api.put(`/brands/${id}`, data)
+  async updateBrand(id: string, data: BrandFormData): Promise<Brand> {
+    const response = await apiClient.put(`/brands/${id}`, data)
+    return response.data
   },
 
-  deleteBrand: async (id: string) => {
-    return api.delete(`/brands/${id}`)
-  }
+  async deleteBrand(id: string): Promise<void> {
+    await apiClient.delete(`/brands/${id}`)
+  },
+
+  async getBrandSurveys(brandId: string): Promise<any[]> {
+    const response = await apiClient.get(`/brands/${brandId}/surveys`)
+    return response.data
+  },
+
+  async getBrandActivations(brandId: string): Promise<any[]> {
+    const response = await apiClient.get(`/brands/${brandId}/activations`)
+    return response.data
+  },
+
+  async getBrandBoards(brandId: string): Promise<any[]> {
+    const response = await apiClient.get(`/brands/${brandId}/boards`)
+    return response.data
+  },
+
+  async getBrandProducts(brandId: string): Promise<any[]> {
+    const response = await apiClient.get(`/brands/${brandId}/products`)
+    return response.data
+  },
 }
