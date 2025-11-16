@@ -18,15 +18,9 @@ export default function ReturnItemEdit() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      return_id: returnId,
-      product_name: 'Coca-Cola 500ml',
-      quantity_returned: 10,
-      reason: 'Damaged goods',
-      condition: 'damaged',
-      restockable: false,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<ReturnItemFormData>({

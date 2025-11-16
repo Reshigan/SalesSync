@@ -18,18 +18,9 @@ export default function ReturnItemApproval() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      return_id: returnId,
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity_returned: 10,
-      unit_price: 15.00,
-      refund_amount: 150.00,
-      reason: 'Damaged goods',
-      condition: 'damaged',
-      restockable: false,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ApprovalFormData>()

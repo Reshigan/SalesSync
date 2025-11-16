@@ -14,37 +14,11 @@ export default function OrderItemHistory() {
     }),
   })
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery({
     queryKey: ['order-item-history', orderId, itemId],
-    queryFn: async () => [
-      {
-        id: '1',
-        action: 'Fulfilled',
-        field: 'fulfillment_status',
-        old_value: 'pending',
-        new_value: 'fulfilled',
-        changed_by: 'Warehouse System',
-        changed_at: '2024-01-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        action: 'Updated',
-        field: 'quantity',
-        old_value: '80',
-        new_value: '100',
-        changed_by: 'John Doe',
-        changed_at: '2024-01-15T14:30:00Z',
-      },
-      {
-        id: '3',
-        action: 'Created',
-        field: null,
-        old_value: null,
-        new_value: null,
-        changed_by: 'System',
-        changed_at: '2024-01-15T10:00:00Z',
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {

@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, FileText, AlertCircle } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function StatusTransitionDetail() {
   const { orderId, transitionId } = useParams<{ orderId: string; transitionId: string }>()
@@ -17,41 +18,10 @@ export default function StatusTransitionDetail() {
 
   const { data: transition, isLoading } = useQuery({
     queryKey: ['status-transition', orderId, transitionId],
-    queryFn: async () => ({
-      id: transitionId,
-      order_id: orderId,
-      status: 'shipped',
-      previous_status: 'processing',
-      changed_at: '2024-01-20T08:00:00Z',
-      changed_by: 'John Driver',
-      changed_by_id: 'user-123',
-      changed_by_role: 'Driver',
-      notes: 'Order loaded on vehicle VAN-001',
-      reason: 'Standard workflow progression',
-      metadata: {
-        vehicle: 'VAN-001',
-        driver_id: 'driver-1',
-        warehouse: 'WH-001',
-        items_loaded: 15,
-        weight_kg: 150,
-        delivery_route: 'Route-A',
-      },
-      system_info: {
-        ip_address: '192.168.1.100',
-        user_agent: 'Mobile App v2.1.0',
-        location: {
-          latitude: -1.2921,
-          longitude: 36.8219,
-        },
-      },
-      validation_passed: true,
-      validation_checks: [
-        { check: 'All items picked', passed: true },
-        { check: 'Quality check completed', passed: true },
-        { check: 'Packaging verified', passed: true },
-        { check: 'Vehicle capacity available', passed: true },
-      ],
-    }),
+    queryFn: async () => {
+      const history = await ordersService.getOrderStatusHistory(orderId!)
+      return history.find(h => h.id === transitionId) || null
+    },
   })
 
   if (isLoading) {

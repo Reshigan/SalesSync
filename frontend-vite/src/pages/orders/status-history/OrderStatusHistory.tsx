@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, FileText } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function OrderStatusHistory() {
   const { orderId } = useParams<{ orderId: string }>()
@@ -16,75 +17,9 @@ export default function OrderStatusHistory() {
     }),
   })
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery({
     queryKey: ['order-status-history', orderId],
-    queryFn: async () => [
-      {
-        id: '1',
-        status: 'delivered',
-        previous_status: 'shipped',
-        changed_at: '2024-01-22T14:30:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Delivery confirmed by customer signature',
-        metadata: {
-          delivery_id: 'DEL-2024-001',
-          signature_captured: true,
-        },
-      },
-      {
-        id: '2',
-        status: 'shipped',
-        previous_status: 'processing',
-        changed_at: '2024-01-20T08:00:00Z',
-        changed_by: 'John Driver',
-        changed_by_role: 'Driver',
-        notes: 'Order loaded on vehicle VAN-001',
-        metadata: {
-          vehicle: 'VAN-001',
-          driver_id: 'driver-1',
-        },
-      },
-      {
-        id: '3',
-        status: 'processing',
-        previous_status: 'confirmed',
-        changed_at: '2024-01-19T10:00:00Z',
-        changed_by: 'Jane Smith',
-        changed_by_role: 'Warehouse Manager',
-        notes: 'Items picked and packed',
-        metadata: {
-          warehouse: 'WH-001',
-          picker_id: 'picker-5',
-        },
-      },
-      {
-        id: '4',
-        status: 'confirmed',
-        previous_status: 'pending',
-        changed_at: '2024-01-15T14:00:00Z',
-        changed_by: 'Mike Johnson',
-        changed_by_role: 'Sales Manager',
-        notes: 'Order confirmed after credit check',
-        metadata: {
-          credit_check_passed: true,
-          payment_terms: 'NET30',
-        },
-      },
-      {
-        id: '5',
-        status: 'pending',
-        previous_status: null,
-        changed_at: '2024-01-15T10:00:00Z',
-        changed_by: 'Sarah Agent',
-        changed_by_role: 'Sales Agent',
-        notes: 'Order created from customer request',
-        metadata: {
-          source: 'mobile_app',
-          customer_id: 'cust-1',
-        },
-      },
-    ],
+    queryFn: async () => ordersService.getOrderStatusHistory(orderId!),
   })
 
   if (isLoading) {
