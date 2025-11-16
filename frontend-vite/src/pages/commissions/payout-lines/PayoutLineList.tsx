@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { commissionsService } from '../../../services/commissions.service'
 
 export default function PayoutLineList() {
   const { payoutId } = useParams<{ payoutId: string }>()
@@ -22,8 +23,10 @@ export default function PayoutLineList() {
   const { data: lines, isLoading } = useQuery({
     queryKey: ['payout-lines', payoutId],
     queryFn: async () => {
-      return []
+      if (!payoutId) return []
+      return await commissionsService.getPayoutLines(payoutId)
     },
+    enabled: !!payoutId,
     oldData: [
       {
         id: '1',

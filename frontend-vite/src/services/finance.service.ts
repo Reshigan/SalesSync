@@ -318,6 +318,36 @@ class FinanceService {
       throw error
     }
   }
+
+  async getInvoiceStatusHistory(invoiceId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/invoices/${invoiceId}/status-history`)
+      return response.data.data?.history || []
+    } catch (error) {
+      console.error('Failed to fetch invoice status history:', error)
+      throw error
+    }
+  }
+
+  async getPaymentStatusHistory(paymentId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.paymentsUrl}/${paymentId}/status-history`)
+      return response.data.data?.history || []
+    } catch (error) {
+      console.error('Failed to fetch payment status history:', error)
+      throw error
+    }
+  }
+
+  async getInvoiceItemHistory(invoiceId: string, itemId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/invoices/${invoiceId}/items/${itemId}/history`)
+      return response.data.data?.history || []
+    } catch (error) {
+      console.error('Failed to fetch invoice item history:', error)
+      throw error
+    }
+  }
 }
 
 export const financeService = new FinanceService()
