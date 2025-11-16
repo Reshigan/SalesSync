@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../../services/finance.service'
 
 interface InvoiceItemFormData {
   quantity: number
@@ -18,15 +19,7 @@ export default function InvoiceItemEdit() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['invoice-item', invoiceId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      invoice_id: invoiceId,
-      product_name: 'Coca-Cola 500ml',
-      quantity: 100,
-      unit_price: 15.00,
-      discount_percent: 5,
-      notes: '',
-    }),
+    queryFn: async () => financeService.getInvoiceItem(invoiceId!, itemId!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<InvoiceItemFormData>({
@@ -35,7 +28,7 @@ export default function InvoiceItemEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InvoiceItemFormData) => {
-      return data
+      return financeService.updateInvoiceItem(invoiceId!, itemId!, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice-item', invoiceId, itemId] })

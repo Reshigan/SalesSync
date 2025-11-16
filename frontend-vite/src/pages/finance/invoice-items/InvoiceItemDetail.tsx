@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, DollarSign, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function InvoiceItemDetail() {
   const { invoiceId, itemId } = useParams<{ invoiceId: string; itemId: string }>()
@@ -9,35 +10,12 @@ export default function InvoiceItemDetail() {
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', invoiceId],
-    queryFn: async () => ({
-      id: invoiceId,
-      invoice_number: 'INV-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => financeService.getInvoice(invoiceId!),
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['invoice-item', invoiceId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      invoice_id: invoiceId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity: 100,
-      unit_price: 15.00,
-      discount_percent: 5,
-      discount_amount: 75.00,
-      tax_rate: 15,
-      tax_amount: 213.75,
-      tax_code: 'VAT-STD',
-      line_total: 1500.00,
-      subtotal: 1425.00,
-      total: 1638.75,
-      gl_account: '4000-Sales Revenue',
-      cost_center: 'CC-001',
-      created_at: '2024-01-15T10:00:00Z',
-    }),
+    queryFn: async () => financeService.getInvoiceItem(invoiceId!, itemId!),
   })
 
   if (isLoading) {

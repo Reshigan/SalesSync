@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Edit } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function InvoiceItemList() {
   const { invoiceId } = useParams<{ invoiceId: string }>()
@@ -9,37 +10,12 @@ export default function InvoiceItemList() {
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', invoiceId],
-    queryFn: async () => ({
-      id: invoiceId,
-      invoice_number: 'INV-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => financeService.getInvoice(invoiceId!),
   })
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['invoice-items', invoiceId],
-    queryFn: async () => [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        quantity: 100,
-        unit_price: 15.00,
-        discount_percent: 5,
-        tax_amount: 213.75,
-        total: 1638.75,
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        quantity: 50,
-        unit_price: 14.00,
-        discount_percent: 0,
-        tax_amount: 105.00,
-        total: 805.00,
-      },
-    ],
+    queryFn: async () => financeService.getInvoiceItemsList(invoiceId!),
   })
 
   if (isLoading) {

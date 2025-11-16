@@ -229,6 +229,36 @@ class FinanceService {
       throw error
     }
   }
+
+  async getInvoiceItemsList(invoiceId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items`)
+      return response.data.data?.items || []
+    } catch (error) {
+      console.error('Failed to fetch invoice items list:', error)
+      return []
+    }
+  }
+
+  async getInvoiceItem(invoiceId: string, itemId: string): Promise<any | null> {
+    try {
+      const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items/${itemId}`)
+      return response.data.data?.item || null
+    } catch (error) {
+      console.error('Failed to fetch invoice item:', error)
+      return null
+    }
+  }
+
+  async updateInvoiceItem(invoiceId: string, itemId: string, updates: any): Promise<any> {
+    try {
+      const response = await apiClient.put(`/api/finance/invoices/${invoiceId}/items/${itemId}`, updates)
+      return response.data.data?.item || response.data.data
+    } catch (error) {
+      console.error('Failed to update invoice item:', error)
+      throw error
+    }
+  }
 }
 
 export const financeService = new FinanceService()
