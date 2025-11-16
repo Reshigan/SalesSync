@@ -1,0 +1,46 @@
+/**
+ * Audit Service
+ * Handles audit trail operations for all entity types
+ */
+
+import { apiClient } from './api.service'
+
+export interface AuditEntry {
+  id: string
+  entity_type: string
+  entity_id: string
+  action: string
+  description: string
+  performed_by: string
+  performed_by_name?: string
+  performed_at: string
+  details?: Record<string, any>
+  tenant_id: string
+  created_at: string
+}
+
+class AuditService {
+  private readonly baseUrl = '/api/audit'
+
+  async getAuditTrail(entityType: string, entityId: string): Promise<AuditEntry[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}`)
+      return response.data.data?.auditTrail || []
+    } catch (error) {
+      console.error('Failed to fetch audit trail:', error)
+      return []
+    }
+  }
+
+  async getAuditEntry(entityType: string, entityId: string, entryId: string): Promise<AuditEntry | null> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}/entries/${entryId}`)
+      return response.data.data?.entry || null
+    } catch (error) {
+      console.error('Failed to fetch audit entry:', error)
+      return null
+    }
+  }
+}
+
+export const auditService = new AuditService()

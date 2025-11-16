@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Clock, User, Filter } from 'lucide-react'
+import { auditService } from '../../../services/audit.service'
 
 interface AuditTrailComponentProps {
   entityType: string
@@ -9,38 +10,7 @@ interface AuditTrailComponentProps {
 export default function AuditTrailComponent({ entityType, entityId }: AuditTrailComponentProps) {
   const { data: auditTrail, isLoading } = useQuery({
     queryKey: ['audit-trail', entityType, entityId],
-    queryFn: async () => [
-      {
-        id: '1',
-        action: 'created',
-        description: `${entityType} created`,
-        performed_by: 'System',
-        performed_at: '2024-01-20T09:00:00Z',
-        details: {},
-      },
-      {
-        id: '2',
-        action: 'updated',
-        description: `${entityType} updated`,
-        performed_by: 'John User',
-        performed_at: '2024-01-20T10:00:00Z',
-        details: {
-          field: 'status',
-          old_value: 'pending',
-          new_value: 'approved',
-        },
-      },
-      {
-        id: '3',
-        action: 'approved',
-        description: `${entityType} approved`,
-        performed_by: 'Manager',
-        performed_at: '2024-01-20T11:00:00Z',
-        details: {
-          approval_notes: 'Approved after review',
-        },
-      },
-    ],
+    queryFn: async () => auditService.getAuditTrail(entityType, entityId),
   })
 
   if (isLoading) {
