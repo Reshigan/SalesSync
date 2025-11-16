@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, FileText, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function PaymentAllocationDetail() {
   const { paymentId, allocationId } = useParams<{ paymentId: string; allocationId: string }>()
@@ -9,31 +10,12 @@ export default function PaymentAllocationDetail() {
 
   const { data: payment } = useQuery({
     queryKey: ['payment', paymentId],
-    queryFn: async () => ({
-      id: paymentId,
-      payment_number: 'PAY-2024-001',
-      customer_name: 'ABC Store',
-      total_amount: 10000,
-    }),
+    queryFn: async () => financeService.getPayment(paymentId!),
   })
 
   const { data: allocation, isLoading } = useQuery({
     queryKey: ['payment-allocation', paymentId, allocationId],
-    queryFn: async () => ({
-      id: allocationId,
-      payment_id: paymentId,
-      invoice_id: 'inv-1',
-      invoice_number: 'INV-2024-001',
-      invoice_date: '2024-01-10',
-      invoice_amount: 15000,
-      invoice_balance: 5000,
-      allocated_amount: 5000,
-      allocation_date: '2024-01-20',
-      allocation_type: 'full',
-      notes: 'Partial payment for outstanding invoice',
-      created_by: 'John Doe',
-      created_at: '2024-01-20T10:00:00Z',
-    }),
+    queryFn: async () => financeService.getPaymentAllocation(paymentId!, allocationId!),
   })
 
   if (isLoading) {

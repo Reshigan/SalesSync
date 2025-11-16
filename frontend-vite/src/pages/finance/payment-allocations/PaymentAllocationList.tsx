@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Edit, Plus } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function PaymentAllocationList() {
   const { paymentId } = useParams<{ paymentId: string }>()
@@ -9,34 +10,12 @@ export default function PaymentAllocationList() {
 
   const { data: payment } = useQuery({
     queryKey: ['payment', paymentId],
-    queryFn: async () => ({
-      id: paymentId,
-      payment_number: 'PAY-2024-001',
-      customer_name: 'ABC Store',
-      total_amount: 10000,
-    }),
+    queryFn: async () => financeService.getPayment(paymentId!),
   })
 
   const { data: allocations, isLoading } = useQuery({
     queryKey: ['payment-allocations', paymentId],
-    queryFn: async () => [
-      {
-        id: '1',
-        invoice_number: 'INV-2024-001',
-        invoice_amount: 15000,
-        allocated_amount: 5000,
-        allocation_date: '2024-01-20',
-        allocation_type: 'partial',
-      },
-      {
-        id: '2',
-        invoice_number: 'INV-2024-002',
-        invoice_amount: 5000,
-        allocated_amount: 5000,
-        allocation_date: '2024-01-20',
-        allocation_type: 'full',
-      },
-    ],
+    queryFn: async () => financeService.getPaymentAllocationsList(paymentId!),
   })
 
   if (isLoading) {

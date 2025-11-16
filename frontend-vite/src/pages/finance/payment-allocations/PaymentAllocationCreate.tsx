@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../../services/finance.service'
 
 interface AllocationFormData {
   invoice_id: string
@@ -18,20 +19,13 @@ export default function PaymentAllocationCreate() {
 
   const { data: payment } = useQuery({
     queryKey: ['payment', paymentId],
-    queryFn: async () => ({
-      id: paymentId,
-      payment_number: 'PAY-2024-001',
-      customer_name: 'ABC Store',
-      total_amount: 10000,
-    }),
+    queryFn: async () => financeService.getPayment(paymentId!),
   })
 
   const { data: invoices } = useQuery({
-    queryKey: ['customer-invoices', payment?.customer_name],
-    queryFn: async () => [
-      { id: 'inv-1', invoice_number: 'INV-2024-001', balance: 15000 },
-      { id: 'inv-2', invoice_number: 'INV-2024-002', balance: 5000 },
-    ],
+    queryKey: ['customer-invoices', payment?.customer_id],
+    queryFn: async () => financeService.getInvoicesList(),
+    enabled: !!payment?.customer_id,
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<AllocationFormData>({
