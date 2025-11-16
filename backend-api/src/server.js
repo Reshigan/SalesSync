@@ -307,6 +307,7 @@ async function startServer() {
     const fieldAgentRoutes = require('./routes/fieldAgents');
     const kycRoutes = require('./routes/kyc');
     const surveyRoutes = require('./routes/surveys');
+    const visitSurveysRoutes = require('./routes/visit-surveys');
     const analyticsRoutes = require('./routes/analytics');
     const financeRoutes = require('./routes/finance');
     const areaRoutes = require('./routes/areas');
