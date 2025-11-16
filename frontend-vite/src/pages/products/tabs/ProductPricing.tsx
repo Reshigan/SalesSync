@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { DollarSign, TrendingUp, Calendar } from 'lucide-react'
-import { productService } from '../../../services/products.service'
+import { productsService as productService } from '../../../services/products.service'
 
 export default function ProductPricing() {
   const { id } = useParams<{ id: string }>()

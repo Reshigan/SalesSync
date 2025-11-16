@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, FileText } from 'lucide-react'
-import { surveyService } from '../../../services/surveys.service'
+import { surveysService as surveyService } from '../../../services/surveys.service'
 
 export default function CustomerSurveys() {
   const { id } = useParams<{ id: string }>()

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, Tag, Calendar } from 'lucide-react'
-import { promotionService } from '../../../services/promotions.service'
+import { promotionsService as promotionService } from '../../../services/promotions.service'
 
 export default function ProductPromotions() {
   const { id } = useParams<{ id: string }>()

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, MapPin } from 'lucide-react'
-import { visitService } from '../../../services/visits.service'
+import { visitsService as visitService } from '../../../services/visits.service'
 
 export default function CustomerVisits() {
   const { id } = useParams<{ id: string }>()
