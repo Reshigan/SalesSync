@@ -1,12 +1,11 @@
-import { Outlet } from 'react-router-dom'
-import { Building2 } from 'lucide-react'
+import { Outlet, Link } from 'react-router-dom'
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 flex-col justify-between relative overflow-hidden">
-        {/* Subtle background pattern */}
+        {/* Animated background pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{ 
             backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
@@ -15,15 +14,10 @@ export default function AuthLayout() {
         </div>
         
         <div className="relative z-10">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-              <Building2 className="w-7 h-7 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">SalesSync</h1>
-              <p className="text-blue-100 text-sm">Enterprise Edition</p>
-            </div>
-          </div>
+          <Link to="/" className="inline-block">
+            <img src="/salessync-logo.svg" alt="SalesSync" className="h-12 brightness-0 invert" />
+          </Link>
+          <p className="text-blue-100 text-sm mt-2">Enterprise Field Force & Van Sales Platform</p>
         </div>
 
         <div className="relative z-10 space-y-6">
@@ -57,10 +51,9 @@ export default function AuthLayout() {
           </div>
         </div>
 
-        <div className="relative z-10">
-          <p className="text-blue-100 text-sm">
-            &copy; 2024 SalesSync. All rights reserved.
-          </p>
+        <div className="relative z-10 flex items-center space-x-2">
+          <span className="text-blue-100 text-sm">A Product of</span>
+          <img src="/gonxt-logo.svg" alt="GONXT" className="h-6" />
         </div>
       </div>
 
@@ -69,15 +62,10 @@ export default function AuthLayout() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 text-center">
-            <div className="inline-flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-left">
-                <h1 className="text-xl font-bold text-gray-900">SalesSync</h1>
-                <p className="text-gray-500 text-xs">Enterprise Edition</p>
-              </div>
-            </div>
+            <Link to="/" className="inline-block">
+              <img src="/salessync-logo.svg" alt="SalesSync" className="h-10" />
+            </Link>
+            <p className="text-gray-500 text-sm mt-2">Enterprise Field Force & Van Sales Platform</p>
           </div>
 
           {/* Form container */}
@@ -90,6 +78,12 @@ export default function AuthLayout() {
             <p className="text-sm text-gray-500">
               Demo: <span className="font-mono text-gray-700">admin@demo.com</span> / <span className="font-mono text-gray-700">admin123</span>
             </p>
+          </div>
+
+          {/* GONXT branding - Mobile */}
+          <div className="lg:hidden mt-8 text-center flex items-center justify-center space-x-2">
+            <span className="text-gray-500 text-sm">A Product of</span>
+            <img src="/gonxt-logo.svg" alt="GONXT" className="h-5" />
           </div>
         </div>
       </div>

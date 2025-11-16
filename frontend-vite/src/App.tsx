@@ -398,6 +398,7 @@ import TaskPage from './pages/field-agents/TaskPage'
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
+import LandingPage from './pages/marketing/LandingPage'
 
 function App() {
   const { isAuthenticated, isLoading, initialize, hydrated } = useAuthStore()
@@ -420,6 +421,9 @@ function App() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
         <Routes>
+          {/* Marketing Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Public Routes */}
           <Route path="/auth/*" element={
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthLayout />

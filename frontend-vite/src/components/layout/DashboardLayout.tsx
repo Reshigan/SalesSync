@@ -53,6 +53,23 @@ export default function DashboardLayout() {
             <Outlet />
           </div>
         </main>
+
+        {/* Footer with GONXT branding */}
+        <footer className="bg-white border-t border-gray-200 py-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <span>A Product of</span>
+                <a href="https://www.gonxt.tech" target="_blank" rel="noopener noreferrer">
+                  <img src="/gonxt-logo.svg" alt="GONXT" className="h-5" />
+                </a>
+              </div>
+              <div className="text-sm text-gray-500">
+                &copy; 2025 SalesSync by GONXT. All rights reserved.
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
       
       {/* Offline Indicator */}
