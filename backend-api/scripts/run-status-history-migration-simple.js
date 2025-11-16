@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { runQuery } = require('../src/utils/database');
 const fs = require('fs');
 const path = require('path');
