@@ -8,7 +8,10 @@ export default function BatchAllocation() {
 
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -20,7 +23,10 @@ export default function BatchAllocation() {
 
   const { data: allocations, isLoading } = useQuery({
     queryKey: ['batch-allocations', batchId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         order_number: 'ORD-2024-001',

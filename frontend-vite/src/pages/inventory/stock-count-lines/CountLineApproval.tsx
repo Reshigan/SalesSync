@@ -16,7 +16,10 @@ export default function CountLineApproval() {
 
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',

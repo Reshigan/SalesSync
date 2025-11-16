@@ -8,7 +8,10 @@ export default function TransferItemList() {
 
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: transferId,
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
@@ -18,7 +21,10 @@ export default function TransferItemList() {
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['transfer-items', transferId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',

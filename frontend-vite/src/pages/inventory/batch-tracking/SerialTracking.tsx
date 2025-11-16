@@ -8,7 +8,10 @@ export default function SerialTracking() {
 
   const { data: serial } = useQuery({
     queryKey: ['serial', serialId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_name: 'Premium Coffee Machine',
@@ -17,7 +20,10 @@ export default function SerialTracking() {
 
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['serial-tracking', serialId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         event_type: 'delivered',

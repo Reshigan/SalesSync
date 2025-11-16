@@ -8,7 +8,10 @@ export default function BatchExpiry() {
 
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -21,7 +24,10 @@ export default function BatchExpiry() {
 
   const { data: expiryInfo, isLoading } = useQuery({
     queryKey: ['batch-expiry', batchId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       expiry_date: '2024-12-31',
       days_until_expiry: 45,
       expiry_status: 'expiring_soon',

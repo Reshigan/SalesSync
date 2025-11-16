@@ -8,7 +8,10 @@ export default function SerialDetail() {
 
   const { data: serial, isLoading } = useQuery({
     queryKey: ['serial', serialId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_id: 'prod-1',

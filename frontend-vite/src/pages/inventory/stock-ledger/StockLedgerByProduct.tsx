@@ -8,7 +8,10 @@ export default function StockLedgerByProduct() {
 
   const { data: product } = useQuery({
     queryKey: ['product', productId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: productId,
       name: 'Coca-Cola 500ml',
       sku: 'CC-500',
@@ -18,7 +21,10 @@ export default function StockLedgerByProduct() {
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ['stock-ledger-product', productId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         warehouse_name: 'Main Warehouse',

@@ -8,7 +8,10 @@ export default function MovementDetail() {
 
   const { data: movement, isLoading } = useQuery({
     queryKey: ['stock-movement', movementId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: movementId,
       movement_number: 'MOV-2024-001',
       product_name: 'Coca-Cola 500ml',

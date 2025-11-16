@@ -8,7 +8,10 @@ export default function TransferItemDetail() {
 
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: transferId,
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
@@ -18,7 +21,10 @@ export default function TransferItemDetail() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: itemId,
       transfer_id: transferId,
       product_id: 'prod-1',

@@ -8,7 +8,10 @@ export default function LotDetail() {
 
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', lotId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lotId,
       lot_number: 'LOT-2024-A-001',
       product_id: 'prod-1',
@@ -51,7 +54,10 @@ export default function LotDetail() {
 
   const { data: batches } = useQuery({
     queryKey: ['lot-batches', lotId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: 'batch-1',
         batch_number: 'BATCH-2024-001',

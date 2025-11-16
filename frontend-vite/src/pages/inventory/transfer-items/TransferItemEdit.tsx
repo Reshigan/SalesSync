@@ -16,7 +16,10 @@ export default function TransferItemEdit() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: itemId,
       transfer_id: transferId,
       product_name: 'Coca-Cola 500ml',

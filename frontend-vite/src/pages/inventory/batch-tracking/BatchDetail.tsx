@@ -8,7 +8,10 @@ export default function BatchDetail() {
 
   const { data: batch, isLoading } = useQuery({
     queryKey: ['batch', batchId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_id: 'prod-1',

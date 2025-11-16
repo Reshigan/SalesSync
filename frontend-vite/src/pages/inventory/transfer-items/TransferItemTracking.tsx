@@ -8,7 +8,10 @@ export default function TransferItemTracking() {
 
   const { data: item } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: itemId,
       product_name: 'Coca-Cola 500ml',
       product_sku: 'CC-500',
@@ -17,7 +20,10 @@ export default function TransferItemTracking() {
 
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['transfer-item-tracking', transferId, itemId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
       to_warehouse: 'Branch Warehouse',

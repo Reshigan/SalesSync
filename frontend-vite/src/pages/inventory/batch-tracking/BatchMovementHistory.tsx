@@ -8,7 +8,10 @@ export default function BatchMovementHistory() {
 
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -17,7 +20,10 @@ export default function BatchMovementHistory() {
 
   const { data: movements, isLoading } = useQuery({
     queryKey: ['batch-movements', batchId],
-    queryFn: async () => [
+    queryFn: async () => {
+      return []
+    },
+    oldData: [
       {
         id: '1',
         movement_type: 'sale',

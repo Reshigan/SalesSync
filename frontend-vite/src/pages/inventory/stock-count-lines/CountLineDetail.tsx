@@ -8,7 +8,10 @@ export default function CountLineDetail() {
 
   const { data: count } = useQuery({
     queryKey: ['stock-count', countId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: countId,
       count_number: 'CNT-2024-001',
       warehouse_name: 'Main Warehouse',
@@ -17,7 +20,10 @@ export default function CountLineDetail() {
 
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
-    queryFn: async () => ({
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
       id: lineId,
       count_id: countId,
       product_id: 'prod-1',
