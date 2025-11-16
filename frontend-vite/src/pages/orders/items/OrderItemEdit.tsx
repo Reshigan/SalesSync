@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { ordersService } from '../../../services/orders.service'
 
 export default function OrderItemEdit() {
   const { orderId, itemId } = useParams<{ orderId: string; itemId: string }>()
@@ -11,17 +12,7 @@ export default function OrderItemEdit() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['order-item', orderId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      order_id: orderId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      quantity: 100,
-      unit_price: 15.00,
-      discount_percent: 5,
-      notes: 'Customer requested split delivery',
-      price_override_reason: 'Volume discount applied',
-    }),
+    queryFn: async () => ordersService.getOrderItem(orderId!, itemId!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -30,7 +21,7 @@ export default function OrderItemEdit() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      return data
+      return ordersService.updateOrderItem(orderId!, itemId!, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['order-item', orderId, itemId] })

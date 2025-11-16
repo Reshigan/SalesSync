@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Edit } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { ordersService } from '../../../services/orders.service'
 
 export default function OrderItemList() {
   const { orderId } = useParams<{ orderId: string }>()
@@ -9,37 +10,12 @@ export default function OrderItemList() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['order-items', orderId],
-    queryFn: async () => [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        quantity: 100,
-        unit_price: 15.00,
-        discount_percent: 5,
-        line_total: 1500.00,
-        fulfillment_status: 'fulfilled',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        quantity: 50,
-        unit_price: 14.00,
-        discount_percent: 0,
-        line_total: 700.00,
-        fulfillment_status: 'pending',
-      },
-    ],
+    queryFn: async () => ordersService.getOrderItemsList(orderId!),
   })
 
   if (isLoading) {
