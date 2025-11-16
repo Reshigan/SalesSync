@@ -9,11 +9,7 @@ export default function StatusTransitionDetail() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: transition, isLoading } = useQuery({

@@ -9,12 +9,7 @@ export default function OrderStatusHistory() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-      current_status: 'delivered',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: history = [], isLoading } = useQuery({
