@@ -159,6 +159,36 @@ class VanSalesService {
       throw error
     }
   }
+
+  async getRouteStops(routeId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/routes/${routeId}/stops`)
+      return response.data.data?.stops || []
+    } catch (error) {
+      console.error('Failed to fetch route stops:', error)
+      throw error
+    }
+  }
+
+  async getRouteExceptions(routeId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/routes/${routeId}/exceptions`)
+      return response.data.data?.exceptions || []
+    } catch (error) {
+      console.error('Failed to fetch route exceptions:', error)
+      throw error
+    }
+  }
+
+  async getVanLoadItems(loadId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/loads/${loadId}/items`)
+      return response.data.data?.items || []
+    } catch (error) {
+      console.error('Failed to fetch van load items:', error)
+      throw error
+    }
+  }
 }
 
 export const vanSalesService = new VanSalesService()

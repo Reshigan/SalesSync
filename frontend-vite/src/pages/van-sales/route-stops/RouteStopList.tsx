@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, MapPin, Clock } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { vanSalesService } from '../../../services/vanSales.service'
 
 export default function RouteStopList() {
   const { routeId } = useParams<{ routeId: string }>()
@@ -10,15 +11,19 @@ export default function RouteStopList() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      return null
+      if (!routeId) return null
+      return await vanSalesService.getRoute(routeId)
     },
+    enabled: !!routeId,
   })
 
   const { data: stops = [], isLoading } = useQuery({
     queryKey: ['route-stops', routeId],
     queryFn: async () => {
-      return []
+      if (!routeId) return []
+      return await vanSalesService.getRouteStops(routeId)
     },
+    enabled: !!routeId,
   })
 
   if (isLoading) {
