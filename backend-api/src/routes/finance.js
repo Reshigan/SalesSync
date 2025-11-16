@@ -224,15 +224,20 @@ router.delete('/invoices/:id', asyncHandler(async (req, res) => {
 router.get('/invoices/:invoiceId/items', asyncHandler(async (req, res) => {
   const { getQuery } = require('../utils/database');
   const { invoiceId } = req.params;
+  const tenantId = req.user?.tenantId;
   
   const items = await getQuery(`
     SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
-           p.unit_of_measure, p.brand_id
+           p.unit_of_measure, p.brand_id,
+           (ii.quantity * ii.unit_price) as line_total,
+           COALESCE(ii.discount_percentage, 0) as discount_percentage,
+           COALESCE(ii.tax_percentage, 0) as tax_percentage
     FROM invoice_items ii
     LEFT JOIN products p ON ii.product_id = p.id
-    WHERE ii.invoice_id = ?
+    JOIN invoices i ON ii.invoice_id = i.id
+    WHERE ii.invoice_id = $1 AND i.tenant_id = $2
     ORDER BY ii.created_at
-  `, [invoiceId]);
+  `, [invoiceId, tenantId]);
   
   res.json({
     success: true,
@@ -243,14 +248,19 @@ router.get('/invoices/:invoiceId/items', asyncHandler(async (req, res) => {
 router.get('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) => {
   const { getOneQuery } = require('../utils/database');
   const { invoiceId, itemId } = req.params;
+  const tenantId = req.user?.tenantId;
   
   const item = await getOneQuery(`
     SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
-           p.unit_of_measure, p.brand_id
+           p.unit_of_measure, p.brand_id,
+           (ii.quantity * ii.unit_price) as line_total,
+           COALESCE(ii.discount_percentage, 0) as discount_percentage,
+           COALESCE(ii.tax_percentage, 0) as tax_percentage
     FROM invoice_items ii
     LEFT JOIN products p ON ii.product_id = p.id
-    WHERE ii.id = ? AND ii.invoice_id = ?
-  `, [itemId, invoiceId]);
+    JOIN invoices i ON ii.invoice_id = i.id
+    WHERE ii.id = $1 AND ii.invoice_id = $2 AND i.tenant_id = $3
+  `, [itemId, invoiceId, tenantId]);
   
   if (!item) {
     throw new AppError('Invoice item not found', 404);

@@ -230,10 +230,37 @@ class FinanceService {
     }
   }
 
+  private normalizeInvoiceItem(item: any): any {
+    if (!item) return null
+    
+    const quantity = parseFloat(item.quantity || 0)
+    const unitPrice = parseFloat(item.unit_price || 0)
+    const discountPercentage = parseFloat(item.discount_percentage || 0)
+    const taxPercentage = parseFloat(item.tax_percentage || 0)
+    
+    const lineTotal = quantity * unitPrice
+    const discountAmount = lineTotal * (discountPercentage / 100)
+    const subtotal = lineTotal - discountAmount
+    const taxAmount = subtotal * (taxPercentage / 100)
+    const total = subtotal + taxAmount
+    
+    return {
+      ...item,
+      discount_percent: discountPercentage,
+      tax_rate: taxPercentage,
+      line_total: lineTotal,
+      discount_amount: discountAmount,
+      subtotal: subtotal,
+      tax_amount: taxAmount,
+      total: total,
+    }
+  }
+
   async getInvoiceItemsList(invoiceId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items`)
-      return response.data.data?.items || []
+      const items = response.data.data?.items || []
+      return items.map((item: any) => this.normalizeInvoiceItem(item))
     } catch (error) {
       console.error('Failed to fetch invoice items list:', error)
       return []
@@ -243,7 +270,8 @@ class FinanceService {
   async getInvoiceItem(invoiceId: string, itemId: string): Promise<any | null> {
     try {
       const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items/${itemId}`)
-      return response.data.data?.item || null
+      const item = response.data.data?.item || null
+      return this.normalizeInvoiceItem(item)
     } catch (error) {
       console.error('Failed to fetch invoice item:', error)
       return null
@@ -253,7 +281,8 @@ class FinanceService {
   async updateInvoiceItem(invoiceId: string, itemId: string, updates: any): Promise<any> {
     try {
       const response = await apiClient.put(`/api/finance/invoices/${invoiceId}/items/${itemId}`, updates)
-      return response.data.data?.item || response.data.data
+      const item = response.data.data?.item || response.data.data
+      return this.normalizeInvoiceItem(item)
     } catch (error) {
       console.error('Failed to update invoice item:', error)
       throw error
