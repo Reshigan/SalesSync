@@ -33,12 +33,26 @@ export interface OrderItem {
   product_id: string
   product_name?: string
   product_code?: string
+  product_sku?: string
   unit_of_measure?: string
   quantity: number
   unit_price: number
   discount_percentage?: number
+  discount_percent?: number
+  discount_amount?: number
   tax_percentage?: number
+  tax_rate?: number
+  tax_amount?: number
   line_total: number
+  subtotal?: number
+  total?: number
+  fulfillment_status?: 'pending' | 'partially_fulfilled' | 'fulfilled'
+  fulfilled_quantity?: number
+  pending_quantity?: number
+  notes?: string
+  price_override_reason?: string
+  created_at?: string
+  updated_at?: string
   product?: {
     id: string
     name: string
@@ -163,6 +177,76 @@ class OrdersService {
     } catch (error) {
       console.error('Failed to update order status:', error)
       throw error
+    }
+  }
+
+  async getOrderItemsList(orderId: string): Promise<OrderItem[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/items`)
+      return response.data.data?.items || []
+    } catch (error) {
+      console.error('Failed to fetch order items list:', error)
+      return []
+    }
+  }
+
+  async getOrderItem(orderId: string, itemId: string): Promise<OrderItem | null> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/items/${itemId}`)
+      return response.data.data?.item || null
+    } catch (error) {
+      console.error('Failed to fetch order item:', error)
+      return null
+    }
+  }
+
+  async updateOrderItem(orderId: string, itemId: string, updates: Partial<OrderItem>): Promise<OrderItem> {
+    try {
+      const response = await apiClient.put(`${this.baseUrl}/${orderId}/items/${itemId}`, updates)
+      return response.data.data?.item || response.data.data
+    } catch (error) {
+      console.error('Failed to update order item:', error)
+      throw error
+    }
+  }
+
+  async getOrderDeliveries(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries`)
+      return response.data.data?.deliveries || []
+    } catch (error) {
+      console.error('Failed to fetch order deliveries:', error)
+      return []
+    }
+  }
+
+  async getOrderDelivery(orderId: string, deliveryId: string): Promise<any | null> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries/${deliveryId}`)
+      return response.data.data?.delivery || null
+    } catch (error) {
+      console.error('Failed to fetch order delivery:', error)
+      return null
+    }
+  }
+
+  async getOrderReturns(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/returns`)
+      return response.data.data?.returns || []
+    } catch (error) {
+      console.error('Failed to fetch order returns:', error)
+      return []
+    }
+  }
+
+  async getOrderStatusHistory(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/status-history`)
+      return response.data.data?.statusHistory || []
+    } catch (error) {
+      console.error('Failed to fetch order status history:', error)
+      return []
     }
   }
 

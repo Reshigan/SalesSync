@@ -458,13 +458,8 @@ export default function Sidebar({ onNavigate }: SidebarProps = {}) {
   return (
     <div className="flex flex-col flex-1 min-h-0 bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-primary-600">
-        <div className="flex items-center">
-          <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center">
-            <span className="text-sm font-bold text-primary-600">SS</span>
-          </div>
-          <span className="ml-2 text-xl font-bold text-white">SalesSync</span>
-        </div>
+      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-gradient-to-r from-blue-600 to-blue-700">
+        <img src="/salessync-logo.svg" alt="SalesSync" className="h-10 brightness-0 invert" />
       </div>
 
       {/* Navigation */}

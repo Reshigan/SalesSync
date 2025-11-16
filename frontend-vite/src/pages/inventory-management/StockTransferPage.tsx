@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryService } from '../../services/inventory.service'
-import { Plus, Eye, TrendingRight, CheckCircle, Clock } from 'lucide-react'
+import { Plus, Eye, TrendingUp, CheckCircle, Clock } from 'lucide-react'
 
 export default function StockTransferPage() {
   const [filter, setFilter] = useState({ page: 1, limit: 20, status: '' })

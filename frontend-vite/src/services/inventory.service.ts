@@ -180,6 +180,106 @@ class InventoryService {
       throw error
     }
   }
+
+  async getStockCountLines(countId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stock-counts/${countId}/lines`)
+      return response.data.data?.lines || []
+    } catch (error) {
+      console.error('Failed to fetch stock count lines:', error)
+      throw error
+    }
+  }
+
+  async getAdjustmentItems(adjustmentId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/adjustments/${adjustmentId}/items`)
+      return response.data.data?.items || []
+    } catch (error) {
+      console.error('Failed to fetch adjustment items:', error)
+      throw error
+    }
+  }
+
+  async getTransferItems(transferId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/transfers/${transferId}/items`)
+      return response.data.data?.items || []
+    } catch (error) {
+      console.error('Failed to fetch transfer items:', error)
+      throw error
+    }
+  }
+
+  async getBatchTracking(batchId: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/batches/${batchId}/tracking`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch batch tracking:', error)
+      throw error
+    }
+  }
+
+  async getLotTracking(lotId: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/lots/${lotId}/tracking`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch lot tracking:', error)
+      throw error
+    }
+  }
+
+  async getBatchMovements(batchId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/batches/${batchId}/movements`)
+      return response.data.data?.movements || []
+    } catch (error) {
+      console.error('Failed to fetch batch movements:', error)
+      throw error
+    }
+  }
+
+  async getBatchAllocations(batchId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/batches/${batchId}/allocations`)
+      return response.data.data?.allocations || []
+    } catch (error) {
+      console.error('Failed to fetch batch allocations:', error)
+      throw error
+    }
+  }
+
+  async getStockLedgerByProduct(productId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stock-ledger/product/${productId}`)
+      return response.data.data?.ledger || []
+    } catch (error) {
+      console.error('Failed to fetch stock ledger by product:', error)
+      throw error
+    }
+  }
+
+  async getStockLedgerByWarehouse(warehouseId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stock-ledger/warehouse/${warehouseId}`)
+      return response.data.data?.ledger || []
+    } catch (error) {
+      console.error('Failed to fetch stock ledger by warehouse:', error)
+      throw error
+    }
+  }
+
+  async getSerialTracking(serialNumber: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/serials/${serialNumber}/tracking`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch serial tracking:', error)
+      throw error
+    }
+  }
 }
 
 export const inventoryService = new InventoryService()

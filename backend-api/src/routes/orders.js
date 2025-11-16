@@ -651,6 +651,162 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/:orderId/items', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const items = await getQuery(`
+      SELECT oi.*, p.name as product_name, p.code as product_code, p.sku as product_sku, 
+             p.unit_of_measure, p.brand_id,
+             (oi.quantity * oi.unit_price) as line_total,
+             (oi.quantity * oi.unit_price * (oi.discount_percentage / 100)) as discount_amount,
+             ((oi.quantity * oi.unit_price) - (oi.quantity * oi.unit_price * (oi.discount_percentage / 100))) as subtotal,
+             ((oi.quantity * oi.unit_price) - (oi.quantity * oi.unit_price * (oi.discount_percentage / 100))) * (oi.tax_percentage / 100) as tax_amount,
+             oi.line_total as total
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = $1
+      ORDER BY oi.created_at
+    `, [orderId]);
+    
+    res.json({
+      success: true,
+      data: { items }
+    });
+  } catch (error) {
+    console.error('Error fetching order items:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+router.get('/:orderId/items/:itemId', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId, itemId } = req.params;
+    
+    const item = await getOneQuery(`
+      SELECT oi.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
+             p.unit_of_measure, p.brand_id,
+             (oi.quantity * oi.unit_price) as line_total,
+             (oi.quantity * oi.unit_price * (oi.discount_percentage / 100)) as discount_amount,
+             ((oi.quantity * oi.unit_price) - (oi.quantity * oi.unit_price * (oi.discount_percentage / 100))) as subtotal,
+             ((oi.quantity * oi.unit_price) - (oi.quantity * oi.unit_price * (oi.discount_percentage / 100))) * (oi.tax_percentage / 100) as tax_amount,
+             oi.line_total as total,
+             COALESCE(oi.fulfilled_quantity, 0) as fulfilled_quantity,
+             (oi.quantity - COALESCE(oi.fulfilled_quantity, 0)) as pending_quantity,
+             CASE 
+               WHEN COALESCE(oi.fulfilled_quantity, 0) = 0 THEN 'pending'
+               WHEN COALESCE(oi.fulfilled_quantity, 0) >= oi.quantity THEN 'fulfilled'
+               ELSE 'partially_fulfilled'
+             END as fulfillment_status
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.id = $1 AND oi.order_id = $2
+    `, [itemId, orderId]);
+    
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order item not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: { item }
+    });
+  } catch (error) {
+    console.error('Error fetching order item:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+router.put('/:orderId/items/:itemId', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId, itemId } = req.params;
+    const { quantity, unit_price, discount_percentage, tax_percentage, notes, price_override_reason } = req.body;
+    
+    const existingItem = await getOneQuery(
+      'SELECT * FROM order_items WHERE id = $1 AND order_id = $2',
+      [itemId, orderId]
+    );
+    
+    if (!existingItem) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order item not found'
+      });
+    }
+    
+    const updateData = {};
+    if (quantity !== undefined) updateData.quantity = parseInt(quantity);
+    if (unit_price !== undefined) updateData.unit_price = parseFloat(unit_price);
+    if (discount_percentage !== undefined) updateData.discount_percentage = parseFloat(discount_percentage);
+    if (tax_percentage !== undefined) updateData.tax_percentage = parseFloat(tax_percentage);
+    if (notes !== undefined) updateData.notes = notes;
+    if (price_override_reason !== undefined) updateData.price_override_reason = price_override_reason;
+    
+    const qty = quantity !== undefined ? parseInt(quantity) : existingItem.quantity;
+    const price = unit_price !== undefined ? parseFloat(unit_price) : existingItem.unit_price;
+    const discount = discount_percentage !== undefined ? parseFloat(discount_percentage) : existingItem.discount_percentage;
+    const tax = tax_percentage !== undefined ? parseFloat(tax_percentage) : existingItem.tax_percentage;
+    
+    const lineSubtotal = qty * price;
+    const lineDiscount = lineSubtotal * (discount / 100);
+    const lineTaxable = lineSubtotal - lineDiscount;
+    const lineTax = lineTaxable * (tax / 100);
+    updateData.line_total = lineTaxable + lineTax;
+    
+    await runQuery(
+      `UPDATE order_items SET ${Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $${Object.keys(updateData).length + 1} AND order_id = $${Object.keys(updateData).length + 2}`,
+      [...Object.values(updateData), itemId, orderId]
+    );
+    
+    const items = await getQuery('SELECT * FROM order_items WHERE order_id = $1', [orderId]);
+    let orderSubtotal = 0;
+    let orderTax = 0;
+    let orderDiscount = 0;
+    
+    items.forEach(item => {
+      const itemSubtotal = item.quantity * item.unit_price;
+      const itemDiscount = itemSubtotal * (item.discount_percentage / 100);
+      const itemTaxable = itemSubtotal - itemDiscount;
+      const itemTax = itemTaxable * (item.tax_percentage / 100);
+      
+      orderSubtotal += itemSubtotal;
+      orderDiscount += itemDiscount;
+      orderTax += itemTax;
+    });
+    
+    const orderTotal = orderSubtotal - orderDiscount + orderTax;
+    
+    await runQuery(
+      `UPDATE orders SET subtotal = $1, discount_amount = $2, tax_amount = $3, total_amount = $4, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $5`,
+      [orderSubtotal.toFixed(2), orderDiscount.toFixed(2), orderTax.toFixed(2), orderTotal.toFixed(2), orderId]
+    );
+    
+    const updatedItem = await getOneQuery(`
+      SELECT oi.*, p.name as product_name, p.code as product_code, p.sku as product_sku
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.id = $1 AND oi.order_id = $2
+    `, [itemId, orderId]);
+    
+    res.json({
+      success: true,
+      data: { item: updatedItem },
+      message: 'Order item updated successfully'
+    });
+  } catch (error) {
+    console.error('Error updating order item:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Additional endpoints for order management
 router.get('/customer/:customerId', async (req, res) => {
   try {
@@ -769,6 +925,103 @@ router.put('/:id/status', async (req, res) => {
   } catch (error) {
     console.error('Error updating order status:', error);
     res.status(500).json({ success: false, message: error.message || 'Failed to update order status' });
+  }
+});
+
+// GET /api/orders/:orderId/deliveries - Get deliveries for an order
+router.get('/:orderId/deliveries', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const deliveries = await getQuery(`
+      SELECT d.*, u.first_name || ' ' || u.last_name as driver_name, v.registration_number as vehicle_number
+      FROM deliveries d
+      LEFT JOIN users u ON d.driver_id = u.id
+      LEFT JOIN vehicles v ON d.vehicle_id = v.id
+      WHERE d.order_id = $1 AND d.tenant_id = $2
+      ORDER BY d.scheduled_date DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { deliveries }
+    });
+  } catch (error) {
+    console.error('Error fetching deliveries:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/deliveries/:deliveryId - Get delivery detail
+router.get('/:orderId/deliveries/:deliveryId', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId, deliveryId } = req.params;
+    
+    const delivery = await getOneQuery(`
+      SELECT d.*, u.first_name || ' ' || u.last_name as driver_name, v.registration_number as vehicle_number
+      FROM deliveries d
+      LEFT JOIN users u ON d.driver_id = u.id
+      LEFT JOIN vehicles v ON d.vehicle_id = v.id
+      WHERE d.id = $1 AND d.order_id = $2 AND d.tenant_id = $3
+    `, [deliveryId, orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { delivery }
+    });
+  } catch (error) {
+    console.error('Error fetching delivery:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/returns - Get returns for an order
+router.get('/:orderId/returns', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const returns = await getQuery(`
+      SELECT r.*, u.first_name || ' ' || u.last_name as processed_by_name
+      FROM returns r
+      LEFT JOIN users u ON r.processed_by = u.id
+      WHERE r.order_id = $1 AND r.tenant_id = $2
+      ORDER BY r.return_date DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { returns }
+    });
+  } catch (error) {
+    console.error('Error fetching returns:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/status-history - Get status history for an order
+router.get('/:orderId/status-history', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const statusHistory = await getQuery(`
+      SELECT osh.*, u.first_name || ' ' || u.last_name as changed_by_name
+      FROM order_status_history osh
+      LEFT JOIN users u ON osh.changed_by = u.id
+      WHERE osh.order_id = $1 AND osh.tenant_id = $2
+      ORDER BY osh.changed_at DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { statusHistory }
+    });
+  } catch (error) {
+    console.error('Error fetching status history:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

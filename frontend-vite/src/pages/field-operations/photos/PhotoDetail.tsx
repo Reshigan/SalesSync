@@ -1,0 +1,138 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Image, MapPin, Calendar, User } from 'lucide-react'
+
+export default function PhotoDetail() {
+  const { visitId, photoId } = useParams<{ visitId: string; photoId: string }>()
+  const navigate = useNavigate()
+
+  const { data: photo, isLoading } = useQuery({
+    queryKey: ['photo', visitId, photoId],
+    queryFn: async () => {
+      return null
+    },
+    oldData: {
+      id: photoId,
+      visit_id: visitId,
+      photo_url: '/placeholder-photo.jpg',
+      photo_type: 'board_placement',
+      caption: 'Coca-Cola promotional board installed at store entrance',
+      taken_at: '2024-01-20T09:35:00Z',
+      taken_by: 'John Field Agent',
+      location: {
+        latitude: -1.2921,
+        longitude: 36.8219,
+        address: 'ABC Store, Nairobi',
+      },
+      metadata: {
+        device: 'iPhone 13',
+        resolution: '4032x3024',
+        file_size: '2.4 MB',
+      },
+    }),
+  })
+
+  if (isLoading) {
+    return <div className="p-6">Loading photo...</div>
+  }
+
+  if (!photo) {
+    return <div className="p-6">Photo not found</div>
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(`/field-operations/visits/${visitId}`)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Visit
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Photo Detail</h1>
+        <p className="text-gray-600 capitalize">{photo.photo_type.replace('_', ' ')}</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow p-6">
+            <img
+              src={photo.photo_url}
+              alt={photo.caption}
+              className="w-full h-auto rounded-lg"
+            />
+            {photo.caption && (
+              <p className="mt-4 text-sm text-gray-700">{photo.caption}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo Information</h2>
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Type</dt>
+                <dd className="mt-1 text-sm text-gray-900 capitalize">
+                  {photo.photo_type.replace('_', ' ')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Taken At</dt>
+                <dd className="mt-1 text-sm text-gray-900 flex items-center gap-1">
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                  {new Date(photo.taken_at).toLocaleString()}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Taken By</dt>
+                <dd className="mt-1 text-sm text-gray-900 flex items-center gap-1">
+                  <User className="h-4 w-4 text-gray-400" />
+                  {photo.taken_by}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Address</dt>
+                <dd className="mt-1 text-sm text-gray-900 flex items-start gap-1">
+                  <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                  {photo.location.address}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Coordinates</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {photo.location.latitude.toFixed(6)}, {photo.location.longitude.toFixed(6)}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Metadata</h2>
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Device</dt>
+                <dd className="mt-1 text-sm text-gray-900">{photo.metadata.device}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Resolution</dt>
+                <dd className="mt-1 text-sm text-gray-900">{photo.metadata.resolution}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">File Size</dt>
+                <dd className="mt-1 text-sm text-gray-900">{photo.metadata.file_size}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -130,4 +130,104 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/commissions/payouts/:payoutId/lines - Get payout lines
+router.get('/payouts/:payoutId/lines', authMiddleware, asyncHandler(async (req, res) => {
+  const { payoutId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const lines = await getQuery(`
+    SELECT 
+      pl.*,
+      u.first_name || ' ' || u.last_name as agent_name,
+      pl.commission_amount,
+      pl.payment_method,
+      pl.status
+    FROM payout_lines pl
+    LEFT JOIN users u ON pl.agent_id = u.id
+    JOIN payouts p ON pl.payout_id = p.id
+    WHERE pl.payout_id = $1 AND p.tenant_id = $2
+    ORDER BY u.first_name, u.last_name
+  `, [payoutId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { lines: lines || [] }
+  });
+}));
+
+// GET /api/commissions/payouts/:payoutId/lines/:lineId/audit - Get payout line audit trail
+router.get('/payouts/:payoutId/lines/:lineId/audit', authMiddleware, asyncHandler(async (req, res) => {
+  const { payoutId, lineId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const auditTrail = await getQuery(`
+    SELECT 
+      pa.*,
+      u.first_name || ' ' || u.last_name as performed_by
+    FROM payout_audit pa
+    LEFT JOIN users u ON pa.performed_by = u.id
+    WHERE pa.payout_line_id = $1 AND pa.tenant_id = $2
+    ORDER BY pa.performed_at DESC
+  `, [lineId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { auditTrail: auditTrail || [] }
+  });
+}));
+
+// GET /api/commissions/agents/:agentId/calculations - Get commission calculation log
+router.get('/agents/:agentId/calculations', authMiddleware, asyncHandler(async (req, res) => {
+  const { agentId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const calculations = await getQuery(`
+    SELECT 
+      cc.*,
+      cc.calculation_date,
+      cc.period_start,
+      cc.period_end,
+      cc.total_sales,
+      cc.commission_rate,
+      cc.commission_amount,
+      cc.status
+    FROM commission_calculations cc
+    WHERE cc.agent_id = $1 AND cc.tenant_id = $2
+    ORDER BY cc.calculation_date DESC
+    LIMIT 100
+  `, [agentId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { calculations: calculations || [] }
+  });
+}));
+
+// GET /api/commissions/payouts/:payoutId/lines/:lineId/transactions - Get source transactions
+router.get('/payouts/:payoutId/lines/:lineId/transactions', authMiddleware, asyncHandler(async (req, res) => {
+  const { payoutId, lineId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const transactions = await getQuery(`
+    SELECT 
+      ct.*,
+      o.order_number,
+      c.name as customer_name,
+      ct.transaction_date,
+      ct.transaction_type,
+      ct.amount,
+      ct.commission_amount
+    FROM commission_transactions ct
+    LEFT JOIN orders o ON ct.order_id = o.id
+    LEFT JOIN customers c ON o.customer_id = c.id
+    WHERE ct.payout_line_id = $1 AND ct.tenant_id = $2
+    ORDER BY ct.transaction_date DESC
+  `, [lineId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { transactions: transactions || [] }
+  });
+}));
+
 module.exports = router;

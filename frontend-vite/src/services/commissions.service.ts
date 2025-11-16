@@ -188,6 +188,46 @@ class CommissionsService {
       throw error
     }
   }
+
+  async getPayoutLines(payoutId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/payouts/${payoutId}/lines`)
+      return response.data.data?.lines || []
+    } catch (error) {
+      console.error('Failed to fetch payout lines:', error)
+      throw error
+    }
+  }
+
+  async getPayoutAuditTrail(payoutId: string, lineId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/payouts/${payoutId}/lines/${lineId}/audit`)
+      return response.data.data?.audit || []
+    } catch (error) {
+      console.error('Failed to fetch payout audit trail:', error)
+      throw error
+    }
+  }
+
+  async getAgentCalculations(agentId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/agents/${agentId}/calculations`)
+      return response.data.data?.calculations || []
+    } catch (error) {
+      console.error('Failed to fetch agent calculations:', error)
+      throw error
+    }
+  }
+
+  async getPayoutSourceTransactions(payoutId: string, lineId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/payouts/${payoutId}/lines/${lineId}/transactions`)
+      return response.data.data?.transactions || []
+    } catch (error) {
+      console.error('Failed to fetch payout source transactions:', error)
+      throw error
+    }
+  }
 }
 
 export const commissionsService = new CommissionsService()
