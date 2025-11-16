@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tantml:invoke name="@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, DollarSign, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
 import { ordersService } from '../../../services/orders.service'
