@@ -198,6 +198,136 @@ import { BackupManagementPage } from './pages/admin-settings/BackupManagementPag
 import { IntegrationsPage } from './pages/admin-settings/IntegrationsPage'
 import { SystemHealthPage } from './pages/admin-settings/SystemHealthPage'
 
+import InvoicesList from './pages/sales/invoices/InvoicesList'
+import PaymentsList from './pages/sales/payments/PaymentsList'
+import CreditNotesList from './pages/sales/credit-notes/CreditNotesList'
+import SalesReturnsList from './pages/sales/returns/SalesReturnsList'
+import SalesOrdersList from './pages/sales/orders/SalesOrdersList'
+import VanSalesOrdersList from './pages/van-sales/orders/VanSalesOrdersList'
+import VanSalesReturnsList from './pages/van-sales/returns/VanSalesReturnsList'
+import VanLoadsList from './pages/van-sales/van-loads/VanLoadsList'
+import VanCashReconciliationList from './pages/van-sales/cash-reconciliation/CashReconciliationList'
+import AdjustmentsList from './pages/inventory/adjustments/AdjustmentsList'
+import IssuesList from './pages/inventory/issues/IssuesList'
+import ReceiptsList from './pages/inventory/receipts/ReceiptsList'
+import StockCountsList from './pages/inventory/stock-counts/StockCountsList'
+import TransfersList from './pages/inventory/transfers/TransfersList'
+import CashReconciliationList from './pages/finance/cash-reconciliation/CashReconciliationList'
+import CommissionPayoutsList from './pages/finance/commission-payouts/CommissionPayoutsList'
+import FinanceDashboard from './pages/finance/FinanceDashboard'
+import InvoiceManagementPage from './pages/finance/InvoiceManagementPage'
+import PaymentCollectionPage from './pages/finance/PaymentCollectionPage'
+
+import { BankDepositPage } from './pages/cash-reconciliation/BankDepositPage'
+import { CashCollectionPage } from './pages/cash-reconciliation/CashCollectionPage'
+import { CashReportsPage } from './pages/cash-reconciliation/CashReportsPage'
+import { CashSessionDashboardPage } from './pages/cash-reconciliation/CashSessionDashboardPage'
+import { CloseCashSessionPage } from './pages/cash-reconciliation/CloseCashSessionPage'
+import { StartCashSessionPage } from './pages/cash-reconciliation/StartCashSessionPage'
+import { VarianceApprovalPage } from './pages/cash-reconciliation/VarianceApprovalPage'
+
+import { CommissionApprovalPage } from './pages/commissions/CommissionApprovalPage'
+import { CommissionCalculationPage } from './pages/commissions/CommissionCalculationPage'
+import { CommissionDashboardPage } from './pages/commissions/CommissionDashboardPage'
+import { CommissionPaymentPage } from './pages/commissions/CommissionPaymentPage'
+import { CommissionReportsPage } from './pages/commissions/CommissionReportsPage'
+import { CommissionSettingsPage } from './pages/commissions/CommissionSettingsPage'
+
+import ActivationsList from './pages/marketing/activations/ActivationsList'
+import CampaignsList from './pages/marketing/campaigns/CampaignsList'
+import EventsList from './pages/marketing/events/EventsList'
+import PromotionsList from './pages/marketing/promotions/PromotionsList'
+
+import CustomersList from './pages/crm/customers/CustomersList'
+import KYCCasesList from './pages/crm/kyc-cases/KYCCasesList'
+import SurveysList from './pages/crm/surveys/SurveysList'
+
+// Field Operations List Pages
+import BoardPlacementsList from './pages/field-operations/board-placements/BoardPlacementsList'
+import CommissionLedgerList from './pages/field-operations/commission-ledger/CommissionLedgerList'
+import ProductDistributionsList from './pages/field-operations/product-distributions/ProductDistributionsList'
+
+import { CustomerAnalyticsPage } from './pages/customer-management/CustomerAnalyticsPage'
+import { CustomerCreditManagementPage } from './pages/customer-management/CustomerCreditManagementPage'
+import { CustomerHierarchyPage } from './pages/customer-management/CustomerHierarchyPage'
+import { CustomerImportExportPage } from './pages/customer-management/CustomerImportExportPage'
+import { CustomerListPage } from './pages/customer-management/CustomerListPage'
+import { CustomerSegmentationPage } from './pages/customer-management/CustomerSegmentationPage'
+import { CustomerVisitHistoryPage } from './pages/customer-management/CustomerVisitHistoryPage'
+
+import { ProductAnalyticsPage } from './pages/product-management/ProductAnalyticsPage'
+import { ProductHierarchyPage } from './pages/product-management/ProductHierarchyPage'
+import { ProductImportExportPage } from './pages/product-management/ProductImportExportPage'
+import { ProductInventoryPage } from './pages/product-management/ProductInventoryPage'
+import { ProductListPage } from './pages/product-management/ProductListPage'
+import { ProductPricingPage } from './pages/product-management/ProductPricingPage'
+
+import { CreditNotesPage } from './pages/order-lifecycle/CreditNotesPage'
+import { DeliveryTrackingPage } from './pages/order-lifecycle/DeliveryTrackingPage'
+import { OrderFulfillmentPage } from './pages/order-lifecycle/OrderFulfillmentPage'
+import { QuotationApprovalPage } from './pages/order-lifecycle/QuotationApprovalPage'
+import { QuotationManagementPage } from './pages/order-lifecycle/QuotationManagementPage'
+import { RefundProcessingPage } from './pages/order-lifecycle/RefundProcessingPage'
+import { ReturnManagementPage } from './pages/order-lifecycle/ReturnManagementPage'
+
+// Inventory Management Pages
+import InventoryAnalyticsPage from './pages/inventory-management/InventoryAnalyticsPage'
+import StockCountListPage from './pages/inventory-management/StockCountListPage'
+import StockMovementsPage from './pages/inventory-management/StockMovementsPage'
+import StockOverviewPage from './pages/inventory-management/StockOverviewPage'
+import StockTransferPage from './pages/inventory-management/StockTransferPage'
+import WarehouseManagementPage from './pages/inventory-management/WarehouseManagementPage'
+
+import AnalyticsDashboardPage from './pages/reports/AnalyticsDashboardPage'
+import ReportBuilderPage from './pages/reports/ReportBuilderPage'
+import ReportTemplatesPage from './pages/reports/ReportTemplatesPage'
+import CommissionSummaryReport from './pages/reports/finance/CommissionSummaryReport'
+import InventorySnapshotReport from './pages/reports/inventory/InventorySnapshotReport'
+import VarianceAnalysisReport from './pages/reports/inventory/VarianceAnalysisReport'
+import FieldOperationsProductivityReport from './pages/reports/operations/FieldOperationsProductivityReport'
+import SalesExceptionsReport from './pages/reports/sales/SalesExceptionsReport'
+import SalesSummaryReport from './pages/reports/sales/SalesSummaryReport'
+
+import { CustomerAnalyticsPage as CustomerAnalyticsReportPage } from './pages/reports-analytics/CustomerAnalyticsPage'
+import { ExecutiveDashboardPage } from './pages/reports-analytics/ExecutiveDashboardPage'
+import { FinancialReportsPage } from './pages/reports-analytics/FinancialReportsPage'
+import { InventoryReportsPage } from './pages/reports-analytics/InventoryReportsPage'
+import { PerformanceAnalyticsPage } from './pages/reports-analytics/PerformanceAnalyticsPage'
+import { SalesReportsPage } from './pages/reports-analytics/SalesReportsPage'
+
+// KYC Surveys Pages
+import { AuditTrailPage } from './pages/kyc-surveys/AuditTrailPage'
+import { KYCAnalyticsPage } from './pages/kyc-surveys/KYCAnalyticsPage'
+import { KYCListPage } from './pages/kyc-surveys/KYCListPage'
+import { SurveyListPage } from './pages/kyc-surveys/SurveyListPage'
+import { SurveyResponsesPage } from './pages/kyc-surveys/SurveyResponsesPage'
+
+// Additional Dashboard Pages
+import CustomerDashboard from './pages/customers/CustomerDashboard'
+import OrderDashboard from './pages/orders/OrderDashboard'
+import AgentDashboard from './pages/agent/AgentDashboard'
+import AdvancedAnalyticsDashboard from './pages/analytics/AdvancedAnalyticsDashboard'
+import ExecutiveDashboard from './pages/analytics/ExecutiveDashboard'
+import SalesDashboard from './pages/sales/SalesDashboard'
+import BrandActivationsPage from './pages/brand-activations/BrandActivationsPage'
+import TenantManagement from './pages/superadmin/TenantManagement'
+
+// Field Operations Additional Pages
+import FieldAgentDashboardPage from './pages/field-operations/FieldAgentDashboardPage'
+import LiveGPSTrackingPage from './pages/field-operations/LiveGPSTrackingPage'
+import VisitHistoryPage from './pages/field-operations/VisitHistoryPage'
+import VisitManagementPage from './pages/field-operations/VisitManagementPage'
+
+// Van Sales Additional Pages
+import VanCashCollectionPage from './pages/van-sales/VanCashCollectionPage'
+import VanInventoryPage from './pages/van-sales/VanInventoryPage'
+import VanOrdersListPage from './pages/van-sales/VanOrdersListPage'
+import VanPerformancePage from './pages/van-sales/VanPerformancePage'
+import VanRoutesListPage from './pages/van-sales/VanRoutesListPage'
+
+import SurveyPage from './pages/field-agents/SurveyPage'
+import TaskPage from './pages/field-agents/TaskPage'
+
 // Components
 import LoadingSpinner from './components/ui/LoadingSpinner'
 import ProtectedRoute from './components/auth/ProtectedRoute'
@@ -248,43 +378,75 @@ function App() {
             <Route path="analytics-dashboard/orders" element={<OrdersAnalytics />} />
             <Route path="analytics-dashboard/field-ops" element={<FieldOpsAnalytics />} />
             <Route path="analytics-dashboard/commissions" element={<CommissionsAnalytics />} />
+            <Route path="analytics-dashboard/advanced" element={<AdvancedAnalyticsDashboard />} />
+            <Route path="analytics-dashboard/executive" element={<ExecutiveDashboard />} />
+            
+            {/* Reports Routes */}
+            <Route path="reports" element={<AnalyticsDashboardPage />} />
+            <Route path="reports/builder" element={<ReportBuilderPage />} />
+            <Route path="reports/templates" element={<ReportTemplatesPage />} />
+            <Route path="reports/sales/summary" element={<SalesSummaryReport />} />
+            <Route path="reports/sales/exceptions" element={<SalesExceptionsReport />} />
+            <Route path="reports/finance/commission-summary" element={<CommissionSummaryReport />} />
+            <Route path="reports/inventory/snapshot" element={<InventorySnapshotReport />} />
+            <Route path="reports/inventory/variance" element={<VarianceAnalysisReport />} />
+            <Route path="reports/operations/field-ops-productivity" element={<FieldOperationsProductivityReport />} />
+            
+            {/* Reports Analytics Routes */}
+            <Route path="reports-analytics/customer" element={<CustomerAnalyticsReportPage />} />
+            <Route path="reports-analytics/executive" element={<ExecutiveDashboardPage />} />
+            <Route path="reports-analytics/financial" element={<FinancialReportsPage />} />
+            <Route path="reports-analytics/inventory" element={<InventoryReportsPage />} />
+            <Route path="reports-analytics/performance" element={<PerformanceAnalyticsPage />} />
+            <Route path="reports-analytics/sales" element={<SalesReportsPage />} />
 
             {/* Van Sales Routes */}
             <Route path="van-sales" element={<VanSalesDashboard />} />
             <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
             <Route path="van-sales/workflow" element={<VanSalesWorkflowPageMobile />} />
             <Route path="van-sales/management" element={<VanSalesPage />} />
-            <Route path="van-sales/routes" element={<RouteManagementPage />} />
+            <Route path="van-sales/performance" element={<VanPerformancePage />} />
+            <Route path="van-sales/cash-collection" element={<VanCashCollectionPage />} />
+            <Route path="van-sales/van-inventory" element={<VanInventoryPage />} />
+            <Route path="van-sales/routes" element={<VanRoutesListPage />} />
             <Route path="van-sales/routes/:id" element={<VanRouteDetailsPage />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
+            <Route path="van-sales/orders" element={<VanSalesOrdersList />} />
             <Route path="van-sales/orders/create" element={<VanOrderCreatePage />} />
             <Route path="van-sales/orders/new" element={<VanSalesOrderCreate />} />
             <Route path="van-sales/orders/:id" element={<VanSalesOrderDetail />} />
             <Route path="van-sales/orders/:id/edit" element={<VanSalesOrderEdit />} />
+            <Route path="van-sales/returns" element={<VanSalesReturnsList />} />
             <Route path="van-sales/returns/create" element={<VanSalesReturnCreate />} />
             <Route path="van-sales/returns/:id" element={<VanSalesReturnDetail />} />
+            <Route path="van-sales/van-loads" element={<VanLoadsList />} />
             <Route path="van-sales/van-loads/create" element={<VanLoadCreate />} />
             <Route path="van-sales/van-loads/:id" element={<VanLoadDetail />} />
+            <Route path="van-sales/cash-reconciliation" element={<VanCashReconciliationList />} />
             <Route path="van-sales/cash-reconciliation/create" element={<VanCashReconciliationCreate />} />
             <Route path="van-sales/cash-reconciliation/:id" element={<VanCashReconciliationDetail />} />
 
             {/* Field Operations Routes */}
             <Route path="field-operations" element={<FieldOperationsDashboard />} />
             <Route path="field-operations/dashboard" element={<FieldOperationsDashboard />} />
+            <Route path="field-operations/agent-dashboard" element={<FieldAgentDashboardPage />} />
             <Route path="field-operations/agents" element={<FieldAgentsPage />} />
             <Route path="field-operations/mapping" element={<LiveMappingPage />} />
-            <Route path="field-operations/boards" element={<BoardPlacementPage />} />
+            <Route path="field-operations/gps-tracking" element={<LiveGPSTrackingPage />} />
+            <Route path="field-operations/boards" element={<BoardPlacementsList />} />
             <Route path="field-operations/boards/create" element={<BoardPlacementFormPage />} />
             <Route path="field-operations/boards/:id" element={<BoardPlacementDetail />} />
-            <Route path="field-operations/products" element={<ProductDistributionPage />} />
+            <Route path="field-operations/products" element={<ProductDistributionsList />} />
             <Route path="field-operations/products/create" element={<ProductDistributionFormPage />} />
             <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
-            <Route path="field-operations/commission" element={<AgentCommissionDashboard />} />
+            <Route path="field-operations/commission" element={<CommissionLedgerList />} />
             <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
             <Route path="field-operations/visits" element={<VisitsList />} />
             <Route path="field-operations/visits/create" element={<VisitCreate />} />
             <Route path="field-operations/visits/:id" element={<VisitDetail />} />
             <Route path="field-operations/visits/:id/edit" element={<VisitEdit />} />
+            <Route path="field-operations/visit-history" element={<VisitHistoryPage />} />
+            <Route path="field-operations/visit-management" element={<VisitManagementPage />} />
 
             {/* Field Marketing Routes */}
             <Route path="field-marketing" element={<FieldMarketingDashboard />} />
@@ -304,6 +466,13 @@ function App() {
             <Route path="kyc/dashboard" element={<KYCDashboard />} />
             <Route path="kyc/management" element={<KYCManagement />} />
             <Route path="kyc/reports" element={<KYCReports />} />
+            
+            {/* KYC Surveys Routes */}
+            <Route path="kyc-surveys/list" element={<KYCListPage />} />
+            <Route path="kyc-surveys/analytics" element={<KYCAnalyticsPage />} />
+            <Route path="kyc-surveys/surveys" element={<SurveyListPage />} />
+            <Route path="kyc-surveys/responses" element={<SurveyResponsesPage />} />
+            <Route path="kyc-surveys/audit-trail" element={<AuditTrailPage />} />
 
             {/* Surveys Routes */}
             <Route path="surveys" element={<SurveysDashboard />} />
@@ -317,16 +486,29 @@ function App() {
             <Route path="inventory/stock-count/:id" element={<StockCountDetailsPage />} />
             <Route path="inventory/management" element={<InventoryManagement />} />
             <Route path="inventory/reports" element={<InventoryReports />} />
+            <Route path="inventory/adjustments" element={<AdjustmentsList />} />
             <Route path="inventory/adjustments/create" element={<AdjustmentCreate />} />
             <Route path="inventory/adjustments/:id" element={<AdjustmentDetail />} />
+            <Route path="inventory/issues" element={<IssuesList />} />
             <Route path="inventory/issues/create" element={<IssueCreate />} />
             <Route path="inventory/issues/:id" element={<IssueDetail />} />
+            <Route path="inventory/receipts" element={<ReceiptsList />} />
             <Route path="inventory/receipts/create" element={<ReceiptCreate />} />
             <Route path="inventory/receipts/:id" element={<ReceiptDetail />} />
+            <Route path="inventory/stock-counts" element={<StockCountsList />} />
             <Route path="inventory/stock-counts/create" element={<StockCountCreate />} />
             <Route path="inventory/stock-counts/:id" element={<StockCountDetail />} />
+            <Route path="inventory/transfers" element={<TransfersList />} />
             <Route path="inventory/transfers/create" element={<TransferCreate />} />
             <Route path="inventory/transfers/:id" element={<TransferDetail />} />
+            
+            {/* Inventory Management Routes */}
+            <Route path="inventory-management/overview" element={<StockOverviewPage />} />
+            <Route path="inventory-management/analytics" element={<InventoryAnalyticsPage />} />
+            <Route path="inventory-management/movements" element={<StockMovementsPage />} />
+            <Route path="inventory-management/stock-counts" element={<StockCountListPage />} />
+            <Route path="inventory-management/transfers" element={<StockTransferPage />} />
+            <Route path="inventory-management/warehouses" element={<WarehouseManagementPage />} />
 
             {/* Promotions Routes */}
             <Route path="promotions" element={<PromotionsDashboard />} />
@@ -346,21 +528,32 @@ function App() {
 
             {/* Campaign Routes */}
             <Route path="campaigns" element={<CampaignsPage />} />
+            
+            {/* Brand Activations Routes */}
+            <Route path="brand-activations" element={<BrandActivationsPage />} />
+            
+            {/* Superadmin Routes */}
+            <Route path="superadmin/tenants" element={<TenantManagement />} />
 
             {/* Legacy Field Agent Routes (for backward compatibility) */}
             <Route path="field-agents" element={<FieldAgentsPage />} />
+            <Route path="field-agents/dashboard" element={<AgentDashboard />} />
             <Route path="field-agents/workflow" element={<AgentWorkflowPageMobile />} />
             <Route path="field-agents/mapping" element={<LiveMappingPage />} />
             <Route path="field-agents/boards" element={<BoardPlacementPage />} />
             <Route path="field-agents/products" element={<ProductDistributionPage />} />
             <Route path="field-agents/commission" element={<AgentCommissionDashboard />} />
+            <Route path="field-agents/surveys" element={<SurveyPage />} />
+            <Route path="field-agents/tasks" element={<TaskPage />} />
 
             {/* Business Routes */}
             <Route path="customers" element={<CustomersPage />} />
+            <Route path="customers/dashboard" element={<CustomerDashboard />} />
             <Route path="customers/create" element={<CustomerCreatePage />} />
             <Route path="customers/:id" element={<CustomerDetailsPage />} />
             <Route path="customers/:id/edit" element={<CustomerEditPage />} />
             <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/dashboard" element={<OrderDashboard />} />
             <Route path="orders/create" element={<OrderCreatePage />} />
             <Route path="orders/:id" element={<OrderDetailsPage />} />
             <Route path="orders/:id/edit" element={<OrderEditPage />} />
@@ -368,45 +561,106 @@ function App() {
             <Route path="products/create" element={<ProductCreatePage />} />
             <Route path="products/:id" element={<ProductDetailsPage />} />
             <Route path="products/:id/edit" element={<ProductEditPage />} />
+            
+            {/* Customer Management Routes */}
+            <Route path="customer-management/list" element={<CustomerListPage />} />
+            <Route path="customer-management/analytics" element={<CustomerAnalyticsPage />} />
+            <Route path="customer-management/credit" element={<CustomerCreditManagementPage />} />
+            <Route path="customer-management/hierarchy" element={<CustomerHierarchyPage />} />
+            <Route path="customer-management/import-export" element={<CustomerImportExportPage />} />
+            <Route path="customer-management/segmentation" element={<CustomerSegmentationPage />} />
+            <Route path="customer-management/visit-history" element={<CustomerVisitHistoryPage />} />
+            
+            {/* Product Management Routes */}
+            <Route path="product-management/list" element={<ProductListPage />} />
+            <Route path="product-management/analytics" element={<ProductAnalyticsPage />} />
+            <Route path="product-management/hierarchy" element={<ProductHierarchyPage />} />
+            <Route path="product-management/import-export" element={<ProductImportExportPage />} />
+            <Route path="product-management/inventory" element={<ProductInventoryPage />} />
+            <Route path="product-management/pricing" element={<ProductPricingPage />} />
+            
+            {/* Order Lifecycle Routes */}
+            <Route path="order-lifecycle/quotations" element={<QuotationManagementPage />} />
+            <Route path="order-lifecycle/quotation-approval" element={<QuotationApprovalPage />} />
+            <Route path="order-lifecycle/fulfillment" element={<OrderFulfillmentPage />} />
+            <Route path="order-lifecycle/delivery-tracking" element={<DeliveryTrackingPage />} />
+            <Route path="order-lifecycle/returns" element={<ReturnManagementPage />} />
+            <Route path="order-lifecycle/credit-notes" element={<CreditNotesPage />} />
+            <Route path="order-lifecycle/refunds" element={<RefundProcessingPage />} />
 
             {/* Sales Routes */}
+            <Route path="sales" element={<SalesDashboard />} />
+            <Route path="sales/orders" element={<SalesOrdersList />} />
             <Route path="sales/orders/create" element={<SalesOrderCreate />} />
             <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
             <Route path="sales/orders/:id/edit" element={<SalesOrderEdit />} />
+            <Route path="sales/invoices" element={<InvoicesList />} />
             <Route path="sales/invoices/create" element={<InvoiceCreate />} />
             <Route path="sales/invoices/:id" element={<InvoiceDetail />} />
+            <Route path="sales/payments" element={<PaymentsList />} />
             <Route path="sales/payments/create" element={<PaymentCreate />} />
             <Route path="sales/payments/:id" element={<PaymentDetail />} />
+            <Route path="sales/credit-notes" element={<CreditNotesList />} />
             <Route path="sales/credit-notes/create" element={<CreditNoteCreate />} />
             <Route path="sales/credit-notes/:id" element={<CreditNoteDetail />} />
+            <Route path="sales/returns" element={<SalesReturnsList />} />
             <Route path="sales/returns/create" element={<SalesReturnCreate />} />
             <Route path="sales/returns/:id" element={<SalesReturnDetail />} />
 
             {/* Marketing Routes */}
+            <Route path="marketing/campaigns" element={<CampaignsList />} />
             <Route path="marketing/campaigns/create" element={<CampaignCreate />} />
             <Route path="marketing/campaigns/:id" element={<CampaignDetail />} />
             <Route path="marketing/campaigns/:id/edit" element={<CampaignEdit />} />
+            <Route path="marketing/events" element={<EventsList />} />
             <Route path="marketing/events/create" element={<EventCreate />} />
             <Route path="marketing/events/:id" element={<EventDetail />} />
             <Route path="marketing/events/:id/edit" element={<EventEdit />} />
+            <Route path="marketing/activations" element={<ActivationsList />} />
             <Route path="marketing/activations/create" element={<ActivationCreate />} />
             <Route path="marketing/activations/:id" element={<ActivationDetail />} />
+            <Route path="marketing/promotions" element={<PromotionsList />} />
             <Route path="marketing/promotions/create" element={<PromotionCreate />} />
             <Route path="marketing/promotions/:id" element={<PromotionDetail />} />
 
             {/* CRM Routes */}
+            <Route path="crm/customers" element={<CustomersList />} />
             <Route path="crm/customers/create" element={<CRMCustomerCreate />} />
             <Route path="crm/customers/:id" element={<CRMCustomerDetail />} />
             <Route path="crm/customers/:id/edit" element={<CRMCustomerEdit />} />
+            <Route path="crm/kyc-cases" element={<KYCCasesList />} />
             <Route path="crm/kyc-cases/create" element={<KYCCaseCreate />} />
             <Route path="crm/kyc-cases/:id" element={<KYCCaseDetail />} />
+            <Route path="crm/surveys" element={<SurveysList />} />
             <Route path="crm/surveys/create" element={<SurveyCreate />} />
             <Route path="crm/surveys/:id" element={<SurveyDetail />} />
 
             {/* Finance Routes */}
+            <Route path="finance" element={<FinanceDashboard />} />
+            <Route path="finance/invoices" element={<InvoiceManagementPage />} />
+            <Route path="finance/payments" element={<PaymentCollectionPage />} />
+            <Route path="finance/cash-reconciliation" element={<CashReconciliationList />} />
             <Route path="finance/cash-reconciliation/create" element={<CashReconciliationCreate />} />
             <Route path="finance/cash-reconciliation/:id" element={<CashReconciliationDetail />} />
+            <Route path="finance/commission-payouts" element={<CommissionPayoutsList />} />
             <Route path="finance/commission-payouts/:id" element={<CommissionPayoutDetail />} />
+            
+            {/* Cash Reconciliation Routes */}
+            <Route path="cash-reconciliation" element={<CashSessionDashboardPage />} />
+            <Route path="cash-reconciliation/start" element={<StartCashSessionPage />} />
+            <Route path="cash-reconciliation/close" element={<CloseCashSessionPage />} />
+            <Route path="cash-reconciliation/collection" element={<CashCollectionPage />} />
+            <Route path="cash-reconciliation/deposit" element={<BankDepositPage />} />
+            <Route path="cash-reconciliation/variance" element={<VarianceApprovalPage />} />
+            <Route path="cash-reconciliation/reports" element={<CashReportsPage />} />
+            
+            {/* Commission Routes */}
+            <Route path="commissions" element={<CommissionDashboardPage />} />
+            <Route path="commissions/calculation" element={<CommissionCalculationPage />} />
+            <Route path="commissions/approval" element={<CommissionApprovalPage />} />
+            <Route path="commissions/payment" element={<CommissionPaymentPage />} />
+            <Route path="commissions/reports" element={<CommissionReportsPage />} />
+            <Route path="commissions/settings" element={<CommissionSettingsPage />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
