@@ -302,12 +302,27 @@ const navigation = [
       },
       {
         name: 'Orders',
-        href: '/orders',
+        href: '/sales/orders',
         permission: PERMISSIONS.VIEW_ORDERS,
       },
       {
-        name: 'Order Analytics',
-        href: '/orders/dashboard',
+        name: 'Invoices',
+        href: '/sales/invoices',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Payments',
+        href: '/sales/payments',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Credit Notes',
+        href: '/sales/credit-notes',
+        permission: PERMISSIONS.VIEW_ORDERS,
+      },
+      {
+        name: 'Returns',
+        href: '/sales/returns',
         permission: PERMISSIONS.VIEW_ORDERS,
       },
     ],
