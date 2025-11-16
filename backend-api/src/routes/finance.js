@@ -220,6 +220,126 @@ router.delete('/invoices/:id', asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'Invoice deleted successfully' });
 }));
 
+// Get invoice items list
+router.get('/invoices/:invoiceId/items', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  const { invoiceId } = req.params;
+  
+  const items = await getQuery(`
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
+           p.unit_of_measure, p.brand_id
+    FROM invoice_items ii
+    LEFT JOIN products p ON ii.product_id = p.id
+    WHERE ii.invoice_id = ?
+    ORDER BY ii.created_at
+  `, [invoiceId]);
+  
+  res.json({
+    success: true,
+    data: { items }
+  });
+}));
+
+router.get('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) => {
+  const { getOneQuery } = require('../utils/database');
+  const { invoiceId, itemId } = req.params;
+  
+  const item = await getOneQuery(`
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
+           p.unit_of_measure, p.brand_id
+    FROM invoice_items ii
+    LEFT JOIN products p ON ii.product_id = p.id
+    WHERE ii.id = ? AND ii.invoice_id = ?
+  `, [itemId, invoiceId]);
+  
+  if (!item) {
+    throw new AppError('Invoice item not found', 404);
+  }
+  
+  res.json({
+    success: true,
+    data: { item }
+  });
+}));
+
+// Update invoice item
+router.put('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery, getQuery } = require('../utils/database');
+  const { invoiceId, itemId } = req.params;
+  const { product_id, description, quantity, unit_price, discount_percentage, tax_percentage } = req.body;
+  
+  const existingItem = await getOneQuery(
+    'SELECT * FROM invoice_items WHERE id = ? AND invoice_id = ?',
+    [itemId, invoiceId]
+  );
+  
+  if (!existingItem) {
+    throw new AppError('Invoice item not found', 404);
+  }
+  
+  const updateData = {};
+  if (product_id !== undefined) updateData.product_id = product_id;
+  if (description !== undefined) updateData.description = description;
+  if (quantity !== undefined) updateData.quantity = parseInt(quantity);
+  if (unit_price !== undefined) updateData.unit_price = parseFloat(unit_price);
+  if (discount_percentage !== undefined) updateData.discount_percentage = parseFloat(discount_percentage);
+  if (tax_percentage !== undefined) updateData.tax_percentage = parseFloat(tax_percentage);
+  
+  const qty = quantity !== undefined ? parseInt(quantity) : existingItem.quantity;
+  const price = unit_price !== undefined ? parseFloat(unit_price) : existingItem.unit_price;
+  const discount = discount_percentage !== undefined ? parseFloat(discount_percentage) : (existingItem.discount_percentage || 0);
+  const tax = tax_percentage !== undefined ? parseFloat(tax_percentage) : (existingItem.tax_percentage || 0);
+  
+  const lineSubtotal = qty * price;
+  const lineDiscount = lineSubtotal * (discount / 100);
+  const lineTaxable = lineSubtotal - lineDiscount;
+  const lineTax = lineTaxable * (tax / 100);
+  updateData.total = lineTaxable + lineTax;
+  
+  await runQuery(
+    `UPDATE invoice_items SET ${Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
+     WHERE id = $${Object.keys(updateData).length + 1} AND invoice_id = $${Object.keys(updateData).length + 2}`,
+    [...Object.values(updateData), itemId, invoiceId]
+  );
+  
+  const items = await getQuery('SELECT * FROM invoice_items WHERE invoice_id = ?', [invoiceId]);
+  let invoiceSubtotal = 0;
+  let invoiceTax = 0;
+  let invoiceDiscount = 0;
+  
+  items.forEach(item => {
+    const itemSubtotal = item.quantity * item.unit_price;
+    const itemDiscount = itemSubtotal * ((item.discount_percentage || 0) / 100);
+    const itemTaxable = itemSubtotal - itemDiscount;
+    const itemTax = itemTaxable * ((item.tax_percentage || 0) / 100);
+    
+    invoiceSubtotal += itemSubtotal;
+    invoiceDiscount += itemDiscount;
+    invoiceTax += itemTax;
+  });
+  
+  const invoiceTotal = invoiceSubtotal - invoiceDiscount + invoiceTax;
+  
+  await runQuery(
+    `UPDATE invoices SET subtotal = $1, discount = $2, tax = $3, total = $4, updated_at = CURRENT_TIMESTAMP 
+     WHERE id = $5`,
+    [invoiceSubtotal.toFixed(2), invoiceDiscount.toFixed(2), invoiceTax.toFixed(2), invoiceTotal.toFixed(2), invoiceId]
+  );
+  
+  const updatedItem = await getOneQuery(`
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku
+    FROM invoice_items ii
+    LEFT JOIN products p ON ii.product_id = p.id
+    WHERE ii.id = ? AND ii.invoice_id = ?
+  `, [itemId, invoiceId]);
+  
+  res.json({
+    success: true,
+    data: { item: updatedItem },
+    message: 'Invoice item updated successfully'
+  });
+}));
+
 // Get all payments
 router.get('/payments', asyncHandler(async (req, res) => {
   const { getQuery } = require('../utils/database');
