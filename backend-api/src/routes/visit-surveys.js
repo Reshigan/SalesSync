@@ -15,7 +15,7 @@ const { asyncHandler, AppError } = require('../middleware/errorHandler');
 router.get('/available', asyncHandler(async (req, res) => {
   const { getQuery } = require('../utils/database');
   const tenantId = req.tenantId;
-  const { target_type } = req.query;
+  const { target_type, brand_id, survey_type } = req.query;
 
   let query = `
     SELECT 
@@ -25,9 +25,13 @@ router.get('/available', asyncHandler(async (req, res) => {
       s.type, 
       s.category, 
       s.target_type,
+      s.brand_id,
+      s.survey_type,
       s.status,
+      b.name as brand_name,
       COUNT(DISTINCT sr.id) as response_count
     FROM surveys s
+    LEFT JOIN brands b ON s.brand_id = b.id
     LEFT JOIN survey_responses sr ON s.id = sr.survey_id
     WHERE s.tenant_id = $1 
       AND s.status = 'active'
@@ -41,7 +45,17 @@ router.get('/available', asyncHandler(async (req, res) => {
     params.push(target_type);
   }
 
-  query += ` GROUP BY s.id ORDER BY s.title`;
+  if (brand_id) {
+    query += ` AND (s.brand_id = $${++paramIndex} OR s.brand_id IS NULL)`;
+    params.push(brand_id);
+  }
+
+  if (survey_type && ['mandatory', 'adhoc', 'feedback', 'audit', 'brand_specific'].includes(survey_type)) {
+    query += ` AND s.survey_type = $${++paramIndex}`;
+    params.push(survey_type);
+  }
+
+  query += ` GROUP BY s.id, b.name ORDER BY s.survey_type DESC, s.title`;
 
   const surveys = await getQuery(query, params);
 
