@@ -210,6 +210,46 @@ class OrdersService {
     }
   }
 
+  async getOrderDeliveries(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries`)
+      return response.data.data?.deliveries || []
+    } catch (error) {
+      console.error('Failed to fetch order deliveries:', error)
+      return []
+    }
+  }
+
+  async getOrderDelivery(orderId: string, deliveryId: string): Promise<any | null> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries/${deliveryId}`)
+      return response.data.data?.delivery || null
+    } catch (error) {
+      console.error('Failed to fetch order delivery:', error)
+      return null
+    }
+  }
+
+  async getOrderReturns(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/returns`)
+      return response.data.data?.returns || []
+    } catch (error) {
+      console.error('Failed to fetch order returns:', error)
+      return []
+    }
+  }
+
+  async getOrderStatusHistory(orderId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/status-history`)
+      return response.data.data?.statusHistory || []
+    } catch (error) {
+      console.error('Failed to fetch order status history:', error)
+      return []
+    }
+  }
+
 }
 
 export const ordersService = new OrdersService()

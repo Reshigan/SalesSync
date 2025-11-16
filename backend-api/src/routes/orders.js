@@ -928,4 +928,101 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
+// GET /api/orders/:orderId/deliveries - Get deliveries for an order
+router.get('/:orderId/deliveries', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const deliveries = await getQuery(`
+      SELECT d.*, u.first_name || ' ' || u.last_name as driver_name, v.registration_number as vehicle_number
+      FROM deliveries d
+      LEFT JOIN users u ON d.driver_id = u.id
+      LEFT JOIN vehicles v ON d.vehicle_id = v.id
+      WHERE d.order_id = $1 AND d.tenant_id = $2
+      ORDER BY d.scheduled_date DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { deliveries }
+    });
+  } catch (error) {
+    console.error('Error fetching deliveries:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/deliveries/:deliveryId - Get delivery detail
+router.get('/:orderId/deliveries/:deliveryId', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId, deliveryId } = req.params;
+    
+    const delivery = await getOneQuery(`
+      SELECT d.*, u.first_name || ' ' || u.last_name as driver_name, v.registration_number as vehicle_number
+      FROM deliveries d
+      LEFT JOIN users u ON d.driver_id = u.id
+      LEFT JOIN vehicles v ON d.vehicle_id = v.id
+      WHERE d.id = $1 AND d.order_id = $2 AND d.tenant_id = $3
+    `, [deliveryId, orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { delivery }
+    });
+  } catch (error) {
+    console.error('Error fetching delivery:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/returns - Get returns for an order
+router.get('/:orderId/returns', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const returns = await getQuery(`
+      SELECT r.*, u.first_name || ' ' || u.last_name as processed_by_name
+      FROM returns r
+      LEFT JOIN users u ON r.processed_by = u.id
+      WHERE r.order_id = $1 AND r.tenant_id = $2
+      ORDER BY r.return_date DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { returns }
+    });
+  } catch (error) {
+    console.error('Error fetching returns:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// GET /api/orders/:orderId/status-history - Get status history for an order
+router.get('/:orderId/status-history', async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const { orderId } = req.params;
+    
+    const statusHistory = await getQuery(`
+      SELECT osh.*, u.first_name || ' ' || u.last_name as changed_by_name
+      FROM order_status_history osh
+      LEFT JOIN users u ON osh.changed_by = u.id
+      WHERE osh.order_id = $1 AND osh.tenant_id = $2
+      ORDER BY osh.changed_at DESC
+    `, [orderId, tenantId]);
+    
+    res.json({
+      success: true,
+      data: { statusHistory }
+    });
+  } catch (error) {
+    console.error('Error fetching status history:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

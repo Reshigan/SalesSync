@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, Truck } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function DeliveryList() {
   const { orderId } = useParams<{ orderId: string }>()
@@ -8,37 +9,12 @@ export default function DeliveryList() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: deliveries, isLoading } = useQuery({
     queryKey: ['order-deliveries', orderId],
-    queryFn: async () => [
-      {
-        id: '1',
-        delivery_number: 'DEL-2024-001',
-        status: 'delivered',
-        driver_name: 'John Driver',
-        vehicle_number: 'VAN-001',
-        scheduled_date: '2024-01-20',
-        actual_delivery_time: '2024-01-20T14:30:00Z',
-        stops: 3,
-      },
-      {
-        id: '2',
-        delivery_number: 'DEL-2024-002',
-        status: 'in_transit',
-        driver_name: 'Jane Driver',
-        vehicle_number: 'VAN-002',
-        scheduled_date: '2024-01-21',
-        actual_delivery_time: null,
-        stops: 2,
-      },
-    ],
+    queryFn: async () => ordersService.getOrderDeliveries(orderId!),
   })
 
   if (isLoading) {
