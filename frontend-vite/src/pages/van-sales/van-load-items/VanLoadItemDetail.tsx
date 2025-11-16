@@ -8,31 +8,16 @@ export default function VanLoadItemDetail() {
 
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
-    queryFn: async () => ({
-      id: loadId,
-      load_number: 'LOAD-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      load_id: loadId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity_loaded: 100,
-      quantity_sold: 75,
-      quantity_returned: 5,
-      quantity_remaining: 20,
-      variance: 0,
-      unit_price: 15.00,
-      total_loaded_value: 1500.00,
-      total_sold_value: 1125.00,
-      status: 'active',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {
