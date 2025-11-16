@@ -1,0 +1,129 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Image, Clock } from 'lucide-react'
+
+export default function PhotoTimeline() {
+  const { visitId } = useParams<{ visitId: string }>()
+  const navigate = useNavigate()
+
+  const { data: visit } = useQuery({
+    queryKey: ['visit', visitId],
+    queryFn: async () => ({
+      id: visitId,
+      visit_number: 'VISIT-2024-001',
+      customer_name: 'ABC Store',
+    }),
+  })
+
+  const { data: photos, isLoading } = useQuery({
+    queryKey: ['visit-photos-timeline', visitId],
+    queryFn: async () => [
+      {
+        id: '1',
+        photo_url: '/placeholder-photo.jpg',
+        photo_type: 'arrival',
+        caption: 'Arrived at store',
+        taken_at: '2024-01-20T09:00:00Z',
+        taken_by: 'John Field Agent',
+      },
+      {
+        id: '2',
+        photo_url: '/placeholder-photo.jpg',
+        photo_type: 'board_placement',
+        caption: 'Board installation in progress',
+        taken_at: '2024-01-20T09:20:00Z',
+        taken_by: 'John Field Agent',
+      },
+      {
+        id: '3',
+        photo_url: '/placeholder-photo.jpg',
+        photo_type: 'board_placement',
+        caption: 'Board installation complete',
+        taken_at: '2024-01-20T09:35:00Z',
+        taken_by: 'John Field Agent',
+      },
+      {
+        id: '4',
+        photo_url: '/placeholder-photo.jpg',
+        photo_type: 'product_display',
+        caption: 'Product display setup',
+        taken_at: '2024-01-20T09:50:00Z',
+        taken_by: 'John Field Agent',
+      },
+      {
+        id: '5',
+        photo_url: '/placeholder-photo.jpg',
+        photo_type: 'signature',
+        caption: 'Customer signature captured',
+        taken_at: '2024-01-20T10:15:00Z',
+        taken_by: 'John Field Agent',
+      },
+    ],
+  })
+
+  if (isLoading) {
+    return <div className="p-6">Loading timeline...</div>
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(`/field-operations/visits/${visitId}`)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Visit
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Photo Timeline</h1>
+        <p className="text-gray-600">
+          {visit?.visit_number} - {visit?.customer_name}
+        </p>
+      </div>
+
+      <div className="relative">
+        <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+
+        <div className="space-y-8">
+          {photos?.map((photo, index) => (
+            <div key={photo.id} className="relative flex gap-6">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 border-4 border-white shadow z-10">
+                  <Image className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+
+              <div className="flex-1 bg-white rounded-lg shadow p-6">
+                <div className="flex items-start gap-4">
+                  <img
+                    src={photo.photo_url}
+                    alt={photo.caption}
+                    onClick={() => navigate(`/field-operations/visits/${visitId}/photos/${photo.id}`)}
+                    className="w-32 h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{photo.caption}</h3>
+                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize mt-1">
+                          {photo.photo_type.replace('_', ' ')}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-3">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {new Date(photo.taken_at).toLocaleString()}
+                      </div>
+                      <div>By {photo.taken_by}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
