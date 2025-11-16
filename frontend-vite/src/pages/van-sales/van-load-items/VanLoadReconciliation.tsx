@@ -9,31 +9,16 @@ export default function VanLoadReconciliation() {
 
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
-    queryFn: async () => ({
-      id: loadId,
-      load_number: 'LOAD-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: reconciliation, isLoading } = useQuery({
     queryKey: ['van-load-reconciliation', loadId],
-    queryFn: async () => ({
-      total_items_loaded: 240,
-      total_items_sold: 180,
-      total_items_returned: 7,
-      total_items_remaining: 53,
-      expected_remaining: 53,
-      variance: 0,
-      total_loaded_value: 3590.00,
-      total_sold_value: 2692.50,
-      total_cash_collected: 2692.50,
-      cash_variance: 0,
-      reconciliation_status: 'balanced',
-      items_with_variance: [],
-      reconciled_by: 'John Van Sales',
-      reconciled_at: '2024-01-20T18:00:00Z',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

@@ -9,37 +9,16 @@ export default function RouteStopDetail() {
 
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
-    queryFn: async () => ({
-      id: routeId,
-      route_number: 'ROUTE-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
-    queryFn: async () => ({
-      id: stopId,
-      route_id: routeId,
-      stop_number: 1,
-      customer_id: 'cust-1',
-      customer_name: 'ABC Store',
-      customer_contact: 'John Owner',
-      customer_phone: '+1234567890',
-      address: '123 Main St, City, State 12345',
-      planned_arrival: '2024-01-20T09:00:00Z',
-      actual_arrival: '2024-01-20T09:05:00Z',
-      planned_departure: '2024-01-20T09:30:00Z',
-      actual_departure: '2024-01-20T09:35:00Z',
-      status: 'completed',
-      order_value: 250.00,
-      payment_collected: 250.00,
-      payment_method: 'cash',
-      items_delivered: 15,
-      notes: 'Customer requested early delivery next time',
-      signature_captured: true,
-      photos_taken: 2,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

@@ -17,18 +17,9 @@ export default function VanLoadVariance() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      load_id: loadId,
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity_loaded: 100,
-      quantity_sold: 75,
-      quantity_returned: 5,
-      expected_remaining: 20,
-      actual_remaining: 18,
-      variance: -2,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<VarianceFormData>()

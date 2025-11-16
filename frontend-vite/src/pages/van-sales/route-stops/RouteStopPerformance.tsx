@@ -9,56 +9,16 @@ export default function RouteStopPerformance() {
 
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
-    queryFn: async () => ({
-      id: routeId,
-      route_number: 'ROUTE-2024-001',
-      agent_name: 'John Van Sales',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: performance, isLoading } = useQuery({
     queryKey: ['route-performance', routeId],
-    queryFn: async () => ({
-      total_stops: 10,
-      completed_stops: 8,
-      skipped_stops: 1,
-      pending_stops: 1,
-      completion_rate: 80,
-      total_revenue: 2450.00,
-      average_stop_duration: 25,
-      on_time_percentage: 70,
-      late_stops: 3,
-      early_stops: 2,
-      stops_detail: [
-        {
-          stop_number: 1,
-          customer_name: 'ABC Store',
-          planned_duration: 30,
-          actual_duration: 30,
-          on_time: true,
-          revenue: 250.00,
-          items_sold: 15,
-        },
-        {
-          stop_number: 2,
-          customer_name: 'XYZ Mart',
-          planned_duration: 30,
-          actual_duration: 35,
-          on_time: false,
-          revenue: 180.00,
-          items_sold: 12,
-        },
-        {
-          stop_number: 3,
-          customer_name: 'DEF Shop',
-          planned_duration: 30,
-          actual_duration: 20,
-          on_time: true,
-          revenue: 320.00,
-          items_sold: 18,
-        },
-      ],
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

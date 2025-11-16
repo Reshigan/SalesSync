@@ -17,14 +17,9 @@ export default function RouteStopEdit() {
 
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
-    queryFn: async () => ({
-      id: stopId,
-      route_id: routeId,
-      customer_name: 'ABC Store',
-      planned_arrival: '2024-01-20T09:00:00',
-      planned_departure: '2024-01-20T09:30:00',
-      notes: 'Customer requested early delivery next time',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<StopFormData>({

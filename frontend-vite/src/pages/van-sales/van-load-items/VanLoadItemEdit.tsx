@@ -16,13 +16,9 @@ export default function VanLoadItemEdit() {
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      load_id: loadId,
-      product_name: 'Coca-Cola 500ml',
-      quantity_loaded: 100,
-      notes: '',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<ItemFormData>({
