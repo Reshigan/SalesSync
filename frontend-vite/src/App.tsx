@@ -104,6 +104,31 @@ import ProductDetailsPage from './pages/products/ProductDetailsPage'
 import ProductEditPage from './pages/products/ProductEditPage'
 import ProductCreatePage from './pages/products/ProductCreatePage'
 
+import BrandsList from './pages/brands/BrandsList'
+import BrandDetail from './pages/brands/BrandDetail'
+import BrandEdit from './pages/brands/BrandEdit'
+import BrandCreate from './pages/brands/BrandCreate'
+import BrandSurveys from './pages/brands/BrandSurveys'
+import BrandActivations from './pages/brands/BrandActivations'
+import BrandBoards from './pages/brands/BrandBoards'
+import BrandProducts from './pages/brands/BrandProducts'
+
+import CustomerOrders from './pages/customers/tabs/CustomerOrders'
+import CustomerVisits from './pages/customers/tabs/CustomerVisits'
+import CustomerPayments from './pages/customers/tabs/CustomerPayments'
+import CustomerSurveys from './pages/customers/tabs/CustomerSurveys'
+import CustomerKYC from './pages/customers/tabs/CustomerKYC'
+
+import ProductInventory from './pages/products/tabs/ProductInventory'
+import ProductPricing from './pages/products/tabs/ProductPricing'
+import ProductPromotions from './pages/products/tabs/ProductPromotions'
+import ProductSales from './pages/products/tabs/ProductSales'
+
+import OrderItems from './pages/orders/tabs/OrderItems'
+import OrderPayments from './pages/orders/tabs/OrderPayments'
+import OrderDelivery from './pages/orders/tabs/OrderDelivery'
+import OrderReturns from './pages/orders/tabs/OrderReturns'
+
 // Van Sales Detail Pages
 import VanOrderCreatePage from './pages/van-sales/VanOrderCreatePage'
 import VanRouteDetailsPage from './pages/van-sales/VanRouteDetailsPage'
@@ -552,15 +577,36 @@ function App() {
             <Route path="customers/create" element={<CustomerCreatePage />} />
             <Route path="customers/:id" element={<CustomerDetailsPage />} />
             <Route path="customers/:id/edit" element={<CustomerEditPage />} />
+            <Route path="customers/:id/orders" element={<CustomerOrders />} />
+            <Route path="customers/:id/visits" element={<CustomerVisits />} />
+            <Route path="customers/:id/payments" element={<CustomerPayments />} />
+            <Route path="customers/:id/surveys" element={<CustomerSurveys />} />
+            <Route path="customers/:id/kyc" element={<CustomerKYC />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/dashboard" element={<OrderDashboard />} />
             <Route path="orders/create" element={<OrderCreatePage />} />
             <Route path="orders/:id" element={<OrderDetailsPage />} />
             <Route path="orders/:id/edit" element={<OrderEditPage />} />
+            <Route path="orders/:id/items" element={<OrderItems />} />
+            <Route path="orders/:id/payments" element={<OrderPayments />} />
+            <Route path="orders/:id/delivery" element={<OrderDelivery />} />
+            <Route path="orders/:id/returns" element={<OrderReturns />} />
             <Route path="products" element={<ProductsPage />} />
             <Route path="products/create" element={<ProductCreatePage />} />
             <Route path="products/:id" element={<ProductDetailsPage />} />
             <Route path="products/:id/edit" element={<ProductEditPage />} />
+            <Route path="products/:id/inventory" element={<ProductInventory />} />
+            <Route path="products/:id/pricing" element={<ProductPricing />} />
+            <Route path="products/:id/promotions" element={<ProductPromotions />} />
+            <Route path="products/:id/sales" element={<ProductSales />} />
+            <Route path="brands" element={<BrandsList />} />
+            <Route path="brands/create" element={<BrandCreate />} />
+            <Route path="brands/:id" element={<BrandDetail />} />
+            <Route path="brands/:id/edit" element={<BrandEdit />} />
+            <Route path="brands/:id/surveys" element={<BrandSurveys />} />
+            <Route path="brands/:id/activations" element={<BrandActivations />} />
+            <Route path="brands/:id/boards" element={<BrandBoards />} />
+            <Route path="brands/:id/products" element={<BrandProducts />} />
             
             {/* Customer Management Routes */}
             <Route path="customer-management/list" element={<CustomerListPage />} />
