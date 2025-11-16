@@ -206,12 +206,11 @@ export default function LandingPage() {
               Join hundreds of enterprises transforming their field operations
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { icon: Clock, value: '40%', label: 'Time Saved' },
               { icon: DollarSign, value: '35%', label: 'Cost Reduction' },
-              { icon: TrendingUp, value: '50%', label: 'Sales Increase' },
-              { icon: Globe, value: '99.9%', label: 'Uptime SLA' }
+              { icon: TrendingUp, value: '50%', label: 'Sales Increase' }
             ].map((stat, index) => (
               <div key={index} className="text-center p-8 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20">
                 <stat.icon className="h-12 w-12 text-white mx-auto mb-4" />
@@ -219,6 +218,153 @@ export default function LandingPage() {
                 <div className="text-blue-100 text-lg">{stat.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Screenshots Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              See SalesSync in Action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Powerful features designed for modern field operations
+            </p>
+          </div>
+          <div className="space-y-16">
+            {/* Dashboard Screenshot */}
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="space-y-4">
+                <h3 className="text-3xl font-bold text-gray-900">Real-Time Dashboard</h3>
+                <p className="text-lg text-gray-600">
+                  Monitor your entire field operation at a glance. Track sales performance, agent activity, 
+                  and key metrics in real-time with our intuitive dashboard.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Live KPI tracking and performance metrics</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Customizable widgets and reports</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Role-based access and permissions</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-2xl blur-2xl opacity-20"></div>
+                <img 
+                  src="/dashboard-screenshot.png" 
+                  alt="SalesSync Dashboard" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-200"
+                />
+              </div>
+            </div>
+
+            {/* Field Operations Screenshot */}
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="relative lg:order-1">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-400 rounded-2xl blur-2xl opacity-20"></div>
+                <img 
+                  src="/field-ops-screenshot.png" 
+                  alt="Field Operations Workflow" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-200"
+                />
+              </div>
+              <div className="space-y-4 lg:order-2">
+                <h3 className="text-3xl font-bold text-gray-900">Mobile Field Operations</h3>
+                <p className="text-lg text-gray-600">
+                  Empower your field agents with a mobile-first workflow. Capture visits, take photos, 
+                  complete surveys, and process orders—all from their smartphone.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Step-by-step guided workflows</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Offline mode with automatic sync</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">GPS tracking and route optimization</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Analytics Screenshot */}
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="space-y-4">
+                <h3 className="text-3xl font-bold text-gray-900">Advanced Analytics</h3>
+                <p className="text-lg text-gray-600">
+                  Make data-driven decisions with comprehensive analytics. Visualize trends, 
+                  identify opportunities, and optimize your field operations.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Interactive charts and visualizations</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Daily, weekly, and monthly tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Export reports in multiple formats</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur-2xl opacity-20"></div>
+                <img 
+                  src="/analytics-screenshot.png" 
+                  alt="Analytics Dashboard" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-200"
+                />
+              </div>
+            </div>
+
+            {/* Van Sales Screenshot */}
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div className="relative lg:order-1">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl blur-2xl opacity-20"></div>
+                <img 
+                  src="/van-sales-screenshot.png" 
+                  alt="Van Sales Management" 
+                  className="relative rounded-2xl shadow-2xl border border-gray-200"
+                />
+              </div>
+              <div className="space-y-4 lg:order-2">
+                <h3 className="text-3xl font-bold text-gray-900">Van Sales Management</h3>
+                <p className="text-lg text-gray-600">
+                  Complete van sales solution with route planning, inventory tracking, 
+                  and cash management—all in one platform.
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Route optimization and scheduling</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Real-time inventory management</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">Cash reconciliation and reporting</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
