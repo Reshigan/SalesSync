@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, CheckCircle } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function PaymentStatusHistory() {
   const { paymentId } = useParams<{ paymentId: string }>()
@@ -9,70 +10,14 @@ export default function PaymentStatusHistory() {
 
   const { data: payment } = useQuery({
     queryKey: ['payment', paymentId],
-    queryFn: async () => ({
-      id: paymentId,
-      payment_number: 'PAY-2024-001',
-      customer_name: 'ABC Store',
-      current_status: 'cleared',
-      amount: 10000,
-    }),
+    queryFn: async () => financeService.getPayment(paymentId!),
   })
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery({
     queryKey: ['payment-status-history', paymentId],
-    queryFn: async () => [
-      {
-        id: '1',
-        status: 'cleared',
-        previous_status: 'allocated',
-        changed_at: '2024-01-22T10:00:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Payment cleared by bank',
-        metadata: {
-          bank_reference: 'BNK-REF-12345',
-          clearing_date: '2024-01-22',
-        },
-      },
-      {
-        id: '2',
-        status: 'allocated',
-        previous_status: 'verified',
-        changed_at: '2024-01-20T15:00:00Z',
-        changed_by: 'Jane Smith',
-        changed_by_role: 'Accounts Manager',
-        notes: 'Payment allocated to invoices',
-        metadata: {
-          invoices_allocated: 2,
-          total_allocated: 10000,
-        },
-      },
-      {
-        id: '3',
-        status: 'verified',
-        previous_status: 'received',
-        changed_at: '2024-01-20T11:00:00Z',
-        changed_by: 'Mike Johnson',
-        changed_by_role: 'Finance Manager',
-        notes: 'Payment verified and approved',
-        metadata: {
-          verification_method: 'bank_statement',
-        },
-      },
-      {
-        id: '4',
-        status: 'received',
-        previous_status: null,
-        changed_at: '2024-01-20T10:00:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Payment received from customer',
-        metadata: {
-          payment_method: 'bank_transfer',
-          reference: 'CUST-REF-789',
-        },
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {

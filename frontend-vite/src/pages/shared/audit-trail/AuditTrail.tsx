@@ -18,10 +18,9 @@ export default function AuditTrail() {
 
   const { data: entity } = useQuery({
     queryKey: [entityType, entityId],
-    queryFn: async () => ({
-      id: entityId,
-      name: `${entityType?.toUpperCase()}-001`,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   const { data: auditLog, isLoading } = useQuery({

@@ -10,38 +10,9 @@ interface ImpactAnalysisProps {
 export default function ImpactAnalysis({ entityType, entityId, action }: ImpactAnalysisProps) {
   const { data: impact, isLoading } = useQuery({
     queryKey: ['impact-analysis', entityType, entityId, action],
-    queryFn: async () => ({
-      action: action,
-      severity: 'medium',
-      affected_documents: [
-        {
-          type: 'invoice',
-          id: 'invoice-1',
-          number: 'INV-2024-001',
-          impact_type: 'requires_update',
-          description: 'Invoice will need to be regenerated',
-        },
-        {
-          type: 'delivery',
-          id: 'delivery-1',
-          number: 'DEL-2024-001',
-          impact_type: 'warning',
-          description: 'Delivery schedule may be affected',
-        },
-        {
-          type: 'payment',
-          id: 'payment-1',
-          number: 'PAY-2024-001',
-          impact_type: 'info',
-          description: 'Payment allocation may need review',
-        },
-      ],
-      recommendations: [
-        'Review and update invoice INV-2024-001',
-        'Notify delivery team about potential schedule changes',
-        'Verify payment allocation after changes',
-      ],
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function InvoiceItemHistory() {
   const { invoiceId, itemId } = useParams<{ invoiceId: string; itemId: string }>()
@@ -9,43 +10,14 @@ export default function InvoiceItemHistory() {
 
   const { data: item } = useQuery({
     queryKey: ['invoice-item', invoiceId, itemId],
-    queryFn: async () => ({
-      id: itemId,
-      product_name: 'Coca-Cola 500ml',
-    }),
+    queryFn: async () => financeService.getInvoiceItem(invoiceId!, itemId!),
   })
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery({
     queryKey: ['invoice-item-history', invoiceId, itemId],
-    queryFn: async () => [
-      {
-        id: '1',
-        action: 'Updated',
-        field: 'quantity',
-        old_value: '80',
-        new_value: '100',
-        changed_by: 'John Doe',
-        changed_at: '2024-01-15T14:30:00Z',
-      },
-      {
-        id: '2',
-        action: 'Updated',
-        field: 'unit_price',
-        old_value: '14.00',
-        new_value: '15.00',
-        changed_by: 'Jane Smith',
-        changed_at: '2024-01-15T10:15:00Z',
-      },
-      {
-        id: '3',
-        action: 'Created',
-        field: null,
-        old_value: null,
-        new_value: null,
-        changed_by: 'System',
-        changed_at: '2024-01-15T10:00:00Z',
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {

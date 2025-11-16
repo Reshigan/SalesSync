@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User, DollarSign } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { financeService } from '../../../services/finance.service'
 
 export default function InvoiceStatusHistory() {
   const { invoiceId } = useParams<{ invoiceId: string }>()
@@ -9,84 +10,14 @@ export default function InvoiceStatusHistory() {
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', invoiceId],
-    queryFn: async () => ({
-      id: invoiceId,
-      invoice_number: 'INV-2024-001',
-      customer_name: 'ABC Store',
-      current_status: 'paid',
-    }),
+    queryFn: async () => financeService.getInvoice(invoiceId!),
   })
 
-  const { data: history, isLoading } = useQuery({
+  const { data: history = [], isLoading } = useQuery({
     queryKey: ['invoice-status-history', invoiceId],
-    queryFn: async () => [
-      {
-        id: '1',
-        status: 'paid',
-        previous_status: 'partial',
-        changed_at: '2024-01-25T10:00:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Final payment received - invoice fully paid',
-        metadata: {
-          payment_id: 'PAY-2024-002',
-          amount_paid: 5000,
-          total_paid: 15000,
-        },
-      },
-      {
-        id: '2',
-        status: 'partial',
-        previous_status: 'sent',
-        changed_at: '2024-01-20T14:30:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Partial payment received',
-        metadata: {
-          payment_id: 'PAY-2024-001',
-          amount_paid: 10000,
-          remaining_balance: 5000,
-        },
-      },
-      {
-        id: '3',
-        status: 'sent',
-        previous_status: 'approved',
-        changed_at: '2024-01-16T09:00:00Z',
-        changed_by: 'Jane Smith',
-        changed_by_role: 'Accounts Manager',
-        notes: 'Invoice sent to customer via email',
-        metadata: {
-          email_sent_to: 'customer@abcstore.com',
-          delivery_method: 'email',
-        },
-      },
-      {
-        id: '4',
-        status: 'approved',
-        previous_status: 'draft',
-        changed_at: '2024-01-15T16:00:00Z',
-        changed_by: 'Mike Johnson',
-        changed_by_role: 'Finance Manager',
-        notes: 'Invoice approved for sending',
-        metadata: {
-          approval_level: 'manager',
-        },
-      },
-      {
-        id: '5',
-        status: 'draft',
-        previous_status: null,
-        changed_at: '2024-01-15T10:00:00Z',
-        changed_by: 'System',
-        changed_by_role: 'Automated',
-        notes: 'Invoice created from order ORD-2024-001',
-        metadata: {
-          order_id: 'ord-1',
-          auto_generated: true,
-        },
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {
