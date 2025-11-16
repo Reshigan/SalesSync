@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { attachmentsService } from '../../../services/attachments.service'
 
 interface MetadataFormData {
   description: string
@@ -17,13 +18,7 @@ export default function AttachmentMetadata() {
 
   const { data: attachment, isLoading } = useQuery({
     queryKey: ['attachment-metadata', entityType, entityId, attachmentId],
-    queryFn: async () => ({
-      id: attachmentId,
-      file_name: 'invoice.pdf',
-      description: 'Invoice for January 2024',
-      tags: 'invoice, finance, important',
-      category: 'financial',
-    }),
+    queryFn: async () => attachmentsService.getAttachment(entityType!, entityId!, attachmentId!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<MetadataFormData>({
@@ -32,7 +27,7 @@ export default function AttachmentMetadata() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: MetadataFormData) => {
-      return data
+      return attachmentsService.uploadAttachment(entityType!, entityId!, new File([], ''), { description: data.description, tags: data.tags.split(',').map(t => t.trim()) })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['attachment-metadata', entityType, entityId, attachmentId] })

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Download, FileText, Table } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { auditService } from '../../../services/audit.service'
 
 interface ExportFormData {
   format: 'csv' | 'excel' | 'pdf' | 'json'
@@ -20,7 +21,7 @@ export default function AuditExport() {
     queryKey: [entityType, entityId],
     queryFn: async () => ({
       id: entityId,
-      name: `${entityType.toUpperCase()}-001`,
+      name: `${entityType?.toUpperCase()}-001`,
     }),
   })
 

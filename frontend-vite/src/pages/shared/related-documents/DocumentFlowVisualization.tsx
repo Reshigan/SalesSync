@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, FileText } from 'lucide-react'
+import { documentsService } from '../../../services/documents.service'
 
 interface DocumentFlowVisualizationProps {
   entityType: string
@@ -10,49 +11,27 @@ interface DocumentFlowVisualizationProps {
 export default function DocumentFlowVisualization({ entityType, entityId }: DocumentFlowVisualizationProps) {
   const navigate = useNavigate()
 
-  const { data: flow, isLoading } = useQuery({
+  const { data: relationships = [], isLoading } = useQuery({
     queryKey: ['document-flow', entityType, entityId],
-    queryFn: async () => ({
-      current_document: {
-        type: 'order',
-        id: entityId,
-        number: 'ORD-2024-001',
-        status: 'completed',
-      },
-      flow_stages: [
-        {
-          stage: 'quote',
-          documents: [
-            { id: 'quote-1', number: 'QUO-2024-001', status: 'accepted' },
-          ],
-        },
-        {
-          stage: 'order',
-          documents: [
-            { id: entityId, number: 'ORD-2024-001', status: 'completed', is_current: true },
-          ],
-        },
-        {
-          stage: 'delivery',
-          documents: [
-            { id: 'delivery-1', number: 'DEL-2024-001', status: 'delivered' },
-          ],
-        },
-        {
-          stage: 'invoice',
-          documents: [
-            { id: 'invoice-1', number: 'INV-2024-001', status: 'paid' },
-          ],
-        },
-        {
-          stage: 'payment',
-          documents: [
-            { id: 'payment-1', number: 'PAY-2024-001', status: 'completed' },
-          ],
-        },
-      ],
-    }),
+    queryFn: async () => documentsService.getRelatedDocuments(entityType, entityId),
   })
+
+  const flow = {
+    current_document: {
+      type: entityType,
+      id: entityId,
+      number: `${entityType?.toUpperCase()}-001`,
+      status: 'active',
+    },
+    flow_stages: relationships.length > 0 ? [] : [
+      {
+        stage: entityType,
+        documents: [
+          { id: entityId, number: `${entityType?.toUpperCase()}-001`, status: 'active', is_current: true },
+        ],
+      },
+    ],
+  }
 
   if (isLoading) {
     return <div className="p-6">Loading flow visualization...</div>
