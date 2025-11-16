@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Paperclip, Download, Calendar, User } from 'lucide-react'
+import { attachmentsService } from '../../../services/attachments.service'
 
 export default function AttachmentDetail() {
   const { entityType, entityId, attachmentId } = useParams<{ entityType: string; entityId: string; attachmentId: string }>()
@@ -8,19 +9,7 @@ export default function AttachmentDetail() {
 
   const { data: attachment, isLoading } = useQuery({
     queryKey: ['attachment', entityType, entityId, attachmentId],
-    queryFn: async () => ({
-      id: attachmentId,
-      entity_type: entityType,
-      entity_id: entityId,
-      file_name: 'invoice.pdf',
-      file_type: 'application/pdf',
-      file_size: 245000,
-      file_url: '/placeholder-file.pdf',
-      uploaded_by: 'John User',
-      uploaded_at: '2024-01-20T10:00:00Z',
-      description: 'Invoice for January 2024',
-      tags: ['invoice', 'finance', 'important'],
-    }),
+    queryFn: async () => attachmentsService.getAttachment(entityType!, entityId!, attachmentId!),
   })
 
   const formatFileSize = (bytes: number) => {

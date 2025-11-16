@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Link2, Calendar, User } from 'lucide-react'
+import { documentsService } from '../../../services/documents.service'
 
 export default function RelationshipDetail() {
   const { entityType, entityId, relationshipId } = useParams<{ entityType: string; entityId: string; relationshipId: string }>()
@@ -8,19 +9,7 @@ export default function RelationshipDetail() {
 
   const { data: relationship, isLoading } = useQuery({
     queryKey: ['relationship', entityType, entityId, relationshipId],
-    queryFn: async () => ({
-      id: relationshipId,
-      source_entity_type: entityType,
-      source_entity_id: entityId,
-      source_entity_number: 'ORD-2024-001',
-      relationship_type: 'generates',
-      related_entity_type: 'invoice',
-      related_entity_id: 'invoice-1',
-      related_entity_number: 'INV-2024-001',
-      created_by: 'System',
-      created_at: '2024-01-20T10:00:00Z',
-      description: 'Invoice generated from order',
-    }),
+    queryFn: async () => documentsService.getRelationship(entityType!, entityId!, relationshipId!),
   })
 
   if (isLoading) {
