@@ -424,6 +424,7 @@ async function startServer() {
     app.use('/api/field-agents', authTenantMiddleware, fieldAgentRoutes);
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
+    app.use('/api/visit-surveys', authTenantMiddleware, visitSurveysRoutes);
     app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
     
     // Finance routes - special handling for debugging
