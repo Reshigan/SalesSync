@@ -1,0 +1,140 @@
+import { useParams, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowLeft, Eye, TrendingUp, TrendingDown } from 'lucide-react'
+
+export default function VanLoadItemList() {
+  const { loadId } = useParams<{ loadId: string }>()
+  const navigate = useNavigate()
+
+  const { data: load } = useQuery({
+    queryKey: ['van-load', loadId],
+    queryFn: async () => ({
+      id: loadId,
+      load_number: 'LOAD-2024-001',
+      agent_name: 'John Van Sales',
+    }),
+  })
+
+  const { data: items, isLoading } = useQuery({
+    queryKey: ['van-load-items', loadId],
+    queryFn: async () => [
+      {
+        id: '1',
+        product_name: 'Coca-Cola 500ml',
+        product_sku: 'CC-500',
+        quantity_loaded: 100,
+        quantity_sold: 75,
+        quantity_returned: 5,
+        quantity_remaining: 20,
+        unit_price: 15.00,
+      },
+      {
+        id: '2',
+        product_name: 'Pepsi 500ml',
+        product_sku: 'PP-500',
+        quantity_loaded: 80,
+        quantity_sold: 60,
+        quantity_returned: 2,
+        quantity_remaining: 18,
+        unit_price: 14.50,
+      },
+      {
+        id: '3',
+        product_name: 'Sprite 500ml',
+        product_sku: 'SP-500',
+        quantity_loaded: 60,
+        quantity_sold: 45,
+        quantity_returned: 0,
+        quantity_remaining: 15,
+        unit_price: 14.00,
+      },
+    ],
+  })
+
+  if (isLoading) {
+    return <div className="p-6">Loading items...</div>
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate(`/van-sales/loads/${loadId}`)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          Back to Van Load
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Van Load Items</h1>
+        <p className="text-gray-600">{load?.load_number} - {load?.agent_name}</p>
+      </div>
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Loaded</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Returned</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Remaining</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sell-Through</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {items?.map((item) => {
+              const sellThrough = ((item.quantity_sold / item.quantity_loaded) * 100).toFixed(1)
+              return (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {item.product_name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {item.product_sku}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                    {item.quantity_loaded}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                    <div className="flex items-center justify-end gap-1 text-green-600 font-medium">
+                      <TrendingDown className="h-3 w-3" />
+                      {item.quantity_sold}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                    <div className="flex items-center justify-end gap-1 text-orange-600">
+                      <TrendingUp className="h-3 w-3" />
+                      {item.quantity_returned}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                    {item.quantity_remaining}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      parseFloat(sellThrough) >= 80 ? 'bg-green-100 text-green-800' :
+                      parseFloat(sellThrough) >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {sellThrough}%
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <button
+                      onClick={() => navigate(`/van-sales/loads/${loadId}/items/${item.id}`)}
+                      className="text-primary-600 hover:text-primary-900"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
