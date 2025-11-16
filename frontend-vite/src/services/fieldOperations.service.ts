@@ -59,10 +59,10 @@ class FieldOperationsService {
     }
   }
 
-  async createVisit(data: Partial<Visit>): Promise<Visit> {
+  async createVisit(data: Partial<Visit>): Promise<any> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/visits`, data)
-      return response.data.data
+      const response = await apiClient.post('/visits', data)
+      return response.data
     } catch (error) {
       console.error('Failed to create visit:', error)
       throw error
