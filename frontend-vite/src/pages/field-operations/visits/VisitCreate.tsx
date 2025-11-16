@@ -1,12 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, Alert } from '@mui/material'
 import TransactionForm from '../../../components/transactions/TransactionForm'
+import SurveyAssignmentStep from '../../../components/surveys/SurveyAssignmentStep'
 import { fieldOperationsService } from '../../../services/field-operations.service'
+import visitSurveysService, { SurveyAssignment } from '../../../services/visitSurveys.service'
 
 export default function VisitCreate() {
   const navigate = useNavigate()
+  const [activeStep, setActiveStep] = useState(0)
   const [agents, setAgents] = useState([])
   const [customers, setCustomers] = useState([])
+  const [visitData, setVisitData] = useState<any>(null)
+  const [surveyAssignments, setSurveyAssignments] = useState<SurveyAssignment[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  const steps = ['Visit Details', 'Assign Surveys', 'Review & Create']
 
   useEffect(() => {
     loadFormData()
@@ -73,22 +82,151 @@ export default function VisitCreate() {
     }
   ]
 
-  const handleSubmit = async (data: any) => {
+  const handleVisitDetailsSubmit = async (data: any) => {
+    setVisitData(data)
+    setActiveStep(1)
+  }
+
+  const handleNext = () => {
+    setActiveStep((prev) => prev + 1)
+  }
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1)
+  }
+
+  const handleFinalSubmit = async () => {
     try {
-      await fieldOperationsService.createVisit(data)
+      setError(null)
+      
+      const visitResponse = await fieldOperationsService.createVisit(visitData)
+      const visitId = visitResponse.data?.id || visitResponse.data?.visit?.id
+      
+      if (!visitId) {
+        throw new Error('Failed to get visit ID from response')
+      }
+
+      if (surveyAssignments.length > 0) {
+        await visitSurveysService.assignSurveys(visitId, surveyAssignments)
+      }
+
       navigate('/field-operations/visits')
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create visit')
+      console.error('Failed to create visit:', error)
+      setError(error.message || 'Failed to create visit')
+    }
+  }
+
+  const renderStepContent = () => {
+    switch (activeStep) {
+      case 0:
+        return (
+          <TransactionForm
+            title="Visit Details"
+            fields={fields}
+            onSubmit={handleVisitDetailsSubmit}
+            onCancel={() => navigate('/field-operations/visits')}
+            submitLabel="Next: Assign Surveys"
+          />
+        )
+      
+      case 1:
+        return (
+          <Paper sx={{ p: 3 }}>
+            <SurveyAssignmentStep
+              customerId={visitData?.customer_id}
+              onAssignmentsChange={setSurveyAssignments}
+              initialAssignments={surveyAssignments}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button onClick={handleBack}>
+                Back
+              </Button>
+              <Button variant="contained" onClick={handleNext}>
+                Next: Review
+              </Button>
+            </Box>
+          </Paper>
+        )
+      
+      case 2:
+        return (
+          <Paper sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Review & Create Visit
+            </Typography>
+            
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Visit Details
+              </Typography>
+              <Typography variant="body2">Date: {visitData?.visit_date}</Typography>
+              <Typography variant="body2">Agent: {agents.find((a: any) => a.id === visitData?.agent_id)?.name}</Typography>
+              <Typography variant="body2">Customer: {customers.find((c: any) => c.id === visitData?.customer_id)?.name}</Typography>
+              <Typography variant="body2">Type: {visitData?.visit_type}</Typography>
+              {visitData?.notes && <Typography variant="body2">Notes: {visitData.notes}</Typography>}
+            </Box>
+
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Survey Assignments
+              </Typography>
+              {surveyAssignments.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  No surveys assigned
+                </Typography>
+              ) : (
+                <Box>
+                  <Typography variant="body2">
+                    {surveyAssignments.filter(a => a.subject_type === 'business').length} business survey(s)
+                  </Typography>
+                  <Typography variant="body2">
+                    {surveyAssignments.filter(a => a.subject_type === 'individual').length} individual survey(s)
+                  </Typography>
+                  <Typography variant="body2">
+                    {surveyAssignments.filter(a => a.required).length} required survey(s)
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+              <Button onClick={handleBack}>
+                Back
+              </Button>
+              <Button variant="contained" color="primary" onClick={handleFinalSubmit}>
+                Create Visit
+              </Button>
+            </Box>
+          </Paper>
+        )
+      
+      default:
+        return null
     }
   }
 
   return (
-    <TransactionForm
-      title="Create Field Visit"
-      fields={fields}
-      onSubmit={handleSubmit}
-      onCancel={() => navigate('/field-operations/visits')}
-      submitLabel="Create Visit"
-    />
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Create Field Visit
+      </Typography>
+      
+      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
+        {steps.map((label) => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+
+      {renderStepContent()}
+    </Box>
   )
 }
