@@ -288,6 +288,36 @@ class FinanceService {
       throw error
     }
   }
+
+  async getPaymentAllocationsList(paymentId: string): Promise<any[]> {
+    try {
+      const response = await apiClient.get(`/api/payments/${paymentId}/allocations`)
+      return response.data.data?.allocations || []
+    } catch (error) {
+      console.error('Failed to fetch payment allocations list:', error)
+      return []
+    }
+  }
+
+  async getPaymentAllocation(paymentId: string, allocationId: string): Promise<any | null> {
+    try {
+      const response = await apiClient.get(`/api/payments/${paymentId}/allocations/${allocationId}`)
+      return response.data.data?.allocation || null
+    } catch (error) {
+      console.error('Failed to fetch payment allocation:', error)
+      return null
+    }
+  }
+
+  async updatePaymentAllocation(paymentId: string, allocationId: string, updates: any): Promise<any> {
+    try {
+      const response = await apiClient.put(`/api/payments/${paymentId}/allocations/${allocationId}`, updates)
+      return response.data.data?.allocation || response.data.data
+    } catch (error) {
+      console.error('Failed to update payment allocation:', error)
+      throw error
+    }
+  }
 }
 
 export const financeService = new FinanceService()
