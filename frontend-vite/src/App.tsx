@@ -142,6 +142,48 @@ import VanLoadDetail from './pages/van-sales/van-loads/VanLoadDetail'
 import VanCashReconciliationCreate from './pages/van-sales/cash-reconciliation/CashReconciliationCreate'
 import VanCashReconciliationDetail from './pages/van-sales/cash-reconciliation/CashReconciliationDetail'
 
+// Van Sales Depth Pages
+import RouteDetail from './pages/van-sales-depth/RouteDetail'
+import RouteEdit from './pages/van-sales-depth/RouteEdit'
+import RouteCreate from './pages/van-sales-depth/RouteCreate'
+import RouteCustomers from './pages/van-sales-depth/RouteCustomers'
+import RouteOrders from './pages/van-sales-depth/RouteOrders'
+import RoutePerformance from './pages/van-sales-depth/RoutePerformance'
+
+import CommissionDetail from './pages/commissions/CommissionDetail'
+import CommissionEdit from './pages/commissions/CommissionEdit'
+import CommissionCreate from './pages/commissions/CommissionCreate'
+import RuleDetail from './pages/commissions/RuleDetail'
+import RuleEdit from './pages/commissions/RuleEdit'
+import RuleCreate from './pages/commissions/RuleCreate'
+
+import SessionDetail from './pages/cash-reconciliation/SessionDetail'
+import SessionEdit from './pages/cash-reconciliation/SessionEdit'
+import DepositDetail from './pages/cash-reconciliation/DepositDetail'
+import DepositEdit from './pages/cash-reconciliation/DepositEdit'
+import SessionCollections from './pages/cash-reconciliation/SessionCollections'
+import SessionDeposits from './pages/cash-reconciliation/SessionDeposits'
+
+import KYCDetail from './pages/kyc/KYCDetail'
+import KYCEdit from './pages/kyc/KYCEdit'
+import KYCCreate from './pages/kyc/KYCCreate'
+
+import SurveyResponses from './pages/surveys/SurveyResponses'
+import SurveyAnalytics from './pages/surveys/SurveyAnalytics'
+
+import ReportDetail from './pages/reports/ReportDetail'
+import ReportEdit from './pages/reports/ReportEdit'
+import ReportCreate from './pages/reports/ReportCreate'
+
+import FinanceInvoiceDetail from './pages/finance/InvoiceDetail'
+import FinanceInvoiceEdit from './pages/finance/InvoiceEdit'
+import FinanceInvoiceCreate from './pages/finance/InvoiceCreate'
+import FinancePaymentDetail from './pages/finance/PaymentDetail'
+import FinancePaymentEdit from './pages/finance/PaymentEdit'
+import FinancePaymentCreate from './pages/finance/PaymentCreate'
+import InvoicePayments from './pages/finance/InvoicePayments'
+import InvoiceItems from './pages/finance/InvoiceItems'
+
 // Inventory Detail Pages
 import StockCountDetailsPage from './pages/inventory-management/StockCountDetailsPage'
 import AdjustmentCreate from './pages/inventory/adjustments/AdjustmentCreate'
@@ -410,6 +452,9 @@ function App() {
             <Route path="reports" element={<AnalyticsDashboardPage />} />
             <Route path="reports/builder" element={<ReportBuilderPage />} />
             <Route path="reports/templates" element={<ReportTemplatesPage />} />
+            <Route path="reports/create" element={<ReportCreate />} />
+            <Route path="reports/:id" element={<ReportDetail />} />
+            <Route path="reports/:id/edit" element={<ReportEdit />} />
             <Route path="reports/sales/summary" element={<SalesSummaryReport />} />
             <Route path="reports/sales/exceptions" element={<SalesExceptionsReport />} />
             <Route path="reports/finance/commission-summary" element={<CommissionSummaryReport />} />
@@ -434,7 +479,12 @@ function App() {
             <Route path="van-sales/cash-collection" element={<VanCashCollectionPage />} />
             <Route path="van-sales/van-inventory" element={<VanInventoryPage />} />
             <Route path="van-sales/routes" element={<VanRoutesListPage />} />
-            <Route path="van-sales/routes/:id" element={<VanRouteDetailsPage />} />
+            <Route path="van-sales/routes/create" element={<RouteCreate />} />
+            <Route path="van-sales/routes/:id" element={<RouteDetail />} />
+            <Route path="van-sales/routes/:id/edit" element={<RouteEdit />} />
+            <Route path="van-sales/routes/:id/customers" element={<RouteCustomers />} />
+            <Route path="van-sales/routes/:id/orders" element={<RouteOrders />} />
+            <Route path="van-sales/routes/:id/performance" element={<RoutePerformance />} />
             <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
             <Route path="van-sales/orders" element={<VanSalesOrdersList />} />
             <Route path="van-sales/orders/create" element={<VanOrderCreatePage />} />
@@ -490,6 +540,9 @@ function App() {
             <Route path="kyc" element={<KYCDashboard />} />
             <Route path="kyc/dashboard" element={<KYCDashboard />} />
             <Route path="kyc/management" element={<KYCManagement />} />
+            <Route path="kyc/create" element={<KYCCreate />} />
+            <Route path="kyc/:id" element={<KYCDetail />} />
+            <Route path="kyc/:id/edit" element={<KYCEdit />} />
             <Route path="kyc/reports" element={<KYCReports />} />
             
             {/* KYC Surveys Routes */}
@@ -503,6 +556,10 @@ function App() {
             <Route path="surveys" element={<SurveysDashboard />} />
             <Route path="surveys/dashboard" element={<SurveysDashboard />} />
             <Route path="surveys/management" element={<SurveysManagement />} />
+            <Route path="surveys/create" element={<SurveyCreate />} />
+            <Route path="surveys/:id/edit" element={<SurveyEdit />} />
+            <Route path="surveys/:id/responses" element={<SurveyResponses />} />
+            <Route path="surveys/:id/analytics" element={<SurveyAnalytics />} />
 
             {/* Inventory Routes */}
             <Route path="inventory" element={<InventoryDashboard />} />
@@ -684,7 +741,15 @@ function App() {
             {/* Finance Routes */}
             <Route path="finance" element={<FinanceDashboard />} />
             <Route path="finance/invoices" element={<InvoiceManagementPage />} />
+            <Route path="finance/invoices/create" element={<FinanceInvoiceCreate />} />
+            <Route path="finance/invoices/:id" element={<FinanceInvoiceDetail />} />
+            <Route path="finance/invoices/:id/edit" element={<FinanceInvoiceEdit />} />
+            <Route path="finance/invoices/:id/payments" element={<InvoicePayments />} />
+            <Route path="finance/invoices/:id/items" element={<InvoiceItems />} />
             <Route path="finance/payments" element={<PaymentCollectionPage />} />
+            <Route path="finance/payments/create" element={<FinancePaymentCreate />} />
+            <Route path="finance/payments/:id" element={<FinancePaymentDetail />} />
+            <Route path="finance/payments/:id/edit" element={<FinancePaymentEdit />} />
             <Route path="finance/cash-reconciliation" element={<CashReconciliationList />} />
             <Route path="finance/cash-reconciliation/create" element={<CashReconciliationCreate />} />
             <Route path="finance/cash-reconciliation/:id" element={<CashReconciliationDetail />} />
@@ -699,14 +764,26 @@ function App() {
             <Route path="cash-reconciliation/deposit" element={<BankDepositPage />} />
             <Route path="cash-reconciliation/variance" element={<VarianceApprovalPage />} />
             <Route path="cash-reconciliation/reports" element={<CashReportsPage />} />
+            <Route path="cash-reconciliation/sessions/:id" element={<SessionDetail />} />
+            <Route path="cash-reconciliation/sessions/:id/edit" element={<SessionEdit />} />
+            <Route path="cash-reconciliation/sessions/:id/collections" element={<SessionCollections />} />
+            <Route path="cash-reconciliation/sessions/:id/deposits" element={<SessionDeposits />} />
+            <Route path="cash-reconciliation/deposits/:id" element={<DepositDetail />} />
+            <Route path="cash-reconciliation/deposits/:id/edit" element={<DepositEdit />} />
             
             {/* Commission Routes */}
             <Route path="commissions" element={<CommissionDashboardPage />} />
+            <Route path="commissions/create" element={<CommissionCreate />} />
+            <Route path="commissions/:id" element={<CommissionDetail />} />
+            <Route path="commissions/:id/edit" element={<CommissionEdit />} />
             <Route path="commissions/calculation" element={<CommissionCalculationPage />} />
             <Route path="commissions/approval" element={<CommissionApprovalPage />} />
             <Route path="commissions/payment" element={<CommissionPaymentPage />} />
             <Route path="commissions/reports" element={<CommissionReportsPage />} />
             <Route path="commissions/settings" element={<CommissionSettingsPage />} />
+            <Route path="commissions/rules/create" element={<RuleCreate />} />
+            <Route path="commissions/rules/:id" element={<RuleDetail />} />
+            <Route path="commissions/rules/:id/edit" element={<RuleEdit />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
