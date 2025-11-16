@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, AlertTriangle, Clock, XCircle } from 'lucide-react'
+import { vanSalesService } from '../../../services/vanSales.service'
 
 export default function RouteStopExceptions() {
   const { routeId } = useParams<{ routeId: string }>()
@@ -9,15 +10,19 @@ export default function RouteStopExceptions() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      return null
+      if (!routeId) return null
+      return await vanSalesService.getRoute(routeId)
     },
+    enabled: !!routeId,
   })
 
   const { data: exceptions = [], isLoading } = useQuery({
     queryKey: ['route-exceptions', routeId],
     queryFn: async () => {
-      return []
+      if (!routeId) return []
+      return await vanSalesService.getRouteExceptions(routeId)
     },
+    enabled: !!routeId,
   })
 
   const oldExceptions = [

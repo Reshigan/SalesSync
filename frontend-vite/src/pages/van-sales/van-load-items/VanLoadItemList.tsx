@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, TrendingUp, TrendingDown } from 'lucide-react'
+import { vanSalesService } from '../../../services/vanSales.service'
 
 export default function VanLoadItemList() {
   const { loadId } = useParams<{ loadId: string }>()
@@ -16,8 +17,10 @@ export default function VanLoadItemList() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['van-load-items', loadId],
     queryFn: async () => {
-      return []
+      if (!loadId) return []
+      return await vanSalesService.getVanLoadItems(loadId)
     },
+    enabled: !!loadId,
   })
 
   if (isLoading) {
