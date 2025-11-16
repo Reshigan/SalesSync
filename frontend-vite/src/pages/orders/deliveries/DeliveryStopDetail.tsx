@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Clock, Package, User } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function DeliveryStopDetail() {
   const { orderId, deliveryId, stopId } = useParams<{ orderId: string; deliveryId: string; stopId: string }>()
@@ -8,32 +9,14 @@ export default function DeliveryStopDetail() {
 
   const { data: delivery } = useQuery({
     queryKey: ['delivery', orderId, deliveryId],
-    queryFn: async () => ({
-      id: deliveryId,
-      delivery_number: 'DEL-2024-001',
-    }),
+    queryFn: async () => ordersService.getOrderDelivery(orderId!, deliveryId!),
   })
 
   const { data: stop, isLoading } = useQuery({
     queryKey: ['delivery-stop', orderId, deliveryId, stopId],
-    queryFn: async () => ({
-      id: stopId,
-      stop_number: 1,
-      customer_name: 'ABC Store',
-      customer_contact: 'John Smith',
-      customer_phone: '+1234567890',
-      address: '123 Main St, City, Country',
-      status: 'completed',
-      scheduled_time: '2024-01-20T09:00:00Z',
-      actual_arrival_time: '2024-01-20T09:05:00Z',
-      actual_departure_time: '2024-01-20T09:25:00Z',
-      items_delivered: 15,
-      signature_captured: true,
-      signature_name: 'John Smith',
-      signature_time: '2024-01-20T09:25:00Z',
-      notes: 'Delivered successfully. Customer satisfied.',
-      special_instructions: 'Use back entrance',
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

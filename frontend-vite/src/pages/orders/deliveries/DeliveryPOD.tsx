@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, FileText, Download, Image as ImageIcon } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function DeliveryPOD() {
   const { orderId, deliveryId } = useParams<{ orderId: string; deliveryId: string }>()
@@ -8,42 +9,14 @@ export default function DeliveryPOD() {
 
   const { data: delivery } = useQuery({
     queryKey: ['delivery', orderId, deliveryId],
-    queryFn: async () => ({
-      id: deliveryId,
-      delivery_number: 'DEL-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrderDelivery(orderId!, deliveryId!),
   })
 
   const { data: pod, isLoading } = useQuery({
     queryKey: ['delivery-pod', orderId, deliveryId],
-    queryFn: async () => ({
-      id: 'pod-1',
-      delivery_id: deliveryId,
-      signature_captured: true,
-      signature_name: 'John Smith',
-      signature_title: 'Store Manager',
-      signature_time: '2024-01-20T14:30:00Z',
-      signature_image_url: null,
-      delivery_photos: [
-        {
-          id: 'photo-1',
-          url: '/placeholder-delivery.jpg',
-          caption: 'Items delivered at entrance',
-          taken_at: '2024-01-20T14:25:00Z',
-        },
-        {
-          id: 'photo-2',
-          url: '/placeholder-delivery.jpg',
-          caption: 'Signed delivery note',
-          taken_at: '2024-01-20T14:30:00Z',
-        },
-      ],
-      notes: 'All items delivered in good condition. Customer verified count.',
-      items_delivered: 15,
-      items_damaged: 0,
-      items_returned: 0,
-    }),
+    queryFn: async () => {
+      return null
+    },
   })
 
   if (isLoading) {

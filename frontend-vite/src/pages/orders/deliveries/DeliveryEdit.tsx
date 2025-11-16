@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { ordersService } from '../../../services/orders.service'
 
 interface DeliveryFormData {
   driver_name: string
@@ -20,17 +21,7 @@ export default function DeliveryEdit() {
 
   const { data: delivery, isLoading } = useQuery({
     queryKey: ['delivery', orderId, deliveryId],
-    queryFn: async () => ({
-      id: deliveryId,
-      order_id: orderId,
-      delivery_number: 'DEL-2024-001',
-      driver_name: 'John Driver',
-      vehicle_number: 'VAN-001',
-      scheduled_date: '2024-01-20',
-      estimated_delivery_time: '2024-01-20T14:00:00',
-      delivery_address: '123 Main St, City, Country',
-      notes: 'Handle with care - fragile items',
-    }),
+    queryFn: async () => ordersService.getOrderDelivery(orderId!, deliveryId!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<DeliveryFormData>({

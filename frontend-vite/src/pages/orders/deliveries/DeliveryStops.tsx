@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, CheckCircle, Clock, Eye } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function DeliveryStops() {
   const { orderId, deliveryId } = useParams<{ orderId: string; deliveryId: string }>()
@@ -8,49 +9,14 @@ export default function DeliveryStops() {
 
   const { data: delivery } = useQuery({
     queryKey: ['delivery', orderId, deliveryId],
-    queryFn: async () => ({
-      id: deliveryId,
-      delivery_number: 'DEL-2024-001',
-    }),
+    queryFn: async () => ordersService.getOrderDelivery(orderId!, deliveryId!),
   })
 
-  const { data: stops, isLoading } = useQuery({
+  const { data: stops = [], isLoading } = useQuery({
     queryKey: ['delivery-stops', orderId, deliveryId],
-    queryFn: async () => [
-      {
-        id: '1',
-        stop_number: 1,
-        customer_name: 'ABC Store',
-        address: '123 Main St, City',
-        status: 'completed',
-        scheduled_time: '2024-01-20T09:00:00Z',
-        actual_arrival_time: '2024-01-20T09:05:00Z',
-        actual_departure_time: '2024-01-20T09:25:00Z',
-        notes: 'Delivered successfully',
-      },
-      {
-        id: '2',
-        stop_number: 2,
-        customer_name: 'XYZ Market',
-        address: '456 Oak Ave, City',
-        status: 'in_progress',
-        scheduled_time: '2024-01-20T10:00:00Z',
-        actual_arrival_time: '2024-01-20T10:10:00Z',
-        actual_departure_time: null,
-        notes: null,
-      },
-      {
-        id: '3',
-        stop_number: 3,
-        customer_name: 'DEF Shop',
-        address: '789 Pine Rd, City',
-        status: 'pending',
-        scheduled_time: '2024-01-20T11:00:00Z',
-        actual_arrival_time: null,
-        actual_departure_time: null,
-        notes: null,
-      },
-    ],
+    queryFn: async () => {
+      return []
+    },
   })
 
   if (isLoading) {

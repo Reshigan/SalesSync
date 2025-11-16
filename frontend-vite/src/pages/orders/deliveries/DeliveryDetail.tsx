@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Truck, MapPin, Clock, CheckCircle } from 'lucide-react'
+import { ordersService } from '../../../services/orders.service'
 
 export default function DeliveryDetail() {
   const { orderId, deliveryId } = useParams<{ orderId: string; deliveryId: string }>()
@@ -8,33 +9,12 @@ export default function DeliveryDetail() {
 
   const { data: order } = useQuery({
     queryKey: ['order', orderId],
-    queryFn: async () => ({
-      id: orderId,
-      order_number: 'ORD-2024-001',
-      customer_name: 'ABC Store',
-    }),
+    queryFn: async () => ordersService.getOrder(orderId!),
   })
 
   const { data: delivery, isLoading } = useQuery({
     queryKey: ['delivery', orderId, deliveryId],
-    queryFn: async () => ({
-      id: deliveryId,
-      order_id: orderId,
-      delivery_number: 'DEL-2024-001',
-      status: 'in_transit',
-      driver_name: 'John Driver',
-      vehicle_number: 'VAN-001',
-      scheduled_date: '2024-01-20',
-      actual_pickup_time: '2024-01-20T08:00:00Z',
-      estimated_delivery_time: '2024-01-20T14:00:00Z',
-      actual_delivery_time: null,
-      delivery_address: '123 Main St, City, Country',
-      tracking_number: 'TRK-2024-001',
-      notes: 'Handle with care - fragile items',
-      stops: 3,
-      current_stop: 2,
-      created_at: '2024-01-20T07:00:00Z',
-    }),
+    queryFn: async () => ordersService.getOrderDelivery(orderId!, deliveryId!),
   })
 
   if (isLoading) {
