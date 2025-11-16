@@ -231,4 +231,266 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+// GET /api/inventory/stock-counts/:countId/lines - Get stock count lines
+router.get('/stock-counts/:countId/lines', asyncHandler(async (req, res) => {
+  const { countId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const lines = await getQuery(`
+    SELECT 
+      scl.*,
+      p.name as product_name,
+      p.code as product_code,
+      scl.system_quantity,
+      scl.counted_quantity,
+      (scl.counted_quantity - scl.system_quantity) as variance_quantity,
+      (scl.counted_quantity - scl.system_quantity) * scl.unit_cost as variance_value
+    FROM stock_count_lines scl
+    LEFT JOIN products p ON scl.product_id = p.id
+    JOIN stock_counts sc ON scl.stock_count_id = sc.id
+    WHERE scl.stock_count_id = $1 AND sc.tenant_id = $2
+    ORDER BY p.name
+  `, [countId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { lines: lines || [] }
+  });
+}));
+
+// GET /api/inventory/adjustments/:adjustmentId/items - Get adjustment items
+router.get('/adjustments/:adjustmentId/items', asyncHandler(async (req, res) => {
+  const { adjustmentId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const items = await getQuery(`
+    SELECT 
+      ai.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name
+    FROM adjustment_items ai
+    LEFT JOIN products p ON ai.product_id = p.id
+    LEFT JOIN warehouses w ON ai.warehouse_id = w.id
+    JOIN adjustments a ON ai.adjustment_id = a.id
+    WHERE ai.adjustment_id = $1 AND a.tenant_id = $2
+    ORDER BY p.name
+  `, [adjustmentId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { items: items || [] }
+  });
+}));
+
+// GET /api/inventory/transfers/:transferId/items - Get transfer items
+router.get('/transfers/:transferId/items', asyncHandler(async (req, res) => {
+  const { transferId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const items = await getQuery(`
+    SELECT 
+      ti.*,
+      p.name as product_name,
+      p.code as product_code,
+      ti.quantity_requested,
+      ti.quantity_shipped,
+      ti.quantity_received
+    FROM transfer_items ti
+    LEFT JOIN products p ON ti.product_id = p.id
+    JOIN transfers t ON ti.transfer_id = t.id
+    WHERE ti.transfer_id = $1 AND t.tenant_id = $2
+    ORDER BY p.name
+  `, [transferId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { items: items || [] }
+  });
+}));
+
+// GET /api/inventory/batches/:batchId/tracking - Get batch tracking details
+router.get('/batches/:batchId/tracking', asyncHandler(async (req, res) => {
+  const { batchId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const tracking = await getQuery(`
+    SELECT 
+      bt.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name,
+      bt.batch_number,
+      bt.lot_number,
+      bt.expiry_date,
+      bt.quantity_on_hand,
+      bt.quantity_reserved
+    FROM batch_tracking bt
+    LEFT JOIN products p ON bt.product_id = p.id
+    LEFT JOIN warehouses w ON bt.warehouse_id = w.id
+    WHERE bt.id = $1 AND bt.tenant_id = $2
+  `, [batchId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { tracking: tracking[0] || null }
+  });
+}));
+
+// GET /api/inventory/lots/:lotId/tracking - Get lot tracking details
+router.get('/lots/:lotId/tracking', asyncHandler(async (req, res) => {
+  const { lotId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const lot = await getQuery(`
+    SELECT 
+      bt.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name
+    FROM batch_tracking bt
+    LEFT JOIN products p ON bt.product_id = p.id
+    LEFT JOIN warehouses w ON bt.warehouse_id = w.id
+    WHERE bt.lot_number = $1 AND bt.tenant_id = $2
+    ORDER BY bt.created_at DESC
+  `, [lotId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { lot: lot || [] }
+  });
+}));
+
+// GET /api/inventory/batches/:batchId/movements - Get batch movement history
+router.get('/batches/:batchId/movements', asyncHandler(async (req, res) => {
+  const { batchId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const movements = await getQuery(`
+    SELECT 
+      sm.*,
+      p.name as product_name,
+      p.code as product_code,
+      wf.name as from_warehouse_name,
+      wt.name as to_warehouse_name,
+      u.first_name || ' ' || u.last_name as created_by_name
+    FROM stock_movements sm
+    LEFT JOIN products p ON sm.product_id = p.id
+    LEFT JOIN warehouses wf ON sm.from_warehouse_id = wf.id
+    LEFT JOIN warehouses wt ON sm.to_warehouse_id = wt.id
+    LEFT JOIN users u ON sm.created_by = u.id
+    WHERE sm.batch_id = $1 AND sm.tenant_id = $2
+    ORDER BY sm.created_at DESC
+  `, [batchId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { movements: movements || [] }
+  });
+}));
+
+// GET /api/inventory/batches/:batchId/allocations - Get batch allocations
+router.get('/batches/:batchId/allocations', asyncHandler(async (req, res) => {
+  const { batchId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const allocations = await getQuery(`
+    SELECT 
+      ba.*,
+      o.order_number,
+      c.name as customer_name,
+      ba.quantity_allocated,
+      ba.quantity_fulfilled
+    FROM batch_allocations ba
+    LEFT JOIN orders o ON ba.order_id = o.id
+    LEFT JOIN customers c ON o.customer_id = c.id
+    WHERE ba.batch_id = $1 AND ba.tenant_id = $2
+    ORDER BY ba.created_at DESC
+  `, [batchId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { allocations: allocations || [] }
+  });
+}));
+
+// GET /api/inventory/stock-ledger/product/:productId - Get stock ledger by product
+router.get('/stock-ledger/product/:productId', asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const ledger = await getQuery(`
+    SELECT 
+      sl.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name,
+      u.first_name || ' ' || u.last_name as created_by_name
+    FROM stock_ledger sl
+    LEFT JOIN products p ON sl.product_id = p.id
+    LEFT JOIN warehouses w ON sl.warehouse_id = w.id
+    LEFT JOIN users u ON sl.created_by = u.id
+    WHERE sl.product_id = $1 AND sl.tenant_id = $2
+    ORDER BY sl.created_at DESC
+    LIMIT 100
+  `, [productId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { ledger: ledger || [] }
+  });
+}));
+
+// GET /api/inventory/stock-ledger/warehouse/:warehouseId - Get stock ledger by warehouse
+router.get('/stock-ledger/warehouse/:warehouseId', asyncHandler(async (req, res) => {
+  const { warehouseId } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const ledger = await getQuery(`
+    SELECT 
+      sl.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name,
+      u.first_name || ' ' || u.last_name as created_by_name
+    FROM stock_ledger sl
+    LEFT JOIN products p ON sl.product_id = p.id
+    LEFT JOIN warehouses w ON sl.warehouse_id = w.id
+    LEFT JOIN users u ON sl.created_by = u.id
+    WHERE sl.warehouse_id = $1 AND sl.tenant_id = $2
+    ORDER BY sl.created_at DESC
+    LIMIT 100
+  `, [warehouseId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { ledger: ledger || [] }
+  });
+}));
+
+// GET /api/inventory/serials/:serialNumber/tracking - Get serial number tracking
+router.get('/serials/:serialNumber/tracking', asyncHandler(async (req, res) => {
+  const { serialNumber } = req.params;
+  const tenantId = req.user.tenantId;
+  
+  const serial = await getQuery(`
+    SELECT 
+      st.*,
+      p.name as product_name,
+      p.code as product_code,
+      w.name as warehouse_name,
+      c.name as customer_name
+    FROM serial_tracking st
+    LEFT JOIN products p ON st.product_id = p.id
+    LEFT JOIN warehouses w ON st.warehouse_id = w.id
+    LEFT JOIN customers c ON st.customer_id = c.id
+    WHERE st.serial_number = $1 AND st.tenant_id = $2
+  `, [serialNumber, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { serial: serial[0] || null }
+  });
+}));
+
 module.exports = router;
