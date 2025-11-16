@@ -341,4 +341,93 @@ router.get('/stats', asyncHandler(async (req, res) => {
   });
 }));
 
+router.get('/:paymentId/allocations', asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  const { paymentId } = req.params;
+  const tenantId = req.user?.tenantId;
+  
+  const allocations = await getQuery(`
+    SELECT pa.*, i.invoice_number, i.total_amount as invoice_total
+    FROM payment_allocations pa
+    LEFT JOIN invoices i ON pa.invoice_id = i.id
+    JOIN payments p ON pa.payment_id = p.id
+    WHERE pa.payment_id = $1 AND p.tenant_id = $2
+    ORDER BY pa.created_at
+  `, [paymentId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { allocations }
+  });
+}));
+
+router.get('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res) => {
+  const { getOneQuery } = require('../utils/database');
+  const { paymentId, allocationId } = req.params;
+  const tenantId = req.user?.tenantId;
+  
+  const allocation = await getOneQuery(`
+    SELECT pa.*, i.invoice_number, i.total_amount as invoice_total,
+           p.amount as payment_amount, p.payment_date
+    FROM payment_allocations pa
+    LEFT JOIN invoices i ON pa.invoice_id = i.id
+    JOIN payments p ON pa.payment_id = p.id
+    WHERE pa.id = $1 AND pa.payment_id = $2 AND p.tenant_id = $3
+  `, [allocationId, paymentId, tenantId]);
+  
+  if (!allocation) {
+    throw new AppError('Payment allocation not found', 404);
+  }
+  
+  res.json({
+    success: true,
+    data: { allocation }
+  });
+}));
+
+router.put('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../utils/database');
+  const { paymentId, allocationId } = req.params;
+  const { invoice_id, amount, notes } = req.body;
+  const tenantId = req.user?.tenantId;
+  
+  const existingAllocation = await getOneQuery(
+    `SELECT pa.* FROM payment_allocations pa
+     JOIN payments p ON pa.payment_id = p.id
+     WHERE pa.id = $1 AND pa.payment_id = $2 AND p.tenant_id = $3`,
+    [allocationId, paymentId, tenantId]
+  );
+  
+  if (!existingAllocation) {
+    throw new AppError('Payment allocation not found', 404);
+  }
+  
+  const updateData = {};
+  if (invoice_id !== undefined) updateData.invoice_id = invoice_id;
+  if (amount !== undefined) updateData.amount = parseFloat(amount);
+  if (notes !== undefined) updateData.notes = notes;
+  
+  if (Object.keys(updateData).length > 0) {
+    const setClause = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ');
+    await runQuery(
+      `UPDATE payment_allocations SET ${setClause}, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = $${Object.keys(updateData).length + 1}`,
+      [...Object.values(updateData), allocationId]
+    );
+  }
+  
+  const updatedAllocation = await getOneQuery(`
+    SELECT pa.*, i.invoice_number, i.total_amount as invoice_total
+    FROM payment_allocations pa
+    LEFT JOIN invoices i ON pa.invoice_id = i.id
+    WHERE pa.id = $1
+  `, [allocationId]);
+  
+  res.json({
+    success: true,
+    data: { allocation: updatedAllocation },
+    message: 'Payment allocation updated successfully'
+  });
+}));
+
 module.exports = router;
