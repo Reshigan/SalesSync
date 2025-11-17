@@ -251,6 +251,7 @@ import RolePermissionsPage from './pages/admin/RolePermissionsPage'
 import SystemSettingsPage from './pages/admin/SystemSettingsPage'
 import AuditLogsPage from './pages/admin/AuditLogsPage'
 import SmokeTestPage from './pages/admin/SmokeTestPage'
+import RouteAuditPage from './pages/admin/RouteAuditPage'
 import BrandManagementPage from './pages/admin/BrandManagementPage'
 import CampaignManagementPage from './pages/admin/CampaignManagementPage'
 import CommissionRuleBuilderPage from './pages/admin/CommissionRuleBuilderPage'
@@ -434,8 +435,8 @@ function App() {
             <Route index element={<Navigate to="login" replace />} />
           </Route>
 
-          {/* Protected Routes */}
-          <Route path="/*" element={
+          {/* Protected Routes - using pathless parent to avoid catch-all matching "/" */}
+          <Route element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
@@ -883,6 +884,11 @@ function App() {
             <Route path="admin/smoke-test" element={
               <ProtectedRoute requiredRole="admin">
                 <SmokeTestPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/route-audit" element={
+              <ProtectedRoute requiredRole="admin">
+                <RouteAuditPage />
               </ProtectedRoute>
             } />
 
