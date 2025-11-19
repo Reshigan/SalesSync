@@ -23,7 +23,8 @@ export interface BrandFormData {
 export const brandService = {
   async getBrands(params?: { search?: string; status?: string }): Promise<Brand[]> {
     const response = await apiClient.get('/brands', { params })
-    return response.data
+    const brandsData = response.data.data?.brands || response.data.data || response.data || []
+    return Array.isArray(brandsData) ? brandsData : []
   },
 
   async getBrand(id: string): Promise<Brand> {
