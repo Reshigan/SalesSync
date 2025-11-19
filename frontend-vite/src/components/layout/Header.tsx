@@ -17,7 +17,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <div className="sticky top-0 z-10 flex-shrink-0 flex h-16 bg-white shadow">
+    <div className="sticky top-0 z-[1000] flex-shrink-0 flex h-16 bg-white shadow">
       {/* Mobile menu button */}
       <button
         type="button"
