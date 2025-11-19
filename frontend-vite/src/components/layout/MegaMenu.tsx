@@ -137,7 +137,7 @@ export default function MegaMenu() {
             {/* Mega Menu Dropdown */}
             {activeMenu === category && (
               <div
-                className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-[90vw] max-w-[800px] max-h-[70vh] overflow-y-auto overscroll-contain"
+                className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[1100] w-[90vw] max-w-[800px] max-h-[70vh] overflow-y-auto overscroll-contain"
                 onMouseEnter={cancelClose}
                 onMouseLeave={scheduleClose}
                 onWheelCapture={(e) => e.stopPropagation()}
