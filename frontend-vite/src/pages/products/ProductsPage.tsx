@@ -264,7 +264,10 @@ export default function ProductsPage() {
             <Download className="h-4 w-4" />
             <span>Export</span>
           </button>
-          <button className="btn-primary flex items-center space-x-2">
+          <button 
+            onClick={() => navigate('/products/create')}
+            className="btn-primary flex items-center space-x-2"
+          >
             <Plus className="h-4 w-4" />
             <span>Add Product</span>
           </button>
@@ -584,7 +587,7 @@ export default function ProductsPage() {
                           <Eye className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => navigate(`/products/${product.id}`)}
+                          onClick={() => navigate(`/products/${product.id}/edit`)}
                           className="text-gray-400 hover:text-gray-600"
                           title="Edit Product"
                         >

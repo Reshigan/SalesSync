@@ -91,10 +91,16 @@ import PromotionsManagement from './pages/promotions/PromotionsManagement'
 // Business Pages
 import CustomersPage from './pages/customers/CustomersPage'
 import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
+import CustomerEditPage from './pages/customers/CustomerEditPage'
+import CustomerCreatePage from './pages/customers/CustomerCreatePage'
 import OrdersPage from './pages/orders/OrdersPage'
 import OrderDetailsPage from './pages/orders/OrderDetailsPage'
+import OrderEditPage from './pages/orders/OrderEditPage'
+import OrderCreatePage from './pages/orders/OrderCreatePage'
 import ProductsPage from './pages/products/ProductsPage'
 import ProductDetailsPage from './pages/products/ProductDetailsPage'
+import ProductEditPage from './pages/products/ProductEditPage'
+import ProductCreatePage from './pages/products/ProductCreatePage'
 
 // Van Sales Detail Pages
 import VanOrderCreatePage from './pages/van-sales/VanOrderCreatePage'
@@ -349,11 +355,17 @@ function App() {
 
             {/* Business Routes */}
             <Route path="customers" element={<CustomersPage />} />
+            <Route path="customers/create" element={<CustomerCreatePage />} />
             <Route path="customers/:id" element={<CustomerDetailsPage />} />
+            <Route path="customers/:id/edit" element={<CustomerEditPage />} />
             <Route path="orders" element={<OrdersPage />} />
+            <Route path="orders/create" element={<OrderCreatePage />} />
             <Route path="orders/:id" element={<OrderDetailsPage />} />
+            <Route path="orders/:id/edit" element={<OrderEditPage />} />
             <Route path="products" element={<ProductsPage />} />
+            <Route path="products/create" element={<ProductCreatePage />} />
             <Route path="products/:id" element={<ProductDetailsPage />} />
+            <Route path="products/:id/edit" element={<ProductEditPage />} />
 
             {/* Sales Routes */}
             <Route path="sales/orders/create" element={<SalesOrderCreate />} />
