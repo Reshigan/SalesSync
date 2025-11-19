@@ -66,7 +66,8 @@ const SurveyBuilderPage: React.FC = () => {
   const loadBrands = async () => {
     try {
       const response = await apiClient.get('/brands');
-      setBrands(response.data.data || []);
+      const brandsData = response.data.data?.brands || response.data.data || [];
+      setBrands(Array.isArray(brandsData) ? brandsData : []);
     } catch (err) {
       console.error('Failed to load brands:', err);
     }

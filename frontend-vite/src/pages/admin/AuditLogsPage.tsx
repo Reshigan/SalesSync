@@ -38,7 +38,8 @@ export default function AuditLogsPage() {
       if (dateRange[1]) params.endDate = dateRange[1]
       
       const response = await api.get('/admin/audit-logs', { params })
-      setLogs(response.data.data || [])
+      const logsData = response.data.data?.logs || response.data.data || []
+      setLogs(Array.isArray(logsData) ? logsData : [])
     } catch (error) {
       console.error('Failed to fetch audit logs:', error)
       // In production, show empty state instead of mock data
