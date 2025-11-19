@@ -10,6 +10,7 @@ export default function MegaMenu() {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const menuRef = useRef<HTMLDivElement>(null)
+  const closeTimerRef = useRef<number | null>(null)
 
   const isNavItemVisible = (item: NavigationItem) => {
     if (item.requiresRole && user?.role !== item.requiresRole) {
@@ -37,20 +38,37 @@ export default function MegaMenu() {
     })
   }
 
+  const cancelClose = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }
+
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimerRef.current = window.setTimeout(() => {
+      setActiveMenu(null)
+    }, 200)
+  }
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        cancelClose()
         setActiveMenu(null)
       }
     }
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        cancelClose()
         setActiveMenu(null)
       }
     }
 
     const handleResize = () => {
+      cancelClose()
       setActiveMenu(null)
     }
 
@@ -62,6 +80,9 @@ export default function MegaMenu() {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('keydown', handleEscape)
       window.removeEventListener('resize', handleResize)
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current)
+      }
     }
   }, [])
 
@@ -91,10 +112,14 @@ export default function MegaMenu() {
             <button
               onMouseEnter={() => {
                 if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+                  cancelClose()
                   setActiveMenu(category)
                 }
               }}
-              onClick={() => setActiveMenu(activeMenu === category ? null : category)}
+              onClick={() => {
+                cancelClose()
+                setActiveMenu(activeMenu === category ? null : category)
+              }}
               className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeMenu === category
                   ? 'bg-blue-50 text-blue-700'
@@ -112,8 +137,10 @@ export default function MegaMenu() {
             {/* Mega Menu Dropdown */}
             {activeMenu === category && (
               <div
-                className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-[90vw] max-w-[800px]"
-                onMouseLeave={() => setActiveMenu(null)}
+                className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-50 w-[90vw] max-w-[800px] max-h-[70vh] overflow-y-auto overscroll-contain"
+                onMouseEnter={cancelClose}
+                onMouseLeave={scheduleClose}
+                onWheelCapture={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
                   <div className="grid grid-cols-2 gap-6">
