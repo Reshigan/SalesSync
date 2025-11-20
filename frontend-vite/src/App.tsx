@@ -229,7 +229,7 @@ import ProductDistributionDetail from './pages/field-operations/product-distribu
 import VisitCreate from './pages/field-operations/visits/VisitCreate'
 import VisitDetail from './pages/field-operations/visits/VisitDetail'
 import VisitEdit from './pages/field-operations/visits/VisitEdit'
-import VisitsList from './pages/field-operations/visits/VisitsList'
+import VisitManagementPage from './pages/field-operations/VisitManagementPage'
 import VisitConfigurationPage from './pages/field-operations/VisitConfigurationPage'
 
 import CRMCustomerCreate from './pages/crm/customers/CustomerCreate'
@@ -522,7 +522,7 @@ function App() {
             <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
             <Route path="field-operations/commission" element={<CommissionLedgerList />} />
             <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
-            <Route path="field-operations/visits" element={<VisitsList />} />
+            <Route path="field-operations/visits" element={<VisitManagementPage />} />
             <Route path="field-operations/visits/create" element={<VisitCreate />} />
             <Route path="field-operations/visits/:id" element={<VisitDetail />} />
             <Route path="field-operations/visits/:id/edit" element={<VisitEdit />} />
