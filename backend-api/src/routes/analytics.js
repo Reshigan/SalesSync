@@ -317,7 +317,7 @@ router.get('/dashboard', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as agent_name,
       COUNT(o.id)::int as total_orders,
       COALESCE(SUM(o.total_amount), 0)::float8 as total_revenue,
-      ROUND((COUNT(CASE WHEN o.order_status = 'completed' THEN 1 END)::float8 / NULLIF(COUNT(o.id), 0) * 100), 1) as success_rate
+      ROUND((COUNT(CASE WHEN o.order_status = 'completed' THEN 1 END)::float8 / NULLIF(COUNT(o.id), 0) * 100)::numeric, 1)::float8 as success_rate
     FROM users u
     LEFT JOIN orders o ON u.id = o.salesman_id AND o.tenant_id = $1 AND o.order_date >= $2::date AND o.order_date <= $3::date
     WHERE u.tenant_id = $1 AND u.role = 'agent'
