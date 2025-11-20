@@ -40,12 +40,14 @@ class FieldOperationsService {
   async getVisits(filter?: any): Promise<{ data: Visit[], total: number }> {
     try {
       const response = await apiClient.get('/visits', { params: filter })
-      const visits = Array.isArray(response.data.data?.visits) ? response.data.data.visits : 
-                     Array.isArray(response.data.data) ? response.data.data : []
+      const visits = response.data.data?.visits || response.data.data
+      if (!Array.isArray(visits)) {
+        throw new Error('Invalid response: expected array of visits')
+      }
       return { data: visits, total: response.data.data?.stats?.total_visits || visits.length }
     } catch (error) {
       console.error('Failed to fetch visits:', error)
-      return { data: [], total: 0 }
+      throw error
     }
   }
 

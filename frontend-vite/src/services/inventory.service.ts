@@ -67,7 +67,7 @@ class InventoryService {
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch product inventory:', error)
-      return null
+      throw error
     }
   }
 
@@ -94,10 +94,14 @@ class InventoryService {
   async getLowStock(): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/low-stock`)
-      return response.data.data || []
+      const data = response.data.data
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid response: expected array of low stock items')
+      }
+      return data
     } catch (error) {
       console.error('Failed to fetch low stock:', error)
-      return []
+      throw error
     }
   }
 

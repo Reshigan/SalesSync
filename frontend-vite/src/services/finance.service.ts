@@ -259,22 +259,28 @@ class FinanceService {
   async getInvoiceItemsList(invoiceId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items`)
-      const items = response.data.data?.items || []
+      const items = response.data.data?.items
+      if (!Array.isArray(items)) {
+        throw new Error('Invalid response: expected array of invoice items')
+      }
       return items.map((item: any) => this.normalizeInvoiceItem(item))
     } catch (error) {
       console.error('Failed to fetch invoice items list:', error)
-      return []
+      throw error
     }
   }
 
-  async getInvoiceItem(invoiceId: string, itemId: string): Promise<any | null> {
+  async getInvoiceItem(invoiceId: string, itemId: string): Promise<any> {
     try {
       const response = await apiClient.get(`/api/finance/invoices/${invoiceId}/items/${itemId}`)
-      const item = response.data.data?.item || null
+      const item = response.data.data?.item
+      if (!item) {
+        throw new Error('Invoice item not found')
+      }
       return this.normalizeInvoiceItem(item)
     } catch (error) {
       console.error('Failed to fetch invoice item:', error)
-      return null
+      throw error
     }
   }
 
@@ -292,20 +298,28 @@ class FinanceService {
   async getPaymentAllocationsList(paymentId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`/api/payments/${paymentId}/allocations`)
-      return response.data.data?.allocations || []
+      const allocations = response.data.data?.allocations
+      if (!Array.isArray(allocations)) {
+        throw new Error('Invalid response: expected array of payment allocations')
+      }
+      return allocations
     } catch (error) {
       console.error('Failed to fetch payment allocations list:', error)
-      return []
+      throw error
     }
   }
 
-  async getPaymentAllocation(paymentId: string, allocationId: string): Promise<any | null> {
+  async getPaymentAllocation(paymentId: string, allocationId: string): Promise<any> {
     try {
       const response = await apiClient.get(`/api/payments/${paymentId}/allocations/${allocationId}`)
-      return response.data.data?.allocation || null
+      const allocation = response.data.data?.allocation
+      if (!allocation) {
+        throw new Error('Payment allocation not found')
+      }
+      return allocation
     } catch (error) {
       console.error('Failed to fetch payment allocation:', error)
-      return null
+      throw error
     }
   }
 

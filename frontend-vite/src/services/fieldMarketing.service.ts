@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { apiClient } from './api.service';
 
 // ============================================
 // FIELD MARKETING API SERVICE
@@ -198,58 +196,26 @@ export interface SurveySubmission {
 }
 
 class FieldMarketingService {
-  private getAuthToken() {
-    return localStorage.getItem('token');
-  }
-
-  private getHeaders() {
-    const token = this.getAuthToken();
-    return {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
-    };
-  }
-
   // GPS Validation
   async validateGPS(data: GPSValidationRequest): Promise<GPSValidationResponse> {
-    const response = await axios.post(
-      `${API_URL}/field-marketing/gps/validate`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.post('/field-marketing/gps/validate', data);
     return response.data;
   }
 
   // Customer Search
   async searchCustomers(params: CustomerSearchParams): Promise<{ customers: Customer[] }> {
-    const response = await axios.get(
-      `${API_URL}/field-marketing/customers/search`,
-      {
-        params,
-        headers: this.getHeaders()
-      }
-    );
+    const response = await apiClient.get('/field-marketing/customers/search', { params });
     return response.data;
   }
 
   // Visits
   async createVisit(data: CreateVisitRequest): Promise<{ visit: Visit }> {
-    const response = await axios.post(
-      `${API_URL}/field-marketing/visits`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.post('/field-marketing/visits', data);
     return response.data;
   }
 
   async getVisits(params?: { status?: string; startDate?: string; endDate?: string }): Promise<{ visits: Visit[] }> {
-    const response = await axios.get(
-      `${API_URL}/field-marketing/visits`,
-      {
-        params,
-        headers: this.getHeaders()
-      }
-    );
+    const response = await apiClient.get('/field-marketing/visits', { params });
     return response.data;
   }
 
@@ -259,10 +225,7 @@ class FieldMarketingService {
     productDistributions: ProductDistribution[];
     surveys: any[];
   }> {
-    const response = await axios.get(
-      `${API_URL}/field-marketing/visits/${visitId}`,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.get(`/field-marketing/visits/${visitId}`);
     return response.data;
   }
 
@@ -271,43 +234,27 @@ class FieldMarketingService {
     endLongitude: number;
     visitNotes?: string;
   }): Promise<{ visit: Visit }> {
-    const response = await axios.put(
-      `${API_URL}/field-marketing/visits/${visitId}/complete`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.put(`/field-marketing/visits/${visitId}/complete`, data);
     return response.data;
   }
 
   // Boards
   async getBoards(brandId?: number): Promise<{ boards: Board[] }> {
-    const response = await axios.get(
-      `${API_URL}/field-marketing/boards`,
-      {
-        params: { brandId },
-        headers: this.getHeaders()
-      }
-    );
+    const response = await apiClient.get('/field-marketing/boards', {
+      params: { brandId }
+    });
     return response.data;
   }
 
   // Board Placements
   async createBoardPlacement(data: CreateBoardPlacementRequest): Promise<{ placement: BoardPlacement }> {
-    const response = await axios.post(
-      `${API_URL}/field-marketing/board-placements`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.post('/field-marketing/board-placements', data);
     return response.data;
   }
 
   // Product Distributions
   async createProductDistribution(data: CreateProductDistributionRequest): Promise<{ distribution: ProductDistribution }> {
-    const response = await axios.post(
-      `${API_URL}/field-marketing/product-distributions`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.post('/field-marketing/product-distributions', data);
     return response.data;
   }
 
@@ -320,23 +267,13 @@ class FieldMarketingService {
     commissions: Commission[];
     totals: CommissionTotals;
   }> {
-    const response = await axios.get(
-      `${API_URL}/field-marketing/commissions`,
-      {
-        params,
-        headers: this.getHeaders()
-      }
-    );
+    const response = await apiClient.get('/field-marketing/commissions', { params });
     return response.data;
   }
 
   // Surveys
   async submitSurvey(data: SurveySubmission): Promise<{ survey: any }> {
-    const response = await axios.post(
-      `${API_URL}/field-marketing/surveys/submit`,
-      data,
-      { headers: this.getHeaders() }
-    );
+    const response = await apiClient.post('/field-marketing/surveys/submit', data);
     return response.data;
   }
 }

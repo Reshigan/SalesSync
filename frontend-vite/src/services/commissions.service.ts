@@ -153,10 +153,14 @@ class CommissionsService {
   async getRules(): Promise<CommissionRule[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/rules`)
-      return response.data.data || []
+      const rules = response.data.data
+      if (!Array.isArray(rules)) {
+        throw new Error('Invalid response: expected array of commission rules')
+      }
+      return rules
     } catch (error) {
       console.error('Failed to fetch commission rules:', error)
-      return []
+      throw error
     }
   }
 

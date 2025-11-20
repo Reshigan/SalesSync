@@ -88,13 +88,13 @@ class OrdersService {
     }
   }
 
-  async getOrder(id: string): Promise<Order | null> {
+  async getOrder(id: string): Promise<Order> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${id}`)
-      return response.data.data?.order || response.data.data || null
+      return response.data.data?.order || response.data.data
     } catch (error) {
       console.error('Failed to fetch order:', error)
-      return null
+      throw error
     }
   }
 
@@ -133,7 +133,7 @@ class OrdersService {
       return order?.items || []
     } catch (error) {
       console.error('Failed to fetch order items:', error)
-      return []
+      throw error
     }
   }
 
@@ -142,10 +142,14 @@ class OrdersService {
       const response = await apiClient.get(`${this.baseUrl}/customer/${customerId}`, {
         params: { limit }
       })
-      return response.data.data?.orders || []
+      const orders = response.data.data?.orders
+      if (!Array.isArray(orders)) {
+        throw new Error('Invalid response: expected array of orders')
+      }
+      return orders
     } catch (error) {
       console.error('Failed to fetch customer orders:', error)
-      return []
+      throw error
     }
   }
 
@@ -154,10 +158,14 @@ class OrdersService {
       const response = await apiClient.get(`${this.baseUrl}/salesman/${salesmanId}`, {
         params: filters
       })
-      return response.data.data?.orders || []
+      const orders = response.data.data?.orders
+      if (!Array.isArray(orders)) {
+        throw new Error('Invalid response: expected array of orders')
+      }
+      return orders
     } catch (error) {
       console.error('Failed to fetch salesman orders:', error)
-      return []
+      throw error
     }
   }
 
@@ -167,7 +175,7 @@ class OrdersService {
       return response.data.data
     } catch (error) {
       console.error('Failed to fetch order stats:', error)
-      return null
+      throw error
     }
   }
 
@@ -183,20 +191,28 @@ class OrdersService {
   async getOrderItemsList(orderId: string): Promise<OrderItem[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/items`)
-      return response.data.data?.items || []
+      const items = response.data.data?.items
+      if (!Array.isArray(items)) {
+        throw new Error('Invalid response: expected array of order items')
+      }
+      return items
     } catch (error) {
       console.error('Failed to fetch order items list:', error)
-      return []
+      throw error
     }
   }
 
-  async getOrderItem(orderId: string, itemId: string): Promise<OrderItem | null> {
+  async getOrderItem(orderId: string, itemId: string): Promise<OrderItem> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/items/${itemId}`)
-      return response.data.data?.item || null
+      const item = response.data.data?.item
+      if (!item) {
+        throw new Error('Order item not found')
+      }
+      return item
     } catch (error) {
       console.error('Failed to fetch order item:', error)
-      return null
+      throw error
     }
   }
 
@@ -213,40 +229,56 @@ class OrdersService {
   async getOrderDeliveries(orderId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries`)
-      return response.data.data?.deliveries || []
+      const deliveries = response.data.data?.deliveries
+      if (!Array.isArray(deliveries)) {
+        throw new Error('Invalid response: expected array of deliveries')
+      }
+      return deliveries
     } catch (error) {
       console.error('Failed to fetch order deliveries:', error)
-      return []
+      throw error
     }
   }
 
-  async getOrderDelivery(orderId: string, deliveryId: string): Promise<any | null> {
+  async getOrderDelivery(orderId: string, deliveryId: string): Promise<any> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/deliveries/${deliveryId}`)
-      return response.data.data?.delivery || null
+      const delivery = response.data.data?.delivery
+      if (!delivery) {
+        throw new Error('Order delivery not found')
+      }
+      return delivery
     } catch (error) {
       console.error('Failed to fetch order delivery:', error)
-      return null
+      throw error
     }
   }
 
   async getOrderReturns(orderId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/returns`)
-      return response.data.data?.returns || []
+      const returns = response.data.data?.returns
+      if (!Array.isArray(returns)) {
+        throw new Error('Invalid response: expected array of returns')
+      }
+      return returns
     } catch (error) {
       console.error('Failed to fetch order returns:', error)
-      return []
+      throw error
     }
   }
 
   async getOrderStatusHistory(orderId: string): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${orderId}/status-history`)
-      return response.data.data?.statusHistory || []
+      const statusHistory = response.data.data?.statusHistory
+      if (!Array.isArray(statusHistory)) {
+        throw new Error('Invalid response: expected array of status history')
+      }
+      return statusHistory
     } catch (error) {
       console.error('Failed to fetch order status history:', error)
-      return []
+      throw error
     }
   }
 

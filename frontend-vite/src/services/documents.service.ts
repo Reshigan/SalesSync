@@ -27,20 +27,28 @@ class DocumentsService {
   async getRelatedDocuments(entityType: string, entityId: string): Promise<DocumentRelationship[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}/relationships`)
-      return response.data.data?.relationships || []
+      const relationships = response.data.data?.relationships
+      if (!Array.isArray(relationships)) {
+        throw new Error('Invalid response: expected array of relationships')
+      }
+      return relationships
     } catch (error) {
       console.error('Failed to fetch related documents:', error)
-      return []
+      throw error
     }
   }
 
-  async getRelationship(entityType: string, entityId: string, relationshipId: string): Promise<DocumentRelationship | null> {
+  async getRelationship(entityType: string, entityId: string, relationshipId: string): Promise<DocumentRelationship> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}/relationships/${relationshipId}`)
-      return response.data.data?.relationship || null
+      const relationship = response.data.data?.relationship
+      if (!relationship) {
+        throw new Error('Relationship not found')
+      }
+      return relationship
     } catch (error) {
       console.error('Failed to fetch relationship:', error)
-      return null
+      throw error
     }
   }
 

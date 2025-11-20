@@ -8,14 +8,20 @@ class AIService {
   private buildUrl(endpoint: string): string {
     return `${API_CONFIG.BASE_URL}${endpoint}`
   }
-  private ollamaUrl = 'http://localhost:11434'
+  private ollamaUrl = import.meta.env.VITE_OLLAMA_URL || ''
   private isOllamaAvailable = false
 
   constructor() {
-    this.checkOllamaAvailability()
+    if (this.ollamaUrl) {
+      this.checkOllamaAvailability()
+    }
   }
 
   private async checkOllamaAvailability() {
+    if (!this.ollamaUrl) {
+      this.isOllamaAvailable = false
+      return
+    }
     try {
       const response = await fetch(`${this.ollamaUrl}/api/tags`)
       this.isOllamaAvailable = response.ok

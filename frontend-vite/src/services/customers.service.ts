@@ -73,13 +73,13 @@ class CustomersService {
     }
   }
 
-  async getCustomer(id: string): Promise<Customer | null> {
+  async getCustomer(id: string): Promise<Customer> {
     try {
       const response = await apiClient.get(API_CONFIG.ENDPOINTS.CUSTOMERS.BY_ID(id))
       return response.data.data?.customer || response.data.data
     } catch (error) {
       console.error('Failed to fetch customer:', error)
-      return null
+      throw error
     }
   }
 
@@ -125,31 +125,42 @@ class CustomersService {
   async getCustomerOrders(customerId: string, filter?: any): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${customerId}/orders`, { params: filter })
-      return Array.isArray(response.data.data?.orders) ? response.data.data.orders : 
-             Array.isArray(response.data.data) ? response.data.data : []
+      const orders = response.data.data?.orders || response.data.data
+      if (!Array.isArray(orders)) {
+        throw new Error('Invalid response: expected array of orders')
+      }
+      return orders
     } catch (error) {
       console.error('Failed to fetch customer orders:', error)
-      return []
+      throw error
     }
   }
 
   async getCustomerTransactions(customerId: string, filter?: any): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${customerId}/transactions`, { params: filter })
-      return response.data.data || []
+      const transactions = response.data.data
+      if (!Array.isArray(transactions)) {
+        throw new Error('Invalid response: expected array of transactions')
+      }
+      return transactions
     } catch (error) {
       console.error('Failed to fetch customer transactions:', error)
-      return []
+      throw error
     }
   }
 
   async getCustomerVisits(customerId: string, filter?: any): Promise<any[]> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${customerId}/visits`, { params: filter })
-      return Array.isArray(response.data.data) ? response.data.data : []
+      const visits = response.data.data
+      if (!Array.isArray(visits)) {
+        throw new Error('Invalid response: expected array of visits')
+      }
+      return visits
     } catch (error) {
       console.error('Failed to fetch customer visits:', error)
-      return []
+      throw error
     }
   }
 
