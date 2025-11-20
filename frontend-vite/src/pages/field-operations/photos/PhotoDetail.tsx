@@ -11,7 +11,7 @@ export default function PhotoDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: photoId,
       visit_id: visitId,
       photo_url: '/placeholder-photo.jpg',
@@ -29,7 +29,7 @@ export default function PhotoDetail() {
         resolution: '4032x3024',
         file_size: '2.4 MB',
       },
-    }),
+    },
   })
 
   if (isLoading) {

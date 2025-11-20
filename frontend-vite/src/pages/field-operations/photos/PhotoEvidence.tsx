@@ -11,11 +11,11 @@ export default function PhotoEvidence() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
-    }),
+    },
   })
 
   const { data: evidence, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function PhotoEvidence() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       visit_id: visitId,
       total_photos: 5,
       verified_photos: 5,
@@ -61,7 +61,7 @@ export default function PhotoEvidence() {
           taken_at: '2024-01-20T10:15:00Z',
         },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

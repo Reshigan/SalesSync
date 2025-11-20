@@ -11,7 +11,7 @@ export default function AdjustmentJustification() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',
@@ -40,7 +40,7 @@ export default function AdjustmentJustification() {
           uploaded_at: '2024-01-20T14:36:00Z',
         },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

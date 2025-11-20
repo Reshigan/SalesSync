@@ -11,12 +11,12 @@ export default function TransferItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: transferId,
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
       to_warehouse: 'Branch Warehouse',
-    }),
+    },
   })
 
   const { data: item, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function TransferItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       transfer_id: transferId,
       product_id: 'prod-1',
@@ -40,7 +40,7 @@ export default function TransferItemDetail() {
       shipped_at: '2024-01-20T08:00:00Z',
       received_at: '2024-01-22T10:00:00Z',
       variance_notes: '5 units damaged during transit',
-    }),
+    },
   })
 
   if (isLoading) {

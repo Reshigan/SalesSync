@@ -19,9 +19,7 @@ export default function CollectionDetail() {
     queryFn: async () => {
       return null
     },
-  })
-
-  const oldCollection = {
+    placeholderData: {
       id: collectionId,
       session_id: sessionId,
       customer_id: 'cust-1',
@@ -34,7 +32,7 @@ export default function CollectionDetail() {
       collected_by: 'John Van Sales',
       reference_number: 'REF-001',
       notes: 'Full payment received',
-    }),
+    },
   })
 
   if (isLoading) {

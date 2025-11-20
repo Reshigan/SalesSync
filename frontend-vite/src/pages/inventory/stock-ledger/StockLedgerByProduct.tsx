@@ -11,12 +11,12 @@ export default function StockLedgerByProduct() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: productId,
       name: 'Coca-Cola 500ml',
       sku: 'CC-500',
       current_stock: 140,
-    }),
+    },
   })
 
   const { data: entries, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function StockLedgerByProduct() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         warehouse_name: 'Main Warehouse',

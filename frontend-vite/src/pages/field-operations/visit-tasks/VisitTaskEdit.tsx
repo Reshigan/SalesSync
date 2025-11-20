@@ -21,14 +21,14 @@ export default function VisitTaskEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: taskId,
       visit_id: visitId,
       task_title: 'Install promotional board',
       description: 'Install new Coca-Cola promotional board at store entrance',
       priority: 'high',
       notes: 'Board installed successfully, customer satisfied',
-    }),
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<TaskFormData>({

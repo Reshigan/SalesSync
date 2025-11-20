@@ -11,7 +11,7 @@ export default function SurveyAnswerDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: questionId,
       survey_id: surveyId,
       question_text: 'How satisfied are you with our product quality?',
@@ -25,7 +25,7 @@ export default function SurveyAnswerDetail() {
         { value: '1', count: 0, percentage: 0, label: 'Very Dissatisfied' },
       ],
       average_rating: 4.5,
-    }),
+    },
   })
 
   if (isLoading) {

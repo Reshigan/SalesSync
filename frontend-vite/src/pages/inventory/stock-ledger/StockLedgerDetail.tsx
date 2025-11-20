@@ -11,11 +11,11 @@ export default function StockLedgerDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: productId,
       name: 'Coca-Cola 500ml',
       sku: 'CC-500',
-    }),
+    },
   })
 
   const { data: entry, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function StockLedgerDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: entryId,
       product_id: productId,
       transaction_type: 'sale',
@@ -37,7 +37,7 @@ export default function StockLedgerDetail() {
       transaction_date: '2024-01-20T14:30:00Z',
       created_by: 'System',
       notes: 'Order fulfillment',
-    }),
+    },
   })
 
   if (isLoading) {

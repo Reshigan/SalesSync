@@ -11,10 +11,10 @@ export default function PayoutAuditTrail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       agent_name: 'John Sales Agent',
-    }),
+    },
   })
 
   const { data: auditTrail, isLoading } = useQuery({
@@ -22,7 +22,7 @@ export default function PayoutAuditTrail() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         action: 'payout_completed',

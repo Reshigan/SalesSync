@@ -13,11 +13,11 @@ export default function PayoutLineList() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: payoutId,
       payout_number: 'PAYOUT-2024-001',
       payout_date: '2024-02-05',
-    }),
+    },
   })
 
   const { data: lines, isLoading } = useQuery({
@@ -27,7 +27,7 @@ export default function PayoutLineList() {
       return await commissionsService.getPayoutLines(payoutId)
     },
     enabled: !!payoutId,
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         agent_name: 'John Sales Agent',

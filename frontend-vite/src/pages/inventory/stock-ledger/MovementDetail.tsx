@@ -11,7 +11,7 @@ export default function MovementDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: movementId,
       movement_number: 'MOV-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -42,7 +42,7 @@ export default function MovementDetail() {
           url: '/finance/invoices/inv-1',
         },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

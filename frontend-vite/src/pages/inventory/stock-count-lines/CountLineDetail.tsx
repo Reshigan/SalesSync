@@ -11,11 +11,11 @@ export default function CountLineDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: countId,
       count_number: 'CNT-2024-001',
       warehouse_name: 'Main Warehouse',
-    }),
+    },
   })
 
   const { data: line, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function CountLineDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_id: 'prod-1',
@@ -40,7 +40,7 @@ export default function CountLineDetail() {
       status: 'variance_pending',
       notes: 'Found 5 damaged units',
       location: 'Aisle 3, Shelf B',
-    }),
+    },
   })
 
   if (isLoading) {

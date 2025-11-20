@@ -12,11 +12,11 @@ export default function SourceTransactions() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       agent_name: 'John Sales Agent',
       commission_amount: 2700.00,
-    }),
+    },
   })
 
   const { data: transactions, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function SourceTransactions() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         transaction_type: 'order',

@@ -12,11 +12,11 @@ export default function AdjustmentItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: adjustmentId,
       adjustment_number: 'ADJ-2024-001',
       warehouse_name: 'Main Warehouse',
-    }),
+    },
   })
 
   const { data: item, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function AdjustmentItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_id: 'prod-1',
@@ -39,7 +39,7 @@ export default function AdjustmentItemDetail() {
       location: 'Aisle 3, Shelf B',
       created_by: 'John Manager',
       created_at: '2024-01-20T14:30:00Z',
-    }),
+    },
   })
 
   if (isLoading) {

@@ -19,14 +19,14 @@ export default function CountLineEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',
       expected_quantity: 100,
       counted_quantity: 95,
       notes: 'Found 5 damaged units',
-    }),
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<CountLineFormData>({

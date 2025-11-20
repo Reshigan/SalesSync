@@ -19,9 +19,7 @@ export default function DepositDetail() {
     queryFn: async () => {
       return null
     },
-  })
-
-  const oldDeposit = {
+    placeholderData: {
       id: depositId,
       session_id: sessionId,
       deposit_number: 'DEP-2024-001',
@@ -40,7 +38,7 @@ export default function DepositDetail() {
         cards: 0.00,
       },
       notes: 'End of day deposit',
-    }),
+    },
   })
 
   if (isLoading) {

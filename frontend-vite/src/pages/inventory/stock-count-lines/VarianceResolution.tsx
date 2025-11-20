@@ -20,7 +20,7 @@ export default function VarianceResolution() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',
@@ -31,7 +31,7 @@ export default function VarianceResolution() {
       variance_percent: -5.0,
       variance_value: -75.00,
       unit_cost: 15.00,
-    }),
+    },
   })
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ResolutionFormData>()

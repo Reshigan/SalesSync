@@ -11,11 +11,11 @@ export default function BoardComplianceChecks() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
-    }),
+    },
   })
 
   const { data: checks, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function BoardComplianceChecks() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         check_type: 'brand_guidelines',

@@ -11,7 +11,7 @@ export default function LotDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lotId,
       lot_number: 'LOT-2024-A-001',
       product_id: 'prod-1',
@@ -49,7 +49,7 @@ export default function LotDetail() {
         },
       ],
       notes: 'Standard production lot, all quality checks passed',
-    }),
+    },
   })
 
   const { data: batches } = useQuery({
@@ -57,7 +57,7 @@ export default function LotDetail() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: 'batch-1',
         batch_number: 'BATCH-2024-001',

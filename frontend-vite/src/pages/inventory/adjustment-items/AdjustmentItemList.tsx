@@ -12,11 +12,11 @@ export default function AdjustmentItemList() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: adjustmentId,
       adjustment_number: 'ADJ-2024-001',
       warehouse_name: 'Main Warehouse',
-    }),
+    },
   })
 
   const { data: items, isLoading } = useQuery({
@@ -24,7 +24,7 @@ export default function AdjustmentItemList() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',

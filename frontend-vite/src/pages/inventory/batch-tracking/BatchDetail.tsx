@@ -11,7 +11,7 @@ export default function BatchDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_id: 'prod-1',
@@ -31,7 +31,7 @@ export default function BatchDetail() {
       quality_checked_by: 'Jane QC',
       quality_checked_at: '2024-01-02T10:00:00Z',
       notes: 'Standard batch, all quality checks passed',
-    }),
+    },
   })
 
   if (isLoading) {

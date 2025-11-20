@@ -11,7 +11,7 @@ export default function SurveyAnalysis() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       survey_id: surveyId,
       survey_title: 'Customer Satisfaction Survey',
       total_responses: 10,
@@ -41,7 +41,7 @@ export default function SurveyAnalysis() {
       ],
       overall_satisfaction: 4.5,
       nps_score: 80,
-    }),
+    },
   })
 
   if (isLoading) {

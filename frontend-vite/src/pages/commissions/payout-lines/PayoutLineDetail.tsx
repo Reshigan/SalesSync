@@ -12,7 +12,7 @@ export default function PayoutLineDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       payout_id: payoutId,
       agent_id: 'agent-1',
@@ -25,7 +25,7 @@ export default function PayoutLineDetail() {
       payment_reference: 'PAY-2024-001',
       paid_at: '2024-02-05T10:00:00Z',
       status: 'paid',
-    }),
+    },
   })
 
   if (isLoading) {

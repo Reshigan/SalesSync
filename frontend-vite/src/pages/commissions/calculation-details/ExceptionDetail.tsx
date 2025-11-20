@@ -12,7 +12,7 @@ export default function ExceptionDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: exceptionId,
       calculation_id: calculationId,
       exception_type: 'negative_commission',
@@ -24,7 +24,7 @@ export default function ExceptionDetail() {
       resolution_action: 'Adjusted commission to zero, flagged for review',
       resolved_by: 'Manager',
       resolved_at: '2024-02-01T10:00:00Z',
-    }),
+    },
   })
 
   if (isLoading) {

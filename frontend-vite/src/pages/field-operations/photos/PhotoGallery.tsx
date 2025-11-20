@@ -11,11 +11,11 @@ export default function PhotoGallery() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
-    }),
+    },
   })
 
   const { data: photos, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function PhotoGallery() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',

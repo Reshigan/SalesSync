@@ -12,7 +12,7 @@ export default function ApprovalDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: '1',
       calculation_id: calculationId,
       agent_name: 'John Sales Agent',
@@ -24,7 +24,7 @@ export default function ApprovalDetail() {
       approval_status: 'approved',
       approval_notes: 'Commission calculation verified and approved',
       approval_level: 'manager',
-    }),
+    },
   })
 
   if (isLoading) {

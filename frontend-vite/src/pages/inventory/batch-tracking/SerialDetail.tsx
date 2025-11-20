@@ -11,7 +11,7 @@ export default function SerialDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_id: 'prod-1',
@@ -30,7 +30,7 @@ export default function SerialDetail() {
       sold_order: 'ORD-2024-001',
       sold_invoice: 'INV-2024-001',
       notes: 'Premium model with extended warranty',
-    }),
+    },
   })
 
   if (isLoading) {

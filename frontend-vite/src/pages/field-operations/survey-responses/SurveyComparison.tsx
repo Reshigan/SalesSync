@@ -11,7 +11,7 @@ export default function SurveyComparison() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       current_survey: {
         id: surveyId,
         title: 'Customer Satisfaction Survey - Q1 2024',
@@ -54,7 +54,7 @@ export default function SurveyComparison() {
           trend: 'up',
         },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

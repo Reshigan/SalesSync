@@ -11,7 +11,7 @@ export default function BoardPlacementDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: placementId,
       visit_id: visitId,
       board_id: 'board-1',
@@ -26,7 +26,7 @@ export default function BoardPlacementDetail() {
       photos_taken: 3,
       customer_approval: true,
       notes: 'Perfect location with high visibility',
-    }),
+    },
   })
 
   if (isLoading) {

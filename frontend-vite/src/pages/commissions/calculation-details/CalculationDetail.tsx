@@ -12,7 +12,7 @@ export default function CalculationDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: calculationId,
       agent_id: 'agent-1',
       agent_name: 'John Sales Agent',
@@ -32,7 +32,7 @@ export default function CalculationDetail() {
         { category: 'Product Sales', amount: 40000.00, rate: 5, commission: 2000.00 },
         { category: 'Service Sales', amount: 10000.00, rate: 5, commission: 500.00 },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

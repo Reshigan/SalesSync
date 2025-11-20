@@ -21,9 +21,7 @@ export default function CashVariance() {
     queryFn: async () => {
       return null
     },
-  })
-
-  const oldSession = {
+    placeholderData: {
       id: sessionId,
       session_number: 'CASH-2024-001',
       agent_name: 'John Van Sales',
@@ -31,7 +29,7 @@ export default function CashVariance() {
       actual_cash: 2430.00,
       variance: -20.00,
       variance_percentage: -0.82,
-    }),
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<VarianceFormData>()

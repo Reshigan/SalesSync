@@ -20,13 +20,13 @@ export default function PayoutLineEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       payout_id: payoutId,
       payment_method: 'bank_transfer',
       payment_reference: 'PAY-2024-001',
       notes: '',
-    }),
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<PayoutLineFormData>({

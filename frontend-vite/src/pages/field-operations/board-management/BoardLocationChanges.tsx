@@ -11,11 +11,11 @@ export default function BoardLocationChanges() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
-    }),
+    },
   })
 
   const { data: changes, isLoading } = useQuery({
@@ -23,7 +23,7 @@ export default function BoardLocationChanges() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         from_location: 'XYZ Mart - Window Display',

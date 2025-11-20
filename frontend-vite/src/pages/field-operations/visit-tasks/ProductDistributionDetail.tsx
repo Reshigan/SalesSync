@@ -11,7 +11,7 @@ export default function ProductDistributionDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: distributionId,
       visit_id: visitId,
       distribution_type: 'samples',
@@ -38,7 +38,7 @@ export default function ProductDistributionDetail() {
       recipient_signature: true,
       photos_taken: 2,
       notes: 'Samples well received, store manager interested in ordering',
-    }),
+    },
   })
 
   if (isLoading) {

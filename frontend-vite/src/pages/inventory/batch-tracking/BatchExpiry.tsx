@@ -11,7 +11,7 @@ export default function BatchExpiry() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -19,7 +19,7 @@ export default function BatchExpiry() {
       expiry_date: '2024-12-31',
       current_quantity: 750,
       warehouse_name: 'Main Warehouse',
-    }),
+    },
   })
 
   const { data: expiryInfo, isLoading } = useQuery({
@@ -27,7 +27,7 @@ export default function BatchExpiry() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       expiry_date: '2024-12-31',
       days_until_expiry: 45,
       expiry_status: 'expiring_soon',
@@ -66,7 +66,7 @@ export default function BatchExpiry() {
           notified_users: ['Inventory Manager'],
         },
       ],
-    }),
+    },
   })
 
   if (isLoading) {

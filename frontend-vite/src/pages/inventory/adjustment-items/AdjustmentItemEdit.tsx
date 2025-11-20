@@ -20,7 +20,7 @@ export default function AdjustmentItemEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',
@@ -28,7 +28,7 @@ export default function AdjustmentItemEdit() {
       quantity: -10,
       reason: 'damaged',
       justification: 'Found 10 damaged units during quality inspection',
-    }),
+    },
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<AdjustmentItemFormData>({
