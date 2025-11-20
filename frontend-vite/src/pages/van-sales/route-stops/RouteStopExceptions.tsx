@@ -23,9 +23,7 @@ export default function RouteStopExceptions() {
       return await vanSalesService.getRouteExceptions(routeId)
     },
     enabled: !!routeId,
-  })
-
-  const oldExceptions = [
+    placeholderData: [
       {
         id: '1',
         stop_number: 2,
