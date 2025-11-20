@@ -308,6 +308,7 @@ async function startServer() {
     const kycRoutes = require('./routes/kyc');
     const surveyRoutes = require('./routes/surveys');
     const visitSurveysRoutes = require('./routes/visit-surveys');
+    const visitConfigurationsRoutes = require('./routes/visit-configurations');
     const analyticsRoutes = require('./routes/analytics');
     const financeRoutes = require('./routes/finance');
     const areaRoutes = require('./routes/areas');
@@ -426,6 +427,7 @@ async function startServer() {
     app.use('/api/kyc', authTenantMiddleware, kycRoutes);
     app.use('/api/surveys', authTenantMiddleware, surveyRoutes);
     app.use('/api/visit-surveys', authTenantMiddleware, visitSurveysRoutes);
+    app.use('/api/visit-configurations', authTenantMiddleware, visitConfigurationsRoutes);
     app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
     
     // Finance routes - special handling for debugging
