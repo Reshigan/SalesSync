@@ -1,11 +1,15 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fieldOperationsService } from '../../services/fieldOperations.service'
-import { Plus, Edit, Trash2, MapPin, Calendar } from 'lucide-react'
+import { Plus, Edit, Trash2, MapPin, Calendar, Map, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import LiveVisitMap from '../../components/maps/LiveVisitMap'
 
 export default function VisitManagementPage() {
   const [filter, setFilter] = useState({ page: 1, limit: 20, status: '' })
+  const [showMap, setShowMap] = useState(false)
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['visits', filter],
@@ -37,8 +41,40 @@ export default function VisitManagementPage() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div><h1 className="text-2xl font-bold text-gray-900">Visit Management</h1><p className="text-sm text-gray-600 mt-1">Schedule and manage field visits ({total} total)</p></div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Schedule Visit</span></button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => navigate('/field-operations/visit-configurations')}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <Settings className="h-4 w-4" />
+            <span>Configurations</span>
+          </button>
+          <button 
+            onClick={() => setShowMap(!showMap)}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <Map className="h-4 w-4" />
+            <span>{showMap ? 'Hide' : 'Show'} Map</span>
+          </button>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Schedule Visit</span></button>
+        </div>
       </div>
+
+      {showMap && (
+        <div className="bg-white rounded-lg shadow p-4" style={{ height: '500px' }}>
+          <LiveVisitMap 
+            visits={visits.map(v => ({
+              id: v.id,
+              customer_name: v.customer_name,
+              agent_name: v.agent_name || 'Unknown',
+              status: v.status,
+              lat: v.latitude,
+              lng: v.longitude,
+              visit_date: v.visit_date
+            }))}
+          />
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex flex-wrap gap-4">

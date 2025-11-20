@@ -230,6 +230,7 @@ import VisitCreate from './pages/field-operations/visits/VisitCreate'
 import VisitDetail from './pages/field-operations/visits/VisitDetail'
 import VisitEdit from './pages/field-operations/visits/VisitEdit'
 import VisitsList from './pages/field-operations/visits/VisitsList'
+import VisitConfigurationPage from './pages/field-operations/VisitConfigurationPage'
 
 import CRMCustomerCreate from './pages/crm/customers/CustomerCreate'
 import CRMCustomerDetail from './pages/crm/customers/CustomerDetail'
@@ -525,6 +526,7 @@ function App() {
             <Route path="field-operations/visits/create" element={<VisitCreate />} />
             <Route path="field-operations/visits/:id" element={<VisitDetail />} />
             <Route path="field-operations/visits/:id/edit" element={<VisitEdit />} />
+            <Route path="field-operations/visit-configurations" element={<VisitConfigurationPage />} />
             <Route path="field-operations/visit-history" element={<VisitHistoryPage />} />
             <Route path="field-operations/visit-management" element={<VisitManagementPage />} />
 
