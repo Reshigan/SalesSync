@@ -401,6 +401,9 @@ async function startServer() {
     app.use('/api/orders', authTenantMiddleware, ordersEnhancedRoutes); // Enhanced endpoints
     app.use('/api/visits', authTenantMiddleware, visitRoutes);
     app.use('/api/commissions', authTenantMiddleware, commissionRoutes);
+    app.use('/api/order-lines', authTenantMiddleware, require('./routes/order-lines'));
+    app.use('/api/team-hierarchy', authTenantMiddleware, require('./routes/team-hierarchy'));
+    app.use('/api/pricing', authTenantMiddleware, require('./routes/pricing'));
     app.use('/api/reports', authTenantMiddleware, reportRoutes);
     app.use('/api/dashboard', authTenantMiddleware, dashboardRoutes);
     app.use('/api/warehouses', authTenantMiddleware, warehouseRoutes);
