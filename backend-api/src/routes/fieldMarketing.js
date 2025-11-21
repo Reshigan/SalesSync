@@ -204,7 +204,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     
     // Get product distributions
     const productDistributions = await db.all(
-      `SELECT pd.*, p.name as product_name, p.sku
+      `SELECT pd.*, p.name as product_name, p.code as sku
        FROM product_distributions pd
        JOIN products p ON pd.product_id = p.id
        WHERE pd.visit_id = ?`,

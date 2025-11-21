@@ -283,10 +283,10 @@ router.get('/inventory', authenticateToken, (req, res) => {
     SELECT 
       p.id,
       p.name,
-      p.sku,
+      p.code as sku,
       i.quantity,
       i.warehouse_id,
-      p.unit_price,
+      p.selling_price as unit_price,
       i.last_updated
     FROM inventory i
     JOIN products p ON p.id = i.product_id

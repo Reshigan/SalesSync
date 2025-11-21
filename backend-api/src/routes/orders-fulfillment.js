@@ -406,7 +406,7 @@ router.get('/:id/backorders', async (req, res) => {
 
     const backorders = await new Promise((resolve, reject) => {
       db.all(
-        `SELECT b.*, p.name as product_name, p.sku
+        `SELECT b.*, p.name as product_name, p.code as sku
          FROM order_backorders b
          JOIN products p ON b.product_id = p.id
          WHERE b.order_id = $1 AND b.tenant_id = $2

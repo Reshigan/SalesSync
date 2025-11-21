@@ -204,7 +204,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
       SELECT 
         ssd.*,
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         c.name as category_name
       FROM shelf_share_data ssd
       LEFT JOIN products p ON ssd.product_id = p.id
@@ -256,7 +256,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
       SELECT 
         pm.*,
         p.name as product_name,
-        p.sku
+        p.code as sku
       FROM price_monitoring pm
       LEFT JOIN products p ON pm.product_id = p.id
       WHERE pm.visit_id = ? AND pm.tenant_id = ?
@@ -401,7 +401,7 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     let productQuery = `
       SELECT 
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         AVG(ssd.shelf_share_percentage) as avg_shelf_share,
         AVG(ssd.facing_count) as avg_facing_count,
         COUNT(ssd.id) as measurement_count,

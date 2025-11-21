@@ -227,7 +227,7 @@ router.get('/invoices/:invoiceId/items', asyncHandler(async (req, res) => {
   const tenantId = req.user?.tenantId;
   
   const items = await getQuery(`
-    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.code as product_sku,
            p.unit_of_measure, p.brand_id,
            (ii.quantity * ii.unit_price) as line_total,
            COALESCE(ii.discount_percentage, 0) as discount_percentage,
@@ -251,7 +251,7 @@ router.get('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) =
   const tenantId = req.user?.tenantId;
   
   const item = await getOneQuery(`
-    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku,
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.code as product_sku,
            p.unit_of_measure, p.brand_id,
            (ii.quantity * ii.unit_price) as line_total,
            COALESCE(ii.discount_percentage, 0) as discount_percentage,
@@ -337,7 +337,7 @@ router.put('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) =
   );
   
   const updatedItem = await getOneQuery(`
-    SELECT ii.*, p.name as product_name, p.code as product_code, p.sku as product_sku
+    SELECT ii.*, p.name as product_name, p.code as product_code, p.code as product_sku
     FROM invoice_items ii
     LEFT JOIN products p ON ii.product_id = p.id
     WHERE ii.id = ? AND ii.invoice_id = ?

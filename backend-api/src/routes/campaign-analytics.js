@@ -130,7 +130,7 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
     const productPerformance = db.prepare(`
       SELECT 
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         SUM(oi.quantity) as quantity_sold,
         SUM(oi.total_price) as revenue,
         COUNT(DISTINCT o.id) as orders
@@ -139,7 +139,7 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       JOIN orders o ON oi.order_id = o.id
       JOIN field_agent_visits fav ON o.customer_id = fav.customer_id
       WHERE fav.campaign_id = ? AND o.created_at::date = fav.visit_date::date
-      GROUP BY p.id, p.name, p.sku
+      GROUP BY p.id, p.name, p.code
       ORDER BY revenue DESC
       LIMIT 20
     `).all(campaignId);
