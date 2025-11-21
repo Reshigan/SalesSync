@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersService } from '../../services/users.service'
+import teamHierarchyService from '../../services/teamHierarchy.service'
+import TeamLeaderSelector from '../../components/team/TeamLeaderSelector'
 
 interface User {
   id: string
@@ -19,6 +21,8 @@ export const UserManagementPage: React.FC = () => {
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showTeamLeaderModal, setShowTeamLeaderModal] = useState(false)
+  const [selectedAgent, setSelectedAgent] = useState<User | null>(null)
   const [page, setPage] = useState(1)
   const limit = 20
 
@@ -35,6 +39,34 @@ export const UserManagementPage: React.FC = () => {
 
   const users = data?.users || []
   const total = data?.total || 0
+
+  const assignTeamLeaderMutation = useMutation({
+    mutationFn: ({ agentId, leaderId }: { agentId: string; leaderId: string }) =>
+      teamHierarchyService.assignAgentToLeader({
+        agent_id: agentId,
+        leader_id: leaderId,
+        effective_start: new Date().toISOString()
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      queryClient.invalidateQueries({ queryKey: ['team-hierarchy'] })
+      setShowTeamLeaderModal(false)
+      setSelectedAgent(null)
+    }
+  })
+
+  const handleAssignTeamLeader = async (leaderId: string) => {
+    if (!selectedAgent) return
+    await assignTeamLeaderMutation.mutateAsync({
+      agentId: selectedAgent.id,
+      leaderId
+    })
+  }
+
+  const handleOpenTeamLeaderModal = (user: User) => {
+    setSelectedAgent(user)
+    setShowTeamLeaderModal(true)
+  }
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -260,6 +292,14 @@ export const UserManagementPage: React.FC = () => {
                       <button className="text-blue-600 hover:text-blue-900 mr-4">
                         Edit
                       </button>
+                      {user.role.toLowerCase() === 'agent' && (
+                        <button 
+                          onClick={() => handleOpenTeamLeaderModal(user)}
+                          className="text-green-600 hover:text-green-900 mr-4"
+                        >
+                          Team Leader
+                        </button>
+                      )}
                       <button className="text-red-600 hover:text-red-900">
                         Delete
                       </button>
@@ -316,6 +356,39 @@ export const UserManagementPage: React.FC = () => {
                   Next
                 </button>
               </nav>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Leader Assignment Modal */}
+      {showTeamLeaderModal && selectedAgent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Assign Team Leader
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                {selectedAgent.first_name} {selectedAgent.last_name}
+              </p>
+            </div>
+            <div className="px-6 py-4">
+              <TeamLeaderSelector
+                agentId={selectedAgent.id}
+                onAssign={handleAssignTeamLeader}
+              />
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={() => {
+                  setShowTeamLeaderModal(false)
+                  setSelectedAgent(null)
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
