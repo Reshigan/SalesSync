@@ -152,7 +152,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   }
   
   const product = await getOneQuery(`
-    SELECT id, name, selling_price, price
+    SELECT id, name, selling_price
     FROM products
     WHERE id = $1 AND tenant_id = $2
   `, [product_id, req.tenantId]);
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
     throw new AppError('Product not found', 404);
   }
   
-  const finalUnitPrice = unit_price || product.selling_price || product.price || 0;
+  const finalUnitPrice = unit_price || product.selling_price || 0;
   const subtotal = finalUnitPrice * quantity;
   const discountAmount = subtotal * (discount_percent / 100);
   const taxableAmount = subtotal - discountAmount;

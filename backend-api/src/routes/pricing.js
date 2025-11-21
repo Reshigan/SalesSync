@@ -40,7 +40,7 @@ router.get('/quote', authMiddleware, asyncHandler(async (req, res) => {
   }
   
   const product = await getOneQuery(`
-    SELECT id, name, code as sku, price as selling_price, cost_price, unit_of_measure as unit, 0 as tax_rate
+    SELECT id, name, code as sku, selling_price, cost_price, unit_of_measure as unit, tax_rate
     FROM products
     WHERE id = $1 AND tenant_id = $2
   `, [product_id, req.tenantId]);
@@ -160,7 +160,7 @@ router.post('/bulk-quote', authMiddleware, asyncHandler(async (req, res) => {
     }
     
     const product = await getOneQuery(`
-      SELECT id, name, code as sku, price as selling_price, cost_price, unit_of_measure as unit, 0 as tax_rate
+      SELECT id, name, code as sku, selling_price, cost_price, unit_of_measure as unit, tax_rate
       FROM products
       WHERE id = $1 AND tenant_id = $2
     `, [product_id, req.tenantId]);
