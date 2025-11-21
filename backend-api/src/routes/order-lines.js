@@ -30,8 +30,8 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
     SELECT 
       ol.*,
       p.name as product_name,
-      p.sku as product_sku,
-      p.unit as product_unit
+      p.code as product_sku,
+      p.unit_of_measure as product_unit
     FROM order_lines ol
     JOIN products p ON p.id = ol.product_id
     WHERE ol.tenant_id = $1
@@ -81,8 +81,8 @@ router.get('/:id', authMiddleware, asyncHandler(async (req, res) => {
     SELECT 
       ol.*,
       p.name as product_name,
-      p.sku as product_sku,
-      p.unit as product_unit,
+      p.code as product_sku,
+      p.unit_of_measure as product_unit,
       p.selling_price as product_price
     FROM order_lines ol
     JOIN products p ON p.id = ol.product_id
@@ -152,7 +152,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   }
   
   const product = await getOneQuery(`
-    SELECT id, name, selling_price
+    SELECT id, name, selling_price, price
     FROM products
     WHERE id = $1 AND tenant_id = $2
   `, [product_id, req.tenantId]);
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
     throw new AppError('Product not found', 404);
   }
   
-  const finalUnitPrice = unit_price || product.selling_price;
+  const finalUnitPrice = unit_price || product.selling_price || product.price || 0;
   const subtotal = finalUnitPrice * quantity;
   const discountAmount = subtotal * (discount_percent / 100);
   const taxableAmount = subtotal - discountAmount;
