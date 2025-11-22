@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { test, expect } from '../fixtures/test-fixtures';
+import { test, expect } from '@playwright/test';
 import { CustomersPage } from '../pages/CustomersPage';
 
 test.describe('Customers CRUD @crud', () => {

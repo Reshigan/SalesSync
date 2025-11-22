@@ -1,6 +1,6 @@
-import * as path from 'path';
-import { test, expect } from '../fixtures/test-fixtures';
+import { test, expect } from '@playwright/test';
 import { ProductsPage } from '../pages/ProductsPage';
+import * as path from 'path';
 
 test.describe('Products CRUD @crud', () => {
   test.use({ storageState: path.join(__dirname, '../.auth/admin.json') });

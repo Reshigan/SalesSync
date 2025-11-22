@@ -1,0 +1,252 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e6]:
+      - img "SalesSync" [ref=e8]
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - img [ref=e11]
+          - textbox "Search..." [ref=e14]
+        - button "Core" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: Core
+          - img [ref=e18]
+        - button "Operations" [ref=e21] [cursor=pointer]:
+          - generic [ref=e22]: Operations
+          - img [ref=e23]
+        - button "Sales" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: Sales
+          - img [ref=e28]
+        - button "Finance" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]: Finance
+          - img [ref=e33]
+        - button "Marketing" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37]: Marketing
+          - img [ref=e38]
+        - button "CRM" [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: CRM
+          - img [ref=e43]
+        - button "Catalog" [ref=e46] [cursor=pointer]:
+          - generic [ref=e47]: Catalog
+          - img [ref=e48]
+        - button "Compliance" [ref=e51] [cursor=pointer]:
+          - generic [ref=e52]: Compliance
+          - img [ref=e53]
+        - button "Engagement" [ref=e56] [cursor=pointer]:
+          - generic [ref=e57]: Engagement
+          - img [ref=e58]
+        - button "System" [ref=e61] [cursor=pointer]:
+          - generic [ref=e62]: System
+          - img [ref=e63]
+      - generic [ref=e65]:
+        - generic [ref=e67]:
+          - generic [ref=e68]: Search
+          - generic [ref=e69]:
+            - generic:
+              - img
+            - searchbox "Search" [ref=e70]
+        - generic [ref=e71]:
+          - button "3" [ref=e73] [cursor=pointer]:
+            - img [ref=e74]
+            - generic [ref=e78]: "3"
+          - button "AU" [ref=e81] [cursor=pointer]:
+            - generic [ref=e83]: AU
+    - main [ref=e84]:
+      - generic [ref=e86]:
+        - generic [ref=e87]:
+          - generic [ref=e88]:
+            - heading "Welcome back, Admin!" [level=1] [ref=e89]
+            - paragraph [ref=e90]: Here's what's happening with your sales operations today.
+          - generic [ref=e91]:
+            - generic [ref=e92]:
+              - textbox [ref=e93]: 2025-10-23
+              - textbox [ref=e94]: 2025-11-22
+            - button "Refresh" [ref=e95] [cursor=pointer]:
+              - img [ref=e96]
+              - generic [ref=e101]: Refresh
+        - generic [ref=e102]:
+          - generic [ref=e104]:
+            - img [ref=e107]
+            - generic [ref=e109]:
+              - paragraph [ref=e110]: Total Revenue
+              - paragraph [ref=e111]: R 1,075,021.66
+              - paragraph [ref=e112]: 3,572 orders
+          - generic [ref=e114]:
+            - img [ref=e117]
+            - generic [ref=e122]:
+              - paragraph [ref=e123]: Active Customers
+              - paragraph [ref=e124]: "804"
+              - paragraph [ref=e125]: 847 new this period
+          - generic [ref=e127]:
+            - img [ref=e130]
+            - generic [ref=e133]:
+              - paragraph [ref=e134]: Field Agents
+              - paragraph [ref=e135]: "20"
+              - paragraph [ref=e136]: 20 active today
+          - generic [ref=e138]:
+            - img [ref=e141]
+            - generic [ref=e145]:
+              - paragraph [ref=e146]: Products Sold
+              - paragraph [ref=e147]: "32"
+              - paragraph [ref=e148]: 39 unique products
+        - generic [ref=e149]:
+          - generic [ref=e150]:
+            - generic [ref=e151]:
+              - heading "Revenue Trends" [level=3] [ref=e152]
+              - img [ref=e153]
+            - img [ref=e158]:
+              - generic [ref=e163]:
+                - generic [ref=e165]: 26/10/2025
+                - generic [ref=e167]: 30/10/2025
+                - generic [ref=e169]: 03/11/2025
+                - generic [ref=e171]: 07/11/2025
+                - generic [ref=e173]: 11/11/2025
+                - generic [ref=e175]: 15/11/2025
+                - generic [ref=e177]: 20/11/2025
+              - generic [ref=e179]:
+                - generic [ref=e181]: R 0.00
+                - generic [ref=e183]: R15.0K
+                - generic [ref=e185]: R30.0K
+                - generic [ref=e187]: R45.0K
+                - generic [ref=e189]: R60.0K
+          - generic [ref=e196]:
+            - generic [ref=e197]:
+              - heading "Sales Performance" [level=3] [ref=e198]
+              - img [ref=e199]
+            - img [ref=e206]:
+              - generic [ref=e211]:
+                - generic [ref=e213]: 26/10/2025
+                - generic [ref=e215]: 30/10/2025
+                - generic [ref=e217]: 03/11/2025
+                - generic [ref=e219]: 07/11/2025
+                - generic [ref=e221]: 11/11/2025
+                - generic [ref=e223]: 15/11/2025
+                - generic [ref=e225]: 20/11/2025
+              - generic [ref=e227]:
+                - generic [ref=e229]: "0"
+                - generic [ref=e231]: "45"
+                - generic [ref=e233]: "90"
+                - generic [ref=e235]: "135"
+                - generic [ref=e237]: "180"
+        - generic [ref=e299]:
+          - generic [ref=e300]:
+            - generic [ref=e301]:
+              - heading "Recent Activity" [level=3] [ref=e302]
+              - img [ref=e303]
+            - generic [ref=e305]:
+              - generic [ref=e308]:
+                - paragraph [ref=e309]: Visit to Individual 8
+                - paragraph [ref=e310]: Agent34 Team3 • 20 Nov 2025
+              - generic [ref=e313]:
+                - paragraph [ref=e314]: Visit to Individual 27
+                - paragraph [ref=e315]: Agent25 Team2 • 20 Nov 2025
+              - generic [ref=e318]:
+                - paragraph [ref=e319]: Visit to Diepsloot Spaza 30
+                - paragraph [ref=e320]: Agent13 Team1 • 20 Nov 2025
+              - generic [ref=e323]:
+                - paragraph [ref=e324]: Visit to Individual 17
+                - paragraph [ref=e325]: Agent34 Team3 • 20 Nov 2025
+              - generic [ref=e326]:
+                - generic [ref=e328]:
+                  - paragraph [ref=e329]: New order from Diepsloot Spaza 30
+                  - paragraph [ref=e330]: Agent13 Team1 • 20 Nov 2025
+                - generic [ref=e331]: R 525.00
+              - generic [ref=e332]:
+                - generic [ref=e334]:
+                  - paragraph [ref=e335]: New order from Mamelodi Spaza 1
+                  - paragraph [ref=e336]: Leader1 TeamLeader • 20 Nov 2025
+                - generic [ref=e337]: R 1,350.00
+              - generic [ref=e338]:
+                - generic [ref=e340]:
+                  - paragraph [ref=e341]: New order from Mamelodi Spaza 1
+                  - paragraph [ref=e342]: Leader1 TeamLeader • 20 Nov 2025
+                - generic [ref=e343]: R 1,026.00
+              - generic [ref=e344]:
+                - generic [ref=e346]:
+                  - paragraph [ref=e347]: New order from Soweto Spaza 18
+                  - paragraph [ref=e348]: Agent12 Team1 • 20 Nov 2025
+                - generic [ref=e349]: R 594.00
+          - generic [ref=e350]:
+            - generic [ref=e351]:
+              - heading "Top Performing Agents" [level=3] [ref=e352]
+              - img [ref=e353]
+            - generic [ref=e358]:
+              - generic [ref=e359]:
+                - generic [ref=e360]:
+                  - generic [ref=e361]: "1"
+                  - generic [ref=e362]:
+                    - paragraph [ref=e363]: Agent31 Team3
+                    - paragraph [ref=e364]: 63 orders
+                - generic [ref=e365]:
+                  - paragraph [ref=e366]: R 50,806.00
+                  - paragraph [ref=e367]: 100% success rate
+              - generic [ref=e368]:
+                - generic [ref=e369]:
+                  - generic [ref=e370]: "2"
+                  - generic [ref=e371]:
+                    - paragraph [ref=e372]: Agent32 Team3
+                    - paragraph [ref=e373]: 61 orders
+                - generic [ref=e374]:
+                  - paragraph [ref=e375]: R 49,605.00
+                  - paragraph [ref=e376]: 100% success rate
+              - generic [ref=e377]:
+                - generic [ref=e378]:
+                  - generic [ref=e379]: "3"
+                  - generic [ref=e380]:
+                    - paragraph [ref=e381]: Agent24 Team2
+                    - paragraph [ref=e382]: 67 orders
+                - generic [ref=e383]:
+                  - paragraph [ref=e384]: R 48,194.00
+                  - paragraph [ref=e385]: 100% success rate
+              - generic [ref=e386]:
+                - generic [ref=e387]:
+                  - generic [ref=e388]: "4"
+                  - generic [ref=e389]:
+                    - paragraph [ref=e390]: Agent25 Team2
+                    - paragraph [ref=e391]: 58 orders
+                - generic [ref=e392]:
+                  - paragraph [ref=e393]: R 43,897.00
+                  - paragraph [ref=e394]: 100% success rate
+              - generic [ref=e395]:
+                - generic [ref=e396]:
+                  - generic [ref=e397]: "5"
+                  - generic [ref=e398]:
+                    - paragraph [ref=e399]: Agent35 Team3
+                    - paragraph [ref=e400]: 60 orders
+                - generic [ref=e401]:
+                  - paragraph [ref=e402]: R 42,561.00
+                  - paragraph [ref=e403]: 100% success rate
+        - generic [ref=e404]:
+          - heading "Quick Actions" [level=3] [ref=e406]
+          - generic [ref=e407]:
+            - button "New Order Create a new customer order" [ref=e408] [cursor=pointer]:
+              - img [ref=e409]
+              - generic [ref=e413]:
+                - paragraph [ref=e414]: New Order
+                - paragraph [ref=e415]: Create a new customer order
+            - button "Add Customer Register a new customer" [ref=e416] [cursor=pointer]:
+              - img [ref=e417]
+              - generic [ref=e422]:
+                - paragraph [ref=e423]: Add Customer
+                - paragraph [ref=e424]: Register a new customer
+            - button "Schedule Visit Plan a customer visit" [ref=e425] [cursor=pointer]:
+              - img [ref=e426]
+              - generic [ref=e429]:
+                - paragraph [ref=e430]: Schedule Visit
+                - paragraph [ref=e431]: Plan a customer visit
+            - button "View Reports Access detailed analytics" [ref=e432] [cursor=pointer]:
+              - img [ref=e433]
+              - generic [ref=e436]:
+                - paragraph [ref=e437]: View Reports
+                - paragraph [ref=e438]: Access detailed analytics
+    - contentinfo [ref=e439]:
+      - generic [ref=e441]:
+        - generic [ref=e442]:
+          - generic [ref=e443]: A Product of
+          - link "GONXT" [ref=e444] [cursor=pointer]:
+            - /url: https://www.gonxt.tech
+            - img "GONXT" [ref=e445]
+        - generic [ref=e446]: © 2025 SalesSync by GONXT. All rights reserved.
+  - generic [ref=e447]: "0"
+```
