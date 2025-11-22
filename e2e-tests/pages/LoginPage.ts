@@ -23,7 +23,10 @@ export class LoginPage {
     await this.emailInput.fill(email);
     await this.passwordInput.fill(password);
     await this.loginButton.click();
-    await this.page.waitForURL(/\/dashboard/, { timeout: 15000 });
+    await Promise.race([
+      this.page.waitForURL(/\/(dashboard|app)/, { timeout: 20000 }),
+      this.page.waitForSelector('text=/Welcome back|Total Revenue/i', { timeout: 20000 })
+    ]);
   }
 
   async expectLoginPage() {

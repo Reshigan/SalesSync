@@ -1,8 +1,9 @@
+import * as path from 'path';
 import { test, expect } from '../fixtures/test-fixtures';
 import { OrdersPage } from '../pages/OrdersPage';
 
 test.describe('Orders Workflow @workflow', () => {
-  test.use({ storageState: '.auth/admin.json' });
+  test.use({ storageState: path.join(__dirname, '../.auth/admin.json') });
 
   test('should display orders list page', async ({ page }) => {
     const ordersPage = new OrdersPage(page);

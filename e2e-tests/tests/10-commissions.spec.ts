@@ -1,7 +1,8 @@
+import * as path from 'path';
 import { test, expect } from '../fixtures/test-fixtures';
 
 test.describe('Commissions @workflow', () => {
-  test.use({ storageState: '.auth/admin.json' });
+  test.use({ storageState: path.join(__dirname, '../.auth/admin.json') });
 
   test('should display commissions page', async ({ page }) => {
     await page.goto('/commissions');

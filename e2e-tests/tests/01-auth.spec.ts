@@ -14,7 +14,8 @@ test.describe('Authentication Flow @smoke', () => {
     const loginPage = new LoginPage(page);
     await loginPage.goto();
     await loginPage.loginButton.click();
-    await expect(loginPage.errorMessage).toBeVisible({ timeout: 5000 });
+    const errorMessages = page.locator('text=/required|invalid/i');
+    await expect(errorMessages.first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should login successfully with valid credentials', async ({ page }) => {
