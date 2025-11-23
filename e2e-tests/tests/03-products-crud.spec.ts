@@ -12,10 +12,11 @@ test.describe('Products CRUD @crud', () => {
     await expect(productsPage.productsList).toBeVisible({ timeout: 10000 });
   });
 
-  test('should create a new product', async ({ page, uniqueName }) => {
+  test('should create a new product', async ({ page }) => {
     const productsPage = new ProductsPage(page);
-    const productName = uniqueName('Product');
-    const productCode = uniqueName('PROD');
+    const timestamp = Date.now();
+    const productName = `E2E-Product-${timestamp}`;
+    const productCode = `E2E-PROD-${timestamp}`;
     
     await productsPage.goto();
     await productsPage.clickCreate();

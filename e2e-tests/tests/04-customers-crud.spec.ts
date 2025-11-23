@@ -12,10 +12,11 @@ test.describe('Customers CRUD @crud', () => {
     await expect(customersPage.customersList).toBeVisible({ timeout: 10000 });
   });
 
-  test('should create a new customer', async ({ page, uniqueName }) => {
+  test('should create a new customer', async ({ page }) => {
     const customersPage = new CustomersPage(page);
-    const customerName = uniqueName('Customer');
-    const customerEmail = `${uniqueName('customer')}@e2etest.com`.toLowerCase();
+    const timestamp = Date.now();
+    const customerName = `E2E-Customer-${timestamp}`;
+    const customerEmail = `e2e-customer-${timestamp}@e2etest.com`;
     
     await customersPage.goto();
     await customersPage.clickCreate();
