@@ -1,0 +1,701 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "SalesSync" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - img [ref=e11]
+        - textbox "Search..." [ref=e14]
+      - button "Core" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: Core
+        - img [ref=e18]
+      - button "Operations" [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: Operations
+        - img [ref=e23]
+      - button "Sales" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: Sales
+        - img [ref=e28]
+      - button "Finance" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: Finance
+        - img [ref=e33]
+      - button "Marketing" [ref=e36] [cursor=pointer]:
+        - generic [ref=e37]: Marketing
+        - img [ref=e38]
+      - button "CRM" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: CRM
+        - img [ref=e43]
+      - button "Catalog" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: Catalog
+        - img [ref=e48]
+      - button "Compliance" [ref=e51] [cursor=pointer]:
+        - generic [ref=e52]: Compliance
+        - img [ref=e53]
+      - button "Engagement" [ref=e56] [cursor=pointer]:
+        - generic [ref=e57]: Engagement
+        - img [ref=e58]
+      - button "System" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: System
+        - img [ref=e63]
+    - generic [ref=e65]:
+      - generic [ref=e67]:
+        - generic [ref=e68]: Search
+        - generic [ref=e69]:
+          - generic:
+            - img
+          - searchbox "Search" [ref=e70]
+      - generic [ref=e71]:
+        - button "3" [ref=e73] [cursor=pointer]:
+          - img [ref=e74]
+          - generic [ref=e78]: "3"
+        - button "AU" [ref=e81] [cursor=pointer]:
+          - generic [ref=e83]: AU
+  - main [ref=e84]:
+    - generic [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - heading "Products" [level=1] [ref=e89]
+          - paragraph [ref=e90]: Manage your product inventory and catalog
+        - generic [ref=e91]:
+          - button "Import" [ref=e92] [cursor=pointer]:
+            - img [ref=e93]
+            - generic [ref=e96]: Import
+          - button "Export" [ref=e97] [cursor=pointer]:
+            - img [ref=e98]
+            - generic [ref=e101]: Export
+          - button "Add Product" [active] [ref=e102] [cursor=pointer]:
+            - img [ref=e103]
+            - generic [ref=e104]: Add Product
+      - generic [ref=e105]:
+        - generic [ref=e107]:
+          - img [ref=e110]
+          - generic [ref=e114]:
+            - paragraph [ref=e115]: Total Products
+            - paragraph [ref=e116]: "39"
+            - paragraph [ref=e117]: 39 active
+        - generic [ref=e119]:
+          - img [ref=e122]
+          - generic [ref=e125]:
+            - paragraph [ref=e126]: In Stock
+            - paragraph [ref=e127]: "0"
+            - paragraph [ref=e128]: Available for sale
+        - generic [ref=e130]:
+          - img [ref=e133]
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: Low Stock
+            - paragraph [ref=e137]: "0"
+            - paragraph [ref=e138]: Needs attention
+        - generic [ref=e140]:
+          - img [ref=e143]
+          - generic [ref=e145]:
+            - paragraph [ref=e146]: Total Value
+            - paragraph [ref=e147]: £0.00
+            - paragraph [ref=e148]: Inventory worth
+      - generic [ref=e150]:
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - textbox "Search products by name, code, or description..." [ref=e156]
+        - generic [ref=e157]:
+          - button "Filters" [ref=e158] [cursor=pointer]:
+            - img [ref=e159]
+            - generic [ref=e161]: Filters
+          - combobox [ref=e162]:
+            - option "Sort by Name" [selected]
+            - option "Sort by Code"
+            - option "Sort by Price"
+            - option "Sort by Stock"
+            - option "Sort by Date"
+          - button [ref=e163] [cursor=pointer]:
+            - img [ref=e164]
+      - generic [ref=e167]:
+        - heading "Products (39)" [level=3] [ref=e170]
+        - table [ref=e172]:
+          - rowgroup [ref=e173]:
+            - row "Product Code Category Price Stock Status Actions" [ref=e174]:
+              - cell [ref=e175]:
+                - checkbox [ref=e176]
+              - cell "Product" [ref=e177]
+              - cell "Code" [ref=e178]
+              - cell "Category" [ref=e179]
+              - cell "Price" [ref=e180]
+              - cell "Stock" [ref=e181]
+              - cell "Status" [ref=e182]
+              - cell "Actions" [ref=e183]
+          - rowgroup [ref=e184]:
+            - row "7UP 330ml Can 7UP-330 Beverages £1.50 0 units In Stock active" [ref=e185]:
+              - cell [ref=e186]:
+                - checkbox [ref=e187]
+              - cell "7UP 330ml Can" [ref=e188]:
+                - generic [ref=e189]:
+                  - img [ref=e192]
+                  - generic [ref=e197]: 7UP 330ml Can
+              - cell "7UP-330" [ref=e198]
+              - cell "Beverages" [ref=e199]
+              - cell "£1.50" [ref=e200]
+              - cell "0 units In Stock" [ref=e201]:
+                - generic [ref=e202]:
+                  - generic [ref=e203]: 0 units
+                  - generic [ref=e204]:
+                    - img [ref=e205]
+                    - text: In Stock
+              - cell "active" [ref=e208]:
+                - generic [ref=e209]: active
+              - cell [ref=e210]:
+                - generic [ref=e211]:
+                  - button "View Product" [ref=e212] [cursor=pointer]:
+                    - img [ref=e213]
+                  - button "Edit Product" [ref=e216] [cursor=pointer]:
+                    - img [ref=e217]
+                  - button "Delete Product" [ref=e220] [cursor=pointer]:
+                    - img [ref=e221]
+                  - button "More Options" [ref=e224] [cursor=pointer]:
+                    - img [ref=e225]
+            - row "Ariel Detergent 1kg ARIEL-1KG Household £9.50 0 units In Stock active" [ref=e229]:
+              - cell [ref=e230]:
+                - checkbox [ref=e231]
+              - cell "Ariel Detergent 1kg" [ref=e232]:
+                - generic [ref=e233]:
+                  - img [ref=e236]
+                  - generic [ref=e241]: Ariel Detergent 1kg
+              - cell "ARIEL-1KG" [ref=e242]
+              - cell "Household" [ref=e243]
+              - cell "£9.50" [ref=e244]
+              - cell "0 units In Stock" [ref=e245]:
+                - generic [ref=e246]:
+                  - generic [ref=e247]: 0 units
+                  - generic [ref=e248]:
+                    - img [ref=e249]
+                    - text: In Stock
+              - cell "active" [ref=e252]:
+                - generic [ref=e253]: active
+              - cell [ref=e254]:
+                - generic [ref=e255]:
+                  - button "View Product" [ref=e256] [cursor=pointer]:
+                    - img [ref=e257]
+                  - button "Edit Product" [ref=e260] [cursor=pointer]:
+                    - img [ref=e261]
+                  - button "Delete Product" [ref=e264] [cursor=pointer]:
+                    - img [ref=e265]
+                  - button "More Options" [ref=e268] [cursor=pointer]:
+                    - img [ref=e269]
+            - row "Cadbury Dairy Milk 100g CADBURY-DM-100 Confectionery £2.50 0 units In Stock active" [ref=e273]:
+              - cell [ref=e274]:
+                - checkbox [ref=e275]
+              - cell "Cadbury Dairy Milk 100g" [ref=e276]:
+                - generic [ref=e277]:
+                  - img [ref=e280]
+                  - generic [ref=e285]: Cadbury Dairy Milk 100g
+              - cell "CADBURY-DM-100" [ref=e286]
+              - cell "Confectionery" [ref=e287]
+              - cell "£2.50" [ref=e288]
+              - cell "0 units In Stock" [ref=e289]:
+                - generic [ref=e290]:
+                  - generic [ref=e291]: 0 units
+                  - generic [ref=e292]:
+                    - img [ref=e293]
+                    - text: In Stock
+              - cell "active" [ref=e296]:
+                - generic [ref=e297]: active
+              - cell [ref=e298]:
+                - generic [ref=e299]:
+                  - button "View Product" [ref=e300] [cursor=pointer]:
+                    - img [ref=e301]
+                  - button "Edit Product" [ref=e304] [cursor=pointer]:
+                    - img [ref=e305]
+                  - button "Delete Product" [ref=e308] [cursor=pointer]:
+                    - img [ref=e309]
+                  - button "More Options" [ref=e312] [cursor=pointer]:
+                    - img [ref=e313]
+            - row "Cadbury Fruit & Nut 100g CADBURY-FN-100 Confectionery £2.75 0 units In Stock active" [ref=e317]:
+              - cell [ref=e318]:
+                - checkbox [ref=e319]
+              - cell "Cadbury Fruit & Nut 100g" [ref=e320]:
+                - generic [ref=e321]:
+                  - img [ref=e324]
+                  - generic [ref=e329]: Cadbury Fruit & Nut 100g
+              - cell "CADBURY-FN-100" [ref=e330]
+              - cell "Confectionery" [ref=e331]
+              - cell "£2.75" [ref=e332]
+              - cell "0 units In Stock" [ref=e333]:
+                - generic [ref=e334]:
+                  - generic [ref=e335]: 0 units
+                  - generic [ref=e336]:
+                    - img [ref=e337]
+                    - text: In Stock
+              - cell "active" [ref=e340]:
+                - generic [ref=e341]: active
+              - cell [ref=e342]:
+                - generic [ref=e343]:
+                  - button "View Product" [ref=e344] [cursor=pointer]:
+                    - img [ref=e345]
+                  - button "Edit Product" [ref=e348] [cursor=pointer]:
+                    - img [ref=e349]
+                  - button "Delete Product" [ref=e352] [cursor=pointer]:
+                    - img [ref=e353]
+                  - button "More Options" [ref=e356] [cursor=pointer]:
+                    - img [ref=e357]
+            - row "Coca-Cola 1.5L Bottle COKE-1500 Beverages £3.50 0 units In Stock active" [ref=e361]:
+              - cell [ref=e362]:
+                - checkbox [ref=e363]
+              - cell "Coca-Cola 1.5L Bottle" [ref=e364]:
+                - generic [ref=e365]:
+                  - img [ref=e368]
+                  - generic [ref=e373]: Coca-Cola 1.5L Bottle
+              - cell "COKE-1500" [ref=e374]
+              - cell "Beverages" [ref=e375]
+              - cell "£3.50" [ref=e376]
+              - cell "0 units In Stock" [ref=e377]:
+                - generic [ref=e378]:
+                  - generic [ref=e379]: 0 units
+                  - generic [ref=e380]:
+                    - img [ref=e381]
+                    - text: In Stock
+              - cell "active" [ref=e384]:
+                - generic [ref=e385]: active
+              - cell [ref=e386]:
+                - generic [ref=e387]:
+                  - button "View Product" [ref=e388] [cursor=pointer]:
+                    - img [ref=e389]
+                  - button "Edit Product" [ref=e392] [cursor=pointer]:
+                    - img [ref=e393]
+                  - button "Delete Product" [ref=e396] [cursor=pointer]:
+                    - img [ref=e397]
+                  - button "More Options" [ref=e400] [cursor=pointer]:
+                    - img [ref=e401]
+            - row "Coca-Cola 330ml COKE330 £12.50 0 unit In Stock active" [ref=e405]:
+              - cell [ref=e406]:
+                - checkbox [ref=e407]
+              - cell "Coca-Cola 330ml" [ref=e408]:
+                - generic [ref=e409]:
+                  - img [ref=e412]
+                  - generic [ref=e417]: Coca-Cola 330ml
+              - cell "COKE330" [ref=e418]
+              - cell [ref=e419]
+              - cell "£12.50" [ref=e420]
+              - cell "0 unit In Stock" [ref=e421]:
+                - generic [ref=e422]:
+                  - generic [ref=e423]: 0 unit
+                  - generic [ref=e424]:
+                    - img [ref=e425]
+                    - text: In Stock
+              - cell "active" [ref=e428]:
+                - generic [ref=e429]: active
+              - cell [ref=e430]:
+                - generic [ref=e431]:
+                  - button "View Product" [ref=e432] [cursor=pointer]:
+                    - img [ref=e433]
+                  - button "Edit Product" [ref=e436] [cursor=pointer]:
+                    - img [ref=e437]
+                  - button "Delete Product" [ref=e440] [cursor=pointer]:
+                    - img [ref=e441]
+                  - button "More Options" [ref=e444] [cursor=pointer]:
+                    - img [ref=e445]
+            - row "Coca-Cola 330ml Can COKE-330 Beverages £1.50 0 units In Stock active" [ref=e449]:
+              - cell [ref=e450]:
+                - checkbox [ref=e451]
+              - cell "Coca-Cola 330ml Can" [ref=e452]:
+                - generic [ref=e453]:
+                  - img [ref=e456]
+                  - generic [ref=e461]: Coca-Cola 330ml Can
+              - cell "COKE-330" [ref=e462]
+              - cell "Beverages" [ref=e463]
+              - cell "£1.50" [ref=e464]
+              - cell "0 units In Stock" [ref=e465]:
+                - generic [ref=e466]:
+                  - generic [ref=e467]: 0 units
+                  - generic [ref=e468]:
+                    - img [ref=e469]
+                    - text: In Stock
+              - cell "active" [ref=e472]:
+                - generic [ref=e473]: active
+              - cell [ref=e474]:
+                - generic [ref=e475]:
+                  - button "View Product" [ref=e476] [cursor=pointer]:
+                    - img [ref=e477]
+                  - button "Edit Product" [ref=e480] [cursor=pointer]:
+                    - img [ref=e481]
+                  - button "Delete Product" [ref=e484] [cursor=pointer]:
+                    - img [ref=e485]
+                  - button "More Options" [ref=e488] [cursor=pointer]:
+                    - img [ref=e489]
+            - row "Coca-Cola 500ml COKE500 £18.00 0 unit In Stock active" [ref=e493]:
+              - cell [ref=e494]:
+                - checkbox [ref=e495]
+              - cell "Coca-Cola 500ml" [ref=e496]:
+                - generic [ref=e497]:
+                  - img [ref=e500]
+                  - generic [ref=e505]: Coca-Cola 500ml
+              - cell "COKE500" [ref=e506]
+              - cell [ref=e507]
+              - cell "£18.00" [ref=e508]
+              - cell "0 unit In Stock" [ref=e509]:
+                - generic [ref=e510]:
+                  - generic [ref=e511]: 0 unit
+                  - generic [ref=e512]:
+                    - img [ref=e513]
+                    - text: In Stock
+              - cell "active" [ref=e516]:
+                - generic [ref=e517]: active
+              - cell [ref=e518]:
+                - generic [ref=e519]:
+                  - button "View Product" [ref=e520] [cursor=pointer]:
+                    - img [ref=e521]
+                  - button "Edit Product" [ref=e524] [cursor=pointer]:
+                    - img [ref=e525]
+                  - button "Delete Product" [ref=e528] [cursor=pointer]:
+                    - img [ref=e529]
+                  - button "More Options" [ref=e532] [cursor=pointer]:
+                    - img [ref=e533]
+            - row "Coca-Cola 500ml Bottle COKE-500 Beverages £2.00 0 units In Stock active" [ref=e537]:
+              - cell [ref=e538]:
+                - checkbox [ref=e539]
+              - cell "Coca-Cola 500ml Bottle" [ref=e540]:
+                - generic [ref=e541]:
+                  - img [ref=e544]
+                  - generic [ref=e549]: Coca-Cola 500ml Bottle
+              - cell "COKE-500" [ref=e550]
+              - cell "Beverages" [ref=e551]
+              - cell "£2.00" [ref=e552]
+              - cell "0 units In Stock" [ref=e553]:
+                - generic [ref=e554]:
+                  - generic [ref=e555]: 0 units
+                  - generic [ref=e556]:
+                    - img [ref=e557]
+                    - text: In Stock
+              - cell "active" [ref=e560]:
+                - generic [ref=e561]: active
+              - cell [ref=e562]:
+                - generic [ref=e563]:
+                  - button "View Product" [ref=e564] [cursor=pointer]:
+                    - img [ref=e565]
+                  - button "Edit Product" [ref=e568] [cursor=pointer]:
+                    - img [ref=e569]
+                  - button "Delete Product" [ref=e572] [cursor=pointer]:
+                    - img [ref=e573]
+                  - button "More Options" [ref=e576] [cursor=pointer]:
+                    - img [ref=e577]
+            - row "Coca-Cola Zero 330ml Can COKE-Z-330 Beverages £1.50 0 units In Stock active" [ref=e581]:
+              - cell [ref=e582]:
+                - checkbox [ref=e583]
+              - cell "Coca-Cola Zero 330ml Can" [ref=e584]:
+                - generic [ref=e585]:
+                  - img [ref=e588]
+                  - generic [ref=e593]: Coca-Cola Zero 330ml Can
+              - cell "COKE-Z-330" [ref=e594]
+              - cell "Beverages" [ref=e595]
+              - cell "£1.50" [ref=e596]
+              - cell "0 units In Stock" [ref=e597]:
+                - generic [ref=e598]:
+                  - generic [ref=e599]: 0 units
+                  - generic [ref=e600]:
+                    - img [ref=e601]
+                    - text: In Stock
+              - cell "active" [ref=e604]:
+                - generic [ref=e605]: active
+              - cell [ref=e606]:
+                - generic [ref=e607]:
+                  - button "View Product" [ref=e608] [cursor=pointer]:
+                    - img [ref=e609]
+                  - button "Edit Product" [ref=e612] [cursor=pointer]:
+                    - img [ref=e613]
+                  - button "Delete Product" [ref=e616] [cursor=pointer]:
+                    - img [ref=e617]
+                  - button "More Options" [ref=e620] [cursor=pointer]:
+                    - img [ref=e621]
+            - row "Doritos Nacho 50g DORITOS-50 Snacks £1.75 0 units In Stock active" [ref=e625]:
+              - cell [ref=e626]:
+                - checkbox [ref=e627]
+              - cell "Doritos Nacho 50g" [ref=e628]:
+                - generic [ref=e629]:
+                  - img [ref=e632]
+                  - generic [ref=e637]: Doritos Nacho 50g
+              - cell "DORITOS-50" [ref=e638]
+              - cell "Snacks" [ref=e639]
+              - cell "£1.75" [ref=e640]
+              - cell "0 units In Stock" [ref=e641]:
+                - generic [ref=e642]:
+                  - generic [ref=e643]: 0 units
+                  - generic [ref=e644]:
+                    - img [ref=e645]
+                    - text: In Stock
+              - cell "active" [ref=e648]:
+                - generic [ref=e649]: active
+              - cell [ref=e650]:
+                - generic [ref=e651]:
+                  - button "View Product" [ref=e652] [cursor=pointer]:
+                    - img [ref=e653]
+                  - button "Edit Product" [ref=e656] [cursor=pointer]:
+                    - img [ref=e657]
+                  - button "Delete Product" [ref=e660] [cursor=pointer]:
+                    - img [ref=e661]
+                  - button "More Options" [ref=e664] [cursor=pointer]:
+                    - img [ref=e665]
+            - row "Dove Shampoo 400ml DOVE-SHAMP-400 Personal Care £5.50 0 units In Stock active" [ref=e669]:
+              - cell [ref=e670]:
+                - checkbox [ref=e671]
+              - cell "Dove Shampoo 400ml" [ref=e672]:
+                - generic [ref=e673]:
+                  - img [ref=e676]
+                  - generic [ref=e681]: Dove Shampoo 400ml
+              - cell "DOVE-SHAMP-400" [ref=e682]
+              - cell "Personal Care" [ref=e683]
+              - cell "£5.50" [ref=e684]
+              - cell "0 units In Stock" [ref=e685]:
+                - generic [ref=e686]:
+                  - generic [ref=e687]: 0 units
+                  - generic [ref=e688]:
+                    - img [ref=e689]
+                    - text: In Stock
+              - cell "active" [ref=e692]:
+                - generic [ref=e693]: active
+              - cell [ref=e694]:
+                - generic [ref=e695]:
+                  - button "View Product" [ref=e696] [cursor=pointer]:
+                    - img [ref=e697]
+                  - button "Edit Product" [ref=e700] [cursor=pointer]:
+                    - img [ref=e701]
+                  - button "Delete Product" [ref=e704] [cursor=pointer]:
+                    - img [ref=e705]
+                  - button "More Options" [ref=e708] [cursor=pointer]:
+                    - img [ref=e709]
+            - row "Dove Soap 100g DOVE-SOAP-100 Personal Care £2.00 0 units In Stock active" [ref=e713]:
+              - cell [ref=e714]:
+                - checkbox [ref=e715]
+              - cell "Dove Soap 100g" [ref=e716]:
+                - generic [ref=e717]:
+                  - img [ref=e720]
+                  - generic [ref=e725]: Dove Soap 100g
+              - cell "DOVE-SOAP-100" [ref=e726]
+              - cell "Personal Care" [ref=e727]
+              - cell "£2.00" [ref=e728]
+              - cell "0 units In Stock" [ref=e729]:
+                - generic [ref=e730]:
+                  - generic [ref=e731]: 0 units
+                  - generic [ref=e732]:
+                    - img [ref=e733]
+                    - text: In Stock
+              - cell "active" [ref=e736]:
+                - generic [ref=e737]: active
+              - cell [ref=e738]:
+                - generic [ref=e739]:
+                  - button "View Product" [ref=e740] [cursor=pointer]:
+                    - img [ref=e741]
+                  - button "Edit Product" [ref=e744] [cursor=pointer]:
+                    - img [ref=e745]
+                  - button "Delete Product" [ref=e748] [cursor=pointer]:
+                    - img [ref=e749]
+                  - button "More Options" [ref=e752] [cursor=pointer]:
+                    - img [ref=e753]
+            - row "Fanta Orange 330ml Can FANTA-330 Beverages £1.50 0 units In Stock active" [ref=e757]:
+              - cell [ref=e758]:
+                - checkbox [ref=e759]
+              - cell "Fanta Orange 330ml Can" [ref=e760]:
+                - generic [ref=e761]:
+                  - img [ref=e764]
+                  - generic [ref=e769]: Fanta Orange 330ml Can
+              - cell "FANTA-330" [ref=e770]
+              - cell "Beverages" [ref=e771]
+              - cell "£1.50" [ref=e772]
+              - cell "0 units In Stock" [ref=e773]:
+                - generic [ref=e774]:
+                  - generic [ref=e775]: 0 units
+                  - generic [ref=e776]:
+                    - img [ref=e777]
+                    - text: In Stock
+              - cell "active" [ref=e780]:
+                - generic [ref=e781]: active
+              - cell [ref=e782]:
+                - generic [ref=e783]:
+                  - button "View Product" [ref=e784] [cursor=pointer]:
+                    - img [ref=e785]
+                  - button "Edit Product" [ref=e788] [cursor=pointer]:
+                    - img [ref=e789]
+                  - button "Delete Product" [ref=e792] [cursor=pointer]:
+                    - img [ref=e793]
+                  - button "More Options" [ref=e796] [cursor=pointer]:
+                    - img [ref=e797]
+            - row "GoldRush Energy Drink 500ml GR-500 £25.00 0 units In Stock active" [ref=e801]:
+              - cell [ref=e802]:
+                - checkbox [ref=e803]
+              - cell "GoldRush Energy Drink 500ml" [ref=e804]:
+                - generic [ref=e805]:
+                  - img [ref=e808]
+                  - generic [ref=e813]: GoldRush Energy Drink 500ml
+              - cell "GR-500" [ref=e814]
+              - cell [ref=e815]
+              - cell "£25.00" [ref=e816]
+              - cell "0 units In Stock" [ref=e817]:
+                - generic [ref=e818]:
+                  - generic [ref=e819]: 0 units
+                  - generic [ref=e820]:
+                    - img [ref=e821]
+                    - text: In Stock
+              - cell "active" [ref=e824]:
+                - generic [ref=e825]: active
+              - cell [ref=e826]:
+                - generic [ref=e827]:
+                  - button "View Product" [ref=e828] [cursor=pointer]:
+                    - img [ref=e829]
+                  - button "Edit Product" [ref=e832] [cursor=pointer]:
+                    - img [ref=e833]
+                  - button "Delete Product" [ref=e836] [cursor=pointer]:
+                    - img [ref=e837]
+                  - button "More Options" [ref=e840] [cursor=pointer]:
+                    - img [ref=e841]
+            - row "KitKat 4 Finger KITKAT-4F Confectionery £1.20 0 units In Stock active" [ref=e845]:
+              - cell [ref=e846]:
+                - checkbox [ref=e847]
+              - cell "KitKat 4 Finger" [ref=e848]:
+                - generic [ref=e849]:
+                  - img [ref=e852]
+                  - generic [ref=e857]: KitKat 4 Finger
+              - cell "KITKAT-4F" [ref=e858]
+              - cell "Confectionery" [ref=e859]
+              - cell "£1.20" [ref=e860]
+              - cell "0 units In Stock" [ref=e861]:
+                - generic [ref=e862]:
+                  - generic [ref=e863]: 0 units
+                  - generic [ref=e864]:
+                    - img [ref=e865]
+                    - text: In Stock
+              - cell "active" [ref=e868]:
+                - generic [ref=e869]: active
+              - cell [ref=e870]:
+                - generic [ref=e871]:
+                  - button "View Product" [ref=e872] [cursor=pointer]:
+                    - img [ref=e873]
+                  - button "Edit Product" [ref=e876] [cursor=pointer]:
+                    - img [ref=e877]
+                  - button "Delete Product" [ref=e880] [cursor=pointer]:
+                    - img [ref=e881]
+                  - button "More Options" [ref=e884] [cursor=pointer]:
+                    - img [ref=e885]
+            - row "Lays BBQ 50g LAYS-BBQ-50 Snacks £1.50 0 units In Stock active" [ref=e889]:
+              - cell [ref=e890]:
+                - checkbox [ref=e891]
+              - cell "Lays BBQ 50g" [ref=e892]:
+                - generic [ref=e893]:
+                  - img [ref=e896]
+                  - generic [ref=e901]: Lays BBQ 50g
+              - cell "LAYS-BBQ-50" [ref=e902]
+              - cell "Snacks" [ref=e903]
+              - cell "£1.50" [ref=e904]
+              - cell "0 units In Stock" [ref=e905]:
+                - generic [ref=e906]:
+                  - generic [ref=e907]: 0 units
+                  - generic [ref=e908]:
+                    - img [ref=e909]
+                    - text: In Stock
+              - cell "active" [ref=e912]:
+                - generic [ref=e913]: active
+              - cell [ref=e914]:
+                - generic [ref=e915]:
+                  - button "View Product" [ref=e916] [cursor=pointer]:
+                    - img [ref=e917]
+                  - button "Edit Product" [ref=e920] [cursor=pointer]:
+                    - img [ref=e921]
+                  - button "Delete Product" [ref=e924] [cursor=pointer]:
+                    - img [ref=e925]
+                  - button "More Options" [ref=e928] [cursor=pointer]:
+                    - img [ref=e929]
+            - row "Lays Classic 50g LAYS-CL-50 Snacks £1.50 0 units In Stock active" [ref=e933]:
+              - cell [ref=e934]:
+                - checkbox [ref=e935]
+              - cell "Lays Classic 50g" [ref=e936]:
+                - generic [ref=e937]:
+                  - img [ref=e940]
+                  - generic [ref=e945]: Lays Classic 50g
+              - cell "LAYS-CL-50" [ref=e946]
+              - cell "Snacks" [ref=e947]
+              - cell "£1.50" [ref=e948]
+              - cell "0 units In Stock" [ref=e949]:
+                - generic [ref=e950]:
+                  - generic [ref=e951]: 0 units
+                  - generic [ref=e952]:
+                    - img [ref=e953]
+                    - text: In Stock
+              - cell "active" [ref=e956]:
+                - generic [ref=e957]: active
+              - cell [ref=e958]:
+                - generic [ref=e959]:
+                  - button "View Product" [ref=e960] [cursor=pointer]:
+                    - img [ref=e961]
+                  - button "Edit Product" [ref=e964] [cursor=pointer]:
+                    - img [ref=e965]
+                  - button "Delete Product" [ref=e968] [cursor=pointer]:
+                    - img [ref=e969]
+                  - button "More Options" [ref=e972] [cursor=pointer]:
+                    - img [ref=e973]
+            - row "Lays Sour Cream 50g LAYS-SC-50 Snacks £1.50 0 units In Stock active" [ref=e977]:
+              - cell [ref=e978]:
+                - checkbox [ref=e979]
+              - cell "Lays Sour Cream 50g" [ref=e980]:
+                - generic [ref=e981]:
+                  - img [ref=e984]
+                  - generic [ref=e989]: Lays Sour Cream 50g
+              - cell "LAYS-SC-50" [ref=e990]
+              - cell "Snacks" [ref=e991]
+              - cell "£1.50" [ref=e992]
+              - cell "0 units In Stock" [ref=e993]:
+                - generic [ref=e994]:
+                  - generic [ref=e995]: 0 units
+                  - generic [ref=e996]:
+                    - img [ref=e997]
+                    - text: In Stock
+              - cell "active" [ref=e1000]:
+                - generic [ref=e1001]: active
+              - cell [ref=e1002]:
+                - generic [ref=e1003]:
+                  - button "View Product" [ref=e1004] [cursor=pointer]:
+                    - img [ref=e1005]
+                  - button "Edit Product" [ref=e1008] [cursor=pointer]:
+                    - img [ref=e1009]
+                  - button "Delete Product" [ref=e1012] [cursor=pointer]:
+                    - img [ref=e1013]
+                  - button "More Options" [ref=e1016] [cursor=pointer]:
+                    - img [ref=e1017]
+            - row "Mineral Water MW001 Beverages £1.50 0 bottle In Stock active" [ref=e1021]:
+              - cell [ref=e1022]:
+                - checkbox [ref=e1023]
+              - cell "Mineral Water" [ref=e1024]:
+                - generic [ref=e1025]:
+                  - img [ref=e1028]
+                  - generic [ref=e1033]: Mineral Water
+              - cell "MW001" [ref=e1034]
+              - cell "Beverages" [ref=e1035]
+              - cell "£1.50" [ref=e1036]
+              - cell "0 bottle In Stock" [ref=e1037]:
+                - generic [ref=e1038]:
+                  - generic [ref=e1039]: 0 bottle
+                  - generic [ref=e1040]:
+                    - img [ref=e1041]
+                    - text: In Stock
+              - cell "active" [ref=e1044]:
+                - generic [ref=e1045]: active
+              - cell [ref=e1046]:
+                - generic [ref=e1047]:
+                  - button "View Product" [ref=e1048] [cursor=pointer]:
+                    - img [ref=e1049]
+                  - button "Edit Product" [ref=e1052] [cursor=pointer]:
+                    - img [ref=e1053]
+                  - button "Delete Product" [ref=e1056] [cursor=pointer]:
+                    - img [ref=e1057]
+                  - button "More Options" [ref=e1060] [cursor=pointer]:
+                    - img [ref=e1061]
+        - generic [ref=e1066]:
+          - generic [ref=e1067]: Showing 1 to 20 of 39 products
+          - generic [ref=e1068]:
+            - button "Previous" [disabled] [ref=e1069]
+            - button "1" [ref=e1070] [cursor=pointer]
+            - button "2" [ref=e1071] [cursor=pointer]
+            - button "Next" [ref=e1072] [cursor=pointer]
+  - contentinfo [ref=e1073]:
+    - generic [ref=e1075]:
+      - generic [ref=e1076]:
+        - generic [ref=e1077]: A Product of
+        - link "GONXT" [ref=e1078] [cursor=pointer]:
+          - /url: https://www.gonxt.tech
+          - img "GONXT" [ref=e1079]
+      - generic [ref=e1080]: © 2025 SalesSync by GONXT. All rights reserved.
+```

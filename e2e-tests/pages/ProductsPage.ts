@@ -10,9 +10,9 @@ export class ProductsPage {
   constructor(page: Page) {
     this.page = page;
     this.pageTitle = page.locator('h1, h2').filter({ hasText: /products/i }).first();
-    this.createButton = page.locator('button, a').filter({ hasText: /create|add|new/i }).first();
+    this.createButton = page.getByRole('button', { name: /add product/i });
     this.productsList = page.locator('table, [role="grid"], [class*="list"]').first();
-    this.searchInput = page.locator('input[type="search"], input[placeholder*="search" i]').first();
+    this.searchInput = page.getByPlaceholder(/search products/i);
   }
 
   async goto() {
@@ -25,7 +25,7 @@ export class ProductsPage {
 
   async clickCreate() {
     await this.createButton.click();
-    await this.page.waitForURL(/\/products\/(create|new)/, { timeout: 10000 });
+    await this.page.waitForSelector('input[name="name"], input[placeholder*="name" i]', { timeout: 10000 });
   }
 
   async fillProductForm(data: { name: string; code: string; price: string }) {
