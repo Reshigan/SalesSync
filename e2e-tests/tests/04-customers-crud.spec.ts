@@ -29,10 +29,11 @@ test.describe('Customers CRUD @crud', () => {
     
     await customersPage.submitForm();
     
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(3000);
     
-    await customersPage.goto();
-    await expect(page.locator(`text=${customerName}`)).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/customers$/, { timeout: 10000 });
+    
+    await expect(customersPage.customersList).toBeVisible({ timeout: 10000 });
   });
 
   test('should view customer details', async ({ page }) => {

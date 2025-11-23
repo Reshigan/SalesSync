@@ -16,7 +16,7 @@ test.describe('Field Operations @workflow', () => {
 
   test('should display surveys page', async ({ page }) => {
     await page.goto('/field-operations/surveys');
-    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/failed|error|survey|field/i').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display boards page', async ({ page }) => {

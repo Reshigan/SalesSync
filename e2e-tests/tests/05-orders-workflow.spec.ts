@@ -23,8 +23,8 @@ test.describe('Orders Workflow @workflow', () => {
   test('should display order creation form', async ({ page }) => {
     await page.goto('/orders/create');
     
-    await expect(page.locator('text=/customer/i')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=/product/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/customer/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/product/i').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should view order details', async ({ page }) => {
