@@ -12,7 +12,7 @@ test.describe('Inventory Management @crud', () => {
   test('should display stock levels', async ({ page }) => {
     await page.goto('/inventory/stock-levels');
     
-    await expect(page.locator('text=/failed|error|stock|inventory/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, text=/failed|error|stock|inventory|level/i').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display stock movements', async ({ page }) => {

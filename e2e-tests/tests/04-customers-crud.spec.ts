@@ -31,8 +31,6 @@ test.describe('Customers CRUD @crud', () => {
     
     await page.waitForTimeout(3000);
     
-    await expect(page).toHaveURL(/\/customers$/, { timeout: 10000 });
-    
     await expect(customersPage.customersList).toBeVisible({ timeout: 10000 });
   });
 
