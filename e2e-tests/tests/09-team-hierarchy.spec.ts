@@ -12,6 +12,6 @@ test.describe('Team Hierarchy @crud', () => {
   test('should display users list', async ({ page }) => {
     await page.goto('/admin-settings/users');
     
-    await expect(page.locator('h1, h2, button, text=/failed|error|users|team/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('button').first()).toBeVisible({ timeout: 10000 });
   });
 });
