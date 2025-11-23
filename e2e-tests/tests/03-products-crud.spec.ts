@@ -42,14 +42,14 @@ test.describe('Products CRUD @crud', () => {
     
     await productsPage.searchProduct('Red Bull');
     
-    await expect(page.locator('text=Red Bull')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('text=Red Bull').first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should view product details', async ({ page }) => {
     const productsPage = new ProductsPage(page);
     await productsPage.goto();
     
-    const viewButton = page.locator('button, a').filter({ hasText: /view|edit|details/i }).first();
+    const viewButton = page.locator('button[title*="View"], button[aria-label*="View"], svg').first();
     await viewButton.click();
     
     await expect(page).toHaveURL(/\/products\/[a-f0-9-]+/, { timeout: 10000 });
