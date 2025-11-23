@@ -49,7 +49,8 @@ test.describe('Products CRUD @crud', () => {
     const productsPage = new ProductsPage(page);
     await productsPage.goto();
     
-    const viewButton = page.locator('button[title*="View"], button[aria-label*="View"], svg').first();
+    const firstRow = page.locator('tbody tr').first();
+    const viewButton = firstRow.locator('button').first();
     await viewButton.click();
     
     await expect(page).toHaveURL(/\/products\/[a-f0-9-]+/, { timeout: 10000 });
