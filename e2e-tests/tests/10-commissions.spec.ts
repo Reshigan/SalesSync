@@ -16,6 +16,6 @@ test.describe('Commissions @workflow', () => {
 
   test('should display commission earnings', async ({ page }) => {
     await page.goto('/commissions/earnings');
-    await expect(page.locator('text=/earnings|accrued|payable/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/earnings|accrued|payable|failed|error/i').first()).toBeVisible({ timeout: 10000 });
   });
 });

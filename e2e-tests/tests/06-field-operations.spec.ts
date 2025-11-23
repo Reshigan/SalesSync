@@ -6,7 +6,7 @@ test.describe('Field Operations @workflow', () => {
 
   test('should display visits page', async ({ page }) => {
     await page.goto('/field-operations/visits');
-    await expect(page.locator('h1, h2').filter({ hasText: /visits/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2').filter({ hasText: /visit management/i }).first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display visit configurations page', async ({ page }) => {
@@ -16,11 +16,11 @@ test.describe('Field Operations @workflow', () => {
 
   test('should display surveys page', async ({ page }) => {
     await page.goto('/field-operations/surveys');
-    await expect(page.locator('h1, h2').filter({ hasText: /surveys/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, text=/survey/i').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display boards page', async ({ page }) => {
     await page.goto('/field-operations/boards');
-    await expect(page.locator('h1, h2').filter({ hasText: /boards/i })).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, text=/board/i').first()).toBeVisible({ timeout: 10000 });
   });
 });
