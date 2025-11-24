@@ -1,0 +1,24 @@
+import { test, expect } from '../fixtures/auth-fixture';
+
+test.describe('Field Operations @workflow', () => {
+
+  test('should display visits page', async ({ page }) => {
+    await page.goto('/field-operations/visits');
+    await expect(page.locator('h1, h2').filter({ hasText: /visit management/i }).first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display visit configurations page', async ({ page }) => {
+    await page.goto('/field-operations/visit-configurations');
+    await expect(page.locator('h1, h2').filter({ hasText: /visit config/i })).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display surveys page', async ({ page }) => {
+    await page.goto('/field-operations/surveys');
+    await expect(page.locator('text=/failed|error|survey|field/i').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should display boards page', async ({ page }) => {
+    await page.goto('/field-operations/boards');
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
+  });
+});

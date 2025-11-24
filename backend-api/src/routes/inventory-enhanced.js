@@ -26,7 +26,7 @@ router.get('/multi-location', async (req, res) => {
         il.id,
         il.product_id,
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         il.warehouse_id,
         w.name as warehouse_name,
         w.code as warehouse_code,
@@ -285,7 +285,7 @@ router.get('/transactions', async (req, res) => {
       SELECT 
         it.*,
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         w.name as warehouse_name,
         u.username as created_by_name
       FROM inventory_transactions it
@@ -543,7 +543,7 @@ router.get('/lots', async (req, res) => {
       SELECT 
         l.*,
         p.name as product_name,
-        p.sku,
+        p.code as sku,
         w.name as warehouse_name,
         JULIANDAY(l.expiry_date) - JULIANDAY('now') as days_to_expiry
       FROM inventory_lots l
@@ -602,10 +602,10 @@ router.get('/reorder-suggestions', async (req, res) => {
       SELECT 
         il.*,
         p.name as product_name,
-        p.sku,
-        p.cost,
+        p.code as sku,
+        p.cost_price as cost,
         w.name as warehouse_name,
-        (il.reorder_quantity * p.cost) as estimated_cost,
+        (il.reorder_quantity * p.cost_price) as estimated_cost,
         il.reorder_point - il.available_quantity as shortage
       FROM inventory_locations il
       JOIN products p ON il.product_id = p.id

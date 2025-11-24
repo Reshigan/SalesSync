@@ -534,7 +534,7 @@ router.get('/transactions/:id', async (req, res) => {
     
     // Get transaction items
     const items = await getQuery(`
-      SELECT ti.*, p.name as product_name, p.sku as product_sku
+      SELECT ti.*, p.name as product_name, p.code as product_sku
       FROM transaction_items ti
       LEFT JOIN products p ON ti.product_id = p.id
       WHERE ti.transaction_id = ?

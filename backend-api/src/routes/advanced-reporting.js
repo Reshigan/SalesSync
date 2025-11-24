@@ -717,7 +717,7 @@ async function generateReportData(template, parameters, filters, tenantId) {
         SELECT 
           p.id,
           p.name as product_name,
-          p.sku,
+          p.code as sku,
           i.quantity_available,
           i.reorder_level
         FROM products p

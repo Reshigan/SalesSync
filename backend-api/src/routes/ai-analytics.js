@@ -387,7 +387,7 @@ router.get('/recommendations/products', requireFunction('analytics', 'view'), as
         pr.*,
         c.name as customer_name,
         p.name as product_name,
-        p.sku as product_sku
+        p.code as product_sku
       FROM product_recommendations pr
       LEFT JOIN customers c ON pr.customer_id = c.id
       LEFT JOIN products p ON pr.product_id = p.id

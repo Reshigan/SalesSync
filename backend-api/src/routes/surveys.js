@@ -170,12 +170,13 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
     throw new AppError('Survey not found', 404);
   }
   
-  // Get survey questions
+  // Get survey questions from template
   const questions = await getQuery(`
-    SELECT * FROM survey_questions 
-    WHERE survey_id = $1 
-    ORDER BY question_order
-  `, [id]);
+    SELECT sq.* 
+    FROM survey_questions sq
+    WHERE sq.survey_template_id = $1 
+    ORDER BY sq.sequence_order
+  `, [survey.template_id || id]);
   
   // Get survey assignments
   const assignments = await getQuery(`
