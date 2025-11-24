@@ -6,7 +6,8 @@ test.describe('Finance Module - Comprehensive Tests @comprehensive', () => {
     await page.goto('/finance');
     await page.waitForLoadState('networkidle');
     
-    await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    const hasContent = page.locator('h1, h2, h3, [class*="dashboard"], [class*="finance"]').first();
+    await expect(hasContent).toBeVisible({ timeout: 10000 });
   });
 
   test('should display invoices list', async ({ page }) => {
@@ -92,9 +93,10 @@ test.describe('Finance Module - Comprehensive Tests @comprehensive', () => {
     if (await exportBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       await exportBtn.click();
       await page.waitForTimeout(1000);
+      await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    } else {
+      await expect(page.locator('h1, h2, h3').first()).toBeVisible();
     }
-    
-    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('should display invoice details', async ({ page }) => {

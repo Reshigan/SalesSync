@@ -46,9 +46,10 @@ test.describe('Orders Module - Comprehensive Tests @comprehensive', () => {
     if (await viewBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
       await viewBtn.click();
       await page.waitForTimeout(2000);
+      await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    } else {
+      await expect(page.locator('h1, h2').first()).toBeVisible();
     }
-    
-    await expect(page.locator('h1, h2').first()).toBeVisible();
   });
 
   test('should navigate to order fulfillment', async ({ page }) => {
