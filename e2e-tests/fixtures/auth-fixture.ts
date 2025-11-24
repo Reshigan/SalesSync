@@ -1,28 +1,34 @@
 import { test as base, Page } from '@playwright/test';
 
+let cachedAuthData: any = null;
+
 export async function setupAuth(page: Page) {
-  await page.addInitScript(() => {
-    const authData = {
-      state: {
-        user: {
-          id: '1',
-          email: 'admin@demo.com',
-          name: 'Admin User',
-          role: 'admin',
-          tenant_id: '25d01022-8ee8-4130-a562-f5da2cb6826c'
-        },
-        tokens: {
-          access_token: 'mock-token-for-e2e-tests',
-          expires_in: 86400,
-          token_type: 'Bearer'
-        },
-        isAuthenticated: true
-      },
-      version: 0
-    };
+  if (!cachedAuthData) {
+    const baseURL = process.env.TEST_URL || 'https://ss.gonxt.tech';
     
-    localStorage.setItem('salessync-auth', JSON.stringify(authData));
-  });
+    await page.goto(`${baseURL}/auth/login`, { waitUntil: 'networkidle' });
+    
+    await page.fill('input[type="email"]', 'admin@demo.com');
+    await page.fill('input[type="password"]', 'Admin@123');
+    
+    await page.locator('button[type="submit"]').first().click();
+    
+    await page.waitForURL(/\/(dashboard|app)/, { timeout: 30000 });
+    
+    const authDataString = await page.evaluate(() => {
+      return localStorage.getItem('salessync-auth');
+    });
+    
+    if (authDataString) {
+      cachedAuthData = JSON.parse(authDataString);
+    }
+  }
+  
+  if (cachedAuthData) {
+    await page.addInitScript((authData) => {
+      localStorage.setItem('salessync-auth', JSON.stringify(authData));
+    }, cachedAuthData);
+  }
 }
 
 export const test = base.extend({

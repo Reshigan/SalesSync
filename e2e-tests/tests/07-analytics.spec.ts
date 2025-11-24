@@ -16,7 +16,7 @@ test.describe('Analytics @smoke', () => {
 
   test('should display commission analytics', async ({ page }) => {
     await page.goto('/analytics/commissions');
-    await expect(page.locator('h1, h2, text=/commission|failed|error|analytics/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should display field operations analytics', async ({ page }) => {
