@@ -1,64 +1,134 @@
 # Page snapshot
 
 ```yaml
-- generic [ref=e4]:
-  - generic [ref=e5]:
-    - generic [ref=e8]:
-      - link "SalesSync" [ref=e9] [cursor=pointer]:
-        - /url: /
-        - img "SalesSync" [ref=e10]
-      - paragraph [ref=e11]: Enterprise Field Force & Van Sales Platform
-    - generic [ref=e12]:
-      - heading "Complete Business Management Platform" [level=2] [ref=e13]:
-        - text: Complete Business
-        - text: Management Platform
-      - paragraph [ref=e14]: Streamline your operations with 15+ enterprise modules, real-time analytics, and powerful automation tools.
-      - generic [ref=e15]:
-        - generic [ref=e16]:
-          - generic [ref=e17]: 15+
-          - generic [ref=e18]: Enterprise Modules
-        - generic [ref=e19]:
-          - generic [ref=e20]: 99.9%
-          - generic [ref=e21]: Uptime SLA
-        - generic [ref=e22]:
-          - generic [ref=e23]: 24/7
-          - generic [ref=e24]: Support
-        - generic [ref=e25]:
-          - generic [ref=e26]: SSL
-          - generic [ref=e27]: Secured
-    - generic [ref=e28]:
-      - generic [ref=e29]: A Product of
-      - img "GONXT" [ref=e30]
-  - generic [ref=e32]:
-    - generic [ref=e34]:
-      - generic [ref=e35]:
-        - heading "Welcome Back" [level=2] [ref=e36]
-        - paragraph [ref=e37]: Sign in to your account
-      - generic [ref=e38]:
-        - generic [ref=e39]:
-          - generic [ref=e40]: Email Address
-          - generic [ref=e41]:
-            - generic:
-              - img
-            - textbox "you@company.com" [ref=e42]
-        - generic [ref=e43]:
-          - generic [ref=e44]: Password
-          - generic [ref=e45]:
-            - generic:
-              - img
-            - textbox "••••••••" [ref=e46]
-            - button [ref=e47] [cursor=pointer]:
-              - img [ref=e48]
-        - generic [ref=e51]:
-          - generic [ref=e52]:
-            - checkbox "Remember me" [ref=e53]
-            - generic [ref=e54]: Remember me
-          - link "Forgot password?" [ref=e56] [cursor=pointer]:
-            - /url: /auth/forgot-password
-        - button "Sign In" [ref=e58] [cursor=pointer]:
-          - generic [ref=e59]: Sign In
-          - img [ref=e60]
-      - link "Agent? Login with mobile number →" [ref=e63] [cursor=pointer]:
-        - /url: /auth/mobile-login
-    - paragraph [ref=e65]: "Demo: admin@demo.com / admin123"
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "SalesSync" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - img [ref=e11]
+        - textbox "Search..." [ref=e14]
+      - button "Core" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: Core
+        - img [ref=e18]
+      - button "Operations" [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: Operations
+        - img [ref=e23]
+      - button "Sales" [ref=e26] [cursor=pointer]:
+        - generic [ref=e27]: Sales
+        - img [ref=e28]
+      - button "Finance" [ref=e31] [cursor=pointer]:
+        - generic [ref=e32]: Finance
+        - img [ref=e33]
+      - button "Marketing" [ref=e36] [cursor=pointer]:
+        - generic [ref=e37]: Marketing
+        - img [ref=e38]
+      - button "CRM" [ref=e41] [cursor=pointer]:
+        - generic [ref=e42]: CRM
+        - img [ref=e43]
+      - button "Catalog" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: Catalog
+        - img [ref=e48]
+      - button "Compliance" [ref=e51] [cursor=pointer]:
+        - generic [ref=e52]: Compliance
+        - img [ref=e53]
+      - button "Engagement" [ref=e56] [cursor=pointer]:
+        - generic [ref=e57]: Engagement
+        - img [ref=e58]
+      - button "System" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: System
+        - img [ref=e63]
+    - generic [ref=e65]:
+      - generic [ref=e67]:
+        - generic [ref=e68]: Search
+        - generic [ref=e69]:
+          - generic:
+            - img
+          - searchbox "Search" [ref=e70]
+      - generic [ref=e71]:
+        - button "3" [ref=e73] [cursor=pointer]:
+          - img [ref=e74]
+          - generic [ref=e78]: "3"
+        - button "AU" [ref=e81] [cursor=pointer]:
+          - generic [ref=e83]: AU
+  - main [ref=e84]:
+    - generic [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e88]:
+          - heading "Products" [level=1] [ref=e89]
+          - paragraph [ref=e90]: Manage your product inventory and catalog
+        - generic [ref=e91]:
+          - button "Import" [ref=e92] [cursor=pointer]:
+            - img [ref=e93]
+            - generic [ref=e96]: Import
+          - button "Export" [ref=e97] [cursor=pointer]:
+            - img [ref=e98]
+            - generic [ref=e101]: Export
+          - button "Add Product" [ref=e102] [cursor=pointer]:
+            - img [ref=e103]
+            - generic [ref=e104]: Add Product
+      - generic [ref=e105]:
+        - generic [ref=e107]:
+          - img [ref=e110]
+          - generic [ref=e114]:
+            - paragraph [ref=e115]: Total Products
+            - paragraph [ref=e116]: "39"
+            - paragraph [ref=e117]: 39 active
+        - generic [ref=e119]:
+          - img [ref=e122]
+          - generic [ref=e125]:
+            - paragraph [ref=e126]: In Stock
+            - paragraph [ref=e127]: "0"
+            - paragraph [ref=e128]: Available for sale
+        - generic [ref=e130]:
+          - img [ref=e133]
+          - generic [ref=e135]:
+            - paragraph [ref=e136]: Low Stock
+            - paragraph [ref=e137]: "0"
+            - paragraph [ref=e138]: Needs attention
+        - generic [ref=e140]:
+          - img [ref=e143]
+          - generic [ref=e145]:
+            - paragraph [ref=e146]: Total Value
+            - paragraph [ref=e147]: £0.00
+            - paragraph [ref=e148]: Inventory worth
+      - generic [ref=e150]:
+        - generic [ref=e152]:
+          - img [ref=e153]
+          - textbox "Search products by name, code, or description..." [active] [ref=e156]: E2E-PROD-1763951443888
+        - generic [ref=e157]:
+          - button "Filters" [ref=e158] [cursor=pointer]:
+            - img [ref=e159]
+            - generic [ref=e161]: Filters
+          - combobox [ref=e162]:
+            - option "Sort by Name" [selected]
+            - option "Sort by Code"
+            - option "Sort by Price"
+            - option "Sort by Stock"
+            - option "Sort by Date"
+          - button [ref=e163] [cursor=pointer]:
+            - img [ref=e164]
+      - generic [ref=e167]:
+        - heading "Products (0)" [level=3] [ref=e170]
+        - table [ref=e172]:
+          - rowgroup [ref=e173]:
+            - row "Product Code Category Price Stock Status Actions" [ref=e174]:
+              - cell [ref=e175]:
+                - checkbox [ref=e176]
+              - cell "Product" [ref=e177]
+              - cell "Code" [ref=e178]
+              - cell "Category" [ref=e179]
+              - cell "Price" [ref=e180]
+              - cell "Stock" [ref=e181]
+              - cell "Status" [ref=e182]
+              - cell "Actions" [ref=e183]
+          - rowgroup
+  - contentinfo [ref=e184]:
+    - generic [ref=e186]:
+      - generic [ref=e187]:
+        - generic [ref=e188]: A Product of
+        - link "GONXT" [ref=e189] [cursor=pointer]:
+          - /url: https://www.gonxt.tech
+          - img "GONXT" [ref=e190]
+      - generic [ref=e191]: © 2025 SalesSync by GONXT. All rights reserved.
 ```

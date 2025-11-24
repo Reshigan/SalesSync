@@ -1,28 +1,35 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, Page, Browser } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let cachedAuthData: any = null;
+let authInitialized = false;
 
-export async function setupAuth(page: Page) {
-  if (!cachedAuthData) {
-    const baseURL = process.env.TEST_URL || 'https://ss.gonxt.tech';
-    
-    await page.goto(`${baseURL}/auth/login`, { waitUntil: 'networkidle' });
-    
-    await page.fill('input[type="email"]', 'admin@demo.com');
-    await page.fill('input[type="password"]', 'Admin@123');
-    
-    await page.locator('button[type="submit"]').first().click();
-    
-    await page.waitForURL(/\/(dashboard|app)/, { timeout: 30000 });
-    
-    const authDataString = await page.evaluate(() => {
-      return localStorage.getItem('salessync-auth');
-    });
-    
-    if (authDataString) {
-      cachedAuthData = JSON.parse(authDataString);
+async function initializeAuth() {
+  if (authInitialized) return;
+  
+  const authFile = path.join(__dirname, '../.auth/admin.json');
+  
+  if (fs.existsSync(authFile)) {
+    const authState = JSON.parse(fs.readFileSync(authFile, 'utf-8'));
+    if (authState.origins && authState.origins[0] && authState.origins[0].localStorage) {
+      const authItem = authState.origins[0].localStorage.find((item: any) => item.name === 'salessync-auth');
+      if (authItem && authItem.value) {
+        const authData = JSON.parse(authItem.value);
+        if (authData.state && authData.state.isAuthenticated && authData.state.tokens) {
+          cachedAuthData = authData;
+          authInitialized = true;
+          return;
+        }
+      }
     }
   }
+  
+  authInitialized = true;
+}
+
+export async function setupAuth(page: Page) {
+  await initializeAuth();
   
   if (cachedAuthData) {
     await page.addInitScript((authData) => {
