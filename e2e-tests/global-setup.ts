@@ -4,6 +4,37 @@ import * as path from 'path';
 
 async function globalSetup(config: FullConfig) {
   const { baseURL } = config.projects[0].use;
+  
+  const authDir = path.join(__dirname, '.auth');
+  const authPath = path.join(authDir, 'admin.json');
+  
+  if (fs.existsSync(authPath)) {
+    try {
+      const saved = JSON.parse(fs.readFileSync(authPath, 'utf-8'));
+      const entry = saved?.origins?.[0]?.localStorage?.find((x: any) => x.name === 'salessync-auth');
+      const parsed = entry?.value ? JSON.parse(entry.value) : null;
+      const token = parsed?.state?.tokens?.access_token;
+      
+      if (token) {
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString('utf8'));
+        const expiresAt = payload?.exp ? payload.exp * 1000 : 0;
+        const now = Date.now();
+        const bufferTime = 5 * 60 * 1000; // 5 minutes buffer
+        
+        if (expiresAt > now + bufferTime) {
+          console.log('✅ Reusing existing valid authentication state');
+          console.log(`   Token expires at: ${new Date(expiresAt).toISOString()}`);
+          console.log(`   Time remaining: ${Math.floor((expiresAt - now) / 1000 / 60)} minutes`);
+          return; // Skip login, reuse existing state
+        } else {
+          console.log('⚠️  Cached auth token is expired or expiring soon, will re-login');
+        }
+      }
+    } catch (error) {
+      console.log('⚠️  Failed to parse cached auth state, will re-login:', error);
+    }
+  }
+  
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     ignoreHTTPSErrors: true,
@@ -81,12 +112,10 @@ async function globalSetup(config: FullConfig) {
     await page.waitForTimeout(1000);
     
     console.log('💾 Saving authentication state...');
-    const authDir = path.join(__dirname, '.auth');
     if (!fs.existsSync(authDir)) {
       fs.mkdirSync(authDir, { recursive: true });
     }
     
-    const authPath = path.join(authDir, 'admin.json');
     await context.storageState({ path: authPath });
     
     const saved = JSON.parse(fs.readFileSync(authPath, 'utf-8'));
