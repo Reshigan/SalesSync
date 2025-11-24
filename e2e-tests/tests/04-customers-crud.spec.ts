@@ -1,9 +1,7 @@
-import * as path from 'path';
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth-fixture';
 import { CustomersPage } from '../pages/CustomersPage';
 
 test.describe('Customers CRUD @crud', () => {
-  test.use({ storageState: path.join(__dirname, '../.auth/admin.json') });
 
   test('should display customers list page', async ({ page }) => {
     const customersPage = new CustomersPage(page);

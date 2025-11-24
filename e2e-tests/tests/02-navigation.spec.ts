@@ -1,9 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/auth-fixture';
 import { DashboardPage } from '../pages/DashboardPage';
-import * as path from 'path';
 
 test.describe('Navigation @smoke', () => {
-  test.use({ storageState: path.join(__dirname, '../.auth/admin.json') });
 
   test('should display dashboard after login', async ({ page }) => {
     const dashboardPage = new DashboardPage(page);
