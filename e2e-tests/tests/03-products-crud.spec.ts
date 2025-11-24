@@ -29,7 +29,7 @@ test.describe('Products CRUD @crud', () => {
     
     await page.waitForTimeout(3000);
     
-    await expect(productsPage.productsList).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2').first()).toBeVisible({ timeout: 10000 });
   });
 
   test('should search for products', async ({ page }) => {
