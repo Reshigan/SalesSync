@@ -11,7 +11,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should not allow access to admin pages without admin role', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.fill('input[type="email"], input[name="email"]', 'user@demo.com');
     await page.fill('input[type="password"], input[name="password"]', 'User@123');
     await page.click('button[type="submit"]');
@@ -39,7 +39,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should logout successfully', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.fill('input[type="email"], input[name="email"]', 'admin@demo.com');
     await page.fill('input[type="password"], input[name="password"]', 'Admin@123');
     await page.click('button[type="submit"]');
@@ -56,7 +56,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should prevent SQL injection in search', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.fill('input[type="email"], input[name="email"]', 'admin@demo.com');
     await page.fill('input[type="password"], input[name="password"]', 'Admin@123');
     await page.click('button[type="submit"]');
@@ -75,7 +75,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should prevent XSS in input fields', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.fill('input[type="email"], input[name="email"]', 'admin@demo.com');
     await page.fill('input[type="password"], input[name="password"]', 'Admin@123');
     await page.click('button[type="submit"]');
@@ -94,7 +94,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should enforce tenant isolation', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.fill('input[type="email"], input[name="email"]', 'admin@demo.com');
     await page.fill('input[type="password"], input[name="password"]', 'Admin@123');
     await page.click('button[type="submit"]');
@@ -107,7 +107,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should have CSRF protection', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
     
     const form = page.locator('form').first();
@@ -115,7 +115,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
   });
 
   test('should enforce password complexity', async ({ page }) => {
-    await page.goto('/login');
+    await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
     
     await expect(page.locator('form, input[type="email"]').first()).toBeVisible({ timeout: 10000 });
