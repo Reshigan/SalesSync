@@ -9,6 +9,7 @@ import ErrorBoundary from './components/ui/ErrorBoundary'
 
 // Auth Pages
 import LoginPage from './pages/auth/LoginPage'
+import MobileLoginPage from './pages/auth/MobileLoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
@@ -431,6 +432,7 @@ function App() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <AuthLayout />
           }>
             <Route path="login" element={<LoginPage />} />
+            <Route path="mobile-login" element={<MobileLoginPage />} />
             <Route path="forgot-password" element={<ForgotPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
             <Route index element={<Navigate to="login" replace />} />
