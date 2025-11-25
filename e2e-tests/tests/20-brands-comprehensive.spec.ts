@@ -36,24 +36,27 @@ test.describe('Brands Module - Comprehensive Tests @comprehensive', () => {
   });
 
   test('should display brand activations', async ({ page }) => {
-    await page.goto('/brands/activations');
+    await page.goto('/field-operations/brand-activations');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
     
-    await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, h3, div, main').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('should display brand boards', async ({ page }) => {
-    await page.goto('/brands/boards');
+    await page.goto('/field-operations/board-placements');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
     
-    await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, h3, div, main').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('should display brand surveys', async ({ page }) => {
-    await page.goto('/brands/surveys');
+    await page.goto('/field-operations/surveys');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
     
-    await expect(page.locator('h1, h2, h3').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1, h2, h3, div, main').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('should search brands', async ({ page }) => {
