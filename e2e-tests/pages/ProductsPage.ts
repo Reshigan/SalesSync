@@ -24,8 +24,13 @@ export class ProductsPage {
   }
 
   async clickCreate() {
-    await this.createButton.click();
-    await this.page.waitForSelector('input[name="name"], input[placeholder*="name" i]', { timeout: 10000 });
+    await this.page.waitForLoadState('networkidle');
+    
+    const createBtn = this.page.locator('button, a').filter({ hasText: /add product|create|new product|\+/i }).first();
+    await createBtn.waitFor({ state: 'visible', timeout: 15000 });
+    await createBtn.click();
+    
+    await this.page.waitForSelector('input[name="name"], input[placeholder*="name" i], form', { timeout: 15000 });
   }
 
   async fillProductForm(data: { name: string; code: string; price: string }) {
