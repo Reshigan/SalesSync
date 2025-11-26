@@ -78,8 +78,13 @@ const authMiddleware = async (req, res, next) => {
 // Middleware to check specific permissions
 const requirePermission = (module, action) => {
   return (req, res, next) => {
-    const hasPermission = req.userPermissions[module]?.[action]?.[action] || 
-                         req.user.role === 'admin'; // Admin has all permissions
+    // Admin has all permissions
+    if (req.user?.role === 'admin') {
+      return next();
+    }
+    
+    const actionKey = `can_${action}`; // e.g., 'can_view', 'can_create', 'can_edit'
+    const hasPermission = req.userPermissions?.[module]?.[actionKey] === true;
     
     if (!hasPermission) {
       return next(new AppError(`Insufficient permissions for ${module}:${action}`, 403, 'INSUFFICIENT_PERMISSIONS'));
@@ -90,22 +95,22 @@ const requirePermission = (module, action) => {
 };
 
 // Middleware to check if user can access specific function
-const requireFunction = (module, functionCode, action = 'view') => {
+const requireFunction = (module, action = 'view') => {
   return (req, res, next) => {
     // Admin users have access to everything
     if (req.user?.role === 'admin') {
       return next();
     }
     
-    // Check permissions if they exist (support both req.permissions and req.userPermissions for compatibility)
     const permissions = req.permissions || req.userPermissions;
-    const hasPermission = permissions?.[module]?.[functionCode]?.[action];
+    const actionKey = `can_${action}`; // e.g., 'can_view', 'can_create', 'can_edit'
+    const hasPermission = permissions?.[module]?.[actionKey] === true;
     
-    if (!hasPermission && process.env.NODE_ENV === 'production') {
+    if (!hasPermission && process.env.NODE_ENV !== 'production') {
       console.log('[requireFunction] Permission check failed:', {
         module,
-        functionCode,
         action,
+        actionKey,
         userRole: req.user?.role,
         hasReqPermissions: !!req.permissions,
         hasReqUserPermissions: !!req.userPermissions,
@@ -116,7 +121,7 @@ const requireFunction = (module, functionCode, action = 'view') => {
     }
     
     if (!hasPermission) {
-      return next(new AppError(`Access denied to ${module}:${functionCode}:${action}`, 403, 'ACCESS_DENIED'));
+      return next(new AppError(`Access denied to ${module}:${action}`, 403, 'ACCESS_DENIED'));
     }
     
     next();
