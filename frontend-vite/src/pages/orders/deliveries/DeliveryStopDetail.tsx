@@ -15,7 +15,14 @@ export default function DeliveryStopDetail() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['delivery-stop', orderId, deliveryId, stopId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/orders/${orderId}/deliveries/${deliveryId}/stops/${stopId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
