@@ -230,4 +230,131 @@ router.get('/payouts/:payoutId/lines/:lineId/transactions', authMiddleware, asyn
   });
 }));
 
+// GET /api/commissions/calculations/:id - Get calculation detail
+router.get('/calculations/:id', authMiddleware, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  
+  const calculation = await getOneQuery(`
+    SELECT 
+      cc.*,
+      u.first_name || ' ' || u.last_name as agent_name
+    FROM commission_calculations cc
+    LEFT JOIN users u ON cc.agent_id = u.id
+    WHERE cc.id = $1 AND cc.tenant_id = $2
+  `, [id, tenantId]);
+  
+  res.json({
+    success: true,
+    data: calculation || null
+  });
+}));
+
+// GET /api/commissions/calculations/:id/approval - Get calculation approval
+router.get('/calculations/:id/approval', authMiddleware, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  
+  const approval = await getOneQuery(`
+    SELECT 
+      ca.*,
+      u.first_name || ' ' || u.last_name as agent_name,
+      u2.first_name || ' ' || u2.last_name as approved_by_name
+    FROM commission_approvals ca
+    LEFT JOIN commission_calculations cc ON ca.calculation_id = cc.id
+    LEFT JOIN users u ON cc.agent_id = u.id
+    LEFT JOIN users u2 ON ca.approved_by = u2.id
+    WHERE ca.calculation_id = $1 AND ca.tenant_id = $2
+  `, [id, tenantId]);
+  
+  res.json({
+    success: true,
+    data: approval || null
+  });
+}));
+
+// GET /api/commissions/calculations/:id/logs - Get calculation logs
+router.get('/calculations/:id/logs', authMiddleware, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  
+  const logs = await getQuery(`
+    SELECT 
+      cl.*,
+      u.first_name || ' ' || u.last_name as performed_by_name
+    FROM commission_logs cl
+    LEFT JOIN users u ON cl.performed_by = u.id
+    WHERE cl.calculation_id = $1 AND cl.tenant_id = $2
+    ORDER BY cl.created_at DESC
+  `, [id, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { logs: logs || [] }
+  });
+}));
+
+// GET /api/commissions/calculations/:id/exceptions - Get calculation exceptions
+router.get('/calculations/:id/exceptions', authMiddleware, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  
+  const exceptions = await getQuery(`
+    SELECT 
+      ce.*,
+      u.first_name || ' ' || u.last_name as resolved_by_name
+    FROM commission_exceptions ce
+    LEFT JOIN users u ON ce.resolved_by = u.id
+    WHERE ce.calculation_id = $1 AND ce.tenant_id = $2
+    ORDER BY ce.created_at DESC
+  `, [id, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { exceptions: exceptions || [] }
+  });
+}));
+
+// GET /api/commissions/rules/:id/conditions - Get rule conditions
+router.get('/rules/:id/conditions', authMiddleware, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const tenantId = req.tenantId;
+  
+  const conditions = await getQuery(`
+    SELECT 
+      crc.*
+    FROM commission_rule_conditions crc
+    WHERE crc.rule_id = $1 AND crc.tenant_id = $2
+    ORDER BY crc.priority
+  `, [id, tenantId]);
+  
+  res.json({
+    success: true,
+    data: { conditions: conditions || [] }
+  });
+}));
+
+// GET /api/commissions/payouts/:payoutId/lines/:lineId - Get payout line detail
+router.get('/payouts/:payoutId/lines/:lineId', authMiddleware, asyncHandler(async (req, res) => {
+  const { payoutId, lineId } = req.params;
+  const tenantId = req.tenantId;
+  
+  const line = await getOneQuery(`
+    SELECT 
+      pl.*,
+      u.first_name || ' ' || u.last_name as agent_name,
+      p.payout_date,
+      p.status as payout_status
+    FROM payout_lines pl
+    LEFT JOIN users u ON pl.agent_id = u.id
+    JOIN payouts p ON pl.payout_id = p.id
+    WHERE pl.id = $1 AND pl.payout_id = $2 AND p.tenant_id = $3
+  `, [lineId, payoutId, tenantId]);
+  
+  res.json({
+    success: true,
+    data: line || null
+  });
+}));
+
 module.exports = router;
