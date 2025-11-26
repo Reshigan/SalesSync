@@ -57,9 +57,15 @@ temp/
 coverage/
 .nyc_output/
 
+# Playwright test artifacts
+e2e-tests/playwright-report/
+e2e-tests/test-results/
+e2e-tests/.auth/
+playwright-report/
+test-results/
+
 # Large binary files
 *.tar.gz
 *.zip
 *.tar
 *.gz
-test-results/
