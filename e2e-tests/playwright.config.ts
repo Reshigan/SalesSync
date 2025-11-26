@@ -7,9 +7,11 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  globalSetup: require.resolve('./global-setup.ts'),
   
   use: {
     baseURL: process.env.BASE_URL || 'https://ss.gonxt.tech',
+    storageState: '.auth/admin.json',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
