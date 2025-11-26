@@ -5,6 +5,424 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 
 /**
  * @swagger
+ * /api/pricing/price-lists:
+ *   get:
+ *     summary: Get all price lists
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: customer_type
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: is_active
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: Price lists retrieved successfully
+ */
+router.get('/price-lists', authMiddleware, asyncHandler(async (req, res) => {
+  const { getQuery } = require('../utils/database');
+  
+  const { customer_type, is_active } = req.query;
+  
+  let whereConditions = ['pl.tenant_id = $1'];
+  let params = [req.tenantId];
+  let paramIndex = 2;
+  
+  if (customer_type) {
+    whereConditions.push(`pl.customer_type = $${paramIndex}`);
+    params.push(customer_type);
+    paramIndex++;
+  }
+  
+  if (is_active !== undefined) {
+    whereConditions.push(`pl.is_active = $${paramIndex}`);
+    params.push(is_active === 'true');
+    paramIndex++;
+  }
+  
+  const priceLists = await getQuery(`
+    SELECT 
+      pl.*,
+      r.name as region_name,
+      a.name as area_name,
+      u.first_name || ' ' || u.last_name as created_by_name,
+      (SELECT COUNT(*) FROM price_list_items WHERE price_list_id = pl.id) as item_count
+    FROM price_lists pl
+    LEFT JOIN regions r ON r.id = pl.region_id
+    LEFT JOIN areas a ON a.id = pl.area_id
+    LEFT JOIN users u ON u.id = pl.created_by
+    WHERE ${whereConditions.join(' AND ')}
+    ORDER BY pl.priority DESC, pl.created_at DESC
+  `, params);
+  
+  res.json({
+    success: true,
+    data: priceLists
+  });
+}));
+
+/**
+ * @swagger
+ * /api/pricing/price-lists/{id}:
+ *   get:
+ *     summary: Get a single price list with items
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Price list retrieved successfully
+ */
+router.get('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => {
+  const { getOneQuery, getQuery } = require('../utils/database');
+  
+  const { id } = req.params;
+  
+  const priceList = await getOneQuery(`
+    SELECT 
+      pl.*,
+      r.name as region_name,
+      a.name as area_name,
+      u.first_name || ' ' || u.last_name as created_by_name
+    FROM price_lists pl
+    LEFT JOIN regions r ON r.id = pl.region_id
+    LEFT JOIN areas a ON a.id = pl.area_id
+    LEFT JOIN users u ON u.id = pl.created_by
+    WHERE pl.id = $1 AND pl.tenant_id = $2
+  `, [id, req.tenantId]);
+  
+  if (!priceList) {
+    throw new AppError('Price list not found', 404);
+  }
+  
+  const items = await getQuery(`
+    SELECT 
+      pli.*,
+      p.name as product_name,
+      p.code as product_code,
+      p.selling_price as standard_price
+    FROM price_list_items pli
+    JOIN products p ON p.id = pli.product_id
+    WHERE pli.price_list_id = $1
+    ORDER BY p.name, pli.min_quantity
+  `, [id]);
+  
+  res.json({
+    success: true,
+    data: {
+      ...priceList,
+      items
+    }
+  });
+}));
+
+/**
+ * @swagger
+ * /api/pricing/price-lists:
+ *   post:
+ *     summary: Create a new price list
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - code
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               customer_type:
+ *                 type: string
+ *               region_id:
+ *                 type: string
+ *               area_id:
+ *                 type: string
+ *               channel:
+ *                 type: string
+ *               currency:
+ *                 type: string
+ *               effective_start:
+ *                 type: string
+ *                 format: date
+ *               effective_end:
+ *                 type: string
+ *                 format: date
+ *               is_active:
+ *                 type: boolean
+ *               priority:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Price list created successfully
+ */
+router.post('/price-lists', authMiddleware, asyncHandler(async (req, res) => {
+  const { runQuery } = require('../utils/database');
+  
+  const {
+    name,
+    code,
+    description,
+    customer_type,
+    region_id,
+    area_id,
+    channel,
+    currency = 'USD',
+    effective_start,
+    effective_end,
+    is_active = true,
+    priority = 0
+  } = req.body;
+  
+  if (!name || !code) {
+    throw new AppError('Name and code are required', 400);
+  }
+  
+  const result = await runQuery(`
+    INSERT INTO price_lists (
+      tenant_id, name, code, description, customer_type, region_id, area_id,
+      channel, currency, effective_start, effective_end, is_active, priority, created_by
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    RETURNING *
+  `, [
+    req.tenantId, name, code, description, customer_type, region_id, area_id,
+    channel, currency, effective_start, effective_end, is_active, priority, req.userId
+  ]);
+  
+  res.status(201).json({
+    success: true,
+    data: result.rows[0]
+  });
+}));
+
+/**
+ * @swagger
+ * /api/pricing/price-lists/{id}:
+ *   put:
+ *     summary: Update a price list
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Price list updated successfully
+ */
+router.put('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../utils/database');
+  
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    customer_type,
+    region_id,
+    area_id,
+    channel,
+    currency,
+    effective_start,
+    effective_end,
+    is_active,
+    priority
+  } = req.body;
+  
+  const existing = await getOneQuery(`
+    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+  `, [id, req.tenantId]);
+  
+  if (!existing) {
+    throw new AppError('Price list not found', 404);
+  }
+  
+  const result = await runQuery(`
+    UPDATE price_lists SET
+      name = COALESCE($1, name),
+      description = COALESCE($2, description),
+      customer_type = COALESCE($3, customer_type),
+      region_id = COALESCE($4, region_id),
+      area_id = COALESCE($5, area_id),
+      channel = COALESCE($6, channel),
+      currency = COALESCE($7, currency),
+      effective_start = COALESCE($8, effective_start),
+      effective_end = COALESCE($9, effective_end),
+      is_active = COALESCE($10, is_active),
+      priority = COALESCE($11, priority)
+    WHERE id = $12 AND tenant_id = $13
+    RETURNING *
+  `, [
+    name, description, customer_type, region_id, area_id, channel, currency,
+    effective_start, effective_end, is_active, priority, id, req.tenantId
+  ]);
+  
+  res.json({
+    success: true,
+    data: result.rows[0]
+  });
+}));
+
+/**
+ * @swagger
+ * /api/pricing/price-lists/{id}:
+ *   delete:
+ *     summary: Delete a price list
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Price list deleted successfully
+ */
+router.delete('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../utils/database');
+  
+  const { id } = req.params;
+  
+  const existing = await getOneQuery(`
+    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+  `, [id, req.tenantId]);
+  
+  if (!existing) {
+    throw new AppError('Price list not found', 404);
+  }
+  
+  await runQuery(`
+    DELETE FROM price_lists WHERE id = $1 AND tenant_id = $2
+  `, [id, req.tenantId]);
+  
+  res.json({
+    success: true,
+    message: 'Price list deleted successfully'
+  });
+}));
+
+/**
+ * @swagger
+ * /api/pricing/price-lists/{id}/items:
+ *   post:
+ *     summary: Add items to a price list
+ *     tags: [Pricing]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - product_id
+ *                     - price
+ *                   properties:
+ *                     product_id:
+ *                       type: string
+ *                     price:
+ *                       type: number
+ *                     min_quantity:
+ *                       type: integer
+ *                     max_quantity:
+ *                       type: integer
+ *                     discount_percentage:
+ *                       type: number
+ *     responses:
+ *       201:
+ *         description: Items added successfully
+ */
+router.post('/price-lists/:id/items', authMiddleware, asyncHandler(async (req, res) => {
+  const { runQuery, getOneQuery } = require('../utils/database');
+  
+  const { id } = req.params;
+  const { items } = req.body;
+  
+  if (!items || !Array.isArray(items) || items.length === 0) {
+    throw new AppError('Items array is required', 400);
+  }
+  
+  const priceList = await getOneQuery(`
+    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+  `, [id, req.tenantId]);
+  
+  if (!priceList) {
+    throw new AppError('Price list not found', 404);
+  }
+  
+  const insertedItems = [];
+  
+  for (const item of items) {
+    const { product_id, price, min_quantity = 1, max_quantity, discount_percentage } = item;
+    
+    if (!product_id || !price) {
+      continue;
+    }
+    
+    const result = await runQuery(`
+      INSERT INTO price_list_items (
+        price_list_id, product_id, price, min_quantity, max_quantity, discount_percentage
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (price_list_id, product_id, min_quantity) 
+      DO UPDATE SET price = $3, max_quantity = $5, discount_percentage = $6
+      RETURNING *
+    `, [id, product_id, price, min_quantity, max_quantity, discount_percentage]);
+    
+    insertedItems.push(result.rows[0]);
+  }
+  
+  res.status(201).json({
+    success: true,
+    data: insertedItems
+  });
+}));
+
+/**
+ * @swagger
  * /api/pricing/quote:
  *   get:
  *     summary: Get pricing quote for a product
