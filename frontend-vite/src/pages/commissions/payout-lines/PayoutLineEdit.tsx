@@ -18,15 +18,15 @@ export default function PayoutLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/payouts/${payoutId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: lineId,
-      payout_id: payoutId,
-      payment_method: 'bank_transfer',
-      payment_reference: 'PAY-2024-001',
-      notes: '',
-    }),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<PayoutLineFormData>({

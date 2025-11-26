@@ -9,20 +9,32 @@ export default function PayoutAuditTrail() {
   const { data: line } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/payouts/${payoutId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: lineId,
-      agent_name: 'John Sales Agent',
-    }),
   })
 
   const { data: auditTrail, isLoading } = useQuery({
     queryKey: ['payout-line-audit', payoutId, lineId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/commissions/payouts/${payoutId}/lines/${lineId}/audit`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldAuditTrail = [
       {
         id: '1',
         action: 'payout_completed',
@@ -66,8 +78,7 @@ export default function PayoutAuditTrail() {
           commission_amount: 2700.00,
         },
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading audit trail...</div>

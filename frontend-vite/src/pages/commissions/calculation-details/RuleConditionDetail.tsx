@@ -9,20 +9,15 @@ export default function RuleConditionDetail() {
   const { data: condition, isLoading } = useQuery({
     queryKey: ['commission-rule-condition', ruleId, conditionId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/rules/${ruleId}/conditions/${conditionId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: conditionId,
-      rule_id: ruleId,
-      rule_name: 'High Volume Bonus',
-      condition_type: 'sales_threshold',
-      operator: 'greater_than',
-      threshold_value: 40000.00,
-      description: 'Sales must exceed $40,000',
-      is_active: true,
-      evaluation_result: true,
-      actual_value: 50000.00,
-    }),
   })
 
   if (isLoading) {

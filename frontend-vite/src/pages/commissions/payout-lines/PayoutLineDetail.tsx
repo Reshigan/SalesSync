@@ -10,22 +10,15 @@ export default function PayoutLineDetail() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/payouts/${payoutId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: lineId,
-      payout_id: payoutId,
-      agent_id: 'agent-1',
-      agent_name: 'John Sales Agent',
-      calculation_id: 'calc-1',
-      period_start: '2024-01-01',
-      period_end: '2024-01-31',
-      commission_amount: 2700.00,
-      payment_method: 'bank_transfer',
-      payment_reference: 'PAY-2024-001',
-      paid_at: '2024-02-05T10:00:00Z',
-      status: 'paid',
-    }),
   })
 
   if (isLoading) {
