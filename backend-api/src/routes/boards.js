@@ -126,4 +126,105 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/:boardId/compliance', async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const compliance = await getQuery(`
+      SELECT bc.*, u.first_name || ' ' || u.last_name as checked_by_name
+      FROM board_compliance bc
+      LEFT JOIN users u ON bc.checked_by = u.id
+      WHERE bc.board_id = $1 AND bc.tenant_id = $2
+      ORDER BY bc.check_date DESC
+    `, [boardId, tenantId]);
+    
+    res.json({ success: true, data: { compliance: compliance || [] } });
+  } catch (error) {
+    console.error('Error fetching board compliance:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+router.get('/:boardId/location-history', async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const history = await getQuery(`
+      SELECT blh.*, u.first_name || ' ' || u.last_name as changed_by_name
+      FROM board_location_history blh
+      LEFT JOIN users u ON blh.changed_by = u.id
+      WHERE blh.board_id = $1 AND blh.tenant_id = $2
+      ORDER BY blh.changed_at DESC
+    `, [boardId, tenantId]);
+    
+    res.json({ success: true, data: { history: history || [] } });
+  } catch (error) {
+    console.error('Error fetching location history:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+router.get('/:boardId/maintenance', async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const maintenance = await getQuery(`
+      SELECT bm.*, u.first_name || ' ' || u.last_name as performed_by_name
+      FROM board_maintenance bm
+      LEFT JOIN users u ON bm.performed_by = u.id
+      WHERE bm.board_id = $1 AND bm.tenant_id = $2
+      ORDER BY bm.maintenance_date DESC
+    `, [boardId, tenantId]);
+    
+    res.json({ success: true, data: { maintenance: maintenance || [] } });
+  } catch (error) {
+    console.error('Error fetching maintenance log:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+router.get('/:boardId/photos', async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const photos = await getQuery(`
+      SELECT bp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
+      FROM board_photos bp
+      LEFT JOIN users u ON bp.uploaded_by = u.id
+      WHERE bp.board_id = $1 AND bp.tenant_id = $2
+      ORDER BY bp.created_at DESC
+    `, [boardId, tenantId]);
+    
+    res.json({ success: true, data: { photos: photos || [] } });
+  } catch (error) {
+    console.error('Error fetching board photos:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+router.get('/:boardId/placements', async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const placements = await getQuery(`
+      SELECT bp.*, c.name as customer_name, u.first_name || ' ' || u.last_name as placed_by_name
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN users u ON bp.placed_by = u.id
+      WHERE bp.board_id = $1 AND bp.tenant_id = $2
+      ORDER BY bp.placement_date DESC
+    `, [boardId, tenantId]);
+    
+    res.json({ success: true, data: { placements: placements || [] } });
+  } catch (error) {
+    console.error('Error fetching board placements:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
