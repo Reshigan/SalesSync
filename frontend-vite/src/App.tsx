@@ -262,6 +262,8 @@ import ProductTypeBuilderPage from './pages/admin/ProductTypeBuilderPage'
 import SurveyBuilderPage from './pages/admin/SurveyBuilderPage'
 import TerritoryManagementPage from './pages/admin/TerritoryManagementPage'
 import BoardManagementPage from './pages/admin/BoardManagementPage'
+import PriceListManagementPage from './pages/admin/PriceListManagementPage'
+import PriceListEditPage from './pages/admin/PriceListEditPage'
 
 import { BackupManagementPage } from './pages/admin-settings/BackupManagementPage'
 import { IntegrationsPage } from './pages/admin-settings/IntegrationsPage'
@@ -891,6 +893,16 @@ function App() {
             <Route path="admin/route-audit" element={
               <ProtectedRoute requiredRole="admin">
                 <RouteAuditPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/price-lists" element={
+              <ProtectedRoute requiredRole="admin">
+                <PriceListManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/price-lists/:id" element={
+              <ProtectedRoute requiredRole="admin">
+                <PriceListEditPage />
               </ProtectedRoute>
             } />
 
