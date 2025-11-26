@@ -3,6 +3,7 @@ import {
   Search, X, Clock, TrendingUp, MapPin, Package, Users, 
   FileText, Command, Loader2
 } from 'lucide-react';
+import { apiClient } from '../../services/api.service';
 
 interface SearchResult {
   id: string;
@@ -69,19 +70,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
     const searchTimeout = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query)}&limit=10`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              'Content-Type': 'application/json'
-            }
-          }
+        const response = await apiClient.get(
+          `/search?q=${encodeURIComponent(query)}&limit=10`
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          setResults(data.results || []);
+        if (response.data) {
+          setResults(response.data.results || []);
         }
       } catch (error) {
         console.error('Search error:', error);
