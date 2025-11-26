@@ -10,27 +10,6 @@ export default function BatchDetail() {
     queryKey: ['batch', batchId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      manufacture_date: '2024-01-01',
-      expiry_date: '2024-12-31',
-      initial_quantity: 1000,
-      current_quantity: 750,
-      allocated_quantity: 100,
-      available_quantity: 650,
-      warehouse_name: 'Main Warehouse',
-      status: 'active',
-      supplier: 'Coca-Cola Bottling Co.',
-      lot_number: 'LOT-2024-A-001',
-      quality_status: 'passed',
-      quality_checked_by: 'Jane QC',
-      quality_checked_at: '2024-01-02T10:00:00Z',
-      notes: 'Standard batch, all quality checks passed',
     }),
   })
 

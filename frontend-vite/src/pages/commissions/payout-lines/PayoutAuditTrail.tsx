@@ -10,10 +10,6 @@ export default function PayoutAuditTrail() {
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: lineId,
-      agent_name: 'John Sales Agent',
     }),
   })
 
@@ -22,51 +18,6 @@ export default function PayoutAuditTrail() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        action: 'payout_completed',
-        description: 'Payout marked as completed',
-        performed_by: 'Finance Manager',
-        performed_at: '2024-02-05T10:30:00Z',
-        details: {
-          payment_reference: 'PAY-2024-001',
-          amount: 2700.00,
-        },
-      },
-      {
-        id: '2',
-        action: 'payment_processed',
-        description: 'Payment processed via bank transfer',
-        performed_by: 'Finance Manager',
-        performed_at: '2024-02-05T10:00:00Z',
-        details: {
-          payment_method: 'bank_transfer',
-          payment_reference: 'PAY-2024-001',
-        },
-      },
-      {
-        id: '3',
-        action: 'payout_approved',
-        description: 'Payout approved for processing',
-        performed_by: 'Manager',
-        performed_at: '2024-02-01T10:00:00Z',
-        details: {
-          approval_notes: 'Commission calculation verified',
-        },
-      },
-      {
-        id: '4',
-        action: 'payout_created',
-        description: 'Payout line created',
-        performed_by: 'System',
-        performed_at: '2024-02-01T09:00:00Z',
-        details: {
-          calculation_id: 'calc-1',
-          commission_amount: 2700.00,
-        },
-      },
-    ],
   })
 
   if (isLoading) {

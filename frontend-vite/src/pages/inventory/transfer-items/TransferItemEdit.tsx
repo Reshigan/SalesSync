@@ -18,13 +18,6 @@ export default function TransferItemEdit() {
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: itemId,
-      transfer_id: transferId,
-      product_name: 'Coca-Cola 500ml',
-      quantity_requested: 100,
-      notes: '',
     }),
   })
 

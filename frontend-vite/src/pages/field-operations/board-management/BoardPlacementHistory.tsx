@@ -10,11 +10,6 @@ export default function BoardPlacementHistory() {
     queryKey: ['board', boardId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
     }),
   })
 
@@ -23,35 +18,6 @@ export default function BoardPlacementHistory() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        location: 'ABC Store - Entrance',
-        installed_at: '2024-01-20T09:30:00Z',
-        removed_at: null,
-        status: 'active',
-        condition: 'excellent',
-        installed_by: 'John Field Agent',
-      },
-      {
-        id: '2',
-        location: 'XYZ Mart - Window Display',
-        installed_at: '2023-12-15T10:00:00Z',
-        removed_at: '2024-01-15T14:00:00Z',
-        status: 'removed',
-        condition: 'good',
-        installed_by: 'Jane Agent',
-      },
-      {
-        id: '3',
-        location: 'DEF Shop - Counter',
-        installed_at: '2023-11-01T11:00:00Z',
-        removed_at: '2023-12-10T15:00:00Z',
-        status: 'removed',
-        condition: 'fair',
-        installed_by: 'John Field Agent',
-      },
-    ],
   })
 
   if (isLoading) {

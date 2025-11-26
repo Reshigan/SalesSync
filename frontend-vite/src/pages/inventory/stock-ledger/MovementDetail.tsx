@@ -10,38 +10,6 @@ export default function MovementDetail() {
     queryKey: ['stock-movement', movementId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: movementId,
-      movement_number: 'MOV-2024-001',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      product_id: 'prod-1',
-      transaction_type: 'sale',
-      transaction_reference: 'ORD-2024-001',
-      from_location: 'Main Warehouse - Aisle 3, Shelf B',
-      to_location: 'Customer Delivery',
-      quantity: 10,
-      unit_cost: 15.00,
-      total_value: 150.00,
-      movement_date: '2024-01-20T14:30:00Z',
-      performed_by: 'John Picker',
-      performed_by_role: 'Warehouse Staff',
-      approved_by: 'Jane Manager',
-      approved_at: '2024-01-20T14:25:00Z',
-      notes: 'Order fulfillment for customer ABC Store',
-      related_documents: [
-        {
-          type: 'order',
-          reference: 'ORD-2024-001',
-          url: '/orders/ord-1',
-        },
-        {
-          type: 'invoice',
-          reference: 'INV-2024-001',
-          url: '/finance/invoices/inv-1',
-        },
-      ],
     }),
   })
 

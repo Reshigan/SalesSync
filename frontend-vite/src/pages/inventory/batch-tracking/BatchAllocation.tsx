@@ -10,14 +10,6 @@ export default function BatchAllocation() {
     queryKey: ['batch', batchId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
-      current_quantity: 750,
-      allocated_quantity: 100,
-      available_quantity: 650,
     }),
   })
 
@@ -26,35 +18,6 @@ export default function BatchAllocation() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        order_number: 'ORD-2024-001',
-        customer_name: 'ABC Store',
-        quantity_allocated: 50,
-        allocation_date: '2024-01-20T10:00:00Z',
-        status: 'pending',
-        expected_ship_date: '2024-01-22',
-      },
-      {
-        id: '2',
-        order_number: 'ORD-2024-002',
-        customer_name: 'XYZ Mart',
-        quantity_allocated: 30,
-        allocation_date: '2024-01-19T14:00:00Z',
-        status: 'pending',
-        expected_ship_date: '2024-01-21',
-      },
-      {
-        id: '3',
-        order_number: 'ORD-2024-003',
-        customer_name: 'DEF Shop',
-        quantity_allocated: 20,
-        allocation_date: '2024-01-18T09:00:00Z',
-        status: 'fulfilled',
-        shipped_date: '2024-01-19',
-      },
-    ],
   })
 
   if (isLoading) {

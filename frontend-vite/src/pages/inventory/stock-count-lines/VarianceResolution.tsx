@@ -19,18 +19,6 @@ export default function VarianceResolution() {
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: lineId,
-      count_id: countId,
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      expected_quantity: 100,
-      counted_quantity: 95,
-      variance: -5,
-      variance_percent: -5.0,
-      variance_value: -75.00,
-      unit_cost: 15.00,
     }),
   })
 

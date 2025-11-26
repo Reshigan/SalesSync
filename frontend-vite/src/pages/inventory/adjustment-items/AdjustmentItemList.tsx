@@ -11,11 +11,6 @@ export default function AdjustmentItemList() {
     queryKey: ['adjustment', adjustmentId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: adjustmentId,
-      adjustment_number: 'ADJ-2024-001',
-      warehouse_name: 'Main Warehouse',
     }),
   })
 
@@ -24,28 +19,6 @@ export default function AdjustmentItemList() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        adjustment_type: 'decrease',
-        quantity: -10,
-        unit_cost: 15.00,
-        total_value: -150.00,
-        reason: 'damaged',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        adjustment_type: 'increase',
-        quantity: 5,
-        unit_cost: 14.00,
-        total_value: 70.00,
-        reason: 'found',
-      },
-    ],
   })
 
   if (isLoading) {

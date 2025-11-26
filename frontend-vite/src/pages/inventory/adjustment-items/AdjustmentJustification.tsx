@@ -10,36 +10,6 @@ export default function AdjustmentJustification() {
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: itemId,
-      adjustment_id: adjustmentId,
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity: -10,
-      reason: 'damaged',
-      justification: 'Found 10 damaged units during quality inspection. Units were damaged due to improper storage conditions in the warehouse. The damaged units have been segregated and will be disposed of according to company policy.',
-      created_by: 'John Manager',
-      created_by_email: 'john.manager@company.com',
-      created_by_role: 'Warehouse Manager',
-      created_at: '2024-01-20T14:30:00Z',
-      approved_by: 'Jane Director',
-      approved_by_email: 'jane.director@company.com',
-      approved_by_role: 'Operations Director',
-      approved_at: '2024-01-20T16:00:00Z',
-      approval_notes: 'Approved after reviewing photos and inspection report',
-      supporting_documents: [
-        {
-          id: 'doc-1',
-          name: 'Damage Inspection Report.pdf',
-          uploaded_at: '2024-01-20T14:35:00Z',
-        },
-        {
-          id: 'doc-2',
-          name: 'Photo Evidence.jpg',
-          uploaded_at: '2024-01-20T14:36:00Z',
-        },
-      ],
     }),
   })
 

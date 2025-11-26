@@ -10,11 +10,6 @@ export default function StockLedgerDetail() {
     queryKey: ['product', productId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: productId,
-      name: 'Coca-Cola 500ml',
-      sku: 'CC-500',
     }),
   })
 
@@ -22,21 +17,6 @@ export default function StockLedgerDetail() {
     queryKey: ['stock-ledger-entry', productId, entryId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: entryId,
-      product_id: productId,
-      transaction_type: 'sale',
-      transaction_reference: 'ORD-2024-001',
-      warehouse_name: 'Main Warehouse',
-      quantity_before: 150,
-      quantity_change: -10,
-      quantity_after: 140,
-      unit_cost: 15.00,
-      total_value: -150.00,
-      transaction_date: '2024-01-20T14:30:00Z',
-      created_by: 'System',
-      notes: 'Order fulfillment',
     }),
   })
 

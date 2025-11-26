@@ -11,19 +11,6 @@ export default function ApprovalDetail() {
     queryKey: ['commission-approval', calculationId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: '1',
-      calculation_id: calculationId,
-      agent_name: 'John Sales Agent',
-      commission_amount: 2700.00,
-      submitted_by: 'System',
-      submitted_at: '2024-02-01T09:00:00Z',
-      approved_by: 'Jane Manager',
-      approved_at: '2024-02-01T10:00:00Z',
-      approval_status: 'approved',
-      approval_notes: 'Commission calculation verified and approved',
-      approval_level: 'manager',
     }),
   })
 

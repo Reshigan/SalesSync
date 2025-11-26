@@ -10,50 +10,6 @@ export default function SurveyComparison() {
     queryKey: ['survey-comparison', surveyId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      current_survey: {
-        id: surveyId,
-        title: 'Customer Satisfaction Survey - Q1 2024',
-        responses: 10,
-        satisfaction: 4.5,
-        nps: 80,
-      },
-      previous_survey: {
-        id: 'survey-prev',
-        title: 'Customer Satisfaction Survey - Q4 2023',
-        responses: 8,
-        satisfaction: 4.2,
-        nps: 70,
-      },
-      changes: {
-        responses: { value: 2, percentage: 25, trend: 'up' },
-        satisfaction: { value: 0.3, percentage: 7.1, trend: 'up' },
-        nps: { value: 10, percentage: 14.3, trend: 'up' },
-      },
-      question_comparison: [
-        {
-          question: 'Product Quality',
-          current: 4.5,
-          previous: 4.2,
-          change: 0.3,
-          trend: 'up',
-        },
-        {
-          question: 'Customer Service',
-          current: 4.3,
-          previous: 4.4,
-          change: -0.1,
-          trend: 'down',
-        },
-        {
-          question: 'Value for Money',
-          current: 4.6,
-          previous: 4.1,
-          change: 0.5,
-          trend: 'up',
-        },
-      ],
     }),
   })
 

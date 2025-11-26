@@ -10,11 +10,6 @@ export default function BoardComplianceChecks() {
     queryKey: ['board', boardId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
     }),
   })
 
@@ -23,44 +18,6 @@ export default function BoardComplianceChecks() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        check_type: 'brand_guidelines',
-        check_date: '2024-01-25T10:00:00Z',
-        status: 'passed',
-        checked_by: 'Jane Manager',
-        notes: 'All brand guidelines met',
-        issues_found: 0,
-      },
-      {
-        id: '2',
-        check_type: 'safety_standards',
-        check_date: '2024-01-25T10:15:00Z',
-        status: 'passed',
-        checked_by: 'Jane Manager',
-        notes: 'Board securely mounted, no safety concerns',
-        issues_found: 0,
-      },
-      {
-        id: '3',
-        check_type: 'visibility_requirements',
-        check_date: '2024-01-25T10:30:00Z',
-        status: 'warning',
-        checked_by: 'Jane Manager',
-        notes: 'Partially obscured by store signage during certain hours',
-        issues_found: 1,
-      },
-      {
-        id: '4',
-        check_type: 'maintenance_schedule',
-        check_date: '2024-01-25T10:45:00Z',
-        status: 'passed',
-        checked_by: 'Jane Manager',
-        notes: 'Regular maintenance being performed on schedule',
-        issues_found: 0,
-      },
-    ],
   })
 
   if (isLoading) {

@@ -10,12 +10,6 @@ export default function TransferItemList() {
     queryKey: ['transfer', transferId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: transferId,
-      transfer_number: 'TRF-2024-001',
-      from_warehouse: 'Main Warehouse',
-      to_warehouse: 'Branch Warehouse',
     }),
   })
 
@@ -24,38 +18,6 @@ export default function TransferItemList() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        quantity_requested: 100,
-        quantity_shipped: 100,
-        quantity_received: 95,
-        variance: -5,
-        status: 'received_with_variance',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        quantity_requested: 50,
-        quantity_shipped: 50,
-        quantity_received: 50,
-        variance: 0,
-        status: 'received',
-      },
-      {
-        id: '3',
-        product_name: 'Sprite 500ml',
-        product_sku: 'SP-500',
-        quantity_requested: 75,
-        quantity_shipped: 75,
-        quantity_received: null,
-        variance: 0,
-        status: 'in_transit',
-      },
-    ],
   })
 
   if (isLoading) {

@@ -11,27 +11,6 @@ export default function CalculationDetail() {
     queryKey: ['commission-calculation', calculationId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: calculationId,
-      agent_id: 'agent-1',
-      agent_name: 'John Sales Agent',
-      calculation_date: '2024-01-31T23:59:59Z',
-      period_start: '2024-01-01',
-      period_end: '2024-01-31',
-      total_sales: 50000.00,
-      commission_rate: 5,
-      base_commission: 2500.00,
-      bonuses: 250.00,
-      deductions: 50.00,
-      final_commission: 2700.00,
-      status: 'approved',
-      approved_by: 'Manager',
-      approved_at: '2024-02-01T10:00:00Z',
-      breakdown: [
-        { category: 'Product Sales', amount: 40000.00, rate: 5, commission: 2000.00 },
-        { category: 'Service Sales', amount: 10000.00, rate: 5, commission: 500.00 },
-      ],
     }),
   })
 

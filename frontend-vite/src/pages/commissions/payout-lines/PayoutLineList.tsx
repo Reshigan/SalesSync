@@ -12,11 +12,6 @@ export default function PayoutLineList() {
     queryKey: ['payout', payoutId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: payoutId,
-      payout_number: 'PAYOUT-2024-001',
-      payout_date: '2024-02-05',
     }),
   })
 
@@ -27,32 +22,6 @@ export default function PayoutLineList() {
       return await commissionsService.getPayoutLines(payoutId)
     },
     enabled: !!payoutId,
-    placeholderData: [
-      {
-        id: '1',
-        agent_name: 'John Sales Agent',
-        period: 'Jan 2024',
-        commission_amount: 2700.00,
-        payment_method: 'bank_transfer',
-        status: 'paid',
-      },
-      {
-        id: '2',
-        agent_name: 'Jane Agent',
-        period: 'Jan 2024',
-        commission_amount: 3200.00,
-        payment_method: 'bank_transfer',
-        status: 'paid',
-      },
-      {
-        id: '3',
-        agent_name: 'Bob Field Agent',
-        period: 'Jan 2024',
-        commission_amount: 2100.00,
-        payment_method: 'mobile_money',
-        status: 'paid',
-      },
-    ],
   })
 
   if (isLoading) {

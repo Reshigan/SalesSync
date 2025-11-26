@@ -10,21 +10,6 @@ export default function SurveyAnswerDetail() {
     queryKey: ['survey-question-answers', surveyId, questionId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: questionId,
-      survey_id: surveyId,
-      question_text: 'How satisfied are you with our product quality?',
-      question_type: 'rating',
-      total_responses: 10,
-      answers: [
-        { value: '5', count: 6, percentage: 60, label: 'Very Satisfied' },
-        { value: '4', count: 3, percentage: 30, label: 'Satisfied' },
-        { value: '3', count: 1, percentage: 10, label: 'Neutral' },
-        { value: '2', count: 0, percentage: 0, label: 'Dissatisfied' },
-        { value: '1', count: 0, percentage: 0, label: 'Very Dissatisfied' },
-      ],
-      average_rating: 4.5,
     }),
   })
 

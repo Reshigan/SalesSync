@@ -10,45 +10,6 @@ export default function LotDetail() {
     queryKey: ['lot', lotId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: lotId,
-      lot_number: 'LOT-2024-A-001',
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      manufacture_date: '2024-01-01',
-      manufacture_location: 'Factory A - Line 3',
-      supplier: 'Coca-Cola Bottling Co.',
-      supplier_lot_number: 'SUP-LOT-2024-001',
-      total_quantity: 5000,
-      batches_count: 5,
-      quality_status: 'passed',
-      quality_certificate: 'QC-2024-001.pdf',
-      quality_checked_by: 'Jane QC Manager',
-      quality_checked_at: '2024-01-02T10:00:00Z',
-      certifications: ['ISO 9001', 'HACCP', 'FDA Approved'],
-      test_results: [
-        {
-          test_name: 'pH Level',
-          result: '2.5',
-          standard: '2.4-2.6',
-          status: 'passed',
-        },
-        {
-          test_name: 'Sugar Content',
-          result: '10.8g/100ml',
-          standard: '10.6-11.0g/100ml',
-          status: 'passed',
-        },
-        {
-          test_name: 'Carbonation',
-          result: '3.8 volumes',
-          standard: '3.7-4.0 volumes',
-          status: 'passed',
-        },
-      ],
-      notes: 'Standard production lot, all quality checks passed',
     }),
   })
 
@@ -57,43 +18,6 @@ export default function LotDetail() {
     queryFn: async () => {
       return []
     },
-    placeholderData: [
-      {
-        id: 'batch-1',
-        batch_number: 'BATCH-2024-001',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-2',
-        batch_number: 'BATCH-2024-002',
-        warehouse_name: 'Branch Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-3',
-        batch_number: 'BATCH-2024-003',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-4',
-        batch_number: 'BATCH-2024-004',
-        warehouse_name: 'Regional Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-5',
-        batch_number: 'BATCH-2024-005',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-    ],
   })
 
   if (isLoading) {

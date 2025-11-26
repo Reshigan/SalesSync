@@ -10,26 +10,6 @@ export default function SerialDetail() {
     queryKey: ['serial', serialId],
     queryFn: async () => {
       return null
-    },
-    placeholderData: {
-      id: serialId,
-      serial_number: 'SN-2024-001-00001',
-      product_id: 'prod-1',
-      product_name: 'Premium Coffee Machine',
-      product_sku: 'PCM-001',
-      batch_id: 'batch-1',
-      batch_number: 'BATCH-2024-001',
-      status: 'sold',
-      current_location: 'Customer - ABC Store',
-      warehouse_name: 'Main Warehouse',
-      manufacture_date: '2024-01-15',
-      warranty_start: '2024-01-20',
-      warranty_end: '2025-01-20',
-      sold_to_customer: 'ABC Store',
-      sold_date: '2024-01-20',
-      sold_order: 'ORD-2024-001',
-      sold_invoice: 'INV-2024-001',
-      notes: 'Premium model with extended warranty',
     }),
   })
 
