@@ -10,14 +10,28 @@ export default function RouteStopPerformance() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/routes/${routeId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
   const { data: performance, isLoading } = useQuery({
     queryKey: ['route-performance', routeId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/routes/${routeId}/performance`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
