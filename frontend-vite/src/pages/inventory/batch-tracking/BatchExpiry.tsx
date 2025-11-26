@@ -9,25 +9,32 @@ export default function BatchExpiry() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/batches/${batchId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      expiry_date: '2024-12-31',
-      current_quantity: 750,
-      warehouse_name: 'Main Warehouse',
-    }),
   })
 
   const { data: expiryInfo, isLoading } = useQuery({
     queryKey: ['batch-expiry', batchId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/batches/${batchId}/expiry`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldExpiryInfo = {
       expiry_date: '2024-12-31',
       days_until_expiry: 45,
       expiry_status: 'expiring_soon',
@@ -66,8 +73,7 @@ export default function BatchExpiry() {
           notified_users: ['Inventory Manager'],
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading expiry information...</div>

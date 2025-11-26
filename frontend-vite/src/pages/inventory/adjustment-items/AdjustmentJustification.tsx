@@ -9,9 +9,18 @@ export default function AdjustmentJustification() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/adjustments/${adjustmentId}/items/${itemId}/justification`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldItem = {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',
@@ -40,8 +49,7 @@ export default function AdjustmentJustification() {
           uploaded_at: '2024-01-20T14:36:00Z',
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading justification...</div>

@@ -9,9 +9,18 @@ export default function BatchDetail() {
   const { data: batch, isLoading } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/batches/${batchId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldBatch = {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_id: 'prod-1',
@@ -31,8 +40,7 @@ export default function BatchDetail() {
       quality_checked_by: 'Jane QC',
       quality_checked_at: '2024-01-02T10:00:00Z',
       notes: 'Standard batch, all quality checks passed',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading batch details...</div>

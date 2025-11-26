@@ -9,9 +9,18 @@ export default function LotDetail() {
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/lots/${lotId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldLot = {
       id: lotId,
       lot_number: 'LOT-2024-A-001',
       product_id: 'prod-1',
@@ -49,15 +58,23 @@ export default function LotDetail() {
         },
       ],
       notes: 'Standard production lot, all quality checks passed',
-    }),
-  })
+    }
 
   const { data: batches } = useQuery({
     queryKey: ['lot-batches', lotId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/lots/${lotId}/batches`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldBatches = [
       {
         id: 'batch-1',
         batch_number: 'BATCH-2024-001',
@@ -93,8 +110,7 @@ export default function LotDetail() {
         quantity: 1000,
         status: 'active',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading lot details...</div>

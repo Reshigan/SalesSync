@@ -10,21 +10,32 @@ export default function AdjustmentItemList() {
   const { data: adjustment } = useQuery({
     queryKey: ['adjustment', adjustmentId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/adjustments/${adjustmentId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: adjustmentId,
-      adjustment_number: 'ADJ-2024-001',
-      warehouse_name: 'Main Warehouse',
-    }),
   })
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['adjustment-items', adjustmentId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/adjustments/${adjustmentId}/items`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldItems = [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',
@@ -45,8 +56,7 @@ export default function AdjustmentItemList() {
         total_value: 70.00,
         reason: 'found',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading adjustment items...</div>
