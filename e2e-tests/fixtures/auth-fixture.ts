@@ -1,6 +1,7 @@
 import { test as base, Page, Browser } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { disableAnimations } from './disable-animations';
 
 let cachedAuthData: any = null;
 let authInitialized = false;
@@ -41,6 +42,7 @@ export async function setupAuth(page: Page) {
 export const test = base.extend({
   page: async ({ page }, use) => {
     await setupAuth(page);
+    await disableAnimations(page);
     await use(page);
   },
 });
