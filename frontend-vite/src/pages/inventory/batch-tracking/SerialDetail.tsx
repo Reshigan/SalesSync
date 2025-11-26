@@ -11,7 +11,7 @@ export default function SerialDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_id: 'prod-1',

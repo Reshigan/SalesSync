@@ -19,7 +19,7 @@ export default function CountLineEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',

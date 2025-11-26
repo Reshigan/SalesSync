@@ -11,7 +11,7 @@ export default function SurveyAnswerDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: questionId,
       survey_id: surveyId,
       question_text: 'How satisfied are you with our product quality?',

@@ -11,7 +11,7 @@ export default function AdjustmentJustification() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',

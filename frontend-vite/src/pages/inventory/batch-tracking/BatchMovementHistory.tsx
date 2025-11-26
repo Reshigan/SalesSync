@@ -11,7 +11,7 @@ export default function BatchMovementHistory() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -23,7 +23,7 @@ export default function BatchMovementHistory() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         movement_type: 'sale',

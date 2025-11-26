@@ -11,7 +11,7 @@ export default function CountLineList() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: countId,
       count_number: 'CNT-2024-001',
       warehouse_name: 'Main Warehouse',
@@ -23,7 +23,7 @@ export default function CountLineList() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',

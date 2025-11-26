@@ -11,7 +11,7 @@ export default function PhotoTimeline() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
@@ -23,7 +23,7 @@ export default function PhotoTimeline() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',

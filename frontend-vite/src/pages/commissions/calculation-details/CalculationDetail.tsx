@@ -12,7 +12,7 @@ export default function CalculationDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: calculationId,
       agent_id: 'agent-1',
       agent_name: 'John Sales Agent',

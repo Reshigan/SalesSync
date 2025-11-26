@@ -11,7 +11,7 @@ export default function BoardPlacementDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: placementId,
       visit_id: visitId,
       board_id: 'board-1',

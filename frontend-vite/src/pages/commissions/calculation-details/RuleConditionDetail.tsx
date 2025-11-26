@@ -11,7 +11,7 @@ export default function RuleConditionDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: conditionId,
       rule_id: ruleId,
       rule_name: 'High Volume Bonus',

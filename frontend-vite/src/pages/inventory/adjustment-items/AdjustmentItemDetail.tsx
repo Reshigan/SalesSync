@@ -12,7 +12,7 @@ export default function AdjustmentItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: adjustmentId,
       adjustment_number: 'ADJ-2024-001',
       warehouse_name: 'Main Warehouse',
@@ -24,7 +24,7 @@ export default function AdjustmentItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       adjustment_id: adjustmentId,
       product_id: 'prod-1',

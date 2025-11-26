@@ -11,7 +11,7 @@ export default function VisitTaskDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       agent_name: 'John Field Agent',
@@ -23,7 +23,7 @@ export default function VisitTaskDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: taskId,
       visit_id: visitId,
       task_type: 'board_placement',

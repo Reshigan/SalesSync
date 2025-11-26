@@ -11,7 +11,7 @@ export default function LotTracking() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lotId,
       lot_number: 'LOT-2024-A-001',
       product_name: 'Coca-Cola 500ml',
@@ -23,7 +23,7 @@ export default function LotTracking() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         event_type: 'distributed',

@@ -21,7 +21,7 @@ export default function VisitTaskEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: taskId,
       visit_id: visitId,
       task_title: 'Install promotional board',

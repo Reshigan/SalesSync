@@ -12,7 +12,7 @@ export default function ExceptionDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: exceptionId,
       calculation_id: calculationId,
       exception_type: 'negative_commission',

@@ -11,7 +11,7 @@ export default function PhotoEvidence() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: visitId,
       visit_number: 'VISIT-2024-001',
       customer_name: 'ABC Store',
@@ -23,7 +23,7 @@ export default function PhotoEvidence() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       visit_id: visitId,
       total_photos: 5,
       verified_photos: 5,

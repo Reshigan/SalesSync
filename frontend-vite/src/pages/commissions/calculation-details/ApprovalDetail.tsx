@@ -12,7 +12,7 @@ export default function ApprovalDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: '1',
       calculation_id: calculationId,
       agent_name: 'John Sales Agent',

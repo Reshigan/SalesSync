@@ -11,7 +11,7 @@ export default function ProductDistributionDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: distributionId,
       visit_id: visitId,
       distribution_type: 'samples',

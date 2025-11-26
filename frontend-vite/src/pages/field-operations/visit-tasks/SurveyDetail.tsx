@@ -11,7 +11,7 @@ export default function SurveyDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: surveyId,
       visit_id: visitId,
       survey_title: 'Customer Satisfaction Survey',

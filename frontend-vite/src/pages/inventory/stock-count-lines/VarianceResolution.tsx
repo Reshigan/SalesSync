@@ -20,7 +20,7 @@ export default function VarianceResolution() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',

@@ -11,7 +11,7 @@ export default function PhotoDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: photoId,
       visit_id: visitId,
       photo_url: '/placeholder-photo.jpg',

@@ -12,7 +12,7 @@ export default function CalculationLog() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: agentId,
       name: 'John Sales Agent',
     }),
@@ -23,7 +23,7 @@ export default function CalculationLog() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         calculation_date: '2024-01-31T23:59:59Z',

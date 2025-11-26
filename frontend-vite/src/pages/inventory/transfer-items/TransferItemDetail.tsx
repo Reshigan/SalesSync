@@ -11,7 +11,7 @@ export default function TransferItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: transferId,
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
@@ -24,7 +24,7 @@ export default function TransferItemDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       transfer_id: transferId,
       product_id: 'prod-1',

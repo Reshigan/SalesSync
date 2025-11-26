@@ -11,7 +11,7 @@ export default function TransferItemTracking() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: itemId,
       product_name: 'Coca-Cola 500ml',
       product_sku: 'CC-500',
@@ -23,7 +23,7 @@ export default function TransferItemTracking() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
       to_warehouse: 'Branch Warehouse',

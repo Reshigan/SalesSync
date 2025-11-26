@@ -11,7 +11,7 @@ export default function BatchAllocation() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -26,7 +26,7 @@ export default function BatchAllocation() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         order_number: 'ORD-2024-001',

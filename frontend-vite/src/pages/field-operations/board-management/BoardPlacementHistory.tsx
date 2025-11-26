@@ -11,7 +11,7 @@ export default function BoardPlacementHistory() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: boardId,
       board_number: 'BOARD-001',
       brand_name: 'Coca-Cola',
@@ -23,7 +23,7 @@ export default function BoardPlacementHistory() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         location: 'ABC Store - Entrance',

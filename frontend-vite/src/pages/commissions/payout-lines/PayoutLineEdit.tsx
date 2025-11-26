@@ -20,7 +20,7 @@ export default function PayoutLineEdit() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       payout_id: payoutId,
       payment_method: 'bank_transfer',

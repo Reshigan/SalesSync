@@ -11,7 +11,7 @@ export default function BatchDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: batchId,
       batch_number: 'BATCH-2024-001',
       product_id: 'prod-1',

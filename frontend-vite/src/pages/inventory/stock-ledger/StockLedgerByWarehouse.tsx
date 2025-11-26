@@ -11,7 +11,7 @@ export default function StockLedgerByWarehouse() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: warehouseId,
       name: 'Main Warehouse',
     }),
@@ -22,7 +22,7 @@ export default function StockLedgerByWarehouse() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',

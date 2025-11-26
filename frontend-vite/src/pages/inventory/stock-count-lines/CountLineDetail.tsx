@@ -11,7 +11,7 @@ export default function CountLineDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: countId,
       count_number: 'CNT-2024-001',
       warehouse_name: 'Main Warehouse',
@@ -23,7 +23,7 @@ export default function CountLineDetail() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: lineId,
       count_id: countId,
       product_id: 'prod-1',

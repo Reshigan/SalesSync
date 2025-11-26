@@ -11,7 +11,7 @@ export default function SerialTracking() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_name: 'Premium Coffee Machine',
@@ -23,7 +23,7 @@ export default function SerialTracking() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         event_type: 'delivered',

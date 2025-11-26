@@ -11,7 +11,7 @@ export default function TransferItemList() {
     queryFn: async () => {
       return null
     },
-    oldData: {
+    placeholderData: {
       id: transferId,
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
@@ -24,7 +24,7 @@ export default function TransferItemList() {
     queryFn: async () => {
       return []
     },
-    oldData: [
+    placeholderData: [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',
