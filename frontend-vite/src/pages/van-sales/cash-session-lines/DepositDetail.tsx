@@ -17,7 +17,14 @@ export default function DepositDetail() {
   const { data: deposit, isLoading } = useQuery({
     queryKey: ['deposit', sessionId, depositId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/cash-sessions/${sessionId}/deposits/${depositId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

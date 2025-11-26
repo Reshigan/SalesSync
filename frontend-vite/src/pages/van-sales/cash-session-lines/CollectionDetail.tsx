@@ -17,7 +17,14 @@ export default function CollectionDetail() {
   const { data: collection, isLoading } = useQuery({
     queryKey: ['collection', sessionId, collectionId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/cash-sessions/${sessionId}/collections/${collectionId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

@@ -17,7 +17,14 @@ export default function VanLoadReconciliation() {
   const { data: reconciliation, isLoading } = useQuery({
     queryKey: ['van-load-reconciliation', loadId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/van-loads/${loadId}/reconciliation`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
