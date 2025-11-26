@@ -16,6 +16,7 @@ export default function PriceListEditPage() {
   
   const [formData, setFormData] = useState({
     name: '',
+    code: '',
     description: '',
     customer_type: '',
     region_id: '',
@@ -53,6 +54,7 @@ export default function PriceListEditPage() {
       if (data) {
         setFormData({
           name: data.name,
+          code: data.code || '',
           description: data.description || '',
           customer_type: data.customer_type || '',
           region_id: data.region_id || '',
@@ -174,7 +176,7 @@ export default function PriceListEditPage() {
           <h2 className="text-lg font-semibold mb-4">Price List Details</h2>
           
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Name *
               </label>
@@ -184,6 +186,20 @@ export default function PriceListEditPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Code *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="e.g., PL-2024-001"
               />
             </div>
 
