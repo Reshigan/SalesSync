@@ -9,21 +9,32 @@ export default function TransferItemTracking() {
   const { data: item } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: itemId,
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-    }),
   })
 
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['transfer-item-tracking', transferId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}/tracking`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldTracking = {
       transfer_number: 'TRF-2024-001',
       from_warehouse: 'Main Warehouse',
       to_warehouse: 'Branch Warehouse',
@@ -62,8 +73,7 @@ export default function TransferItemTracking() {
           performed_by: 'Mike Picker',
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading tracking information...</div>

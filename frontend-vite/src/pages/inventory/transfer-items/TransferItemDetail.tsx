@@ -9,22 +9,32 @@ export default function TransferItemDetail() {
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: transferId,
-      transfer_number: 'TRF-2024-001',
-      from_warehouse: 'Main Warehouse',
-      to_warehouse: 'Branch Warehouse',
-    }),
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldItem = {
       id: itemId,
       transfer_id: transferId,
       product_id: 'prod-1',
@@ -40,8 +50,7 @@ export default function TransferItemDetail() {
       shipped_at: '2024-01-20T08:00:00Z',
       received_at: '2024-01-22T10:00:00Z',
       variance_notes: '5 units damaged during transit',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading transfer item...</div>

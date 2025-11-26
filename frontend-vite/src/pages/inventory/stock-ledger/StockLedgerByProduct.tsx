@@ -9,22 +9,32 @@ export default function StockLedgerByProduct() {
   const { data: product } = useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/products/${productId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: productId,
-      name: 'Coca-Cola 500ml',
-      sku: 'CC-500',
-      current_stock: 140,
-    }),
   })
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ['stock-ledger-product', productId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/products/${productId}/stock-ledger`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldEntries = [
       {
         id: '1',
         warehouse_name: 'Main Warehouse',
@@ -55,8 +65,7 @@ export default function StockLedgerByProduct() {
         quantity_after: 50,
         transaction_date: '2024-01-14T16:00:00Z',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading stock ledger...</div>

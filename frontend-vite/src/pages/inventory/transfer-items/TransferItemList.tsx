@@ -9,22 +9,32 @@ export default function TransferItemList() {
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: transferId,
-      transfer_number: 'TRF-2024-001',
-      from_warehouse: 'Main Warehouse',
-      to_warehouse: 'Branch Warehouse',
-    }),
   })
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['transfer-items', transferId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/transfers/${transferId}/items`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldItems = [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',
@@ -55,8 +65,7 @@ export default function TransferItemList() {
         variance: 0,
         status: 'in_transit',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading transfer items...</div>
