@@ -149,17 +149,25 @@ export default function DashboardPage() {
         </div>
         <div className="flex space-x-3">
           <div className="flex space-x-2">
+            <label htmlFor="dashboard-start-date" className="sr-only">Start Date</label>
             <input
+              id="dashboard-start-date"
+              name="start_date"
               type="date"
               value={dateRange.start_date}
               onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
               className="input text-sm"
+              aria-label="Start date for dashboard data range"
             />
+            <label htmlFor="dashboard-end-date" className="sr-only">End Date</label>
             <input
+              id="dashboard-end-date"
+              name="end_date"
               type="date"
               value={dateRange.end_date}
               onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
               className="input text-sm"
+              aria-label="End date for dashboard data range"
             />
           </div>
           <button

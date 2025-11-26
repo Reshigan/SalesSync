@@ -209,9 +209,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
           {/* Search Input */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200">
             <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <label htmlFor="global-search-input" className="sr-only">Global Search</label>
             <input
+              id="global-search-input"
+              name="search"
               ref={inputRef}
-              type="text"
+              type="search"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -219,6 +222,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               }}
               placeholder="Search customers, stores, products, visits..."
               className="flex-1 outline-none text-gray-900 placeholder-gray-400"
+              aria-label="Search customers, stores, products, visits, orders, and materials"
+              role="searchbox"
             />
             {isLoading && <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />}
             <button
