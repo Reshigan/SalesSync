@@ -10,11 +10,6 @@ export default function LotTracking() {
     queryKey: ['lot', lotId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: lotId,
-      lot_number: 'LOT-2024-A-001',
-      product_name: 'Coca-Cola 500ml',
     }),
   })
 
@@ -23,62 +18,6 @@ export default function LotTracking() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        event_type: 'distributed',
-        description: 'Distributed to 5 warehouses',
-        location: 'Multiple Locations',
-        performed_by: 'Distribution Manager',
-        timestamp: '2024-01-05T08:00:00Z',
-        details: '5 batches created and distributed',
-      },
-      {
-        id: '2',
-        event_type: 'quality_approved',
-        description: 'Quality check passed - approved for distribution',
-        location: 'Factory A - QC Lab',
-        performed_by: 'Jane QC Manager',
-        timestamp: '2024-01-02T10:00:00Z',
-        details: 'All quality tests passed',
-      },
-      {
-        id: '3',
-        event_type: 'quality_testing',
-        description: 'Quality testing in progress',
-        location: 'Factory A - QC Lab',
-        performed_by: 'QC Team',
-        timestamp: '2024-01-02T08:00:00Z',
-        details: 'pH, sugar content, carbonation tests',
-      },
-      {
-        id: '4',
-        event_type: 'packaging',
-        description: 'Packaging completed',
-        location: 'Factory A - Packaging Line',
-        performed_by: 'Production Team',
-        timestamp: '2024-01-01T16:00:00Z',
-        details: '5000 units packaged',
-      },
-      {
-        id: '5',
-        event_type: 'production',
-        description: 'Production completed',
-        location: 'Factory A - Line 3',
-        performed_by: 'Production Manager',
-        timestamp: '2024-01-01T14:00:00Z',
-        details: 'Batch production run completed',
-      },
-      {
-        id: '6',
-        event_type: 'production_start',
-        description: 'Production started',
-        location: 'Factory A - Line 3',
-        performed_by: 'Production Manager',
-        timestamp: '2024-01-01T08:00:00Z',
-        details: 'Raw materials verified and production initiated',
-      },
-    ],
   })
 
   if (isLoading) {

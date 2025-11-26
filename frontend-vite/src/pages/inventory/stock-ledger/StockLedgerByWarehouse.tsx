@@ -10,10 +10,6 @@ export default function StockLedgerByWarehouse() {
     queryKey: ['warehouse', warehouseId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: warehouseId,
-      name: 'Main Warehouse',
     }),
   })
 
@@ -22,38 +18,6 @@ export default function StockLedgerByWarehouse() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        transaction_type: 'sale',
-        transaction_reference: 'ORD-2024-001',
-        quantity_change: -10,
-        quantity_after: 140,
-        transaction_date: '2024-01-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        transaction_type: 'purchase',
-        transaction_reference: 'PO-2024-001',
-        quantity_change: 50,
-        quantity_after: 100,
-        transaction_date: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '3',
-        product_name: 'Sprite 500ml',
-        product_sku: 'SP-500',
-        transaction_type: 'adjustment',
-        transaction_reference: 'ADJ-2024-001',
-        quantity_change: -5,
-        quantity_after: 70,
-        transaction_date: '2024-01-19T16:00:00Z',
-      },
-    ],
   })
 
   if (isLoading) {

@@ -17,13 +17,6 @@ export default function SurveyResponseEdit() {
     queryKey: ['survey-response', surveyId, responseId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: responseId,
-      survey_id: surveyId,
-      question_text: 'How satisfied are you with our product quality?',
-      question_type: 'rating',
-      answer: '5',
     }),
   })
 

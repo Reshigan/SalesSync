@@ -75,8 +75,8 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        // Try to refresh token
-        const { useAuthStore } = await import('../store/auth.store')
+        // Try to refresh token (use require to avoid dynamic import warning)
+        const { useAuthStore } = require('../store/auth.store')
         await useAuthStore.getState().refreshToken()
         
         // Retry original request with new token
@@ -86,8 +86,8 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest)
         }
       } catch (refreshError) {
-        // Refresh failed, logout user
-        const { useAuthStore } = await import('../store/auth.store')
+        // Refresh failed, logout user (use require to avoid dynamic import warning)
+        const { useAuthStore } = require('../store/auth.store')
         useAuthStore.getState().logout()
         
         // Redirect to login

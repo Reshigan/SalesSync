@@ -10,11 +10,6 @@ export default function SerialTracking() {
     queryKey: ['serial', serialId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: serialId,
-      serial_number: 'SN-2024-001-00001',
-      product_name: 'Premium Coffee Machine',
     }),
   })
 
@@ -23,53 +18,6 @@ export default function SerialTracking() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        event_type: 'delivered',
-        location: 'Customer - ABC Store',
-        description: 'Delivered to customer',
-        performed_by: 'John Driver',
-        timestamp: '2024-01-22T14:00:00Z',
-        reference: 'DEL-2024-001',
-      },
-      {
-        id: '2',
-        event_type: 'shipped',
-        location: 'In Transit',
-        description: 'Shipped from warehouse',
-        performed_by: 'Jane Shipper',
-        timestamp: '2024-01-21T08:00:00Z',
-        reference: 'ORD-2024-001',
-      },
-      {
-        id: '3',
-        event_type: 'sold',
-        location: 'Main Warehouse',
-        description: 'Sold to ABC Store',
-        performed_by: 'Mike Sales',
-        timestamp: '2024-01-20T10:00:00Z',
-        reference: 'ORD-2024-001',
-      },
-      {
-        id: '4',
-        event_type: 'quality_check',
-        location: 'Main Warehouse - QC Area',
-        description: 'Quality check passed',
-        performed_by: 'Jane QC',
-        timestamp: '2024-01-16T14:00:00Z',
-        reference: 'QC-2024-001',
-      },
-      {
-        id: '5',
-        event_type: 'received',
-        location: 'Main Warehouse - Receiving',
-        description: 'Received from supplier',
-        performed_by: 'Tom Receiver',
-        timestamp: '2024-01-15T09:00:00Z',
-        reference: 'PO-2024-001',
-      },
-    ],
   })
 
   if (isLoading) {

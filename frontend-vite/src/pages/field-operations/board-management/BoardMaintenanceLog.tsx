@@ -10,11 +10,6 @@ export default function BoardMaintenanceLog() {
     queryKey: ['board', boardId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
     }),
   })
 
@@ -23,48 +18,6 @@ export default function BoardMaintenanceLog() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        maintenance_type: 'cleaning',
-        maintenance_date: '2024-02-01T10:00:00Z',
-        performed_by: 'John Field Agent',
-        duration_minutes: 30,
-        status: 'completed',
-        notes: 'Board cleaned, all surfaces wiped down',
-        photos_taken: 2,
-      },
-      {
-        id: '2',
-        maintenance_type: 'repair',
-        maintenance_date: '2024-01-28T14:00:00Z',
-        performed_by: 'Jane Agent',
-        duration_minutes: 45,
-        status: 'completed',
-        notes: 'Replaced damaged corner bracket',
-        photos_taken: 3,
-      },
-      {
-        id: '3',
-        maintenance_type: 'inspection',
-        maintenance_date: '2024-01-25T10:00:00Z',
-        performed_by: 'Jane Manager',
-        duration_minutes: 15,
-        status: 'completed',
-        notes: 'Routine inspection - no issues found',
-        photos_taken: 1,
-      },
-      {
-        id: '4',
-        maintenance_type: 'replacement',
-        maintenance_date: '2024-01-20T09:00:00Z',
-        performed_by: 'John Field Agent',
-        duration_minutes: 60,
-        status: 'completed',
-        notes: 'Replaced worn promotional material',
-        photos_taken: 4,
-      },
-    ],
   })
 
   if (isLoading) {

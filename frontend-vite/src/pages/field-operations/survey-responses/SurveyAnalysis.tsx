@@ -10,37 +10,6 @@ export default function SurveyAnalysis() {
     queryKey: ['survey-analysis', surveyId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      survey_id: surveyId,
-      survey_title: 'Customer Satisfaction Survey',
-      total_responses: 10,
-      completion_rate: 100,
-      average_completion_time: 10,
-      questions_analysis: [
-        {
-          question_id: '1',
-          question_text: 'How satisfied are you with our product quality?',
-          question_type: 'rating',
-          average_rating: 4.5,
-          total_responses: 10,
-        },
-        {
-          question_id: '2',
-          question_text: 'Would you recommend our products to others?',
-          question_type: 'yes_no',
-          yes_percentage: 90,
-          total_responses: 10,
-        },
-        {
-          question_id: '3',
-          question_text: 'What improvements would you suggest?',
-          question_type: 'text',
-          total_responses: 8,
-        },
-      ],
-      overall_satisfaction: 4.5,
-      nps_score: 80,
     }),
   })
 

@@ -10,11 +10,6 @@ export default function BatchMovementHistory() {
     queryKey: ['batch', batchId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
     }),
   })
 
@@ -23,56 +18,6 @@ export default function BatchMovementHistory() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        movement_type: 'sale',
-        reference: 'ORD-2024-001',
-        quantity_before: 850,
-        quantity_change: -100,
-        quantity_after: 750,
-        location: 'Main Warehouse',
-        performed_by: 'John Picker',
-        timestamp: '2024-01-20T14:30:00Z',
-        notes: 'Order fulfillment',
-      },
-      {
-        id: '2',
-        movement_type: 'allocation',
-        reference: 'ORD-2024-002',
-        quantity_before: 850,
-        quantity_change: 0,
-        quantity_after: 850,
-        location: 'Main Warehouse',
-        performed_by: 'System',
-        timestamp: '2024-01-19T10:00:00Z',
-        notes: 'Allocated 100 units for pending order',
-      },
-      {
-        id: '3',
-        movement_type: 'transfer_out',
-        reference: 'TRF-2024-001',
-        quantity_before: 900,
-        quantity_change: -50,
-        quantity_after: 850,
-        location: 'Main Warehouse',
-        performed_by: 'Jane Shipper',
-        timestamp: '2024-01-15T08:00:00Z',
-        notes: 'Transfer to Branch Warehouse',
-      },
-      {
-        id: '4',
-        movement_type: 'receipt',
-        reference: 'PO-2024-001',
-        quantity_before: 0,
-        quantity_change: 1000,
-        quantity_after: 1000,
-        location: 'Main Warehouse',
-        performed_by: 'Mike Receiver',
-        timestamp: '2024-01-02T09:00:00Z',
-        notes: 'Initial receipt from supplier',
-      },
-    ],
   })
 
   if (isLoading) {

@@ -10,11 +10,6 @@ export default function CountLineDetail() {
     queryKey: ['stock-count', countId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: countId,
-      count_number: 'CNT-2024-001',
-      warehouse_name: 'Main Warehouse',
     }),
   })
 
@@ -22,24 +17,6 @@ export default function CountLineDetail() {
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: lineId,
-      count_id: countId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      expected_quantity: 100,
-      counted_quantity: 95,
-      variance: -5,
-      variance_percent: -5.0,
-      variance_value: -75.00,
-      unit_cost: 15.00,
-      counted_by: 'John Counter',
-      counted_at: '2024-01-20T14:30:00Z',
-      status: 'variance_pending',
-      notes: 'Found 5 damaged units',
-      location: 'Aisle 3, Shelf B',
     }),
   })
 

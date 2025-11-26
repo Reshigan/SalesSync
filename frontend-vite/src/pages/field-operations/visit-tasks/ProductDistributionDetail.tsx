@@ -10,34 +10,6 @@ export default function ProductDistributionDetail() {
     queryKey: ['product-distribution', visitId, distributionId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: distributionId,
-      visit_id: visitId,
-      distribution_type: 'samples',
-      brand_name: 'Coca-Cola',
-      products_distributed: [
-        {
-          product_name: 'Coca-Cola 330ml Can',
-          quantity: 24,
-          unit_value: 1.50,
-          total_value: 36.00,
-        },
-        {
-          product_name: 'Sprite 330ml Can',
-          quantity: 12,
-          unit_value: 1.50,
-          total_value: 18.00,
-        },
-      ],
-      total_quantity: 36,
-      total_value: 54.00,
-      distributed_at: '2024-01-20T09:50:00Z',
-      distributed_by: 'John Field Agent',
-      recipient_name: 'Store Manager',
-      recipient_signature: true,
-      photos_taken: 2,
-      notes: 'Samples well received, store manager interested in ordering',
     }),
   })
 

@@ -19,13 +19,6 @@ export default function PayoutLineEdit() {
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: lineId,
-      payout_id: payoutId,
-      payment_method: 'bank_transfer',
-      payment_reference: 'PAY-2024-001',
-      notes: '',
     }),
   })
 

@@ -11,11 +11,6 @@ export default function SourceTransactions() {
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: lineId,
-      agent_name: 'John Sales Agent',
-      commission_amount: 2700.00,
     }),
   })
 
@@ -24,53 +19,6 @@ export default function SourceTransactions() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-001',
-        transaction_date: '2024-01-05',
-        transaction_amount: 10000.00,
-        commission_rate: 5,
-        commission_amount: 500.00,
-      },
-      {
-        id: '2',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-015',
-        transaction_date: '2024-01-12',
-        transaction_amount: 15000.00,
-        commission_rate: 5,
-        commission_amount: 750.00,
-      },
-      {
-        id: '3',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-028',
-        transaction_date: '2024-01-20',
-        transaction_amount: 12000.00,
-        commission_rate: 5,
-        commission_amount: 600.00,
-      },
-      {
-        id: '4',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-035',
-        transaction_date: '2024-01-28',
-        transaction_amount: 13000.00,
-        commission_rate: 5,
-        commission_amount: 650.00,
-      },
-      {
-        id: '5',
-        transaction_type: 'bonus',
-        transaction_number: 'BONUS-2024-001',
-        transaction_date: '2024-01-31',
-        transaction_amount: 0,
-        commission_rate: 0,
-        commission_amount: 200.00,
-      },
-    ],
   })
 
   if (isLoading) {

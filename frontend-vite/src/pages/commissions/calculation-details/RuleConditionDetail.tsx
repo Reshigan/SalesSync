@@ -10,18 +10,6 @@ export default function RuleConditionDetail() {
     queryKey: ['commission-rule-condition', ruleId, conditionId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: conditionId,
-      rule_id: ruleId,
-      rule_name: 'High Volume Bonus',
-      condition_type: 'sales_threshold',
-      operator: 'greater_than',
-      threshold_value: 40000.00,
-      description: 'Sales must exceed $40,000',
-      is_active: true,
-      evaluation_result: true,
-      actual_value: 50000.00,
     }),
   })
 

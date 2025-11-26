@@ -11,10 +11,6 @@ export default function CalculationLog() {
     queryKey: ['agent', agentId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: agentId,
-      name: 'John Sales Agent',
     }),
   })
 
@@ -23,38 +19,6 @@ export default function CalculationLog() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        calculation_date: '2024-01-31T23:59:59Z',
-        period_start: '2024-01-01',
-        period_end: '2024-01-31',
-        total_sales: 50000.00,
-        commission_rate: 5,
-        commission_amount: 2500.00,
-        status: 'approved',
-      },
-      {
-        id: '2',
-        calculation_date: '2023-12-31T23:59:59Z',
-        period_start: '2023-12-01',
-        period_end: '2023-12-31',
-        total_sales: 45000.00,
-        commission_rate: 5,
-        commission_amount: 2250.00,
-        status: 'paid',
-      },
-      {
-        id: '3',
-        calculation_date: '2023-11-30T23:59:59Z',
-        period_start: '2023-11-01',
-        period_end: '2023-11-30',
-        total_sales: 48000.00,
-        commission_rate: 5,
-        commission_amount: 2400.00,
-        status: 'paid',
-      },
-    ],
   })
 
   if (isLoading) {

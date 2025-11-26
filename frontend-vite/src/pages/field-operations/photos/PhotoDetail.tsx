@@ -10,25 +10,6 @@ export default function PhotoDetail() {
     queryKey: ['photo', visitId, photoId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: photoId,
-      visit_id: visitId,
-      photo_url: '/placeholder-photo.jpg',
-      photo_type: 'board_placement',
-      caption: 'Coca-Cola promotional board installed at store entrance',
-      taken_at: '2024-01-20T09:35:00Z',
-      taken_by: 'John Field Agent',
-      location: {
-        latitude: -1.2921,
-        longitude: 36.8219,
-        address: 'ABC Store, Nairobi',
-      },
-      metadata: {
-        device: 'iPhone 13',
-        resolution: '4032x3024',
-        file_size: '2.4 MB',
-      },
     }),
   })
 

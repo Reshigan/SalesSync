@@ -19,15 +19,6 @@ export default function AdjustmentItemEdit() {
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: itemId,
-      adjustment_id: adjustmentId,
-      product_name: 'Coca-Cola 500ml',
-      adjustment_type: 'decrease',
-      quantity: -10,
-      reason: 'damaged',
-      justification: 'Found 10 damaged units during quality inspection',
     }),
   })
 

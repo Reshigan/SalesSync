@@ -10,11 +10,6 @@ export default function PhotoTimeline() {
     queryKey: ['visit', visitId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: visitId,
-      visit_number: 'VISIT-2024-001',
-      customer_name: 'ABC Store',
     }),
   })
 
@@ -23,48 +18,6 @@ export default function PhotoTimeline() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'arrival',
-        caption: 'Arrived at store',
-        taken_at: '2024-01-20T09:00:00Z',
-        taken_by: 'John Field Agent',
-      },
-      {
-        id: '2',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'board_placement',
-        caption: 'Board installation in progress',
-        taken_at: '2024-01-20T09:20:00Z',
-        taken_by: 'John Field Agent',
-      },
-      {
-        id: '3',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'board_placement',
-        caption: 'Board installation complete',
-        taken_at: '2024-01-20T09:35:00Z',
-        taken_by: 'John Field Agent',
-      },
-      {
-        id: '4',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'product_display',
-        caption: 'Product display setup',
-        taken_at: '2024-01-20T09:50:00Z',
-        taken_by: 'John Field Agent',
-      },
-      {
-        id: '5',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'signature',
-        caption: 'Customer signature captured',
-        taken_at: '2024-01-20T10:15:00Z',
-        taken_by: 'John Field Agent',
-      },
-    ],
   })
 
   if (isLoading) {

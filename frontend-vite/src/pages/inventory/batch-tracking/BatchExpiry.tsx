@@ -10,15 +10,6 @@ export default function BatchExpiry() {
     queryKey: ['batch', batchId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      expiry_date: '2024-12-31',
-      current_quantity: 750,
-      warehouse_name: 'Main Warehouse',
     }),
   })
 
@@ -26,46 +17,6 @@ export default function BatchExpiry() {
     queryKey: ['batch-expiry', batchId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      expiry_date: '2024-12-31',
-      days_until_expiry: 45,
-      expiry_status: 'expiring_soon',
-      current_quantity: 750,
-      allocated_quantity: 100,
-      available_quantity: 650,
-      estimated_value: 11250.00,
-      recommendations: [
-        {
-          action: 'priority_sale',
-          description: 'Prioritize this batch for upcoming orders',
-          impact: 'Reduce waste by selling before expiry',
-        },
-        {
-          action: 'promotion',
-          description: 'Consider promotional pricing to move inventory',
-          impact: 'Accelerate sales velocity',
-        },
-        {
-          action: 'transfer',
-          description: 'Transfer to high-volume locations',
-          impact: 'Increase likelihood of sale before expiry',
-        },
-      ],
-      expiry_alerts: [
-        {
-          id: '1',
-          alert_type: '30_day_warning',
-          triggered_at: '2024-12-01T00:00:00Z',
-          notified_users: ['Inventory Manager', 'Sales Manager'],
-        },
-        {
-          id: '2',
-          alert_type: '60_day_warning',
-          triggered_at: '2024-11-01T00:00:00Z',
-          notified_users: ['Inventory Manager'],
-        },
-      ],
     }),
   })
 

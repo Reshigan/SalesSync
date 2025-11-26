@@ -10,11 +10,6 @@ export default function VisitTaskDetail() {
     queryKey: ['visit', visitId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: visitId,
-      visit_number: 'VISIT-2024-001',
-      agent_name: 'John Field Agent',
     }),
   })
 
@@ -22,23 +17,6 @@ export default function VisitTaskDetail() {
     queryKey: ['visit-task', visitId, taskId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: taskId,
-      visit_id: visitId,
-      task_type: 'board_placement',
-      task_title: 'Install promotional board',
-      description: 'Install new Coca-Cola promotional board at store entrance',
-      status: 'completed',
-      priority: 'high',
-      assigned_to: 'John Field Agent',
-      assigned_at: '2024-01-20T08:00:00Z',
-      started_at: '2024-01-20T09:15:00Z',
-      completed_at: '2024-01-20T09:45:00Z',
-      duration_minutes: 30,
-      notes: 'Board installed successfully, customer satisfied',
-      completion_photos: 2,
-      customer_signature: true,
     }),
   })
 

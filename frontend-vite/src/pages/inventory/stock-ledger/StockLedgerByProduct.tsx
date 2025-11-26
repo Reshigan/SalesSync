@@ -10,12 +10,6 @@ export default function StockLedgerByProduct() {
     queryKey: ['product', productId],
     queryFn: async () => {
       return null
-    },
-    oldData: {
-      id: productId,
-      name: 'Coca-Cola 500ml',
-      sku: 'CC-500',
-      current_stock: 140,
     }),
   })
 
@@ -24,38 +18,6 @@ export default function StockLedgerByProduct() {
     queryFn: async () => {
       return []
     },
-    oldData: [
-      {
-        id: '1',
-        warehouse_name: 'Main Warehouse',
-        transaction_type: 'sale',
-        transaction_reference: 'ORD-2024-001',
-        quantity_before: 150,
-        quantity_change: -10,
-        quantity_after: 140,
-        transaction_date: '2024-01-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        warehouse_name: 'Main Warehouse',
-        transaction_type: 'purchase',
-        transaction_reference: 'PO-2024-001',
-        quantity_before: 100,
-        quantity_change: 50,
-        quantity_after: 150,
-        transaction_date: '2024-01-15T10:00:00Z',
-      },
-      {
-        id: '3',
-        warehouse_name: 'Branch Warehouse',
-        transaction_type: 'transfer_in',
-        transaction_reference: 'TRF-2024-001',
-        quantity_before: 20,
-        quantity_change: 30,
-        quantity_after: 50,
-        transaction_date: '2024-01-14T16:00:00Z',
-      },
-    ],
   })
 
   if (isLoading) {
