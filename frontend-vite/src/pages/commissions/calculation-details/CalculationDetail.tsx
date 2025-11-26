@@ -10,7 +10,14 @@ export default function CalculationDetail() {
   const { data: calculation, isLoading } = useQuery({
     queryKey: ['commission-calculation', calculationId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/calculations/${calculationId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
     oldData: {
       id: calculationId,
