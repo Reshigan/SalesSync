@@ -9,22 +9,32 @@ export default function VisitTaskList() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: visitId,
-      visit_number: 'VISIT-2024-001',
-      agent_name: 'John Field Agent',
-      customer_name: 'ABC Store',
-    }),
   })
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['visit-tasks', visitId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/visits/${visitId}/tasks`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldTasks = [
       {
         id: '1',
         task_type: 'board_placement',
@@ -52,8 +62,7 @@ export default function VisitTaskList() {
         duration_minutes: 10,
         completed_at: '2024-01-20T10:10:00Z',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading tasks...</div>

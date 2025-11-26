@@ -9,9 +9,18 @@ export default function ProductDistributionDetail() {
   const { data: distribution, isLoading } = useQuery({
     queryKey: ['product-distribution', visitId, distributionId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}/product-distributions/${distributionId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldDistribution = {
       id: distributionId,
       visit_id: visitId,
       distribution_type: 'samples',
@@ -38,8 +47,7 @@ export default function ProductDistributionDetail() {
       recipient_signature: true,
       photos_taken: 2,
       notes: 'Samples well received, store manager interested in ordering',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading distribution details...</div>

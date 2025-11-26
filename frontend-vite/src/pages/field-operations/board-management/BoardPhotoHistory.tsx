@@ -9,21 +9,32 @@ export default function BoardPhotoHistory() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/boards/${boardId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
-    }),
   })
 
   const { data: photos, isLoading } = useQuery({
     queryKey: ['board-photo-history', boardId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/boards/${boardId}/photos`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldPhotos = [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',
@@ -51,8 +62,7 @@ export default function BoardPhotoHistory() {
         taken_by: 'John Field Agent',
         caption: 'Cleaning and maintenance performed',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading photo history...</div>

@@ -9,21 +9,32 @@ export default function BoardMaintenanceLog() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/boards/${boardId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
-    }),
   })
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ['board-maintenance-log', boardId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/boards/${boardId}/maintenance`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldLogs = [
       {
         id: '1',
         maintenance_type: 'cleaning',
@@ -64,8 +75,7 @@ export default function BoardMaintenanceLog() {
         notes: 'Replaced worn promotional material',
         photos_taken: 4,
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading maintenance log...</div>
