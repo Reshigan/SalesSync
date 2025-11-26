@@ -1,7 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import { getAuthToken } from '../store/auth.store'
 import { tenantService } from './tenant.service'
 import { API_CONFIG } from '../config/api.config'
+import { shouldRetry, getRetryDelay } from '../utils/api-retry'
 
 // API Configuration
 const API_BASE_URL = API_CONFIG.BASE_URL
@@ -61,13 +62,13 @@ apiClient.interceptors.request.use(
   }
 )
 
-// Response interceptor for error handling
+// Response interceptor for error handling with retry logic
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response
   },
-  async (error) => {
-    const originalRequest = error.config
+  async (error: AxiosError) => {
+    const originalRequest = error.config as any
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -108,6 +109,23 @@ apiClient.interceptors.response.use(
         // Redirect to login with error message
         window.location.href = '/auth/login?error=forbidden'
       }
+    }
+
+    const method = originalRequest?.method?.toUpperCase()
+    const isIdempotent = method === 'GET' || method === 'HEAD' || method === 'OPTIONS'
+    
+    if (isIdempotent && shouldRetry(error) && !originalRequest._retryCount) {
+      originalRequest._retryCount = 0
+    }
+    
+    if (isIdempotent && originalRequest._retryCount !== undefined && originalRequest._retryCount < 3) {
+      originalRequest._retryCount++
+      const delay = getRetryDelay(originalRequest._retryCount)
+      
+      console.log(`Retrying ${method} request (attempt ${originalRequest._retryCount}/3) after ${delay}ms...`)
+      
+      await new Promise(resolve => setTimeout(resolve, delay))
+      return apiClient(originalRequest)
     }
 
     // Handle network errors
