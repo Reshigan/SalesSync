@@ -9,9 +9,18 @@ export default function SurveyResponseDetail() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['survey-response', surveyId, responseId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/survey-responses/${responseId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldResponse = {
       id: responseId,
       survey_id: surveyId,
       question_text: 'How satisfied are you with our product quality?',
@@ -20,8 +29,7 @@ export default function SurveyResponseDetail() {
       answer_text: 'Very satisfied',
       respondent_name: 'Store Manager',
       answered_at: '2024-01-20T10:05:00Z',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading response...</div>

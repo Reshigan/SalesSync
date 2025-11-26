@@ -9,21 +9,32 @@ export default function BoardLocationChanges() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/boards/${boardId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: boardId,
-      board_number: 'BOARD-001',
-      brand_name: 'Coca-Cola',
-    }),
   })
 
   const { data: changes, isLoading } = useQuery({
     queryKey: ['board-location-changes', boardId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/boards/${boardId}/location-history`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldChanges = [
       {
         id: '1',
         from_location: 'XYZ Mart - Window Display',
@@ -42,8 +53,7 @@ export default function BoardLocationChanges() {
         changed_by: 'Jane Agent',
         approved_by: 'Manager',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading location changes...</div>

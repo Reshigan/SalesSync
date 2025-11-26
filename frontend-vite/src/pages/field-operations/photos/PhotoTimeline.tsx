@@ -9,21 +9,32 @@ export default function PhotoTimeline() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: visitId,
-      visit_number: 'VISIT-2024-001',
-      customer_name: 'ABC Store',
-    }),
   })
 
   const { data: photos, isLoading } = useQuery({
     queryKey: ['visit-photos-timeline', visitId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/visits/${visitId}/photos/timeline`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldPhotos = [
       {
         id: '1',
         photo_url: '/placeholder-photo.jpg',
@@ -64,8 +75,7 @@ export default function PhotoTimeline() {
         taken_at: '2024-01-20T10:15:00Z',
         taken_by: 'John Field Agent',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading timeline...</div>

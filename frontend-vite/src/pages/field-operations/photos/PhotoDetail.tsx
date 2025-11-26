@@ -9,9 +9,18 @@ export default function PhotoDetail() {
   const { data: photo, isLoading } = useQuery({
     queryKey: ['photo', visitId, photoId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}/photos/${photoId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldPhoto = {
       id: photoId,
       visit_id: visitId,
       photo_url: '/placeholder-photo.jpg',
@@ -29,8 +38,7 @@ export default function PhotoDetail() {
         resolution: '4032x3024',
         file_size: '2.4 MB',
       },
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading photo...</div>

@@ -9,9 +9,18 @@ export default function SurveyAnalysis() {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['survey-analysis', surveyId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/surveys/${surveyId}/analysis`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldAnalysis = {
       survey_id: surveyId,
       survey_title: 'Customer Satisfaction Survey',
       total_responses: 10,
@@ -41,8 +50,7 @@ export default function SurveyAnalysis() {
       ],
       overall_satisfaction: 4.5,
       nps_score: 80,
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading analysis...</div>
