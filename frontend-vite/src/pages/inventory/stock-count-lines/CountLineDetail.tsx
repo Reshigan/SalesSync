@@ -9,21 +9,32 @@ export default function CountLineDetail() {
   const { data: count } = useQuery({
     queryKey: ['stock-count', countId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: countId,
-      count_number: 'CNT-2024-001',
-      warehouse_name: 'Main Warehouse',
-    }),
   })
 
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldLine = {
       id: lineId,
       count_id: countId,
       product_id: 'prod-1',
@@ -40,8 +51,7 @@ export default function CountLineDetail() {
       status: 'variance_pending',
       notes: 'Found 5 damaged units',
       location: 'Aisle 3, Shelf B',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading count line...</div>

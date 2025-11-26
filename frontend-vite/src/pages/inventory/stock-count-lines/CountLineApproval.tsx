@@ -17,9 +17,18 @@ export default function CountLineApproval() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldLine = {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',
@@ -32,8 +41,7 @@ export default function CountLineApproval() {
       counted_by: 'John Counter',
       counted_at: '2024-01-20T14:30:00Z',
       resolution_notes: 'Found 5 damaged units during count',
-    }),
-  })
+    }
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ApprovalFormData>()
 

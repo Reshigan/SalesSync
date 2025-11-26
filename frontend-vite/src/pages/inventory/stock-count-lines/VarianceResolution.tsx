@@ -18,9 +18,18 @@ export default function VarianceResolution() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldLine = {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',
@@ -31,8 +40,7 @@ export default function VarianceResolution() {
       variance_percent: -5.0,
       variance_value: -75.00,
       unit_cost: 15.00,
-    }),
-  })
+    }
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<ResolutionFormData>()
 

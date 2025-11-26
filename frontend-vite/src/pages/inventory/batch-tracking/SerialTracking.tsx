@@ -9,21 +9,32 @@ export default function SerialTracking() {
   const { data: serial } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/serials/${serialId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: serialId,
-      serial_number: 'SN-2024-001-00001',
-      product_name: 'Premium Coffee Machine',
-    }),
   })
 
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['serial-tracking', serialId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/serials/${serialId}/tracking`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldTracking = [
       {
         id: '1',
         event_type: 'delivered',
@@ -69,8 +80,7 @@ export default function SerialTracking() {
         timestamp: '2024-01-15T09:00:00Z',
         reference: 'PO-2024-001',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading tracking history...</div>
