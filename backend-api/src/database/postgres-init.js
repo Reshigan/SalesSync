@@ -33,11 +33,17 @@ function getDatabase() {
   return pool;
 }
 
+function convertPlaceholders(sql) {
+  let index = 1;
+  return sql.replace(/\?/g, () => `$${index++}`);
+}
+
 // Execute SQL query
 async function runQuery(sql, params = []) {
   const client = await getDatabase().connect();
   try {
-    const result = await client.query(sql, params);
+    const pgSql = convertPlaceholders(sql);
+    const result = await client.query(pgSql, params);
     return result;
   } finally {
     client.release();
