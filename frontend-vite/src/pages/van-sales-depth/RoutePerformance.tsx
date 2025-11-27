@@ -2,6 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, DollarSign, Users, Package } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { vanSalesService } from '../../services/vanSales.service'
+import { beatRoutesService } from '../../services/beat-routes.service'
 
 export default function RoutePerformance() {
   const { id } = useParams<{ id: string }>()
@@ -9,27 +11,12 @@ export default function RoutePerformance() {
 
   const { data: route } = useQuery({
     queryKey: ['route', id],
-    queryFn: async () => ({ id, route_name: 'Route A - Johannesburg North' }),
+    queryFn: () => vanSalesService.getRoute(id!),
   })
 
   const { data: performance, isLoading } = useQuery({
     queryKey: ['route-performance', id],
-    queryFn: async () => ({
-      total_sales: 450000,
-      total_orders: 120,
-      total_customers: 25,
-      avg_order_value: 3750,
-      sales_trend: [
-        { date: '2024-01-01', sales: 12000 },
-        { date: '2024-01-08', sales: 15000 },
-        { date: '2024-01-15', sales: 18000 },
-        { date: '2024-01-22', sales: 16000 },
-      ],
-      top_products: [
-        { name: 'Coca-Cola 500ml', quantity: 500, revenue: 25000 },
-        { name: 'Lays Chips 120g', quantity: 300, revenue: 30000 },
-      ],
-    }),
+    queryFn: () => beatRoutesService.getBeatStats(id),
   })
 
   if (isLoading) return <div className="p-6">Loading performance...</div>

@@ -2,6 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { vanSalesService } from '../../services/vanSales.service'
+import { ordersService } from '../../services/orders.service'
 
 export default function RouteOrders() {
   const { id } = useParams<{ id: string }>()
@@ -9,15 +11,15 @@ export default function RouteOrders() {
 
   const { data: route } = useQuery({
     queryKey: ['route', id],
-    queryFn: async () => ({ id, route_name: 'Route A - Johannesburg North' }),
+    queryFn: () => vanSalesService.getRoute(id!),
   })
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['route-orders', id],
-    queryFn: async () => [
-      { id: 'ord-1', order_number: 'ORD-001', customer: 'ABC Store', amount: 5000, status: 'delivered', date: '2024-01-15' },
-      { id: 'ord-2', order_number: 'ORD-002', customer: 'XYZ Shop', amount: 3500, status: 'pending', date: '2024-01-15' },
-    ],
+    queryFn: async () => {
+      const result = await ordersService.getOrders({ route_id: id })
+      return result.data || []
+    },
   })
 
   const total = orders?.reduce((sum, o) => sum + o.amount, 0) || 0

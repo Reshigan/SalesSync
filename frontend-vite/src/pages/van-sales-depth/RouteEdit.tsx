@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { vanSalesService } from '../../services/vanSales.service'
 
 interface RouteFormData {
   route_name: string
@@ -21,18 +22,7 @@ export default function RouteEdit() {
 
   const { data: route, isLoading } = useQuery({
     queryKey: ['route', id],
-    queryFn: async () => {
-      return {
-        id,
-        route_name: 'Route A - Johannesburg North',
-        agent_id: 'agent-1',
-        van_id: 'van-1',
-        coverage_area: 'Johannesburg North',
-        start_location: 'Warehouse A',
-        status: 'active',
-        notes: 'High-value route'
-      }
-    },
+    queryFn: () => vanSalesService.getRoute(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<RouteFormData>({
