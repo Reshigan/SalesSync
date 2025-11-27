@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, MapPin, Users, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { vanSalesService } from '../../services/vanSales.service'
 
 export default function RouteDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,21 +10,7 @@ export default function RouteDetail() {
 
   const { data: route, isLoading } = useQuery({
     queryKey: ['route', id],
-    queryFn: async () => {
-      return {
-        id,
-        route_name: 'Route A - Johannesburg North',
-        agent_name: 'John Doe',
-        van_number: 'VAN-001',
-        status: 'active',
-        total_customers: 25,
-        active_customers: 20,
-        avg_daily_sales: 15000,
-        coverage_area: 'Johannesburg North',
-        start_location: 'Warehouse A',
-        notes: 'High-value route'
-      }
-    },
+    queryFn: () => vanSalesService.getRoute(id!),
   })
 
   if (isLoading) {
