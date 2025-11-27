@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, DollarSign, Calendar, FileText } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { financeService } from '../../services/finance.service'
 
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,22 +10,7 @@ export default function InvoiceDetail() {
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ['invoice', id],
-    queryFn: async () => {
-      return {
-        id,
-        invoice_number: 'INV-2024-001',
-        customer_name: 'ABC Store',
-        issue_date: '2024-01-15',
-        due_date: '2024-02-15',
-        subtotal: 10000,
-        tax: 1500,
-        total: 11500,
-        paid: 5000,
-        balance: 6500,
-        status: 'partial',
-        notes: 'Payment plan agreed'
-      }
-    },
+    queryFn: () => financeService.getInvoice(id!),
   })
 
   if (isLoading) {
@@ -48,7 +34,7 @@ export default function InvoiceDetail() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{invoice.invoice_number}</h1>
-            <p className="text-gray-600">{invoice.customer_name}</p>
+            <p className="text-gray-600">Customer ID: {invoice.customer_id}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -67,7 +53,7 @@ export default function InvoiceDetail() {
             </button>
             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
               invoice.status === 'paid' ? 'bg-green-100 text-green-800' : 
-              invoice.status === 'partial' ? 'bg-yellow-100 text-yellow-800' : 
+              invoice.status === 'sent' || invoice.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
               'bg-red-100 text-red-800'
             }`}>
               {invoice.status}
@@ -82,7 +68,7 @@ export default function InvoiceDetail() {
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Amount</h3>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{formatCurrency(invoice.total)}</p>
+          <p className="text-3xl font-bold text-gray-900">{formatCurrency(invoice.total_amount)}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -90,7 +76,7 @@ export default function InvoiceDetail() {
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Paid</h3>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{formatCurrency(invoice.paid)}</p>
+          <p className="text-3xl font-bold text-gray-900">{formatCurrency(invoice.paid_amount)}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
@@ -110,13 +96,13 @@ export default function InvoiceDetail() {
             <dd className="mt-1 text-sm text-gray-900">{invoice.invoice_number}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Customer</dt>
-            <dd className="mt-1 text-sm text-gray-900">{invoice.customer_name}</dd>
+            <dt className="text-sm font-medium text-gray-500">Customer ID</dt>
+            <dd className="mt-1 text-sm text-gray-900">{invoice.customer_id}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Issue Date</dt>
+            <dt className="text-sm font-medium text-gray-500">Invoice Date</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              {new Date(invoice.issue_date).toLocaleDateString()}
+              {new Date(invoice.invoice_date).toLocaleDateString()}
             </dd>
           </div>
           <div>
@@ -131,7 +117,7 @@ export default function InvoiceDetail() {
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Tax</dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatCurrency(invoice.tax)}</dd>
+            <dd className="mt-1 text-sm text-gray-900">{formatCurrency(invoice.tax_amount)}</dd>
           </div>
           <div className="md:col-span-2">
             <dt className="text-sm font-medium text-gray-500">Notes</dt>

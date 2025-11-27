@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { financeService } from '../../services/finance.service'
 
 export default function InvoiceItems() {
   const { id } = useParams<{ id: string }>()
@@ -9,31 +10,12 @@ export default function InvoiceItems() {
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', id],
-    queryFn: async () => {
-      return { id, invoice_number: 'INV-2024-001', customer_name: 'ABC Store' }
-    },
+    queryFn: () => financeService.getInvoice(id!),
   })
 
   const { data: items, isLoading } = useQuery({
     queryKey: ['invoice-items', id],
-    queryFn: async () => {
-      return [
-        {
-          id: '1',
-          product_name: 'Coca-Cola 500ml',
-          quantity: 100,
-          unit_price: 50,
-          total: 5000
-        },
-        {
-          id: '2',
-          product_name: 'Lays Chips 120g',
-          quantity: 50,
-          unit_price: 100,
-          total: 5000
-        },
-      ]
-    },
+    queryFn: () => financeService.getInvoiceItemsList(id!),
   })
 
   const subtotal = items?.reduce((sum, item) => sum + item.total, 0) || 0
