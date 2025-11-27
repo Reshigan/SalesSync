@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, Users, Star, BarChart3 } from 'lucide-react'
+import { surveysService } from '../../services/surveys.service'
 
 export default function SurveyAnalytics() {
   const { id } = useParams<{ id: string }>()
@@ -15,33 +16,7 @@ export default function SurveyAnalytics() {
 
   const { data: analytics, isLoading } = useQuery({
     queryKey: ['survey-analytics', id],
-    queryFn: async () => {
-      return {
-        total_responses: 45,
-        completion_rate: 78,
-        average_score: 4.2,
-        response_trend: [
-          { date: '2024-01-01', count: 5 },
-          { date: '2024-01-08', count: 8 },
-          { date: '2024-01-15', count: 12 },
-          { date: '2024-01-22', count: 10 },
-          { date: '2024-01-29', count: 10 },
-        ],
-        score_distribution: [
-          { score: 5, count: 20, percentage: 44 },
-          { score: 4, count: 15, percentage: 33 },
-          { score: 3, count: 7, percentage: 16 },
-          { score: 2, count: 2, percentage: 4 },
-          { score: 1, count: 1, percentage: 2 },
-        ],
-        top_locations: [
-          { location: 'Johannesburg', count: 18 },
-          { location: 'Cape Town', count: 12 },
-          { location: 'Durban', count: 8 },
-          { location: 'Pretoria', count: 7 },
-        ]
-      }
-    },
+    queryFn: () => surveysService.getSurveyAnalytics(id!),
   })
 
   if (isLoading) {

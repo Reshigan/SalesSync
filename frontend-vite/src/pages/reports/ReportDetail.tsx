@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, Download, Share2, Calendar } from 'lucide-react'
+import { reportsService } from '../../services/reports.service'
 
 export default function ReportDetail() {
   const { id } = useParams<{ id: string }>()
@@ -8,21 +9,7 @@ export default function ReportDetail() {
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['report', id],
-    queryFn: async () => {
-      // Mock data for now - replace with actual API call
-      return {
-        id,
-        name: 'Sales Summary Report',
-        description: 'Monthly sales performance summary',
-        type: 'sales',
-        created_at: '2024-01-15',
-        created_by: 'Admin User',
-        last_run: '2024-01-20',
-        schedule: 'Monthly',
-        format: 'PDF',
-        recipients: ['manager@example.com', 'sales@example.com']
-      }
-    },
+    queryFn: () => reportsService.getReport(id!),
   })
 
   if (isLoading) {

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { customersService } from '../../services/customers.service'
 
 interface KYCFormData {
   business_name: string
@@ -24,21 +25,7 @@ export default function KYCEdit() {
 
   const { data: kyc, isLoading } = useQuery({
     queryKey: ['kyc', id],
-    queryFn: async () => {
-      return {
-        id,
-        business_name: 'ABC Trading Ltd',
-        registration_number: 'REG-12345',
-        tax_number: 'TAX-67890',
-        owner_name: 'John Smith',
-        owner_id: 'ID-123456',
-        phone: '+27123456789',
-        email: 'john@abcstore.com',
-        address: '123 Main St, Johannesburg',
-        status: 'approved',
-        notes: 'All documents verified'
-      }
-    },
+    queryFn: () => customersService.getCustomer(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<KYCFormData>({
