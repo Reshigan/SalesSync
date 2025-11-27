@@ -13,7 +13,7 @@ const config = {
   
   production: {
     type: process.env.DB_TYPE || 'sqlite',
-    database: process.env.DB_PATH || path.join(__dirname, '../../database/salessync.db'),
+    database: process.env.DB_NAME || process.env.DB_PATH || path.join(__dirname, '../../database/salessync.db'),
     host: process.env.DB_HOST,
     port: parseInt(process.env.DB_PORT) || 5432,
     username: process.env.DB_USER,
