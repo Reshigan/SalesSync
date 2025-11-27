@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, DollarSign, Calendar, Building2 } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { cashReconciliationService } from '../../services/cashReconciliation.service'
 
 export default function DepositDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,20 +11,8 @@ export default function DepositDetail() {
   const { data: deposit, isLoading } = useQuery({
     queryKey: ['deposit', id],
     queryFn: async () => {
-      return {
-        id,
-        deposit_number: 'DEP-2024-001',
-        session_id: 'session-1',
-        session_number: 'CS-2024-001',
-        amount: 7300,
-        deposit_date: '2024-01-15',
-        bank_name: 'First National Bank',
-        account_number: '****1234',
-        reference_number: 'REF-789456',
-        deposited_by: 'John Doe',
-        status: 'confirmed',
-        notes: 'Deposit confirmed by bank'
-      }
+      const deposits = await cashReconciliationService.getBankDeposits({ id })
+      return deposits.data[0]
     },
   })
 

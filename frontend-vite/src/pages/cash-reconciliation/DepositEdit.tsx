@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { cashReconciliationService } from '../../services/cashReconciliation.service'
 
 interface DepositFormData {
   amount: number
@@ -20,14 +21,8 @@ export default function DepositEdit() {
   const { data: deposit, isLoading } = useQuery({
     queryKey: ['deposit', id],
     queryFn: async () => {
-      return {
-        id,
-        amount: 7300,
-        deposit_date: '2024-01-15',
-        bank_name: 'First National Bank',
-        reference_number: 'REF-789456',
-        notes: 'Deposit confirmed by bank'
-      }
+      const deposits = await cashReconciliationService.getBankDeposits({ id })
+      return deposits.data[0]
     },
   })
 
