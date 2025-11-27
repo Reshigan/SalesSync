@@ -9,21 +9,32 @@ export default function BatchMovementHistory() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/batches/${batchId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
-    }),
   })
 
   const { data: movements, isLoading } = useQuery({
     queryKey: ['batch-movements', batchId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/batches/${batchId}/movements`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldMovements = [
       {
         id: '1',
         movement_type: 'sale',
@@ -72,8 +83,7 @@ export default function BatchMovementHistory() {
         timestamp: '2024-01-02T09:00:00Z',
         notes: 'Initial receipt from supplier',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading movement history...</div>

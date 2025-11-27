@@ -9,9 +9,18 @@ export default function SurveyComparison() {
   const { data: comparison, isLoading } = useQuery({
     queryKey: ['survey-comparison', surveyId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/surveys/${surveyId}/comparison`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldComparison = {
       current_survey: {
         id: surveyId,
         title: 'Customer Satisfaction Survey - Q1 2024',
@@ -54,8 +63,7 @@ export default function SurveyComparison() {
           trend: 'up',
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading comparison...</div>

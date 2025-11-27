@@ -663,16 +663,16 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
         (SELECT COALESCE(SUM(total_amount), 0) 
          FROM orders 
          WHERE tenant_id = ? 
-         AND strftime('%Y', order_date) = ? 
-         AND strftime('%m', order_date) = ?) as last_revenue
+         AND EXTRACT(YEAR FROM order_date) = ? 
+         AND EXTRACT(MONTH FROM order_date) = ?) as last_revenue
       FROM orders
       WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
+      AND EXTRACT(YEAR FROM order_date) = ?
+      AND EXTRACT(MONTH FROM order_date) = ?
       AND order_status NOT IN ('cancelled', 'rejected')
     `, [
-      tenantId, lastMonthYear.toString(), lastMonth.toString().padStart(2, '0'),
-      tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')
+      tenantId, lastMonthYear, lastMonth,
+      tenantId, currentYear, currentMonth
     ]);
 
     // Outstanding Invoices
@@ -691,7 +691,7 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
       WHERE tenant_id = ?
       AND payment_status IN ('pending', 'partial')
       AND order_status NOT IN ('cancelled', 'rejected')
-      AND julianday('now') - julianday(order_date) > 30
+      AND order_date < CURRENT_DATE - INTERVAL '30 days'
     `, [tenantId]);
 
     // Cash Flow
@@ -700,10 +700,10 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(amount_paid), 0) as total_paid
       FROM orders
       WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
+      AND EXTRACT(YEAR FROM order_date) = ?
+      AND EXTRACT(MONTH FROM order_date) = ?
       AND order_status NOT IN ('cancelled', 'rejected')
-    `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
+    `, [tenantId, currentYear, currentMonth]);
 
     // Accounts Receivable
     const accountsReceivable = await getOneQuery(`
@@ -722,9 +722,9 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
       FROM orders
       WHERE tenant_id = ?
       AND order_status NOT IN ('cancelled', 'rejected')
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
-    `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
+      AND EXTRACT(YEAR FROM order_date) = ?
+      AND EXTRACT(MONTH FROM order_date) = ?
+    `, [tenantId, currentYear, currentMonth]);
 
     // Calculate metrics
     const totalRevenue = revenue.current_revenue || 0;
@@ -789,22 +789,22 @@ router.get('/sales', asyncHandler(async (req, res, next) => {
         (SELECT COALESCE(SUM(total_amount), 0) 
          FROM orders 
          WHERE tenant_id = ? 
-         AND strftime('%Y', order_date) = ? 
-         AND strftime('%m', order_date) = ?) as last_sales,
+         AND EXTRACT(YEAR FROM order_date) = ? 
+         AND EXTRACT(MONTH FROM order_date) = ?) as last_sales,
         (SELECT COUNT(*) 
          FROM orders 
          WHERE tenant_id = ? 
-         AND strftime('%Y', order_date) = ? 
-         AND strftime('%m', order_date) = ?) as last_orders
+         AND EXTRACT(YEAR FROM order_date) = ? 
+         AND EXTRACT(MONTH FROM order_date) = ?) as last_orders
       FROM orders
       WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
+      AND EXTRACT(YEAR FROM order_date) = ?
+      AND EXTRACT(MONTH FROM order_date) = ?
       AND order_status NOT IN ('cancelled', 'rejected')
     `, [
-      tenantId, lastMonthYear.toString(), lastMonth.toString().padStart(2, '0'),
-      tenantId, lastMonthYear.toString(), lastMonth.toString().padStart(2, '0'),
-      tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')
+      tenantId, lastMonthYear, lastMonth,
+      tenantId, lastMonthYear, lastMonth,
+      tenantId, currentYear, currentMonth
     ]);
 
     // Order Status
@@ -814,18 +814,18 @@ router.get('/sales', asyncHandler(async (req, res, next) => {
         COUNT(CASE WHEN order_status = 'delivered' OR payment_status = 'paid' THEN 1 END) as fulfilled
       FROM orders
       WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
-    `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
+      AND EXTRACT(YEAR FROM order_date) = ?
+      AND EXTRACT(MONTH FROM order_date) = ?
+    `, [tenantId, currentYear, currentMonth]);
 
     // Conversion Rate
     const leads = await getOneQuery(`
       SELECT COUNT(*) as lead_count
       FROM leads
       WHERE tenant_id = ?
-      AND strftime('%Y', created_at) = ?
-      AND strftime('%m', created_at) = ?
-    `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
+      AND EXTRACT(YEAR FROM created_at) = ?
+      AND EXTRACT(MONTH FROM created_at) = ?
+    `, [tenantId, currentYear, currentMonth]);
 
     // Calculate metrics
     const totalSales = sales.current_sales || 0;

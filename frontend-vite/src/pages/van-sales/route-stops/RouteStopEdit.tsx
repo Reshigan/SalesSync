@@ -18,7 +18,14 @@ export default function RouteStopEdit() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/route-stops/${stopId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

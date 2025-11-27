@@ -9,21 +9,32 @@ export default function CountLineList() {
   const { data: count } = useQuery({
     queryKey: ['stock-count', countId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: countId,
-      count_number: 'CNT-2024-001',
-      warehouse_name: 'Main Warehouse',
-    }),
   })
 
   const { data: lines, isLoading } = useQuery({
     queryKey: ['count-lines', countId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/stock-counts/${countId}/lines`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldLines = [
       {
         id: '1',
         product_name: 'Coca-Cola 500ml',
@@ -54,8 +65,7 @@ export default function CountLineList() {
         variance_percent: 6.67,
         status: 'variance_pending',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading count lines...</div>

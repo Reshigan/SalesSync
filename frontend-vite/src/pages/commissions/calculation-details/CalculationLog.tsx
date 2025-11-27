@@ -10,20 +10,32 @@ export default function CalculationLog() {
   const { data: agent } = useQuery({
     queryKey: ['agent', agentId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/agents/${agentId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: agentId,
-      name: 'John Sales Agent',
-    }),
   })
 
   const { data: calculations, isLoading } = useQuery({
     queryKey: ['commission-calculations', agentId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/commissions/calculations?agent_id=${agentId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldCalculations = [
       {
         id: '1',
         calculation_date: '2024-01-31T23:59:59Z',
@@ -54,8 +66,7 @@ export default function CalculationLog() {
         commission_amount: 2400.00,
         status: 'paid',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading calculations...</div>

@@ -9,21 +9,32 @@ export default function PhotoEvidence() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: visitId,
-      visit_number: 'VISIT-2024-001',
-      customer_name: 'ABC Store',
-    }),
   })
 
   const { data: evidence, isLoading } = useQuery({
     queryKey: ['visit-photo-evidence', visitId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}/photos/evidence`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldEvidence = {
       visit_id: visitId,
       total_photos: 5,
       verified_photos: 5,
@@ -61,8 +72,7 @@ export default function PhotoEvidence() {
           taken_at: '2024-01-20T10:15:00Z',
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading evidence...</div>

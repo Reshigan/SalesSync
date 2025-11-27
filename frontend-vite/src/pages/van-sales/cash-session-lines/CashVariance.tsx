@@ -19,7 +19,14 @@ export default function CashVariance() {
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/cash-sessions/${sessionId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

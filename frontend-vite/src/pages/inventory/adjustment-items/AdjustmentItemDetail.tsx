@@ -10,21 +10,32 @@ export default function AdjustmentItemDetail() {
   const { data: adjustment } = useQuery({
     queryKey: ['adjustment', adjustmentId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/adjustments/${adjustmentId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: adjustmentId,
-      adjustment_number: 'ADJ-2024-001',
-      warehouse_name: 'Main Warehouse',
-    }),
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/adjustments/${adjustmentId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldItem = {
       id: itemId,
       adjustment_id: adjustmentId,
       product_id: 'prod-1',
@@ -39,8 +50,7 @@ export default function AdjustmentItemDetail() {
       location: 'Aisle 3, Shelf B',
       created_by: 'John Manager',
       created_at: '2024-01-20T14:30:00Z',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading adjustment item...</div>

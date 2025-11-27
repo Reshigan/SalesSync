@@ -9,9 +9,18 @@ export default function MovementDetail() {
   const { data: movement, isLoading } = useQuery({
     queryKey: ['stock-movement', movementId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-movements/${movementId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldMovement = {
       id: movementId,
       movement_number: 'MOV-2024-001',
       product_name: 'Coca-Cola 500ml',
@@ -42,8 +51,7 @@ export default function MovementDetail() {
           url: '/finance/invoices/inv-1',
         },
       ],
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading movement details...</div>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { cashReconciliationService } from '../../services/cashReconciliation.service'
 
 interface SessionFormData {
   opening_balance: number
@@ -17,14 +18,7 @@ export default function SessionEdit() {
 
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', id],
-    queryFn: async () => {
-      return {
-        id,
-        opening_balance: 5000,
-        closing_balance: 12500,
-        notes: 'All collections verified'
-      }
-    },
+    queryFn: () => cashReconciliationService.getSession(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<SessionFormData>({

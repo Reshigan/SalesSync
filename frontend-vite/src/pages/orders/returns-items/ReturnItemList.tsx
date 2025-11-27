@@ -10,14 +10,28 @@ export default function ReturnItemList() {
   const { data: returnOrder } = useQuery({
     queryKey: ['return', returnId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/returns/${returnId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['return-items', returnId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/returns/${returnId}/items`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
   })
 

@@ -9,9 +9,18 @@ export default function SurveyDetail() {
   const { data: survey, isLoading } = useQuery({
     queryKey: ['survey', visitId, surveyId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/surveys/${surveyId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldSurvey = {
       id: surveyId,
       visit_id: visitId,
       survey_title: 'Customer Satisfaction Survey',
@@ -26,8 +35,7 @@ export default function SurveyDetail() {
       respondent_name: 'Store Manager',
       respondent_role: 'Manager',
       status: 'completed',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading survey details...</div>

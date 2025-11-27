@@ -17,7 +17,14 @@ export default function VanLoadItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/van-loads/${loadId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

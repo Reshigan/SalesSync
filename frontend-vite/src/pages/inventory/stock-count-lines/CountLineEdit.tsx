@@ -17,17 +17,25 @@ export default function CountLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldLine = {
       id: lineId,
       count_id: countId,
       product_name: 'Coca-Cola 500ml',
       expected_quantity: 100,
       counted_quantity: 95,
       notes: 'Found 5 damaged units',
-    }),
-  })
+    }
 
   const { register, handleSubmit, formState: { errors } } = useForm<CountLineFormData>({
     values: line,

@@ -17,16 +17,24 @@ export default function TransferItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldItem = {
       id: itemId,
       transfer_id: transferId,
       product_name: 'Coca-Cola 500ml',
       quantity_requested: 100,
       notes: '',
-    }),
-  })
+    }
 
   const { register, handleSubmit, formState: { errors } } = useForm<TransferItemFormData>({
     values: item,

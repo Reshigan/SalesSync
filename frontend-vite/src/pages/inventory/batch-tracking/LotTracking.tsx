@@ -9,21 +9,32 @@ export default function LotTracking() {
   const { data: lot } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/lots/${lotId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: lotId,
-      lot_number: 'LOT-2024-A-001',
-      product_name: 'Coca-Cola 500ml',
-    }),
   })
 
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['lot-tracking', lotId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/lots/${lotId}/tracking`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldTracking = [
       {
         id: '1',
         event_type: 'distributed',
@@ -78,8 +89,7 @@ export default function LotTracking() {
         timestamp: '2024-01-01T08:00:00Z',
         details: 'Raw materials verified and production initiated',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading lot tracking...</div>

@@ -547,4 +547,148 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// GET /api/visits/:visitId/photos - Get visit photos
+router.get('/:visitId/photos', async (req, res) => {
+  try {
+    const { visitId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const photos = await getQuery(`
+      SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
+      FROM visit_photos vp
+      LEFT JOIN users u ON vp.uploaded_by = u.id
+      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      ORDER BY vp.created_at DESC
+    `, [visitId, tenantId]);
+    
+    res.json({ success: true, data: { photos: photos || [] } });
+  } catch (error) {
+    console.error('Error fetching visit photos:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/photo-gallery - Get visit photo gallery
+router.get('/:visitId/photo-gallery', async (req, res) => {
+  try {
+    const { visitId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const photos = await getQuery(`
+      SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
+      FROM visit_photos vp
+      LEFT JOIN users u ON vp.uploaded_by = u.id
+      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      ORDER BY vp.created_at DESC
+    `, [visitId, tenantId]);
+    
+    res.json({ success: true, data: { photos: photos || [] } });
+  } catch (error) {
+    console.error('Error fetching photo gallery:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/photo-timeline - Get visit photo timeline
+router.get('/:visitId/photo-timeline', async (req, res) => {
+  try {
+    const { visitId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const photos = await getQuery(`
+      SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
+      FROM visit_photos vp
+      LEFT JOIN users u ON vp.uploaded_by = u.id
+      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      ORDER BY vp.created_at ASC
+    `, [visitId, tenantId]);
+    
+    res.json({ success: true, data: { photos: photos || [] } });
+  } catch (error) {
+    console.error('Error fetching photo timeline:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/surveys/:surveyId - Get visit survey detail
+router.get('/:visitId/surveys/:surveyId', async (req, res) => {
+  try {
+    const { visitId, surveyId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const survey = await getOneQuery(`
+      SELECT sr.*, s.title as survey_title, s.description as survey_description
+      FROM survey_responses sr
+      LEFT JOIN surveys s ON sr.survey_id = s.id
+      WHERE sr.id = $1 AND sr.visit_id = $2 AND sr.tenant_id = $3
+    `, [surveyId, visitId, tenantId]);
+    
+    res.json({ success: true, data: survey || null });
+  } catch (error) {
+    console.error('Error fetching visit survey:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/product-distribution/:id - Get product distribution detail
+router.get('/:visitId/product-distribution/:id', async (req, res) => {
+  try {
+    const { visitId, id } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const distribution = await getOneQuery(`
+      SELECT pd.*, p.name as product_name, p.code as product_code
+      FROM product_distributions pd
+      LEFT JOIN products p ON pd.product_id = p.id
+      WHERE pd.id = $1 AND pd.visit_id = $2 AND pd.tenant_id = $3
+    `, [id, visitId, tenantId]);
+    
+    res.json({ success: true, data: distribution || null });
+  } catch (error) {
+    console.error('Error fetching product distribution:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/tasks - Get visit tasks
+router.get('/:visitId/tasks', async (req, res) => {
+  try {
+    const { visitId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const tasks = await getQuery(`
+      SELECT vt.*, u.first_name || ' ' || u.last_name as assigned_to_name
+      FROM visit_tasks vt
+      LEFT JOIN users u ON vt.assigned_to = u.id
+      WHERE vt.visit_id = $1 AND vt.tenant_id = $2
+      ORDER BY vt.created_at DESC
+    `, [visitId, tenantId]);
+    
+    res.json({ success: true, data: { tasks: tasks || [] } });
+  } catch (error) {
+    console.error('Error fetching visit tasks:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// GET /api/visits/:visitId/tasks/:taskId - Get visit task detail
+router.get('/:visitId/tasks/:taskId', async (req, res) => {
+  try {
+    const { visitId, taskId } = req.params;
+    const tenantId = req.user.tenantId;
+    
+    const task = await getOneQuery(`
+      SELECT vt.*, u.first_name || ' ' || u.last_name as assigned_to_name
+      FROM visit_tasks vt
+      LEFT JOIN users u ON vt.assigned_to = u.id
+      WHERE vt.id = $1 AND vt.visit_id = $2 AND vt.tenant_id = $3
+    `, [taskId, visitId, tenantId]);
+    
+    res.json({ success: true, data: task || null });
+  } catch (error) {
+    console.error('Error fetching visit task:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

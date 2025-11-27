@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { cashReconciliationService } from '../../services/cashReconciliation.service'
 
 export default function SessionCollections() {
   const { id } = useParams<{ id: string }>()
@@ -9,13 +10,7 @@ export default function SessionCollections() {
 
   const { data: collections, isLoading } = useQuery({
     queryKey: ['session-collections', id],
-    queryFn: async () => {
-      return [
-        { id: '1', customer_name: 'ABC Store', amount: 2500, payment_method: 'Cash', collected_at: '2024-01-15T10:30:00' },
-        { id: '2', customer_name: 'XYZ Shop', amount: 1800, payment_method: 'Cash', collected_at: '2024-01-15T11:45:00' },
-        { id: '3', customer_name: 'Quick Mart', amount: 3200, payment_method: 'Cash', collected_at: '2024-01-15T14:20:00' },
-      ]
-    },
+    queryFn: () => cashReconciliationService.getCollections(id!),
   })
 
   const total = collections?.reduce((sum, c) => sum + c.amount, 0) || 0

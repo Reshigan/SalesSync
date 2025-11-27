@@ -128,6 +128,54 @@ class TradeMarketingService {
       throw error
     }
   }
+
+  async deleteCampaign(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`${this.baseUrl}/campaigns/${id}`)
+    } catch (error) {
+      console.error('Failed to delete campaign:', error)
+      throw error
+    }
+  }
+
+  async getPromoters(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/promoters`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch promoters:', error)
+      throw error
+    }
+  }
+
+  async deletePromoter(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`${this.baseUrl}/promoters/${id}`)
+    } catch (error) {
+      console.error('Failed to delete promoter:', error)
+      throw error
+    }
+  }
+
+  async getMerchandisingCompliance(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/merchandising-compliance`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch merchandising compliance:', error)
+      throw error
+    }
+  }
+
+  async getTradeMarketingAnalytics(filter?: any): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/analytics`, { params: filter })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch trade marketing analytics:', error)
+      throw error
+    }
+  }
 }
 
 export const tradeMarketingService = new TradeMarketingService()

@@ -9,9 +9,18 @@ export default function BoardPlacementDetail() {
   const { data: placement, isLoading } = useQuery({
     queryKey: ['board-placement', visitId, placementId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}/board-placements/${placementId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldPlacement = {
       id: placementId,
       visit_id: visitId,
       board_id: 'board-1',
@@ -26,8 +35,7 @@ export default function BoardPlacementDetail() {
       photos_taken: 3,
       customer_approval: true,
       notes: 'Perfect location with high visibility',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading placement details...</div>

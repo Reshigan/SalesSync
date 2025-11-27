@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, User, Calendar, MapPin } from 'lucide-react'
+import { surveysService } from '../../services/surveys.service'
 
 export default function SurveyResponses() {
   const { id } = useParams<{ id: string }>()
@@ -16,32 +17,8 @@ export default function SurveyResponses() {
   const { data: responses, isLoading } = useQuery({
     queryKey: ['survey-responses', id],
     queryFn: async () => {
-      return [
-        {
-          id: '1',
-          respondent: 'John Doe',
-          customer: 'ABC Store',
-          location: 'Johannesburg',
-          completed_at: '2024-01-15T10:30:00',
-          score: 4.5,
-          answers: [
-            { question: 'How satisfied are you?', answer: 'Very satisfied' },
-            { question: 'Would you recommend us?', answer: 'Yes' },
-          ]
-        },
-        {
-          id: '2',
-          respondent: 'Jane Smith',
-          customer: 'XYZ Shop',
-          location: 'Cape Town',
-          completed_at: '2024-01-15T14:20:00',
-          score: 4.0,
-          answers: [
-            { question: 'How satisfied are you?', answer: 'Satisfied' },
-            { question: 'Would you recommend us?', answer: 'Yes' },
-          ]
-        },
-      ]
+      const result = await surveysService.getSurveyResponses(id!)
+      return result.data || []
     },
   })
 

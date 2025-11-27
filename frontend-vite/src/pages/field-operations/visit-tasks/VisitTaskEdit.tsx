@@ -19,17 +19,25 @@ export default function VisitTaskEdit() {
   const { data: task, isLoading } = useQuery({
     queryKey: ['visit-task', visitId, taskId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/visits/${visitId}/tasks/${taskId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldTask = {
       id: taskId,
       visit_id: visitId,
       task_title: 'Install promotional board',
       description: 'Install new Coca-Cola promotional board at store entrance',
       priority: 'high',
       notes: 'Board installed successfully, customer satisfied',
-    }),
-  })
+    }
 
   const { register, handleSubmit, formState: { errors } } = useForm<TaskFormData>({
     values: task,

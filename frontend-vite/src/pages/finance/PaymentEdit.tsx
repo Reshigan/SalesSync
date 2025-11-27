@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../services/finance.service'
 
 interface PaymentFormData {
   amount: number
@@ -20,17 +21,7 @@ export default function PaymentEdit() {
 
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', id],
-    queryFn: async () => {
-      return {
-        id,
-        amount: 5000,
-        payment_date: '2024-01-20',
-        payment_method: 'Bank Transfer',
-        reference_number: 'REF-123456',
-        status: 'confirmed',
-        notes: 'Partial payment received'
-      }
-    },
+    queryFn: () => financeService.getPayment(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<PaymentFormData>({

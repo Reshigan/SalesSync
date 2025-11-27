@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { reportsService } from '../../services/reports.service'
 
 interface ReportFormData {
   name: string
@@ -20,18 +21,7 @@ export default function ReportEdit() {
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['report', id],
-    queryFn: async () => {
-      // Mock data - replace with actual API call
-      return {
-        id,
-        name: 'Sales Summary Report',
-        description: 'Monthly sales performance summary',
-        type: 'sales',
-        schedule: 'monthly',
-        format: 'pdf',
-        recipients: 'manager@example.com, sales@example.com'
-      }
-    },
+    queryFn: () => reportsService.getReport(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<ReportFormData>({

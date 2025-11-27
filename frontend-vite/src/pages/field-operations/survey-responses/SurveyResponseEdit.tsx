@@ -16,16 +16,24 @@ export default function SurveyResponseEdit() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['survey-response', surveyId, responseId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/survey-responses/${responseId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldResponse = {
       id: responseId,
       survey_id: surveyId,
       question_text: 'How satisfied are you with our product quality?',
       question_type: 'rating',
       answer: '5',
-    }),
-  })
+    }
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResponseFormData>({
     values: response,

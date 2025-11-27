@@ -9,9 +9,18 @@ export default function SerialDetail() {
   const { data: serial, isLoading } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/serials/${serialId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldSerial = {
       id: serialId,
       serial_number: 'SN-2024-001-00001',
       product_id: 'prod-1',
@@ -30,8 +39,7 @@ export default function SerialDetail() {
       sold_order: 'ORD-2024-001',
       sold_invoice: 'INV-2024-001',
       notes: 'Premium model with extended warranty',
-    }),
-  })
+    }
 
   if (isLoading) {
     return <div className="p-6">Loading serial details...</div>

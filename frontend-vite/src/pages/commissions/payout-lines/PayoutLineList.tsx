@@ -11,13 +11,15 @@ export default function PayoutLineList() {
   const { data: payout } = useQuery({
     queryKey: ['payout', payoutId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/payouts/${payoutId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: payoutId,
-      payout_number: 'PAYOUT-2024-001',
-      payout_date: '2024-02-05',
-    }),
   })
 
   const { data: lines, isLoading } = useQuery({

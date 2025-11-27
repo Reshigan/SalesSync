@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, Eye } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { financeService } from '../../services/finance.service'
 
 export default function InvoicePayments() {
   const { id } = useParams<{ id: string }>()
@@ -9,24 +10,14 @@ export default function InvoicePayments() {
 
   const { data: invoice } = useQuery({
     queryKey: ['invoice', id],
-    queryFn: async () => {
-      return { id, invoice_number: 'INV-2024-001', customer_name: 'ABC Store' }
-    },
+    queryFn: () => financeService.getInvoice(id!),
   })
 
   const { data: payments, isLoading } = useQuery({
     queryKey: ['invoice-payments', id],
     queryFn: async () => {
-      return [
-        {
-          id: 'pay-1',
-          payment_number: 'PAY-2024-001',
-          amount: 5000,
-          payment_date: '2024-01-20',
-          payment_method: 'Bank Transfer',
-          status: 'confirmed'
-        },
-      ]
+      const result = await financeService.getPayments({ invoice_id: id })
+      return result.payments || []
     },
   })
 

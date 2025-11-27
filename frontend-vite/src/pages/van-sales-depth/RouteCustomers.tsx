@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Phone } from 'lucide-react'
+import { vanSalesService } from '../../services/vanSales.service'
+import { beatRoutesService } from '../../services/beat-routes.service'
 
 export default function RouteCustomers() {
   const { id } = useParams<{ id: string }>()
@@ -8,15 +10,12 @@ export default function RouteCustomers() {
 
   const { data: route } = useQuery({
     queryKey: ['route', id],
-    queryFn: async () => ({ id, route_name: 'Route A - Johannesburg North' }),
+    queryFn: () => vanSalesService.getRoute(id!),
   })
 
   const { data: customers, isLoading } = useQuery({
     queryKey: ['route-customers', id],
-    queryFn: async () => [
-      { id: '1', name: 'ABC Store', address: '123 Main St', phone: '+27123456789', status: 'active', last_visit: '2024-01-15' },
-      { id: '2', name: 'XYZ Shop', address: '456 Oak Ave', phone: '+27987654321', status: 'active', last_visit: '2024-01-14' },
-    ],
+    queryFn: () => beatRoutesService.getRouteCustomers(id!),
   })
 
   if (isLoading) return <div className="p-6">Loading customers...</div>

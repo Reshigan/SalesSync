@@ -9,24 +9,32 @@ export default function BatchAllocation() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/batches/${batchId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: batchId,
-      batch_number: 'BATCH-2024-001',
-      product_name: 'Coca-Cola 500ml',
-      current_quantity: 750,
-      allocated_quantity: 100,
-      available_quantity: 650,
-    }),
   })
 
   const { data: allocations, isLoading } = useQuery({
     queryKey: ['batch-allocations', batchId],
     queryFn: async () => {
-      return []
+      const response = await fetch(`/api/batches/${batchId}/allocations`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return []
+      const result = await response.json()
+      return result.data || []
     },
-    oldData: [
+  })
+
+  const oldAllocations = [
       {
         id: '1',
         order_number: 'ORD-2024-001',
@@ -54,8 +62,7 @@ export default function BatchAllocation() {
         status: 'fulfilled',
         shipped_date: '2024-01-19',
       },
-    ],
-  })
+    ]
 
   if (isLoading) {
     return <div className="p-6">Loading allocations...</div>

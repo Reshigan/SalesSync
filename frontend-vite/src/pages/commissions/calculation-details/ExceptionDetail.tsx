@@ -10,21 +10,15 @@ export default function ExceptionDetail() {
   const { data: exception, isLoading } = useQuery({
     queryKey: ['commission-exception', calculationId, exceptionId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/commissions/calculations/${calculationId}/exceptions/${exceptionId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
-      id: exceptionId,
-      calculation_id: calculationId,
-      exception_type: 'negative_commission',
-      severity: 'high',
-      description: 'Negative commission detected due to returns exceeding sales',
-      detected_at: '2024-01-31T23:59:59Z',
-      affected_amount: -150.00,
-      resolution_status: 'resolved',
-      resolution_action: 'Adjusted commission to zero, flagged for review',
-      resolved_by: 'Manager',
-      resolved_at: '2024-02-01T10:00:00Z',
-    }),
   })
 
   if (isLoading) {

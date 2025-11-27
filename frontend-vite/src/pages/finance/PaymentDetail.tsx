@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, DollarSign, CreditCard, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { financeService } from '../../services/finance.service'
 
 export default function PaymentDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,20 +10,7 @@ export default function PaymentDetail() {
 
   const { data: payment, isLoading } = useQuery({
     queryKey: ['payment', id],
-    queryFn: async () => {
-      return {
-        id,
-        payment_number: 'PAY-2024-001',
-        invoice_number: 'INV-2024-001',
-        customer_name: 'ABC Store',
-        amount: 5000,
-        payment_date: '2024-01-20',
-        payment_method: 'Bank Transfer',
-        reference_number: 'REF-123456',
-        status: 'confirmed',
-        notes: 'Partial payment received'
-      }
-    },
+    queryFn: () => financeService.getPayment(id!),
   })
 
   if (isLoading) {
@@ -46,7 +34,7 @@ export default function PaymentDetail() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{payment.payment_number}</h1>
-            <p className="text-gray-600">{payment.customer_name}</p>
+            <p className="text-gray-600">Customer ID: {payment.customer_id}</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -57,7 +45,9 @@ export default function PaymentDetail() {
               Edit
             </button>
             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              payment.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              payment.status === 'completed' ? 'bg-green-100 text-green-800' : 
+              payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+              'bg-red-100 text-red-800'
             }`}>
               {payment.status}
             </span>
@@ -101,19 +91,21 @@ export default function PaymentDetail() {
             <dd className="mt-1 text-sm text-gray-900">{payment.payment_number}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Invoice Number</dt>
+            <dt className="text-sm font-medium text-gray-500">Invoice ID</dt>
             <dd className="mt-1 text-sm text-gray-900">
-              <button
-                onClick={() => navigate(`/finance/invoices/${payment.invoice_number}`)}
-                className="text-primary-600 hover:text-primary-900"
-              >
-                {payment.invoice_number}
-              </button>
+              {payment.invoice_id ? (
+                <button
+                  onClick={() => navigate(`/finance/invoices/${payment.invoice_id}`)}
+                  className="text-primary-600 hover:text-primary-900"
+                >
+                  {payment.invoice_id}
+                </button>
+              ) : '-'}
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Customer</dt>
-            <dd className="mt-1 text-sm text-gray-900">{payment.customer_name}</dd>
+            <dt className="text-sm font-medium text-gray-500">Customer ID</dt>
+            <dd className="mt-1 text-sm text-gray-900">{payment.customer_id}</dd>
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Reference Number</dt>

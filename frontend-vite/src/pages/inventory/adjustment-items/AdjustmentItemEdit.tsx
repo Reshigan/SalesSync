@@ -18,9 +18,18 @@ export default function AdjustmentItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/adjustments/${adjustmentId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
-    oldData: {
+  })
+
+  const oldItem = {
       id: itemId,
       adjustment_id: adjustmentId,
       product_name: 'Coca-Cola 500ml',
@@ -28,8 +37,7 @@ export default function AdjustmentItemEdit() {
       quantity: -10,
       reason: 'damaged',
       justification: 'Found 10 damaged units during quality inspection',
-    }),
-  })
+    }
 
   const { register, handleSubmit, formState: { errors } } = useForm<AdjustmentItemFormData>({
     values: item,

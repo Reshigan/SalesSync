@@ -9,14 +9,28 @@ export default function VanLoadItemDetail() {
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/van-loads/${loadId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
     queryFn: async () => {
-      return null
+      const response = await fetch(`/api/van-loads/${loadId}/items/${itemId}`, {
+        headers: {
+          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+        },
+      })
+      if (!response.ok) return null
+      const result = await response.json()
+      return result.data
     },
   })
 

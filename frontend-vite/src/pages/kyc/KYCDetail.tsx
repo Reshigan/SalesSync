@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, CheckCircle, XCircle } from 'lucide-react'
+import { customersService } from '../../services/customers.service'
 
 export default function KYCDetail() {
   const { id } = useParams<{ id: string }>()
@@ -8,24 +9,7 @@ export default function KYCDetail() {
 
   const { data: kyc, isLoading } = useQuery({
     queryKey: ['kyc', id],
-    queryFn: async () => {
-      return {
-        id,
-        customer_name: 'ABC Store',
-        business_name: 'ABC Trading Ltd',
-        registration_number: 'REG-12345',
-        tax_number: 'TAX-67890',
-        owner_name: 'John Smith',
-        owner_id: 'ID-123456',
-        phone: '+27123456789',
-        email: 'john@abcstore.com',
-        address: '123 Main St, Johannesburg',
-        status: 'approved',
-        verified_by: 'Jane Doe',
-        verified_at: '2024-01-15T10:30:00',
-        notes: 'All documents verified'
-      }
-    },
+    queryFn: () => customersService.getCustomer(id!),
   })
 
   if (isLoading) {

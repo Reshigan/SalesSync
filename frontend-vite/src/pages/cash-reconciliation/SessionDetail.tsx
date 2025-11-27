@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, DollarSign, TrendingUp, AlertCircle } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { cashReconciliationService } from '../../services/cashReconciliation.service'
 
 export default function SessionDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,25 +10,7 @@ export default function SessionDetail() {
 
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', id],
-    queryFn: async () => {
-      // Mock data - replace with actual API call
-      return {
-        id,
-        session_number: 'CS-2024-001',
-        agent_id: 'agent-1',
-        agent_name: 'John Doe',
-        start_time: '2024-01-15T08:00:00',
-        end_time: '2024-01-15T17:00:00',
-        opening_balance: 5000,
-        closing_balance: 12500,
-        expected_balance: 12300,
-        variance: 200,
-        status: 'closed',
-        total_collections: 7500,
-        total_deposits: 7300,
-        notes: 'All collections verified'
-      }
-    },
+    queryFn: () => cashReconciliationService.getSession(id!),
   })
 
   if (isLoading) {
