@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../services/finance.service'
 
 interface InvoiceFormData {
   issue_date: string
@@ -19,16 +20,7 @@ export default function InvoiceEdit() {
 
   const { data: invoice, isLoading } = useQuery({
     queryKey: ['invoice', id],
-    queryFn: async () => {
-      return {
-        id,
-        issue_date: '2024-01-15',
-        due_date: '2024-02-15',
-        subtotal: 10000,
-        tax: 1500,
-        notes: 'Payment plan agreed'
-      }
-    },
+    queryFn: () => financeService.getInvoice(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<InvoiceFormData>({
