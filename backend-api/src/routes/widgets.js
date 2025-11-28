@@ -319,7 +319,7 @@ router.get('/:widgetId/data', authenticateToken, async (req, res) => {
         const kpis = await new Promise((resolve, reject) => {
           Promise.all([
             new Promise((res, rej) => db.get('SELECT COUNT(*) as count FROM orders WHERE status = "pending"', [], (e, r) => e ? rej(e) : res(r))),
-            new Promise((res, rej) => db.get('SELECT SUM(total_amount) as revenue FROM orders WHERE order_date >= date("now", "-30 days")', [], (e, r) => e ? rej(e) : res(r))),
+            new Promise((res, rej) => db.get('SELECT SUM(total_amount) as revenue FROM orders WHERE order_date >= CURRENT_DATE - INTERVAL \'30 days\'', [], (e, r) => e ? rej(e) : res(r))),
             new Promise((res, rej) => db.get('SELECT COUNT(*) as count FROM customers WHERE status = "active"', [], (e, r) => e ? rej(e) : res(r))),
             new Promise((res, rej) => db.get('SELECT COUNT(*) as count FROM products WHERE status = "active"', [], (e, r) => e ? rej(e) : res(r)))
           ])

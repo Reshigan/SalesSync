@@ -919,7 +919,7 @@ router.get('/:id/sales-data', async (req, res) => {
       new Promise((resolve, reject) => {
         db.all(
           `SELECT 
-            strftime('${dateFormat}', o.order_date) as period,
+            TO_CHAR(o.order_date, '${dateFormat}') as period,
             COUNT(DISTINCT o.id) as order_count,
             SUM(oi.quantity) as total_quantity,
             SUM(oi.quantity * oi.unit_price) as total_revenue,

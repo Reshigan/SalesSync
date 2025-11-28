@@ -175,6 +175,24 @@ io.on('connection', (socket) => {
 // Make io available to routes
 app.set('io', io);
 
+// Database health check endpoint (no auth required)
+const dbHealthRoutes = require('./routes/db-health');
+app.use('/api/db', dbHealthRoutes);
+
+// RBAC endpoints
+const rbacRoutes = require('./routes/rbac');
+app.use('/api/rbac', authTenantMiddleware, rbacRoutes);
+
+const gpsRoutes = require('./routes/gps-tracking');
+app.use('/api/gps', authTenantMiddleware, gpsRoutes);
+
+// Audit logging endpoints
+const auditRoutes = require('./routes/audit-logs');
+app.use('/api/audit-logs', authTenantMiddleware, auditRoutes);
+
+const analyticsRoutesNew = require('./routes/analytics');
+app.use('/api/analytics-new', authTenantMiddleware, analyticsRoutesNew);
+
 // Request logging
 app.use(expressWinston.logger({
   winstonInstance: logger,
