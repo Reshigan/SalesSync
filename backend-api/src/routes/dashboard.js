@@ -1019,9 +1019,9 @@ router.get('/orders', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(total_amount), 0) as total_value,
         COALESCE(AVG(total_amount), 0) as avg_value
       FROM orders
-      WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
+        WHERE tenant_id = ?
+        AND EXTRACT(YEAR FROM order_date) = ?
+        AND EXTRACT(MONTH FROM order_date) = ?
     `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
 
     // Today's Orders
