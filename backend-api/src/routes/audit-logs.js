@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { asyncHandler } = require('../middleware/errorHandler');
 
-router.post('/location', asyncHandler(async (req, res) => {
-  res.json({ success: true, data: { id: '123' } });
+router.get('/', asyncHandler(async (req, res) => {
+  res.json({ success: true, data: [] });
 }));
 
 module.exports = router;
