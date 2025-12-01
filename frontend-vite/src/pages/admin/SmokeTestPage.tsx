@@ -11,11 +11,29 @@ interface RouteTest {
   loadTime?: number
 }
 
+interface ApiHealthCheck {
+  name: string
+  endpoint: string
+  status: 'pending' | 'loading' | 'success' | 'error'
+  error?: string
+  loadTime?: number
+  responseData?: any
+}
+
+interface ConsoleError {
+  message: string
+  timestamp: number
+  stack?: string
+}
+
 export default function SmokeTestPage() {
   const { user } = useAuthStore()
   const [tests, setTests] = useState<RouteTest[]>([])
+  const [apiHealthChecks, setApiHealthChecks] = useState<ApiHealthCheck[]>([])
+  const [consoleErrors, setConsoleErrors] = useState<ConsoleError[]>([])
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [activeTab, setActiveTab] = useState<'routes' | 'api' | 'console'>('api')
 
   const providers = {
     customerId: async () => {
@@ -82,9 +100,79 @@ export default function SmokeTestPage() {
 
   useEffect(() => {
     setTests(routeRegistry.map(r => ({ ...r, status: 'pending' })))
+    
+    const healthChecks: Omit<ApiHealthCheck, 'status'>[] = [
+      { name: 'Database Health', endpoint: '/db/health' },
+      { name: 'Users API', endpoint: '/users?limit=1' },
+      { name: 'Customers API', endpoint: '/customers?limit=1' },
+      { name: 'Products API', endpoint: '/products?limit=1' },
+      { name: 'Orders API', endpoint: '/orders?limit=1' },
+      { name: 'RBAC Roles', endpoint: '/rbac/roles' },
+      { name: 'GPS Tracking', endpoint: '/gps/agents/active' },
+      { name: 'Audit Logs', endpoint: '/audit-logs?limit=1' },
+      { name: 'Analytics Sales', endpoint: '/analytics-new/sales?period=daily' },
+    ]
+    setApiHealthChecks(healthChecks.map(h => ({ ...h, status: 'pending' })))
+    
+    const originalConsoleError = console.error
+    const errors: ConsoleError[] = []
+    console.error = (...args: any[]) => {
+      errors.push({
+        message: args.map(a => String(a)).join(' '),
+        timestamp: Date.now(),
+        stack: new Error().stack
+      })
+      setConsoleErrors([...errors])
+      originalConsoleError(...args)
+    }
+    
+    return () => {
+      console.error = originalConsoleError
+    }
   }, [])
 
-  const runTests = async () => {
+  const runApiHealthChecks = async () => {
+    setRunning(true)
+    setProgress(0)
+    setConsoleErrors([])
+
+    for (let i = 0; i < apiHealthChecks.length; i++) {
+      const check = apiHealthChecks[i]
+      
+      setApiHealthChecks(prev => prev.map((c, idx) => 
+        idx === i ? { ...c, status: 'loading' } : c
+      ))
+
+      try {
+        const startTime = Date.now()
+        const response = await apiClient.get(check.endpoint)
+        const loadTime = Date.now() - startTime
+
+        setApiHealthChecks(prev => prev.map((c, idx) => 
+          idx === i ? { 
+            ...c, 
+            status: 'success', 
+            loadTime,
+            responseData: response.data 
+          } : c
+        ))
+      } catch (error: any) {
+        setApiHealthChecks(prev => prev.map((c, idx) => 
+          idx === i ? { 
+            ...c, 
+            status: 'error', 
+            error: error.message || 'Unknown error' 
+          } : c
+        ))
+      }
+
+      setProgress(((i + 1) / apiHealthChecks.length) * 100)
+    }
+
+    setRunning(false)
+  }
+
+  const runRouteTests = async () => {
     setRunning(true)
     setProgress(0)
 
@@ -132,17 +220,57 @@ export default function SmokeTestPage() {
     setRunning(false)
   }
 
-  const successCount = tests.filter(t => t.status === 'success').length
-  const errorCount = tests.filter(t => t.status === 'error').length
-  const pendingCount = tests.filter(t => t.status === 'pending').length
+  const routeSuccessCount = tests.filter(t => t.status === 'success').length
+  const routeErrorCount = tests.filter(t => t.status === 'error').length
+  const routePendingCount = tests.filter(t => t.status === 'pending').length
+  
+  const apiSuccessCount = apiHealthChecks.filter(c => c.status === 'success').length
+  const apiErrorCount = apiHealthChecks.filter(c => c.status === 'error').length
+  const apiPendingCount = apiHealthChecks.filter(c => c.status === 'pending').length
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Smoke Test - Route Registry</h1>
+        <h1 className="text-2xl font-bold text-gray-900">QA & Test Micro-Frontend</h1>
         <p className="text-gray-600 mt-2">
-          Test all {tests.length} mounted detail/edit/create routes for errors
+          Comprehensive testing suite for API health, routes, and console errors
         </p>
+      </div>
+
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('api')}
+            className={`${
+              activeTab === 'api'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            API Health Checks ({apiHealthChecks.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('routes')}
+            className={`${
+              activeTab === 'routes'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            Route Tests ({tests.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('console')}
+            className={`${
+              activeTab === 'console'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+          >
+            Console Errors ({consoleErrors.length})
+          </button>
+        </nav>
       </div>
 
       {/* Stats */}
