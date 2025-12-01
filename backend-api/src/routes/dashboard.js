@@ -36,7 +36,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
       getOneQuery('SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?', [req.tenantId, 'active']),
       getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [req.tenantId]),
       getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE', [req.tenantId]),
-      getOneQuery('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE AND order_status != "cancelled"', [req.tenantId]),
+      getOneQuery('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE AND order_status != $2', [req.tenantId, 'cancelled']),
       getOneQuery("SELECT COUNT(*) as count FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND status = ?", [req.tenantId, 'active'])
     ]);
 
@@ -48,8 +48,7 @@ router.get('/', asyncHandler(async (req, res, next) => {
         u.first_name as salesman_first_name, u.last_name as salesman_last_name
       FROM orders o
       JOIN customers c ON c.id = o.customer_id
-      LEFT JOIN users a ON a.id = o.salesman_id
-      LEFT JOIN users u ON u.id = a.user_id
+      LEFT JOIN users u ON u.id = o.salesman_id
       WHERE o.tenant_id = ?
       ORDER BY o.created_at DESC
       LIMIT 5
@@ -62,12 +61,12 @@ router.get('/', asyncHandler(async (req, res, next) => {
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales
       FROM customers c
-      LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status != 'cancelled'
-      WHERE c.tenant_id = ? AND c.status = 'active'
-      GROUP BY c.id
+      LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status != $2
+      WHERE c.tenant_id = ? AND c.status = $3
+      GROUP BY c.id, c.name, c.type
       ORDER BY total_sales DESC
       LIMIT 5
-    `, [req.tenantId]);
+    `, [req.tenantId, 'cancelled', 'active']);
 
     // Get sales by month (last 6 months)
     const salesByMonth = await getQuery(`
@@ -77,27 +76,27 @@ router.get('/', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(o.total_amount), 0) as total_sales
       FROM orders o
       WHERE o.tenant_id = ? 
-        AND o.order_status != 'cancelled'
+        AND o.order_status != $2
         AND o.order_date >= CURRENT_DATE - INTERVAL '6 month'
       GROUP BY to_char(o.order_date, 'YYYY-MM')
       ORDER BY month ASC
-    `, [req.tenantId]);
+    `, [req.tenantId, 'cancelled']);
 
     // Get agent performance
     const agentPerformance = await getQuery(`
       SELECT 
-        u.first_name, u.last_name, u.role as agent_type,
+        u.id, u.first_name, u.last_name, u.role as agent_type,
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales,
         COUNT(DISTINCT v.id) as visit_count
       FROM users u
-      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status != 'cancelled'
+      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status != $2
       LEFT JOIN visits v ON v.agent_id = u.id
-      WHERE u.tenant_id = ? AND u.status = 'active' AND u.role IN ('agent', 'sales_agent', 'field_agent')
-      GROUP BY u.id
+      WHERE u.tenant_id = ? AND u.status = $3 AND u.role IN ($4, $5, $6)
+      GROUP BY u.id, u.first_name, u.last_name, u.role
       ORDER BY total_sales DESC
       LIMIT 5
-    `, [req.tenantId]);
+    `, [req.tenantId, 'cancelled', 'active', 'agent', 'sales_agent', 'field_agent']);
 
     res.json({
       success: true,
@@ -155,19 +154,19 @@ router.get('/stats', asyncHandler(async (req, res, next) => {
         dateFilter = 'created_at::date = CURRENT_DATE';
         break;
       case 'week':
-        dateFilter = 'created_at >= date("now", "-7 days")';
+        dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'7 days\'';
         break;
       case 'month':
-        dateFilter = 'created_at >= date("now", "-1 month")';
+        dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'1 month\'';
         break;
       case 'quarter':
-        dateFilter = 'created_at >= date("now", "-3 months")';
+        dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'3 months\'';
         break;
       case 'year':
-        dateFilter = 'created_at >= date("now", "-1 year")';
+        dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'1 year\'';
         break;
       default:
-        dateFilter = 'created_at >= date("now", "-1 month")';
+        dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'1 month\'';
     }
 
     // Get period statistics
@@ -288,7 +287,7 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
       SELECT 
         'visit' as type,
         v.id,
-        'VISIT-' || substr(v.id, 1, 8) as reference,
+        'VISIT-' || substring(v.id::text, 1, 8) as reference,
         'Customer visit completed' as description,
         c.name as customer_name,
         u.first_name || ' ' || u.last_name as agent_name,
@@ -310,14 +309,14 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
       SELECT 
         'van_load' as type,
         vl.id,
-        'VL-' || substr(vl.id, 1, 8) as reference,
+        'VL-' || substring(vl.id::text, 1, 8) as reference,
         'Van loaded for the day' as description,
         NULL as customer_name,
         u.first_name || ' ' || u.last_name as agent_name,
         vl.cash_float as amount,
         vl.status,
         vl.created_at as timestamp,
-        'Van loaded by ' || u.first_name || ' ' || u.last_name || ' on ' || date(vl.load_date) as detail
+        'Van loaded by ' || u.first_name || ' ' || u.last_name || ' on ' || vl.load_date::text as detail
       FROM van_loads vl
       JOIN users a ON a.id = vl.salesman_id
       JOIN users u ON u.id = a.user_id
@@ -1020,9 +1019,9 @@ router.get('/orders', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(total_amount), 0) as total_value,
         COALESCE(AVG(total_amount), 0) as avg_value
       FROM orders
-      WHERE tenant_id = ?
-      AND strftime('%Y', order_date) = ?
-      AND strftime('%m', order_date) = ?
+        WHERE tenant_id = ?
+        AND EXTRACT(YEAR FROM order_date) = ?
+        AND EXTRACT(MONTH FROM order_date) = ?
     `, [tenantId, currentYear.toString(), currentMonth.toString().padStart(2, '0')]);
 
     // Today's Orders

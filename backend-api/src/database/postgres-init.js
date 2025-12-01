@@ -38,13 +38,25 @@ function convertPlaceholders(sql) {
   return sql.replace(/\?/g, () => `$${index++}`);
 }
 
-// Execute SQL query
+// Execute SQL query with enhanced error logging
 async function runQuery(sql, params = []) {
   const client = await getDatabase().connect();
   try {
     const pgSql = convertPlaceholders(sql);
     const result = await client.query(pgSql, params);
     return result;
+  } catch (error) {
+    console.error('=== PostgreSQL Query Error ===');
+    console.error('Error Code:', error.code);
+    console.error('Error Message:', error.message);
+    console.error('Error Detail:', error.detail);
+    console.error('Error Hint:', error.hint);
+    console.error('Error Position:', error.position);
+    console.error('Query:', pgSql);
+    console.error('Params:', JSON.stringify(params));
+    console.error('Stack:', error.stack);
+    console.error('=============================');
+    throw error;
   } finally {
     client.release();
   }

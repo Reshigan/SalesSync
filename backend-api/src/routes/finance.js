@@ -428,13 +428,13 @@ router.get('/summary', asyncHandler(async (req, res) => {
   // Calculate date filter based on period
   let dateFilter = '';
   if (period === 'day') {
-    dateFilter = "AND date(invoice_date) = CURRENT_DATE";
+    dateFilter = "AND invoice_date::date = CURRENT_DATE";
   } else if (period === 'week') {
-    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '7 day'";
+    dateFilter = "AND invoice_date >= CURRENT_DATE - INTERVAL '7 day'";
   } else if (period === 'month') {
-    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '30 day'";
+    dateFilter = "AND invoice_date >= CURRENT_DATE - INTERVAL '30 day'";
   } else if (period === 'year') {
-    dateFilter = "AND date(invoice_date) >= CURRENT_DATE - INTERVAL '365 day'";
+    dateFilter = "AND invoice_date >= CURRENT_DATE - INTERVAL '365 day'";
   }
 
   // Get invoice summary
