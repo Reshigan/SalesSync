@@ -56,10 +56,16 @@ class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
-    const response = await apiClient.post<RefreshTokenResponse>('/auth/refresh', {
-      refresh_token: refreshToken,
+    const response = await apiClient.post('/auth/refresh', {
+      refreshToken: refreshToken,
     })
-    return response.data
+    
+    const apiData = response.data.data || response.data
+    
+    return {
+      access_token: apiData.token || apiData.access_token,
+      expires_in: apiData.expires_in || 86400, // Default 24 hours
+    }
   }
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<void> {
