@@ -35,20 +35,18 @@ router.get('/collections', async (req, res) => {
     let sql = `SELECT cc.*, u.first_name || ' ' || u.last_name as agent_name, r.route_number FROM cash_collections cc
       LEFT JOIN users u ON cc.agent_id = u.id
       LEFT JOIN van_sales_routes r ON cc.route_id = r.id
-      WHERE cc.tenant_id = $1`;
+      WHERE cc.tenant_id = ?`;
     const params = [tenantId];
 
     if (agent_id) { sql += ' AND cc.agent_id = ?'; params.push(agent_id); }
-    if (from_date) { sql += ' AND cc.collection_date >= $1'; params.push(from_date); }
+    if (from_date) { sql += ' AND cc.collection_date >= ?'; params.push(from_date); }
     if (to_date) { sql += ' AND cc.collection_date <= ?'; params.push(to_date); }
     if (status) { sql += ' AND cc.status = ?'; params.push(status); }
 
     sql += ' ORDER BY cc.collection_date DESC';
 
-    db.all(sql, params, (err, rows) => {
-      if (err) return res.status(500).json({ error: 'Failed to fetch collections' });
-      res.json({ success: true, data: rows || [] });
-    });
+    const rows = await getQuery(sql, params);
+    res.json({ success: true, data: rows || [] });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -66,14 +64,11 @@ router.post('/collections', async (req, res) => {
     }
 
     const receiptNumber = `RCPT-${Date.now()}`;
-    db.run(`INSERT INTO cash_collections (tenant_id, receipt_number, route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes, status, created_by, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, CURRENT_TIMESTAMP)`,
-      [tenantId, receiptNumber, route_id, agent_id, customer_id, collection_date || new Date().toISOString().split('T')[0], amount, payment_method || 'cash', reference, notes, userId],
-      function(err) {
-        if (err) return res.status(500).json({ error: 'Failed to record collection' });
-        res.status(201).json({ success: true, data: { id: this.lastID, receipt_number: receiptNumber } });
-      }
+    const result = await runQuery(`INSERT INTO cash_collections (tenant_id, receipt_number, route_id, agent_id, customer_id, collection_date, amount, payment_method, reference, notes, status, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
+      [tenantId, receiptNumber, route_id, agent_id, customer_id, collection_date || new Date().toISOString().split('T')[0], amount, payment_method || 'cash', reference, notes, userId]
     );
+    res.status(201).json({ success: true, data: { id: result.lastID, receipt_number: receiptNumber } });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -89,14 +84,11 @@ router.post('/reconciliations', async (req, res) => {
     const refNumber = `REC-${Date.now()}`;
     const variance = actual_cash - expected_cash;
 
-    db.run(`INSERT INTO cash_reconciliations (tenant_id, reference_number, route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance, variance_reason, denominations, status, created_by, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', $11, CURRENT_TIMESTAMP)`,
-      [tenantId, refNumber, route_id, agent_id, reconciliation_date || new Date().toISOString().split('T')[0], expected_cash, actual_cash, variance, variance_reason, JSON.stringify(denominations), userId],
-      function(err) {
-        if (err) return res.status(500).json({ error: 'Failed to create reconciliation' });
-        res.status(201).json({ success: true, data: { id: this.lastID, reference_number: refNumber, variance } });
-      }
+    const result = await runQuery(`INSERT INTO cash_reconciliations (tenant_id, reference_number, route_id, agent_id, reconciliation_date, expected_cash, actual_cash, variance, variance_reason, denominations, status, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
+      [tenantId, refNumber, route_id, agent_id, reconciliation_date || new Date().toISOString().split('T')[0], expected_cash, actual_cash, variance, variance_reason, JSON.stringify(denominations), userId]
     );
+    res.status(201).json({ success: true, data: { id: result.lastID, reference_number: refNumber, variance } });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -109,13 +101,11 @@ router.post('/reconciliations/:id/approve', async (req, res) => {
     const tenantId = req.tenantId || 1;
     const userId = req.userId || 1;
 
-    db.run(`UPDATE cash_reconciliations SET status = 'approved', approved_by = $1, approved_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3`,
-      [userId, id, tenantId],
-      function(err) {
-        if (err || this.changes === 0) return res.status(500).json({ error: 'Failed to approve reconciliation' });
-        res.json({ success: true, message: 'Reconciliation approved successfully' });
-      }
+    const result = await runQuery(`UPDATE cash_reconciliations SET status = 'approved', approved_by = ?, approved_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?`,
+      [userId, id, tenantId]
     );
+    if (result.changes === 0) return res.status(500).json({ error: 'Failed to approve reconciliation' });
+    res.json({ success: true, message: 'Reconciliation approved successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -133,14 +123,11 @@ router.post('/deposits', async (req, res) => {
     }
 
     const refNumber = `DEP-${Date.now()}`;
-    db.run(`INSERT INTO bank_deposits (tenant_id, reference_number, deposit_date, bank_name, account_number, amount, deposit_slip, notes, status, created_by, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending', $9, CURRENT_TIMESTAMP)`,
-      [tenantId, refNumber, deposit_date, bank_name, account_number, amount, deposit_slip, notes, userId],
-      function(err) {
-        if (err) return res.status(500).json({ error: 'Failed to record deposit' });
-        res.status(201).json({ success: true, data: { id: this.lastID, reference_number: refNumber } });
-      }
+    const result = await runQuery(`INSERT INTO bank_deposits (tenant_id, reference_number, deposit_date, bank_name, account_number, amount, deposit_slip, notes, status, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP)`,
+      [tenantId, refNumber, deposit_date, bank_name, account_number, amount, deposit_slip, notes, userId]
     );
+    res.status(201).json({ success: true, data: { id: result.lastID, reference_number: refNumber } });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -152,15 +139,13 @@ router.get('/summary', async (req, res) => {
     const { from_date, to_date } = req.query;
     const tenantId = req.tenantId || 1;
 
-    let sql = `SELECT SUM(amount) as total_collected, COUNT(*) as collection_count FROM cash_collections WHERE tenant_id = $1`;
+    let sql = `SELECT SUM(amount) as total_collected, COUNT(*) as collection_count FROM cash_collections WHERE tenant_id = ?`;
     const params = [tenantId];
-    if (from_date) { sql += ' AND collection_date >= $1'; params.push(from_date); }
+    if (from_date) { sql += ' AND collection_date >= ?'; params.push(from_date); }
     if (to_date) { sql += ' AND collection_date <= ?'; params.push(to_date); }
 
-    db.get(sql, params, (err, summary) => {
-      if (err) return res.status(500).json({ error: 'Failed to fetch summary' });
-      res.json({ success: true, data: summary || { total_collected: 0, collection_count: 0 } });
-    });
+    const summary = await getOneQuery(sql, params);
+    res.json({ success: true, data: summary || { total_collected: 0, collection_count: 0 } });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
