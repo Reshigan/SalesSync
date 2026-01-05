@@ -15,7 +15,7 @@ router.get('/', async (req, res) => {
         status,
         created_at
       FROM brands
-      WHERE tenant_id = $1 AND status = 'active'
+      WHERE tenant_id = ? AND status = 'active'
       ORDER BY name ASC
     `, [tenantId]);
     

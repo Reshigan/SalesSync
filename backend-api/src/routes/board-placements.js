@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow } = require('../utils/pg-helpers');
 const { getQuery, getOneQuery } = require('../utils/database');
 
@@ -15,32 +14,32 @@ router.get('/', async (req, res) => {
         c.name as customer_name,
         br.name as brand_name,
         b.name as board_name,
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM board_placements bp
       LEFT JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN brands br ON bp.brand_id = br.id
       LEFT JOIN boards b ON bp.board_id = b.id
       LEFT JOIN users u ON bp.created_by = u.id
-      WHERE bp.tenant_id = $1
+      WHERE bp.tenant_id = ?
     `;
     const params = [tenantId];
     
     if (customer_id) {
+      query += ` AND bp.customer_id = ?`;
       params.push(customer_id);
-      query += ` AND bp.customer_id = $${params.length}`;
     }
     
     if (brand_id) {
+      query += ` AND bp.brand_id = ?`;
       params.push(brand_id);
-      query += ` AND bp.brand_id = $${params.length}`;
     }
     
     if (agent_id) {
+      query += ` AND bp.created_by = ?`;
       params.push(agent_id);
-      query += ` AND bp.created_by = $${params.length}`;
     }
     
-    query += ` ORDER BY bp.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY bp.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const placements = await getQuery(query, params);
@@ -67,7 +66,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
       LEFT JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN brands br ON bp.brand_id = br.id
       LEFT JOIN boards b ON bp.board_id = b.id
-      WHERE bp.tenant_id = $1 AND bp.created_by = $2
+      WHERE bp.tenant_id = ? AND bp.created_by = ?
       ORDER BY bp.created_at DESC
     `;
 
@@ -91,13 +90,13 @@ router.get('/:id', async (req, res) => {
         c.name as customer_name,
         br.name as brand_name,
         b.name as board_name,
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM board_placements bp
       LEFT JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN brands br ON bp.brand_id = br.id
       LEFT JOIN boards b ON bp.board_id = b.id
       LEFT JOIN users u ON bp.created_by = u.id
-      WHERE bp.id = $1 AND bp.tenant_id = $2
+      WHERE bp.id = ? AND bp.tenant_id = ?
     `;
     const placement = await getOneQuery(query, [id, tenantId]);
 
