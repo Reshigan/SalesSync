@@ -23,6 +23,8 @@ export default function OrdersPage() {
   const getStatusBadge = (status: string) => {
     const statusColors = {
       pending: 'bg-yellow-100 text-yellow-800',
+      pending_approval: 'bg-orange-100 text-orange-800',
+      approved: 'bg-green-100 text-green-800',
       processing: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800',
@@ -153,6 +155,8 @@ export default function OrdersPage() {
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
+              <option value="pending_approval">Pending Approval</option>
+              <option value="approved">Approved</option>
               <option value="processing">Processing</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
