@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface CreditNote {
   id: string
@@ -17,7 +19,31 @@ export const CreditNotesPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockCreditNotes: CreditNote[] = []
+  const { data: creditNotesData, isLoading } = useQuery({
+    queryKey: ['credit-notes', statusFilter, page],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/orders-enhanced/credit-notes', {
+        params: { 
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          page, 
+          limit 
+        }
+      })
+      return response.data
+    },
+  })
+
+  const creditNotes: CreditNote[] = (creditNotesData?.data || creditNotesData?.credit_notes || []).map((n: any) => ({
+    id: n.id,
+    credit_note_number: n.credit_note_number || `CN-${n.id?.slice(0, 8)}`,
+    order_id: n.order_id,
+    order_number: n.order_number || n.order?.order_number || 'N/A',
+    customer_name: n.customer_name || n.customer?.name || 'Unknown Customer',
+    issue_date: n.issue_date || n.created_at,
+    amount: n.amount || 0,
+    reason: n.reason || '',
+    status: n.status || 'draft'
+  }))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -36,9 +62,7 @@ export const CreditNotesPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredNotes = statusFilter === 'all'
-    ? mockCreditNotes
-    : mockCreditNotes.filter(n => n.status === statusFilter)
+    const filteredNotes = creditNotes
 
   return (
     <div className="space-y-6">
@@ -61,7 +85,7 @@ export const CreditNotesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Draft Notes</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCreditNotes.filter(n => n.status === 'draft').length}
+                {creditNotes.filter(n => n.status === 'draft').length}
               </p>
             </div>
           </div>
@@ -77,7 +101,7 @@ export const CreditNotesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Issued</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCreditNotes.filter(n => n.status === 'issued').length}
+                {creditNotes.filter(n => n.status === 'issued').length}
               </p>
             </div>
           </div>
@@ -93,7 +117,7 @@ export const CreditNotesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Applied</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCreditNotes.filter(n => n.status === 'applied').length}
+                {creditNotes.filter(n => n.status === 'applied').length}
               </p>
             </div>
           </div>
@@ -109,7 +133,7 @@ export const CreditNotesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Value</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCreditNotes.reduce((sum, n) => sum + n.amount, 0))}
+                {formatCurrency(creditNotes.reduce((sum, n) => sum + n.amount, 0))}
               </p>
             </div>
           </div>

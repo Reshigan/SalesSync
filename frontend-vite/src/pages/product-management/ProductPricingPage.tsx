@@ -22,7 +22,34 @@ export const ProductPricingPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockPricing: ProductPricing[] = []
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ['product-pricing', searchTerm, page],
+    queryFn: () => productsService.getProducts({ search: searchTerm || undefined, page, limit }),
+  })
+
+  const pricing: ProductPricing[] = (productsData?.data || []).map((product: any) => {
+    const costPrice = product.cost_price || product.unit_cost || 0
+    const sellingPrice = product.selling_price || product.unit_price || 0
+    const marginAmount = sellingPrice - costPrice
+    const marginPercentage = costPrice > 0 ? (marginAmount / costPrice) * 100 : 0
+    const discountPercentage = product.discount_percentage || 0
+    const finalPrice = sellingPrice * (1 - discountPercentage / 100)
+    
+    return {
+      product_id: product.id,
+      product_name: product.name,
+      sku: product.sku || product.code || '',
+      category: product.category_name || product.category || 'Uncategorized',
+      cost_price: costPrice,
+      selling_price: sellingPrice,
+      margin_percentage: marginPercentage,
+      margin_amount: marginAmount,
+      tax_rate: product.tax_rate || 0,
+      discount_percentage: discountPercentage,
+      final_price: finalPrice,
+      last_price_change: product.updated_at
+    }
+  })
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -38,11 +65,11 @@ export const ProductPricingPage: React.FC = () => {
   }
 
   const filteredPricing = searchTerm
-    ? mockPricing.filter(p => 
+    ? pricing.filter(p => 
         p.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : mockPricing
+    : pricing
 
   return (
     <div className="space-y-6">
@@ -70,8 +97,8 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Selling Price</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.length > 0
-                  ? formatCurrency(mockPricing.reduce((sum, p) => sum + p.selling_price, 0) / mockPricing.length)
+                {pricing.length > 0
+                  ? formatCurrency(pricing.reduce((sum, p) => sum + p.selling_price, 0) / pricing.length)
                   : formatCurrency(0)}
               </p>
             </div>
@@ -88,8 +115,8 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Margin</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.length > 0
-                  ? `${(mockPricing.reduce((sum, p) => sum + p.margin_percentage, 0) / mockPricing.length).toFixed(1)}%`
+                {pricing.length > 0
+                  ? `${(pricing.reduce((sum, p) => sum + p.margin_percentage, 0) / pricing.length).toFixed(1)}%`
                   : '0%'}
               </p>
             </div>
@@ -106,7 +133,7 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Products on Discount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.filter(p => p.discount_percentage && p.discount_percentage > 0).length}
+                {pricing.filter(p => p.discount_percentage && p.discount_percentage > 0).length}
               </p>
             </div>
           </div>
@@ -122,7 +149,7 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Low Margin Products</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.filter(p => p.margin_percentage < 15).length}
+                {pricing.filter(p => p.margin_percentage < 15).length}
               </p>
             </div>
           </div>

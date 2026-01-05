@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { productsService } from '../../services/products.service'
+import { inventoryService } from '../../services/inventory.service'
 
 interface ProductInventory {
   product_id: string
@@ -24,7 +24,24 @@ export const ProductInventoryPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockInventory: ProductInventory[] = []
+  const { data: inventoryData, isLoading } = useQuery({
+    queryKey: ['product-inventory', statusFilter, page],
+    queryFn: () => inventoryService.getStock({ status: statusFilter !== 'all' ? statusFilter : undefined, page, limit }),
+  })
+
+  const inventory: ProductInventory[] = (inventoryData?.data || []).map((item: any) => ({
+    product_id: item.product_id || item.id,
+    product_name: item.product_name || item.name,
+    sku: item.product_code || item.sku || '',
+    category: item.category || 'Uncategorized',
+    current_stock: item.current_stock || item.available_stock || 0,
+    min_stock_level: item.reorder_level || 10,
+    max_stock_level: item.max_stock_level || 100,
+    reorder_point: item.reorder_level || 10,
+    stock_status: item.current_stock <= 0 ? 'out_of_stock' : item.current_stock <= (item.reorder_level || 10) ? 'low_stock' : 'in_stock',
+    last_restocked: item.last_updated || new Date().toISOString(),
+    warehouse_locations: []
+  }))
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -41,8 +58,8 @@ export const ProductInventoryPage: React.FC = () => {
   }
 
   const filteredInventory = statusFilter === 'all'
-    ? mockInventory
-    : mockInventory.filter(i => i.stock_status === statusFilter)
+    ? inventory
+    : inventory.filter(i => i.stock_status === statusFilter)
 
   return (
     <div className="space-y-6">
@@ -70,7 +87,7 @@ export const ProductInventoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">In Stock</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockInventory.filter(i => i.stock_status === 'in_stock').length}
+                {inventory.filter(i => i.stock_status === 'in_stock').length}
               </p>
             </div>
           </div>
@@ -86,7 +103,7 @@ export const ProductInventoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Low Stock</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockInventory.filter(i => i.stock_status === 'low_stock').length}
+                {inventory.filter(i => i.stock_status === 'low_stock').length}
               </p>
             </div>
           </div>
@@ -102,7 +119,7 @@ export const ProductInventoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Out of Stock</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockInventory.filter(i => i.stock_status === 'out_of_stock').length}
+                {inventory.filter(i => i.stock_status === 'out_of_stock').length}
               </p>
             </div>
           </div>
@@ -118,7 +135,7 @@ export const ProductInventoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Items</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockInventory.reduce((sum, i) => sum + i.current_stock, 0)}
+                {inventory.reduce((sum, i) => sum + i.current_stock, 0)}
               </p>
             </div>
           </div>

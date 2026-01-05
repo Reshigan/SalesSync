@@ -20,7 +20,33 @@ export const CustomerCreditManagementPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockCreditLimits: CreditLimit[] = []
+  const { data: customersData, isLoading } = useQuery({
+    queryKey: ['customer-credits', page],
+    queryFn: () => customersService.getCustomers({ page, limit }),
+  })
+
+  const creditLimits: CreditLimit[] = (customersData?.customers || []).map((c: any) => {
+    const creditLimit = c.credit_limit || 0
+    const creditUsed = c.outstanding_balance || c.credit_used || 0
+    const creditAvailable = Math.max(0, creditLimit - creditUsed)
+    const overdueAmount = c.overdue_amount || 0
+    let creditStatus: 'good' | 'warning' | 'exceeded' = 'good'
+    if (creditUsed >= creditLimit) creditStatus = 'exceeded'
+    else if (creditUsed >= creditLimit * 0.8) creditStatus = 'warning'
+    
+    return {
+      customer_id: c.id,
+      customer_name: c.name,
+      credit_limit: creditLimit,
+      credit_used: creditUsed,
+      credit_available: creditAvailable,
+      payment_terms: c.payment_terms || 30,
+      outstanding_balance: creditUsed,
+      overdue_amount: overdueAmount,
+      last_payment_date: c.last_payment_date,
+      credit_status: creditStatus
+    }
+  })
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -43,8 +69,8 @@ export const CustomerCreditManagementPage: React.FC = () => {
   }
 
   const filteredCredits = statusFilter === 'all'
-    ? mockCreditLimits
-    : mockCreditLimits.filter(c => c.credit_status === statusFilter)
+    ? creditLimits
+    : creditLimits.filter(c => c.credit_status === statusFilter)
 
   return (
     <div className="space-y-6">
@@ -72,7 +98,7 @@ export const CustomerCreditManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Credit Limit</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCreditLimits.reduce((sum, c) => sum + c.credit_limit, 0))}
+                {formatCurrency(creditLimits.reduce((sum, c) => sum + c.credit_limit, 0))}
               </p>
             </div>
           </div>
@@ -88,7 +114,7 @@ export const CustomerCreditManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Credit Used</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCreditLimits.reduce((sum, c) => sum + c.credit_used, 0))}
+                {formatCurrency(creditLimits.reduce((sum, c) => sum + c.credit_used, 0))}
               </p>
             </div>
           </div>
@@ -104,7 +130,7 @@ export const CustomerCreditManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Credit Available</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCreditLimits.reduce((sum, c) => sum + c.credit_available, 0))}
+                {formatCurrency(creditLimits.reduce((sum, c) => sum + c.credit_available, 0))}
               </p>
             </div>
           </div>
@@ -120,7 +146,7 @@ export const CustomerCreditManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Overdue Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCreditLimits.reduce((sum, c) => sum + c.overdue_amount, 0))}
+                {formatCurrency(creditLimits.reduce((sum, c) => sum + c.overdue_amount, 0))}
               </p>
             </div>
           </div>

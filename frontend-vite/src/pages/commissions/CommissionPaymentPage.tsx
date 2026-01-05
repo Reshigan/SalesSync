@@ -21,7 +21,23 @@ export const CommissionPaymentPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockPayments: CommissionPayment[] = []
+  const { data: commissionsData, isLoading } = useQuery({
+    queryKey: ['commission-payments', statusFilter, page],
+    queryFn: () => commissionsService.getCommissions({ status: statusFilter !== 'all' ? statusFilter : 'paid', page, limit }),
+  })
+
+  const payments: CommissionPayment[] = (commissionsData?.commissions || []).map((c: any) => ({
+    id: c.id,
+    agent_name: c.user?.name || c.agent_name || 'Unknown Agent',
+    agent_id: c.user_id || c.agent_id || '',
+    payment_date: c.payment_date || c.updated_at || c.created_at,
+    amount: c.commission_amount || 0,
+    payment_method: c.payment_method || 'Bank Transfer',
+    reference_number: c.reference_number || c.id?.substring(0, 8) || '',
+    status: c.status === 'paid' ? 'completed' : c.status || 'pending',
+    commission_count: 1,
+    notes: c.notes
+  }))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -40,7 +56,7 @@ export const CommissionPaymentPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredPayments = mockPayments.filter(payment => {
+  const filteredPayments = payments.filter(payment => {
     if (statusFilter !== 'all' && payment.status !== statusFilter) return false
     if (searchTerm && !payment.agent_name.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
@@ -71,7 +87,7 @@ export const CommissionPaymentPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Payments</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockPayments.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{payments.length}</p>
             </div>
           </div>
         </div>
@@ -86,7 +102,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Completed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPayments.filter(p => p.status === 'completed').length}
+                {payments.filter(p => p.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -102,7 +118,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPayments.filter(p => p.status === 'pending' || p.status === 'processing').length}
+                {payments.filter(p => p.status === 'pending' || p.status === 'processing').length}
               </p>
             </div>
           </div>
@@ -118,7 +134,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockPayments.reduce((sum, p) => sum + p.amount, 0))}
+                {formatCurrency(payments.reduce((sum, p) => sum + p.amount, 0))}
               </p>
             </div>
           </div>

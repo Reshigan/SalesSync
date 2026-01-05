@@ -20,7 +20,22 @@ export const CommissionApprovalPage: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('')
   const [showRejectModal, setShowRejectModal] = useState(false)
 
-  const mockPendingCommissions: PendingCommission[] = []
+  const { data: commissionsData, isLoading } = useQuery({
+    queryKey: ['pending-commissions'],
+    queryFn: () => commissionsService.getCommissions({ status: 'pending' }),
+  })
+
+  const pendingCommissions: PendingCommission[] = (commissionsData?.commissions || []).map((c: any) => ({
+    id: c.id,
+    agent_name: c.user?.name || c.agent_name || 'Unknown Agent',
+    agent_id: c.user_id || c.agent_id || '',
+    transaction_type: c.order_id ? 'Order' : 'Manual',
+    transaction_date: c.created_at,
+    amount: c.base_amount || 0,
+    commission_amount: c.commission_amount || 0,
+    submitted_date: c.created_at,
+    notes: c.notes
+  }))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -40,10 +55,10 @@ export const CommissionApprovalPage: React.FC = () => {
   }
 
   const toggleSelectAll = () => {
-    if (selectedCommissions.size === mockPendingCommissions.length) {
+    if (selectedCommissions.size === pendingCommissions.length) {
       setSelectedCommissions(new Set())
     } else {
-      setSelectedCommissions(new Set(mockPendingCommissions.map(c => c.id)))
+      setSelectedCommissions(new Set(pendingCommissions.map(c => c.id)))
     }
   }
 
@@ -61,7 +76,7 @@ export const CommissionApprovalPage: React.FC = () => {
     setShowRejectModal(false)
   }
 
-  const selectedTotal = mockPendingCommissions
+  const selectedTotal = pendingCommissions
     .filter(c => selectedCommissions.has(c.id))
     .reduce((sum, c) => sum + c.commission_amount, 0)
 
@@ -103,7 +118,7 @@ export const CommissionApprovalPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending Approval</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockPendingCommissions.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{pendingCommissions.length}</p>
             </div>
           </div>
         </div>
@@ -118,7 +133,7 @@ export const CommissionApprovalPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockPendingCommissions.reduce((sum, c) => sum + c.commission_amount, 0))}
+                {formatCurrency(pendingCommissions.reduce((sum, c) => sum + c.commission_amount, 0))}
               </p>
             </div>
           </div>
@@ -143,7 +158,7 @@ export const CommissionApprovalPage: React.FC = () => {
 
       {/* Pending Commissions List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {mockPendingCommissions.length === 0 ? (
+        {pendingCommissions.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -159,7 +174,7 @@ export const CommissionApprovalPage: React.FC = () => {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedCommissions.size === mockPendingCommissions.length}
+                      checked={selectedCommissions.size === pendingCommissions.length && pendingCommissions.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -188,7 +203,7 @@ export const CommissionApprovalPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {mockPendingCommissions.map((commission) => (
+                {pendingCommissions.map((commission) => (
                   <tr key={commission.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input

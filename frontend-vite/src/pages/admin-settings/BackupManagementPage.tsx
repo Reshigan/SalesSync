@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface Backup {
   id: string
@@ -14,7 +15,23 @@ interface Backup {
 export const BackupManagementPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const mockBackups: Backup[] = []
+  const { data: backupsData, isLoading } = useQuery({
+    queryKey: ['backups'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/backup/list')
+      return response.data
+    },
+  })
+
+  const backups: Backup[] = (backupsData?.backups || []).map((b: any, index: number) => ({
+    id: b.filename || `backup-${index}`,
+    name: b.filename || `Backup ${index + 1}`,
+    type: b.type || 'full',
+    size: b.sizeBytes || parseInt(b.size) || 0,
+    status: 'completed' as const,
+    created_at: b.created || new Date().toISOString(),
+    created_by: 'System'
+  }))
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -70,7 +87,7 @@ export const BackupManagementPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Backups</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockBackups.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{backups.length}</p>
             </div>
           </div>
         </div>
@@ -84,9 +101,9 @@ export const BackupManagementPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Successful</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {mockBackups.filter(b => b.status === 'completed').length}
-              </p>
+                            <p className="text-2xl font-semibold text-gray-900">
+                              {backups.filter(b => b.status === 'completed').length}
+                            </p>
             </div>
           </div>
         </div>
@@ -100,9 +117,9 @@ export const BackupManagementPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Size</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {formatFileSize(mockBackups.reduce((sum, b) => sum + b.size, 0))}
-              </p>
+                            <p className="text-2xl font-semibold text-gray-900">
+                              {formatFileSize(backups.reduce((sum, b) => sum + b.size, 0))}
+                            </p>
             </div>
           </div>
         </div>
@@ -116,11 +133,11 @@ export const BackupManagementPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Last Backup</p>
-              <p className="text-sm font-semibold text-gray-900">
-                {mockBackups.length > 0
-                  ? new Date(mockBackups[0].created_at).toLocaleDateString()
-                  : 'Never'}
-              </p>
+                            <p className="text-sm font-semibold text-gray-900">
+                              {backups.length > 0
+                                ? new Date(backups[0].created_at).toLocaleDateString()
+                                : 'Never'}
+                            </p>
             </div>
           </div>
         </div>
@@ -182,7 +199,12 @@ export const BackupManagementPage: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Backup History</h2>
         </div>
-        {mockBackups.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm text-gray-500">Loading backups...</p>
+          </div>
+        ) : backups.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -219,7 +241,7 @@ export const BackupManagementPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {mockBackups.map((backup) => (
+                {backups.map((backup) => (
                   <tr key={backup.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{backup.name}</div>
