@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import apiClient from '../../services/api'
 
 interface Integration {
   id: string
@@ -10,60 +12,38 @@ interface Integration {
   connected_at?: string
 }
 
+// Default available integrations (these are the integrations we support)
+const availableIntegrations: Omit<Integration, 'status' | 'connected_at'>[] = [
+  { id: '1', name: 'Slack', description: 'Send notifications and alerts to Slack channels', category: 'Communication', icon: '💬' },
+  { id: '2', name: 'Google Drive', description: 'Backup and sync files to Google Drive', category: 'Storage', icon: '📁' },
+  { id: '3', name: 'Mailchimp', description: 'Sync customer data with Mailchimp campaigns', category: 'Marketing', icon: '📧' },
+  { id: '4', name: 'QuickBooks', description: 'Sync financial data with QuickBooks', category: 'Accounting', icon: '💰' },
+  { id: '5', name: 'Zapier', description: 'Connect with 3000+ apps via Zapier', category: 'Automation', icon: '⚡' },
+  { id: '6', name: 'Twilio', description: 'Send SMS notifications to customers', category: 'Communication', icon: '📱' }
+]
+
 export const IntegrationsPage: React.FC = () => {
   const [showConfigModal, setShowConfigModal] = useState(false)
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null)
 
-  const mockIntegrations: Integration[] = [
-    {
-      id: '1',
-      name: 'Slack',
-      description: 'Send notifications and alerts to Slack channels',
-      category: 'Communication',
-      icon: '💬',
-      status: 'disconnected'
+  const { data: integrationsData, isLoading } = useQuery({
+    queryKey: ['integrations'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/integrations')
+      return response.data
     },
-    {
-      id: '2',
-      name: 'Google Drive',
-      description: 'Backup and sync files to Google Drive',
-      category: 'Storage',
-      icon: '📁',
-      status: 'disconnected'
-    },
-    {
-      id: '3',
-      name: 'Mailchimp',
-      description: 'Sync customer data with Mailchimp campaigns',
-      category: 'Marketing',
-      icon: '📧',
-      status: 'disconnected'
-    },
-    {
-      id: '4',
-      name: 'QuickBooks',
-      description: 'Sync financial data with QuickBooks',
-      category: 'Accounting',
-      icon: '💰',
-      status: 'disconnected'
-    },
-    {
-      id: '5',
-      name: 'Zapier',
-      description: 'Connect with 3000+ apps via Zapier',
-      category: 'Automation',
-      icon: '⚡',
-      status: 'disconnected'
-    },
-    {
-      id: '6',
-      name: 'Twilio',
-      description: 'Send SMS notifications to customers',
-      category: 'Communication',
-      icon: '📱',
-      status: 'disconnected'
+  })
+
+  // Merge available integrations with connected status from API
+  const connectedIntegrations = integrationsData?.data || integrationsData?.integrations || []
+  const integrations: Integration[] = availableIntegrations.map(available => {
+    const connected = connectedIntegrations.find((c: any) => c.name === available.name || c.id === available.id)
+    return {
+      ...available,
+      status: connected?.status || 'disconnected' as const,
+      connected_at: connected?.connected_at
     }
-  ]
+  })
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -74,7 +54,7 @@ export const IntegrationsPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const categories = Array.from(new Set(mockIntegrations.map(i => i.category)))
+  const categories = Array.from(new Set(integrations.map(i => i.category)))
 
   return (
     <div className="space-y-6">
@@ -101,7 +81,7 @@ export const IntegrationsPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Available</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockIntegrations.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{integrations.length}</p>
             </div>
           </div>
         </div>
@@ -116,7 +96,7 @@ export const IntegrationsPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Connected</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockIntegrations.filter(i => i.status === 'connected').length}
+                {integrations.filter(i => i.status === 'connected').length}
               </p>
             </div>
           </div>
@@ -145,8 +125,8 @@ export const IntegrationsPage: React.FC = () => {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {mockIntegrations
-                .filter(i => i.category === category)
+                            {integrations
+                              .filter(i => i.category === category)
                 .map((integration) => (
                   <div
                     key={integration.id}

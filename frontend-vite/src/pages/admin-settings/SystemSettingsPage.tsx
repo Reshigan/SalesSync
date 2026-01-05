@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import apiClient from '../../services/api'
 
 interface SystemSettings {
   general: {
@@ -33,43 +34,64 @@ interface SystemSettings {
   }
 }
 
+const defaultSettings: SystemSettings = {
+  general: {
+    company_name: 'SalesSync',
+    timezone: 'Africa/Johannesburg',
+    currency: 'ZAR',
+    date_format: 'DD/MM/YYYY',
+    language: 'en'
+  },
+  email: {
+    smtp_host: 'smtp.example.com',
+    smtp_port: 587,
+    smtp_username: 'noreply@example.com',
+    smtp_from_email: 'noreply@example.com',
+    smtp_from_name: 'SalesSync'
+  },
+  security: {
+    session_timeout: 30,
+    password_min_length: 8,
+    password_require_uppercase: true,
+    password_require_lowercase: true,
+    password_require_numbers: true,
+    password_require_special: true,
+    two_factor_enabled: false
+  },
+  features: {
+    enable_notifications: true,
+    enable_analytics: true,
+    enable_api_access: true,
+    enable_mobile_app: true
+  }
+}
+
 export const SystemSettingsPage: React.FC = () => {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'general' | 'email' | 'security' | 'features'>('general')
 
-  const mockSettings: SystemSettings = {
-    general: {
-      company_name: 'SalesSync',
-      timezone: 'Africa/Johannesburg',
-      currency: 'ZAR',
-      date_format: 'DD/MM/YYYY',
-      language: 'en'
+  const { data: settingsData, isLoading } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const response = await apiClient.get('/api/settings')
+      return response.data
     },
-    email: {
-      smtp_host: 'smtp.example.com',
-      smtp_port: 587,
-      smtp_username: 'noreply@example.com',
-      smtp_from_email: 'noreply@example.com',
-      smtp_from_name: 'SalesSync'
-    },
-    security: {
-      session_timeout: 30,
-      password_min_length: 8,
-      password_require_uppercase: true,
-      password_require_lowercase: true,
-      password_require_numbers: true,
-      password_require_special: true,
-      two_factor_enabled: false
-    },
-    features: {
-      enable_notifications: true,
-      enable_analytics: true,
-      enable_api_access: true,
-      enable_mobile_app: true
-    }
-  }
+  })
 
-  const [settings, setSettings] = useState(mockSettings)
+  const [settings, setSettings] = useState(defaultSettings)
+
+  // Update settings when data is loaded from API
+  useEffect(() => {
+    if (settingsData?.data || settingsData?.settings) {
+      const apiSettings = settingsData.data || settingsData.settings
+      setSettings({
+        general: { ...defaultSettings.general, ...apiSettings.general },
+        email: { ...defaultSettings.email, ...apiSettings.email },
+        security: { ...defaultSettings.security, ...apiSettings.security },
+        features: { ...defaultSettings.features, ...apiSettings.features }
+      })
+    }
+  }, [settingsData])
 
   const handleSave = () => {
     console.log('Saving settings:', settings)

@@ -20,7 +20,23 @@ export const SurveyResponsesPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockResponses: SurveyResponse[] = []
+  const { data: responsesData, isLoading } = useQuery({
+    queryKey: ['survey-responses', surveyId, page],
+    queryFn: () => surveysService.getSurveyResponses(surveyId || '', { page, limit }),
+    enabled: !!surveyId,
+  })
+
+  const surveyResponses: SurveyResponse[] = (responsesData?.data || responsesData?.responses || []).map((r: any) => ({
+    id: r.id,
+    survey_id: r.survey_id || surveyId,
+    respondent_name: r.respondent_name || r.customer_name || 'Anonymous',
+    respondent_email: r.respondent_email || r.email,
+    agent_name: r.agent_name || r.agent?.name,
+    submitted_date: r.submitted_date || r.created_at,
+    completion_time_seconds: r.completion_time_seconds || r.duration || 0,
+    responses: r.responses || r.answers || {},
+    score: r.score
+  }))
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
@@ -53,7 +69,7 @@ export const SurveyResponsesPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Responses</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockResponses.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{surveyResponses.length}</p>
             </div>
           </div>
         </div>
@@ -68,9 +84,9 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Completion Time</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.length > 0
-                  ? formatDuration(Math.round(mockResponses.reduce((sum, r) => sum + r.completion_time_seconds, 0) / mockResponses.length))
-                  : '0m 0s'}
+                                {surveyResponses.length > 0
+                                  ? formatDuration(Math.round(surveyResponses.reduce((sum, r) => sum + r.completion_time_seconds, 0) / surveyResponses.length))
+                                  : '0m 0s'}
               </p>
             </div>
           </div>
@@ -86,9 +102,9 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Score</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.length > 0
-                  ? `${(mockResponses.reduce((sum, r) => sum + (r.score || 0), 0) / mockResponses.length).toFixed(1)}/10`
-                  : '0/10'}
+                                {surveyResponses.length > 0
+                                  ? `${(surveyResponses.reduce((sum, r) => sum + (r.score || 0), 0) / surveyResponses.length).toFixed(1)}/10`
+                                  : '0/10'}
               </p>
             </div>
           </div>
@@ -104,11 +120,11 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Today's Responses</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.filter(r => {
-                  const responseDate = new Date(r.submitted_date)
-                  const today = new Date()
-                  return responseDate.toDateString() === today.toDateString()
-                }).length}
+                                {surveyResponses.filter(r => {
+                                  const responseDate = new Date(r.submitted_date)
+                                  const today = new Date()
+                                  return responseDate.toDateString() === today.toDateString()
+                                }).length}
               </p>
             </div>
           </div>
@@ -117,7 +133,7 @@ export const SurveyResponsesPage: React.FC = () => {
 
       {/* Responses List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {mockResponses.length === 0 ? (
+        {surveyResponses.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -151,7 +167,7 @@ export const SurveyResponsesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {mockResponses.map((response) => (
+                {surveyResponses.map((response) => (
                   <tr key={response.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{response.respondent_name}</div>
