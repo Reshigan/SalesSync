@@ -83,37 +83,37 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const event = db.prepare(`
+    const event = await getOneQuery(`
       SELECT e.*, u.name as organizer_name, u.phone as organizer_phone
       FROM events e
       LEFT JOIN users u ON e.organizer_id = u.id
       WHERE e.id = ?
-    `).get(id);
+    `, [id]);
     
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     // Get participants
-    const participants = db.prepare(`
+    const participants = await getQuery(`
       SELECT ep.*, u.name, u.phone, u.email, ep.attendance_status
       FROM event_participants ep
       JOIN users u ON ep.participant_id = u.id
       WHERE ep.event_id = ?
-    `).all(id);
+    `, [id]);
     
     // Get resources
-    const resources = db.prepare(`
+    const resources = await getQuery(`
       SELECT er.*, r.name as resource_name, r.type as resource_type
       FROM event_resources er
       LEFT JOIN resources r ON er.resource_id = r.id
       WHERE er.event_id = ?
-    `).all(id);
+    `, [id]);
     
     // Get performance metrics
-    const performance = db.prepare(`
+    const performance = await getOneQuery(`
       SELECT * FROM event_performance WHERE event_id = ?
-    `).get(id);
+    `, [id]);
     
     res.json({
       ...event,
@@ -156,20 +156,20 @@ router.post('/', async (req, res) => {
     }
     
     // Create event
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO events (
         title, description, type, start_date, end_date, location,
         latitude, longitude, max_participants, budget, objectives,
         target_audience, organizer_id, status, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
+    `, [
       title, description, type, start_date, end_date, location,
       latitude, longitude, max_participants, budget, objectives,
       target_audience, req.user.id, 'planning'
-    );
+    ]);
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Event created successfully'
     });
   } catch (error) {
@@ -198,13 +198,13 @@ router.put('/:id', async (req, res) => {
       status
     } = req.body;
     
-    const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+    const event = await getOneQuery('SELECT * FROM events WHERE id = ?', [id]);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     // Update event
-    db.prepare(`
+    await runQuery(`
       UPDATE events 
       SET title = COALESCE(?, title),
           description = COALESCE(?, description),
@@ -221,11 +221,11 @@ router.put('/:id', async (req, res) => {
           status = COALESCE(?, status),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(
+    `, [
       title, description, type, start_date, end_date, location,
       latitude, longitude, max_participants, budget, objectives,
       target_audience, status, id
-    );
+    ]);
     
     res.json({ message: 'Event updated successfully' });
   } catch (error) {
@@ -245,21 +245,21 @@ router.post('/:id/participants', async (req, res) => {
     }
     
     // Check if event exists
-    const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+    const event = await getOneQuery('SELECT * FROM events WHERE id = ?', [id]);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     // Check if participant exists
-    const participant = db.prepare('SELECT * FROM users WHERE id = ?').get(participant_id);
+    const participant = await getOneQuery('SELECT * FROM users WHERE id = ?', [participant_id]);
     if (!participant) {
       return res.status(404).json({ error: 'Participant not found' });
     }
     
     // Check if already registered
-    const existing = db.prepare(`
+    const existing = await getOneQuery(`
       SELECT * FROM event_participants WHERE event_id = ? AND participant_id = ?
-    `).get(id, participant_id);
+    `, [id, participant_id]);
     
     if (existing) {
       return res.status(400).json({ error: 'Participant already registered for this event' });
@@ -267,9 +267,9 @@ router.post('/:id/participants', async (req, res) => {
     
     // Check capacity
     if (event.max_participants) {
-      const currentCount = db.prepare(`
+      const currentCount = await getOneQuery(`
         SELECT COUNT(*) as count FROM event_participants WHERE event_id = ?
-      `).get(id);
+      `, [id]);
       
       if (currentCount.count >= event.max_participants) {
         return res.status(400).json({ error: 'Event is at maximum capacity' });
@@ -277,14 +277,14 @@ router.post('/:id/participants', async (req, res) => {
     }
     
     // Add participant
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO event_participants (
         event_id, participant_id, role, notes, attendance_status, registered_at
       ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(id, participant_id, role, notes, 'registered');
+    `, [id, participant_id, role, notes, 'registered']);
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Participant added successfully'
     });
   } catch (error) {
@@ -305,14 +305,14 @@ router.patch('/:id/participants/:participantId/attendance', async (req, res) => 
     }
     
     // Update attendance
-    const result = db.prepare(`
+    const result = await runQuery(`
       UPDATE event_participants 
       SET attendance_status = ?, 
           check_in_time = COALESCE(?, check_in_time),
           check_out_time = COALESCE(?, check_out_time),
           notes = COALESCE(?, notes)
       WHERE event_id = ? AND participant_id = ?
-    `).run(attendance_status, check_in_time, check_out_time, notes, id, participantId);
+    `, [attendance_status, check_in_time, check_out_time, notes, id, participantId]);
     
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Participant not found for this event' });
@@ -336,20 +336,20 @@ router.post('/:id/resources', async (req, res) => {
     }
     
     // Check if event exists
-    const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+    const event = await getOneQuery('SELECT * FROM events WHERE id = ?', [id]);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     // Allocate resource
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO event_resources (
         event_id, resource_id, quantity, notes, allocated_at
       ) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(id, resource_id, quantity, notes);
+    `, [id, resource_id, quantity, notes]);
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Resource allocated successfully'
     });
   } catch (error) {
@@ -378,7 +378,7 @@ router.get('/analytics/summary', async (req, res) => {
     }
     
     // Event statistics
-    const eventStats = db.prepare(`
+    const eventStats = await getOneQuery(`
       SELECT 
         COUNT(*) as total_events,
         COUNT(CASE WHEN e.status = 'completed' THEN 1 END) as completed_events,
@@ -388,10 +388,10 @@ router.get('/analytics/summary', async (req, res) => {
         AVG(e.budget) as avg_budget
       FROM events e
       WHERE 1=1 ${dateFilter} ${typeFilter}
-    `).get(...params);
+    `, params);
     
     // Participation statistics
-    const participationStats = db.prepare(`
+    const participationStats = await getOneQuery(`
       SELECT 
         COUNT(DISTINCT ep.participant_id) as total_participants,
         COUNT(CASE WHEN ep.attendance_status = 'checked_in' THEN 1 END) as attended,
@@ -400,10 +400,10 @@ router.get('/analytics/summary', async (req, res) => {
       FROM event_participants ep
       JOIN events e ON ep.event_id = e.id
       WHERE 1=1 ${dateFilter} ${typeFilter}
-    `).get(...params);
+    `, params);
     
     // Event types breakdown
-    const typeBreakdown = db.prepare(`
+    const typeBreakdown = await getQuery(`
       SELECT 
         e.type,
         COUNT(*) as event_count,
@@ -414,7 +414,7 @@ router.get('/analytics/summary', async (req, res) => {
       WHERE 1=1 ${dateFilter} ${typeFilter}
       GROUP BY e.type
       ORDER BY event_count DESC
-    `).all(...params);
+    `, params);
     
     res.json({
       event_stats: eventStats,
@@ -441,17 +441,17 @@ router.post('/:id/performance', async (req, res) => {
     } = req.body;
     
     // Check if event exists
-    const event = db.prepare('SELECT * FROM events WHERE id = ?').get(id);
+    const event = await getOneQuery('SELECT * FROM events WHERE id = ?', [id]);
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
     
     // Insert or update performance record
-    const existing = db.prepare('SELECT * FROM event_performance WHERE event_id = ?').get(id);
+    const existing = await getOneQuery('SELECT * FROM event_performance WHERE event_id = ?', [id]);
     
     if (existing) {
       // Update existing record
-      db.prepare(`
+      await runQuery(`
         UPDATE event_performance 
         SET attendance_count = COALESCE(?, attendance_count),
             satisfaction_score = COALESCE(?, satisfaction_score),
@@ -461,21 +461,21 @@ router.post('/:id/performance', async (req, res) => {
             follow_up_actions = COALESCE(?, follow_up_actions),
             updated_at = CURRENT_TIMESTAMP
         WHERE event_id = ?
-      `).run(
+      `, [
         attendance_count, satisfaction_score, objectives_met,
         feedback_summary, roi_score, follow_up_actions, id
-      );
+      ]);
     } else {
       // Create new record
-      db.prepare(`
+      await runQuery(`
         INSERT INTO event_performance (
           event_id, attendance_count, satisfaction_score, objectives_met,
           feedback_summary, roi_score, follow_up_actions, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `).run(
+      `, [
         id, attendance_count, satisfaction_score, objectives_met,
         feedback_summary, roi_score, follow_up_actions
-      );
+      ]);
     }
     
     res.json({ message: 'Event performance recorded successfully' });
