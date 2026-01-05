@@ -68,7 +68,7 @@ router.post('/process', asyncHandler(async (req, res) => {
     `INSERT INTO payments (
       tenant_id, customer_id, invoice_id, payment_date,
       amount, payment_method, reference_number, notes, status
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       tenantId,
       customerId,
@@ -83,7 +83,7 @@ router.post('/process', asyncHandler(async (req, res) => {
   );
 
   const payment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = $1',
+    'SELECT * FROM payments WHERE id = ?',
     [result.lastID]
   );
 
@@ -102,27 +102,26 @@ router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { customerId, status, startDate, endDate, limit = 50, offset = 0 } = req.query;
 
-  let whereClause = 'WHERE p.tenant_id = $1';
+  let whereClause = 'WHERE p.tenant_id = ?';
   let params = [tenantId];
-  let paramIndex = 1;
 
   if (customerId) {
-    whereClause += ` AND p.customer_id = $${++paramIndex}`;
+    whereClause += ` AND p.customer_id = ?`;
     params.push(customerId);
   }
 
   if (status) {
-    whereClause += ` AND p.status = $${++paramIndex}`;
+    whereClause += ` AND p.status = ?`;
     params.push(status);
   }
 
   if (startDate) {
-    whereClause += ` AND p.payment_date >= $${++paramIndex}`;
+    whereClause += ` AND p.payment_date >= ?`;
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClause += ` AND p.payment_date <= $${++paramIndex}`;
+    whereClause += ` AND p.payment_date <= ?`;
     params.push(endDate);
   }
 
@@ -134,7 +133,7 @@ router.get('/', asyncHandler(async (req, res) => {
     LEFT JOIN customers c ON p.customer_id = c.id
     ${whereClause}
     ORDER BY p.payment_date DESC
-    LIMIT $${++paramIndex} OFFSET $${++paramIndex}
+    LIMIT ? OFFSET ?
   `;
   params.push(parseInt(limit), parseInt(offset));
 
@@ -171,7 +170,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     FROM payments p
     LEFT JOIN customers c ON p.customer_id = c.id
     LEFT JOIN invoices i ON p.invoice_id = i.id
-    WHERE p.id = $1 AND p.tenant_id = $2`,
+    WHERE p.id = ? AND p.tenant_id = ?`,
     [id, tenantId]
   );
 
@@ -193,7 +192,7 @@ router.post('/:id/refund', asyncHandler(async (req, res) => {
   const { amount, reason } = req.body;
 
   const payment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = $1 AND tenant_id = $2',
+    'SELECT * FROM payments WHERE id = ? AND tenant_id = ?',
     [id, tenantId]
   );
 
@@ -223,13 +222,13 @@ router.post('/:id/refund', asyncHandler(async (req, res) => {
   await runQuery(
     `UPDATE payments 
      SET status = 'refunded', 
-         notes = COALESCE(notes, '') || '\nRefund: ' || $1 || ' Amount: ' || $2
-     WHERE id = $3`,
+         notes = COALESCE(notes, '') || '\nRefund: ' || ? || ' Amount: ' || ?
+     WHERE id = ?`,
     [reason || 'No reason provided', refundAmount, id]
   );
 
   const updatedPayment = await getOneQuery(
-    'SELECT * FROM payments WHERE id = $1',
+    'SELECT * FROM payments WHERE id = ?',
     [id]
   );
 
@@ -248,17 +247,16 @@ router.get('/tenant/stats', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const { startDate, endDate } = req.query;
 
-  let whereClause = 'WHERE tenant_id = $1';
+  let whereClause = 'WHERE tenant_id = ?';
   let params = [tenantId];
-  let paramIndex = 1;
 
   if (startDate) {
-    whereClause += ` AND payment_date >= $${++paramIndex}`;
+    whereClause += ` AND payment_date >= ?`;
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClause += ` AND payment_date <= $${++paramIndex}`;
+    whereClause += ` AND payment_date <= ?`;
     params.push(endDate);
   }
 
@@ -302,7 +300,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         AVG(amount) as avg_payment,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_payments,
         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments
-      FROM payments WHERE tenant_id = $1
+      FROM payments WHERE tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
@@ -310,19 +308,19 @@ router.get('/stats', asyncHandler(async (req, res) => {
         payment_method,
         COUNT(*) as count,
         SUM(amount) as total_amount
-      FROM payments WHERE tenant_id = $1
+      FROM payments WHERE tenant_id = ?
       GROUP BY payment_method
       ORDER BY total_amount DESC
     `, [tenantId]),
     
     getQuery(`
       SELECT 
-        payment_date::date as date,
+        DATE(payment_date) as date,
         COUNT(*) as payment_count,
         SUM(amount) as daily_total
       FROM payments
-      WHERE tenant_id = $1 AND payment_date >= CURRENT_DATE - INTERVAL '30 days'
-      GROUP BY payment_date::date
+      WHERE tenant_id = ? AND payment_date >= DATE('now', '-30 days')
+      GROUP BY DATE(payment_date)
       ORDER BY date DESC
     `, [tenantId])
   ]);
@@ -351,7 +349,7 @@ router.get('/:paymentId/allocations', asyncHandler(async (req, res) => {
     FROM payment_allocations pa
     LEFT JOIN invoices i ON pa.invoice_id = i.id
     JOIN payments p ON pa.payment_id = p.id
-    WHERE pa.payment_id = $1 AND p.tenant_id = $2
+    WHERE pa.payment_id = ? AND p.tenant_id = ?
     ORDER BY pa.created_at
   `, [paymentId, tenantId]);
   
@@ -372,7 +370,7 @@ router.get('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res
     FROM payment_allocations pa
     LEFT JOIN invoices i ON pa.invoice_id = i.id
     JOIN payments p ON pa.payment_id = p.id
-    WHERE pa.id = $1 AND pa.payment_id = $2 AND p.tenant_id = $3
+    WHERE pa.id = ? AND pa.payment_id = ? AND p.tenant_id = ?
   `, [allocationId, paymentId, tenantId]);
   
   if (!allocation) {
@@ -394,7 +392,7 @@ router.put('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res
   const existingAllocation = await getOneQuery(
     `SELECT pa.* FROM payment_allocations pa
      JOIN payments p ON pa.payment_id = p.id
-     WHERE pa.id = $1 AND pa.payment_id = $2 AND p.tenant_id = $3`,
+     WHERE pa.id = ? AND pa.payment_id = ? AND p.tenant_id = ?`,
     [allocationId, paymentId, tenantId]
   );
   
@@ -408,10 +406,10 @@ router.put('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res
   if (notes !== undefined) updateData.notes = notes;
   
   if (Object.keys(updateData).length > 0) {
-    const setClause = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ');
+    const setClause = Object.keys(updateData).map((k) => `${k} = ?`).join(', ');
     await runQuery(
       `UPDATE payment_allocations SET ${setClause}, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $${Object.keys(updateData).length + 1}`,
+       WHERE id = ?`,
       [...Object.values(updateData), allocationId]
     );
   }
@@ -420,7 +418,7 @@ router.put('/:paymentId/allocations/:allocationId', asyncHandler(async (req, res
     SELECT pa.*, i.invoice_number, i.total_amount as invoice_total
     FROM payment_allocations pa
     LEFT JOIN invoices i ON pa.invoice_id = i.id
-    WHERE pa.id = $1
+    WHERE pa.id = ?
   `, [allocationId]);
   
   res.json({
@@ -439,7 +437,7 @@ router.get('/:paymentId/status-history', asyncHandler(async (req, res) => {
     SELECT psh.*, u.name as changed_by_name, u.email as changed_by_email
     FROM payment_status_history psh
     LEFT JOIN users u ON psh.changed_by = u.id
-    WHERE psh.payment_id = $1 AND psh.tenant_id = $2
+    WHERE psh.payment_id = ? AND psh.tenant_id = ?
     ORDER BY psh.created_at DESC
   `, [paymentId, tenantId]);
   

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
@@ -81,14 +81,14 @@ router.get('/visits', requireFunction('merchandising', 'view'), async (req, res)
     }
     
     if (start_date && end_date) {
-      query += ' AND mv.visit_date::date BETWEEN ? AND ?';
+      query += ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
     query += ' GROUP BY mv.id ORDER BY mv.visit_date DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
     
-    const visits = await db.all(query, params);
+    const visits = await getQuery(query, params);
     
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM merchandising_visits WHERE tenant_id = ?';
@@ -110,11 +110,11 @@ router.get('/visits', requireFunction('merchandising', 'view'), async (req, res)
     }
     
     if (start_date && end_date) {
-      countQuery += ' AND visit_date::date BETWEEN ? AND ?';
+      countQuery += ' AND DATE(visit_date) BETWEEN ? AND ?';
       countParams.push(start_date, end_date);
     }
     
-    const { total } = await db.get(countQuery, countParams);
+    const { total } = await getOneQuery(countQuery, countParams);
     
     res.json({
       success: true,
@@ -146,7 +146,7 @@ router.post('/visits', requireFunction('merchandising', 'create'), async (req, r
     
     const visitId = require('crypto').randomBytes(16).toString('hex');
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO merchandising_visits (
         id, tenant_id, merchandiser_id, customer_id, visit_type, notes
       ) VALUES (?, ?, ?, ?, ?, ?)
@@ -159,7 +159,7 @@ router.post('/visits', requireFunction('merchandising', 'create'), async (req, r
       notes
     ]);
     
-    const visit = await db.get(`
+    const visit = await getOneQuery(`
       SELECT 
         mv.*,
         a.name as merchandiser_name,
@@ -183,7 +183,7 @@ router.post('/visits', requireFunction('merchandising', 'create'), async (req, r
 // Get specific visit details
 router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, res) => {
   try {
-    const visit = await db.get(`
+    const visit = await getOneQuery(`
       SELECT 
         mv.*,
         a.name as merchandiser_name,
@@ -200,7 +200,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
     }
     
     // Get shelf share data
-    const shelfShareData = await db.all(`
+    const shelfShareData = await getQuery(`
       SELECT 
         ssd.*,
         p.name as product_name,
@@ -214,7 +214,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
     `, [req.params.id, req.user.tenantId]);
     
     // Get competitor data
-    const competitorData = await db.all(`
+    const competitorData = await getQuery(`
       SELECT 
         csd.*,
         cp.competitor_name,
@@ -227,7 +227,7 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
     `, [req.params.id, req.user.tenantId]);
     
     // Get planogram compliance
-    const compliance = await db.all(`
+    const compliance = await getQuery(`
       SELECT 
         pc.*,
         p.planogram_name
@@ -238,21 +238,21 @@ router.get('/visits/:id', requireFunction('merchandising', 'view'), async (req, 
     `, [req.params.id, req.user.tenantId]);
     
     // Get KPIs
-    const kpis = await db.all(`
+    const kpis = await getQuery(`
       SELECT * FROM merchandising_kpis
       WHERE visit_id = ? AND tenant_id = ?
       ORDER BY recorded_at DESC
     `, [req.params.id, req.user.tenantId]);
     
     // Get photos
-    const photos = await db.all(`
+    const photos = await getQuery(`
       SELECT * FROM merchandising_photos
       WHERE visit_id = ? AND tenant_id = ?
       ORDER BY uploaded_at DESC
     `, [req.params.id, req.user.tenantId]);
     
     // Get price monitoring
-    const priceData = await db.all(`
+    const priceData = await getQuery(`
       SELECT 
         pm.*,
         p.name as product_name,
@@ -326,7 +326,7 @@ router.post('/visits/:id/shelf-share', requireFunction('merchandising', 'create'
       
       const recordId = require('crypto').randomBytes(16).toString('hex');
       
-      await db.run(`
+      await runQuery(`
         INSERT INTO shelf_share_data (
           id, tenant_id, visit_id, product_id, category_id, shelf_space_cm,
           total_category_space_cm, position_level, position_order, facing_count,
@@ -371,7 +371,7 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND mv.visit_date::date BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -395,7 +395,7 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     
     categoryQuery += ' GROUP BY ssd.category_id ORDER BY avg_shelf_share DESC';
     
-    const categoryData = await db.all(categoryQuery, params);
+    const categoryData = await getQuery(categoryQuery, params);
     
     // Product performance
     let productQuery = `
@@ -422,10 +422,10 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     
     productQuery += ' GROUP BY ssd.product_id ORDER BY avg_shelf_share DESC LIMIT 20';
     
-    const productData = await db.all(productQuery, productParams);
+    const productData = await getQuery(productQuery, productParams);
     
     // Position analysis
-    const positionAnalysis = await db.all(`
+    const positionAnalysis = await getQuery(`
       SELECT 
         position_level,
         AVG(shelf_share_percentage) as avg_shelf_share,
@@ -439,15 +439,15 @@ router.get('/analytics/shelf-share', requireFunction('merchandising', 'view'), a
     `, params);
     
     // Trend analysis
-    const trendAnalysis = await db.all(`
+    const trendAnalysis = await getQuery(`
       SELECT 
-        mv.visit_date::date as visit_date,
+        DATE(mv.visit_date) as visit_date,
         AVG(ssd.shelf_share_percentage) as avg_shelf_share,
         COUNT(DISTINCT mv.customer_id) as stores_visited
       FROM shelf_share_data ssd
       JOIN merchandising_visits mv ON ssd.visit_id = mv.id
       WHERE ssd.tenant_id = ?${dateFilter}
-      GROUP BY mv.visit_date::date
+      GROUP BY DATE(mv.visit_date)
       ORDER BY visit_date DESC
       LIMIT 30
     `, params);
@@ -476,7 +476,7 @@ router.get('/analytics/competitors', requireFunction('merchandising', 'view'), a
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND mv.visit_date::date BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(mv.visit_date) BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
@@ -501,10 +501,10 @@ router.get('/analytics/competitors', requireFunction('merchandising', 'view'), a
     
     competitorQuery += ' GROUP BY cp.competitor_name ORDER BY avg_shelf_space DESC';
     
-    const competitorData = await db.all(competitorQuery, params);
+    const competitorData = await getQuery(competitorQuery, params);
     
     // Price comparison
-    const priceComparison = await db.all(`
+    const priceComparison = await getQuery(`
       SELECT 
         cp.competitor_name,
         cp.product_name,
@@ -554,7 +554,7 @@ router.post('/visits/:id/photos', requireFunction('merchandising', 'create'), up
       
       const photoId = require('crypto').randomBytes(16).toString('hex');
       
-      await db.run(`
+      await runQuery(`
         INSERT INTO merchandising_photos (
           id, tenant_id, visit_id, photo_type, file_path, file_name,
           file_size, description
@@ -594,7 +594,7 @@ router.put('/visits/:id/complete', requireFunction('merchandising', 'edit'), asy
   try {
     const { duration_minutes, notes } = req.body;
     
-    await db.run(`
+    await runQuery(`
       UPDATE merchandising_visits 
       SET status = 'completed', completed_at = CURRENT_TIMESTAMP, duration_minutes = ?, notes = ?
       WHERE id = ? AND tenant_id = ?
@@ -616,12 +616,12 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
     let params = [req.user.tenantId];
     
     if (start_date && end_date) {
-      dateFilter = ' AND visit_date::date BETWEEN ? AND ?';
+      dateFilter = ' AND DATE(visit_date) BETWEEN ? AND ?';
       params.push(start_date, end_date);
     }
     
     // Visit statistics
-    const visitStats = await db.get(`
+    const visitStats = await getOneQuery(`
       SELECT 
         COUNT(*) as total_visits,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_visits,
@@ -632,7 +632,7 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
     `, params);
     
     // Top performing products by shelf share
-    const topProducts = await db.all(`
+    const topProducts = await getQuery(`
       SELECT 
         p.name as product_name,
         AVG(ssd.shelf_share_percentage) as avg_shelf_share,
@@ -647,7 +647,7 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
     `, params);
     
     // Compliance overview
-    const complianceOverview = await db.get(`
+    const complianceOverview = await getOneQuery(`
       SELECT 
         AVG(overall_compliance_score) as avg_compliance_score,
         COUNT(*) as total_assessments,
@@ -658,7 +658,7 @@ router.get('/dashboard', requireFunction('merchandising', 'view'), async (req, r
     `, params);
     
     // Recent activities
-    const recentActivities = await db.all(`
+    const recentActivities = await getQuery(`
       SELECT 
         mv.id,
         mv.visit_type,

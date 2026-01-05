@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
 const { getQuery, getOneQuery } = require('../utils/database');
 
@@ -10,15 +9,15 @@ router.get('/', async (req, res) => {
     const tenantId = req.tenantId;
     const { brand_id, limit = 100, offset = 0 } = req.query;
 
-    let query = 'SELECT b.*, br.name as brand_name FROM boards b LEFT JOIN brands br ON b.brand_id = br.id WHERE b.tenant_id = $1';
+    let query = 'SELECT b.*, br.name as brand_name FROM boards b LEFT JOIN brands br ON b.brand_id = br.id WHERE b.tenant_id = ?';
     const params = [tenantId];
     
     if (brand_id) {
       params.push(brand_id);
-      query += ` AND b.brand_id = $${params.length}`;
+      query += ` AND b.brand_id = ?`;
     }
     
-    query += ` ORDER BY b.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY b.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const boards = await getQuery(query, params);
@@ -36,7 +35,7 @@ router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const tenantId = req.tenantId;
 
-    const query = 'SELECT b.*, br.name as brand_name FROM boards b LEFT JOIN brands br ON b.brand_id = br.id WHERE b.id = $1 AND b.tenant_id = $2';
+    const query = 'SELECT b.*, br.name as brand_name FROM boards b LEFT JOIN brands br ON b.brand_id = br.id WHERE b.id = ? AND b.tenant_id = ?';
     const board = await getOneQuery(query, [id, tenantId]);
 
     if (!board) {
@@ -135,7 +134,7 @@ router.get('/:boardId/compliance', async (req, res) => {
       SELECT bc.*, u.first_name || ' ' || u.last_name as checked_by_name
       FROM board_compliance bc
       LEFT JOIN users u ON bc.checked_by = u.id
-      WHERE bc.board_id = $1 AND bc.tenant_id = $2
+      WHERE bc.board_id = ? AND bc.tenant_id = ?
       ORDER BY bc.check_date DESC
     `, [boardId, tenantId]);
     
@@ -155,7 +154,7 @@ router.get('/:boardId/location-history', async (req, res) => {
       SELECT blh.*, u.first_name || ' ' || u.last_name as changed_by_name
       FROM board_location_history blh
       LEFT JOIN users u ON blh.changed_by = u.id
-      WHERE blh.board_id = $1 AND blh.tenant_id = $2
+      WHERE blh.board_id = ? AND blh.tenant_id = ?
       ORDER BY blh.changed_at DESC
     `, [boardId, tenantId]);
     
@@ -175,7 +174,7 @@ router.get('/:boardId/maintenance', async (req, res) => {
       SELECT bm.*, u.first_name || ' ' || u.last_name as performed_by_name
       FROM board_maintenance bm
       LEFT JOIN users u ON bm.performed_by = u.id
-      WHERE bm.board_id = $1 AND bm.tenant_id = $2
+      WHERE bm.board_id = ? AND bm.tenant_id = ?
       ORDER BY bm.maintenance_date DESC
     `, [boardId, tenantId]);
     
@@ -195,7 +194,7 @@ router.get('/:boardId/photos', async (req, res) => {
       SELECT bp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
       FROM board_photos bp
       LEFT JOIN users u ON bp.uploaded_by = u.id
-      WHERE bp.board_id = $1 AND bp.tenant_id = $2
+      WHERE bp.board_id = ? AND bp.tenant_id = ?
       ORDER BY bp.created_at DESC
     `, [boardId, tenantId]);
     
@@ -216,7 +215,7 @@ router.get('/:boardId/placements', async (req, res) => {
       FROM board_placements bp
       LEFT JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN users u ON bp.placed_by = u.id
-      WHERE bp.board_id = $1 AND bp.tenant_id = $2
+      WHERE bp.board_id = ? AND bp.tenant_id = ?
       ORDER BY bp.placement_date DESC
     `, [boardId, tenantId]);
     

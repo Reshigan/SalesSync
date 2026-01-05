@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 // ============================================
@@ -22,7 +22,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
     
     const visitCode = `TM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO trade_marketing_visits (
         visit_code, agent_id, store_id, visit_type, visit_status,
         check_in_time, check_in_latitude, check_in_longitude,
@@ -35,7 +35,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
       ]
     );
     
-    const visit = await db.get(
+    const visit = await getOneQuery(
       `SELECT tmv.*, c.name as store_name, c.code as store_code
        FROM trade_marketing_visits tmv
        JOIN customers c ON tmv.store_id = c.id
@@ -70,18 +70,18 @@ router.get('/visits', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND tmv.check_in_time::date >= ?`;
+      sql += ` AND DATE(tmv.check_in_time) >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND tmv.check_in_time::date <= ?`;
+      sql += ` AND DATE(tmv.check_in_time) <= ?`;
       params.push(endDate);
     }
     
     sql += ` ORDER BY tmv.check_in_time DESC LIMIT 100`;
     
-    const visits = await db.all(sql, params);
+    const visits = await getQuery(sql, params);
     
     res.json({ visits });
   } catch (error) {
@@ -93,7 +93,7 @@ router.get('/visits', authMiddleware, async (req, res) => {
 // Get Visit Details
 router.get('/visits/:id', authMiddleware, async (req, res) => {
   try {
-    const visit = await db.get(
+    const visit = await getOneQuery(
       `SELECT tmv.*, c.name as store_name, c.code as store_code,
               c.address, c.phone
        FROM trade_marketing_visits tmv
@@ -107,13 +107,13 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     }
     
     // Get shelf analytics
-    const shelfAnalytics = await db.all(
+    const shelfAnalytics = await getQuery(
       'SELECT * FROM shelf_analytics WHERE visit_id = ?',
       [req.params.id]
     );
     
     // Get SKU availability
-    const skuAvailability = await db.all(
+    const skuAvailability = await getQuery(
       `SELECT sa.*, p.name as product_name, p.sku
        FROM sku_availability sa
        JOIN products p ON sa.product_id = p.id
@@ -122,7 +122,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     );
     
     // Get POS material tracking
-    const posMaterials = await db.all(
+    const posMaterials = await getQuery(
       `SELECT pmt.*, pm.material_name, pm.material_type
        FROM pos_material_tracking pmt
        JOIN pos_materials pm ON pmt.material_id = pm.id
@@ -131,7 +131,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     );
     
     // Get brand activations
-    const brandActivations = await db.all(
+    const brandActivations = await getQuery(
       `SELECT ba.*, c.campaign_name
        FROM brand_activations ba
        JOIN campaigns c ON ba.campaign_id = c.id
@@ -157,7 +157,7 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
   try {
     const { checkOutLatitude, checkOutLongitude, exitPhotoUrl, visitNotes } = req.body;
     
-    await db.run(
+    await runQuery(
       `UPDATE trade_marketing_visits 
        SET visit_status = 'completed', 
            check_out_time = CURRENT_TIMESTAMP,
@@ -170,7 +170,7 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
       [checkOutLatitude, checkOutLongitude, exitPhotoUrl, visitNotes, req.params.id, req.user.id]
     );
     
-    const visit = await db.get(
+    const visit = await getOneQuery(
       'SELECT * FROM trade_marketing_visits WHERE id = ?',
       [req.params.id]
     );
@@ -208,7 +208,7 @@ router.post('/shelf-analytics', authMiddleware, async (req, res) => {
       ? (brandFacings / totalFacings) * 100 
       : 0;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO shelf_analytics (
         visit_id, store_id, category, total_shelf_space_meters,
         brand_shelf_space_meters, brand_shelf_share_percentage,
@@ -225,7 +225,7 @@ router.post('/shelf-analytics', authMiddleware, async (req, res) => {
       ]
     );
     
-    const analytics = await db.get(
+    const analytics = await getOneQuery(
       'SELECT * FROM shelf_analytics WHERE id = ?',
       [result.lastID]
     );
@@ -260,7 +260,7 @@ router.post('/sku-availability', authMiddleware, async (req, res) => {
     const priceVariance = rrp > 0 ? actualPrice - rrp : 0;
     const priceCompliant = Math.abs(priceVariance) <= (rrp * 0.05); // 5% tolerance
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO sku_availability (
         visit_id, store_id, product_id, availability_status,
         facing_count, shelf_position, actual_price, rrp,
@@ -275,7 +275,7 @@ router.post('/sku-availability', authMiddleware, async (req, res) => {
       ]
     );
     
-    const availability = await db.get(
+    const availability = await getOneQuery(
       `SELECT sa.*, p.name as product_name, p.sku
        FROM sku_availability sa
        JOIN products p ON sa.product_id = p.id
@@ -307,7 +307,7 @@ router.post('/pos-materials/track', authMiddleware, async (req, res) => {
       notes
     } = req.body;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO pos_material_tracking (
         visit_id, store_id, material_id, material_type, material_status,
         installation_date, location_in_store, condition, visibility_score,
@@ -320,7 +320,7 @@ router.post('/pos-materials/track', authMiddleware, async (req, res) => {
       ]
     );
     
-    const tracking = await db.get(
+    const tracking = await getOneQuery(
       `SELECT pmt.*, pm.material_name
        FROM pos_material_tracking pmt
        JOIN pos_materials pm ON pmt.material_id = pm.id
@@ -361,7 +361,7 @@ router.get('/pos-materials', authMiddleware, async (req, res) => {
     
     sql += ` ORDER BY pm.material_name`;
     
-    const materials = await db.all(sql, params);
+    const materials = await getQuery(sql, params);
     
     res.json({ materials });
   } catch (error) {
@@ -389,7 +389,7 @@ router.post('/brand-activations', authMiddleware, async (req, res) => {
     
     const activationCode = `BA-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO brand_activations (
         activation_code, visit_id, campaign_id, store_id, agent_id,
         activation_type, activation_status, setup_photo_url, activity_photos,
@@ -404,7 +404,7 @@ router.post('/brand-activations', authMiddleware, async (req, res) => {
       ]
     );
     
-    const activation = await db.get(
+    const activation = await getOneQuery(
       `SELECT ba.*, c.campaign_name
        FROM brand_activations ba
        JOIN campaigns c ON ba.campaign_id = c.id
@@ -441,7 +441,7 @@ router.get('/campaigns', authMiddleware, async (req, res) => {
     
     sql += ` ORDER BY c.start_date DESC`;
     
-    const campaigns = await db.all(sql, params);
+    const campaigns = await getQuery(sql, params);
     
     res.json({ campaigns });
   } catch (error) {
@@ -459,17 +459,17 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     const params = [req.user.id];
     
     if (startDate) {
-      dateFilter += ` AND tmv.check_in_time::date >= ?`;
+      dateFilter += ` AND DATE(tmv.check_in_time) >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      dateFilter += ` AND tmv.check_in_time::date <= ?`;
+      dateFilter += ` AND DATE(tmv.check_in_time) <= ?`;
       params.push(endDate);
     }
     
     // Visits summary
-    const visitsSummary = await db.get(
+    const visitsSummary = await getOneQuery(
       `SELECT 
         COUNT(*) as total_visits,
         SUM(CASE WHEN visit_status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
@@ -480,7 +480,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     );
     
     // Shelf analytics summary
-    const shelfSummary = await db.get(
+    const shelfSummary = await getOneQuery(
       `SELECT 
         AVG(brand_shelf_share_percentage) as avg_shelf_share,
         AVG(brand_facings_share_percentage) as avg_facings_share,
@@ -492,7 +492,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     );
     
     // SKU availability summary
-    const skuSummary = await db.get(
+    const skuSummary = await getOneQuery(
       `SELECT 
         COUNT(*) as total_skus_checked,
         SUM(CASE WHEN availability_status = 'available' THEN 1 ELSE 0 END) as available_skus,
@@ -504,7 +504,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
     );
     
     // Brand activations summary
-    const activationsSummary = await db.get(
+    const activationsSummary = await getOneQuery(
       `SELECT 
         COUNT(*) as total_activations,
         SUM(samples_distributed) as total_samples,
@@ -608,44 +608,43 @@ router.get('/pos-materials', authMiddleware, async (req, res) => {
 router.get('/campaigns/stats', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const { getQuery, getOneQuery } = require('../utils/database');
     
     const [campaignCounts, statusBreakdown, performance, topCampaigns] = await Promise.all([
       getOneQuery(`
         SELECT 
-          COUNT(*)::int as total_campaigns,
-          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_campaigns,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_campaigns,
-          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_campaigns
-        FROM campaigns WHERE tenant_id = $1
+          COUNT(*) as total_campaigns,
+          COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_campaigns,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns
+        FROM campaigns WHERE tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
-        SELECT status, COUNT(*)::int as count
-        FROM campaigns WHERE tenant_id = $1
+        SELECT status, COUNT(*) as count
+        FROM campaigns WHERE tenant_id = ?
         GROUP BY status
       `, [tenantId]).then(rows => rows || []),
       
       getOneQuery(`
         SELECT 
-          COUNT(DISTINCT ce.id)::int as total_executions,
-          COUNT(DISTINCT ce.customer_id)::int as customers_reached,
-          SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END)::int as completed_executions,
-          AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END)::float8 as avg_conversion_value
+          COUNT(DISTINCT ce.id) as total_executions,
+          COUNT(DISTINCT ce.customer_id) as customers_reached,
+          SUM(CASE WHEN ce.status = 'completed' THEN 1 ELSE 0 END) as completed_executions,
+          AVG(CASE WHEN ce.conversion_value IS NOT NULL THEN ce.conversion_value END) as avg_conversion_value
         FROM campaigns c
         LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-        WHERE c.tenant_id = $1
+        WHERE c.tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
         SELECT 
           c.id, c.name, c.type, c.status,
-          COUNT(DISTINCT ce.id)::int as execution_count,
-          COUNT(DISTINCT ce.customer_id)::int as customer_count,
-          SUM(COALESCE(ce.conversion_value, 0))::float8 as total_conversion
+          COUNT(DISTINCT ce.id) as execution_count,
+          COUNT(DISTINCT ce.customer_id) as customer_count,
+          SUM(COALESCE(ce.conversion_value, 0)) as total_conversion
         FROM campaigns c
         LEFT JOIN campaign_executions ce ON c.id = ce.campaign_id
-        WHERE c.tenant_id = $1
+        WHERE c.tenant_id = ?
         GROUP BY c.id, c.name, c.type, c.status
         ORDER BY total_conversion DESC
         LIMIT 10

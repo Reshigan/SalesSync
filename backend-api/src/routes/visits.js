@@ -17,43 +17,36 @@ router.get('/', async (req, res) => {
       LEFT JOIN users u ON v.agent_id = u.id
       LEFT JOIN routes r ON c.route_id = r.id
       LEFT JOIN areas a ON r.area_id = a.id
-      WHERE v.tenant_id = $1
+      WHERE v.tenant_id = ?
     `;
     const params = [tenantId];
-    let paramIndex = 2;
     
     if (agent_id) {
-      sql += ` AND v.agent_id = $${paramIndex}`;
+      sql += ` AND v.agent_id = ?`;
       params.push(agent_id);
-      paramIndex++;
     }
     if (customer_id) {
-      sql += ` AND v.customer_id = $${paramIndex}`;
+      sql += ` AND v.customer_id = ?`;
       params.push(customer_id);
-      paramIndex++;
     }
     if (visit_type) {
-      sql += ` AND v.visit_type = $${paramIndex}`;
+      sql += ` AND v.visit_type = ?`;
       params.push(visit_type);
-      paramIndex++;
     }
     if (status) {
-      sql += ` AND v.status = $${paramIndex}`;
+      sql += ` AND v.status = ?`;
       params.push(status);
-      paramIndex++;
     }
     if (date_from) {
-      sql += ` AND v.visit_date >= $${paramIndex}`;
+      sql += ` AND v.visit_date >= ?`;
       params.push(date_from);
-      paramIndex++;
     }
     if (date_to) {
-      sql += ` AND v.visit_date <= $${paramIndex}`;
+      sql += ` AND v.visit_date <= ?`;
       params.push(date_to);
-      paramIndex++;
     }
     
-    sql += ` ORDER BY v.visit_date DESC, v.check_in_time DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    sql += ` ORDER BY v.visit_date DESC, v.check_in_time DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
     const rows = await getQuery(sql, params);
@@ -66,13 +59,13 @@ router.get('/', async (req, res) => {
     const stats = await getOneQuery(`
       SELECT 
         COUNT(*) as total_visits,
-        SUM(CASE WHEN visit_date::date = CURRENT_DATE THEN 1 ELSE 0 END) as today_visits,
+        SUM(CASE WHEN DATE(visit_date) = DATE('now') THEN 1 ELSE 0 END) as today_visits,
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_visits,
         AVG(CASE WHEN check_in_time IS NOT NULL AND check_out_time IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (check_out_time::timestamp - check_in_time::timestamp)) / 60
+            THEN (JULIANDAY(check_out_time) - JULIANDAY(check_in_time)) * 24 * 60
             ELSE NULL END) as avg_duration_minutes
       FROM visits 
-      WHERE tenant_id = $1 AND visit_date::date >= CURRENT_DATE - INTERVAL '7 days'
+      WHERE tenant_id = ? AND DATE(visit_date) >= DATE('now', '-7 days')
     `, [tenantId]);
     
     res.json({
@@ -170,7 +163,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN users u ON v.agent_id = u.id
       LEFT JOIN routes r ON c.route_id = r.id
       LEFT JOIN areas a ON r.area_id = a.id
-      WHERE v.id = $1 AND v.tenant_id = $2
+      WHERE v.id = ? AND v.tenant_id = ?
     `, [id, tenantId]);
     
     if (!visit) {
@@ -375,20 +368,17 @@ router.get('/agent/:agentId', async (req, res) => {
       SELECT v.*, c.name as customer_name, c.phone as customer_phone, c.address as customer_address
       FROM visits v
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE v.tenant_id = $1 AND v.agent_id = $2
+      WHERE v.tenant_id = ? AND v.agent_id = ?
     `;
     const params = [tenantId, agentId];
-    let paramIndex = 3;
     
     if (date) {
-      sql += ` AND v.visit_date::date = $${paramIndex}`;
+      sql += ` AND DATE(v.visit_date) = ?`;
       params.push(date);
-      paramIndex++;
     }
     if (status) {
-      sql += ` AND v.status = $${paramIndex}`;
+      sql += ` AND v.status = ?`;
       params.push(status);
-      paramIndex++;
     }
     
     sql += ' ORDER BY v.visit_date DESC, v.check_in_time DESC';
@@ -415,9 +405,9 @@ router.get('/customer/:customerId', async (req, res) => {
       SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
       FROM visits v
       LEFT JOIN users u ON v.agent_id = u.id
-      WHERE v.tenant_id = $1 AND v.customer_id = $2
+      WHERE v.tenant_id = ? AND v.customer_id = ?
       ORDER BY v.visit_date DESC
-      LIMIT $3
+      LIMIT ?
     `, [tenantId, customerId, parseInt(limit)]);
     
     res.json({
@@ -436,24 +426,20 @@ router.get('/stats', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { date_from, date_to, agent_id } = req.query;
     
-    let whereClause = 'WHERE v.tenant_id = $1';
+    let whereClause = 'WHERE v.tenant_id = ?';
     const params = [tenantId];
-    let paramIndex = 2;
     
     if (date_from) {
-      whereClause += ` AND v.visit_date::date >= $${paramIndex}`;
+      whereClause += ` AND DATE(v.visit_date) >= ?`;
       params.push(date_from);
-      paramIndex++;
     }
     if (date_to) {
-      whereClause += ` AND v.visit_date::date <= $${paramIndex}`;
+      whereClause += ` AND DATE(v.visit_date) <= ?`;
       params.push(date_to);
-      paramIndex++;
     }
     if (agent_id) {
-      whereClause += ` AND v.agent_id = $${paramIndex}`;
+      whereClause += ` AND v.agent_id = ?`;
       params.push(agent_id);
-      paramIndex++;
     }
     
     const [overallStats, statusBreakdown, agentPerformance, dailyTrend] = await Promise.all([
@@ -467,7 +453,7 @@ router.get('/stats', async (req, res) => {
           COUNT(CASE WHEN v.check_in_time IS NOT NULL THEN 1 END) as checked_in_visits,
           AVG(CASE 
             WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (v.check_out_time::timestamp - v.check_in_time::timestamp)) / 60
+            THEN (JULIANDAY(v.check_out_time) - JULIANDAY(v.check_in_time)) * 24 * 60
           END) as avg_visit_duration_minutes,
           COUNT(DISTINCT v.customer_id) as unique_customers,
           COUNT(DISTINCT v.agent_id) as active_agents
@@ -496,7 +482,7 @@ router.get('/stats', async (req, res) => {
           COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
           AVG(CASE 
             WHEN v.check_out_time IS NOT NULL AND v.check_in_time IS NOT NULL 
-            THEN EXTRACT(EPOCH FROM (v.check_out_time::timestamp - v.check_in_time::timestamp)) / 60
+            THEN (JULIANDAY(v.check_out_time) - JULIANDAY(v.check_in_time)) * 24 * 60
           END) as avg_duration_minutes,
           COUNT(DISTINCT v.customer_id) as unique_customers
         FROM visits v
@@ -510,14 +496,14 @@ router.get('/stats', async (req, res) => {
       // Daily trend (last 30 days)
       getQuery(`
         SELECT 
-          v.visit_date::date as date,
+          DATE(v.visit_date) as date,
           COUNT(*) as total_visits,
           COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
           COUNT(DISTINCT v.agent_id) as active_agents
         FROM visits v
-        WHERE v.tenant_id = $1
-        AND v.visit_date::date >= CURRENT_DATE - INTERVAL '30 days'
-        GROUP BY v.visit_date::date
+        WHERE v.tenant_id = ?
+        AND DATE(v.visit_date) >= DATE('now', '-30 days')
+        GROUP BY DATE(v.visit_date)
         ORDER BY date DESC
       `, [tenantId]).then(rows => rows || [])
     ]);
@@ -557,7 +543,7 @@ router.get('/:visitId/photos', async (req, res) => {
       SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
       FROM visit_photos vp
       LEFT JOIN users u ON vp.uploaded_by = u.id
-      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      WHERE vp.visit_id = ? AND vp.tenant_id = ?
       ORDER BY vp.created_at DESC
     `, [visitId, tenantId]);
     
@@ -578,7 +564,7 @@ router.get('/:visitId/photo-gallery', async (req, res) => {
       SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
       FROM visit_photos vp
       LEFT JOIN users u ON vp.uploaded_by = u.id
-      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      WHERE vp.visit_id = ? AND vp.tenant_id = ?
       ORDER BY vp.created_at DESC
     `, [visitId, tenantId]);
     
@@ -599,7 +585,7 @@ router.get('/:visitId/photo-timeline', async (req, res) => {
       SELECT vp.*, u.first_name || ' ' || u.last_name as uploaded_by_name
       FROM visit_photos vp
       LEFT JOIN users u ON vp.uploaded_by = u.id
-      WHERE vp.visit_id = $1 AND vp.tenant_id = $2
+      WHERE vp.visit_id = ? AND vp.tenant_id = ?
       ORDER BY vp.created_at ASC
     `, [visitId, tenantId]);
     
@@ -620,7 +606,7 @@ router.get('/:visitId/surveys/:surveyId', async (req, res) => {
       SELECT sr.*, s.title as survey_title, s.description as survey_description
       FROM survey_responses sr
       LEFT JOIN surveys s ON sr.survey_id = s.id
-      WHERE sr.id = $1 AND sr.visit_id = $2 AND sr.tenant_id = $3
+      WHERE sr.id = ? AND sr.visit_id = ? AND sr.tenant_id = ?
     `, [surveyId, visitId, tenantId]);
     
     res.json({ success: true, data: survey || null });
@@ -640,7 +626,7 @@ router.get('/:visitId/product-distribution/:id', async (req, res) => {
       SELECT pd.*, p.name as product_name, p.code as product_code
       FROM product_distributions pd
       LEFT JOIN products p ON pd.product_id = p.id
-      WHERE pd.id = $1 AND pd.visit_id = $2 AND pd.tenant_id = $3
+      WHERE pd.id = ? AND pd.visit_id = ? AND pd.tenant_id = ?
     `, [id, visitId, tenantId]);
     
     res.json({ success: true, data: distribution || null });
@@ -660,7 +646,7 @@ router.get('/:visitId/tasks', async (req, res) => {
       SELECT vt.*, u.first_name || ' ' || u.last_name as assigned_to_name
       FROM visit_tasks vt
       LEFT JOIN users u ON vt.assigned_to = u.id
-      WHERE vt.visit_id = $1 AND vt.tenant_id = $2
+      WHERE vt.visit_id = ? AND vt.tenant_id = ?
       ORDER BY vt.created_at DESC
     `, [visitId, tenantId]);
     
@@ -681,7 +667,7 @@ router.get('/:visitId/tasks/:taskId', async (req, res) => {
       SELECT vt.*, u.first_name || ' ' || u.last_name as assigned_to_name
       FROM visit_tasks vt
       LEFT JOIN users u ON vt.assigned_to = u.id
-      WHERE vt.id = $1 AND vt.visit_id = $2 AND vt.tenant_id = $3
+      WHERE vt.id = ? AND vt.visit_id = ? AND vt.tenant_id = ?
     `, [taskId, visitId, tenantId]);
     
     res.json({ success: true, data: task || null });

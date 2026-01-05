@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get report templates
@@ -36,7 +36,7 @@ router.get('/templates', requireFunction('reports', 'view'), async (req, res) =>
     
     query += ' ORDER BY rt.created_at DESC';
     
-    const templates = await db.all(query, params);
+    const templates = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -86,7 +86,7 @@ router.post('/templates', requireFunction('reports', 'create'), async (req, res)
     
     const templateId = require('crypto').randomBytes(16).toString('hex');
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO report_templates (
         id, tenant_id, template_name, template_type, category, description,
         data_sources, fields_config, filters_config, grouping_config,
@@ -112,7 +112,7 @@ router.post('/templates', requireFunction('reports', 'create'), async (req, res)
       req.user.userId
     ]);
     
-    const template = await db.get(`
+    const template = await getOneQuery(`
       SELECT rt.*, u.name as created_by_name
       FROM report_templates rt
       LEFT JOIN users u ON rt.created_by = u.id
@@ -134,7 +134,7 @@ router.post('/templates/:id/generate', requireFunction('reports', 'create'), asy
   try {
     const { parameters, filters, export_format = 'json' } = req.body;
     
-    const template = await db.get(`
+    const template = await getOneQuery(`
       SELECT * FROM report_templates 
       WHERE id = ? AND tenant_id = ? AND is_active = 1
     `, [req.params.id, req.user.tenantId]);
@@ -148,7 +148,7 @@ router.post('/templates/:id/generate', requireFunction('reports', 'create'), asy
     // Generate report data based on template configuration
     const reportData = await generateReportData(template, parameters, filters, req.user.tenantId);
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO generated_reports (
         id, tenant_id, template_id, report_name, parameters,
         filters_applied, data_snapshot, file_format, status, generated_by
@@ -167,7 +167,7 @@ router.post('/templates/:id/generate', requireFunction('reports', 'create'), asy
     ]);
     
     // Log analytics
-    await db.run(`
+    await runQuery(`
       INSERT INTO report_analytics (
         tenant_id, template_id, action_type, user_id, parameters
       ) VALUES (?, ?, ?, ?, ?)
@@ -179,7 +179,7 @@ router.post('/templates/:id/generate', requireFunction('reports', 'create'), asy
       JSON.stringify({ export_format, filters, parameters })
     ]);
     
-    const report = await db.get(`
+    const report = await getOneQuery(`
       SELECT gr.*, rt.template_name
       FROM generated_reports gr
       LEFT JOIN report_templates rt ON gr.template_id = rt.id
@@ -233,7 +233,7 @@ router.get('/generated', requireFunction('reports', 'view'), async (req, res) =>
     query += ' ORDER BY gr.generated_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
     
-    const reports = await db.all(query, params);
+    const reports = await getQuery(query, params);
     
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM generated_reports WHERE tenant_id = ?';
@@ -249,7 +249,7 @@ router.get('/generated', requireFunction('reports', 'view'), async (req, res) =>
       countParams.push(status);
     }
     
-    const { total } = await db.get(countQuery, countParams);
+    const { total } = await getOneQuery(countQuery, countParams);
     
     res.json({
       success: true,
@@ -301,7 +301,7 @@ router.get('/dashboards', requireFunction('reports', 'view'), async (req, res) =
     
     query += ' GROUP BY cd.id ORDER BY cd.created_at DESC';
     
-    const dashboards = await db.all(query, params);
+    const dashboards = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -344,7 +344,7 @@ router.post('/dashboards', requireFunction('reports', 'create'), async (req, res
     
     const dashboardId = require('crypto').randomBytes(16).toString('hex');
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO custom_dashboards (
         id, tenant_id, dashboard_name, dashboard_type, description,
         layout_config, widgets_config, filters_config, refresh_interval,
@@ -366,7 +366,7 @@ router.post('/dashboards', requireFunction('reports', 'create'), async (req, res
       req.user.userId
     ]);
     
-    const dashboard = await db.get(`
+    const dashboard = await getOneQuery(`
       SELECT cd.*, u.name as created_by_name
       FROM custom_dashboards cd
       LEFT JOIN users u ON cd.created_by = u.id
@@ -386,7 +386,7 @@ router.post('/dashboards', requireFunction('reports', 'create'), async (req, res
 // Get dashboard widgets
 router.get('/dashboards/:id/widgets', requireFunction('reports', 'view'), async (req, res) => {
   try {
-    const widgets = await db.all(`
+    const widgets = await getQuery(`
       SELECT * FROM dashboard_widgets 
       WHERE dashboard_id = ? AND tenant_id = ? AND is_active = 1
       ORDER BY json_extract(position_config, '$.row'), json_extract(position_config, '$.col')
@@ -433,7 +433,7 @@ router.post('/dashboards/:id/widgets', requireFunction('reports', 'create'), asy
     
     const widgetId = require('crypto').randomBytes(16).toString('hex');
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO dashboard_widgets (
         id, tenant_id, dashboard_id, widget_name, widget_type, chart_type,
         data_source, query_config, display_config, position_config,
@@ -454,7 +454,7 @@ router.post('/dashboards/:id/widgets', requireFunction('reports', 'create'), asy
       refresh_interval
     ]);
     
-    const widget = await db.get('SELECT * FROM dashboard_widgets WHERE id = ?', [widgetId]);
+    const widget = await getOneQuery('SELECT * FROM dashboard_widgets WHERE id = ?', [widgetId]);
     
     res.status(201).json({
       success: true,
@@ -497,7 +497,7 @@ router.get('/metrics', requireFunction('reports', 'view'), async (req, res) => {
     
     query += ' GROUP BY pm.id ORDER BY pm.created_at DESC';
     
-    const metrics = await db.all(query, params);
+    const metrics = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -532,7 +532,7 @@ router.get('/metrics/:id/values', requireFunction('reports', 'view'), async (req
     query += ' ORDER BY period_date DESC LIMIT ?';
     params.push(parseInt(limit));
     
-    const values = await db.all(query, params);
+    const values = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -587,7 +587,7 @@ router.get('/benchmarks', requireFunction('reports', 'view'), async (req, res) =
     
     query += ' ORDER BY bc.created_at DESC LIMIT 100';
     
-    const benchmarks = await db.all(query, params);
+    const benchmarks = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -609,7 +609,7 @@ router.get('/analytics', requireFunction('reports', 'view'), async (req, res) =>
     const { period = '30' } = req.query; // days
     
     // Most used templates
-    const popularTemplates = await db.all(`
+    const popularTemplates = await getQuery(`
       SELECT 
         rt.template_name,
         rt.template_type,
@@ -625,7 +625,7 @@ router.get('/analytics', requireFunction('reports', 'view'), async (req, res) =>
     `, [req.user.tenantId]);
     
     // Most viewed dashboards
-    const popularDashboards = await db.all(`
+    const popularDashboards = await getQuery(`
       SELECT 
         cd.dashboard_name,
         cd.dashboard_type,
@@ -640,7 +640,7 @@ router.get('/analytics', requireFunction('reports', 'view'), async (req, res) =>
     `, [req.user.tenantId]);
     
     // Usage by action type
-    const actionStats = await db.all(`
+    const actionStats = await getQuery(`
       SELECT 
         action_type,
         COUNT(*) as count,
@@ -652,14 +652,14 @@ router.get('/analytics', requireFunction('reports', 'view'), async (req, res) =>
     `, [req.user.tenantId]);
     
     // Daily usage trend
-    const usageTrend = await db.all(`
+    const usageTrend = await getQuery(`
       SELECT 
-        timestamp::date as date,
+        DATE(timestamp) as date,
         COUNT(*) as total_actions,
         COUNT(DISTINCT user_id) as unique_users
       FROM report_analytics 
       WHERE tenant_id = ? AND timestamp >= date('now', '-${period} days')
-      GROUP BY timestamp::date
+      GROUP BY DATE(timestamp)
       ORDER BY date DESC
     `, [req.user.tenantId]);
     
@@ -743,7 +743,7 @@ async function generateReportData(template, parameters, filters, tenantId) {
     
     baseQuery += ' ORDER BY 1 DESC LIMIT 1000';
     
-    const data = await db.all(baseQuery, queryParams);
+    const data = await getQuery(baseQuery, queryParams);
     
     return {
       template_info: {

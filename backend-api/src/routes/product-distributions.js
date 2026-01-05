@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
 const { selectMany, selectOne, insertRow } = require('../utils/pg-helpers');
 const { getQuery, getOneQuery } = require('../utils/database');
 
@@ -14,31 +13,31 @@ router.get('/', async (req, res) => {
       SELECT pd.*, 
         c.name as customer_name,
         p.name as product_name,
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM product_distributions pd
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN products p ON pd.product_id = p.id
       LEFT JOIN users u ON pd.created_by = u.id
-      WHERE pd.tenant_id = $1
+      WHERE pd.tenant_id = ?
     `;
     const params = [tenantId];
     
     if (customer_id) {
       params.push(customer_id);
-      query += ` AND pd.customer_id = $${params.length}`;
+      query += ` AND pd.customer_id = ?`;
     }
     
     if (product_id) {
       params.push(product_id);
-      query += ` AND pd.product_id = $${params.length}`;
+      query += ` AND pd.product_id = ?`;
     }
     
     if (agent_id) {
       params.push(agent_id);
-      query += ` AND pd.created_by = $${params.length}`;
+      query += ` AND pd.created_by = ?`;
     }
     
-    query += ` ORDER BY pd.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY pd.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const distributions = await getQuery(query, params);
@@ -63,7 +62,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
       FROM product_distributions pd
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN products p ON pd.product_id = p.id
-      WHERE pd.tenant_id = $1 AND pd.created_by = $2
+      WHERE pd.tenant_id = ? AND pd.created_by = ?
       ORDER BY pd.created_at DESC
     `;
 
@@ -86,12 +85,12 @@ router.get('/:id', async (req, res) => {
       SELECT pd.*, 
         c.name as customer_name,
         p.name as product_name,
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name
+        u.first_name || ' ' || u.last_name as agent_name
       FROM product_distributions pd
       LEFT JOIN customers c ON pd.customer_id = c.id
       LEFT JOIN products p ON pd.product_id = p.id
       LEFT JOIN users u ON pd.created_by = u.id
-      WHERE pd.id = $1 AND pd.tenant_id = $2
+      WHERE pd.id = ? AND pd.tenant_id = ?
     `;
     const distribution = await getOneQuery(query, [id, tenantId]);
 
