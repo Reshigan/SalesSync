@@ -56,7 +56,7 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
   await runQuery('BEGIN');
 
   try {
-    const session = await getOneQuery('SELECT * FROM cash_sessions WHERE id = $1 AND tenant_id = $2', [id, tenantId]);
+    const session = await getOneQuery('SELECT * FROM cash_sessions WHERE id = ? AND tenant_id = ?', [id, tenantId]);
     if (!session) throw new Error('Cash session not found');
     if (session.status !== 'open') throw new Error('Cash session is not open');
 
@@ -69,9 +69,9 @@ router.post('/sessions/:id/close', asyncHandler(async (req, res) => {
 
     await runQuery(
       `UPDATE cash_sessions 
-       SET closing_cash = $1, expected_cash = $2, variance = $3, variance_percentage = $4, 
-           denominations = $5, notes = $6, status = $7, closed_by = $8, closed_at = CURRENT_TIMESTAMP
-       WHERE id = $9`,
+       SET closing_cash = ?, expected_cash = ?, variance = ?, variance_percentage = ?, 
+           denominations = ?, notes = ?, status = ?, closed_by = ?, closed_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
       [closing_cash, expectedCash, variance, variancePercentage, JSON.stringify(denominations), notes, status, userId, id]
     );
 
@@ -125,13 +125,13 @@ router.post('/deposits', asyncHandler(async (req, res) => {
     const depositId = require('crypto').randomBytes(16).toString('hex');
     await runQuery(
       `INSERT INTO bank_deposits (id, tenant_id, bank_account, amount, deposit_slip_number, deposit_date, created_by, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [depositId, tenantId, bank_account, deposit_amount, deposit_slip_number, deposit_date, userId]
     );
 
     for (const sessionId of session_ids) {
       await runQuery(
-        'UPDATE cash_sessions SET deposit_id = $1, deposited_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3',
+        'UPDATE cash_sessions SET deposit_id = ?, deposited_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?',
         [depositId, sessionId, tenantId]
       );
     }
@@ -171,11 +171,11 @@ router.get('/sessions', asyncHandler(async (req, res) => {
     params.push(agent_id);
   }
   if (date_from) {
-    query += ' AND cs.started_at::date >= ?';
+    query += ' AND DATE(cs.started_at) >= ?';
     params.push(date_from);
   }
   if (date_to) {
-    query += ' AND cs.started_at::date <= ?';
+    query += ' AND DATE(cs.started_at) <= ?';
     params.push(date_to);
   }
 
@@ -201,7 +201,7 @@ router.get('/reports/daily', asyncHandler(async (req, res) => {
        COUNT(CASE WHEN cs.status = 'pending_approval' THEN 1 END) as pending_approvals,
        COUNT(CASE WHEN cs.status = 'closed' THEN 1 END) as closed_sessions
      FROM cash_sessions cs
-     WHERE cs.tenant_id = ? AND cs.started_at::date = ?`,
+     WHERE cs.tenant_id = ? AND DATE(cs.started_at) = ?`,
     [tenantId, reportDate]
   );
 
@@ -215,7 +215,7 @@ router.get('/reports/daily', asyncHandler(async (req, res) => {
      FROM cash_sessions cs
      JOIN users a ON cs.agent_id = a.id
      LEFT JOIN users u ON a.user_id = u.id
-     WHERE cs.tenant_id = ? AND cs.started_at::date = ?
+     WHERE cs.tenant_id = ? AND DATE(cs.started_at) = ?
      GROUP BY a.id, agent_name`,
     [tenantId, reportDate]
   );
