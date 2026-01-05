@@ -2127,12 +2127,16 @@ async function seedMasterData(tenantId) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [userId, tenantId, agent.email, hashedPassword, agent.firstName, agent.lastName, 'field_agent', agent.mobile, 'active']);
     
-    // Create agent record with mobile login credentials
+    // Create agent record with mobile login credentials (PIN is hashed)
+    // Default PIN is '123456' - agents should change on first login
+    const hashedPin = await bcrypt.hash('123456', 10);
     await runQuery(`
       INSERT INTO agents (tenant_id, user_id, agent_type, employee_code, territory_id, mobile_number, mobile_pin, status)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [tenantId, userId, agent.type, agent.code, routeId, agent.mobile, '123456', 'active']);
+    `, [tenantId, userId, agent.type, agent.code, routeId, agent.mobile, hashedPin, 'active']);
   }
+  
+  console.log('NOTE: Default agent PIN is 123456 - agents should change on first login');
 }
 
 // Close database connection

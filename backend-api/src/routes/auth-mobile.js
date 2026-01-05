@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const { getOneQuery, runQuery } = require('../utils/database');
 
 // Simple logger (will be replaced by winston if available)
@@ -17,6 +18,20 @@ const logger = {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+
+// Validate JWT secret in production
+if (process.env.NODE_ENV === 'production') {
+  const insecureSecrets = [
+    'your-secret-key-change-in-production',
+    'your-super-secret-jwt-key-change-in-production',
+    'secret',
+    'jwt-secret'
+  ];
+  if (insecureSecrets.includes(JWT_SECRET) || JWT_SECRET.length < 32) {
+    logger.error('SECURITY ERROR: Insecure JWT secret detected in production. Please set a secure JWT_SECRET environment variable (minimum 32 characters).');
+    process.exit(1);
+  }
+}
 
 /**
  * POST /api/auth/mobile-login
@@ -108,8 +123,25 @@ router.post('/mobile-login', async (req, res) => {
       });
     }
 
-    // Verify PIN
-    if (agent.mobile_pin !== pin) {
+    // Verify PIN (supports both hashed and legacy plain text PINs)
+    let pinValid = false;
+    if (agent.mobile_pin) {
+      // Check if PIN is hashed (bcrypt hashes start with $2)
+      if (agent.mobile_pin.startsWith('$2')) {
+        pinValid = await bcrypt.compare(pin, agent.mobile_pin);
+      } else {
+        // Legacy plain text PIN - compare directly but flag for migration
+        pinValid = agent.mobile_pin === pin;
+        if (pinValid) {
+          // Auto-migrate to hashed PIN on successful login
+          const hashedPin = await bcrypt.hash(pin, 10);
+          await runQuery(`UPDATE agents SET mobile_pin = ? WHERE id = ?`, [hashedPin, agent.id]);
+          logger.info('Auto-migrated PIN to hashed format', { agentId: agent.id });
+        }
+      }
+    }
+    
+    if (!pinValid) {
       logger.warn('Mobile login failed - invalid PIN', { mobile: normalizedMobile, agentId: agent.id });
       return res.status(401).json({
         success: false,
@@ -227,20 +259,30 @@ router.post('/mobile-change-pin', async (req, res) => {
       });
     }
 
-    // Verify old PIN
-    if (agent.mobile_pin !== oldPin) {
+    // Verify old PIN (supports both hashed and legacy plain text PINs)
+    let oldPinValid = false;
+    if (agent.mobile_pin) {
+      if (agent.mobile_pin.startsWith('$2')) {
+        oldPinValid = await bcrypt.compare(oldPin, agent.mobile_pin);
+      } else {
+        oldPinValid = agent.mobile_pin === oldPin;
+      }
+    }
+    
+    if (!oldPinValid) {
       return res.status(401).json({
         success: false,
         error: { message: 'Invalid old PIN', code: 'INVALID_OLD_PIN' }
       });
     }
 
-    // Update PIN
+    // Hash and update new PIN
+    const hashedNewPin = await bcrypt.hash(newPin, 10);
     await runQuery(`
       UPDATE agents 
       SET mobile_pin = ?, pin_last_changed = CURRENT_TIMESTAMP 
       WHERE id = ?
-    `, [newPin, agent.id]);
+    `, [hashedNewPin, agent.id]);
 
     logger.info('PIN changed successfully', { agentId: agent.id });
 
@@ -279,7 +321,9 @@ router.post('/mobile-reset-pin', async (req, res) => {
       });
     }
 
-    const pinToSet = newPin || '123456'; // Default PIN
+    // Generate secure random PIN if not provided
+    const crypto = require('crypto');
+    const pinToSet = newPin || crypto.randomInt(100000, 999999).toString();
 
     if (!/^\d{6}$/.test(pinToSet)) {
       return res.status(400).json({
@@ -302,7 +346,7 @@ router.post('/mobile-reset-pin', async (req, res) => {
 
     // Check if agent exists
     const agent = await getOneQuery(`
-      SELECT id FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') WHERE id = ? AND tenant_id = ?
+      SELECT id FROM agents WHERE id = ? AND tenant_id = ?
     `, [agentId, tenant.id]);
 
     if (!agent) {
@@ -312,18 +356,19 @@ router.post('/mobile-reset-pin', async (req, res) => {
       });
     }
 
-    // Update agent PIN
+    // Hash and update agent PIN
+    const hashedPin = await bcrypt.hash(pinToSet, 10);
     await runQuery(`
       UPDATE agents 
       SET mobile_pin = ?, pin_last_changed = CURRENT_TIMESTAMP 
       WHERE id = ? AND tenant_id = ?
-    `, [pinToSet, agentId, tenant.id]);
+    `, [hashedPin, agentId, tenant.id]);
 
     logger.info('PIN reset by admin', { agentId });
 
     res.json({
       success: true,
-      message: 'PIN reset successfully',
+      message: 'PIN reset successfully. Agent must change PIN on first login.',
       newPin: pinToSet
     });
 

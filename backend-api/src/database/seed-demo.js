@@ -3,6 +3,10 @@
 /**
  * Seed Demo Data for SalesSync
  * 
+ * SECURITY WARNING: This script uses default credentials for demo/development only.
+ * DO NOT use these credentials in production environments.
+ * All users should change their passwords immediately after first login.
+ * 
  * This script seeds the DEMO tenant with sample data for testing:
  * - 1 admin user (admin@demo.com / admin123)
  * - 1 field agent with van_sales + trade_marketing roles
