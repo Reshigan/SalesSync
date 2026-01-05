@@ -138,21 +138,46 @@ router.post('/', async (req, res) => {
 
     const placement = await insertRow('board_placements', placementData);
 
-    // Create commission entry for board placement
-    const commissionAmount = 10.00; // TODO: Make configurable per brand/board
-    const commissionData = {
-      tenant_id: tenantId,
-      agent_id: userId,
-      type: 'board_placement',
-      entity_id: placement.id,
-      entity_type: 'board_placement',
-      amount: commissionAmount,
-      currency: 'USD',
-      status: 'pending',
-      description: `Board placement commission`
-    };
+    // Get board/brand commission rate from configuration
+    let commissionAmount = 10.00; // Default fallback
+    let commissionSource = 'default';
     
-    await insertRow('commission_ledgers', commissionData);
+    if (board_id) {
+      const board = await getOneQuery(
+        'SELECT commission_rate, name FROM boards WHERE id = $1 AND tenant_id = $2',
+        [board_id, tenantId]
+      );
+      if (board?.commission_rate) {
+        commissionAmount = board.commission_rate;
+        commissionSource = `board: ${board.name}`;
+      }
+    } else if (brand_id) {
+      const brand = await getOneQuery(
+        'SELECT commission_rate, name FROM brands WHERE id = $1 AND tenant_id = $2',
+        [brand_id, tenantId]
+      );
+      if (brand?.commission_rate) {
+        commissionAmount = brand.commission_rate;
+        commissionSource = `brand: ${brand.name}`;
+      }
+    }
+    
+    // Only create commission entry if commission amount > 0
+    if (commissionAmount > 0) {
+      const commissionData = {
+        tenant_id: tenantId,
+        agent_id: userId,
+        type: 'board_placement',
+        entity_id: placement.id,
+        entity_type: 'board_placement',
+        amount: commissionAmount,
+        currency: 'USD',
+        status: 'pending',
+        description: `Board placement commission (${commissionSource})`
+      };
+      
+      await insertRow('commission_ledgers', commissionData);
+    }
 
     res.status(201).json({ success: true, data: placement });
   } catch (error) {

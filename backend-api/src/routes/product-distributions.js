@@ -149,21 +149,31 @@ router.post('/', async (req, res) => {
 
     const distribution = await insertRow('product_distributions', distributionData);
 
-    // Create commission entry for product distribution
-    const commissionAmount = 5.00; // TODO: Make configurable per product
-    const commissionData = {
-      tenant_id: tenantId,
-      agent_id: userId,
-      type: 'product_distribution',
-      entity_id: distribution.id,
-      entity_type: 'product_distribution',
-      amount: commissionAmount,
-      currency: 'USD',
-      status: 'pending',
-      description: `Product distribution commission`
-    };
+    // Get product commission rate from product configuration
+    const product = await getOneQuery(
+      'SELECT commission_rate, name FROM products WHERE id = $1 AND tenant_id = $2',
+      [product_id, tenantId]
+    );
     
-    await insertRow('commission_ledgers', commissionData);
+    // Use product-specific commission rate, or default to 5.00 if not configured
+    const commissionAmount = product?.commission_rate || 5.00;
+    
+    // Only create commission entry if commission amount > 0
+    if (commissionAmount > 0) {
+      const commissionData = {
+        tenant_id: tenantId,
+        agent_id: userId,
+        type: 'product_distribution',
+        entity_id: distribution.id,
+        entity_type: 'product_distribution',
+        amount: commissionAmount,
+        currency: 'USD',
+        status: 'pending',
+        description: `Product distribution commission for ${product?.name || 'product'}`
+      };
+      
+      await insertRow('commission_ledgers', commissionData);
+    }
 
     res.status(201).json({ success: true, data: distribution });
   } catch (error) {
