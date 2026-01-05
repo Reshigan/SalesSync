@@ -48,19 +48,79 @@ router.get('/metrics', async (req, res) => {
     const totalCustomers = totalCustomersQuery[0]?.total || 1;
     const retailerParticipation = Math.round((retailerCount / totalCustomers) * 100);
 
+    // Calculate ROI from sales data (revenue generated / spend)
+    const revenueQuery = await getQuery(`
+      SELECT COALESCE(SUM(o.total_amount), 0) as revenue
+      FROM orders o
+      WHERE o.tenant_id = ? 
+        AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const revenue = revenueQuery[0]?.revenue || 0;
+    const roi = totalSpend > 0 ? parseFloat((revenue / totalSpend).toFixed(2)) : 0;
+
+    // Calculate trade spend efficiency (revenue per dollar spent)
+    const tradeSpendEfficiency = totalSpend > 0 ? parseFloat(((revenue / totalSpend) * 100).toFixed(1)) : 0;
+
+    // Calculate volume growth (compare current vs previous period)
+    const currentVolumeQuery = await getQuery(`
+      SELECT COALESCE(SUM(oi.quantity), 0) as volume
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const previousVolumeQuery = await getQuery(`
+      SELECT COALESCE(SUM(oi.quantity), 0) as volume
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ? 
+        AND o.created_at >= DATE('now', '-60 days')
+        AND o.created_at < DATE('now', '-30 days')
+    `, [tenantId]);
+    const currentVolume = currentVolumeQuery[0]?.volume || 0;
+    const previousVolume = previousVolumeQuery[0]?.volume || 1;
+    const volumeGrowth = parseFloat((((currentVolume - previousVolume) / previousVolume) * 100).toFixed(1));
+
+    // Calculate price realization (actual price vs list price)
+    const priceQuery = await getQuery(`
+      SELECT 
+        COALESCE(AVG(oi.unit_price), 0) as avg_actual_price,
+        COALESCE(AVG(p.price), 0) as avg_list_price
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      JOIN products p ON oi.product_id = p.id
+      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const avgActualPrice = priceQuery[0]?.avg_actual_price || 0;
+    const avgListPrice = priceQuery[0]?.avg_list_price || 1;
+    const priceRealization = avgListPrice > 0 ? parseFloat(((avgActualPrice / avgListPrice) * 100).toFixed(1)) : 100;
+
+    // Get competitor count from competitor service
+    const competitorService = require('../services/competitor.service');
+    let competitorCount = 0;
+    let marketShare = 0;
+    try {
+      const competitorAnalysis = await competitorService.getMarketShareAnalysis(tenantId);
+      competitorCount = competitorAnalysis.totalCompetitors || 0;
+      marketShare = competitorAnalysis.ourMarketShare || 0;
+    } catch (e) {
+      // Competitor tables may not exist yet
+      competitorCount = 0;
+      marketShare = 0;
+    }
+
     res.json({
       success: true,
       data: {
         totalSpend,
         activePromotions,
         retailerParticipation,
-        roi: 3.2, // TODO: Calculate from actual sales data
-        marketShare: 24.5, // TODO: Calculate from market data
-        competitorAnalysis: 12, // TODO: Implement competitor tracking
+        roi,
+        marketShare,
+        competitorAnalysis: competitorCount,
         channelPartners,
-        tradeSpendEfficiency: 78.5, // TODO: Calculate from spend vs revenue
-        volumeGrowth: 12.3, // TODO: Calculate from historical sales
-        priceRealization: 94.2 // TODO: Calculate from pricing data
+        tradeSpendEfficiency,
+        volumeGrowth: isFinite(volumeGrowth) ? volumeGrowth : 0,
+        priceRealization
       }
     });
   } catch (error) {

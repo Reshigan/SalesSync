@@ -3,6 +3,8 @@ const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getQuery, getOneQuery } = require('../utils/database');
+const ExcelJS = require('exceljs');
+const PDFDocument = require('pdfkit');
 
 // Generate Report
 router.post('/generate', asyncHandler(async (req, res) => {
@@ -40,7 +42,11 @@ router.post('/generate', asyncHandler(async (req, res) => {
 router.post('/export', async (req, res) => {
   try {
     const { format } = req.query;
-    const { data } = req.body;
+    const { data, title = 'Report' } = req.body;
+    
+    if (!data || !data.headers || !data.rows) {
+      return res.status(400).json({ error: 'Invalid data format. Expected { headers: [], rows: [] }' });
+    }
     
     if (format === 'csv') {
       const csv = [data.headers.join(','), ...data.rows.map(r => r.join(','))].join('\n');
@@ -48,13 +54,103 @@ router.post('/export', async (req, res) => {
       res.setHeader('Content-Disposition', 'attachment; filename=report.csv');
       res.send(csv);
     } else if (format === 'xlsx') {
+      // Generate actual Excel file using ExcelJS
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'SalesSync';
+      workbook.created = new Date();
+      
+      const worksheet = workbook.addWorksheet(title);
+      
+      // Add headers with styling
+      worksheet.addRow(data.headers);
+      const headerRow = worksheet.getRow(1);
+      headerRow.font = { bold: true };
+      headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FF4472C4' }
+      };
+      headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      
+      // Add data rows
+      data.rows.forEach(row => {
+        worksheet.addRow(row);
+      });
+      
+      // Auto-fit columns
+      worksheet.columns.forEach((column, index) => {
+        let maxLength = data.headers[index]?.length || 10;
+        data.rows.forEach(row => {
+          const cellValue = row[index]?.toString() || '';
+          if (cellValue.length > maxLength) {
+            maxLength = cellValue.length;
+          }
+        });
+        column.width = Math.min(maxLength + 2, 50);
+      });
+      
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', 'attachment; filename=report.xlsx');
-      res.send(Buffer.from('Excel file placeholder'));
+      
+      await workbook.xlsx.write(res);
+      res.end();
     } else if (format === 'pdf') {
+      // Generate actual PDF using PDFKit
+      const doc = new PDFDocument({ margin: 50 });
+      
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
-      res.send(Buffer.from('PDF file placeholder'));
+      
+      doc.pipe(res);
+      
+      // Title
+      doc.fontSize(20).text(title, { align: 'center' });
+      doc.moveDown();
+      doc.fontSize(10).text(`Generated: ${new Date().toLocaleString()}`, { align: 'center' });
+      doc.moveDown(2);
+      
+      // Calculate column widths
+      const pageWidth = doc.page.width - 100;
+      const colCount = data.headers.length;
+      const colWidth = pageWidth / colCount;
+      
+      // Draw table header
+      let y = doc.y;
+      doc.fontSize(10).font('Helvetica-Bold');
+      data.headers.forEach((header, i) => {
+        doc.text(header.toString().substring(0, 15), 50 + (i * colWidth), y, {
+          width: colWidth,
+          align: 'left'
+        });
+      });
+      
+      // Draw header underline
+      y = doc.y + 5;
+      doc.moveTo(50, y).lineTo(50 + pageWidth, y).stroke();
+      doc.moveDown();
+      
+      // Draw data rows
+      doc.font('Helvetica').fontSize(9);
+      data.rows.forEach((row, rowIndex) => {
+        if (doc.y > doc.page.height - 100) {
+          doc.addPage();
+        }
+        y = doc.y;
+        row.forEach((cell, i) => {
+          doc.text((cell?.toString() || '').substring(0, 20), 50 + (i * colWidth), y, {
+            width: colWidth,
+            align: 'left'
+          });
+        });
+        doc.moveDown(0.5);
+      });
+      
+      // Footer
+      doc.fontSize(8).text(`Total rows: ${data.rows.length}`, 50, doc.page.height - 50, { align: 'center' });
+      
+      doc.end();
+    } else {
+      res.status(400).json({ error: 'Invalid format. Supported: csv, xlsx, pdf' });
     }
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

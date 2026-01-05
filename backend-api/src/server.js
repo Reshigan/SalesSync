@@ -124,6 +124,9 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Apply input sanitization and SQL injection prevention after parsing
 app.use(sanitizeInput);
 app.use(preventSQLInjection);
