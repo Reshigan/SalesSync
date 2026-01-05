@@ -107,7 +107,7 @@ router.get('/', async (req, res) => {
         0 as performance_rating,
         NULL as last_activity
       FROM users u
-      WHERE u.tenant_id = $1 AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'van_sales_agent', 'agent')
+      WHERE u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'van_sales_agent', 'agent')
       ORDER BY u.first_name, u.last_name
     `;
     
@@ -160,7 +160,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
       LEFT JOIN users mgr ON u.manager_id = mgr.id
-      WHERE u.id = $1 AND u.tenant_id = $2 AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'agent')
+      WHERE u.id = ? AND u.tenant_id = ? AND u.role IN ('sales_agent', 'field_agent', 'merchandiser', 'promoter', 'supervisor', 'agent')
     `;
     
     const agent = await getOneQuery(query, [id, req.tenantId]);
@@ -258,7 +258,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if employee ID already exists
-    const existingAgent = await getOneQuery('SELECT id FROM users WHERE employee_id = $1 AND tenant_id = $2', [employeeId, req.tenantId]);
+    const existingAgent = await getOneQuery('SELECT id FROM users WHERE employee_id = ? AND tenant_id = ?', [employeeId, req.tenantId]);
     if (existingAgent) {
       return res.status(400).json({
         success: false,
@@ -267,7 +267,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if email already exists
-    const existingEmail = await getOneQuery('SELECT id FROM users WHERE email = $1 AND tenant_id = $2', [email, req.tenantId]);
+    const existingEmail = await getOneQuery('SELECT id FROM users WHERE email = ? AND tenant_id = ?', [email, req.tenantId]);
     if (existingEmail) {
       return res.status(400).json({
         success: false,
@@ -287,7 +287,7 @@ router.post('/', async (req, res) => {
         id, tenant_id, employee_id, first_name, last_name, email, phone, password_hash,
         role, area_id, route_id, manager_id, status, hire_date, monthly_target,
         created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     await runQuery(insertQuery, [
@@ -307,7 +307,7 @@ router.post('/', async (req, res) => {
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
       LEFT JOIN users mgr ON u.manager_id = mgr.id
-      WHERE u.id = $1
+      WHERE u.id = ?
     `;
     
     const agent = await getOneQuery(query, [id]);
@@ -392,7 +392,7 @@ router.put('/:id', async (req, res) => {
     } = req.body;
     
     // Check if agent exists
-    const existingAgent = await getOneQuery('SELECT id FROM users WHERE id = $1 AND tenant_id = $2 AND role IN ($3, $4, $5, $6)', [
+    const existingAgent = await getOneQuery('SELECT id FROM users WHERE id = ? AND tenant_id = ? AND role IN (?, ?, ?, ?)', [
       id, req.tenantId, 'sales_agent', 'merchandiser', 'promoter', 'supervisor'
     ]);
     if (!existingAgent) {
@@ -404,7 +404,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if employee ID already exists (excluding current agent)
     if (employeeId) {
-      const duplicateAgent = await getOneQuery('SELECT id FROM users WHERE employee_id = $1 AND tenant_id = $2 AND id != $3', [employeeId, req.tenantId, id]);
+      const duplicateAgent = await getOneQuery('SELECT id FROM users WHERE employee_id = ? AND tenant_id = ? AND id != ?', [employeeId, req.tenantId, id]);
       if (duplicateAgent) {
         return res.status(400).json({
           success: false,
@@ -415,7 +415,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if email already exists (excluding current agent)
     if (email) {
-      const duplicateEmail = await getOneQuery('SELECT id FROM users WHERE email = $1 AND tenant_id = $2 AND id != $3', [email, req.tenantId, id]);
+      const duplicateEmail = await getOneQuery('SELECT id FROM users WHERE email = ? AND tenant_id = ? AND id != ?', [email, req.tenantId, id]);
       if (duplicateEmail) {
         return res.status(400).json({
           success: false,
@@ -428,20 +428,20 @@ router.put('/:id', async (req, res) => {
     
     const updateQuery = `
       UPDATE users SET
-        employee_id = COALESCE($1, employee_id),
-        first_name = COALESCE($2, first_name),
-        last_name = COALESCE($3, last_name),
-        email = COALESCE($4, email),
-        phone = COALESCE($5, phone),
-        role = COALESCE($6, role),
-        area_id = $7,
-        route_id = $8,
-        manager_id = $9,
-        status = COALESCE($10, status),
-        hire_date = COALESCE($11, hire_date),
-        monthly_target = $12,
-        updated_at = $13
-      WHERE id = $14 AND tenant_id = $15
+        employee_id = COALESCE(?, employee_id),
+        first_name = COALESCE(?, first_name),
+        last_name = COALESCE(?, last_name),
+        email = COALESCE(?, email),
+        phone = COALESCE(?, phone),
+        role = COALESCE(?, role),
+        area_id = ?,
+        route_id = ?,
+        manager_id = ?,
+        status = COALESCE(?, status),
+        hire_date = COALESCE(?, hire_date),
+        monthly_target = ?,
+        updated_at = ?
+      WHERE id = ? AND tenant_id = ?
     `;
     
     await runQuery(updateQuery, [
@@ -461,7 +461,7 @@ router.put('/:id', async (req, res) => {
       LEFT JOIN areas a ON u.area_id = a.id
       LEFT JOIN routes r ON u.route_id = r.id
       LEFT JOIN users mgr ON u.manager_id = mgr.id
-      WHERE u.id = $1
+      WHERE u.id = ?
     `;
     
     const agent = await getOneQuery(query, [id]);
@@ -509,10 +509,10 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
     // Check if agent exists
-    const existingAgent = await getOneQuery('SELECT id FROM users WHERE id = $1 AND tenant_id = $2 AND role IN ($3, $4, $5, $6)', [
+    const existingAgentDel = await getOneQuery('SELECT id FROM users WHERE id = ? AND tenant_id = ? AND role IN (?, ?, ?, ?)', [
       id, req.tenantId, 'sales_agent', 'merchandiser', 'promoter', 'supervisor'
     ]);
-    if (!existingAgent) {
+    if (!existingAgentDel) {
       return res.status(404).json({
         success: false,
         error: 'Agent not found'
@@ -520,7 +520,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if agent has associated orders
-    const orderCount = await getOneQuery('SELECT COUNT(*)::int as count FROM orders WHERE agent_id = $1', [id]);
+    const orderCount = await getOneQuery('SELECT COUNT(*) as count FROM orders WHERE agent_id = ?', [id]);
     if (orderCount && orderCount.count > 0) {
       return res.status(400).json({
         success: false,
@@ -529,7 +529,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if agent has associated visits
-    const visitCount = await getOneQuery('SELECT COUNT(*)::int as count FROM visits WHERE agent_id = $1', [id]);
+    const visitCount = await getOneQuery('SELECT COUNT(*) as count FROM visits WHERE agent_id = ?', [id]);
     if (visitCount && visitCount.count > 0) {
       return res.status(400).json({
         success: false,
@@ -537,7 +537,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    await runQuery('DELETE FROM users WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
+    await runQuery('DELETE FROM users WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     
     res.json({
       success: true,
