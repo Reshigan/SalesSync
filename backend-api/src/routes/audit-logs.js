@@ -22,42 +22,36 @@ router.get('/', asyncHandler(async (req, res) => {
       al.created_at
     FROM audit_logs al
     LEFT JOIN users u ON al.user_id = u.id
-    WHERE al.tenant_id = $1
+    WHERE al.tenant_id = ?
   `;
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (user_id) {
-    query += ` AND al.user_id = $${paramIndex}`;
+    query += ` AND al.user_id = ?`;
     params.push(user_id);
-    paramIndex++;
   }
   
   if (action) {
-    query += ` AND al.action = $${paramIndex}`;
+    query += ` AND al.action = ?`;
     params.push(action);
-    paramIndex++;
   }
   
   if (resource) {
-    query += ` AND al.resource = $${paramIndex}`;
+    query += ` AND al.resource = ?`;
     params.push(resource);
-    paramIndex++;
   }
   
   if (start_date) {
-    query += ` AND al.created_at >= $${paramIndex}`;
+    query += ` AND al.created_at >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    query += ` AND al.created_at <= $${paramIndex}`;
+    query += ` AND al.created_at <= ?`;
     params.push(end_date);
-    paramIndex++;
   }
   
-  query += ` ORDER BY al.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  query += ` ORDER BY al.created_at DESC LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), parseInt(offset));
   
   let logs = [];
@@ -101,32 +95,27 @@ router.get('/', asyncHandler(async (req, res) => {
   try {
     logs = await getQuery(query, params);
     
-    let countQuery = `SELECT COUNT(*) as total FROM audit_logs WHERE tenant_id = $1`;
+    let countQuery = `SELECT COUNT(*) as total FROM audit_logs WHERE tenant_id = ?`;
     const countParams = [tenantId];
-    let countParamIndex = 2;
     
     if (user_id) {
-      countQuery += ` AND user_id = $${countParamIndex}`;
+      countQuery += ` AND user_id = ?`;
       countParams.push(user_id);
-      countParamIndex++;
     }
     if (action) {
-      countQuery += ` AND action = $${countParamIndex}`;
+      countQuery += ` AND action = ?`;
       countParams.push(action);
-      countParamIndex++;
     }
     if (resource) {
-      countQuery += ` AND resource = $${countParamIndex}`;
+      countQuery += ` AND resource = ?`;
       countParams.push(resource);
-      countParamIndex++;
     }
     if (start_date) {
-      countQuery += ` AND created_at >= $${countParamIndex}`;
+      countQuery += ` AND created_at >= ?`;
       countParams.push(start_date);
-      countParamIndex++;
     }
     if (end_date) {
-      countQuery += ` AND created_at <= $${countParamIndex}`;
+      countQuery += ` AND created_at <= ?`;
       countParams.push(end_date);
     }
     
@@ -186,7 +175,7 @@ router.post('/', asyncHandler(async (req, res) => {
   try {
     await runQuery(`
       INSERT INTO audit_logs (id, tenant_id, user_id, action, resource, resource_id, details, ip_address)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [id, tenantId, userId, action, resource, resource_id || null, details ? JSON.stringify(details) : null, ipAddress || null]);
     
     res.json({
@@ -209,16 +198,14 @@ router.get('/stats', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND created_at >= $${paramIndex}`;
+    dateFilter += ` AND created_at >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND created_at <= $${paramIndex}`;
+    dateFilter += ` AND created_at <= ?`;
     params.push(end_date);
   }
   
@@ -231,14 +218,14 @@ router.get('/stats', asyncHandler(async (req, res) => {
   
   try {
     const totalResult = await getOneQuery(`
-      SELECT COUNT(*) as total FROM audit_logs WHERE tenant_id = $1${dateFilter}
+      SELECT COUNT(*) as total FROM audit_logs WHERE tenant_id = ?${dateFilter}
     `, params);
     stats.total_logs = parseInt(totalResult?.total || 0);
     
     stats.by_action = await getQuery(`
       SELECT action, COUNT(*) as count
       FROM audit_logs
-      WHERE tenant_id = $1${dateFilter}
+      WHERE tenant_id = ?${dateFilter}
       GROUP BY action
       ORDER BY count DESC
       LIMIT 10
@@ -247,7 +234,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
     stats.by_resource = await getQuery(`
       SELECT resource, COUNT(*) as count
       FROM audit_logs
-      WHERE tenant_id = $1${dateFilter}
+      WHERE tenant_id = ?${dateFilter}
       GROUP BY resource
       ORDER BY count DESC
       LIMIT 10
@@ -259,7 +246,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as count
       FROM audit_logs al
       LEFT JOIN users u ON al.user_id = u.id
-      WHERE al.tenant_id = $1${dateFilter}
+      WHERE al.tenant_id = ?${dateFilter}
       GROUP BY u.id, u.first_name, u.last_name
       ORDER BY count DESC
       LIMIT 10

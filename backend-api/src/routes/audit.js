@@ -11,7 +11,7 @@ router.get('/:entityType/:entityId', asyncHandler(async (req, res) => {
     SELECT al.*, u.name as performed_by_name
     FROM audit_logs al
     LEFT JOIN users u ON al.performed_by = u.id
-    WHERE al.entity_type = $1 AND al.entity_id = $2 AND al.tenant_id = $3
+    WHERE al.entity_type = ? AND al.entity_id = ? AND al.tenant_id = ?
     ORDER BY al.performed_at DESC
   `, [entityType, entityId, tenantId]);
   
@@ -30,7 +30,7 @@ router.get('/:entityType/:entityId/entries/:entryId', asyncHandler(async (req, r
     SELECT al.*, u.name as performed_by_name
     FROM audit_logs al
     LEFT JOIN users u ON al.performed_by = u.id
-    WHERE al.id = $1 AND al.entity_type = $2 AND al.entity_id = $3 AND al.tenant_id = $4
+    WHERE al.id = ? AND al.entity_type = ? AND al.entity_id = ? AND al.tenant_id = ?
   `, [entryId, entityType, entityId, tenantId]);
   
   const entry = entries[0] || null;
@@ -62,19 +62,19 @@ router.get('/:entityType/:entityId/search', asyncHandler(async (req, res) => {
       1.0 as relevance
     FROM audit_logs al
     LEFT JOIN users u ON al.performed_by = u.id
-    WHERE al.entity_type = $1 
-      AND al.entity_id = $2 
-      AND al.tenant_id = $3
+    WHERE al.entity_type = ? 
+      AND al.entity_id = ? 
+      AND al.tenant_id = ?
       AND (
-        al.action ILIKE $4 
-        OR al.description ILIKE $4
-        OR u.name ILIKE $4
-        OR u.first_name ILIKE $4
-        OR u.last_name ILIKE $4
+        al.action LIKE ? 
+        OR al.description LIKE ?
+        OR u.name LIKE ?
+        OR u.first_name LIKE ?
+        OR u.last_name LIKE ?
       )
     ORDER BY al.performed_at DESC
     LIMIT 50
-  `, [entityType, entityId, tenantId, `%${q}%`]);
+  `, [entityType, entityId, tenantId, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`]);
   
   res.json({
     success: true,
