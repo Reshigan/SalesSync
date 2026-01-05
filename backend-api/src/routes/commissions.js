@@ -13,7 +13,7 @@ router.get('/', authMiddleware, async (req, res) => {
     const query = `
       SELECT ct.*
       FROM commission_transactions ct
-      WHERE ct.tenant_id = $1
+      WHERE ct.tenant_id = ?
       ORDER BY ct.created_at DESC 
       LIMIT 100
     `;
@@ -34,7 +34,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
     const commission = await getOneQuery(
       `SELECT ct.*
        FROM commission_transactions ct
-       WHERE ct.id = $1 AND ct.tenant_id = $2`,
+       WHERE ct.id = ? AND ct.tenant_id = ?`,
       [id, tenantId]
     );
     
@@ -59,7 +59,7 @@ router.post('/:id/approve', authMiddleware, async (req, res) => {
     }
     
     const commission = await getOneQuery(
-      'SELECT * FROM commission_transactions WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM commission_transactions WHERE id = ? AND tenant_id = ?',
       [id, tenantId]
     );
     
@@ -85,7 +85,7 @@ router.get('/agent/:agentId/summary', authMiddleware, async (req, res) => {
         COUNT(*) as total_count,
         COALESCE(SUM(amount), 0) as total_amount
        FROM commission_transactions
-       WHERE tenant_id = $1`,
+       WHERE tenant_id = ?`,
       [tenantId]
     );
 
@@ -110,7 +110,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COUNT(*) as total_records,
       COALESCE(SUM(amount), 0) as total_commissions,
       COALESCE(AVG(amount), 0) as avg_commission
-    FROM commission_transactions WHERE tenant_id = $1
+    FROM commission_transactions WHERE tenant_id = ?
   `, [tenantId]);
 
   res.json({
@@ -145,7 +145,7 @@ router.get('/payouts/:payoutId/lines', authMiddleware, asyncHandler(async (req, 
     FROM payout_lines pl
     LEFT JOIN users u ON pl.agent_id = u.id
     JOIN payouts p ON pl.payout_id = p.id
-    WHERE pl.payout_id = $1 AND p.tenant_id = $2
+    WHERE pl.payout_id = ? AND p.tenant_id = ?
     ORDER BY u.first_name, u.last_name
   `, [payoutId, tenantId]);
   
@@ -166,7 +166,7 @@ router.get('/payouts/:payoutId/lines/:lineId/audit', authMiddleware, asyncHandle
       u.first_name || ' ' || u.last_name as performed_by
     FROM payout_audit pa
     LEFT JOIN users u ON pa.performed_by = u.id
-    WHERE pa.payout_line_id = $1 AND pa.tenant_id = $2
+    WHERE pa.payout_line_id = ? AND pa.tenant_id = ?
     ORDER BY pa.performed_at DESC
   `, [lineId, tenantId]);
   
@@ -192,7 +192,7 @@ router.get('/agents/:agentId/calculations', authMiddleware, asyncHandler(async (
       cc.commission_amount,
       cc.status
     FROM commission_calculations cc
-    WHERE cc.agent_id = $1 AND cc.tenant_id = $2
+    WHERE cc.agent_id = ? AND cc.tenant_id = ?
     ORDER BY cc.calculation_date DESC
     LIMIT 100
   `, [agentId, tenantId]);
@@ -220,7 +220,7 @@ router.get('/payouts/:payoutId/lines/:lineId/transactions', authMiddleware, asyn
     FROM commission_transactions ct
     LEFT JOIN orders o ON ct.order_id = o.id
     LEFT JOIN customers c ON o.customer_id = c.id
-    WHERE ct.payout_line_id = $1 AND ct.tenant_id = $2
+    WHERE ct.payout_line_id = ? AND ct.tenant_id = ?
     ORDER BY ct.transaction_date DESC
   `, [lineId, tenantId]);
   
@@ -241,7 +241,7 @@ router.get('/calculations/:id', authMiddleware, asyncHandler(async (req, res) =>
       u.first_name || ' ' || u.last_name as agent_name
     FROM commission_calculations cc
     LEFT JOIN users u ON cc.agent_id = u.id
-    WHERE cc.id = $1 AND cc.tenant_id = $2
+    WHERE cc.id = ? AND cc.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({
@@ -264,7 +264,7 @@ router.get('/calculations/:id/approval', authMiddleware, asyncHandler(async (req
     LEFT JOIN commission_calculations cc ON ca.calculation_id = cc.id
     LEFT JOIN users u ON cc.agent_id = u.id
     LEFT JOIN users u2 ON ca.approved_by = u2.id
-    WHERE ca.calculation_id = $1 AND ca.tenant_id = $2
+    WHERE ca.calculation_id = ? AND ca.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({
@@ -284,7 +284,7 @@ router.get('/calculations/:id/logs', authMiddleware, asyncHandler(async (req, re
       u.first_name || ' ' || u.last_name as performed_by_name
     FROM commission_logs cl
     LEFT JOIN users u ON cl.performed_by = u.id
-    WHERE cl.calculation_id = $1 AND cl.tenant_id = $2
+    WHERE cl.calculation_id = ? AND cl.tenant_id = ?
     ORDER BY cl.created_at DESC
   `, [id, tenantId]);
   
@@ -305,7 +305,7 @@ router.get('/calculations/:id/exceptions', authMiddleware, asyncHandler(async (r
       u.first_name || ' ' || u.last_name as resolved_by_name
     FROM commission_exceptions ce
     LEFT JOIN users u ON ce.resolved_by = u.id
-    WHERE ce.calculation_id = $1 AND ce.tenant_id = $2
+    WHERE ce.calculation_id = ? AND ce.tenant_id = ?
     ORDER BY ce.created_at DESC
   `, [id, tenantId]);
   
@@ -324,7 +324,7 @@ router.get('/rules/:id/conditions', authMiddleware, asyncHandler(async (req, res
     SELECT 
       crc.*
     FROM commission_rule_conditions crc
-    WHERE crc.rule_id = $1 AND crc.tenant_id = $2
+    WHERE crc.rule_id = ? AND crc.tenant_id = ?
     ORDER BY crc.priority
   `, [id, tenantId]);
   
@@ -348,7 +348,7 @@ router.get('/payouts/:payoutId/lines/:lineId', authMiddleware, asyncHandler(asyn
     FROM payout_lines pl
     LEFT JOIN users u ON pl.agent_id = u.id
     JOIN payouts p ON pl.payout_id = p.id
-    WHERE pl.id = $1 AND pl.payout_id = $2 AND p.tenant_id = $3
+    WHERE pl.id = ? AND pl.payout_id = ? AND p.tenant_id = ?
   `, [lineId, payoutId, tenantId]);
   
   res.json({
