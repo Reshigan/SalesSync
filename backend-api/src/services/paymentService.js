@@ -5,8 +5,25 @@
  */
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_dummy');
+const paypal = require('@paypal/checkout-server-sdk');
 const { getDatabase } = require('../database/database');
 const logger = require('../utils/logger');
+
+// PayPal Environment Setup
+function getPayPalClient() {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+  
+  const environment = process.env.NODE_ENV === 'production'
+    ? new paypal.core.LiveEnvironment(clientId, clientSecret)
+    : new paypal.core.SandboxEnvironment(clientId, clientSecret);
+  
+  return new paypal.core.PayPalHttpClient(environment);
+}
 
 class PaymentService {
   constructor() {
@@ -126,12 +143,148 @@ class PaymentService {
   }
 
   /**
-   * Process PayPal payment (placeholder)
+   * Process PayPal payment
+   * Creates a PayPal order and captures the payment
    */
-  async processPayPalPayment(data) {
-    // TODO: Implement PayPal integration
-    logger.info('PayPal payment processing (not implemented)', data);
-    throw new Error('PayPal integration not yet implemented');
+  async processPayPalPayment({ amount, currency, customerId, metadata, invoiceId }) {
+    const client = getPayPalClient();
+    
+    if (!client) {
+      logger.warn('PayPal credentials not configured');
+      throw new Error('PayPal integration not configured. Please set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET environment variables.');
+    }
+    
+    try {
+      // Create PayPal order
+      const request = new paypal.orders.OrdersCreateRequest();
+      request.prefer('return=representation');
+      request.requestBody({
+        intent: 'CAPTURE',
+        purchase_units: [{
+          amount: {
+            currency_code: currency.toUpperCase(),
+            value: amount.toFixed(2)
+          },
+          description: `Payment for Invoice ${invoiceId || 'N/A'}`,
+          custom_id: customerId,
+          reference_id: invoiceId || `order_${Date.now()}`
+        }],
+        application_context: {
+          brand_name: 'SalesSync',
+          landing_page: 'NO_PREFERENCE',
+          user_action: 'PAY_NOW',
+          return_url: metadata.returnUrl || process.env.PAYPAL_RETURN_URL || 'https://example.com/success',
+          cancel_url: metadata.cancelUrl || process.env.PAYPAL_CANCEL_URL || 'https://example.com/cancel'
+        }
+      });
+      
+      const order = await client.execute(request);
+      logger.info('PayPal order created', { orderId: order.result.id });
+      
+      // If order ID is provided in metadata, capture the payment immediately
+      if (metadata.paypalOrderId) {
+        const captureRequest = new paypal.orders.OrdersCaptureRequest(metadata.paypalOrderId);
+        captureRequest.requestBody({});
+        
+        const capture = await client.execute(captureRequest);
+        
+        return {
+          transactionId: capture.result.id,
+          status: this.mapPayPalStatus(capture.result.status),
+          raw: capture.result
+        };
+      }
+      
+      // Return order for client-side approval
+      return {
+        transactionId: order.result.id,
+        status: 'pending_approval',
+        raw: order.result,
+        approvalUrl: order.result.links.find(link => link.rel === 'approve')?.href
+      };
+      
+    } catch (error) {
+      logger.error('PayPal payment failed', { error: error.message, stack: error.stack });
+      throw new Error(`PayPal payment failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Capture a PayPal order after approval
+   */
+  async capturePayPalOrder(orderId) {
+    const client = getPayPalClient();
+    
+    if (!client) {
+      throw new Error('PayPal integration not configured');
+    }
+    
+    try {
+      const request = new paypal.orders.OrdersCaptureRequest(orderId);
+      request.requestBody({});
+      
+      const capture = await client.execute(request);
+      
+      logger.info('PayPal payment captured', { orderId, captureId: capture.result.id });
+      
+      return {
+        transactionId: capture.result.id,
+        status: this.mapPayPalStatus(capture.result.status),
+        raw: capture.result
+      };
+    } catch (error) {
+      logger.error('PayPal capture failed', { error: error.message, orderId });
+      throw new Error(`PayPal capture failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create PayPal refund
+   */
+  async createPayPalRefund(captureId, amount, currency) {
+    const client = getPayPalClient();
+    
+    if (!client) {
+      throw new Error('PayPal integration not configured');
+    }
+    
+    try {
+      const request = new paypal.payments.CapturesRefundRequest(captureId);
+      request.requestBody({
+        amount: {
+          value: amount.toFixed(2),
+          currency_code: currency.toUpperCase()
+        }
+      });
+      
+      const refund = await client.execute(request);
+      
+      logger.info('PayPal refund created', { captureId, refundId: refund.result.id });
+      
+      return {
+        refundId: refund.result.id,
+        status: this.mapPayPalStatus(refund.result.status),
+        raw: refund.result
+      };
+    } catch (error) {
+      logger.error('PayPal refund failed', { error: error.message, captureId });
+      throw new Error(`PayPal refund failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Map PayPal status to internal status
+   */
+  mapPayPalStatus(paypalStatus) {
+    const statusMap = {
+      'COMPLETED': 'completed',
+      'APPROVED': 'pending',
+      'CREATED': 'pending',
+      'SAVED': 'pending',
+      'VOIDED': 'failed',
+      'PAYER_ACTION_REQUIRED': 'pending_approval'
+    };
+    return statusMap[paypalStatus] || 'pending';
   }
 
   /**

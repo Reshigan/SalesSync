@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
+const competitorService = require('../services/competitor.service');
 
 /**
  * Get trade marketing overview metrics
@@ -47,19 +48,79 @@ router.get('/metrics', async (req, res) => {
     const totalCustomers = totalCustomersQuery[0]?.total || 1;
     const retailerParticipation = Math.round((retailerCount / totalCustomers) * 100);
 
+    // Calculate ROI from sales data (revenue generated / spend)
+    const revenueQuery = await getQuery(`
+      SELECT COALESCE(SUM(o.total_amount), 0) as revenue
+      FROM orders o
+      WHERE o.tenant_id = ? 
+        AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const revenue = revenueQuery[0]?.revenue || 0;
+    const roi = totalSpend > 0 ? parseFloat((revenue / totalSpend).toFixed(2)) : 0;
+
+    // Calculate trade spend efficiency (revenue per dollar spent)
+    const tradeSpendEfficiency = totalSpend > 0 ? parseFloat(((revenue / totalSpend) * 100).toFixed(1)) : 0;
+
+    // Calculate volume growth (compare current vs previous period)
+    const currentVolumeQuery = await getQuery(`
+      SELECT COALESCE(SUM(oi.quantity), 0) as volume
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const previousVolumeQuery = await getQuery(`
+      SELECT COALESCE(SUM(oi.quantity), 0) as volume
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ? 
+        AND o.created_at >= DATE('now', '-60 days')
+        AND o.created_at < DATE('now', '-30 days')
+    `, [tenantId]);
+    const currentVolume = currentVolumeQuery[0]?.volume || 0;
+    const previousVolume = previousVolumeQuery[0]?.volume || 1;
+    const volumeGrowth = parseFloat((((currentVolume - previousVolume) / previousVolume) * 100).toFixed(1));
+
+    // Calculate price realization (actual price vs list price)
+    const priceQuery = await getQuery(`
+      SELECT 
+        COALESCE(AVG(oi.unit_price), 0) as avg_actual_price,
+        COALESCE(AVG(p.price), 0) as avg_list_price
+      FROM order_items oi
+      JOIN orders o ON oi.order_id = o.id
+      JOIN products p ON oi.product_id = p.id
+      WHERE o.tenant_id = ? AND o.created_at >= DATE('now', '-30 days')
+    `, [tenantId]);
+    const avgActualPrice = priceQuery[0]?.avg_actual_price || 0;
+    const avgListPrice = priceQuery[0]?.avg_list_price || 1;
+    const priceRealization = avgListPrice > 0 ? parseFloat(((avgActualPrice / avgListPrice) * 100).toFixed(1)) : 100;
+
+    // Get competitor count from competitor service
+    const competitorService = require('../services/competitor.service');
+    let competitorCount = 0;
+    let marketShare = 0;
+    try {
+      const competitorAnalysis = await competitorService.getMarketShareAnalysis(tenantId);
+      competitorCount = competitorAnalysis.totalCompetitors || 0;
+      marketShare = competitorAnalysis.ourMarketShare || 0;
+    } catch (e) {
+      // Competitor tables may not exist yet
+      competitorCount = 0;
+      marketShare = 0;
+    }
+
     res.json({
       success: true,
       data: {
         totalSpend,
         activePromotions,
         retailerParticipation,
-        roi: 3.2, // TODO: Calculate from actual sales data
-        marketShare: 24.5, // TODO: Calculate from market data
-        competitorAnalysis: 12, // TODO: Implement competitor tracking
+        roi,
+        marketShare,
+        competitorAnalysis: competitorCount,
         channelPartners,
-        tradeSpendEfficiency: 78.5, // TODO: Calculate from spend vs revenue
-        volumeGrowth: 12.3, // TODO: Calculate from historical sales
-        priceRealization: 94.2 // TODO: Calculate from pricing data
+        tradeSpendEfficiency,
+        volumeGrowth: isFinite(volumeGrowth) ? volumeGrowth : 0,
+        priceRealization
       }
     });
   } catch (error) {
@@ -157,44 +218,255 @@ router.get('/channel-partners', async (req, res) => {
 });
 
 /**
- * Get competitor analysis
+ * Get competitor analysis (market share overview)
  */
 router.get('/competitor-analysis', async (req, res) => {
   try {
-    // TODO: Implement competitor tracking in database
-    const mockData = [
-      {
-        competitor: 'Competitor A',
-        marketShare: 28.3,
-        priceIndex: 105,
-        promotionalActivity: 82,
-        trend: 'up'
-      },
-      {
-        competitor: 'Competitor B',
-        marketShare: 22.1,
-        priceIndex: 98,
-        promotionalActivity: 75,
-        trend: 'stable'
-      },
-      {
-        competitor: 'Competitor C',
-        marketShare: 18.7,
-        priceIndex: 92,
-        promotionalActivity: 68,
-        trend: 'down'
-      }
-    ];
-
+    const tenantId = req.tenantId;
+    const analysis = await competitorService.getMarketShareAnalysis(tenantId);
+    
     res.json({
       success: true,
-      data: mockData
+      data: analysis.competitors,
+      summary: {
+        ourMarketShare: analysis.ourMarketShare,
+        totalCompetitors: analysis.totalCompetitors
+      }
     });
   } catch (error) {
     console.error('Error fetching competitor analysis:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch competitor analysis'
+    });
+  }
+});
+
+/**
+ * Get all competitors
+ */
+router.get('/competitors', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { limit, offset, status } = req.query;
+    
+    const result = await competitorService.getCompetitors(tenantId, {
+      limit: parseInt(limit) || 50,
+      offset: parseInt(offset) || 0,
+      status
+    });
+    
+    res.json({
+      success: true,
+      data: result.competitors,
+      pagination: {
+        total: result.total,
+        limit: result.limit,
+        offset: result.offset
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching competitors:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch competitors'
+    });
+  }
+});
+
+/**
+ * Get competitor by ID
+ */
+router.get('/competitors/:id', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { id } = req.params;
+    
+    const competitor = await competitorService.getCompetitorById(tenantId, id);
+    
+    if (!competitor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Competitor not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: competitor
+    });
+  } catch (error) {
+    console.error('Error fetching competitor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch competitor'
+    });
+  }
+});
+
+/**
+ * Create competitor
+ */
+router.post('/competitors', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const competitor = await competitorService.createCompetitor(tenantId, req.body);
+    
+    res.status(201).json({
+      success: true,
+      data: competitor
+    });
+  } catch (error) {
+    console.error('Error creating competitor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create competitor'
+    });
+  }
+});
+
+/**
+ * Update competitor
+ */
+router.put('/competitors/:id', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { id } = req.params;
+    
+    const competitor = await competitorService.updateCompetitor(tenantId, id, req.body);
+    
+    res.json({
+      success: true,
+      data: competitor
+    });
+  } catch (error) {
+    console.error('Error updating competitor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update competitor'
+    });
+  }
+});
+
+/**
+ * Delete competitor
+ */
+router.delete('/competitors/:id', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { id } = req.params;
+    
+    await competitorService.deleteCompetitor(tenantId, id);
+    
+    res.json({
+      success: true,
+      message: 'Competitor deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting competitor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to delete competitor'
+    });
+  }
+});
+
+/**
+ * Add competitor product
+ */
+router.post('/competitors/:competitorId/products', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { competitorId } = req.params;
+    
+    const product = await competitorService.addCompetitorProduct(tenantId, competitorId, req.body);
+    
+    res.status(201).json({
+      success: true,
+      data: product
+    });
+  } catch (error) {
+    console.error('Error adding competitor product:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to add competitor product'
+    });
+  }
+});
+
+/**
+ * Record price observation
+ */
+router.post('/competitors/:competitorId/prices', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { competitorId } = req.params;
+    
+    const observation = await competitorService.recordPriceObservation(tenantId, {
+      ...req.body,
+      competitor_id: competitorId
+    });
+    
+    res.status(201).json({
+      success: true,
+      data: observation
+    });
+  } catch (error) {
+    console.error('Error recording price observation:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to record price observation'
+    });
+  }
+});
+
+/**
+ * Record competitor activity
+ */
+router.post('/competitors/:competitorId/activities', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { competitorId } = req.params;
+    
+    const activity = await competitorService.recordCompetitorActivity(tenantId, {
+      ...req.body,
+      competitor_id: competitorId
+    });
+    
+    res.status(201).json({
+      success: true,
+      data: activity
+    });
+  } catch (error) {
+    console.error('Error recording competitor activity:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to record competitor activity'
+    });
+  }
+});
+
+/**
+ * Get competitive intelligence summary
+ */
+router.get('/competitive-intelligence', async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const { days } = req.query;
+    
+    const intelligence = await competitorService.getCompetitiveIntelligence(tenantId, {
+      days: parseInt(days) || 30
+    });
+    
+    res.json({
+      success: true,
+      data: intelligence
+    });
+  } catch (error) {
+    console.error('Error fetching competitive intelligence:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch competitive intelligence'
     });
   }
 });

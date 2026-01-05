@@ -124,6 +124,9 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Apply input sanitization and SQL injection prevention after parsing
 app.use(sanitizeInput);
 app.use(preventSQLInjection);
@@ -587,6 +590,11 @@ async function startServer() {
     
     logger.info('Mounting fraud prevention routes...');
     app.use('/api/individuals', authTenantMiddleware, individualsRoutes);
+
+    // Image Analysis routes
+    logger.info('Mounting image analysis routes...');
+    const imageAnalysisRoutes = require('./routes/image-analysis');
+    app.use('/api/image-analysis', authTenantMiddleware, imageAnalysisRoutes);
 
     logger.info('Routes configured successfully');
 

@@ -1,6 +1,9 @@
 const express = require('express');
 const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { selectOne, selectMany, insertRow, updateRow, deleteRow } = require('../utils/pg-helpers');
+const settingsService = require('../services/settings.service');
+const masterdataService = require('../services/masterdata.service');
+const notificationService = require('../services/notification.service');
 const router = express.Router();
 
 /**
@@ -311,6 +314,44 @@ router.post('/', async (req, res) => {
       });
     }
     
+    // Calculate preliminary total for credit check
+    let preliminaryTotal = 0;
+    for (const item of items) {
+      const product = await selectOne('products', { id: item.product_id }, tenantId);
+      if (product) {
+        const price = parseFloat(item.unit_price || product.selling_price || 0);
+        preliminaryTotal += price * parseInt(item.quantity || 1);
+      }
+    }
+    
+    // Check customer credit using settings service
+    const creditCheck = await masterdataService.checkCustomerCreditForOrder(tenantId, customer_id, preliminaryTotal);
+    if (!creditCheck.allowed) {
+      return res.status(400).json({
+        success: false,
+        message: creditCheck.reason,
+        creditInfo: {
+          availableCredit: creditCheck.availableCredit,
+          creditLimit: creditCheck.creditLimit,
+          orderAmount: preliminaryTotal
+        }
+      });
+    }
+    
+    // Check inventory availability using settings service
+    const inventoryItems = items.map(item => ({
+      product_id: item.product_id,
+      quantity: parseInt(item.quantity || 1)
+    }));
+    const inventoryCheck = await settingsService.checkInventoryForOrder(tenantId, inventoryItems);
+    if (!inventoryCheck.allowed) {
+      return res.status(400).json({
+        success: false,
+        message: inventoryCheck.reason,
+        insufficientItems: inventoryCheck.insufficientItems
+      });
+    }
+    
     // Validate salesman if provided
     if (salesman_id) {
       const salesman = await selectOne('users', { id: salesman_id }, tenantId);
@@ -361,6 +402,10 @@ router.post('/', async (req, res) => {
     
     const total_amount = subtotal - discount_amount + tax_amount;
     
+    // Check if order requires approval based on settings
+    const approvalCheck = await settingsService.orderRequiresApproval(tenantId, total_amount);
+    const initialStatus = approvalCheck.required ? 'pending_approval' : 'pending';
+    
     // Generate order number
     const order_number = await generateOrderNumber(tenantId);
     
@@ -378,8 +423,10 @@ router.post('/', async (req, res) => {
       total_amount: total_amount.toFixed(2),
       payment_method,
       payment_status: 'pending',
-      order_status: 'pending',
-      notes
+      order_status: initialStatus,
+      notes,
+      requires_approval: approvalCheck.required ? 1 : 0,
+      approval_reason: approvalCheck.reason
     };
     
     const newOrder = await insertRow('orders', orderData, tenantId);
@@ -401,6 +448,11 @@ router.post('/', async (req, res) => {
     
     // Get complete order with items
     const completeOrder = await getOrderWithDetails(newOrder.id, tenantId);
+    
+    // Send order confirmation notification (async, don't block response)
+    notificationService.sendOrderConfirmation(tenantId, newOrder.id).catch(err => {
+      console.error('Failed to send order confirmation:', err);
+    });
     
     // Emit Socket.IO event for real-time update
     const io = req.app.get('io');
@@ -426,8 +478,14 @@ router.post('/', async (req, res) => {
     
     res.status(201).json({
       success: true,
-      data: { order: completeOrder },
-      message: 'Order created successfully'
+      data: { 
+        order: completeOrder,
+        requiresApproval: approvalCheck.required,
+        approvalReason: approvalCheck.reason
+      },
+      message: approvalCheck.required 
+        ? 'Order created and pending approval' 
+        : 'Order created successfully'
     });
   } catch (error) {
     console.error('Error creating order:', error);
