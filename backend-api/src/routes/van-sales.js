@@ -33,38 +33,38 @@ router.get('/', asyncHandler(async (req, res) => {
     LEFT JOIN vans v ON vs.van_id = v.id
     LEFT JOIN customers c ON vs.customer_id = c.id
     LEFT JOIN users u ON vs.agent_id = u.id
-    WHERE vs.tenant_id = $1
+    WHERE vs.tenant_id = ?
   `;
   
   const params = [tenantId];
   let paramIndex = 2;
   
   if (start_date) {
-    query += ` AND vs.sale_date >= $${paramIndex}`;
+    query += ` AND vs.sale_date >= ?`;
     params.push(start_date);
     paramIndex++;
   }
   
   if (end_date) {
-    query += ` AND vs.sale_date <= $${paramIndex}`;
+    query += ` AND vs.sale_date <= ?`;
     params.push(end_date);
     paramIndex++;
   }
   
   if (van_id) {
-    query += ` AND vs.van_id = $${paramIndex}`;
+    query += ` AND vs.van_id = ?`;
     params.push(van_id);
     paramIndex++;
   }
   
   if (agent_id) {
-    query += ` AND vs.agent_id = $${paramIndex}`;
+    query += ` AND vs.agent_id = ?`;
     params.push(agent_id);
     paramIndex++;
   }
   
   if (status) {
-    query += ` AND vs.status = $${paramIndex}`;
+    query += ` AND vs.status = ?`;
     params.push(status);
     paramIndex++;
   }
@@ -130,7 +130,7 @@ router.post('/', asyncHandler(async (req, res) => {
       sale_type, subtotal, tax_amount, discount_amount, total_amount, 
       amount_paid, amount_due, payment_method, payment_reference,
       location_lat, location_lng, notes, status, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
     [
       req.tenantId,
       saleNumber,
@@ -168,7 +168,7 @@ router.post('/', asyncHandler(async (req, res) => {
       `INSERT INTO van_sale_items (
         van_sale_id, product_id, quantity, unit_price, 
         discount_rate, tax_rate, line_total
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         saleId,
         item.product_id,
@@ -212,7 +212,7 @@ router.get('/routes', asyncHandler(async (req, res) => {
       u.first_name || ' ' || u.last_name as driver_name
     FROM routes r
     LEFT JOIN users u ON r.salesman_id = u.id
-    WHERE r.tenant_id = $1
+    WHERE r.tenant_id = ?
     ORDER BY r.created_at DESC
   `, [tenantId]);
 
@@ -253,7 +253,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COUNT(*) as total_vans,
       SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_vans
     FROM vans
-    WHERE tenant_id = $1
+    WHERE tenant_id = ?
   `, [tenantId]);
   
   // Get sales statistics
@@ -264,20 +264,20 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COALESCE(AVG(total_amount), 0) as avg_sale_value,
       COUNT(DISTINCT customer_id) as customers_served
     FROM van_sales
-    WHERE tenant_id = $1
+    WHERE tenant_id = ?
   `;
   
   const salesParams = [tenantId];
   let salesParamIndex = 2;
   
   if (start_date) {
-    salesQuery += ` AND sale_date >= $${salesParamIndex}`;
+    salesQuery += ` AND sale_date >= ?`;
     salesParams.push(start_date);
     salesParamIndex++;
   }
   
   if (end_date) {
-    salesQuery += ` AND sale_date <= $${salesParamIndex}`;
+    salesQuery += ` AND sale_date <= ?`;
     salesParams.push(end_date);
     salesParamIndex++;
   }
@@ -289,13 +289,13 @@ router.get('/stats', asyncHandler(async (req, res) => {
   
   let dateConditions = '';
   if (start_date) {
-    dateConditions += ` AND vs.sale_date >= $${topVansParamIndex}`;
+    dateConditions += ` AND vs.sale_date >= ?`;
     topVansParams.push(start_date);
     topVansParamIndex++;
   }
   
   if (end_date) {
-    dateConditions += ` AND vs.sale_date <= $${topVansParamIndex}`;
+    dateConditions += ` AND vs.sale_date <= ?`;
     topVansParams.push(end_date);
     topVansParamIndex++;
   }
@@ -307,8 +307,8 @@ router.get('/stats', asyncHandler(async (req, res) => {
       COUNT(vs.id) as total_sales,
       COALESCE(SUM(vs.total_amount), 0) as total_revenue
     FROM vans v
-    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = $1${dateConditions}
-    WHERE v.tenant_id = $${topVansParamIndex}
+    LEFT JOIN van_sales vs ON v.id = vs.van_id AND vs.tenant_id = ?${dateConditions}
+    WHERE v.tenant_id = ?
     GROUP BY v.id, v.registration_number
     ORDER BY total_revenue DESC
     LIMIT 5
@@ -363,13 +363,13 @@ router.get('/analytics', asyncHandler(async (req, res) => {
   let paramIndex = 2;
 
   if (start_date) {
-    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    dateFilter += ` AND vs.sale_date >= ?`;
     params.push(start_date);
     paramIndex++;
   }
 
   if (end_date) {
-    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    dateFilter += ` AND vs.sale_date <= ?`;
     params.push(end_date);
     paramIndex++;
   }
@@ -385,7 +385,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
     FROM products p
     INNER JOIN van_sale_items vsi ON p.id = vsi.product_id
     INNER JOIN van_sales vs ON vsi.van_sale_id = vs.id
-    WHERE vs.tenant_id = $1${dateFilter}
+    WHERE vs.tenant_id = ?${dateFilter}
     GROUP BY p.id, p.name, p.code
     ORDER BY total_revenue DESC
     LIMIT 10
@@ -401,7 +401,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
       0 as total_revenue,
       0 as unique_customers
     FROM regions r
-    WHERE r.tenant_id = $1
+    WHERE r.tenant_id = ?
     GROUP BY r.id, r.name
     ORDER BY r.name
   `;
@@ -414,7 +414,7 @@ router.get('/analytics', asyncHandler(async (req, res) => {
       SUM(vs.total_amount) as revenue,
       AVG(vs.total_amount) as avg_order_value
     FROM van_sales vs
-    WHERE vs.tenant_id = $1${dateFilter}
+    WHERE vs.tenant_id = ?${dateFilter}
     GROUP BY DATE(vs.sale_date)
     ORDER BY date DESC
     LIMIT 30
@@ -442,13 +442,13 @@ router.get('/trends', asyncHandler(async (req, res) => {
   let paramIndex = 2;
 
   if (start_date) {
-    dateFilter += ` AND vs.sale_date >= $${paramIndex}`;
+    dateFilter += ` AND vs.sale_date >= ?`;
     params.push(start_date);
     paramIndex++;
   }
 
   if (end_date) {
-    dateFilter += ` AND vs.sale_date <= $${paramIndex}`;
+    dateFilter += ` AND vs.sale_date <= ?`;
     params.push(end_date);
     paramIndex++;
   }
@@ -465,7 +465,7 @@ router.get('/trends', asyncHandler(async (req, res) => {
         COUNT(DISTINCT vs.customer_id) as unique_customers,
         COUNT(DISTINCT vs.van_id) as active_vans
       FROM van_sales vs
-      WHERE vs.tenant_id = $1${dateFilter}
+      WHERE vs.tenant_id = ?${dateFilter}
       GROUP BY DATE(vs.sale_date)
       ORDER BY period DESC
       LIMIT 30
@@ -480,7 +480,7 @@ router.get('/trends', asyncHandler(async (req, res) => {
         COUNT(DISTINCT vs.customer_id) as unique_customers,
         COUNT(DISTINCT vs.van_id) as active_vans
       FROM van_sales vs
-      WHERE vs.tenant_id = $1${dateFilter}
+      WHERE vs.tenant_id = ?${dateFilter}
       GROUP BY DATE_TRUNC('week', vs.sale_date)
       ORDER BY period DESC
       LIMIT 12
@@ -495,7 +495,7 @@ router.get('/trends', asyncHandler(async (req, res) => {
         COUNT(DISTINCT vs.customer_id) as unique_customers,
         COUNT(DISTINCT vs.van_id) as active_vans
       FROM van_sales vs
-      WHERE vs.tenant_id = $1${dateFilter}
+      WHERE vs.tenant_id = ?${dateFilter}
       GROUP BY DATE_TRUNC('month', vs.sale_date)
       ORDER BY period DESC
       LIMIT 12
@@ -537,7 +537,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     LEFT JOIN vans v ON vs.van_id = v.id
     LEFT JOIN customers c ON vs.customer_id = c.id
     LEFT JOIN users u ON vs.agent_id = u.id
-    WHERE vs.id = $1 AND vs.tenant_id = $2
+    WHERE vs.id = ? AND vs.tenant_id = ?
   `, [id, tenantId]);
 
   if (!vanSale) {
@@ -554,7 +554,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
       p.code as product_sku
     FROM van_sale_items vsi
     LEFT JOIN products p ON vsi.product_id = p.id
-    WHERE vsi.van_sale_id = $1
+    WHERE vsi.van_sale_id = ?
   `, [id]);
   
   vanSale.items = items || [];
@@ -601,7 +601,7 @@ router.get('/routes/:routeId/stops', asyncHandler(async (req, res) => {
     FROM route_stops rs
     LEFT JOIN customers c ON rs.customer_id = c.id
     LEFT JOIN orders o ON rs.order_id = o.id
-    WHERE rs.route_id = $1 AND rs.tenant_id = $2
+    WHERE rs.route_id = ? AND rs.tenant_id = ?
     ORDER BY rs.stop_number
   `, [routeId, tenantId]);
   
@@ -624,7 +624,7 @@ router.get('/routes/:routeId/exceptions', asyncHandler(async (req, res) => {
     FROM route_exceptions re
     LEFT JOIN route_stops rs ON re.stop_id = rs.id
     LEFT JOIN customers c ON rs.customer_id = c.id
-    WHERE re.route_id = $1 AND re.tenant_id = $2
+    WHERE re.route_id = ? AND re.tenant_id = ?
     ORDER BY re.created_at DESC
   `, [routeId, tenantId]);
   
@@ -651,7 +651,7 @@ router.get('/loads/:loadId/items', asyncHandler(async (req, res) => {
     FROM van_load_items vli
     LEFT JOIN products p ON vli.product_id = p.id
     JOIN van_loads vl ON vli.van_load_id = vl.id
-    WHERE vli.van_load_id = $1 AND vl.tenant_id = $2
+    WHERE vli.van_load_id = ? AND vl.tenant_id = ?
     ORDER BY p.name
   `, [loadId, tenantId]);
   

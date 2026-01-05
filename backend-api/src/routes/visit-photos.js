@@ -13,7 +13,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN visits v ON vp.visit_id = v.id
       LEFT JOIN customers c ON v.customer_id = c.id
       LEFT JOIN users u ON vp.uploaded_by = u.id
-      WHERE vp.id = $1 AND vp.tenant_id = $2
+      WHERE vp.id = ? AND vp.tenant_id = ?
     `, [id, tenantId]);
     
     res.json({ success: true, data: photo || null });

@@ -18,49 +18,49 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
     FROM surveys s
     LEFT JOIN survey_responses sr ON s.id = sr.survey_id
     LEFT JOIN survey_assignments sa ON s.id = sa.survey_id
-    WHERE s.tenant_id = $1
+    WHERE s.tenant_id = ?
   `;
   
   const params = [req.tenantId];
   let paramIndex = 1;
   
   if (status) {
-    query += ` AND s.status = $${++paramIndex}`;
+    query += ` AND s.status = ?`;
     params.push(status);
   }
   
   if (type) {
-    query += ` AND s.type = $${++paramIndex}`;
+    query += ` AND s.type = ?`;
     params.push(type);
   }
   
   if (category) {
-    query += ` AND s.category = $${++paramIndex}`;
+    query += ` AND s.category = ?`;
     params.push(category);
   }
   
-  query += ` GROUP BY s.id ORDER BY s.created_at DESC LIMIT $${++paramIndex} OFFSET $${++paramIndex}`;
+  query += ` GROUP BY s.id ORDER BY s.created_at DESC LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), offset);
   
   const surveys = await getQuery(query, params);
   
   // Get total count
-  let countQuery = 'SELECT COUNT(*) as total FROM surveys s WHERE s.tenant_id = $1';
+  let countQuery = 'SELECT COUNT(*) as total FROM surveys s WHERE s.tenant_id = ?';
   const countParams = [req.tenantId];
   let countParamIndex = 1;
   
   if (status) {
-    countQuery += ` AND s.status = $${++countParamIndex}`;
+    countQuery += ` AND s.status = ?`;
     countParams.push(status);
   }
   
   if (type) {
-    countQuery += ` AND s.type = $${++countParamIndex}`;
+    countQuery += ` AND s.type = ?`;
     countParams.push(type);
   }
   
   if (category) {
-    countQuery += ` AND s.category = $${++countParamIndex}`;
+    countQuery += ` AND s.category = ?`;
     countParams.push(category);
   }
   
@@ -94,7 +94,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(*) as total_surveys,
         COUNT(CASE WHEN status = 'active' THEN 1 END) as active_surveys,
         COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_surveys
-      FROM surveys WHERE tenant_id = $1
+      FROM surveys WHERE tenant_id = ?
     `, [tenantId]).then(row => row || {}),
     
     getOneQuery(`
@@ -104,7 +104,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         AVG(CASE WHEN sr.completion_time IS NOT NULL THEN sr.completion_time END) as avg_completion_time
       FROM survey_responses sr
       INNER JOIN surveys s ON sr.survey_id = s.id
-      WHERE s.tenant_id = $1
+      WHERE s.tenant_id = ?
     `, [tenantId]).then(row => row || {}),
     
     getQuery(`
@@ -113,7 +113,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(sr.id) as response_count
       FROM surveys s
       LEFT JOIN survey_responses sr ON s.id = sr.survey_id
-      WHERE s.tenant_id = $1
+      WHERE s.tenant_id = ?
       GROUP BY s.id, s.title, s.status
       ORDER BY response_count DESC
       LIMIT 10
@@ -163,7 +163,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
   const survey = await getOneQuery(`
     SELECT s.*
     FROM surveys s
-    WHERE s.id = $1 AND s.tenant_id = $2
+    WHERE s.id = ? AND s.tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!survey) {
@@ -174,7 +174,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
   const questions = await getQuery(`
     SELECT sq.* 
     FROM survey_questions sq
-    WHERE sq.survey_template_id = $1 
+    WHERE sq.survey_template_id = ? 
     ORDER BY sq.sequence_order
   `, [survey.template_id || id]);
   
@@ -183,7 +183,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
     SELECT sa.*, u.first_name || ' ' || u.last_name as assignee_name, u.phone as assignee_phone
     FROM survey_assignments sa
     LEFT JOIN users u ON sa.assignee_id = u.id
-    WHERE sa.survey_id = $1
+    WHERE sa.survey_id = ?
   `, [id]);
   
   // Get response summary
@@ -194,7 +194,7 @@ router.get('/:id', requireFunction('surveys', 'view'), asyncHandler(async (req, 
       0 as in_progress_responses,
       0 as avg_completion_time
     FROM survey_responses sr
-    WHERE sr.survey_id = $1
+    WHERE sr.survey_id = ?
   `, [id]);
   
   res.json({

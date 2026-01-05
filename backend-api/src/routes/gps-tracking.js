@@ -45,7 +45,7 @@ router.post('/location', asyncHandler(async (req, res) => {
   try {
     await runQuery(`
       INSERT INTO agent_locations (id, tenant_id, agent_id, latitude, longitude, accuracy, recorded_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [id, tenantId, agent_id, latitude, longitude, accuracy || null, recordedAt]);
     
     res.json({
@@ -76,24 +76,24 @@ router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   let query = `
     SELECT id, agent_id, latitude, longitude, accuracy, recorded_at, created_at
     FROM agent_locations
-    WHERE tenant_id = $1 AND agent_id = $2
+    WHERE tenant_id = ? AND agent_id = ?
   `;
   const params = [tenantId, agentId];
   let paramIndex = 3;
   
   if (start_date) {
-    query += ` AND recorded_at >= $${paramIndex}`;
+    query += ` AND recorded_at >= ?`;
     params.push(start_date);
     paramIndex++;
   }
   
   if (end_date) {
-    query += ` AND recorded_at <= $${paramIndex}`;
+    query += ` AND recorded_at <= ?`;
     params.push(end_date);
     paramIndex++;
   }
   
-  query += ` ORDER BY recorded_at DESC LIMIT $${paramIndex}`;
+  query += ` ORDER BY recorded_at DESC LIMIT ?`;
   params.push(parseInt(limit));
   
   let locations = [];
@@ -118,7 +118,7 @@ router.get('/agent/:agentId/latest', asyncHandler(async (req, res) => {
     location = await getOneQuery(`
       SELECT id, agent_id, latitude, longitude, accuracy, recorded_at, created_at
       FROM agent_locations
-      WHERE tenant_id = $1 AND agent_id = $2
+      WHERE tenant_id = ? AND agent_id = ?
       ORDER BY recorded_at DESC
       LIMIT 1
     `, [tenantId, agentId]);
@@ -149,9 +149,9 @@ router.get('/active-agents', asyncHandler(async (req, res) => {
         al.recorded_at as last_location_time
       FROM users u
       LEFT JOIN agent_locations al ON u.id = al.agent_id AND u.tenant_id = al.tenant_id
-      WHERE u.tenant_id = $1 
-        AND u.role IN ($2, $3, $4, $5, $6)
-        AND u.status = $7
+      WHERE u.tenant_id = ? 
+        AND u.role IN (?, ?, ?, ?, ?)
+        AND u.status = ?
         AND al.recorded_at >= CURRENT_TIMESTAMP - INTERVAL '${parseInt(hours)} hours'
       ORDER BY u.id, al.recorded_at DESC
     `, [tenantId, 'agent', 'sales_agent', 'field_agent', 'van_sales_agent', 'merchandiser', 'active']);
@@ -177,9 +177,9 @@ router.get('/agent/:agentId/route', asyncHandler(async (req, res) => {
     route = await getQuery(`
       SELECT id, agent_id, latitude, longitude, accuracy, recorded_at
       FROM agent_locations
-      WHERE tenant_id = $1 
-        AND agent_id = $2
-        AND DATE(recorded_at) = $3
+      WHERE tenant_id = ? 
+        AND agent_id = ?
+        AND DATE(recorded_at) = ?
       ORDER BY recorded_at ASC
     `, [tenantId, agentId, targetDate]);
   } catch (error) {

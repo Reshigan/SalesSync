@@ -58,7 +58,7 @@ router.post('/visits', asyncHandler(async (req, res) => {
     `INSERT INTO visits (
       id, tenant_id, agent_id, customer_id, visit_date, check_in_time,
       latitude, longitude, gps_accuracy, distance_meters, visit_type, status, created_at
-    ) VALUES ($1, $2, $3, $4, CURRENT_DATE, CURRENT_TIMESTAMP, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
+    ) VALUES (?, ?, ?, ?, CURRENT_DATE, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
     [visitId, tenantId, agentId, customer_id, gps_lat, gps_lng, gps_accuracy, distanceMeters,
      visit_type || 'field_marketing', requiresOverride ? 'pending_override' : 'in_progress']
   );
@@ -106,7 +106,7 @@ router.get('/visits/active', asyncHandler(async (req, res) => {
      JOIN users a ON v.agent_id = a.id
      LEFT JOIN users u ON a.user_id = u.id
      JOIN customers c ON v.customer_id = c.id
-     WHERE v.tenant_id = $1 AND v.status = 'in_progress'
+     WHERE v.tenant_id = ? AND v.status = 'in_progress'
      ORDER BY v.visit_date DESC`, [tenantId]
   );
   res.json({ success: true, data: activeVisits || [] });
@@ -176,25 +176,25 @@ router.post('/visits/:id/complete', asyncHandler(async (req, res) => {
 
   try {
     const incompleteTasks = await getQuery(
-      `SELECT * FROM visit_tasks WHERE visit_id = $1 AND is_mandatory = 1 AND status != 'completed'`, [id]
+      `SELECT * FROM visit_tasks WHERE visit_id = ? AND is_mandatory = 1 AND status != 'completed'`, [id]
     );
 
     if (incompleteTasks.length > 0) {
       throw new Error('All mandatory tasks must be completed before closing visit');
     }
 
-    const commissionEvents = await getQuery('SELECT SUM(amount) as total FROM commission_events WHERE visit_id = $1', [id]);
+    const commissionEvents = await getQuery('SELECT SUM(amount) as total FROM commission_events WHERE visit_id = ?', [id]);
     const totalCommission = commissionEvents[0]?.total || 0;
 
     await runQuery(
-      `UPDATE visits SET status = 'completed', check_out_time = CURRENT_TIMESTAMP, total_commission = $1
-       WHERE id = $2 AND tenant_id = $3`,
+      `UPDATE visits SET status = 'completed', check_out_time = CURRENT_TIMESTAMP, total_commission = ?
+       WHERE id = ? AND tenant_id = ?`,
       [totalCommission, id, tenantId]
     );
 
     await runQuery('COMMIT');
 
-    const visit = await getOneQuery('SELECT * FROM visits WHERE id = $1', [id]);
+    const visit = await getOneQuery('SELECT * FROM visits WHERE id = ?', [id]);
     res.json({ success: true, data: { visit, total_commission: totalCommission } });
   } catch (error) {
     await runQuery('ROLLBACK');
@@ -251,7 +251,7 @@ router.post('/gps/override', asyncHandler(async (req, res) => {
     [reason, photo_url, visit_id, tenantId]
   );
 
-  const visit = await getOneQuery('SELECT * FROM visits WHERE id = $1', [visit_id]);
+  const visit = await getOneQuery('SELECT * FROM visits WHERE id = ?', [visit_id]);
   res.json({ success: true, data: visit });
 }));
 
@@ -259,7 +259,7 @@ router.get('/', asyncHandler(async (req, res) => {
   const tenantId = req.tenantId;
   const operations = await getQuery(
     `SELECT id, operation_type, agent_id, customer_id, status, scheduled_date, completed_date, created_at
-     FROM field_operations WHERE tenant_id = $1 ORDER BY created_at DESC`, [tenantId]
+     FROM field_operations WHERE tenant_id = ? ORDER BY created_at DESC`, [tenantId]
   );
   res.json({ success: true, data: operations || [] });
 }));
@@ -271,9 +271,9 @@ router.get('/live-locations', asyncHandler(async (req, res) => {
             v.latitude, v.longitude, v.visit_date as timestamp, v.status, c.name as customer_name, c.id as customer_id
      FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') a
      LEFT JOIN users u ON a.user_id = u.id
-     LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = $1
+     LEFT JOIN visits v ON a.id = v.agent_id AND v.tenant_id = ?
      LEFT JOIN customers c ON v.customer_id = c.id
-     WHERE a.tenant_id = $2 AND v.latitude IS NOT NULL AND v.longitude IS NOT NULL
+     WHERE a.tenant_id = ? AND v.latitude IS NOT NULL AND v.longitude IS NOT NULL
      ORDER BY v.visit_date DESC`, [tenantId, tenantId]
   );
   res.json({ success: true, data: locations || [] });

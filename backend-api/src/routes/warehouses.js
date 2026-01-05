@@ -82,7 +82,7 @@ router.get('/', async (req, res, next) => {
     const { getQuery } = require('../utils/database');
     
     const warehouses = await getQuery(
-      'SELECT * FROM warehouses WHERE tenant_id = $1 ORDER BY name',
+      'SELECT * FROM warehouses WHERE tenant_id = ? ORDER BY name',
       [req.tenantId]
     );
     
@@ -125,7 +125,7 @@ router.get('/:id', async (req, res, next) => {
     const { getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
       [req.params.id, req.tenantId]
     );
     
@@ -188,7 +188,7 @@ router.post('/', async (req, res, next) => {
       `INSERT INTO warehouses (
         id, tenant_id, name, code, address, city, state, postal_code, country,
         capacity, current_stock, manager_id, phone, email, status, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [
         warehouseId,
         req.tenantId,
@@ -249,7 +249,7 @@ router.put('/:id', async (req, res, next) => {
     const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
       [req.params.id, req.tenantId]
     );
     
@@ -274,9 +274,9 @@ router.put('/:id', async (req, res, next) => {
     
     await runQuery(
       `UPDATE warehouses SET 
-        name = $1, code = $2, address = $3, city = $4, state = $5, postal_code = $6, country = $7,
-        capacity = $8, manager_id = $9, phone = $10, email = $11, status = $12, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $13 AND tenant_id = $14`,
+        name = ?, code = ?, address = ?, city = ?, state = ?, postal_code = ?, country = ?,
+        capacity = ?, manager_id = ?, phone = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND tenant_id = ?`,
       [
         name || warehouse.name,
         code || warehouse.code,
@@ -327,7 +327,7 @@ router.delete('/:id', async (req, res, next) => {
     const { runQuery, getOneQuery } = require('../utils/database');
     
     const warehouse = await getOneQuery(
-      'SELECT * FROM warehouses WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM warehouses WHERE id = ? AND tenant_id = ?',
       [req.params.id, req.tenantId]
     );
     
@@ -336,7 +336,7 @@ router.delete('/:id', async (req, res, next) => {
     }
     
     await runQuery(
-      'DELETE FROM warehouses WHERE id = $1 AND tenant_id = $2',
+      'DELETE FROM warehouses WHERE id = ? AND tenant_id = ?',
       [req.params.id, req.tenantId]
     );
     
@@ -355,40 +355,40 @@ router.get('/stats', async (req, res) => {
     const [warehouseCounts, inventoryStats, transferStats, capacityUtilization] = await Promise.all([
       getOneQuery(`
         SELECT 
-          COUNT(*)::int as total_warehouses,
-          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_warehouses,
-          SUM(CASE WHEN capacity IS NOT NULL THEN capacity ELSE 0 END)::int as total_capacity
-        FROM warehouses WHERE tenant_id = $1
+          COUNT(*) as total_warehouses,
+          COUNT(CASE WHEN status = 'active' THEN 1 END) as active_warehouses,
+          SUM(CASE WHEN capacity IS NOT NULL THEN capacity ELSE 0 END) as total_capacity
+        FROM warehouses WHERE tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getOneQuery(`
         SELECT 
-          COUNT(DISTINCT i.product_id)::int as total_products,
-          SUM(i.quantity_on_hand)::int as total_quantity,
-          SUM(i.quantity_on_hand * i.cost_price)::float8 as total_value
+          COUNT(DISTINCT i.product_id) as total_products,
+          SUM(i.quantity_on_hand) as total_quantity,
+          SUM(i.quantity_on_hand * i.cost_price) as total_value
         FROM inventory_stock i
-        WHERE i.tenant_id = $1
+        WHERE i.tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getOneQuery(`
         SELECT 
-          COUNT(*)::int as total_transfers,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_transfers,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_transfers,
-          SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END)::int as total_transferred_quantity
+          COUNT(*) as total_transfers,
+          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_transfers,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_transfers,
+          SUM(CASE WHEN status = 'completed' THEN quantity ELSE 0 END) as total_transferred_quantity
         FROM stock_transfers
-        WHERE tenant_id = $1
+        WHERE tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
         SELECT 
           w.id, w.name, w.capacity,
-          COUNT(DISTINCT i.product_id)::int as product_count,
-          SUM(i.quantity_on_hand)::int as current_quantity,
-          SUM(i.quantity_on_hand * i.cost_price)::float8 as inventory_value
+          COUNT(DISTINCT i.product_id) as product_count,
+          SUM(i.quantity_on_hand) as current_quantity,
+          SUM(i.quantity_on_hand * i.cost_price) as inventory_value
         FROM warehouses w
         LEFT JOIN inventory_stock i ON w.id = i.warehouse_id
-        WHERE w.tenant_id = $1
+        WHERE w.tenant_id = ?
         GROUP BY w.id, w.name, w.capacity
         ORDER BY inventory_value DESC
       `, [tenantId]).then(rows => rows || [])

@@ -375,16 +375,16 @@ router.post('/complete-visit', async (req, res, next) => {
     activities.forEach(activity => {
       switch (activity.type) {
         case 'survey':
-          totalCommission += 5.00; // $5 per survey
+          totalCommission += 5.00; // ? per survey
           break;
         case 'board_placement':
-          totalCommission += 10.00; // $10 per board placement
+          totalCommission += 10.00; // ? per board placement
           break;
         case 'product_distribution':
           totalCommission += activity.quantity * 0.50; // $0.50 per product
           break;
         default:
-          totalCommission += 2.00; // $2 for other activities
+          totalCommission += 2.00; // ? for other activities
       }
     });
 

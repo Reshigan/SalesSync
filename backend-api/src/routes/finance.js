@@ -235,7 +235,7 @@ router.get('/invoices/:invoiceId/items', asyncHandler(async (req, res) => {
     FROM invoice_items ii
     LEFT JOIN products p ON ii.product_id = p.id
     JOIN invoices i ON ii.invoice_id = i.id
-    WHERE ii.invoice_id = $1 AND i.tenant_id = $2
+    WHERE ii.invoice_id = ? AND i.tenant_id = ?
     ORDER BY ii.created_at
   `, [invoiceId, tenantId]);
   
@@ -259,7 +259,7 @@ router.get('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) =
     FROM invoice_items ii
     LEFT JOIN products p ON ii.product_id = p.id
     JOIN invoices i ON ii.invoice_id = i.id
-    WHERE ii.id = $1 AND ii.invoice_id = $2 AND i.tenant_id = $3
+    WHERE ii.id = ? AND ii.invoice_id = ? AND i.tenant_id = ?
   `, [itemId, invoiceId, tenantId]);
   
   if (!item) {
@@ -307,8 +307,8 @@ router.put('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) =
   updateData.total = lineTaxable + lineTax;
   
   await runQuery(
-    `UPDATE invoice_items SET ${Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
-     WHERE id = $${Object.keys(updateData).length + 1} AND invoice_id = $${Object.keys(updateData).length + 2}`,
+    `UPDATE invoice_items SET ${Object.keys(updateData).map((k, i) => `${k} = ?`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
+     WHERE id = ? AND invoice_id = ?`,
     [...Object.values(updateData), itemId, invoiceId]
   );
   
@@ -331,8 +331,8 @@ router.put('/invoices/:invoiceId/items/:itemId', asyncHandler(async (req, res) =
   const invoiceTotal = invoiceSubtotal - invoiceDiscount + invoiceTax;
   
   await runQuery(
-    `UPDATE invoices SET subtotal = $1, discount = $2, tax = $3, total = $4, updated_at = CURRENT_TIMESTAMP 
-     WHERE id = $5`,
+    `UPDATE invoices SET subtotal = ?, discount = ?, tax = ?, total = ?, updated_at = CURRENT_TIMESTAMP 
+     WHERE id = ?`,
     [invoiceSubtotal.toFixed(2), invoiceDiscount.toFixed(2), invoiceTax.toFixed(2), invoiceTotal.toFixed(2), invoiceId]
   );
   
@@ -428,7 +428,7 @@ router.get('/summary', asyncHandler(async (req, res) => {
   // Calculate date filter based on period
   let dateFilter = '';
   if (period === 'day') {
-    dateFilter = "AND invoice_date::date = CURRENT_DATE";
+    dateFilter = "AND DATE(invoice_date) = CURRENT_DATE";
   } else if (period === 'week') {
     dateFilter = "AND invoice_date >= CURRENT_DATE - INTERVAL '7 day'";
   } else if (period === 'month') {
@@ -573,7 +573,7 @@ router.post('/invoices/:id/email', asyncHandler(async (req, res) => {
       invoiceNumber: invoice.invoice_number,
       invoiceDate: invoice.invoice_date,
       dueDate: invoice.due_date,
-      totalAmount: `$${invoice.total_amount}`,
+      totalAmount: `?`,
       customerName: invoice.customer_name
     });
     
@@ -668,7 +668,7 @@ router.get('/invoices/:invoiceId/status-history', asyncHandler(async (req, res) 
     SELECT ish.*, u.name as changed_by_name, u.email as changed_by_email
     FROM invoice_status_history ish
     LEFT JOIN users u ON ish.changed_by = u.id
-    WHERE ish.invoice_id = $1 AND ish.tenant_id = $2
+    WHERE ish.invoice_id = ? AND ish.tenant_id = ?
     ORDER BY ish.created_at DESC
   `, [invoiceId, tenantId]);
   
@@ -688,7 +688,7 @@ router.get('/invoices/:invoiceId/items/:itemId/history', asyncHandler(async (req
     SELECT iih.*, u.name as changed_by_name, u.email as changed_by_email
     FROM invoice_item_history iih
     LEFT JOIN users u ON iih.changed_by = u.id
-    WHERE iih.invoice_id = $1 AND iih.item_id = $2 AND iih.tenant_id = $3
+    WHERE iih.invoice_id = ? AND iih.item_id = ? AND iih.tenant_id = ?
     ORDER BY iih.created_at DESC
   `, [invoiceId, itemId, tenantId]);
   

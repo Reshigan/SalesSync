@@ -13,50 +13,50 @@ router.get('/', asyncHandler(async (req, res) => {
     SELECT e.*, u.first_name || ' ' || u.last_name as organizer_name
     FROM events e
     LEFT JOIN users u ON e.organizer_id = u.id
-    WHERE e.tenant_id = $1
+    WHERE e.tenant_id = ?
   `;
   
   const params = [tenantId];
   let paramIndex = 1;
   
   if (status) {
-    query += ` AND e.status = $${++paramIndex}`;
+    query += ` AND e.status = ?`;
     params.push(status);
   }
   
   if (type) {
-    query += ` AND e.type = $${++paramIndex}`;
+    query += ` AND e.type = ?`;
     params.push(type);
   }
   
   if (start_date && end_date) {
-    query += ` AND e.start_date >= $${++paramIndex} AND e.end_date <= $${++paramIndex}`;
+    query += ` AND e.start_date >= ? AND e.end_date <= ?`;
     params.push(start_date, end_date);
     paramIndex++;
   }
   
-  query += ` ORDER BY e.start_date DESC LIMIT $${++paramIndex} OFFSET $${++paramIndex}`;
+  query += ` ORDER BY e.start_date DESC LIMIT ? OFFSET ?`;
   params.push(parseInt(limit), offset);
   
   const events = await getQuery(query, params);
   
   // Get total count
-  let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE e.tenant_id = $1';
+  let countQuery = 'SELECT COUNT(*) as total FROM events e WHERE e.tenant_id = ?';
   const countParams = [tenantId];
   let countParamIndex = 1;
   
   if (status) {
-    countQuery += ` AND e.status = $${++countParamIndex}`;
+    countQuery += ` AND e.status = ?`;
     countParams.push(status);
   }
   
   if (type) {
-    countQuery += ` AND e.type = $${++countParamIndex}`;
+    countQuery += ` AND e.type = ?`;
     countParams.push(type);
   }
   
   if (start_date && end_date) {
-    countQuery += ` AND e.start_date >= $${++countParamIndex} AND e.end_date <= $${++countParamIndex}`;
+    countQuery += ` AND e.start_date >= ? AND e.end_date <= ?`;
     countParams.push(start_date, end_date);
     countParamIndex++;
   }
@@ -493,36 +493,36 @@ router.get('/stats', async (req, res) => {
     const [eventCounts, typeBreakdown, attendance, upcomingEvents] = await Promise.all([
       getOneQuery(`
         SELECT 
-          COUNT(*)::int as total_events,
-          COUNT(CASE WHEN status = 'scheduled' THEN 1 END)::int as scheduled_events,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END)::int as completed_events,
-          COUNT(CASE WHEN status = 'cancelled' THEN 1 END)::int as cancelled_events
-        FROM events WHERE tenant_id = $1
+          COUNT(*) as total_events,
+          COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_events,
+          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_events,
+          COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_events
+        FROM events WHERE tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
-        SELECT type, COUNT(*)::int as count
-        FROM events WHERE tenant_id = $1
+        SELECT type, COUNT(*) as count
+        FROM events WHERE tenant_id = ?
         GROUP BY type
       `, [tenantId]).then(rows => rows || []),
       
       getOneQuery(`
         SELECT 
-          COUNT(DISTINCT ea.id)::int as total_attendees,
-          COUNT(DISTINCT ea.customer_id)::int as unique_customers,
-          AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END)::float8 as avg_attendance_rate
+          COUNT(DISTINCT ea.id) as total_attendees,
+          COUNT(DISTINCT ea.customer_id) as unique_customers,
+          AVG(CASE WHEN e.expected_attendance > 0 THEN (COUNT_ATTENDEES * 100.0 / e.expected_attendance) END) as avg_attendance_rate
         FROM events e
         LEFT JOIN event_attendees ea ON e.id = ea.event_id
-        WHERE e.tenant_id = $1
+        WHERE e.tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
         SELECT 
           e.id, e.name, e.type, e.event_date, e.location,
-          COUNT(ea.id)::int as attendee_count
+          COUNT(ea.id) as attendee_count
         FROM events e
         LEFT JOIN event_attendees ea ON e.id = ea.event_id
-        WHERE e.tenant_id = $1 AND e.event_date >= CURRENT_DATE
+        WHERE e.tenant_id = ? AND e.event_date >= CURRENT_DATE
         GROUP BY e.id, e.name, e.type, e.event_date, e.location
         ORDER BY e.event_date ASC
         LIMIT 10

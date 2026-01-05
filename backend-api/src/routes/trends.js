@@ -15,28 +15,28 @@ router.get('/', asyncHandler(async (req, res) => {
   // Daily trends for orders and revenue
   const dailyTrends = await getQuery(`
     SELECT 
-      o.order_date::date as date,
-      COUNT(*)::int as order_count,
-      COALESCE(SUM(o.total_amount), 0)::float8 as revenue,
-      COUNT(DISTINCT o.customer_id)::int as unique_customers
+      o.DATE(order_date) as date,
+      COUNT(*) as order_count,
+      COALESCE(SUM(o.total_amount), 0) as revenue,
+      COUNT(DISTINCT o.customer_id) as unique_customers
     FROM orders o
-    WHERE o.tenant_id = $1
-      AND o.order_date >= $2
-      AND o.order_date <= $3
-    GROUP BY o.order_date::date
-    ORDER BY o.order_date::date
+    WHERE o.tenant_id = ?
+      AND o.order_date >= ?
+      AND o.order_date <= ?
+    GROUP BY o.DATE(order_date)
+    ORDER BY o.DATE(order_date)
   `, [tenantId, startDate, endDate]);
   
   // Weekly trends
   const weeklyTrends = await getQuery(`
     SELECT 
-      DATE_TRUNC('week', o.order_date)::date as week_start,
-      COUNT(*)::int as order_count,
-      COALESCE(SUM(o.total_amount), 0)::float8 as revenue
+      DATE_TRUNC('week', o.order_date)DATE() as week_start,
+      COUNT(*) as order_count,
+      COALESCE(SUM(o.total_amount), 0) as revenue
     FROM orders o
-    WHERE o.tenant_id = $1
-      AND o.order_date >= $2
-      AND o.order_date <= $3
+    WHERE o.tenant_id = ?
+      AND o.order_date >= ?
+      AND o.order_date <= ?
     GROUP BY DATE_TRUNC('week', o.order_date)
     ORDER BY week_start
   `, [tenantId, startDate, endDate]);

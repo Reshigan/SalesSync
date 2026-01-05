@@ -78,24 +78,24 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
   const { role, status, search } = req.query;
   
   try {
-    let whereClause = 'WHERE tenant_id = $1';
+    let whereClause = 'WHERE tenant_id = ?';
     let params = [req.tenantId];
     let paramIndex = 2;
     
     if (role) {
-      whereClause += ` AND role = $${paramIndex}`;
+      whereClause += ` AND role = ?`;
       params.push(role);
       paramIndex++;
     }
     
     if (status) {
-      whereClause += ` AND status = $${paramIndex}`;
+      whereClause += ` AND status = ?`;
       params.push(status);
       paramIndex++;
     }
     
     if (search) {
-      whereClause += ` AND (first_name LIKE $${paramIndex} OR last_name LIKE $${paramIndex+1} OR email LIKE $${paramIndex+2})`;
+      whereClause += ` AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ?)`;
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
       paramIndex += 3;
@@ -108,7 +108,7 @@ router.get('/', requireFunction('users', 'view'), asyncHandler(async (req, res, 
       FROM users 
       ${whereClause}
       ORDER BY created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex+1}
+      LIMIT ? OFFSET ?
     `, [...params, limit, offset]);
     
     // Get total count

@@ -22,7 +22,7 @@ router.get('/', asyncHandler(async (req, res) => {
       status,
       created_at
     FROM promotions 
-    WHERE tenant_id = $1
+    WHERE tenant_id = ?
     ORDER BY created_at DESC
   `, [tenantId]);
 
@@ -40,15 +40,15 @@ router.get('/stats', async (req, res) => {
     const [promotionCounts, typeBreakdown] = await Promise.all([
       getOneQuery(`
         SELECT 
-          COUNT(*)::int as total_promotions,
-          COUNT(CASE WHEN status = 'active' THEN 1 END)::int as active_promotions,
-          COUNT(CASE WHEN status = 'expired' THEN 1 END)::int as expired_promotions
-        FROM promotions WHERE tenant_id = $1
+          COUNT(*) as total_promotions,
+          COUNT(CASE WHEN status = 'active' THEN 1 END) as active_promotions,
+          COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_promotions
+        FROM promotions WHERE tenant_id = ?
       `, [tenantId]).then(row => row || {}),
       
       getQuery(`
-        SELECT type, COUNT(*)::int as count
-        FROM promotions WHERE tenant_id = $1
+        SELECT type, COUNT(*) as count
+        FROM promotions WHERE tenant_id = ?
         GROUP BY type
       `, [tenantId]).then(rows => rows || [])
     ]);
@@ -137,7 +137,7 @@ router.post('/', asyncHandler(async (req, res) => {
     `INSERT INTO promotions (
       id, tenant_id, name, description, type, discount_type, discount_value,
       start_date, end_date, budget, status, created_by, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       promotionId,
       req.user.tenantId,
@@ -173,7 +173,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   
   const promotion = await getOneQuery(`
     SELECT * FROM promotions 
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, tenantId]);
 
   if (!promotion) {
@@ -197,9 +197,9 @@ router.put('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     UPDATE promotions 
-    SET name = $1, promotion_type = $2, start_date = $3, end_date = $4, 
-        discount_percentage = $5, discount_amount = $6, status = $7, updated_at = $8
-    WHERE id = $9 AND tenant_id = $10
+    SET name = ?, promotion_type = ?, start_date = ?, end_date = ?, 
+        discount_percentage = ?, discount_amount = ?, status = ?, updated_at = ?
+    WHERE id = ? AND tenant_id = ?
   `, [name, promotion_type, start_date, end_date, discount_percentage, discount_amount, status, new Date().toISOString(), id, tenantId]);
 
   if (result.changes === 0) {
@@ -222,7 +222,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     DELETE FROM promotions 
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, tenantId]);
 
   if (result.changes === 0) {

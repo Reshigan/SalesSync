@@ -43,19 +43,19 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
     FROM user_hierarchy th
     JOIN users l ON l.id = th.leader_id
     JOIN users a ON a.id = th.agent_id
-    WHERE th.tenant_id = $1
+    WHERE th.tenant_id = ?
     AND (th.effective_end IS NULL OR th.effective_end >= CURRENT_DATE)
   `;
   
   const params = [req.tenantId];
   
   if (leader_id) {
-    query += ` AND th.leader_id = $${params.length + 1}`;
+    query += ` AND th.leader_id = ?`;
     params.push(leader_id);
   }
   
   if (agent_id) {
-    query += ` AND th.agent_id = $${params.length + 1}`;
+    query += ` AND th.agent_id = ?`;
     params.push(agent_id);
   }
   
@@ -104,8 +104,8 @@ router.get('/leader/:leader_id/agents', authMiddleware, asyncHandler(async (req,
     JOIN users a ON a.id = th.agent_id
     LEFT JOIN orders o ON o.salesman_id = a.id AND o.order_status NOT IN ('cancelled', 'rejected')
     LEFT JOIN visits v ON v.agent_id = a.id
-    WHERE th.tenant_id = $1
-    AND th.leader_id = $2
+    WHERE th.tenant_id = ?
+    AND th.leader_id = ?
     AND (th.effective_end IS NULL OR th.effective_end >= CURRENT_DATE)
     GROUP BY a.id, th.effective_start, th.effective_end
     ORDER BY a.first_name, a.last_name
@@ -161,7 +161,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   
   const leader = await getOneQuery(`
     SELECT id, role FROM users
-    WHERE id = $1 AND tenant_id = $2 AND status = 'active'
+    WHERE id = ? AND tenant_id = ? AND status = 'active'
   `, [leader_id, req.tenantId]);
   
   if (!leader) {
@@ -171,7 +171,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   // Validate agent exists
   const agent = await getOneQuery(`
     SELECT id, role FROM users
-    WHERE id = $1 AND tenant_id = $2 AND status = 'active'
+    WHERE id = ? AND tenant_id = ? AND status = 'active'
   `, [agent_id, req.tenantId]);
   
   if (!agent) {
@@ -185,22 +185,22 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   await runQuery(`
     UPDATE user_hierarchy
     SET effective_end = CURRENT_DATE - INTERVAL '1 day'
-    WHERE tenant_id = $1
-    AND agent_id = $2
+    WHERE tenant_id = ?
+    AND agent_id = ?
     AND effective_end IS NULL
   `, [req.tenantId, agent_id]);
   
   const result = await getOneQuery(`
     INSERT INTO user_hierarchy (
       tenant_id, leader_id, agent_id, effective_start
-    ) VALUES ($1, $2, $3, $4)
+    ) VALUES (?, ?, ?, ?)
     RETURNING *
   `, [req.tenantId, leader_id, agent_id, effective_start]);
   
   await runQuery(`
     UPDATE users
-    SET manager_id = $1, updated_at = CURRENT_TIMESTAMP
-    WHERE id = $2 AND tenant_id = $3
+    SET manager_id = ?, updated_at = CURRENT_TIMESTAMP
+    WHERE id = ? AND tenant_id = ?
   `, [leader_id, agent_id, req.tenantId]);
   
   res.status(201).json({
@@ -234,7 +234,7 @@ router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
   
   const hierarchy = await getOneQuery(`
     SELECT * FROM user_hierarchy
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!hierarchy) {
@@ -244,13 +244,13 @@ router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
   await runQuery(`
     UPDATE user_hierarchy
     SET effective_end = CURRENT_DATE
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   await runQuery(`
     UPDATE users
     SET manager_id = NULL, updated_at = CURRENT_TIMESTAMP
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [hierarchy.agent_id, req.tenantId]);
   
   res.json({

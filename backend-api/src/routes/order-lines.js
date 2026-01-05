@@ -34,13 +34,13 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
       p.unit_of_measure as product_unit
     FROM order_lines ol
     JOIN products p ON p.id = ol.product_id
-    WHERE ol.tenant_id = $1
+    WHERE ol.tenant_id = ?
   `;
   
   const params = [req.tenantId];
   
   if (order_id) {
-    query += ` AND ol.order_id = $2`;
+    query += ` AND ol.order_id = ?`;
     params.push(order_id);
   }
   
@@ -86,7 +86,7 @@ router.get('/:id', authMiddleware, asyncHandler(async (req, res) => {
       p.selling_price as product_price
     FROM order_lines ol
     JOIN products p ON p.id = ol.product_id
-    WHERE ol.id = $1 AND ol.tenant_id = $2
+    WHERE ol.id = ? AND ol.tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!orderLine) {
@@ -154,7 +154,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
   const product = await getOneQuery(`
     SELECT id, name, selling_price
     FROM products
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [product_id, req.tenantId]);
   
   if (!product) {
@@ -173,7 +173,7 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
       tenant_id, order_id, product_id, quantity, unit_price,
       discount_percent, discount_amount, tax_rate, tax_amount,
       line_total, notes
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING *
   `, [
     req.tenantId, order_id, product_id, quantity, finalUnitPrice,
@@ -187,10 +187,10 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
       total_amount = (
         SELECT COALESCE(SUM(line_total), 0)
         FROM order_lines
-        WHERE order_id = $1
+        WHERE order_id = ?
       ),
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [order_id, req.tenantId]);
   
   res.status(201).json({
@@ -237,7 +237,7 @@ router.put('/:id', authMiddleware, asyncHandler(async (req, res) => {
   
   const existing = await getOneQuery(`
     SELECT * FROM order_lines
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!existing) {
@@ -258,16 +258,16 @@ router.put('/:id', authMiddleware, asyncHandler(async (req, res) => {
   const updated = await getOneQuery(`
     UPDATE order_lines
     SET
-      quantity = $1,
-      unit_price = $2,
-      discount_percent = $3,
-      discount_amount = $4,
-      tax_rate = $5,
-      tax_amount = $6,
-      line_total = $7,
-      notes = $8,
+      quantity = ?,
+      unit_price = ?,
+      discount_percent = ?,
+      discount_amount = ?,
+      tax_rate = ?,
+      tax_amount = ?,
+      line_total = ?,
+      notes = ?,
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $9 AND tenant_id = $10
+    WHERE id = ? AND tenant_id = ?
     RETURNING *
   `, [
     finalQuantity, finalUnitPrice, finalDiscountPercent, discountAmount,
@@ -281,10 +281,10 @@ router.put('/:id', authMiddleware, asyncHandler(async (req, res) => {
       total_amount = (
         SELECT COALESCE(SUM(line_total), 0)
         FROM order_lines
-        WHERE order_id = $1
+        WHERE order_id = ?
       ),
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [existing.order_id, req.tenantId]);
   
   res.json({
@@ -318,7 +318,7 @@ router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
   
   const orderLine = await getOneQuery(`
     SELECT order_id FROM order_lines
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!orderLine) {
@@ -327,7 +327,7 @@ router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
   
   await runQuery(`
     DELETE FROM order_lines
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   await runQuery(`
@@ -336,10 +336,10 @@ router.delete('/:id', authMiddleware, asyncHandler(async (req, res) => {
       total_amount = (
         SELECT COALESCE(SUM(line_total), 0)
         FROM order_lines
-        WHERE order_id = $1
+        WHERE order_id = ?
       ),
       updated_at = CURRENT_TIMESTAMP
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [orderLine.order_id, req.tenantId]);
   
   res.json({

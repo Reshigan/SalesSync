@@ -115,12 +115,12 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     if (process.env.DB_TYPE === 'postgres') {
       if (isUUID) {
         tenant = await getOneQuery(
-          'SELECT * FROM tenants WHERE (code = $1 OR id = $2) AND status = $3',
+          'SELECT * FROM tenants WHERE (code = ? OR id = ?) AND status = ?',
           [tenantCode.toUpperCase(), tenantCode, 'active']
         );
       } else {
         tenant = await getOneQuery(
-          'SELECT * FROM tenants WHERE code = $1 AND status = $2',
+          'SELECT * FROM tenants WHERE code = ? AND status = ?',
           [tenantCode.toUpperCase(), 'active']
         );
       }
@@ -141,7 +141,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
           SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
           FROM users u
           JOIN tenants t ON t.id = u.tenant_id
-          WHERE LOWER(u.email) = LOWER($1) AND u.tenant_id = $2 AND u.status = 'active' AND t.status = 'active'
+          WHERE LOWER(u.email) = LOWER(?) AND u.tenant_id = ? AND u.status = 'active' AND t.status = 'active'
         `, [email, tenant.id])
       : await getOneQuery(`
           SELECT u.*, t.code as tenant_code, t.name as tenant_name, t.status as tenant_status
@@ -194,7 +194,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     // Update last login
     if (process.env.DB_TYPE === 'postgres') {
       await runQuery(
-        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+        'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
         [user.id]
       );
     } else {
@@ -207,7 +207,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
     // Get full tenant data
     const tenantData = process.env.DB_TYPE === 'postgres'
       ? await getOneQuery(
-          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = $1',
+          'SELECT id, name, code, domain, subscription_plan, max_users, max_transactions_per_day, features, status FROM tenants WHERE id = ?',
           [user.tenant_id]
         )
       : await getOneQuery(
@@ -233,7 +233,7 @@ router.post('/login', asyncHandler(async (req, res, next) => {
             BOOL_OR(rp.can_export) as can_export
           FROM role_permissions rp
           JOIN modules m ON m.id = rp.module_id
-          WHERE rp.tenant_id = $1 AND rp.role = $2
+          WHERE rp.tenant_id = ? AND rp.role = ?
           GROUP BY m.code
         `, [user.tenant_id, user.role])
       : await getQuery(`

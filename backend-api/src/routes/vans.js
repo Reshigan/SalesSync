@@ -13,19 +13,19 @@ router.get('/', async (req, res) => {
              COUNT(vl.id) as load_count
       FROM vans v
       LEFT JOIN users u ON v.assigned_salesman_id = u.id
-      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.load_date::date = CURRENT_DATE
-      WHERE v.tenant_id = $1
+      LEFT JOIN van_loads vl ON v.id = vl.van_id AND vl.DATE(load_date) = CURRENT_DATE
+      WHERE v.tenant_id = ?
     `;
     const params = [tenantId];
     let paramIndex = 2;
     
     if (status) {
-      sql += ` AND v.status = $${paramIndex}`;
+      sql += ` AND v.status = ?`;
       params.push(status);
       paramIndex++;
     }
     if (assigned_salesman_id) {
-      sql += ` AND v.assigned_salesman_id = $${paramIndex}`;
+      sql += ` AND v.assigned_salesman_id = ?`;
       params.push(assigned_salesman_id);
       paramIndex++;
     }
@@ -102,7 +102,7 @@ router.get('/:id', async (req, res) => {
       SELECT v.*, u.first_name || ' ' || u.last_name as salesman_name
       FROM vans v
       LEFT JOIN users u ON v.assigned_salesman_id = u.id
-      WHERE v.id = $1 AND v.tenant_id = $2
+      WHERE v.id = ? AND v.tenant_id = ?
     `, [id, tenantId]);
     
     if (!van) {
@@ -117,7 +117,7 @@ router.get('/:id', async (req, res) => {
       SELECT vl.*, u.first_name || ' ' || u.last_name as salesman_name
       FROM van_loads vl
       LEFT JOIN users u ON vl.salesman_id = u.id
-      WHERE vl.van_id = $1 AND vl.tenant_id = $2
+      WHERE vl.van_id = ? AND vl.tenant_id = ?
       ORDER BY vl.load_date DESC
       LIMIT 10
     `, [id, tenantId]);
@@ -204,7 +204,7 @@ router.delete('/:id', async (req, res) => {
     
     // Check if van has load history
     const loadCountResult = await getOneQuery(
-      'SELECT COUNT(*) as count FROM van_loads WHERE van_id = $1',
+      'SELECT COUNT(*) as count FROM van_loads WHERE van_id = ?',
       [id]
     );
     const loadCount = loadCountResult ? loadCountResult.count : 0;
@@ -241,38 +241,38 @@ router.get('/loads/list', async (req, res) => {
       FROM van_loads vl
       LEFT JOIN vans v ON vl.van_id = v.id
       LEFT JOIN users u ON vl.salesman_id = u.id
-      WHERE vl.tenant_id = $1
+      WHERE vl.tenant_id = ?
     `;
     const params = [tenantId];
     let paramIndex = 2;
     
     if (van_id) {
-      sql += ` AND vl.van_id = $${paramIndex}`;
+      sql += ` AND vl.van_id = ?`;
       params.push(van_id);
       paramIndex++;
     }
     if (salesman_id) {
-      sql += ` AND vl.salesman_id = $${paramIndex}`;
+      sql += ` AND vl.salesman_id = ?`;
       params.push(salesman_id);
       paramIndex++;
     }
     if (status) {
-      sql += ` AND vl.status = $${paramIndex}`;
+      sql += ` AND vl.status = ?`;
       params.push(status);
       paramIndex++;
     }
     if (date_from) {
-      sql += ` AND vl.load_date >= $${paramIndex}`;
+      sql += ` AND vl.load_date >= ?`;
       params.push(date_from);
       paramIndex++;
     }
     if (date_to) {
-      sql += ` AND vl.load_date <= $${paramIndex}`;
+      sql += ` AND vl.load_date <= ?`;
       params.push(date_to);
       paramIndex++;
     }
     
-    sql += ` ORDER BY vl.load_date DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    sql += ` ORDER BY vl.load_date DESC LIMIT ? OFFSET ?`;
     params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
     const rows = await getQuery(sql, params);
@@ -404,7 +404,7 @@ router.get('/loads/:loadId/reconciliation', async (req, res) => {
       FROM van_loads vl
       LEFT JOIN vans v ON vl.van_id = v.id
       LEFT JOIN users u ON vl.salesman_id = u.id
-      WHERE vl.id = $1 AND vl.tenant_id = $2
+      WHERE vl.id = ? AND vl.tenant_id = ?
     `, [loadId, tenantId]);
     
     if (!load) {

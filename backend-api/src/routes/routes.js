@@ -92,7 +92,7 @@ router.get('/', async (req, res) => {
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
       LEFT JOIN customers c ON r.id = c.route_id
-      WHERE r.tenant_id = $1
+      WHERE r.tenant_id = ?
       GROUP BY r.id, a.name, reg.name, u.first_name, u.last_name
       ORDER BY r.name
     `;
@@ -146,7 +146,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = $1 AND r.tenant_id = $2
+      WHERE r.id = ? AND r.tenant_id = ?
     `;
     
     const route = await getOneQuery(query, [id, req.tenantId]);
@@ -232,7 +232,7 @@ router.post('/', async (req, res) => {
     }
     
     // Check if code already exists
-    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE code = $1 AND tenant_id = $2', [code, req.tenantId]);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE code = ? AND tenant_id = ?', [code, req.tenantId]);
     if (existingRoute) {
       return res.status(400).json({
         success: false,
@@ -247,7 +247,7 @@ router.post('/', async (req, res) => {
       INSERT INTO routes (
         id, tenant_id, code, name, area_id, agent_id, description, status,
         visit_frequency, estimated_duration, target_calls, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id, req.tenantId, code, name, area_id, agent_id || null, description || null, status,
       visit_frequency, estimated_duration || null, target_calls || null, now, now
@@ -264,7 +264,7 @@ router.post('/', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = $1
+      WHERE r.id = ?
     `, [id]);
     
     res.status(201).json({
@@ -336,7 +336,7 @@ router.put('/:id', async (req, res) => {
     } = req.body;
     
     // Check if route exists
-    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     if (!existingRoute) {
       return res.status(404).json({
         success: false,
@@ -346,7 +346,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if code already exists (excluding current route)
     if (code) {
-      const duplicateRoute = await getOneQuery('SELECT id FROM routes WHERE code = $1 AND tenant_id = $2 AND id != $3', [code, req.tenantId, id]);
+      const duplicateRoute = await getOneQuery('SELECT id FROM routes WHERE code = ? AND tenant_id = ? AND id != ?', [code, req.tenantId, id]);
       if (duplicateRoute) {
         return res.status(400).json({
           success: false,
@@ -359,17 +359,17 @@ router.put('/:id', async (req, res) => {
     
     await runQuery(`
       UPDATE routes SET
-        code = COALESCE($1, code),
-        name = COALESCE($2, name),
-        area_id = COALESCE($3, area_id),
-        agent_id = $4,
-        description = $5,
-        status = COALESCE($6, status),
-        visit_frequency = COALESCE($7, visit_frequency),
-        estimated_duration = $8,
-        target_calls = $9,
-        updated_at = $10
-      WHERE id = $11 AND tenant_id = $12
+        code = COALESCE(?, code),
+        name = COALESCE(?, name),
+        area_id = COALESCE(?, area_id),
+        agent_id = ?,
+        description = ?,
+        status = COALESCE(?, status),
+        visit_frequency = COALESCE(?, visit_frequency),
+        estimated_duration = ?,
+        target_calls = ?,
+        updated_at = ?
+      WHERE id = ? AND tenant_id = ?
     `, [
       code, name, area_id, agent_id || null, description || null, status,
       visit_frequency, estimated_duration || null, target_calls || null, now, id, req.tenantId
@@ -386,7 +386,7 @@ router.put('/:id', async (req, res) => {
       LEFT JOIN areas a ON r.area_id = a.id
       LEFT JOIN regions reg ON a.region_id = reg.id
       LEFT JOIN users u ON r.salesman_id = u.id
-      WHERE r.id = $1
+      WHERE r.id = ?
     `, [id]);
     
     res.json({
@@ -429,7 +429,7 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
     // Check if route exists
-    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
+    const existingRoute = await getOneQuery('SELECT id FROM routes WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     if (!existingRoute) {
       return res.status(404).json({
         success: false,
@@ -438,7 +438,7 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if route has associated customers
-    const customerCount = await getOneQuery('SELECT COUNT(*)::int as count FROM customers WHERE route_id = $1', [id]);
+    const customerCount = await getOneQuery('SELECT COUNT(*) as count FROM customers WHERE route_id = ?', [id]);
     if (customerCount.count > 0) {
       return res.status(400).json({
         success: false,
@@ -446,7 +446,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
     
-    await runQuery('DELETE FROM routes WHERE id = $1 AND tenant_id = $2', [id, req.tenantId]);
+    await runQuery('DELETE FROM routes WHERE id = ? AND tenant_id = ?', [id, req.tenantId]);
     
     res.json({
       success: true,

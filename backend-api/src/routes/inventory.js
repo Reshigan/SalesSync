@@ -22,7 +22,7 @@ router.get('/', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.tenant_id = $1
+    WHERE i.tenant_id = ?
     ORDER BY p.name
   `, [tenantId]);
 
@@ -51,7 +51,7 @@ router.get('/product/:productId', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.product_id = $1 AND i.tenant_id = $2
+    WHERE i.product_id = ? AND i.tenant_id = ?
   `, [productId, tenantId]);
 
   res.json({
@@ -68,8 +68,8 @@ router.put('/:id', asyncHandler(async (req, res) => {
   
   const result = await runQuery(`
     UPDATE inventory_stock 
-    SET quantity_on_hand = $1, quantity_reserved = $2, cost_price = $3, updated_at = $4
-    WHERE id = $5 AND tenant_id = $6
+    SET quantity_on_hand = ?, quantity_reserved = ?, cost_price = ?, updated_at = ?
+    WHERE id = ? AND tenant_id = ?
   `, [quantity_on_hand, quantity_reserved || 0, cost_price, new Date().toISOString(), id, tenantId]);
 
   if (result.changes === 0) {
@@ -101,7 +101,7 @@ router.post('/', asyncHandler(async (req, res) => {
     `INSERT INTO inventory_stock (
       id, tenant_id, product_id, warehouse_id, quantity_on_hand,
       quantity_reserved, cost_price, updated_at, created_at
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       inventoryId,
       req.user.tenantId,
@@ -144,7 +144,7 @@ router.get('/low-stock', asyncHandler(async (req, res) => {
     FROM inventory_stock i
     JOIN products p ON i.product_id = p.id
     LEFT JOIN warehouses w ON i.warehouse_id = w.id
-    WHERE i.tenant_id = $1 AND i.quantity_on_hand <= $2
+    WHERE i.tenant_id = ? AND i.quantity_on_hand <= ?
     ORDER BY i.quantity_on_hand ASC
   `, [tenantId, parseInt(threshold)]);
 
@@ -176,7 +176,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         SUM(i.quantity_on_hand * i.cost_price) as total_inventory_value,
         COUNT(DISTINCT i.warehouse_id) as warehouse_count
       FROM inventory_stock i
-      WHERE i.tenant_id = $1
+      WHERE i.tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
@@ -186,7 +186,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         COUNT(CASE WHEN i.quantity_on_hand > 10 THEN 1 END) as in_stock
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
-      WHERE i.tenant_id = $1
+      WHERE i.tenant_id = ?
     `, [tenantId]),
     
     getQuery(`
@@ -196,7 +196,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         SUM(i.quantity_on_hand * i.cost_price) as inventory_value
       FROM inventory_stock i
       JOIN products p ON i.product_id = p.id
-      WHERE i.tenant_id = $1
+      WHERE i.tenant_id = ?
       GROUP BY p.id, p.name, p.code
       ORDER BY inventory_value DESC
       LIMIT 10
@@ -210,7 +210,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
         SUM(i.quantity_on_hand * i.cost_price) as inventory_value
       FROM inventory_stock i
       JOIN warehouses w ON i.warehouse_id = w.id
-      WHERE i.tenant_id = $1
+      WHERE i.tenant_id = ?
       GROUP BY w.id, w.name, w.address
       ORDER BY inventory_value DESC
     `, [tenantId])
@@ -248,7 +248,7 @@ router.get('/stock-counts/:countId/lines', asyncHandler(async (req, res) => {
     FROM stock_count_lines scl
     LEFT JOIN products p ON scl.product_id = p.id
     JOIN stock_counts sc ON scl.stock_count_id = sc.id
-    WHERE scl.stock_count_id = $1 AND sc.tenant_id = $2
+    WHERE scl.stock_count_id = ? AND sc.tenant_id = ?
     ORDER BY p.name
   `, [countId, tenantId]);
   
@@ -273,7 +273,7 @@ router.get('/adjustments/:adjustmentId/items', asyncHandler(async (req, res) => 
     LEFT JOIN products p ON ai.product_id = p.id
     LEFT JOIN warehouses w ON ai.warehouse_id = w.id
     JOIN adjustments a ON ai.adjustment_id = a.id
-    WHERE ai.adjustment_id = $1 AND a.tenant_id = $2
+    WHERE ai.adjustment_id = ? AND a.tenant_id = ?
     ORDER BY p.name
   `, [adjustmentId, tenantId]);
   
@@ -299,7 +299,7 @@ router.get('/transfers/:transferId/items', asyncHandler(async (req, res) => {
     FROM transfer_items ti
     LEFT JOIN products p ON ti.product_id = p.id
     JOIN transfers t ON ti.transfer_id = t.id
-    WHERE ti.transfer_id = $1 AND t.tenant_id = $2
+    WHERE ti.transfer_id = ? AND t.tenant_id = ?
     ORDER BY p.name
   `, [transferId, tenantId]);
   
@@ -328,7 +328,7 @@ router.get('/batches/:batchId/tracking', asyncHandler(async (req, res) => {
     FROM batch_tracking bt
     LEFT JOIN products p ON bt.product_id = p.id
     LEFT JOIN warehouses w ON bt.warehouse_id = w.id
-    WHERE bt.id = $1 AND bt.tenant_id = $2
+    WHERE bt.id = ? AND bt.tenant_id = ?
   `, [batchId, tenantId]);
   
   res.json({
@@ -351,7 +351,7 @@ router.get('/lots/:lotId/tracking', asyncHandler(async (req, res) => {
     FROM batch_tracking bt
     LEFT JOIN products p ON bt.product_id = p.id
     LEFT JOIN warehouses w ON bt.warehouse_id = w.id
-    WHERE bt.lot_number = $1 AND bt.tenant_id = $2
+    WHERE bt.lot_number = ? AND bt.tenant_id = ?
     ORDER BY bt.created_at DESC
   `, [lotId, tenantId]);
   
@@ -379,7 +379,7 @@ router.get('/batches/:batchId/movements', asyncHandler(async (req, res) => {
     LEFT JOIN warehouses wf ON sm.from_warehouse_id = wf.id
     LEFT JOIN warehouses wt ON sm.to_warehouse_id = wt.id
     LEFT JOIN users u ON sm.created_by = u.id
-    WHERE sm.batch_id = $1 AND sm.tenant_id = $2
+    WHERE sm.batch_id = ? AND sm.tenant_id = ?
     ORDER BY sm.created_at DESC
   `, [batchId, tenantId]);
   
@@ -404,7 +404,7 @@ router.get('/batches/:batchId/allocations', asyncHandler(async (req, res) => {
     FROM batch_allocations ba
     LEFT JOIN orders o ON ba.order_id = o.id
     LEFT JOIN customers c ON o.customer_id = c.id
-    WHERE ba.batch_id = $1 AND ba.tenant_id = $2
+    WHERE ba.batch_id = ? AND ba.tenant_id = ?
     ORDER BY ba.created_at DESC
   `, [batchId, tenantId]);
   
@@ -430,7 +430,7 @@ router.get('/stock-ledger/product/:productId', asyncHandler(async (req, res) => 
     LEFT JOIN products p ON sl.product_id = p.id
     LEFT JOIN warehouses w ON sl.warehouse_id = w.id
     LEFT JOIN users u ON sl.created_by = u.id
-    WHERE sl.product_id = $1 AND sl.tenant_id = $2
+    WHERE sl.product_id = ? AND sl.tenant_id = ?
     ORDER BY sl.created_at DESC
     LIMIT 100
   `, [productId, tenantId]);
@@ -457,7 +457,7 @@ router.get('/stock-ledger/warehouse/:warehouseId', asyncHandler(async (req, res)
     LEFT JOIN products p ON sl.product_id = p.id
     LEFT JOIN warehouses w ON sl.warehouse_id = w.id
     LEFT JOIN users u ON sl.created_by = u.id
-    WHERE sl.warehouse_id = $1 AND sl.tenant_id = $2
+    WHERE sl.warehouse_id = ? AND sl.tenant_id = ?
     ORDER BY sl.created_at DESC
     LIMIT 100
   `, [warehouseId, tenantId]);
@@ -484,7 +484,7 @@ router.get('/serials/:serialNumber/tracking', asyncHandler(async (req, res) => {
     LEFT JOIN products p ON st.product_id = p.id
     LEFT JOIN warehouses w ON st.warehouse_id = w.id
     LEFT JOIN customers c ON st.customer_id = c.id
-    WHERE st.serial_number = $1 AND st.tenant_id = $2
+    WHERE st.serial_number = ? AND st.tenant_id = ?
   `, [serialNumber, tenantId]);
   
   res.json({
@@ -502,7 +502,7 @@ router.get('/adjustments/:adjustmentId/items', asyncHandler(async (req, res) => 
     SELECT ai.*, p.name as product_name, p.code as product_code
     FROM adjustment_items ai
     LEFT JOIN products p ON ai.product_id = p.id
-    WHERE ai.adjustment_id = $1 AND ai.tenant_id = $2
+    WHERE ai.adjustment_id = ? AND ai.tenant_id = ?
     ORDER BY p.name
   `, [adjustmentId, tenantId]);
   
@@ -519,7 +519,7 @@ router.get('/adjustments/:adjustmentId/items/:itemId', asyncHandler(async (req, 
     FROM adjustment_items ai
     LEFT JOIN products p ON ai.product_id = p.id
     LEFT JOIN warehouses w ON ai.warehouse_id = w.id
-    WHERE ai.id = $1 AND ai.adjustment_id = $2 AND ai.tenant_id = $3
+    WHERE ai.id = ? AND ai.adjustment_id = ? AND ai.tenant_id = ?
   `, [itemId, adjustmentId, tenantId]);
   
   res.json({ success: true, data: item || null });
@@ -534,7 +534,7 @@ router.get('/adjustments/:adjustmentId/justification', asyncHandler(async (req, 
     SELECT aj.*, u.first_name || ' ' || u.last_name as created_by_name
     FROM adjustment_justifications aj
     LEFT JOIN users u ON aj.created_by = u.id
-    WHERE aj.adjustment_id = $1 AND aj.tenant_id = $2
+    WHERE aj.adjustment_id = ? AND aj.tenant_id = ?
   `, [adjustmentId, tenantId]);
   
   res.json({ success: true, data: justification || null });
@@ -550,7 +550,7 @@ router.get('/batches/:batchId/allocations', asyncHandler(async (req, res) => {
     FROM batch_allocations ba
     LEFT JOIN orders o ON ba.order_id = o.id
     LEFT JOIN customers c ON o.customer_id = c.id
-    WHERE ba.batch_id = $1 AND ba.tenant_id = $2
+    WHERE ba.batch_id = ? AND ba.tenant_id = ?
     ORDER BY ba.allocated_at DESC
   `, [batchId, tenantId]);
   
@@ -567,7 +567,7 @@ router.get('/batches/:id', asyncHandler(async (req, res) => {
     FROM batches b
     LEFT JOIN products p ON b.product_id = p.id
     LEFT JOIN warehouses w ON b.warehouse_id = w.id
-    WHERE b.id = $1 AND b.tenant_id = $2
+    WHERE b.id = ? AND b.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({ success: true, data: batch || null });
@@ -585,7 +585,7 @@ router.get('/batches/expiring', asyncHandler(async (req, res) => {
     LEFT JOIN warehouses w ON b.warehouse_id = w.id
     WHERE b.expiry_date <= CURRENT_DATE + INTERVAL '${parseInt(days)} days'
       AND b.expiry_date >= CURRENT_DATE
-      AND b.tenant_id = $1
+      AND b.tenant_id = ?
     ORDER BY b.expiry_date ASC
   `, [tenantId]);
   
@@ -601,7 +601,7 @@ router.get('/batches/:batchId/movements', asyncHandler(async (req, res) => {
     SELECT bm.*, u.first_name || ' ' || u.last_name as performed_by_name
     FROM batch_movements bm
     LEFT JOIN users u ON bm.performed_by = u.id
-    WHERE bm.batch_id = $1 AND bm.tenant_id = $2
+    WHERE bm.batch_id = ? AND bm.tenant_id = ?
     ORDER BY bm.movement_date DESC
   `, [batchId, tenantId]);
   
@@ -617,7 +617,7 @@ router.get('/stock-counts/:countId/lines', asyncHandler(async (req, res) => {
     SELECT scl.*, p.name as product_name, p.code as product_code
     FROM stock_count_lines scl
     LEFT JOIN products p ON scl.product_id = p.id
-    WHERE scl.count_id = $1 AND scl.tenant_id = $2
+    WHERE scl.count_id = ? AND scl.tenant_id = ?
     ORDER BY p.name
   `, [countId, tenantId]);
   
@@ -634,7 +634,7 @@ router.get('/stock-counts/:countId/lines/:lineId', asyncHandler(async (req, res)
     FROM stock_count_lines scl
     LEFT JOIN products p ON scl.product_id = p.id
     LEFT JOIN warehouses w ON scl.warehouse_id = w.id
-    WHERE scl.id = $1 AND scl.count_id = $2 AND scl.tenant_id = $3
+    WHERE scl.id = ? AND scl.count_id = ? AND scl.tenant_id = ?
   `, [lineId, countId, tenantId]);
   
   res.json({ success: true, data: line || null });
@@ -649,7 +649,7 @@ router.get('/stock-counts/:countId/lines/:lineId/approval', asyncHandler(async (
     SELECT scla.*, u.first_name || ' ' || u.last_name as approved_by_name
     FROM stock_count_line_approvals scla
     LEFT JOIN users u ON scla.approved_by = u.id
-    WHERE scla.line_id = $1 AND scla.tenant_id = $2
+    WHERE scla.line_id = ? AND scla.tenant_id = ?
   `, [lineId, tenantId]);
   
   res.json({ success: true, data: approval || null });
@@ -664,7 +664,7 @@ router.get('/stock-counts/:countId/lines/:lineId/variance', asyncHandler(async (
     SELECT sclv.*, u.first_name || ' ' || u.last_name as resolved_by_name
     FROM stock_count_line_variances sclv
     LEFT JOIN users u ON sclv.resolved_by = u.id
-    WHERE sclv.line_id = $1 AND sclv.tenant_id = $2
+    WHERE sclv.line_id = ? AND sclv.tenant_id = ?
   `, [lineId, tenantId]);
   
   res.json({ success: true, data: variance || null });
@@ -679,7 +679,7 @@ router.get('/lots/:id', asyncHandler(async (req, res) => {
     SELECT l.*, p.name as product_name, p.code as product_code
     FROM lots l
     LEFT JOIN products p ON l.product_id = p.id
-    WHERE l.id = $1 AND l.tenant_id = $2
+    WHERE l.id = ? AND l.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({ success: true, data: lot || null });
@@ -694,7 +694,7 @@ router.get('/lots/:lotId/tracking', asyncHandler(async (req, res) => {
     SELECT lt.*, u.first_name || ' ' || u.last_name as tracked_by_name
     FROM lot_tracking lt
     LEFT JOIN users u ON lt.tracked_by = u.id
-    WHERE lt.lot_id = $1 AND lt.tenant_id = $2
+    WHERE lt.lot_id = ? AND lt.tenant_id = ?
     ORDER BY lt.tracked_at DESC
   `, [lotId, tenantId]);
   
@@ -711,7 +711,7 @@ router.get('/movements/:id', asyncHandler(async (req, res) => {
     FROM inventory_movements im
     LEFT JOIN products p ON im.product_id = p.id
     LEFT JOIN warehouses w ON im.warehouse_id = w.id
-    WHERE im.id = $1 AND im.tenant_id = $2
+    WHERE im.id = ? AND im.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({ success: true, data: movement || null });
@@ -726,7 +726,7 @@ router.get('/serials/:id', asyncHandler(async (req, res) => {
     SELECT s.*, p.name as product_name, p.code as product_code
     FROM serials s
     LEFT JOIN products p ON s.product_id = p.id
-    WHERE s.id = $1 AND s.tenant_id = $2
+    WHERE s.id = ? AND s.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({ success: true, data: serial || null });
@@ -741,7 +741,7 @@ router.get('/serials/:serialId/tracking', asyncHandler(async (req, res) => {
     SELECT st.*, u.first_name || ' ' || u.last_name as tracked_by_name
     FROM serial_tracking st
     LEFT JOIN users u ON st.tracked_by = u.id
-    WHERE st.serial_id = $1 AND st.tenant_id = $2
+    WHERE st.serial_id = ? AND st.tenant_id = ?
     ORDER BY st.tracked_at DESC
   `, [serialId, tenantId]);
   
@@ -757,7 +757,7 @@ router.get('/ledger/product/:productId', asyncHandler(async (req, res) => {
     SELECT sl.*, w.name as warehouse_name
     FROM stock_ledger sl
     LEFT JOIN warehouses w ON sl.warehouse_id = w.id
-    WHERE sl.product_id = $1 AND sl.tenant_id = $2
+    WHERE sl.product_id = ? AND sl.tenant_id = ?
     ORDER BY sl.transaction_date DESC
     LIMIT 100
   `, [productId, tenantId]);
@@ -774,7 +774,7 @@ router.get('/ledger/warehouse/:warehouseId', asyncHandler(async (req, res) => {
     SELECT sl.*, p.name as product_name, p.code as product_code
     FROM stock_ledger sl
     LEFT JOIN products p ON sl.product_id = p.id
-    WHERE sl.warehouse_id = $1 AND sl.tenant_id = $2
+    WHERE sl.warehouse_id = ? AND sl.tenant_id = ?
     ORDER BY sl.transaction_date DESC
     LIMIT 100
   `, [warehouseId, tenantId]);
@@ -792,7 +792,7 @@ router.get('/ledger/:id', asyncHandler(async (req, res) => {
     FROM stock_ledger sl
     LEFT JOIN products p ON sl.product_id = p.id
     LEFT JOIN warehouses w ON sl.warehouse_id = w.id
-    WHERE sl.id = $1 AND sl.tenant_id = $2
+    WHERE sl.id = ? AND sl.tenant_id = ?
   `, [id, tenantId]);
   
   res.json({ success: true, data: entry || null });
@@ -807,7 +807,7 @@ router.get('/transfers/:transferId/items', asyncHandler(async (req, res) => {
     SELECT ti.*, p.name as product_name, p.code as product_code
     FROM transfer_items ti
     LEFT JOIN products p ON ti.product_id = p.id
-    WHERE ti.transfer_id = $1 AND ti.tenant_id = $2
+    WHERE ti.transfer_id = ? AND ti.tenant_id = ?
     ORDER BY p.name
   `, [transferId, tenantId]);
   
@@ -823,7 +823,7 @@ router.get('/transfers/:transferId/items/:itemId', asyncHandler(async (req, res)
     SELECT ti.*, p.name as product_name, p.code as product_code
     FROM transfer_items ti
     LEFT JOIN products p ON ti.product_id = p.id
-    WHERE ti.id = $1 AND ti.transfer_id = $2 AND ti.tenant_id = $3
+    WHERE ti.id = ? AND ti.transfer_id = ? AND ti.tenant_id = ?
   `, [itemId, transferId, tenantId]);
   
   res.json({ success: true, data: item || null });
@@ -838,7 +838,7 @@ router.get('/transfers/:transferId/items/:itemId/tracking', asyncHandler(async (
     SELECT tit.*, u.first_name || ' ' || u.last_name as tracked_by_name
     FROM transfer_item_tracking tit
     LEFT JOIN users u ON tit.tracked_by = u.id
-    WHERE tit.item_id = $1 AND tit.tenant_id = $2
+    WHERE tit.item_id = ? AND tit.tenant_id = ?
     ORDER BY tit.tracked_at DESC
   `, [itemId, tenantId]);
   

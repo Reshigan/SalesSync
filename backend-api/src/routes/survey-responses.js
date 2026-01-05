@@ -13,7 +13,7 @@ router.get('/:id', async (req, res) => {
       LEFT JOIN surveys s ON sr.survey_id = s.id
       LEFT JOIN visits v ON sr.visit_id = v.id
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE sr.id = $1 AND sr.tenant_id = $2
+      WHERE sr.id = ? AND sr.tenant_id = ?
     `, [id, tenantId]);
     
     res.json({ success: true, data: response || null });
@@ -32,7 +32,7 @@ router.get('/:responseId/answers/:answerId', async (req, res) => {
       SELECT sa.*, sq.question_text, sq.question_type
       FROM survey_answers sa
       LEFT JOIN survey_questions sq ON sa.question_id = sq.id
-      WHERE sa.id = $1 AND sa.response_id = $2 AND sa.tenant_id = $3
+      WHERE sa.id = ? AND sa.response_id = ? AND sa.tenant_id = ?
     `, [answerId, responseId, tenantId]);
     
     res.json({ success: true, data: answer || null });
@@ -53,7 +53,7 @@ router.get('/:surveyId/analysis', async (req, res) => {
         COUNT(DISTINCT sr.visit_id) as total_visits,
         AVG(CASE WHEN sr.completion_status = 'completed' THEN 1 ELSE 0 END) as completion_rate
       FROM survey_responses sr
-      WHERE sr.survey_id = $1 AND sr.tenant_id = $2
+      WHERE sr.survey_id = ? AND sr.tenant_id = ?
     `, [surveyId, tenantId]);
     
     res.json({ success: true, data: analysis[0] || {} });
@@ -73,7 +73,7 @@ router.get('/:surveyId/comparison', async (req, res) => {
       FROM survey_responses sr
       LEFT JOIN visits v ON sr.visit_id = v.id
       LEFT JOIN customers c ON v.customer_id = c.id
-      WHERE sr.survey_id = $1 AND sr.tenant_id = $2
+      WHERE sr.survey_id = ? AND sr.tenant_id = ?
       ORDER BY sr.created_at DESC
       LIMIT 100
     `, [surveyId, tenantId]);
