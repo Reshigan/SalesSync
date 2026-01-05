@@ -86,30 +86,30 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
   const { type, routeId, status, search } = req.query;
   
   try {
-    let whereClause = 'WHERE c.tenant_id = $1';
+    let whereClause = 'WHERE c.tenant_id = ?';
     let params = [req.tenantId];
     let paramIndex = 2;
     
     if (type) {
-      whereClause += ` AND c.type = $${paramIndex}`;
+      whereClause += ` AND c.type = ?`;
       params.push(type);
       paramIndex++;
     }
     
     if (routeId) {
-      whereClause += ` AND c.route_id = $${paramIndex}`;
+      whereClause += ` AND c.route_id = ?`;
       params.push(routeId);
       paramIndex++;
     }
     
     if (status) {
-      whereClause += ` AND c.status = $${paramIndex}`;
+      whereClause += ` AND c.status = ?`;
       params.push(status);
       paramIndex++;
     }
     
     if (search) {
-      whereClause += ` AND (c.name LIKE $${paramIndex} OR c.code LIKE $${paramIndex + 1} OR c.phone LIKE $${paramIndex + 2})`;
+      whereClause += ` AND (c.name LIKE ? OR c.code LIKE ? OR c.phone LIKE ?)`;
       const searchTerm = `%${search}%`;
       params.push(searchTerm, searchTerm, searchTerm);
       paramIndex += 3;
@@ -135,7 +135,7 @@ router.get('/', requireFunction('customers', 'view'), asyncHandler(async (req, r
       ${whereClause}
       GROUP BY c.id, c.created_at, c.name, c.code, c.type, c.phone, c.email, c.address, c.latitude, c.longitude, c.route_id, c.credit_limit, c.payment_terms, c.status, c.tenant_id, r.name, r.code, a.name, reg.name
       ORDER BY c.created_at DESC
-      LIMIT $${limitParam} OFFSET $${offsetParam}
+      LIMIT ? OFFSET ?
     `, [...params, limit, offset]);
     
     // Get total count
@@ -220,7 +220,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
   try {
     // Check if customer code already exists in this tenant
     const existingCustomer = await getOneQuery(
-      'SELECT id FROM customers WHERE code = $1 AND tenant_id = $2',
+      'SELECT id FROM customers WHERE code = ? AND tenant_id = ?',
       [code, req.tenantId]
     );
     
@@ -231,7 +231,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
     // Validate route if provided
     if (routeId) {
       const route = await getOneQuery(
-        'SELECT id FROM routes WHERE id = $1 AND tenant_id = $2',
+        'SELECT id FROM routes WHERE id = ? AND tenant_id = ?',
         [routeId, req.tenantId]
       );
       
@@ -244,7 +244,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
     const customerId = uuidv4();
     await runQuery(`
       INSERT INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, route_id, credit_limit, payment_terms, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?0, ?1, ?2, ?3, ?4)
     `, [customerId, req.tenantId, name, code, type, phone, email, address, latitude, longitude, routeId, creditLimit, paymentTerms, 'active']);
     
     // Get created customer with route information
@@ -255,7 +255,7 @@ router.post('/', requireFunction('customers', 'create'), asyncHandler(async (req
         r.code as route_code
       FROM customers c
       LEFT JOIN routes r ON r.id = c.route_id
-      WHERE c.id = $1
+      WHERE c.id = ?
     `, [customerId]);
     
     res.status(201).json({
@@ -303,10 +303,10 @@ router.get('/stats', requireFunction('customers', 'view'), asyncHandler(async (r
         SUM(CASE WHEN type = 'retail' THEN 1 ELSE 0 END) as retail_customers,
         SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale_customers,
         SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor_customers,
-        SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '30 days' THEN 1 ELSE 0 END) as new_customers_30d,
-        SUM(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 ELSE 0 END) as new_customers_7d
+        SUM(CASE WHEN created_at >= DATE('now', '-30 days') THEN 1 ELSE 0 END) as new_customers_30d,
+        SUM(CASE WHEN created_at >= DATE('now', '-7 days') THEN 1 ELSE 0 END) as new_customers_7d
       FROM customers
-      WHERE tenant_id = $1
+      WHERE tenant_id = ?
     `, [req.tenantId]);
     
     res.json({
@@ -342,7 +342,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
       LEFT JOIN regions reg ON reg.id = a.region_id
       LEFT JOIN orders o ON o.customer_id = c.id
       LEFT JOIN visits v ON v.customer_id = c.id
-      WHERE c.id = $1 AND c.tenant_id = $2
+      WHERE c.id = ? AND c.tenant_id = ?
       GROUP BY c.id, c.created_at, c.name, c.code, c.type, c.phone, c.email, c.address, c.latitude, c.longitude, c.route_id, c.credit_limit, c.payment_terms, c.status, c.tenant_id, r.name, r.code, a.name, reg.name
     `, [id, req.tenantId]);
     
@@ -354,7 +354,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
     const recentOrders = await getQuery(`
       SELECT id, order_number, order_date, total_amount, order_status
       FROM orders 
-      WHERE customer_id = $1
+      WHERE customer_id = ?
       ORDER BY order_date DESC 
       LIMIT 5
     `, [id]);
@@ -366,7 +366,7 @@ router.get('/:id', requireFunction('customers', 'view'), asyncHandler(async (req
         u.first_name, u.last_name
       FROM visits v
       LEFT JOIN users u ON u.id = v.agent_id
-      WHERE v.customer_id = $1
+      WHERE v.customer_id = ?
       ORDER BY v.visit_date DESC 
       LIMIT 5
     `, [id]);
@@ -444,7 +444,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
   try {
     // Check if customer exists
     const existingCustomer = await getOneQuery(
-      'SELECT * FROM customers WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM customers WHERE id = ? AND tenant_id = ?',
       [id, req.tenantId]
     );
     
@@ -455,7 +455,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
     // Check if code is being changed and already exists
     if (value.code && value.code !== existingCustomer.code) {
       const codeExists = await getOneQuery(
-        'SELECT id FROM customers WHERE code = $1 AND tenant_id = $2 AND id != $3',
+        'SELECT id FROM customers WHERE code = ? AND tenant_id = ? AND id != ?',
         [value.code, req.tenantId, id]
       );
       
@@ -467,7 +467,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
     // Validate route if provided
     if (value.routeId) {
       const route = await getOneQuery(
-        'SELECT id FROM routes WHERE id = $1 AND tenant_id = $2',
+        'SELECT id FROM routes WHERE id = ? AND tenant_id = ?',
         [value.routeId, req.tenantId]
       );
       
@@ -484,13 +484,13 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
     Object.keys(value).forEach(key => {
       if (value[key] !== undefined) {
         if (key === 'routeId') {
-          updateFields.push(`route_id = $${paramIndex}`);
+          updateFields.push(`route_id = ?`);
         } else if (key === 'creditLimit') {
-          updateFields.push(`credit_limit = $${paramIndex}`);
+          updateFields.push(`credit_limit = ?`);
         } else if (key === 'paymentTerms') {
-          updateFields.push(`payment_terms = $${paramIndex}`);
+          updateFields.push(`payment_terms = ?`);
         } else {
-          updateFields.push(`${key} = $${paramIndex}`);
+          updateFields.push(`${key} = ?`);
         }
         updateValues.push(value[key]);
         paramIndex++;
@@ -509,7 +509,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
     await runQuery(`
       UPDATE customers 
       SET ${updateFields.join(', ')} 
-      WHERE id = $${idParam} AND tenant_id = $${tenantParam}
+      WHERE id = ? AND tenant_id = ?
     `, updateValues);
     
     // Get updated customer
@@ -520,7 +520,7 @@ router.put('/:id', requireFunction('customers', 'edit'), asyncHandler(async (req
         r.code as route_code
       FROM customers c
       LEFT JOIN routes r ON r.id = c.route_id
-      WHERE c.id = $1 AND c.tenant_id = $2
+      WHERE c.id = ? AND c.tenant_id = ?
     `, [id, req.tenantId]);
     
     res.json({
@@ -562,7 +562,7 @@ router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async
   try {
     // Check if customer exists
     const existingCustomer = await getOneQuery(
-      'SELECT * FROM customers WHERE id = $1 AND tenant_id = $2',
+      'SELECT * FROM customers WHERE id = ? AND tenant_id = ?',
       [id, req.tenantId]
     );
     
@@ -572,20 +572,20 @@ router.delete('/:id', requireFunction('customers', 'delete'), asyncHandler(async
     
     // Check if customer has orders
     const hasOrders = await getOneQuery(
-      'SELECT COUNT(*) as count FROM orders WHERE customer_id = $1',
+      'SELECT COUNT(*) as count FROM orders WHERE customer_id = ?',
       [id]
     );
     
     if (hasOrders.count > 0) {
       // Soft delete by setting status to inactive
       await runQuery(
-        'UPDATE customers SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3',
+        'UPDATE customers SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?',
         ['inactive', id, req.tenantId]
       );
     } else {
       // Hard delete if no orders
       await runQuery(
-        'DELETE FROM customers WHERE id = $1 AND tenant_id = $2',
+        'DELETE FROM customers WHERE id = ? AND tenant_id = ?',
         [id, req.tenantId]
       );
     }
@@ -640,7 +640,7 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
   try {
     // Verify customer exists
     const customer = await getOneQuery(
-      'SELECT id FROM customers WHERE id = $1 AND tenant_id = $2',
+      'SELECT id FROM customers WHERE id = ? AND tenant_id = ?',
       [id, req.tenantId]
     );
     
@@ -656,14 +656,14 @@ router.get('/:id/orders', requireFunction('customers', 'view'), asyncHandler(asy
         u.last_name as salesman_last_name
       FROM orders o
       LEFT JOIN users u ON u.id = o.salesman_id
-      WHERE o.customer_id = $1
+      WHERE o.customer_id = ?
       ORDER BY o.order_date DESC
-      LIMIT $2 OFFSET $3
+      LIMIT ? OFFSET ?
     `, [id, limit, offset]);
     
     // Get total count
     const totalResult = await getOneQuery(
-      'SELECT COUNT(*) as total FROM orders WHERE customer_id = $1',
+      'SELECT COUNT(*) as total FROM orders WHERE customer_id = ?',
       [id]
     );
     
@@ -703,7 +703,7 @@ router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(asy
   const { getQuery } = require('../utils/database');
   
   try {
-    const visits = await getQuery('SELECT * FROM visits WHERE customer_id = $1 AND tenant_id = $2 ORDER BY visit_date DESC LIMIT 50', 
+    const visits = await getQuery('SELECT * FROM visits WHERE customer_id = ? AND tenant_id = ? ORDER BY visit_date DESC LIMIT 50', 
       [req.params.id, req.tenantId]);
     
     res.json({
@@ -728,7 +728,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
   const { getOneQuery, getQuery } = require('../utils/database');
   
   try {
-    const customer = await getOneQuery('SELECT credit_limit, payment_terms FROM customers WHERE id = $1 AND tenant_id = $2', 
+    const customer = await getOneQuery('SELECT credit_limit, payment_terms FROM customers WHERE id = ? AND tenant_id = ?', 
       [req.params.id, req.tenantId]);
     
     if (!customer) {
@@ -742,7 +742,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
         COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total_amount END), 0) as paid_amount,
         COUNT(*) as total_orders
       FROM orders 
-      WHERE customer_id = $1 AND tenant_id = $2`,
+      WHERE customer_id = ? AND tenant_id = ?`,
       [req.params.id, req.tenantId]
     );
     
@@ -781,7 +781,7 @@ router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(asyn
       `SELECT n.*, u.first_name || ' ' || u.last_name as created_by_name
       FROM customer_notes n
       LEFT JOIN users u ON n.created_by = u.id
-      WHERE n.customer_id = $1 AND n.tenant_id = $2
+      WHERE n.customer_id = ? AND n.tenant_id = ?
       ORDER BY n.created_at DESC`,
       [req.params.id, req.tenantId]
     );
@@ -819,7 +819,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
     }
     
     // Check if customer exists
-    const customer = await getOneQuery('SELECT id FROM customers WHERE id = $1 AND tenant_id = $2', 
+    const customer = await getOneQuery('SELECT id FROM customers WHERE id = ? AND tenant_id = ?', 
       [req.params.id, req.tenantId]);
     
     if (!customer) {
@@ -831,7 +831,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
     
     await runQuery(
       `INSERT INTO customer_notes (id, customer_id, tenant_id, note, type, created_by, created_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [noteId, req.params.id, req.tenantId, value.note, value.type, req.userId, now]
     );
     
@@ -839,7 +839,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
       `SELECT n.*, u.first_name || ' ' || u.last_name as created_by_name
       FROM customer_notes n
       LEFT JOIN users u ON n.created_by = u.id
-      WHERE n.id = $1`,
+      WHERE n.id = ?`,
       [noteId]
     );
     
@@ -883,19 +883,19 @@ router.post('/bulk', requireFunction('customers', 'edit'), asyncHandler(async (r
     
     switch (operation) {
       case 'activate':
-        query = `UPDATE customers SET status = 'active', updated_at = $1 WHERE id IN (${placeholders}) AND tenant_id = $${customer_ids.length + 2}`;
+        query = `UPDATE customers SET status = 'active', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
         params = [new Date().toISOString(), ...customer_ids, req.tenantId];
         break;
       case 'deactivate':
-        query = `UPDATE customers SET status = 'inactive', updated_at = $1 WHERE id IN (${placeholders}) AND tenant_id = $${customer_ids.length + 2}`;
+        query = `UPDATE customers SET status = 'inactive', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
         params = [new Date().toISOString(), ...customer_ids, req.tenantId];
         break;
       case 'suspend':
-        query = `UPDATE customers SET status = 'suspended', updated_at = $1 WHERE id IN (${placeholders}) AND tenant_id = $${customer_ids.length + 2}`;
+        query = `UPDATE customers SET status = 'suspended', updated_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
         params = [new Date().toISOString(), ...customer_ids, req.tenantId];
         break;
       case 'delete':
-        query = `UPDATE customers SET deleted_at = $1 WHERE id IN (${placeholders}) AND tenant_id = $${customer_ids.length + 2}`;
+        query = `UPDATE customers SET deleted_at = ? WHERE id IN (${placeholders}) AND tenant_id = ?`;
         params = [new Date().toISOString(), ...customer_ids, req.tenantId];
         break;
       default:
@@ -949,10 +949,10 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
       LEFT JOIN (
         SELECT customer_id, COUNT(*) as order_count, SUM(total_amount) as order_total
         FROM orders
-        WHERE tenant_id = $1
+        WHERE tenant_id = ?
         GROUP BY customer_id
       ) o ON c.id = o.customer_id
-      WHERE c.tenant_id = $2 AND c.deleted_at IS NULL
+      WHERE c.tenant_id = ? AND c.deleted_at IS NULL
     `;
     
     let params = [req.tenantId, req.tenantId];
@@ -966,13 +966,13 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
     }
     
     if (filters?.status) {
-      query += ` AND c.status = $${paramIndex}`;
+      query += ` AND c.status = ?`;
       params.push(filters.status);
       paramIndex++;
     }
     
     if (filters?.type) {
-      query += ` AND c.type = $${paramIndex}`;
+      query += ` AND c.type = ?`;
       params.push(filters.type);
       paramIndex++;
     }
@@ -1033,7 +1033,7 @@ router.get('/:id/visits', requireFunction('customers', 'view'), asyncHandler(asy
       SELECT v.*, u.first_name || ' ' || u.last_name as agent_name
       FROM visits v
       LEFT JOIN users u ON v.agent_id = u.id
-      WHERE v.customer_id = $1 AND v.tenant_id = $2
+      WHERE v.customer_id = ? AND v.tenant_id = ?
       ORDER BY v.visit_date DESC
       LIMIT 50
     `, [req.params.id, req.tenantId]);
@@ -1053,7 +1053,7 @@ router.get('/:id/kyc', requireFunction('customers', 'view'), asyncHandler(async 
   try {
     const kyc = await getOneQuery(`
       SELECT * FROM customer_kyc
-      WHERE customer_id = $1 AND tenant_id = $2
+      WHERE customer_id = ? AND tenant_id = ?
       ORDER BY created_at DESC
       LIMIT 1
     `, [req.params.id, req.tenantId]);
@@ -1079,7 +1079,7 @@ router.post('/:id/notes', requireFunction('customers', 'edit'), asyncHandler(asy
     const noteId = uuidv4();
     await runQuery(`
       INSERT INTO customer_notes (id, customer_id, tenant_id, user_id, note, created_at)
-      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `, [noteId, req.params.id, req.tenantId, req.userId, note]);
     
     res.json({ success: true, data: { id: noteId, note, created_at: new Date().toISOString() } });
@@ -1099,7 +1099,7 @@ router.get('/:id/notes', requireFunction('customers', 'view'), asyncHandler(asyn
       SELECT cn.*, u.first_name || ' ' || u.last_name as user_name
       FROM customer_notes cn
       LEFT JOIN users u ON cn.user_id = u.id
-      WHERE cn.customer_id = $1 AND cn.tenant_id = $2
+      WHERE cn.customer_id = ? AND cn.tenant_id = ?
       ORDER BY cn.created_at DESC
     `, [req.params.id, req.tenantId]);
     
@@ -1118,7 +1118,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
   try {
     const customer = await getOneQuery(`
       SELECT credit_limit, payment_terms FROM customers
-      WHERE id = $1 AND tenant_id = $2
+      WHERE id = ? AND tenant_id = ?
     `, [req.params.id, req.tenantId]);
     
     if (!customer) {
@@ -1129,7 +1129,7 @@ router.get('/:id/credit', requireFunction('customers', 'view'), asyncHandler(asy
     const outstandingResult = await getOneQuery(`
       SELECT COALESCE(SUM(total_amount - paid_amount), 0) as outstanding
       FROM orders
-      WHERE customer_id = $1 AND tenant_id = $2 AND payment_status != 'paid'
+      WHERE customer_id = ? AND tenant_id = ? AND payment_status != 'paid'
     `, [req.params.id, req.tenantId]);
     
     const outstanding = outstandingResult?.outstanding || 0;
@@ -1169,17 +1169,17 @@ router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async 
       try {
         // Check if customer exists by code
         const existing = await getOneQuery(`
-          SELECT id FROM customers WHERE code = $1 AND tenant_id = $2
+          SELECT id FROM customers WHERE code = ? AND tenant_id = ?
         `, [customerData.code, req.tenantId]);
         
         if (existing) {
           // Update
           await runQuery(`
             UPDATE customers
-            SET name = $1, type = $2, phone = $3, email = $4, address = $5,
-                latitude = $6, longitude = $7, credit_limit = $8, payment_terms = $9,
+            SET name = ?, type = ?, phone = ?, email = ?, address = ?,
+                latitude = ?, longitude = ?, credit_limit = ?, payment_terms = ?,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = $10 AND tenant_id = $11
+            WHERE id = ?0 AND tenant_id = ?1
           `, [
             customerData.name, customerData.type || 'retail', customerData.phone,
             customerData.email, customerData.address, customerData.latitude,
@@ -1194,7 +1194,7 @@ router.post('/bulk', requireFunction('customers', 'create'), asyncHandler(async 
             INSERT INTO customers (
               id, tenant_id, code, name, type, phone, email, address,
               latitude, longitude, credit_limit, payment_terms, status, created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'active', CURRENT_TIMESTAMP)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?0, ?1, ?2, 'active', CURRENT_TIMESTAMP)
           `, [
             customerId, req.tenantId, customerData.code, customerData.name,
             customerData.type || 'retail', customerData.phone, customerData.email,
@@ -1226,24 +1226,24 @@ router.post('/export', requireFunction('customers', 'view'), asyncHandler(async 
   try {
     const { type, status, routeId } = req.body;
     
-    let whereClause = 'WHERE c.tenant_id = $1';
+    let whereClause = 'WHERE c.tenant_id = ?';
     let params = [req.tenantId];
     let paramIndex = 2;
     
     if (type) {
-      whereClause += ` AND c.type = $${paramIndex}`;
+      whereClause += ` AND c.type = ?`;
       params.push(type);
       paramIndex++;
     }
     
     if (status) {
-      whereClause += ` AND c.status = $${paramIndex}`;
+      whereClause += ` AND c.status = ?`;
       params.push(status);
       paramIndex++;
     }
     
     if (routeId) {
-      whereClause += ` AND c.route_id = $${paramIndex}`;
+      whereClause += ` AND c.route_id = ?`;
       params.push(routeId);
       paramIndex++;
     }
@@ -1306,7 +1306,7 @@ router.get('/stats/summary', requireFunction('customers', 'view'), asyncHandler(
         SUM(CASE WHEN type = 'wholesale' THEN 1 ELSE 0 END) as wholesale,
         SUM(CASE WHEN type = 'distributor' THEN 1 ELSE 0 END) as distributor
       FROM customers
-      WHERE tenant_id = $1
+      WHERE tenant_id = ?
     `, [req.tenantId]);
     
     res.json({ success: true, data: stats });
