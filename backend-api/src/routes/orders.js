@@ -84,7 +84,7 @@ const generateOrderNumber = async (tenantId) => {
   const row = await getOneQuery(`
     SELECT COUNT(*) as count 
     FROM orders 
-    WHERE tenant_id = $1 AND created_at::date = CURRENT_DATE
+    WHERE tenant_id = ? AND DATE(created_at) = DATE('now')
   `, [tenantId]);
   
   const sequence = String(row.count + 1).padStart(4, '0');
@@ -157,87 +157,72 @@ router.get('/', async (req, res) => {
       LEFT JOIN customers c ON o.customer_id = c.id
       LEFT JOIN users u ON o.salesman_id = u.id
       LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.tenant_id = $1
+      WHERE o.tenant_id = ?
     `;
     const params = [tenantId];
     
-    let paramIndex = 2;
-    
     // Apply filters
     if (customer_id) {
-      sql += ` AND o.customer_id = $${paramIndex}`;
+      sql += ` AND o.customer_id = ?`;
       params.push(customer_id);
-      paramIndex++;
     }
     if (salesman_id) {
-      sql += ` AND o.salesman_id = $${paramIndex}`;
+      sql += ` AND o.salesman_id = ?`;
       params.push(salesman_id);
-      paramIndex++;
     }
     if (order_status) {
-      sql += ` AND o.order_status = $${paramIndex}`;
+      sql += ` AND o.order_status = ?`;
       params.push(order_status);
-      paramIndex++;
     }
     if (payment_status) {
-      sql += ` AND o.payment_status = $${paramIndex}`;
+      sql += ` AND o.payment_status = ?`;
       params.push(payment_status);
-      paramIndex++;
     }
     if (date_from) {
-      sql += ` AND o.order_date >= $${paramIndex}`;
+      sql += ` AND o.order_date >= ?`;
       params.push(date_from);
-      paramIndex++;
     }
     if (date_to) {
-      sql += ` AND o.order_date <= $${paramIndex}`;
+      sql += ` AND o.order_date <= ?`;
       params.push(date_to);
-      paramIndex++;
     }
     
     sql += ` 
       GROUP BY o.id, c.name, c.phone, u.first_name, u.last_name
       ORDER BY o.created_at DESC 
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      LIMIT ? OFFSET ?
     `;
     params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
     
     const orders = await getQuery(sql, params);
     
     // Get total count
-    let countSql = 'SELECT COUNT(*) as count FROM orders WHERE tenant_id = $1';
+    let countSql = 'SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?';
     const countParams = [tenantId];
-    let countParamIndex = 2;
     
     if (customer_id) {
-      countSql += ` AND customer_id = $${countParamIndex}`;
+      countSql += ` AND customer_id = ?`;
       countParams.push(customer_id);
-      countParamIndex++;
     }
     if (salesman_id) {
-      countSql += ` AND salesman_id = $${countParamIndex}`;
+      countSql += ` AND salesman_id = ?`;
       countParams.push(salesman_id);
-      countParamIndex++;
     }
     if (order_status) {
-      countSql += ` AND order_status = $${countParamIndex}`;
+      countSql += ` AND order_status = ?`;
       countParams.push(order_status);
-      countParamIndex++;
     }
     if (payment_status) {
-      countSql += ` AND payment_status = $${countParamIndex}`;
+      countSql += ` AND payment_status = ?`;
       countParams.push(payment_status);
-      countParamIndex++;
     }
     if (date_from) {
-      countSql += ` AND order_date >= $${countParamIndex}`;
+      countSql += ` AND order_date >= ?`;
       countParams.push(date_from);
-      countParamIndex++;
     }
     if (date_to) {
-      countSql += ` AND order_date <= $${countParamIndex}`;
+      countSql += ` AND order_date <= ?`;
       countParams.push(date_to);
-      countParamIndex++;
     }
     
     const countRow = await getOneQuery(countSql, countParams);
@@ -253,7 +238,7 @@ router.get('/', async (req, res) => {
         SUM(total_amount) as total_value,
         AVG(total_amount) as average_order_value
       FROM orders 
-      WHERE tenant_id = $1 AND order_date::date = CURRENT_DATE
+      WHERE tenant_id = ? AND DATE(order_date) = DATE('now')
     `, [tenantId]);
     
     res.json({
@@ -458,14 +443,14 @@ const getOrderWithDetails = async (orderId, tenantId) => {
     FROM orders o
     LEFT JOIN customers c ON o.customer_id = c.id
     LEFT JOIN users u ON o.salesman_id = u.id
-    WHERE o.id = $1 AND o.tenant_id = $2
+    WHERE o.id = ? AND o.tenant_id = ?
   `, [orderId, tenantId]);
   
   const items = await getQuery(`
     SELECT oi.*, p.name as product_name, p.code as product_code, p.unit_of_measure
     FROM order_items oi
     JOIN products p ON oi.product_id = p.id
-    WHERE oi.order_id = $1
+    WHERE oi.order_id = ?
     ORDER BY p.name
   `, [orderId]);
   
@@ -666,7 +651,7 @@ router.get('/:orderId/items', async (req, res) => {
              oi.line_total as total
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
-      WHERE oi.order_id = $1
+      WHERE oi.order_id = ?
       ORDER BY oi.created_at
     `, [orderId]);
     
@@ -702,7 +687,7 @@ router.get('/:orderId/items/:itemId', async (req, res) => {
              END as fulfillment_status
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
-      WHERE oi.id = $1 AND oi.order_id = $2
+      WHERE oi.id = ? AND oi.order_id = ?
     `, [itemId, orderId]);
     
     if (!item) {
@@ -729,7 +714,7 @@ router.put('/:orderId/items/:itemId', async (req, res) => {
     const { quantity, unit_price, discount_percentage, tax_percentage, notes, price_override_reason } = req.body;
     
     const existingItem = await getOneQuery(
-      'SELECT * FROM order_items WHERE id = $1 AND order_id = $2',
+      'SELECT * FROM order_items WHERE id = ? AND order_id = ?',
       [itemId, orderId]
     );
     
@@ -760,12 +745,12 @@ router.put('/:orderId/items/:itemId', async (req, res) => {
     updateData.line_total = lineTaxable + lineTax;
     
     await runQuery(
-      `UPDATE order_items SET ${Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $${Object.keys(updateData).length + 1} AND order_id = $${Object.keys(updateData).length + 2}`,
+      `UPDATE order_items SET ${Object.keys(updateData).map(k => `${k} = ?`).join(', ')}, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ? AND order_id = ?`,
       [...Object.values(updateData), itemId, orderId]
     );
     
-    const items = await getQuery('SELECT * FROM order_items WHERE order_id = $1', [orderId]);
+    const items = await getQuery('SELECT * FROM order_items WHERE order_id = ?', [orderId]);
     let orderSubtotal = 0;
     let orderTax = 0;
     let orderDiscount = 0;
@@ -784,8 +769,8 @@ router.put('/:orderId/items/:itemId', async (req, res) => {
     const orderTotal = orderSubtotal - orderDiscount + orderTax;
     
     await runQuery(
-      `UPDATE orders SET subtotal = $1, discount_amount = $2, tax_amount = $3, total_amount = $4, updated_at = CURRENT_TIMESTAMP 
-       WHERE id = $5`,
+      `UPDATE orders SET subtotal = ?, discount_amount = ?, tax_amount = ?, total_amount = ?, updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ?`,
       [orderSubtotal.toFixed(2), orderDiscount.toFixed(2), orderTax.toFixed(2), orderTotal.toFixed(2), orderId]
     );
     
@@ -793,7 +778,7 @@ router.put('/:orderId/items/:itemId', async (req, res) => {
       SELECT oi.*, p.name as product_name, p.code as product_code, p.sku as product_sku
       FROM order_items oi
       JOIN products p ON oi.product_id = p.id
-      WHERE oi.id = $1 AND oi.order_id = $2
+      WHERE oi.id = ? AND oi.order_id = ?
     `, [itemId, orderId]);
     
     res.json({
@@ -817,10 +802,10 @@ router.get('/customer/:customerId', async (req, res) => {
       SELECT o.*, COUNT(oi.id) as item_count
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.tenant_id = $1 AND o.customer_id = $2
+      WHERE o.tenant_id = ? AND o.customer_id = ?
       GROUP BY o.id
       ORDER BY o.created_at DESC
-      LIMIT $3
+      LIMIT ?
     `, [tenantId, customerId, parseInt(limit)]);
     
     res.json({
@@ -843,23 +828,20 @@ router.get('/salesman/:salesmanId', async (req, res) => {
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
       LEFT JOIN order_items oi ON o.id = oi.order_id
-      WHERE o.tenant_id = $1 AND o.salesman_id = $2
+      WHERE o.tenant_id = ? AND o.salesman_id = ?
     `;
     const params = [tenantId, salesmanId];
-    let paramIndex = 3;
     
     if (date_from) {
-      sql += ` AND o.order_date >= $${paramIndex}`;
+      sql += ` AND o.order_date >= ?`;
       params.push(date_from);
-      paramIndex++;
     }
     if (date_to) {
-      sql += ` AND o.order_date <= $${paramIndex}`;
+      sql += ` AND o.order_date <= ?`;
       params.push(date_to);
-      paramIndex++;
     }
     
-    sql += ` GROUP BY o.id, c.name ORDER BY o.created_at DESC LIMIT $${paramIndex}`;
+    sql += ` GROUP BY o.id, c.name ORDER BY o.created_at DESC LIMIT ?`;
     params.push(parseInt(limit));
     
     const orders = await getQuery(sql, params);
@@ -880,14 +862,14 @@ router.get('/stats', async (req, res) => {
     const tenantId = req.user.tenantId;
     
     const [totalOrdersRow, ordersByStatus, revenueStats, topCustomers] = await Promise.all([
-      getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = $1', [tenantId]),
+      getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [tenantId]),
       getQuery(`SELECT order_status, COUNT(*) as count, SUM(total_amount) as total_value
-                FROM orders WHERE tenant_id = $1 GROUP BY order_status`, [tenantId]),
+                FROM orders WHERE tenant_id = ? GROUP BY order_status`, [tenantId]),
       getOneQuery(`SELECT SUM(total_amount) as total_revenue, AVG(total_amount) as average_order_value
-                FROM orders WHERE tenant_id = $1`, [tenantId]),
+                FROM orders WHERE tenant_id = ?`, [tenantId]),
       getQuery(`SELECT c.id, c.name, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent
                 FROM customers c INNER JOIN orders o ON c.id = o.customer_id
-                WHERE o.tenant_id = $1 GROUP BY c.id, c.name ORDER BY total_spent DESC LIMIT 10`, [tenantId])
+                WHERE o.tenant_id = ? GROUP BY c.id, c.name ORDER BY total_spent DESC LIMIT 10`, [tenantId])
     ]);
     
     const totalOrders = totalOrdersRow.count;
@@ -914,7 +896,7 @@ router.put('/:id/status', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
     
-    const result = await runQuery('UPDATE orders SET order_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND tenant_id = $3',
+    const result = await runQuery('UPDATE orders SET order_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND tenant_id = ?',
       [status, id, tenantId]);
     
     if (result.rowCount === 0) {
@@ -939,7 +921,7 @@ router.get('/:orderId/deliveries', async (req, res) => {
       FROM deliveries d
       LEFT JOIN users u ON d.driver_id = u.id
       LEFT JOIN vehicles v ON d.vehicle_id = v.id
-      WHERE d.order_id = $1 AND d.tenant_id = $2
+      WHERE d.order_id = ? AND d.tenant_id = ?
       ORDER BY d.scheduled_date DESC
     `, [orderId, tenantId]);
     
@@ -964,7 +946,7 @@ router.get('/:orderId/deliveries/:deliveryId', async (req, res) => {
       FROM deliveries d
       LEFT JOIN users u ON d.driver_id = u.id
       LEFT JOIN vehicles v ON d.vehicle_id = v.id
-      WHERE d.id = $1 AND d.order_id = $2 AND d.tenant_id = $3
+      WHERE d.id = ? AND d.order_id = ? AND d.tenant_id = ?
     `, [deliveryId, orderId, tenantId]);
     
     res.json({
@@ -987,7 +969,7 @@ router.get('/:orderId/returns', async (req, res) => {
       SELECT r.*, u.first_name || ' ' || u.last_name as processed_by_name
       FROM returns r
       LEFT JOIN users u ON r.processed_by = u.id
-      WHERE r.order_id = $1 AND r.tenant_id = $2
+      WHERE r.order_id = ? AND r.tenant_id = ?
       ORDER BY r.return_date DESC
     `, [orderId, tenantId]);
     
@@ -1011,7 +993,7 @@ router.get('/:orderId/status-history', async (req, res) => {
       SELECT osh.*, u.first_name || ' ' || u.last_name as changed_by_name
       FROM order_status_history osh
       LEFT JOIN users u ON osh.changed_by = u.id
-      WHERE osh.order_id = $1 AND osh.tenant_id = $2
+      WHERE osh.order_id = ? AND osh.tenant_id = ?
       ORDER BY osh.changed_at DESC
     `, [orderId, tenantId]);
     

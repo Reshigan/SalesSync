@@ -9,40 +9,37 @@ router.get('/sales', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND o.order_date >= $${paramIndex}`;
+    dateFilter += ` AND o.order_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND o.order_date <= $${paramIndex}`;
+    dateFilter += ` AND o.order_date <= ?`;
     params.push(end_date);
-    paramIndex++;
   }
   
   let groupBy = 'DATE(o.order_date)';
-  let dateFormat = 'YYYY-MM-DD';
+  let periodLabel = 'DATE(o.order_date)';
   if (period === 'weekly') {
-    groupBy = 'DATE_TRUNC(\'week\', o.order_date)';
-    dateFormat = 'YYYY-"W"IW';
+    groupBy = "strftime('%Y-%W', o.order_date)";
+    periodLabel = "strftime('%Y-W%W', o.order_date)";
   } else if (period === 'monthly') {
-    groupBy = 'DATE_TRUNC(\'month\', o.order_date)';
-    dateFormat = 'YYYY-MM';
+    groupBy = "strftime('%Y-%m', o.order_date)";
+    periodLabel = "strftime('%Y-%m', o.order_date)";
   }
   
   const salesTrend = await getQuery(`
     SELECT 
       ${groupBy} as period,
-      TO_CHAR(${groupBy}, '${dateFormat}') as period_label,
+      ${periodLabel} as period_label,
       COUNT(o.id) as order_count,
       COALESCE(SUM(o.total_amount), 0) as total_revenue,
       COALESCE(AVG(o.total_amount), 0) as avg_order_value,
       COUNT(DISTINCT o.customer_id) as unique_customers
     FROM orders o
-    WHERE o.tenant_id = $1 AND o.order_status != $${paramIndex}${dateFilter}
+    WHERE o.tenant_id = ? AND o.order_status != ?${dateFilter}
     GROUP BY ${groupBy}
     ORDER BY period DESC
     LIMIT 30
@@ -55,7 +52,7 @@ router.get('/sales', asyncHandler(async (req, res) => {
       COALESCE(AVG(o.total_amount), 0) as avg_order_value,
       COUNT(DISTINCT o.customer_id) as unique_customers
     FROM orders o
-    WHERE o.tenant_id = $1 AND o.order_status != $${paramIndex}${dateFilter}
+    WHERE o.tenant_id = ? AND o.order_status != ?${dateFilter}
   `, [...params, 'cancelled']);
   
   res.json({
@@ -73,16 +70,14 @@ router.get('/finance', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND o.order_date >= $${paramIndex}`;
+    dateFilter += ` AND o.order_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND o.order_date <= $${paramIndex}`;
+    dateFilter += ` AND o.order_date <= ?`;
     params.push(end_date);
   }
   
@@ -95,7 +90,7 @@ router.get('/finance', asyncHandler(async (req, res) => {
       COALESCE(SUM(CASE WHEN payment_status = 'pending' THEN total_amount ELSE 0 END), 0) as pending_amount,
       COALESCE(SUM(CASE WHEN payment_status = 'overdue' THEN total_amount ELSE 0 END), 0) as overdue_amount
     FROM orders o
-    WHERE tenant_id = $1 AND order_status != 'cancelled'${dateFilter}
+    WHERE tenant_id = ? AND order_status != 'cancelled'${dateFilter}
   `, params);
   
   const byPaymentMethod = await getQuery(`
@@ -104,7 +99,7 @@ router.get('/finance', asyncHandler(async (req, res) => {
       COUNT(*) as order_count,
       COALESCE(SUM(total_amount), 0) as total_amount
     FROM orders
-    WHERE tenant_id = $1 AND order_status != 'cancelled'${dateFilter}
+    WHERE tenant_id = ? AND order_status != 'cancelled'${dateFilter}
     GROUP BY payment_method
     ORDER BY total_amount DESC
   `, params);
@@ -115,7 +110,7 @@ router.get('/finance', asyncHandler(async (req, res) => {
       COUNT(*) as order_count,
       COALESCE(SUM(total_amount), 0) as total_amount
     FROM orders
-    WHERE tenant_id = $1 AND order_status != 'cancelled'${dateFilter}
+    WHERE tenant_id = ? AND order_status != 'cancelled'${dateFilter}
     GROUP BY payment_status
     ORDER BY total_amount DESC
   `, params);
@@ -136,16 +131,14 @@ router.get('/operations', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND v.visit_date >= $${paramIndex}`;
+    dateFilter += ` AND v.visit_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND v.visit_date <= $${paramIndex}`;
+    dateFilter += ` AND v.visit_date <= ?`;
     params.push(end_date);
   }
   
@@ -158,7 +151,7 @@ router.get('/operations', asyncHandler(async (req, res) => {
       COUNT(DISTINCT CASE WHEN v.visit_status = 'pending' THEN v.id END) as pending_visits,
       COUNT(DISTINCT CASE WHEN v.visit_status = 'cancelled' THEN v.id END) as cancelled_visits
     FROM visits v
-    WHERE v.tenant_id = $1${dateFilter}
+    WHERE v.tenant_id = ?${dateFilter}
   `, params);
   
   const visitsByAgent = await getQuery(`
@@ -169,7 +162,7 @@ router.get('/operations', asyncHandler(async (req, res) => {
       COUNT(CASE WHEN v.visit_status = 'completed' THEN 1 END) as completed_count
     FROM visits v
     JOIN users u ON v.agent_id = u.id
-    WHERE v.tenant_id = $1${dateFilter}
+    WHERE v.tenant_id = ?${dateFilter}
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY visit_count DESC
     LIMIT 10
@@ -181,7 +174,7 @@ router.get('/operations', asyncHandler(async (req, res) => {
       COUNT(*) as visit_count,
       COUNT(CASE WHEN visit_status = 'completed' THEN 1 END) as completed_count
     FROM visits
-    WHERE tenant_id = $1${dateFilter}
+    WHERE tenant_id = ?${dateFilter}
     GROUP BY visit_type
     ORDER BY visit_count DESC
   `, params);
@@ -202,18 +195,15 @@ router.get('/products', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND o.order_date >= $${paramIndex}`;
+    dateFilter += ` AND o.order_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND o.order_date <= $${paramIndex}`;
+    dateFilter += ` AND o.order_date <= ?`;
     params.push(end_date);
-    paramIndex++;
   }
   
   const topProducts = await getQuery(`
@@ -227,10 +217,10 @@ router.get('/products', asyncHandler(async (req, res) => {
     FROM order_lines ol
     JOIN orders o ON ol.order_id = o.id
     JOIN products p ON ol.product_id = p.id
-    WHERE o.tenant_id = $1 AND o.order_status != 'cancelled'${dateFilter}
+    WHERE o.tenant_id = ? AND o.order_status != 'cancelled'${dateFilter}
     GROUP BY p.id, p.name, p.sku
     ORDER BY total_revenue DESC
-    LIMIT $${paramIndex}
+    LIMIT ?
   `, [...params, parseInt(limit)]);
   
   const categoryStats = await getQuery(`
@@ -243,7 +233,7 @@ router.get('/products', asyncHandler(async (req, res) => {
     FROM order_lines ol
     JOIN orders o ON ol.order_id = o.id
     JOIN products p ON ol.product_id = p.id
-    WHERE o.tenant_id = $1 AND o.order_status != 'cancelled'${dateFilter}
+    WHERE o.tenant_id = ? AND o.order_status != 'cancelled'${dateFilter}
     GROUP BY p.category
     ORDER BY total_revenue DESC
   `, params);
@@ -263,18 +253,15 @@ router.get('/customers', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND o.order_date >= $${paramIndex}`;
+    dateFilter += ` AND o.order_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND o.order_date <= $${paramIndex}`;
+    dateFilter += ` AND o.order_date <= ?`;
     params.push(end_date);
-    paramIndex++;
   }
   
   const topCustomers = await getQuery(`
@@ -288,10 +275,10 @@ router.get('/customers', asyncHandler(async (req, res) => {
       MAX(o.order_date) as last_order_date
     FROM customers c
     LEFT JOIN orders o ON c.id = o.customer_id AND o.order_status != 'cancelled'
-    WHERE c.tenant_id = $1${dateFilter}
+    WHERE c.tenant_id = ?${dateFilter}
     GROUP BY c.id, c.name, c.customer_type
     ORDER BY total_revenue DESC
-    LIMIT $${paramIndex}
+    LIMIT ?
   `, [...params, parseInt(limit)]);
   
   const customerTypeStats = await getQuery(`
@@ -302,7 +289,7 @@ router.get('/customers', asyncHandler(async (req, res) => {
       COALESCE(SUM(o.total_amount), 0) as total_revenue
     FROM customers c
     LEFT JOIN orders o ON c.id = o.customer_id AND o.order_status != 'cancelled'
-    WHERE c.tenant_id = $1${dateFilter}
+    WHERE c.tenant_id = ?${dateFilter}
     GROUP BY c.customer_type
     ORDER BY total_revenue DESC
   `, params);
@@ -322,16 +309,14 @@ router.get('/agents', asyncHandler(async (req, res) => {
   
   let dateFilter = '';
   const params = [tenantId];
-  let paramIndex = 2;
   
   if (start_date) {
-    dateFilter += ` AND o.order_date >= $${paramIndex}`;
+    dateFilter += ` AND o.order_date >= ?`;
     params.push(start_date);
-    paramIndex++;
   }
   
   if (end_date) {
-    dateFilter += ` AND o.order_date <= $${paramIndex}`;
+    dateFilter += ` AND o.order_date <= ?`;
     params.push(end_date);
   }
   
@@ -347,7 +332,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
     FROM users u
     LEFT JOIN orders o ON u.id = o.agent_id AND o.order_status != 'cancelled'
     LEFT JOIN visits v ON u.id = v.agent_id
-    WHERE u.tenant_id = $1 
+    WHERE u.tenant_id = ? 
       AND u.role IN ('agent', 'sales_agent', 'field_agent', 'van_sales_agent')
       ${dateFilter}
     GROUP BY u.id, u.first_name, u.last_name, u.role
