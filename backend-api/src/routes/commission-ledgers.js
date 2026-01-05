@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { pool } = require('../config/database');
 const { selectMany, selectOne, updateRow } = require('../utils/pg-helpers');
 const { getQuery, getOneQuery } = require('../utils/database');
 
@@ -12,30 +11,30 @@ router.get('/', async (req, res) => {
 
     let query = `
       SELECT cl.*, 
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name,
+        u.first_name || ' ' || u.last_name as agent_name,
         u.email as agent_email
       FROM commission_ledgers cl
       LEFT JOIN users u ON cl.agent_id = u.id
-      WHERE cl.tenant_id = $1
+      WHERE cl.tenant_id = ?
     `;
     const params = [tenantId];
     
     if (agent_id) {
+      query += ` AND cl.agent_id = ?`;
       params.push(agent_id);
-      query += ` AND cl.agent_id = $${params.length}`;
     }
     
     if (status) {
+      query += ` AND cl.status = ?`;
       params.push(status);
-      query += ` AND cl.status = $${params.length}`;
     }
     
     if (type) {
+      query += ` AND cl.type = ?`;
       params.push(type);
-      query += ` AND cl.type = $${params.length}`;
     }
     
-    query += ` ORDER BY cl.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` ORDER BY cl.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
     const commissions = await getQuery(query, params);
@@ -48,8 +47,8 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) as approved_amount,
         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid_amount
       FROM commission_ledgers
-      WHERE tenant_id = $1
-      ${agent_id ? `AND agent_id = $2` : ''}
+      WHERE tenant_id = ?
+      ${agent_id ? `AND agent_id = ?` : ''}
     `;
     
     const totalsParams = agent_id ? [tenantId, agent_id] : [tenantId];
@@ -76,7 +75,7 @@ router.get('/my-earnings', async (req, res) => {
           ELSE cl.type
         END as type_display
       FROM commission_ledgers cl
-      WHERE cl.tenant_id = $1 AND cl.agent_id = $2
+      WHERE cl.tenant_id = ? AND cl.agent_id = ?
       ORDER BY cl.created_at DESC
     `;
 
@@ -90,7 +89,7 @@ router.get('/my-earnings', async (req, res) => {
         SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) as approved,
         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid
       FROM commission_ledgers
-      WHERE tenant_id = $1 AND agent_id = $2
+      WHERE tenant_id = ? AND agent_id = ?
     `;
     
     const totals = await getOneQuery(totalsQuery, [tenantId, userId]);
@@ -111,7 +110,7 @@ router.get('/by-agent/:agentId', async (req, res) => {
     const query = `
       SELECT cl.*
       FROM commission_ledgers cl
-      WHERE cl.tenant_id = $1 AND cl.agent_id = $2
+      WHERE cl.tenant_id = ? AND cl.agent_id = ?
       ORDER BY cl.created_at DESC
     `;
 
@@ -132,11 +131,11 @@ router.get('/:id', async (req, res) => {
 
     const query = `
       SELECT cl.*, 
-        CONCAT(u.first_name, ' ', u.last_name) as agent_name,
+        u.first_name || ' ' || u.last_name as agent_name,
         u.email as agent_email
       FROM commission_ledgers cl
       LEFT JOIN users u ON cl.agent_id = u.id
-      WHERE cl.id = $1 AND cl.tenant_id = $2
+      WHERE cl.id = ? AND cl.tenant_id = ?
     `;
     const commission = await getOneQuery(query, [id, tenantId]);
 

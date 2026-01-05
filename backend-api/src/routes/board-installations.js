@@ -65,21 +65,19 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 
     // Get board details and commission rate
-    db.get(
+    const board = await getOneQuery(
       `SELECT b.*, bb.coverage_standard, bb.visibility_standard
        FROM boards b
-       LEFT JOIN brand_boards bb ON b.id = bb.board_id AND bb.brand_id = $1
-       WHERE b.id = $1 AND b.tenant_id = $2`,
-      [brand_id, board_id, tenantId],
-      async (err, board) => {
-        if (err) {
-          console.error('Error fetching board:', err);
-          return res.status(500).json({ error: 'Failed to fetch board details' });
-        }
-        if (!board) {
-          return res.status(404).json({ error: 'Board not found' });
-        }
+       LEFT JOIN brand_boards bb ON b.id = bb.board_id AND bb.brand_id = ?
+       WHERE b.id = ? AND b.tenant_id = ?`,
+      [brand_id, board_id, tenantId]
+    );
+    
+    if (!board) {
+      return res.status(404).json({ error: 'Board not found' });
+    }
 
+    try {
         // Calculate analytics
         const boardArea = (board.width_cm / 100) * (board.height_cm / 100);
         const coveragePercentage = storefront_area_sqm 
@@ -100,78 +98,64 @@ router.post('/', authMiddleware, async (req, res) => {
         const installationId = uuidv4();
 
         // Insert installation
-        db.run(
+        await runQuery(
           `INSERT INTO board_installations (
             id, tenant_id, agent_id, customer_id, board_id, brand_id, visit_id,
             installation_date, latitude, longitude, gps_accuracy,
             before_photo_url, after_photo_url, storefront_area_sqm, board_area_sqm,
             coverage_percentage, visibility_score, optimal_position, quality_score,
             commission_amount, status, notes, created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
           [
             installationId, tenantId, agentId, customer_id, board_id, brand_id, visit_id,
             latitude, longitude, gps_accuracy,
             before_photo_url, after_photo_url, storefront_area_sqm, boardArea,
             coveragePercentage, visibilityScore, optimal_position ? 1 : 0, qualityScore,
             commissionAmount, 'installed', notes
-          ],
-          function(err) {
-            if (err) {
-              console.error('Error creating installation:', err);
-              return res.status(500).json({ error: 'Failed to record installation' });
-            }
-
-            // Create commission transaction if commission amount > 0
-            if (commissionAmount > 0) {
-              const commissionId = uuidv4();
-              const calculationDetails = JSON.stringify({
-                board_type: board.board_type,
-                base_rate: board.commission_rate,
-                quality_score: qualityScore,
-                visibility_score: visibilityScore,
-                optimal_position: optimal_position,
-                coverage_percentage: coveragePercentage
-              });
-
-              db.run(
-                `INSERT INTO commission_transactions (
-                  id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
-                  base_amount, total_amount, calculation_details, status, created_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP)`,
-                [
-                  commissionId, tenantId, agentId, 'board_installation',
-                  'board_installation', installationId,
-                  board.commission_rate, commissionAmount, calculationDetails, 'pending'
-                ],
-                (err) => {
-                  if (err) {
-                    console.error('Error creating commission:', err);
-                  }
-                }
-              );
-            }
-
-            // Fetch the created installation
-            db.get(
-              `SELECT bi.*, b.board_name, b.board_type, c.name as customer_name, br.name as brand_name
-               FROM board_installations bi
-               LEFT JOIN boards b ON bi.board_id = b.id
-               LEFT JOIN customers c ON bi.customer_id = c.id
-               LEFT JOIN brands br ON bi.brand_id = br.id
-               WHERE bi.id = $1`,
-              [installationId],
-              (err, installation) => {
-                if (err) {
-                  console.error('Error fetching installation:', err);
-                  return res.status(500).json({ error: 'Installation created but failed to fetch' });
-                }
-                res.status(201).json(installation);
-              }
-            );
-          }
+          ]
         );
-      }
-    );
+
+        // Create commission transaction if commission amount > 0
+        if (commissionAmount > 0) {
+          const commissionId = uuidv4();
+          const calculationDetails = JSON.stringify({
+            board_type: board.board_type,
+            base_rate: board.commission_rate,
+            quality_score: qualityScore,
+            visibility_score: visibilityScore,
+            optimal_position: optimal_position,
+            coverage_percentage: coveragePercentage
+          });
+
+          await runQuery(
+            `INSERT INTO commission_transactions (
+              id, tenant_id, agent_id, transaction_type, reference_type, reference_id,
+              base_amount, total_amount, calculation_details, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            [
+              commissionId, tenantId, agentId, 'board_installation',
+              'board_installation', installationId,
+              board.commission_rate, commissionAmount, calculationDetails, 'pending'
+            ]
+          );
+        }
+
+        // Fetch the created installation
+        const installation = await getOneQuery(
+          `SELECT bi.*, b.board_name, b.board_type, c.name as customer_name, br.name as brand_name
+           FROM board_installations bi
+           LEFT JOIN boards b ON bi.board_id = b.id
+           LEFT JOIN customers c ON bi.customer_id = c.id
+           LEFT JOIN brands br ON bi.brand_id = br.id
+           WHERE bi.id = ?`,
+          [installationId]
+        );
+        
+        res.status(201).json(installation);
+    } catch (error) {
+      console.error('Error in create installation:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   } catch (error) {
     console.error('Error in create installation:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -193,7 +177,7 @@ router.get('/', authMiddleware, async (req, res) => {
       LEFT JOIN brands br ON bi.brand_id = br.id
       LEFT JOIN users a ON bi.agent_id = a.id
       LEFT JOIN users u ON a.user_id = u.id
-      WHERE bi.tenant_id = $1
+      WHERE bi.tenant_id = ?
     `;
     const params = [tenantId];
 
@@ -223,13 +207,8 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 
     query += ' ORDER BY bi.installation_date DESC';
-    db.all(query, params, (err, installations) => {
-      if (err) {
-        console.error('Error fetching installations:', err);
-        return res.status(500).json({ error: 'Failed to fetch installations' });
-      }
-      res.json(installations);
-    });
+    const installations = await getQuery(query, params);
+    res.json(installations);
   } catch (error) {
     console.error('Error in get installations:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -241,7 +220,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const tenantId = req.user.tenantId;
-    db.get(
+    const installation = await getOneQuery(
       `SELECT bi.*, b.board_name, b.board_type, b.width_cm, b.height_cm,
               c.name as customer_name, c.address as customer_address,
               br.name as brand_name,
@@ -252,19 +231,14 @@ router.get('/:id', authMiddleware, async (req, res) => {
        LEFT JOIN brands br ON bi.brand_id = br.id
        LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE bi.id = $1 AND bi.tenant_id = $2`,
-      [id, tenantId],
-      (err, installation) => {
-        if (err) {
-          console.error('Error fetching installation:', err);
-          return res.status(500).json({ error: 'Failed to fetch installation' });
-        }
-        if (!installation) {
-          return res.status(404).json({ error: 'Installation not found' });
-        }
-        res.json(installation);
-      }
+       WHERE bi.id = ? AND bi.tenant_id = ?`,
+      [id, tenantId]
     );
+    
+    if (!installation) {
+      return res.status(404).json({ error: 'Installation not found' });
+    }
+    res.json(installation);
   } catch (error) {
     console.error('Error in get installation:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -283,7 +257,8 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
       optimal_position,
       quality_score
     } = req.body;
-    db.run(
+    
+    const result = await runQuery(
       `UPDATE board_installations SET
         storefront_area_sqm = COALESCE(?, storefront_area_sqm),
         coverage_percentage = COALESCE(?, coverage_percentage),
@@ -291,7 +266,7 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
         optimal_position = COALESCE(?, optimal_position),
         quality_score = COALESCE(?, quality_score),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND tenant_id = $2`,
+      WHERE id = ? AND tenant_id = ?`,
       [
         storefront_area_sqm,
         coverage_percentage,
@@ -300,30 +275,19 @@ router.post('/:id/analytics', authMiddleware, async (req, res) => {
         quality_score,
         id,
         tenantId
-      ],
-      function(err) {
-        if (err) {
-          console.error('Error updating analytics:', err);
-          return res.status(500).json({ error: 'Failed to update analytics' });
-        }
-        if (this.changes === 0) {
-          return res.status(404).json({ error: 'Installation not found' });
-        }
-
-        // Fetch updated installation
-        db.get(
-          'SELECT * FROM board_installations WHERE id = $1',
-          [id],
-          (err, installation) => {
-            if (err) {
-              console.error('Error fetching updated installation:', err);
-              return res.status(500).json({ error: 'Analytics updated but failed to fetch' });
-            }
-            res.json(installation);
-          }
-        );
-      }
+      ]
     );
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Installation not found' });
+    }
+
+    // Fetch updated installation
+    const installation = await getOneQuery(
+      'SELECT * FROM board_installations WHERE id = ?',
+      [id]
+    );
+    res.json(installation);
   } catch (error) {
     console.error('Error in update analytics:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -335,23 +299,17 @@ router.get('/agent/:agentId', authMiddleware, async (req, res) => {
   try {
     const { agentId } = req.params;
     const tenantId = req.user.tenantId;
-    db.all(
+    const installations = await getQuery(
       `SELECT bi.*, b.board_name, b.board_type, c.name as customer_name, br.name as brand_name
        FROM board_installations bi
        LEFT JOIN boards b ON bi.board_id = b.id
        LEFT JOIN customers c ON bi.customer_id = c.id
        LEFT JOIN brands br ON bi.brand_id = br.id
-       WHERE bi.agent_id = $1 AND bi.tenant_id = $2
+       WHERE bi.agent_id = ? AND bi.tenant_id = ?
        ORDER BY bi.installation_date DESC`,
-      [agentId, tenantId],
-      (err, installations) => {
-        if (err) {
-          console.error('Error fetching agent installations:', err);
-          return res.status(500).json({ error: 'Failed to fetch installations' });
-        }
-        res.json(installations);
-      }
+      [agentId, tenantId]
     );
+    res.json(installations);
   } catch (error) {
     console.error('Error in get agent installations:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -363,7 +321,7 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
   try {
     const { customerId } = req.params;
     const tenantId = req.user.tenantId;
-    db.all(
+    const installations = await getQuery(
       `SELECT bi.*, b.board_name, b.board_type, br.name as brand_name,
               u.first_name || ' ' || u.last_name as agent_name
        FROM board_installations bi
@@ -371,17 +329,11 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
        LEFT JOIN brands br ON bi.brand_id = br.id
        LEFT JOIN users a ON bi.agent_id = a.id
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE bi.customer_id = $1 AND bi.tenant_id = $2
+       WHERE bi.customer_id = ? AND bi.tenant_id = ?
        ORDER BY bi.installation_date DESC`,
-      [customerId, tenantId],
-      (err, installations) => {
-        if (err) {
-          console.error('Error fetching customer installations:', err);
-          return res.status(500).json({ error: 'Failed to fetch installations' });
-        }
-        res.json(installations);
-      }
+      [customerId, tenantId]
     );
+    res.json(installations);
   } catch (error) {
     console.error('Error in get customer installations:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -403,7 +355,7 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
         SUM(commission_amount) as total_commissions,
         SUM(CASE WHEN optimal_position = 1 THEN 1 ELSE 0 END) as optimal_placements
       FROM board_installations
-      WHERE tenant_id = $1
+      WHERE tenant_id = ?
     `;
     const params = [tenantId];
 
@@ -423,13 +375,8 @@ router.get('/analytics/summary', authMiddleware, async (req, res) => {
       query += ' AND brand_id = ?';
       params.push(brand_id);
     }
-    db.get(query, params, (err, summary) => {
-      if (err) {
-        console.error('Error fetching analytics summary:', err);
-        return res.status(500).json({ error: 'Failed to fetch analytics' });
-      }
-      res.json(summary);
-    });
+    const summary = await getOneQuery(query, params);
+    res.json(summary);
   } catch (error) {
     console.error('Error in get analytics summary:', error);
     res.status(500).json({ error: 'Internal server error' });

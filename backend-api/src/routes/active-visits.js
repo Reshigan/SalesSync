@@ -24,9 +24,9 @@ router.get('/', asyncHandler(async (req, res) => {
     FROM visits v
     JOIN users u ON v.agent_id = u.id
     JOIN customers c ON v.customer_id = c.id
-    WHERE v.tenant_id = $1
+    WHERE v.tenant_id = ?
       AND v.status IN ('in_progress', 'checked_in')
-      AND v.visit_date::date = CURRENT_DATE
+      AND DATE(v.visit_date) = DATE('now')
       AND v.check_in_time IS NOT NULL
       AND v.check_out_time IS NULL
     ORDER BY v.check_in_time DESC

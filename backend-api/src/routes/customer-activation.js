@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction } = require('../middleware/authMiddleware');
 
 // Get all customer activations
@@ -82,7 +82,7 @@ router.get('/:id', requireFunction, async (req, res) => {
   try {
     const { id } = req.params;
     
-    const activation = db.prepare(`
+    const activation = await getOneQuery(`
       SELECT ca.*, c.name as customer_name, c.phone as customer_phone, c.address,
              u.name as agent_name, u.phone as agent_phone, p.name as product_name
       FROM customer_activations ca
@@ -90,24 +90,24 @@ router.get('/:id', requireFunction, async (req, res) => {
       LEFT JOIN users u ON ca.agent_id = u.id
       LEFT JOIN products p ON ca.product_id = p.id
       WHERE ca.id = ?
-    `).get(id);
+    `, [id]);
     
     if (!activation) {
       return res.status(404).json({ error: 'Customer activation not found' });
     }
     
     // Get activation steps
-    const steps = db.prepare(`
+    const steps = await getQuery(`
       SELECT * FROM activation_steps 
       WHERE activation_id = ? 
       ORDER BY step_order
-    `).all(id);
+    `, [id]);
     
     // Get activation metrics
-    const metrics = db.prepare(`
+    const metrics = await getOneQuery(`
       SELECT * FROM activation_metrics 
       WHERE activation_id = ?
-    `).get(id);
+    `, [id]);
     
     res.json({
       ...activation,
@@ -140,45 +140,45 @@ router.post('/', requireFunction, async (req, res) => {
     }
     
     // Check if customer exists
-    const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(customer_id);
+    const customer = await getOneQuery('SELECT * FROM customers WHERE id = ?', [customer_id]);
     if (!customer) {
       return res.status(404).json({ error: 'Customer not found' });
     }
     
     // Check if agent exists
-    const agent = db.prepare('SELECT * FROM users WHERE id = ? AND role IN (?, ?)').get(agent_id, 'agent', 'field_agent');
+    const agent = await getOneQuery('SELECT * FROM users WHERE id = ? AND role IN (?, ?)', [agent_id, 'agent', 'field_agent']);
     if (!agent) {
       return res.status(404).json({ error: 'Agent not found' });
     }
     
     // Create activation record
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO customer_activations (
         customer_id, agent_id, activation_type, product_id, target_date,
         priority, notes, campaign_id, status, created_by, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
+    `, [
       customer_id, agent_id, activation_type, product_id, target_date,
       priority || 'medium', notes, campaign_id, 'initiated', req.user.id
-    );
+    ]);
     
     // Create default activation steps based on type
     const defaultSteps = getDefaultActivationSteps(activation_type);
     for (let i = 0; i < defaultSteps.length; i++) {
       const step = defaultSteps[i];
-      db.prepare(`
+      await runQuery(`
         INSERT INTO activation_steps (
           activation_id, step_name, step_description, step_order, 
           is_mandatory, status, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `).run(
-        result.lastInsertRowid, step.name, step.description, i + 1,
+      `, [
+        result.lastID, step.name, step.description, i + 1,
         step.mandatory, 'pending'
-      );
+      ]);
     }
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Customer activation created successfully'
     });
   } catch (error) {
@@ -198,33 +198,33 @@ router.patch('/:id/status', requireFunction, async (req, res) => {
       return res.status(400).json({ error: 'Invalid status' });
     }
     
-    const activation = db.prepare('SELECT * FROM customer_activations WHERE id = ?').get(id);
+    const activation = await getOneQuery('SELECT * FROM customer_activations WHERE id = ?', [id]);
     if (!activation) {
       return res.status(404).json({ error: 'Customer activation not found' });
     }
     
     // Update activation status
-    db.prepare(`
+    await runQuery(`
       UPDATE customer_activations 
       SET status = ?, 
           completion_notes = COALESCE(?, completion_notes),
           completed_at = CASE WHEN ? = 'completed' THEN CURRENT_TIMESTAMP ELSE completed_at END,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(status, completion_notes, status, id);
+    `, [status, completion_notes, status, id]);
     
     // If completed, record success metrics
     if (status === 'completed' && success_metrics) {
-      db.prepare(`
+      await runQuery(`
         INSERT OR REPLACE INTO activation_metrics (
           activation_id, success_score, engagement_level, conversion_rate,
           time_to_activation, follow_up_required, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `).run(
+      `, [
         id, success_metrics.success_score, success_metrics.engagement_level,
         success_metrics.conversion_rate, success_metrics.time_to_activation,
         success_metrics.follow_up_required
-      );
+      ]);
     }
     
     res.json({ message: 'Activation status updated successfully' });
@@ -246,33 +246,33 @@ router.patch('/:id/steps/:stepId', requireFunction, async (req, res) => {
     }
     
     // Update step
-    const result = db.prepare(`
+    const result = await runQuery(`
       UPDATE activation_steps 
       SET status = ?, 
           completion_notes = COALESCE(?, completion_notes),
           completion_date = COALESCE(?, completion_date),
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ? AND activation_id = ?
-    `).run(status, completion_notes, completion_date, stepId, id);
+    `, [status, completion_notes, completion_date, stepId, id]);
     
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Activation step not found' });
     }
     
     // Check if all mandatory steps are completed
-    const pendingMandatory = db.prepare(`
+    const pendingMandatory = await getOneQuery(`
       SELECT COUNT(*) as count 
       FROM activation_steps 
       WHERE activation_id = ? AND is_mandatory = 1 AND status != 'completed'
-    `).get(id);
+    `, [id]);
     
     // If all mandatory steps completed, update activation status
     if (pendingMandatory.count === 0) {
-      db.prepare(`
+      await runQuery(`
         UPDATE customer_activations 
         SET status = 'completed', completed_at = CURRENT_TIMESTAMP
         WHERE id = ? AND status != 'completed'
-      `).run(id);
+      `, [id]);
     }
     
     res.json({ message: 'Activation step updated successfully' });
@@ -308,7 +308,7 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
     }
     
     // Activation statistics
-    const activationStats = db.prepare(`
+    const activationStats = await getOneQuery(`
       SELECT 
         COUNT(*) as total_activations,
         COUNT(CASE WHEN ca.status = 'completed' THEN 1 END) as completed_activations,
@@ -317,10 +317,10 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
         ROUND(AVG(CASE WHEN ca.status = 'completed' THEN 1.0 ELSE 0.0 END) * 100, 2) as success_rate
       FROM customer_activations ca
       WHERE 1=1 ${dateFilter} ${agentFilter} ${typeFilter}
-    `).get(...params);
+    `, params);
     
     // Success metrics
-    const successMetrics = db.prepare(`
+    const successMetrics = await getOneQuery(`
       SELECT 
         AVG(am.success_score) as avg_success_score,
         AVG(am.engagement_level) as avg_engagement_level,
@@ -329,10 +329,10 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
       FROM activation_metrics am
       JOIN customer_activations ca ON am.activation_id = ca.id
       WHERE 1=1 ${dateFilter} ${agentFilter} ${typeFilter}
-    `).get(...params);
+    `, params);
     
     // Top performing agents
-    const topAgents = db.prepare(`
+    const topAgents = await getQuery(`
       SELECT 
         u.name as agent_name,
         COUNT(*) as total_activations,
@@ -344,10 +344,10 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
       GROUP BY u.id, u.name
       ORDER BY success_rate DESC, completed_activations DESC
       LIMIT 10
-    `).all(...params.filter((_, i) => !agent_id || i !== params.indexOf(agent_id)));
+    `, [...params.filter((_, i]) => !agent_id || i !== params.indexOf(agent_id)));
     
     // Activation types breakdown
-    const typeBreakdown = db.prepare(`
+    const typeBreakdown = await getQuery(`
       SELECT 
         ca.activation_type,
         COUNT(*) as total_count,
@@ -357,7 +357,7 @@ router.get('/analytics/summary', requireFunction, async (req, res) => {
       WHERE 1=1 ${dateFilter} ${agentFilter} ${typeFilter}
       GROUP BY ca.activation_type
       ORDER BY success_rate DESC
-    `).all(...params);
+    `, params);
     
     res.json({
       activation_stats: activationStats,

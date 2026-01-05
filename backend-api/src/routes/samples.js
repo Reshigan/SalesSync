@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get all sample distributions
@@ -82,7 +82,7 @@ router.get('/:id', requireFunction("general", "view"), async (req, res) => {
   try {
     const { id } = req.params;
     
-    const distribution = db.prepare(`
+    const distribution = await getOneQuery(`
       SELECT sd.*, p.name as product_name, p.sku, p.unit_price,
              u.name as agent_name, u.phone as agent_phone,
              c.name as customer_name, c.phone as customer_phone, c.address as customer_address
@@ -91,7 +91,7 @@ router.get('/:id', requireFunction("general", "view"), async (req, res) => {
       LEFT JOIN users u ON sd.agent_id = u.id
       LEFT JOIN customers c ON sd.customer_id = c.id
       WHERE sd.id = ?
-    `).get(id);
+    `, [id]);
     
     if (!distribution) {
       return res.status(404).json({ error: 'Sample distribution not found' });
@@ -123,7 +123,7 @@ router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
     }
     
     // Check if product exists and has sufficient sample inventory
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(product_id);
+    const product = await getOneQuery('SELECT * FROM products WHERE id = ?', [product_id]);
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -133,19 +133,19 @@ router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
     }
     
     // Check if agent exists
-    const agent = db.prepare('SELECT * FROM users WHERE id = ? AND role IN (?, ?)').get(agent_id, 'agent', 'field_agent');
+    const agent = await getOneQuery('SELECT * FROM users WHERE id = ? AND role IN (?, ?)', [agent_id, 'agent', 'field_agent']);
     if (!agent) {
       return res.status(404).json({ error: 'Agent not found' });
     }
     
     // Create sample distribution
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO sample_distributions (
         product_id, agent_id, customer_id, quantity, distribution_date,
         notes, campaign_id, status, created_by, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
-      product_id, agent_id, customer_id, quantity, distribution_date || new Date().toISOString(),
+    `, [
+      product_id, agent_id, customer_id, quantity, distribution_date || new Date(]).toISOString(),
       notes, campaign_id, 'allocated', req.user.id
     );
     
@@ -154,18 +154,18 @@ router.post('/', requireFunction("campaigns", "view"), async (req, res) => {
       .run(quantity, product_id);
     
     // Log inventory movement
-    db.prepare(`
+    await runQuery(`
       INSERT INTO inventory_movements (
         product_id, movement_type, quantity, reference_type, reference_id,
         notes, created_by, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
-      product_id, 'sample_out', -quantity, 'sample_distribution', result.lastInsertRowid,
+    `, [
+      product_id, 'sample_out', -quantity, 'sample_distribution', result.lastID,
       `Sample distribution to agent ${agent.name}`, req.user.id
-    );
+    ]);
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Sample distribution created successfully'
     });
   } catch (error) {
@@ -185,17 +185,17 @@ router.patch('/:id/status', requireFunction("general", "view"), async (req, res)
       return res.status(400).json({ error: 'Invalid status' });
     }
     
-    const distribution = db.prepare('SELECT * FROM sample_distributions WHERE id = ?').get(id);
+    const distribution = await getOneQuery('SELECT * FROM sample_distributions WHERE id = ?', [id]);
     if (!distribution) {
       return res.status(404).json({ error: 'Sample distribution not found' });
     }
     
     // Update distribution status
-    db.prepare(`
+    await runQuery(`
       UPDATE sample_distributions 
       SET status = ?, notes = COALESCE(?, notes), feedback = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(status, notes, feedback, id);
+    `, [status, notes, feedback, id]);
     
     // If cancelled, return inventory
     if (status === 'cancelled' && distribution.status !== 'cancelled') {
@@ -203,15 +203,15 @@ router.patch('/:id/status', requireFunction("general", "view"), async (req, res)
         .run(distribution.quantity, distribution.product_id);
       
       // Log inventory movement
-      db.prepare(`
+      await runQuery(`
         INSERT INTO inventory_movements (
           product_id, movement_type, quantity, reference_type, reference_id,
           notes, created_by, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `).run(
+      `, [
         distribution.product_id, 'sample_return', distribution.quantity, 'sample_distribution', id,
         'Sample distribution cancelled - inventory returned', req.user.id
-      );
+      ]);
     }
     
     res.json({ message: 'Sample distribution status updated successfully' });
@@ -263,7 +263,7 @@ router.get('/analytics/summary', requireFunction("campaigns", "view"), async (re
       WHERE 1=1 ${dateFilter}
     `;
     
-    const productParams = [...params];
+    const productParams = params;
     if (agent_id) {
       productQuery += ' AND sd.agent_id = ?';
       productParams.push(agent_id);
@@ -281,7 +281,7 @@ router.get('/analytics/summary', requireFunction("campaigns", "view"), async (re
       WHERE 1=1 ${dateFilter}
     `;
     
-    const agentParams = [...params];
+    const agentParams = params;
     if (product_id) {
       agentQuery += ' AND sd.product_id = ?';
       agentParams.push(product_id);
@@ -325,20 +325,20 @@ router.post('/bulk-allocate', requireFunction("campaigns", "view"), async (req, 
         }
         
         // Check product inventory
-        const product = db.prepare('SELECT * FROM products WHERE id = ?').get(product_id);
+        const product = await getOneQuery('SELECT * FROM products WHERE id = ?', [product_id]);
         if (!product || product.sample_inventory < quantity) {
           errors.push({ allocation, error: 'Insufficient sample inventory' });
           continue;
         }
         
         // Create distribution
-        const result = db.prepare(`
+        const result = await runQuery(`
           INSERT INTO sample_distributions (
             product_id, agent_id, customer_id, quantity, distribution_date,
             notes, campaign_id, status, created_by, created_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `).run(
-          product_id, agent_id, customer_id, quantity, new Date().toISOString(),
+        `, [
+          product_id, agent_id, customer_id, quantity, new Date(]).toISOString(),
           notes, campaign_id, 'allocated', req.user.id
         );
         
@@ -346,7 +346,7 @@ router.post('/bulk-allocate', requireFunction("campaigns", "view"), async (req, 
         db.prepare('UPDATE products SET sample_inventory = sample_inventory - ? WHERE id = ?')
           .run(quantity, product_id);
         
-        results.push({ id: result.lastInsertRowid, allocation });
+        results.push({ id: result.lastID, allocation });
       } catch (error) {
         errors.push({ allocation, error: error.message });
       }

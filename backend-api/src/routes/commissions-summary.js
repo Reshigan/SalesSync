@@ -11,13 +11,13 @@ router.get('/summary', authMiddleware, asyncHandler(async (req, res) => {
   
   let query = `
     SELECT * FROM commission_summary
-    WHERE tenant_id = $1
+    WHERE tenant_id = ?
   `;
   
   const params = [req.tenantId];
   
   if (agent_id) {
-    query += ` AND agent_id = $2`;
+    query += ` AND agent_id = ?`;
     params.push(agent_id);
   }
   
@@ -39,7 +39,7 @@ router.get('/summary/:agent_id', authMiddleware, asyncHandler(async (req, res) =
   
   const summary = await getOneQuery(`
     SELECT * FROM commission_summary
-    WHERE tenant_id = $1 AND agent_id = $2
+    WHERE tenant_id = ? AND agent_id = ?
   `, [req.tenantId, agent_id]);
   
   if (!summary) {

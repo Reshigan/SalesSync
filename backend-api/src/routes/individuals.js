@@ -30,8 +30,8 @@ router.get('/', asyncHandler(async (req, res) => {
   let paramIndex = 2;
 
   if (process.env.DB_TYPE === 'postgres') {
-    query += '$1';
-    countQuery += '$1';
+    query += '?';
+    countQuery += '?';
   } else {
     query += '?';
     countQuery += '?';
@@ -39,8 +39,8 @@ router.get('/', asyncHandler(async (req, res) => {
 
   if (search) {
     if (process.env.DB_TYPE === 'postgres') {
-      query += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex + 1})`;
-      countQuery += ` AND (name ILIKE $${paramIndex} OR phone ILIKE $${paramIndex + 1})`;
+      query += ` AND (name ILIKE ? OR phone ILIKE ?)`;
+      countQuery += ` AND (name ILIKE ? OR phone ILIKE ?)`;
     } else {
       query += ` AND (name LIKE ? OR phone LIKE ?)`;
       countQuery += ` AND (name LIKE ? OR phone LIKE ?)`;
@@ -52,8 +52,8 @@ router.get('/', asyncHandler(async (req, res) => {
 
   if (status) {
     if (process.env.DB_TYPE === 'postgres') {
-      query += ` AND status = $${paramIndex}`;
-      countQuery += ` AND status = $${paramIndex}`;
+      query += ` AND status = ?`;
+      countQuery += ` AND status = ?`;
     } else {
       query += ` AND status = ?`;
       countQuery += ` AND status = ?`;
@@ -64,7 +64,7 @@ router.get('/', asyncHandler(async (req, res) => {
   }
 
   if (process.env.DB_TYPE === 'postgres') {
-    query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
   } else {
     query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
   }
@@ -101,7 +101,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const individual = process.env.DB_TYPE === 'postgres'
-    ? await getOneQuery('SELECT * FROM individuals WHERE id = $1 AND tenant_id = $2', [id, tenantId])
+    ? await getOneQuery('SELECT * FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId])
     : await getOneQuery('SELECT * FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId]);
 
   if (!individual) {
@@ -113,7 +113,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
   const visits = process.env.DB_TYPE === 'postgres'
     ? await getQuery(
-        `SELECT * FROM visits WHERE tenant_id = $1 AND subject_type = 'individual' AND subject_id = $2 ORDER BY visit_date DESC LIMIT 10`,
+        `SELECT * FROM visits WHERE tenant_id = ? AND subject_type = 'individual' AND subject_id = ? ORDER BY visit_date DESC LIMIT 10`,
         [tenantId, id]
       )
     : await getQuery(
@@ -165,7 +165,7 @@ router.post('/', asyncHandler(async (req, res) => {
 
   if (phoneNormalized) {
     const existing = process.env.DB_TYPE === 'postgres'
-      ? await getOneQuery('SELECT id FROM individuals WHERE tenant_id = $1 AND phone_normalized = $2', [tenantId, phoneNormalized])
+      ? await getOneQuery('SELECT id FROM individuals WHERE tenant_id = ? AND phone_normalized = ?', [tenantId, phoneNormalized])
       : await getOneQuery('SELECT id FROM individuals WHERE tenant_id = ? AND phone_normalized = ?', [tenantId, phoneNormalized]);
 
     if (existing) {
@@ -179,7 +179,7 @@ router.post('/', asyncHandler(async (req, res) => {
 
   if (idHash) {
     const existing = process.env.DB_TYPE === 'postgres'
-      ? await getOneQuery('SELECT id FROM individuals WHERE tenant_id = $1 AND id_hash = $2', [tenantId, idHash])
+      ? await getOneQuery('SELECT id FROM individuals WHERE tenant_id = ? AND id_hash = ?', [tenantId, idHash])
       : await getOneQuery('SELECT id FROM individuals WHERE tenant_id = ? AND id_hash = ?', [tenantId, idHash]);
 
     if (existing) {
@@ -196,7 +196,7 @@ router.post('/', asyncHandler(async (req, res) => {
   if (process.env.DB_TYPE === 'postgres') {
     result = await runQuery(
       `INSERT INTO individuals (tenant_id, name, phone, phone_normalized, id_type, id_number, id_hash, address, lat, lng)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING *`,
       [tenantId, name, phone || null, phoneNormalized, id_type || null, id_number || null, idHash, address || null, lat || null, lng || null]
     );
@@ -246,7 +246,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   } = req.body;
 
   const existing = process.env.DB_TYPE === 'postgres'
-    ? await getOneQuery('SELECT * FROM individuals WHERE id = $1 AND tenant_id = $2', [id, tenantId])
+    ? await getOneQuery('SELECT * FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId])
     : await getOneQuery('SELECT * FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId]);
 
   if (!existing) {
@@ -262,9 +262,9 @@ router.put('/:id', asyncHandler(async (req, res) => {
   if (process.env.DB_TYPE === 'postgres') {
     await runQuery(
       `UPDATE individuals SET
-        name = $1, phone = $2, phone_normalized = $3, id_type = $4, id_number = $5, id_hash = $6,
-        address = $7, lat = $8, lng = $9, status = $10, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $11 AND tenant_id = $12`,
+        name = ?, phone = ?, phone_normalized = ?, id_type = ?, id_number = ?, id_hash = ?,
+        address = ?, lat = ?, lng = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ? AND tenant_id = ?`,
       [
         name || existing.name,
         phone || existing.phone,
@@ -304,7 +304,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   }
 
   const updated = process.env.DB_TYPE === 'postgres'
-    ? await getOneQuery('SELECT * FROM individuals WHERE id = $1', [id])
+    ? await getOneQuery('SELECT * FROM individuals WHERE id = ?', [id])
     : await getOneQuery('SELECT * FROM individuals WHERE id = ?', [id]);
 
   res.json({
@@ -328,7 +328,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const result = process.env.DB_TYPE === 'postgres'
-    ? await runQuery('DELETE FROM individuals WHERE id = $1 AND tenant_id = $2', [id, tenantId])
+    ? await runQuery('DELETE FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId])
     : await runQuery('DELETE FROM individuals WHERE id = ? AND tenant_id = ?', [id, tenantId]);
 
   const rowsAffected = process.env.DB_TYPE === 'postgres' ? result.rowCount : result.changes;

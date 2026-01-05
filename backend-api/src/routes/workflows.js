@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction, requireRole } = require('../middleware/authMiddleware');
 
 // Get custom workflows
@@ -39,7 +39,7 @@ router.get('/', requireFunction('workflows', 'view'), async (req, res) => {
     
     query += ' GROUP BY cw.id ORDER BY cw.created_at DESC';
     
-    const workflows = await db.all(query, params);
+    const workflows = await getQuery(query, params);
     
     res.json({
       success: true,
@@ -59,7 +59,7 @@ router.get('/', requireFunction('workflows', 'view'), async (req, res) => {
 // Get workflow by ID
 router.get('/:id', requireFunction('workflows', 'view'), async (req, res) => {
   try {
-    const workflow = await db.get(`
+    const workflow = await getOneQuery(`
       SELECT 
         cw.*,
         u.name as created_by_name
@@ -73,7 +73,7 @@ router.get('/:id', requireFunction('workflows', 'view'), async (req, res) => {
     }
     
     // Get execution history
-    const executions = await db.all(`
+    const executions = await getQuery(`
       SELECT 
         we.*,
         u.name as executed_by_name
@@ -127,7 +127,7 @@ router.post('/', requireFunction('workflows', 'create'), async (req, res) => {
     
     const workflowId = require('crypto').randomBytes(16).toString('hex');
     
-    await db.run(`
+    await runQuery(`
       INSERT INTO custom_workflows (
         id, tenant_id, name, description, workflow_type, category,
         workflow_steps, trigger_conditions, configuration, is_active,
@@ -148,7 +148,7 @@ router.post('/', requireFunction('workflows', 'create'), async (req, res) => {
       'draft'
     ]);
     
-    const newWorkflow = await db.get(`
+    const newWorkflow = await getOneQuery(`
       SELECT * FROM custom_workflows WHERE id = ?
     `, [workflowId]);
     
@@ -235,13 +235,13 @@ router.put('/:id', requireFunction('workflows', 'edit'), async (req, res) => {
     
     params.push(req.params.id, req.user.tenantId);
     
-    await db.run(`
+    await runQuery(`
       UPDATE custom_workflows 
       SET ${updateFields.join(', ')}
       WHERE id = ? AND tenant_id = ?
     `, params);
     
-    const updatedWorkflow = await db.get(`
+    const updatedWorkflow = await getOneQuery(`
       SELECT * FROM custom_workflows WHERE id = ? AND tenant_id = ?
     `, [req.params.id, req.user.tenantId]);
     
@@ -270,7 +270,7 @@ router.post('/:id/execute', requireFunction('workflows', 'execute'), async (req,
   try {
     const { execution_context = {} } = req.body;
     
-    const workflow = await db.get(`
+    const workflow = await getOneQuery(`
       SELECT * FROM custom_workflows 
       WHERE id = ? AND tenant_id = ? AND is_active = 1
     `, [req.params.id, req.user.tenantId]);
@@ -285,7 +285,7 @@ router.post('/:id/execute', requireFunction('workflows', 'execute'), async (req,
     const executionId = require('crypto').randomBytes(16).toString('hex');
     
     // Start execution record
-    await db.run(`
+    await runQuery(`
       INSERT INTO workflow_executions (
         id, workflow_id, tenant_id, executed_by, execution_context,
         status, started_at
@@ -314,7 +314,7 @@ router.post('/:id/execute', requireFunction('workflows', 'execute'), async (req,
       }
       
       // Update execution record
-      await db.run(`
+      await runQuery(`
         UPDATE workflow_executions 
         SET status = ?, execution_result = ?, completed_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -333,7 +333,7 @@ router.post('/:id/execute', requireFunction('workflows', 'execute'), async (req,
       
     } catch (executionError) {
       // Update execution record with error
-      await db.run(`
+      await runQuery(`
         UPDATE workflow_executions 
         SET status = ?, error_details = ?, completed_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -353,7 +353,7 @@ router.get('/:id/executions', requireFunction('workflows', 'view'), async (req, 
   try {
     const { limit = 20, offset = 0 } = req.query;
     
-    const executions = await db.all(`
+    const executions = await getQuery(`
       SELECT 
         we.*,
         u.name as executed_by_name
@@ -382,7 +382,7 @@ router.get('/:id/executions', requireFunction('workflows', 'view'), async (req, 
 // Delete workflow
 router.delete('/:id', requireFunction('workflows', 'delete'), async (req, res) => {
   try {
-    const result = await db.run(`
+    const result = await runQuery(`
       DELETE FROM custom_workflows 
       WHERE id = ? AND tenant_id = ?
     `, [req.params.id, req.user.tenantId]);

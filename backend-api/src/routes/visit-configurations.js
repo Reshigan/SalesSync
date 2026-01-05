@@ -28,24 +28,24 @@ router.get('/', asyncHandler(async (req, res) => {
     LEFT JOIN surveys s ON vc.survey_id = s.id
     LEFT JOIN boards bo ON vc.board_id = bo.id
     LEFT JOIN users u ON vc.created_by = u.id
-    WHERE vc.tenant_id = $1
+    WHERE vc.tenant_id = ?
   `;
   
   const params = [tenantId];
   let paramIndex = 1;
 
   if (is_active !== undefined) {
-    query += ` AND vc.is_active = $${++paramIndex}`;
+    query += ` AND vc.is_active = ?`;
     params.push(is_active === 'true');
   }
 
   if (target_type) {
-    query += ` AND vc.target_type = $${++paramIndex}`;
+    query += ` AND vc.target_type = ?`;
     params.push(target_type);
   }
 
   if (brand_id) {
-    query += ` AND vc.brand_id = $${++paramIndex}`;
+    query += ` AND vc.brand_id = ?`;
     params.push(brand_id);
   }
 
@@ -79,7 +79,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     LEFT JOIN surveys s ON vc.survey_id = s.id
     LEFT JOIN boards bo ON vc.board_id = bo.id
     LEFT JOIN users u ON vc.created_by = u.id
-    WHERE vc.id = $1 AND vc.tenant_id = $2`,
+    WHERE vc.id = ? AND vc.tenant_id = ?`,
     [id, tenantId]
   );
 
@@ -138,7 +138,7 @@ router.post('/', asyncHandler(async (req, res) => {
        valid_from, valid_to, survey_id, survey_required, requires_board_placement, 
        board_id, board_photo_required, track_coverage_analytics, visit_type, 
        default_duration_minutes, checklist_items, created_by)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      RETURNING *`,
     [
       tenantId, name, description, target_type, brand_id, customer_type,
@@ -185,7 +185,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   } = req.body;
 
   const existing = await getOneQuery(
-    'SELECT id FROM visit_configurations WHERE id = $1 AND tenant_id = $2',
+    'SELECT id FROM visit_configurations WHERE id = ? AND tenant_id = ?',
     [id, tenantId]
   );
 
@@ -198,71 +198,71 @@ router.put('/:id', asyncHandler(async (req, res) => {
   let paramIndex = 0;
 
   if (name !== undefined) {
-    updates.push(`name = $${++paramIndex}`);
+    updates.push(`name = ?`);
     params.push(name);
   }
   if (description !== undefined) {
-    updates.push(`description = $${++paramIndex}`);
+    updates.push(`description = ?`);
     params.push(description);
   }
   if (target_type !== undefined) {
-    updates.push(`target_type = $${++paramIndex}`);
+    updates.push(`target_type = ?`);
     params.push(target_type);
   }
   if (brand_id !== undefined) {
-    updates.push(`brand_id = $${++paramIndex}`);
+    updates.push(`brand_id = ?`);
     params.push(brand_id);
   }
   if (customer_type !== undefined) {
-    updates.push(`customer_type = $${++paramIndex}`);
+    updates.push(`customer_type = ?`);
     params.push(customer_type);
   }
   if (valid_from !== undefined) {
-    updates.push(`valid_from = $${++paramIndex}`);
+    updates.push(`valid_from = ?`);
     params.push(valid_from);
   }
   if (valid_to !== undefined) {
-    updates.push(`valid_to = $${++paramIndex}`);
+    updates.push(`valid_to = ?`);
     params.push(valid_to);
   }
   if (survey_id !== undefined) {
-    updates.push(`survey_id = $${++paramIndex}`);
+    updates.push(`survey_id = ?`);
     params.push(survey_id);
   }
   if (survey_required !== undefined) {
-    updates.push(`survey_required = $${++paramIndex}`);
+    updates.push(`survey_required = ?`);
     params.push(survey_required);
   }
   if (requires_board_placement !== undefined) {
-    updates.push(`requires_board_placement = $${++paramIndex}`);
+    updates.push(`requires_board_placement = ?`);
     params.push(requires_board_placement);
   }
   if (board_id !== undefined) {
-    updates.push(`board_id = $${++paramIndex}`);
+    updates.push(`board_id = ?`);
     params.push(board_id);
   }
   if (board_photo_required !== undefined) {
-    updates.push(`board_photo_required = $${++paramIndex}`);
+    updates.push(`board_photo_required = ?`);
     params.push(board_photo_required);
   }
   if (track_coverage_analytics !== undefined) {
-    updates.push(`track_coverage_analytics = $${++paramIndex}`);
+    updates.push(`track_coverage_analytics = ?`);
     params.push(track_coverage_analytics);
   }
   if (visit_type !== undefined) {
-    updates.push(`visit_type = $${++paramIndex}`);
+    updates.push(`visit_type = ?`);
     params.push(visit_type);
   }
   if (default_duration_minutes !== undefined) {
-    updates.push(`default_duration_minutes = $${++paramIndex}`);
+    updates.push(`default_duration_minutes = ?`);
     params.push(default_duration_minutes);
   }
   if (checklist_items !== undefined) {
-    updates.push(`checklist_items = $${++paramIndex}`);
+    updates.push(`checklist_items = ?`);
     params.push(JSON.stringify(checklist_items));
   }
   if (is_active !== undefined) {
-    updates.push(`is_active = $${++paramIndex}`);
+    updates.push(`is_active = ?`);
     params.push(is_active);
   }
 
@@ -272,7 +272,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
   const result = await runQuery(
     `UPDATE visit_configurations 
      SET ${updates.join(', ')}
-     WHERE id = $${++paramIndex} AND tenant_id = $${++paramIndex}
+     WHERE id = ? AND tenant_id = ?
      RETURNING *`,
     params
   );
@@ -295,7 +295,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const existing = await getOneQuery(
-    'SELECT id FROM visit_configurations WHERE id = $1 AND tenant_id = $2',
+    'SELECT id FROM visit_configurations WHERE id = ? AND tenant_id = ?',
     [id, tenantId]
   );
 
@@ -304,7 +304,7 @@ router.delete('/:id', asyncHandler(async (req, res) => {
   }
 
   await runQuery(
-    'DELETE FROM visit_configurations WHERE id = $1 AND tenant_id = $2',
+    'DELETE FROM visit_configurations WHERE id = ? AND tenant_id = ?',
     [id, tenantId]
   );
 
@@ -326,7 +326,7 @@ router.get('/applicable/:customerId', asyncHandler(async (req, res) => {
   const checkDate = date || new Date().toISOString().split('T')[0];
 
   const customer = await getOneQuery(
-    'SELECT id, customer_type, brand_id FROM customers WHERE id = $1 AND tenant_id = $2',
+    'SELECT id, customer_type, brand_id FROM customers WHERE id = ? AND tenant_id = ?',
     [customerId, tenantId]
   );
 
@@ -344,14 +344,14 @@ router.get('/applicable/:customerId', asyncHandler(async (req, res) => {
     LEFT JOIN brands b ON vc.brand_id = b.id
     LEFT JOIN surveys s ON vc.survey_id = s.id
     LEFT JOIN boards bo ON vc.board_id = bo.id
-    WHERE vc.tenant_id = $1 
+    WHERE vc.tenant_id = ? 
       AND vc.is_active = true
-      AND vc.valid_from <= $2
-      AND vc.valid_to >= $2
+      AND vc.valid_from <= ?
+      AND vc.valid_to >= ?
       AND (
         vc.target_type = 'all'
-        OR (vc.target_type = 'brand' AND vc.brand_id = $3)
-        OR (vc.target_type = 'customer_type' AND vc.customer_type = $4)
+        OR (vc.target_type = 'brand' AND vc.brand_id = ?)
+        OR (vc.target_type = 'customer_type' AND vc.customer_type = ?)
       )
     ORDER BY 
       CASE vc.target_type 
@@ -388,24 +388,24 @@ router.get('/analytics/coverage', asyncHandler(async (req, res) => {
       COUNT(CASE WHEN bp.coverage_percentage < 10 THEN 1 END) as placements_below_standard
     FROM board_placements bp
     LEFT JOIN brands b ON bp.brand_id = b.id
-    WHERE bp.tenant_id = $1
+    WHERE bp.tenant_id = ?
   `;
 
   const params = [tenantId];
   let paramIndex = 1;
 
   if (brand_id) {
-    query += ` AND bp.brand_id = $${++paramIndex}`;
+    query += ` AND bp.brand_id = ?`;
     params.push(brand_id);
   }
 
   if (start_date) {
-    query += ` AND bp.created_at >= $${++paramIndex}`;
+    query += ` AND bp.created_at >= ?`;
     params.push(start_date);
   }
 
   if (end_date) {
-    query += ` AND bp.created_at <= $${++paramIndex}`;
+    query += ` AND bp.created_at <= ?`;
     params.push(end_date);
   }
 

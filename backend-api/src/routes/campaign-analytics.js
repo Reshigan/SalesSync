@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { requireFunction } = require('../middleware/authMiddleware');
 
 // Get campaign analytics overview
@@ -23,7 +23,7 @@ router.get('/overview', requireFunction('campaigns', 'view'), async (req, res) =
     }
     
     // Campaign performance summary
-    const campaignStats = db.prepare(`
+    const campaignStats = await getOneQuery(`
       SELECT 
         COUNT(DISTINCT c.id) as total_campaigns,
         COUNT(DISTINCT CASE WHEN c.status = 'active' THEN c.id END) as active_campaigns,
@@ -32,10 +32,10 @@ router.get('/overview', requireFunction('campaigns', 'view'), async (req, res) =
         SUM(CASE WHEN c.status = 'completed' THEN c.budget ELSE 0 END) as spent_budget
       FROM campaigns c
       WHERE 1=1 ${dateFilter} ${campaignFilter}
-    `).get(...params);
+    `, params);
     
     // ROI calculations
-    const roiStats = db.prepare(`
+    const roiStats = await getOneQuery(`
       SELECT 
         SUM(cp.total_sales) as total_sales,
         SUM(cp.total_visits) as total_visits,
@@ -45,10 +45,10 @@ router.get('/overview', requireFunction('campaigns', 'view'), async (req, res) =
       FROM campaign_performance cp
       JOIN campaigns c ON cp.campaign_id = c.id
       WHERE 1=1 ${dateFilter} ${campaignFilter}
-    `).get(...params);
+    `, params);
     
     // Top performing campaigns
-    const topCampaigns = db.prepare(`
+    const topCampaigns = await getQuery(`
       SELECT 
         c.name,
         c.budget,
@@ -61,7 +61,7 @@ router.get('/overview', requireFunction('campaigns', 'view'), async (req, res) =
       WHERE 1=1 ${dateFilter} ${campaignFilter}
       ORDER BY cp.roi_percentage DESC
       LIMIT 10
-    `).all(...params);
+    `, params);
     
     res.json({
       campaign_stats: campaignStats,
@@ -80,36 +80,36 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
     const { campaignId } = req.params;
     
     // Campaign basic info
-    const campaign = db.prepare(`
+    const campaign = await getOneQuery(`
       SELECT c.*, cp.*
       FROM campaigns c
       LEFT JOIN campaign_performance cp ON c.id = cp.campaign_id
       WHERE c.id = ?
-    `).get(campaignId);
+    `, [campaignId]);
     
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
     // Daily performance metrics
-    const dailyMetrics = db.prepare(`
+    const dailyMetrics = await getQuery(`
       SELECT 
-        fav.visit_date::date as date,
+        DATE(fav.visit_date) as date,
         COUNT(DISTINCT fav.id) as visits,
         COUNT(DISTINCT faa.id) as activities,
         SUM(CASE WHEN o.id IS NOT NULL THEN o.total_amount ELSE 0 END) as sales,
         COUNT(DISTINCT o.id) as orders
       FROM field_agent_visits fav
       LEFT JOIN field_agent_activities faa ON fav.id = faa.visit_id
-      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND o.created_at::date = fav.visit_date::date
+      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND DATE(o.created_at) = DATE(fav.visit_date)
       WHERE fav.campaign_id = ?
-      GROUP BY fav.visit_date::date
+      GROUP BY DATE(fav.visit_date)
       ORDER BY date DESC
       LIMIT 30
-    `).all(campaignId);
+    `, [campaignId]);
     
     // Agent performance
-    const agentPerformance = db.prepare(`
+    const agentPerformance = await getQuery(`
       SELECT 
         u.name as agent_name,
         COUNT(DISTINCT fav.id) as visits,
@@ -120,14 +120,14 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       FROM users u
       JOIN field_agent_visits fav ON u.id = fav.agent_id
       LEFT JOIN field_agent_activities faa ON fav.id = faa.visit_id
-      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND o.created_at::date = fav.visit_date::date
+      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND DATE(o.created_at) = DATE(fav.visit_date)
       WHERE fav.campaign_id = ?
       GROUP BY u.id, u.name
       ORDER BY sales DESC
-    `).all(campaignId);
+    `, [campaignId]);
     
     // Product performance
-    const productPerformance = db.prepare(`
+    const productPerformance = await getQuery(`
       SELECT 
         p.name as product_name,
         p.code as sku,
@@ -138,14 +138,14 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       JOIN order_items oi ON p.id = oi.product_id
       JOIN orders o ON oi.order_id = o.id
       JOIN field_agent_visits fav ON o.customer_id = fav.customer_id
-      WHERE fav.campaign_id = ? AND o.created_at::date = fav.visit_date::date
+      WHERE fav.campaign_id = ? AND DATE(o.created_at) = DATE(fav.visit_date)
       GROUP BY p.id, p.name, p.code
       ORDER BY revenue DESC
       LIMIT 20
-    `).all(campaignId);
+    `, [campaignId]);
     
     // Activity breakdown
-    const activityBreakdown = db.prepare(`
+    const activityBreakdown = await getQuery(`
       SELECT 
         faa.activity_type,
         COUNT(*) as count,
@@ -155,7 +155,7 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       WHERE fav.campaign_id = ?
       GROUP BY faa.activity_type
       ORDER BY count DESC
-    `).all(campaignId);
+    `, [campaignId]);
     
     res.json({
       campaign,
@@ -190,7 +190,7 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
     }
     
     // ROI by campaign
-    const roiByCampaign = db.prepare(`
+    const roiByCampaign = await getQuery(`
       SELECT 
         c.name,
         c.type,
@@ -209,12 +209,12 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
       LEFT JOIN campaign_performance cp ON c.id = cp.campaign_id
       WHERE c.status IN ('active', 'completed') ${dateFilter} ${typeFilter}
       ORDER BY cp.roi_percentage DESC
-    `).all(...params);
+    `, params);
     
     // ROI trends over time
-    const roiTrends = db.prepare(`
+    const roiTrends = await getQuery(`
       SELECT 
-        c.start_date::date as period,
+        DATE(c.start_date) as period,
         AVG(cp.roi_percentage) as avg_roi,
         SUM(c.budget) as total_budget,
         SUM(cp.total_sales) as total_sales,
@@ -222,13 +222,13 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
       FROM campaigns c
       LEFT JOIN campaign_performance cp ON c.id = cp.campaign_id
       WHERE c.status IN ('active', 'completed') ${dateFilter} ${typeFilter}
-      GROUP BY c.start_date::date
+      GROUP BY DATE(c.start_date)
       ORDER BY period DESC
       LIMIT 12
-    `).all(...params);
+    `, params);
     
     // Cost analysis
-    const costAnalysis = db.prepare(`
+    const costAnalysis = await getQuery(`
       SELECT 
         c.type,
         COUNT(*) as campaign_count,
@@ -243,7 +243,7 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
       WHERE c.status IN ('active', 'completed') ${dateFilter} ${typeFilter}
       GROUP BY c.type
       ORDER BY avg_roi DESC
-    `).all(...params);
+    `, params);
     
     res.json({
       roi_by_campaign: roiByCamera,
@@ -270,7 +270,7 @@ router.get('/budget-tracking', requireFunction, async (req, res) => {
     }
     
     // Budget utilization
-    const budgetUtilization = db.prepare(`
+    const budgetUtilization = await getQuery(`
       SELECT 
         c.id,
         c.name,
@@ -286,10 +286,10 @@ router.get('/budget-tracking', requireFunction, async (req, res) => {
       ${campaignFilter}
       GROUP BY c.id, c.name, c.budget, c.start_date, c.end_date, c.status
       ORDER BY utilization_percentage DESC
-    `).all(...params);
+    `, params);
     
     // Expense breakdown
-    const expenseBreakdown = db.prepare(`
+    const expenseBreakdown = await getQuery(`
       SELECT 
         ce.expense_type,
         SUM(ce.amount) as total_amount,
@@ -300,21 +300,21 @@ router.get('/budget-tracking', requireFunction, async (req, res) => {
       ${campaignFilter ? 'WHERE c.id = ?' : ''}
       GROUP BY ce.expense_type
       ORDER BY total_amount DESC
-    `).all(campaign_id ? [campaign_id] : []);
+    `, [campaign_id ? [campaign_id] : []]);
     
     // Monthly budget burn rate
-    const burnRate = db.prepare(`
+    const burnRate = await getQuery(`
       SELECT 
-        to_char(ce.expense_date, 'YYYY-MM') as month,
+        strftime('%Y-%m', ce.expense_date) as month,
         SUM(ce.amount) as monthly_spend,
         COUNT(DISTINCT ce.campaign_id) as active_campaigns
       FROM campaign_expenses ce
       JOIN campaigns c ON ce.campaign_id = c.id
       ${campaignFilter ? 'WHERE c.id = ?' : ''}
-      GROUP BY to_char(ce.expense_date, 'YYYY-MM')
+      GROUP BY strftime('%Y-%m', ce.expense_date)
       ORDER BY month DESC
       LIMIT 12
-    `).all(campaign_id ? [campaign_id] : []);
+    `, [campaign_id ? [campaign_id] : []]);
     
     res.json({
       budget_utilization: budgetUtilization,
@@ -345,17 +345,17 @@ router.post('/expenses', requireFunction, async (req, res) => {
     }
     
     // Check if campaign exists
-    const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaign_id);
+    const campaign = await getOneQuery('SELECT * FROM campaigns WHERE id = ?', [campaign_id]);
     if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
     // Check budget availability
-    const currentSpend = db.prepare(`
+    const currentSpend = await getOneQuery(`
       SELECT COALESCE(SUM(amount), 0) as total_spent
       FROM campaign_expenses
       WHERE campaign_id = ?
-    `).get(campaign_id);
+    `, [campaign_id]);
     
     if ((currentSpend.total_spent + amount) > campaign.budget) {
       return res.status(400).json({ 
@@ -367,18 +367,18 @@ router.post('/expenses', requireFunction, async (req, res) => {
     }
     
     // Create expense record
-    const result = db.prepare(`
+    const result = await runQuery(`
       INSERT INTO campaign_expenses (
         campaign_id, expense_type, amount, description, expense_date,
         receipt_url, created_by, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-    `).run(
+    `, [
       campaign_id, expense_type, amount, description, 
       expense_date || new Date().toISOString(), receipt_url, req.user.id
     );
     
     res.status(201).json({
-      id: result.lastInsertRowid,
+      id: result.lastID,
       message: 'Campaign expense recorded successfully'
     });
   } catch (error) {
@@ -400,7 +400,7 @@ router.get('/comparison', requireFunction, async (req, res) => {
     const placeholders = ids.map(() => '?').join(',');
     
     // Campaign comparison metrics
-    const comparison = db.prepare(`
+    const comparison = await getQuery(`
       SELECT 
         c.id,
         c.name,
@@ -421,7 +421,7 @@ router.get('/comparison', requireFunction, async (req, res) => {
       LEFT JOIN campaign_performance cp ON c.id = cp.campaign_id
       WHERE c.id IN (${placeholders})
       ORDER BY cp.roi_percentage DESC
-    `).all(...ids);
+    `, ids);
     
     // Performance metrics summary
     const summary = {

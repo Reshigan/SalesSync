@@ -179,24 +179,24 @@ router.get('/stats', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (start_date) {
-    dateFilter += ' AND v.visit_date >= $2';
+    dateFilter += ' AND v.visit_date >= ?';
     params.push(start_date);
   }
   if (end_date) {
-    dateFilter += ` AND v.visit_date <= $${params.length + 1}`;
+    dateFilter += ` AND v.visit_date <= ?`;
     params.push(end_date);
   }
   
   const stats = await getOneQuery(`
     SELECT 
-      COUNT(*)::int as total_visits,
-      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits,
-      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END)::int as in_progress_visits,
-      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END)::int as scheduled_visits,
-      COUNT(DISTINCT v.agent_id)::int as active_agents,
-      COUNT(DISTINCT v.customer_id)::int as customers_visited
+      COUNT(*) as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END) as in_progress_visits,
+      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END) as scheduled_visits,
+      COUNT(DISTINCT v.agent_id) as active_agents,
+      COUNT(DISTINCT v.customer_id) as customers_visited
     FROM visits v
-    WHERE v.tenant_id = $1${dateFilter}
+    WHERE v.tenant_id = ?${dateFilter}
   `, params);
 
   res.json({
@@ -214,7 +214,7 @@ router.get('/agents', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (status) {
-    statusFilter = ' AND u.status = $2';
+    statusFilter = ' AND u.status = ?';
     params.push(status);
   }
   
@@ -225,11 +225,11 @@ router.get('/agents', asyncHandler(async (req, res) => {
       u.email,
       u.phone,
       u.status,
-      COUNT(v.id)::int as total_visits,
-      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits
+      COUNT(v.id) as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits
     FROM users u
-    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1
-    WHERE u.tenant_id = $1 AND u.role = 'agent'${statusFilter}
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?
+    WHERE u.tenant_id = ? AND u.role = 'agent'${statusFilter}
     GROUP BY u.id, u.first_name, u.last_name, u.email, u.phone, u.status
     ORDER BY u.first_name, u.last_name
   `, params);
@@ -249,11 +249,11 @@ router.get('/analytics/performance', asyncHandler(async (req, res) => {
   const params = [tenantId];
   
   if (start_date) {
-    dateFilter += ' AND v.visit_date >= $2';
+    dateFilter += ' AND v.visit_date >= ?';
     params.push(start_date);
   }
   if (end_date) {
-    dateFilter += ` AND v.visit_date <= $${params.length + 1}`;
+    dateFilter += ` AND v.visit_date <= ?`;
     params.push(end_date);
   }
   
@@ -261,10 +261,10 @@ router.get('/analytics/performance', asyncHandler(async (req, res) => {
     SELECT 
       u.id as agent_id,
       u.first_name || ' ' || u.last_name as agent_name,
-      COUNT(v.id)::int as total_visits,
-      COUNT(CASE WHEN v.status = 'completed' THEN 1 END)::int as completed_visits,
-      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END)::int as in_progress_visits,
-      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END)::int as scheduled_visits,
+      COUNT(v.id) as total_visits,
+      COUNT(CASE WHEN v.status = 'completed' THEN 1 END) as completed_visits,
+      COUNT(CASE WHEN v.status = 'in_progress' THEN 1 END) as in_progress_visits,
+      COUNT(CASE WHEN v.status = 'scheduled' THEN 1 END) as scheduled_visits,
       ROUND(
         CASE 
           WHEN COUNT(v.id) > 0 
@@ -273,8 +273,8 @@ router.get('/analytics/performance', asyncHandler(async (req, res) => {
         END, 2
       ) as completion_rate
     FROM users u
-    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = $1${dateFilter}
-    WHERE u.tenant_id = $1 AND u.role = 'agent'
+    LEFT JOIN visits v ON u.id = v.agent_id AND v.tenant_id = ?${dateFilter}
+    WHERE u.tenant_id = ? AND u.role = 'agent'
     GROUP BY u.id, u.first_name, u.last_name
     ORDER BY completed_visits DESC
   `, params);

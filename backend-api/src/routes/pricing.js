@@ -29,18 +29,18 @@ router.get('/price-lists', authMiddleware, asyncHandler(async (req, res) => {
   
   const { customer_type, is_active } = req.query;
   
-  let whereConditions = ['pl.tenant_id = $1'];
+  let whereConditions = ['pl.tenant_id = ?'];
   let params = [req.tenantId];
   let paramIndex = 2;
   
   if (customer_type) {
-    whereConditions.push(`pl.customer_type = $${paramIndex}`);
+    whereConditions.push(`pl.customer_type = ?`);
     params.push(customer_type);
     paramIndex++;
   }
   
   if (is_active !== undefined) {
-    whereConditions.push(`pl.is_active = $${paramIndex}`);
+    whereConditions.push(`pl.is_active = ?`);
     params.push(is_active === 'true');
     paramIndex++;
   }
@@ -99,7 +99,7 @@ router.get('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => 
     LEFT JOIN regions r ON r.id = pl.region_id
     LEFT JOIN areas a ON a.id = pl.area_id
     LEFT JOIN users u ON u.id = pl.created_by
-    WHERE pl.id = $1 AND pl.tenant_id = $2
+    WHERE pl.id = ? AND pl.tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!priceList) {
@@ -114,7 +114,7 @@ router.get('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => 
       p.selling_price as standard_price
     FROM price_list_items pli
     JOIN products p ON p.id = pli.product_id
-    WHERE pli.price_list_id = $1
+    WHERE pli.price_list_id = ?
     ORDER BY p.name, pli.min_quantity
   `, [id]);
   
@@ -201,7 +201,7 @@ router.post('/price-lists', authMiddleware, asyncHandler(async (req, res) => {
     INSERT INTO price_lists (
       tenant_id, name, code, description, customer_type, region_id, area_id,
       channel, currency, effective_start, effective_end, is_active, priority, created_by
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING *
   `, [
     req.tenantId, name, code, description, customer_type, region_id, area_id,
@@ -257,7 +257,7 @@ router.put('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => 
   } = req.body;
   
   const existing = await getOneQuery(`
-    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+    SELECT id FROM price_lists WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!existing) {
@@ -266,18 +266,18 @@ router.put('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) => 
   
   const result = await runQuery(`
     UPDATE price_lists SET
-      name = COALESCE($1, name),
-      description = COALESCE($2, description),
-      customer_type = COALESCE($3, customer_type),
-      region_id = COALESCE($4, region_id),
-      area_id = COALESCE($5, area_id),
-      channel = COALESCE($6, channel),
-      currency = COALESCE($7, currency),
-      effective_start = COALESCE($8, effective_start),
-      effective_end = COALESCE($9, effective_end),
-      is_active = COALESCE($10, is_active),
-      priority = COALESCE($11, priority)
-    WHERE id = $12 AND tenant_id = $13
+      name = COALESCE(?, name),
+      description = COALESCE(?, description),
+      customer_type = COALESCE(?, customer_type),
+      region_id = COALESCE(?, region_id),
+      area_id = COALESCE(?, area_id),
+      channel = COALESCE(?, channel),
+      currency = COALESCE(?, currency),
+      effective_start = COALESCE(?, effective_start),
+      effective_end = COALESCE(?, effective_end),
+      is_active = COALESCE(?, is_active),
+      priority = COALESCE(?, priority)
+    WHERE id = ? AND tenant_id = ?
     RETURNING *
   `, [
     name, description, customer_type, region_id, area_id, channel, currency,
@@ -314,7 +314,7 @@ router.delete('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) 
   const { id } = req.params;
   
   const existing = await getOneQuery(`
-    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+    SELECT id FROM price_lists WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!existing) {
@@ -322,7 +322,7 @@ router.delete('/price-lists/:id', authMiddleware, asyncHandler(async (req, res) 
   }
   
   await runQuery(`
-    DELETE FROM price_lists WHERE id = $1 AND tenant_id = $2
+    DELETE FROM price_lists WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   res.json({
@@ -387,7 +387,7 @@ router.post('/price-lists/:id/items', authMiddleware, asyncHandler(async (req, r
   }
   
   const priceList = await getOneQuery(`
-    SELECT id FROM price_lists WHERE id = $1 AND tenant_id = $2
+    SELECT id FROM price_lists WHERE id = ? AND tenant_id = ?
   `, [id, req.tenantId]);
   
   if (!priceList) {
@@ -406,9 +406,9 @@ router.post('/price-lists/:id/items', authMiddleware, asyncHandler(async (req, r
     const result = await runQuery(`
       INSERT INTO price_list_items (
         price_list_id, product_id, price, min_quantity, max_quantity, discount_percentage
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ) VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT (price_list_id, product_id, min_quantity) 
-      DO UPDATE SET price = $3, max_quantity = $5, discount_percentage = $6
+      DO UPDATE SET price = ?, max_quantity = ?, discount_percentage = ?
       RETURNING *
     `, [id, product_id, price, min_quantity, max_quantity, discount_percentage]);
     
@@ -460,7 +460,7 @@ router.get('/quote', authMiddleware, asyncHandler(async (req, res) => {
   const product = await getOneQuery(`
     SELECT id, name, code as sku, selling_price, cost_price, unit_of_measure as unit, tax_rate
     FROM products
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [product_id, req.tenantId]);
   
   if (!product) {
@@ -474,7 +474,7 @@ router.get('/quote', authMiddleware, asyncHandler(async (req, res) => {
     const customer = await getOneQuery(`
       SELECT id, price_list_id
       FROM customers
-      WHERE id = $1 AND tenant_id = $2
+      WHERE id = ? AND tenant_id = ?
     `, [customer_id, req.tenantId]);
     
     if (customer && customer.price_list_id) {
@@ -482,9 +482,9 @@ router.get('/quote', authMiddleware, asyncHandler(async (req, res) => {
         SELECT pli.price, pli.min_quantity
         FROM price_list_items pli
         JOIN price_lists pl ON pl.id = pli.price_list_id
-        WHERE pli.price_list_id = $1
-        AND pli.product_id = $2
-        AND pli.min_quantity <= $3
+        WHERE pli.price_list_id = ?
+        AND pli.product_id = ?
+        AND pli.min_quantity <= ?
         AND pl.is_active = true
         AND (pl.effective_end IS NULL OR pl.effective_end >= CURRENT_DATE)
         ORDER BY pli.min_quantity DESC
@@ -580,7 +580,7 @@ router.post('/bulk-quote', authMiddleware, asyncHandler(async (req, res) => {
     const product = await getOneQuery(`
       SELECT id, name, code as sku, selling_price, cost_price, unit_of_measure as unit, tax_rate
       FROM products
-      WHERE id = $1 AND tenant_id = $2
+      WHERE id = ? AND tenant_id = ?
     `, [product_id, req.tenantId]);
     
     if (!product) {
@@ -594,7 +594,7 @@ router.post('/bulk-quote', authMiddleware, asyncHandler(async (req, res) => {
       const customer = await getOneQuery(`
         SELECT id, price_list_id
         FROM customers
-        WHERE id = $1 AND tenant_id = $2
+        WHERE id = ? AND tenant_id = ?
       `, [customer_id, req.tenantId]);
       
       if (customer && customer.price_list_id) {
@@ -602,9 +602,9 @@ router.post('/bulk-quote', authMiddleware, asyncHandler(async (req, res) => {
           SELECT pli.price, pli.min_quantity
           FROM price_list_items pli
           JOIN price_lists pl ON pl.id = pli.price_list_id
-          WHERE pli.price_list_id = $1
-          AND pli.product_id = $2
-          AND pli.min_quantity <= $3
+          WHERE pli.price_list_id = ?
+          AND pli.product_id = ?
+          AND pli.min_quantity <= ?
           AND pl.is_active = true
           AND (pl.effective_end IS NULL OR pl.effective_end >= CURRENT_DATE)
           ORDER BY pli.min_quantity DESC

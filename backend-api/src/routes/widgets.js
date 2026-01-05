@@ -257,11 +257,11 @@ router.get('/:widgetId/data', authenticateToken, async (req, res) => {
         data = await new Promise((resolve, reject) => {
           db.all(
             `SELECT 
-              order_date::date as date,
+              DATE(order_date) as date,
               SUM(total_amount) as revenue
             FROM orders
             WHERE order_date >= CURRENT_DATE - INTERVAL '30 day'
-            GROUP BY order_date::date
+            GROUP BY DATE(order_date)
             ORDER BY date`,
             [],
             (err, rows) => err ? reject(err) : resolve(rows)
@@ -273,11 +273,11 @@ router.get('/:widgetId/data', authenticateToken, async (req, res) => {
         data = await new Promise((resolve, reject) => {
           db.all(
             `SELECT 
-              created_at::date as date,
+              DATE(created_at) as date,
               COUNT(*) as new_customers
             FROM customers
             WHERE created_at >= CURRENT_DATE - INTERVAL '30 day'
-            GROUP BY created_at::date
+            GROUP BY DATE(created_at)
             ORDER BY date`,
             [],
             (err, rows) => err ? reject(err) : resolve(rows)

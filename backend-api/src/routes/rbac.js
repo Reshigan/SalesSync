@@ -10,7 +10,7 @@ router.get('/roles', asyncHandler(async (req, res) => {
   const roles = await getQuery(`
     SELECT DISTINCT role as name, role as code
     FROM users
-    WHERE tenant_id = $1
+    WHERE tenant_id = ?
     ORDER BY role
   `, [tenantId]);
   
@@ -94,7 +94,7 @@ router.get('/users/:userId/permissions', asyncHandler(async (req, res) => {
   const user = await getOneQuery(`
     SELECT id, role, first_name, last_name, email
     FROM users
-    WHERE id = $1 AND tenant_id = $2
+    WHERE id = ? AND tenant_id = ?
   `, [userId, tenantId]);
   
   if (!user) {

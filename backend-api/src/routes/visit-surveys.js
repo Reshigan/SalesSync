@@ -33,7 +33,7 @@ router.get('/available', asyncHandler(async (req, res) => {
     FROM surveys s
     LEFT JOIN brands b ON s.brand_id = b.id
     LEFT JOIN survey_responses sr ON s.id = sr.survey_id
-    WHERE s.tenant_id = $1 
+    WHERE s.tenant_id = ? 
       AND s.status = 'active'
   `;
   
@@ -41,17 +41,17 @@ router.get('/available', asyncHandler(async (req, res) => {
   let paramIndex = 1;
 
   if (target_type && target_type !== 'both') {
-    query += ` AND (s.target_type = $${++paramIndex} OR s.target_type = 'both')`;
+    query += ` AND (s.target_type = ? OR s.target_type = 'both')`;
     params.push(target_type);
   }
 
   if (brand_id) {
-    query += ` AND (s.brand_id = $${++paramIndex} OR s.brand_id IS NULL)`;
+    query += ` AND (s.brand_id = ? OR s.brand_id IS NULL)`;
     params.push(brand_id);
   }
 
   if (survey_type && ['mandatory', 'adhoc', 'feedback', 'audit', 'brand_specific'].includes(survey_type)) {
-    query += ` AND s.survey_type = $${++paramIndex}`;
+    query += ` AND s.survey_type = ?`;
     params.push(survey_type);
   }
 
@@ -81,7 +81,7 @@ router.post('/assign', asyncHandler(async (req, res) => {
   }
 
   const visit = await getQuery(
-    'SELECT id FROM visits WHERE id = $1 AND tenant_id = $2',
+    'SELECT id FROM visits WHERE id = ? AND tenant_id = ?',
     [visit_id, tenantId]
   );
 
@@ -99,7 +99,7 @@ router.post('/assign', asyncHandler(async (req, res) => {
     return runQuery(
       `INSERT INTO visit_surveys 
         (tenant_id, visit_id, survey_id, subject_type, subject_id, required, assigned_by, status) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'assigned')
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'assigned')
        RETURNING *`,
       [tenantId, visit_id, survey_id, subject_type, subject_id, required, userId]
     );
@@ -150,7 +150,7 @@ router.get('/:visitId', asyncHandler(async (req, res) => {
     INNER JOIN surveys s ON vs.survey_id = s.id
     LEFT JOIN customers c ON vs.subject_type = 'business' AND vs.subject_id = c.id
     LEFT JOIN individuals i ON vs.subject_type = 'individual' AND vs.subject_id = i.id
-    WHERE vs.visit_id = $1 AND vs.tenant_id = $2
+    WHERE vs.visit_id = ? AND vs.tenant_id = ?
     ORDER BY vs.required DESC, vs.assigned_at ASC`,
     [visitId, tenantId]
   );
@@ -182,7 +182,7 @@ router.put('/:visitSurveyId/status', asyncHandler(async (req, res) => {
   }
 
   const existing = await getQuery(
-    'SELECT id FROM visit_surveys WHERE id = $1 AND tenant_id = $2',
+    'SELECT id FROM visit_surveys WHERE id = ? AND tenant_id = ?',
     [visitSurveyId, tenantId]
   );
 
@@ -190,7 +190,7 @@ router.put('/:visitSurveyId/status', asyncHandler(async (req, res) => {
     throw new AppError('Visit survey assignment not found', 404);
   }
 
-  let query = 'UPDATE visit_surveys SET status = $1, updated_at = CURRENT_TIMESTAMP';
+  let query = 'UPDATE visit_surveys SET status = ?, updated_at = CURRENT_TIMESTAMP';
   const params = [status];
   let paramIndex = 1;
 
@@ -199,11 +199,11 @@ router.put('/:visitSurveyId/status', asyncHandler(async (req, res) => {
   }
 
   if (status === 'skipped' && skip_reason) {
-    query += `, skip_reason = $${++paramIndex}`;
+    query += `, skip_reason = ?`;
     params.push(skip_reason);
   }
 
-  query += ` WHERE id = $${++paramIndex} AND tenant_id = $${++paramIndex} RETURNING *`;
+  query += ` WHERE id = ? AND tenant_id = ? RETURNING *`;
   params.push(visitSurveyId, tenantId);
 
   const result = await runQuery(query, params);
@@ -226,7 +226,7 @@ router.delete('/:visitSurveyId', asyncHandler(async (req, res) => {
   const { visitSurveyId } = req.params;
 
   const existing = await getQuery(
-    'SELECT id FROM visit_surveys WHERE id = $1 AND tenant_id = $2',
+    'SELECT id FROM visit_surveys WHERE id = ? AND tenant_id = ?',
     [visitSurveyId, tenantId]
   );
 
@@ -235,7 +235,7 @@ router.delete('/:visitSurveyId', asyncHandler(async (req, res) => {
   }
 
   await runQuery(
-    'DELETE FROM visit_surveys WHERE id = $1 AND tenant_id = $2',
+    'DELETE FROM visit_surveys WHERE id = ? AND tenant_id = ?',
     [visitSurveyId, tenantId]
   );
 
@@ -260,7 +260,7 @@ router.get('/:visitSurveyId/questions', asyncHandler(async (req, res) => {
     `SELECT vs.*, s.title, s.description, s.type
      FROM visit_surveys vs
      INNER JOIN surveys s ON vs.survey_id = s.id
-     WHERE vs.id = $1 AND vs.tenant_id = $2`,
+     WHERE vs.id = ? AND vs.tenant_id = ?`,
     [visitSurveyId, tenantId]
   );
 
@@ -278,7 +278,7 @@ router.get('/:visitSurveyId/questions', asyncHandler(async (req, res) => {
       sq.sequence_order
      FROM survey_questions sq
      INNER JOIN survey_templates st ON sq.survey_template_id = st.id
-     WHERE st.tenant_id = $1
+     WHERE st.tenant_id = ?
      ORDER BY sq.sequence_order ASC`,
     [tenantId]
   );
@@ -312,7 +312,7 @@ router.post('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
     `SELECT vs.*, v.customer_id
      FROM visit_surveys vs
      INNER JOIN visits v ON vs.visit_id = v.id
-     WHERE vs.id = $1 AND vs.tenant_id = $2`,
+     WHERE vs.id = ? AND vs.tenant_id = ?`,
     [visitSurveyId, tenantId]
   );
 
@@ -323,7 +323,7 @@ router.post('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
   const responseResult = await runQuery(
     `INSERT INTO survey_responses 
       (survey_id, customer_id, user_id, visit_survey_id, subject_type, subject_id, survey_version) 
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
      RETURNING id`,
     [
       visitSurvey.survey_id,
@@ -345,7 +345,7 @@ router.post('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
       return runQuery(
         `INSERT INTO survey_answers 
           (survey_response_id, question_id, question_text, answer_value) 
-         VALUES ($1, $2, $3, $4)`,
+         VALUES (?, ?, ?, ?)`,
         [responseId, question_id, question_text, JSON.stringify(answer_value)]
       );
     });
@@ -356,7 +356,7 @@ router.post('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
   await runQuery(
     `UPDATE visit_surveys 
      SET status = 'completed', completed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-     WHERE id = $1 AND tenant_id = $2`,
+     WHERE id = ? AND tenant_id = ?`,
     [visitSurveyId, tenantId]
   );
 
@@ -382,7 +382,7 @@ router.get('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
     `SELECT sr.*
      FROM survey_responses sr
      INNER JOIN visit_surveys vs ON sr.visit_survey_id = vs.id
-     WHERE vs.id = $1 AND vs.tenant_id = $2`,
+     WHERE vs.id = ? AND vs.tenant_id = ?`,
     [visitSurveyId, tenantId]
   );
 
@@ -398,7 +398,7 @@ router.get('/:visitSurveyId/responses', asyncHandler(async (req, res) => {
   }
 
   const answers = await getQuery(
-    `SELECT * FROM survey_answers WHERE survey_response_id = $1 ORDER BY created_at ASC`,
+    `SELECT * FROM survey_answers WHERE survey_response_id = ? ORDER BY created_at ASC`,
     [response.id]
   );
 

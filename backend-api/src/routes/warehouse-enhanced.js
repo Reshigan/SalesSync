@@ -19,7 +19,7 @@ router.post('/receive', async (req, res) => {
       db.run(`
         INSERT INTO receiving_tasks (
           po_id, warehouse_id, status, received_by, tenant_id
-        ) VALUES ($1, $2, 'in_progress', $3, $4)
+        ) VALUES (?, ?, 'in_progress', ?, ?)
       `, [poId, warehouseId, receivedBy || req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -33,7 +33,7 @@ router.post('/receive', async (req, res) => {
           INSERT INTO received_items (
             receipt_id, product_id, quantity, condition, 
             lot_number, expiry_date, tenant_id
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
         `, [receiptId, item.productId, item.quantity, item.condition || 'good',
             item.lotNumber, item.expiryDate, tenantId],
         (err) => {
@@ -59,7 +59,7 @@ router.post('/receive/put-away', async (req, res) => {
         INSERT INTO put_away_tasks (
           receipt_id, product_id, quantity, target_location_id,
           status, assigned_to, tenant_id
-        ) VALUES ($1, $2, $3, $4, 'pending', $5, $6)
+        ) VALUES (?, ?, ?, ?, 'pending', ?, ?)
       `, [receiptId, productId, quantity, locationId, req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -89,7 +89,7 @@ router.get('/receiving/pending', async (req, res) => {
         JOIN purchase_orders po ON rt.po_id = po.id
         JOIN suppliers s ON po.supplier_id = s.id
         LEFT JOIN received_items ri ON rt.id = ri.receipt_id
-        WHERE rt.tenant_id = $1
+        WHERE rt.tenant_id = ?
           AND rt.warehouse_id = ?
           AND rt.status != 'completed'
         GROUP BY rt.id
@@ -120,7 +120,7 @@ router.post('/pick/create-list', async (req, res) => {
         INSERT INTO pick_lists (
           order_id, warehouse_id, status, priority,
           created_by, tenant_id
-        ) VALUES ($1, $2, 'pending', $3, $4, $5)
+        ) VALUES (?, ?, 'pending', ?, ?, ?)
       `, [orderId, warehouseId, priority || 'normal', req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -131,7 +131,7 @@ router.post('/pick/create-list', async (req, res) => {
     // Get order items and create pick list items
     const orderItems = await new Promise((resolve, reject) => {
       db.all(`
-        SELECT * FROM order_items WHERE order_id = $1
+        SELECT * FROM order_items WHERE order_id = ?
       `, [orderId], (err, rows) => {
         if (err) reject(err);
         else resolve(rows || []);
@@ -144,7 +144,7 @@ router.post('/pick/create-list', async (req, res) => {
           INSERT INTO pick_list_items (
             pick_list_id, product_id, quantity_required,
             quantity_picked, tenant_id
-          ) VALUES ($1, $2, $3, 0, $4)
+          ) VALUES (?, ?, ?, 0, ?)
         `, [pickListId, item.product_id, item.quantity, tenantId],
         (err) => {
           if (err) reject(err);
@@ -176,7 +176,7 @@ router.get('/pick/active', async (req, res) => {
         JOIN orders o ON pl.order_id = o.id
         JOIN customers c ON o.customer_id = c.id
         LEFT JOIN pick_list_items pli ON pl.id = pli.pick_list_id
-        WHERE pl.tenant_id = $1
+        WHERE pl.tenant_id = ?
           AND pl.warehouse_id = ?
           AND pl.status IN ('pending', 'in_progress')
         GROUP BY pl.id
@@ -202,10 +202,10 @@ router.post('/pick/confirm', async (req, res) => {
       db.run(`
         UPDATE pick_list_items
         SET quantity_picked = ?,
-            picked_from_location = $1,
+            picked_from_location = ?,
             picked_at = CURRENT_TIMESTAMP,
             picked_by = ?
-        WHERE id = $1 AND tenant_id = $2
+        WHERE id = ? AND tenant_id = ?
       `, [quantityPicked, locationId, req.user.userId, pickListItemId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -232,7 +232,7 @@ router.post('/pack/start', async (req, res) => {
       db.run(`
         INSERT INTO packing_tasks (
           pick_list_id, station, status, packed_by, tenant_id
-        ) VALUES ($1, $2, 'in_progress', $3, $4)
+        ) VALUES (?, ?, 'in_progress', ?, ?)
       `, [pickListId, station, req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -258,7 +258,7 @@ router.post('/pack/complete', async (req, res) => {
             box_count = ?,
             total_weight = ?,
             completed_at = CURRENT_TIMESTAMP
-        WHERE id = $1 AND tenant_id = $2
+        WHERE id = ? AND tenant_id = ?
       `, [boxes, totalWeight, packingId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -286,7 +286,7 @@ router.post('/ship/create', async (req, res) => {
         INSERT INTO shipping_manifests (
           packing_id, carrier, tracking_number, shipping_cost,
           status, created_by, tenant_id
-        ) VALUES ($1, $2, $3, $4, 'pending', $5, $6)
+        ) VALUES (?, ?, ?, ?, 'pending', ?, ?)
       `, [packingId, carrier, trackingNumber, shippingCost, req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -311,7 +311,7 @@ router.post('/ship/dispatch', async (req, res) => {
         SET status = 'dispatched',
             dispatched_at = CURRENT_TIMESTAMP,
             dispatched_by = ?
-        WHERE id = $1 AND tenant_id = $2
+        WHERE id = ? AND tenant_id = ?
       `, [req.user.userId, manifestId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -338,7 +338,7 @@ router.post('/cycle-count/create', async (req, res) => {
       db.run(`
         INSERT INTO cycle_count_tasks (
           warehouse_id, count_type, status, assigned_to, tenant_id
-        ) VALUES ($1, $2, 'pending', $3, $4)
+        ) VALUES (?, ?, 'pending', ?, ?)
       `, [warehouseId, countType || 'cycle', req.user.userId, tenantId],
       function(err) {
         if (err) reject(err);
@@ -351,7 +351,7 @@ router.post('/cycle-count/create', async (req, res) => {
         db.run(`
           INSERT INTO count_results (
             count_task_id, product_id, tenant_id
-          ) VALUES ($1, $2, $3)
+          ) VALUES (?, ?, ?)
         `, [countId, productId, tenantId],
         (err) => {
           if (err) reject(err);
@@ -378,7 +378,7 @@ router.post('/cycle-count/submit', async (req, res) => {
             notes = ?,
             counted_at = CURRENT_TIMESTAMP,
             counted_by = ?
-        WHERE id = $1 AND tenant_id = $2
+        WHERE id = ? AND tenant_id = ?
       `, [countedQuantity, notes, req.user.userId, countResultId, tenantId],
       (err) => {
         if (err) reject(err);
@@ -408,7 +408,7 @@ router.get('/cycle-count/variance', async (req, res) => {
         FROM count_results cr
         JOIN products p ON cr.product_id = p.id
         LEFT JOIN inventory_locations il ON cr.product_id = il.product_id
-        WHERE cr.count_task_id = $1
+        WHERE cr.count_task_id = ?
           AND cr.tenant_id = ?
           AND cr.counted_quantity IS NOT NULL
         ORDER BY ABS(cr.counted_quantity - il.quantity) DESC
@@ -441,7 +441,7 @@ router.get('/analytics', async (req, res) => {
             COUNT(*) as total_receipts,
             SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
           FROM receiving_tasks
-          WHERE warehouse_id = $1 AND tenant_id = $2
+          WHERE warehouse_id = ? AND tenant_id = ?
         `, [warehouseId, tenantId], (err, row) => {
           if (err) reject(err);
           else resolve(row);
@@ -453,7 +453,7 @@ router.get('/analytics', async (req, res) => {
             COUNT(*) as total_picks,
             AVG(JULIANDAY(completed_at) - JULIANDAY(created_at)) as avg_pick_time
           FROM pick_lists
-          WHERE warehouse_id = $1 AND tenant_id = $2 AND status = 'completed'
+          WHERE warehouse_id = ? AND tenant_id = ? AND status = 'completed'
         `, [warehouseId, tenantId], (err, row) => {
           if (err) reject(err);
           else resolve(row);
@@ -465,7 +465,7 @@ router.get('/analytics', async (req, res) => {
           FROM shipping_manifests sm
           JOIN packing_tasks pt ON sm.packing_id = pt.id
           JOIN pick_lists pl ON pt.pick_list_id = pl.id
-          WHERE pl.warehouse_id = $1 AND sm.tenant_id = $2
+          WHERE pl.warehouse_id = ? AND sm.tenant_id = ?
         `, [warehouseId, tenantId], (err, row) => {
           if (err) reject(err);
           else resolve(row);

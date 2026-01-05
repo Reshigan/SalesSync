@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getDatabase } = require('../database/init');
+const { getQuery, getOneQuery, runQuery } = require('../utils/database');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 // ============================================
@@ -13,7 +13,7 @@ router.post('/gps/validate', authMiddleware, async (req, res) => {
     const { customerId, latitude, longitude, accuracy } = req.body;
     
     // Get customer's registered location
-    const customerLocation = await db.get(
+    const customerLocation = await getOneQuery(
       `SELECT latitude, longitude FROM customer_locations 
        WHERE customer_id = ? AND is_verified = 1 
        ORDER BY created_at DESC LIMIT 1`,
@@ -70,7 +70,7 @@ router.get('/customers/search', authMiddleware, async (req, res) => {
     
     sql += ` ORDER BY has_location DESC, c.name ASC LIMIT 50`;
     
-    const customers = await db.all(sql, params);
+    const customers = await getQuery(sql, params);
     
     // Calculate distance for each customer if GPS provided
     if (latitude && longitude) {
@@ -107,7 +107,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
     
     const visitCode = `FV-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO field_visits (
         visit_code, agent_id, customer_id, visit_type, visit_status,
         start_time, start_latitude, start_longitude, selected_brands, gps_validation_passed
@@ -125,7 +125,7 @@ router.post('/visits', authMiddleware, async (req, res) => {
       ]
     );
     
-    const visit = await db.get(
+    const visit = await getOneQuery(
       'SELECT * FROM field_visits WHERE id = ?',
       [result.lastID]
     );
@@ -157,18 +157,18 @@ router.get('/visits', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND fv.start_time::date >= ?`;
+      sql += ` AND DATE(fv.start_time) >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND fv.start_time::date <= ?`;
+      sql += ` AND DATE(fv.start_time) <= ?`;
       params.push(endDate);
     }
     
     sql += ` ORDER BY fv.start_time DESC LIMIT 100`;
     
-    const visits = await db.all(sql, params);
+    const visits = await getQuery(sql, params);
     
     res.json({ visits });
   } catch (error) {
@@ -180,7 +180,7 @@ router.get('/visits', authMiddleware, async (req, res) => {
 // Get Visit Details
 router.get('/visits/:id', authMiddleware, async (req, res) => {
   try {
-    const visit = await db.get(
+    const visit = await getOneQuery(
       `SELECT fv.*, c.name as customer_name, c.code as customer_code,
               c.address, c.phone, c.email
        FROM field_visits fv
@@ -194,7 +194,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     }
     
     // Get board placements for this visit
-    const boardPlacements = await db.all(
+    const boardPlacements = await getQuery(
       `SELECT bp.*, b.board_name, b.board_type
        FROM board_placements bp
        JOIN field_marketing_boards b ON bp.board_id = b.id
@@ -203,7 +203,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     );
     
     // Get product distributions
-    const productDistributions = await db.all(
+    const productDistributions = await getQuery(
       `SELECT pd.*, p.name as product_name, p.code as sku
        FROM product_distributions pd
        JOIN products p ON pd.product_id = p.id
@@ -212,7 +212,7 @@ router.get('/visits/:id', authMiddleware, async (req, res) => {
     );
     
     // Get surveys
-    const surveys = await db.all(
+    const surveys = await getQuery(
       `SELECT vs.*, s.survey_name, s.survey_type
        FROM visit_surveys vs
        JOIN surveys s ON vs.survey_id = s.id
@@ -237,7 +237,7 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
   try {
     const { endLatitude, endLongitude, visitNotes } = req.body;
     
-    await db.run(
+    await runQuery(
       `UPDATE field_visits 
        SET visit_status = 'completed', 
            end_time = CURRENT_TIMESTAMP,
@@ -248,7 +248,7 @@ router.put('/visits/:id/complete', authMiddleware, async (req, res) => {
       [endLatitude, endLongitude, visitNotes, req.params.id, req.user.id]
     );
     
-    const visit = await db.get(
+    const visit = await getOneQuery(
       'SELECT * FROM field_visits WHERE id = ?',
       [req.params.id]
     );
@@ -281,7 +281,7 @@ router.get('/boards', authMiddleware, async (req, res) => {
     
     sql += ` ORDER BY fmb.board_name`;
     
-    const boards = await db.all(sql, params);
+    const boards = await getQuery(sql, params);
     
     res.json({ boards });
   } catch (error) {
@@ -309,12 +309,12 @@ router.post('/board-placements', authMiddleware, async (req, res) => {
     const placementCode = `BP-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
     // Get board details for commission
-    const board = await db.get(
+    const board = await getOneQuery(
       'SELECT commission_rate FROM field_marketing_boards WHERE id = ?',
       [boardId]
     );
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO board_placements (
         placement_code, visit_id, board_id, customer_id, agent_id,
         placement_status, latitude, longitude, placement_photo_url,
@@ -331,7 +331,7 @@ router.post('/board-placements', authMiddleware, async (req, res) => {
     
     // Create commission record
     if (board?.commission_rate > 0) {
-      await db.run(
+      await runQuery(
         `INSERT INTO agent_commissions (
           agent_id, visit_id, commission_type, reference_type, reference_id,
           commission_amount, commission_status, earned_date
@@ -343,7 +343,7 @@ router.post('/board-placements', authMiddleware, async (req, res) => {
       );
     }
     
-    const placement = await db.get(
+    const placement = await getOneQuery(
       'SELECT * FROM board_placements WHERE id = ?',
       [result.lastID]
     );
@@ -380,7 +380,7 @@ router.post('/product-distributions', authMiddleware, async (req, res) => {
     
     const distributionCode = `PD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO product_distributions (
         distribution_code, visit_id, product_id, agent_id, customer_id,
         distribution_status, product_type, product_serial_number, quantity,
@@ -399,7 +399,7 @@ router.post('/product-distributions', authMiddleware, async (req, res) => {
       ]
     );
     
-    const distribution = await db.get(
+    const distribution = await getOneQuery(
       'SELECT * FROM product_distributions WHERE id = ?',
       [result.lastID]
     );
@@ -432,21 +432,21 @@ router.get('/commissions', authMiddleware, async (req, res) => {
     }
     
     if (startDate) {
-      sql += ` AND ac.earned_date::date >= ?`;
+      sql += ` AND DATE(ac.earned_date) >= ?`;
       params.push(startDate);
     }
     
     if (endDate) {
-      sql += ` AND ac.earned_date::date <= ?`;
+      sql += ` AND DATE(ac.earned_date) <= ?`;
       params.push(endDate);
     }
     
     sql += ` ORDER BY ac.earned_date DESC LIMIT 100`;
     
-    const commissions = await db.all(sql, params);
+    const commissions = await getQuery(sql, params);
     
     // Calculate totals
-    const totals = await db.get(
+    const totals = await getOneQuery(
       `SELECT 
         SUM(CASE WHEN commission_status = 'pending' THEN commission_amount ELSE 0 END) as pending,
         SUM(CASE WHEN commission_status = 'approved' THEN commission_amount ELSE 0 END) as approved,
@@ -466,7 +466,6 @@ router.get('/commissions', authMiddleware, async (req, res) => {
 router.get('/board-installations', authMiddleware, async (req, res) => {
   try {
     const { status, startDate, endDate } = req.query;
-    const { getQuery } = require('../utils/database');
     
     let sql = `
       SELECT 
@@ -480,28 +479,24 @@ router.get('/board-installations', authMiddleware, async (req, res) => {
       JOIN field_marketing_boards fmb ON bp.board_id = fmb.id
       JOIN customers c ON bp.customer_id = c.id
       LEFT JOIN field_visits fv ON bp.visit_id = fv.id
-      WHERE bp.agent_id = $1
+      WHERE bp.agent_id = ?
     `;
     
     const params = [req.user.id];
-    let paramIndex = 2;
     
     if (status) {
-      sql += ` AND bp.placement_status = $${paramIndex}`;
+      sql += ` AND bp.placement_status = ?`;
       params.push(status);
-      paramIndex++;
     }
     
     if (startDate) {
-      sql += ` AND bp.created_at::date >= $${paramIndex}`;
+      sql += ` AND DATE(bp.created_at) >= ?`;
       params.push(startDate);
-      paramIndex++;
     }
     
     if (endDate) {
-      sql += ` AND bp.created_at::date <= $${paramIndex}`;
+      sql += ` AND DATE(bp.created_at) <= ?`;
       params.push(endDate);
-      paramIndex++;
     }
     
     sql += ` ORDER BY bp.created_at DESC LIMIT 100`;
@@ -534,7 +529,7 @@ router.post('/surveys/submit', authMiddleware, async (req, res) => {
       responses
     } = req.body;
     
-    const result = await db.run(
+    const result = await runQuery(
       `INSERT INTO visit_surveys (
         visit_id, survey_id, agent_id, customer_id, survey_type,
         survey_scope, brand_id, completion_status, responses,
@@ -546,7 +541,7 @@ router.post('/surveys/submit', authMiddleware, async (req, res) => {
       ]
     );
     
-    const survey = await db.get(
+    const survey = await getOneQuery(
       'SELECT * FROM visit_surveys WHERE id = ?',
       [result.lastID]
     );

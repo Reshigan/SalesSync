@@ -35,8 +35,8 @@ router.get('/', asyncHandler(async (req, res, next) => {
       getOneQuery('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ? AND status = ?', [req.tenantId, 'active']),
       getOneQuery('SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = ?', [req.tenantId, 'active']),
       getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?', [req.tenantId]),
-      getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE', [req.tenantId]),
-      getOneQuery('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at::date = CURRENT_DATE AND order_status != $2', [req.tenantId, 'cancelled']),
+      getOneQuery('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND DATE(created_at) = CURRENT_DATE', [req.tenantId]),
+      getOneQuery('SELECT COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND DATE(created_at) = CURRENT_DATE AND order_status != ?', [req.tenantId, 'cancelled']),
       getOneQuery("SELECT COUNT(*) as count FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND status = ?", [req.tenantId, 'active'])
     ]);
 
@@ -61,8 +61,8 @@ router.get('/', asyncHandler(async (req, res, next) => {
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales
       FROM customers c
-      LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status != $2
-      WHERE c.tenant_id = ? AND c.status = $3
+      LEFT JOIN orders o ON o.customer_id = c.id AND o.order_status != ?
+      WHERE c.tenant_id = ? AND c.status = ?
       GROUP BY c.id, c.name, c.type
       ORDER BY total_sales DESC
       LIMIT 5
@@ -71,14 +71,14 @@ router.get('/', asyncHandler(async (req, res, next) => {
     // Get sales by month (last 6 months)
     const salesByMonth = await getQuery(`
       SELECT 
-        to_char(o.order_date, 'YYYY-MM') as month,
+        strftime('%Y-%m', o.order_date) as month,
         COUNT(o.id) as order_count,
         COALESCE(SUM(o.total_amount), 0) as total_sales
       FROM orders o
       WHERE o.tenant_id = ? 
-        AND o.order_status != $2
-        AND o.order_date >= CURRENT_DATE - INTERVAL '6 month'
-      GROUP BY to_char(o.order_date, 'YYYY-MM')
+        AND o.order_status != ?
+        AND o.order_date >= DATE('now', '-6 months')
+      GROUP BY strftime('%Y-%m', o.order_date)
       ORDER BY month ASC
     `, [req.tenantId, 'cancelled']);
 
@@ -90,9 +90,9 @@ router.get('/', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(o.total_amount), 0) as total_sales,
         COUNT(DISTINCT v.id) as visit_count
       FROM users u
-      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status != $2
+      LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status != ?
       LEFT JOIN visits v ON v.agent_id = u.id
-      WHERE u.tenant_id = ? AND u.status = $3 AND u.role IN ($4, $5, $6)
+      WHERE u.tenant_id = ? AND u.status = ? AND u.role IN (?, ?, ?)
       GROUP BY u.id, u.first_name, u.last_name, u.role
       ORDER BY total_sales DESC
       LIMIT 5
@@ -151,7 +151,7 @@ router.get('/stats', asyncHandler(async (req, res, next) => {
     let dateFilter = '';
     switch (period) {
       case 'today':
-        dateFilter = 'created_at::date = CURRENT_DATE';
+        dateFilter = 'DATE(created_at) = CURRENT_DATE';
         break;
       case 'week':
         dateFilter = 'created_at >= CURRENT_DATE - INTERVAL \'7 days\'';
@@ -287,7 +287,7 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
       SELECT 
         'visit' as type,
         v.id,
-        'VISIT-' || substring(v.id::text, 1, 8) as reference,
+        'VISIT-' || substring(v.id, 1, 8) as reference,
         'Customer visit completed' as description,
         c.name as customer_name,
         u.first_name || ' ' || u.last_name as agent_name,
@@ -309,14 +309,14 @@ router.get('/activities', asyncHandler(async (req, res, next) => {
       SELECT 
         'van_load' as type,
         vl.id,
-        'VL-' || substring(vl.id::text, 1, 8) as reference,
+        'VL-' || substring(vl.id, 1, 8) as reference,
         'Van loaded for the day' as description,
         NULL as customer_name,
         u.first_name || ' ' || u.last_name as agent_name,
         vl.cash_float as amount,
         vl.status,
         vl.created_at as timestamp,
-        'Van loaded by ' || u.first_name || ' ' || u.last_name || ' on ' || vl.load_date::text as detail
+        'Van loaded by ' || u.first_name || ' ' || u.last_name || ' on ' || vl.load_date as detail
       FROM van_loads vl
       JOIN users a ON a.id = vl.salesman_id
       JOIN users u ON u.id = a.user_id
@@ -504,7 +504,7 @@ router.get('/alerts', asyncHandler(async (req, res, next) => {
         AND u.status = 'active'
         AND u.role IN ('agent', 'sales_agent', 'field_agent')
       GROUP BY u.id
-      HAVING last_visit_date IS NULL OR last_visit_date < CURRENT_DATE - INTERVAL '7 days'
+      HAVING last_visit_date IS NULL OR last_visit_date < DATE('now', '-7 days')
       ORDER BY last_visit_date ASC NULLS FIRST
       LIMIT 5
     `, [req.tenantId]);
@@ -541,7 +541,7 @@ router.get('/alerts', asyncHandler(async (req, res, next) => {
       LEFT JOIN users u ON u.id = a.user_id
       WHERE o.tenant_id = ? 
         AND o.total_amount > 1000
-        AND o.created_at >= CURRENT_DATE - INTERVAL '7 days'
+        AND o.created_at >= DATE('now', '-7 days')
       ORDER BY o.total_amount DESC
       LIMIT 3
     `, [req.tenantId]);
@@ -690,7 +690,7 @@ router.get('/finance', asyncHandler(async (req, res, next) => {
       WHERE tenant_id = ?
       AND payment_status IN ('pending', 'partial')
       AND order_status NOT IN ('cancelled', 'rejected')
-      AND order_date < CURRENT_DATE - INTERVAL '30 days'
+      AND order_date < DATE('now', '-30 days')
     `, [tenantId]);
 
     // Cash Flow
@@ -938,7 +938,7 @@ router.get('/customers', asyncHandler(async (req, res, next) => {
         SELECT customer_id, MAX(order_date) as last_order
         FROM orders
         WHERE tenant_id = ?
-        AND order_date >= CURRENT_DATE - INTERVAL '6 month'
+        AND order_date >= DATE('now', '-6 months')
         GROUP BY customer_id
       )
     `, [tenantId]);
@@ -1031,7 +1031,7 @@ router.get('/orders', asyncHandler(async (req, res, next) => {
         COALESCE(SUM(total_amount), 0) as value
       FROM orders
       WHERE tenant_id = ?
-      AND order_date::date = CURRENT_DATE
+      AND DATE(order_date) = CURRENT_DATE
       AND order_status NOT IN ('cancelled', 'rejected')
     `, [tenantId]);
 
@@ -1054,14 +1054,14 @@ router.get('/orders', asyncHandler(async (req, res, next) => {
     // Order Trends (last 7 days)
     const trends = await getQuery(`
       SELECT 
-        order_date::date as date,
+        DATE(order_date) as date,
         COUNT(*) as count,
         COALESCE(SUM(total_amount), 0) as value
       FROM orders
       WHERE tenant_id = ?
-      AND order_date >= CURRENT_DATE - INTERVAL '7 days'
+      AND order_date >= DATE('now', '-7 days')
       AND order_status NOT IN ('cancelled', 'rejected')
-      GROUP BY order_date::date
+      GROUP BY DATE(order_date)
       ORDER BY date ASC
     `, [tenantId]);
 
@@ -1137,7 +1137,7 @@ router.get('/admin', asyncHandler(async (req, res, next) => {
       FROM users u
       LEFT JOIN orders o ON o.salesman_id = u.id AND o.order_status NOT IN ('cancelled', 'rejected')
       LEFT JOIN visits v ON v.agent_id = u.id
-      WHERE u.tenant_id = $1
+      WHERE u.tenant_id = ?
       AND u.status = 'active'
       AND u.role IN ('agent', 'sales_agent', 'field_agent')
       GROUP BY u.id
@@ -1150,7 +1150,7 @@ router.get('/admin', asyncHandler(async (req, res, next) => {
       SELECT 
         (SELECT COUNT(*) FROM orders WHERE tenant_id = ? AND payment_status IN ('pending', 'partial')) as pending_payments,
         (SELECT COUNT(*) FROM orders WHERE tenant_id = ? AND order_status IN ('pending', 'confirmed') AND delivery_date < CURRENT_DATE) as overdue_orders,
-        (SELECT COUNT(*) FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND id NOT IN (SELECT DISTINCT agent_id FROM visits WHERE created_at >= CURRENT_DATE - INTERVAL '7 days')) as inactive_agents
+        (SELECT COUNT(*) FROM users WHERE role IN ('agent', 'sales_agent', 'field_agent') AND tenant_id = ? AND id NOT IN (SELECT DISTINCT agent_id FROM visits WHERE created_at >= DATE('now', '-7 days'))) as inactive_agents
     `, [tenantId, tenantId, tenantId]);
 
     res.json({
