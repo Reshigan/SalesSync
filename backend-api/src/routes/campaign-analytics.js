@@ -94,16 +94,16 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
     // Daily performance metrics
     const dailyMetrics = db.prepare(`
       SELECT 
-        fav.visit_date::date as date,
+        DATE(fav.visit_date) as date,
         COUNT(DISTINCT fav.id) as visits,
         COUNT(DISTINCT faa.id) as activities,
         SUM(CASE WHEN o.id IS NOT NULL THEN o.total_amount ELSE 0 END) as sales,
         COUNT(DISTINCT o.id) as orders
       FROM field_agent_visits fav
       LEFT JOIN field_agent_activities faa ON fav.id = faa.visit_id
-      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND o.created_at::date = fav.visit_date::date
+      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND DATE(o.created_at) = DATE(fav.visit_date)
       WHERE fav.campaign_id = ?
-      GROUP BY fav.visit_date::date
+      GROUP BY DATE(fav.visit_date)
       ORDER BY date DESC
       LIMIT 30
     `).all(campaignId);
@@ -120,7 +120,7 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       FROM users u
       JOIN field_agent_visits fav ON u.id = fav.agent_id
       LEFT JOIN field_agent_activities faa ON fav.id = faa.visit_id
-      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND o.created_at::date = fav.visit_date::date
+      LEFT JOIN orders o ON fav.customer_id = o.customer_id AND DATE(o.created_at) = DATE(fav.visit_date)
       WHERE fav.campaign_id = ?
       GROUP BY u.id, u.name
       ORDER BY sales DESC
@@ -138,7 +138,7 @@ router.get('/performance/:campaignId', requireFunction, async (req, res) => {
       JOIN order_items oi ON p.id = oi.product_id
       JOIN orders o ON oi.order_id = o.id
       JOIN field_agent_visits fav ON o.customer_id = fav.customer_id
-      WHERE fav.campaign_id = ? AND o.created_at::date = fav.visit_date::date
+      WHERE fav.campaign_id = ? AND DATE(o.created_at) = DATE(fav.visit_date)
       GROUP BY p.id, p.name, p.code
       ORDER BY revenue DESC
       LIMIT 20
@@ -214,7 +214,7 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
     // ROI trends over time
     const roiTrends = db.prepare(`
       SELECT 
-        c.start_date::date as period,
+        DATE(c.start_date) as period,
         AVG(cp.roi_percentage) as avg_roi,
         SUM(c.budget) as total_budget,
         SUM(cp.total_sales) as total_sales,
@@ -222,7 +222,7 @@ router.get('/roi-analysis', requireFunction, async (req, res) => {
       FROM campaigns c
       LEFT JOIN campaign_performance cp ON c.id = cp.campaign_id
       WHERE c.status IN ('active', 'completed') ${dateFilter} ${typeFilter}
-      GROUP BY c.start_date::date
+      GROUP BY DATE(c.start_date)
       ORDER BY period DESC
       LIMIT 12
     `).all(...params);

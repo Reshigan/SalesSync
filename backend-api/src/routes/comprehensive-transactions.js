@@ -233,12 +233,12 @@ router.get('/transactions', async (req, res) => {
     }
     
     if (date_from) {
-      query += ' AND t.transaction_date::date >= ?';
+      query += ' AND DATE(t.transaction_date) >= ?';
       params.push(date_from);
     }
     
     if (date_to) {
-      query += ' AND t.transaction_date::date <= ?';
+      query += ' AND DATE(t.transaction_date) <= ?';
       params.push(date_to);
     }
     
@@ -292,11 +292,11 @@ router.get('/transactions', async (req, res) => {
       countParams.push(payment_method);
     }
     if (date_from) {
-      countQuery += ' AND t.transaction_date::date >= ?';
+      countQuery += ' AND DATE(t.transaction_date) >= ?';
       countParams.push(date_from);
     }
     if (date_to) {
-      countQuery += ' AND t.transaction_date::date <= ?';
+      countQuery += ' AND DATE(t.transaction_date) <= ?';
       countParams.push(date_to);
     }
     if (amount_min) {
@@ -1090,14 +1090,14 @@ router.get('/dashboard', async (req, res) => {
     
     // Get daily transaction trends (last 30 days)
     const dailyTrends = await getQuery(`
-      SELECT transaction_date::date as date,
+      SELECT DATE(transaction_date) as date,
              COUNT(*) as transaction_count,
              COALESCE(SUM(total_amount), 0) as daily_revenue
       FROM transactions
       WHERE tenant_id = ? 
-        AND transaction_date >= CURRENT_DATE - INTERVAL '30 days'
+        AND transaction_date >= DATE('now', '-30 days')
         AND status = 'completed'
-      GROUP BY transaction_date::date
+      GROUP BY DATE(transaction_date)
       ORDER BY date DESC
     `, [req.user.tenantId]);
     
