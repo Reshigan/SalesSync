@@ -362,13 +362,8 @@ router.post('/:id/receive', async (req, res) => {
               });
             }
 
-            // TODO: Update inventory levels here
-            // This would typically trigger stock movements
-
-            res.json({ 
-              success: true, 
-              message: 'Purchase order received successfully' 
-            });
+            // Update inventory levels for received items
+            updateInventoryForPO(tenantId, id, received_items, res);
           }
         });
       });
@@ -378,6 +373,80 @@ router.post('/:id/receive', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Helper function to update inventory when PO is received
+async function updateInventoryForPO(tenantId, poId, receivedItems, res) {
+  try {
+    // Get PO details to get warehouse_id
+    const po = await getOneQuery(
+      'SELECT warehouse_id FROM purchase_orders WHERE id = ? AND tenant_id = ?',
+      [poId, tenantId]
+    );
+
+    if (!po) {
+      return res.status(404).json({ error: 'Purchase order not found' });
+    }
+
+    const warehouseId = po.warehouse_id;
+    let inventoryErrors = [];
+
+    for (const item of receivedItems) {
+      try {
+        // Check if inventory record exists for this product/warehouse
+        const existingStock = await getOneQuery(
+          'SELECT id, quantity_on_hand FROM inventory_stock WHERE tenant_id = ? AND warehouse_id = ? AND product_id = ?',
+          [tenantId, warehouseId, item.product_id]
+        );
+
+        if (existingStock) {
+          // Update existing inventory record
+          await runQuery(
+            'UPDATE inventory_stock SET quantity_on_hand = quantity_on_hand + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [item.received_quantity, existingStock.id]
+          );
+        } else {
+          // Create new inventory record
+          await runQuery(
+            'INSERT INTO inventory_stock (tenant_id, warehouse_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+            [tenantId, warehouseId, item.product_id, item.received_quantity]
+          );
+        }
+
+        // Create stock movement record for audit trail
+        await runQuery(`
+          INSERT INTO stock_movements (
+            tenant_id, movement_type, product_id, to_warehouse_id, quantity,
+            movement_date, reference_number, reason, status, created_at
+          ) VALUES (?, 'purchase_receipt', ?, ?, ?, DATE('now'), ?, 'PO Receipt', 'completed', CURRENT_TIMESTAMP)
+        `, [tenantId, item.product_id, warehouseId, item.received_quantity, `PO-${poId}`]);
+
+      } catch (itemErr) {
+        inventoryErrors.push(`Product ${item.product_id}: ${itemErr.message}`);
+      }
+    }
+
+    if (inventoryErrors.length > 0) {
+      console.error('Some inventory updates failed:', inventoryErrors);
+      return res.json({ 
+        success: true, 
+        message: 'Purchase order received with some inventory update warnings',
+        warnings: inventoryErrors
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Purchase order received and inventory updated successfully' 
+    });
+  } catch (error) {
+    console.error('Error updating inventory for PO:', error);
+    res.json({ 
+      success: true, 
+      message: 'Purchase order received but inventory update failed',
+      error: error.message
+    });
+  }
+}
 
 // DELETE /api/purchase-orders/:id - Delete purchase order (only if draft)
 router.delete('/:id', async (req, res) => {

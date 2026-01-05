@@ -323,26 +323,36 @@ router.post('/:id/complete', async (req, res) => {
         WHERE id = $1
       `;
 
-      db.run(updateSql, [actualQuantity, variance, notes, userId, id], function(err) {
+      db.run(updateSql, [actualQuantity, variance, notes, userId, id], async function(err) {
         if (err) {
           console.error('Error completing stock movement:', err);
           return res.status(500).json({ error: 'Failed to complete stock movement' });
         }
 
-        // TODO: Update inventory levels here
-        // This would update the inventory table based on movement type:
-        // - transfer: decrease from_warehouse, increase to_warehouse
-        // - adjustment: update warehouse quantity
-        // - return/damage/expired: update warehouse quantity
-
-        res.json({ 
-          success: true, 
-          message: 'Stock movement completed successfully',
-          data: {
-            received_quantity: actualQuantity,
-            variance: variance
-          }
-        });
+        // Update inventory levels based on movement type
+        try {
+          await updateInventoryForMovement(tenantId, movement, actualQuantity);
+          
+          res.json({ 
+            success: true, 
+            message: 'Stock movement completed and inventory updated successfully',
+            data: {
+              received_quantity: actualQuantity,
+              variance: variance
+            }
+          });
+        } catch (invErr) {
+          console.error('Error updating inventory:', invErr);
+          res.json({ 
+            success: true, 
+            message: 'Stock movement completed but inventory update failed',
+            data: {
+              received_quantity: actualQuantity,
+              variance: variance
+            },
+            warning: invErr.message
+          });
+        }
       });
     });
   } catch (error) {
@@ -350,6 +360,91 @@ router.post('/:id/complete', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Helper function to update inventory based on movement type
+async function updateInventoryForMovement(tenantId, movement, actualQuantity) {
+  const { movement_type, product_id, from_warehouse_id, to_warehouse_id } = movement;
+
+  switch (movement_type) {
+    case 'transfer':
+      // Decrease from source warehouse
+      if (from_warehouse_id) {
+        const fromStock = await getOneQuery(
+          'SELECT id, quantity_on_hand FROM inventory_stock WHERE tenant_id = ? AND warehouse_id = ? AND product_id = ?',
+          [tenantId, from_warehouse_id, product_id]
+        );
+        if (fromStock) {
+          await runQuery(
+            'UPDATE inventory_stock SET quantity_on_hand = quantity_on_hand - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [actualQuantity, fromStock.id]
+          );
+        }
+      }
+      // Increase in destination warehouse
+      if (to_warehouse_id) {
+        const toStock = await getOneQuery(
+          'SELECT id, quantity_on_hand FROM inventory_stock WHERE tenant_id = ? AND warehouse_id = ? AND product_id = ?',
+          [tenantId, to_warehouse_id, product_id]
+        );
+        if (toStock) {
+          await runQuery(
+            'UPDATE inventory_stock SET quantity_on_hand = quantity_on_hand + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [actualQuantity, toStock.id]
+          );
+        } else {
+          // Create new inventory record in destination warehouse
+          await runQuery(
+            'INSERT INTO inventory_stock (tenant_id, warehouse_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+            [tenantId, to_warehouse_id, product_id, actualQuantity]
+          );
+        }
+      }
+      break;
+
+    case 'adjustment':
+      // Adjustment can be positive or negative, applied to to_warehouse
+      const warehouseId = to_warehouse_id || from_warehouse_id;
+      if (warehouseId) {
+        const stock = await getOneQuery(
+          'SELECT id, quantity_on_hand FROM inventory_stock WHERE tenant_id = ? AND warehouse_id = ? AND product_id = ?',
+          [tenantId, warehouseId, product_id]
+        );
+        if (stock) {
+          await runQuery(
+            'UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [actualQuantity, stock.id]
+          );
+        } else {
+          await runQuery(
+            'INSERT INTO inventory_stock (tenant_id, warehouse_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+            [tenantId, warehouseId, product_id, actualQuantity]
+          );
+        }
+      }
+      break;
+
+    case 'return':
+    case 'damage':
+    case 'expired':
+      // These reduce inventory from the source warehouse
+      if (from_warehouse_id) {
+        const srcStock = await getOneQuery(
+          'SELECT id, quantity_on_hand FROM inventory_stock WHERE tenant_id = ? AND warehouse_id = ? AND product_id = ?',
+          [tenantId, from_warehouse_id, product_id]
+        );
+        if (srcStock) {
+          await runQuery(
+            'UPDATE inventory_stock SET quantity_on_hand = quantity_on_hand - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [actualQuantity, srcStock.id]
+          );
+        }
+      }
+      break;
+
+    default:
+      console.warn(`Unknown movement type: ${movement_type}`);
+  }
+}
 
 // POST /api/stock-movements/:id/cancel - Cancel stock movement
 router.post('/:id/cancel', async (req, res) => {
