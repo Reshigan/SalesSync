@@ -588,6 +588,11 @@ async function startServer() {
     logger.info('Mounting fraud prevention routes...');
     app.use('/api/individuals', authTenantMiddleware, individualsRoutes);
 
+    // Image Analysis routes
+    logger.info('Mounting image analysis routes...');
+    const imageAnalysisRoutes = require('./routes/image-analysis');
+    app.use('/api/image-analysis', authTenantMiddleware, imageAnalysisRoutes);
+
     logger.info('Routes configured successfully');
 
     // Error handling (must be after routes)
