@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { refundsService } from '../../services/refunds.service'
 
 interface Refund {
   id: string
@@ -19,7 +21,28 @@ export const RefundProcessingPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockRefunds: Refund[] = []
+  const { data: refundsData, isLoading } = useQuery({
+    queryKey: ['refunds', statusFilter, page],
+    queryFn: () => refundsService.getRefunds({ 
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      page, 
+      limit 
+    }),
+  })
+
+  const refunds: Refund[] = (refundsData?.data?.refunds || refundsData?.refunds || []).map((r: any) => ({
+    id: r.id,
+    refund_number: r.refund_number || `REF-${r.id?.slice(0, 8)}`,
+    order_id: r.order_id,
+    order_number: r.order_number || 'N/A',
+    customer_name: r.customer_name || 'Unknown Customer',
+    request_date: r.request_date || r.created_at,
+    processed_date: r.processed_date,
+    amount: r.amount || 0,
+    refund_method: r.refund_method || 'original_payment',
+    reason: r.reason || '',
+    status: r.status || 'pending'
+  }))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -49,8 +72,8 @@ export const RefundProcessingPage: React.FC = () => {
   }
 
   const filteredRefunds = statusFilter === 'all'
-    ? mockRefunds
-    : mockRefunds.filter(r => r.status === statusFilter)
+    ? refunds
+    : refunds.filter(r => r.status === statusFilter)
 
   return (
     <div className="space-y-6">
@@ -73,7 +96,7 @@ export const RefundProcessingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockRefunds.filter(r => r.status === 'pending').length}
+                {refunds.filter(r => r.status === 'pending').length}
               </p>
             </div>
           </div>
@@ -89,7 +112,7 @@ export const RefundProcessingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Approved</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockRefunds.filter(r => r.status === 'approved').length}
+                {refunds.filter(r => r.status === 'approved').length}
               </p>
             </div>
           </div>
@@ -105,7 +128,7 @@ export const RefundProcessingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Processing</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockRefunds.filter(r => r.status === 'processing').length}
+                {refunds.filter(r => r.status === 'processing').length}
               </p>
             </div>
           </div>
@@ -121,7 +144,7 @@ export const RefundProcessingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Completed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockRefunds.filter(r => r.status === 'completed').length}
+                {refunds.filter(r => r.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -137,7 +160,7 @@ export const RefundProcessingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockRefunds.reduce((sum, r) => sum + r.amount, 0))}
+                {formatCurrency(refunds.reduce((sum, r) => sum + r.amount, 0))}
               </p>
             </div>
           </div>

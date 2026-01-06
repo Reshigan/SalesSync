@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ordersService } from '../../services/orders.service'
+import { returnsService } from '../../services/returns.service'
 
 interface Return {
   id: string
@@ -19,7 +19,26 @@ export const ReturnManagementPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockReturns: Return[] = []
+  const { data: returnsData, isLoading } = useQuery({
+    queryKey: ['returns', statusFilter, page],
+    queryFn: () => returnsService.getReturns({ 
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      page, 
+      limit 
+    }),
+  })
+
+  const returns: Return[] = (returnsData?.data?.returns || returnsData?.returns || []).map((r: any) => ({
+    id: r.id,
+    order_id: r.order_id,
+    order_number: r.order_number || r.return_number || 'N/A',
+    customer_name: r.customer_name || 'Unknown Customer',
+    return_date: r.return_date || r.created_at,
+    reason: r.reason || '',
+    status: r.status || 'pending',
+    refund_amount: r.total_amount || r.refund_amount || 0,
+    items_count: r.items?.length || 0
+  }))
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -39,8 +58,8 @@ export const ReturnManagementPage: React.FC = () => {
   }
 
   const filteredReturns = statusFilter === 'all'
-    ? mockReturns
-    : mockReturns.filter(r => r.status === statusFilter)
+    ? returns
+    : returns.filter(r => r.status === statusFilter)
 
   return (
     <div className="space-y-6">
@@ -63,7 +82,7 @@ export const ReturnManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending Returns</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockReturns.filter(r => r.status === 'pending').length}
+                {returns.filter(r => r.status === 'pending').length}
               </p>
             </div>
           </div>
@@ -79,7 +98,7 @@ export const ReturnManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Approved</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockReturns.filter(r => r.status === 'approved').length}
+                {returns.filter(r => r.status === 'approved').length}
               </p>
             </div>
           </div>
@@ -95,7 +114,7 @@ export const ReturnManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Completed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockReturns.filter(r => r.status === 'completed').length}
+                {returns.filter(r => r.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -111,7 +130,7 @@ export const ReturnManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Refunds</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockReturns.reduce((sum, r) => sum + r.refund_amount, 0))}
+                {formatCurrency(returns.reduce((sum, r) => sum + r.refund_amount, 0))}
               </p>
             </div>
           </div>
