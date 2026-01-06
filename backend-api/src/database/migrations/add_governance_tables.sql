@@ -162,6 +162,52 @@ CREATE INDEX IF NOT EXISTS idx_integration_sync_log_config ON integration_sync_l
 CREATE INDEX IF NOT EXISTS idx_integration_sync_log_entity ON integration_sync_log(entity_type, entity_id);
 
 -- ============================================
+-- COMMISSION REVERSAL TABLES
+-- ============================================
+
+-- Commission reversals for returns
+CREATE TABLE IF NOT EXISTS commission_reversals (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    commission_id TEXT NOT NULL,
+    return_id TEXT NOT NULL,
+    original_amount REAL NOT NULL,
+    reversal_amount REAL NOT NULL,
+    reason TEXT,
+    created_by TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (commission_id) REFERENCES commissions(id),
+    FOREIGN KEY (return_id) REFERENCES returns(id),
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_commission_reversals_tenant ON commission_reversals(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_commission_reversals_commission ON commission_reversals(commission_id);
+CREATE INDEX IF NOT EXISTS idx_commission_reversals_return ON commission_reversals(return_id);
+
+-- Commission deductions for future payouts (when commission was already paid)
+CREATE TABLE IF NOT EXISTS commission_deductions (
+    id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL,
+    agent_id TEXT NOT NULL,
+    amount REAL NOT NULL,
+    reason TEXT,
+    reference_type TEXT,
+    reference_id TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'applied', 'cancelled')),
+    applied_to_payout_id TEXT,
+    applied_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id),
+    FOREIGN KEY (agent_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_commission_deductions_tenant ON commission_deductions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_commission_deductions_agent ON commission_deductions(agent_id);
+CREATE INDEX IF NOT EXISTS idx_commission_deductions_status ON commission_deductions(tenant_id, status);
+
+-- ============================================
 -- BACKUP TABLES
 -- ============================================
 

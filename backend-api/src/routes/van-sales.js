@@ -227,9 +227,28 @@ router.get('/vans/:vanId/inventory', asyncHandler(async (req, res) => {
   const { vanId } = req.params;
   const tenantId = req.tenantId;
   
+  const inventory = await getQuery(`
+    SELECT 
+      vi.id,
+      vi.van_id,
+      vi.product_id,
+      vi.quantity,
+      vi.reserved_quantity,
+      vi.updated_at,
+      p.name as product_name,
+      p.code as product_sku,
+      p.price as unit_price,
+      c.name as category_name
+    FROM van_inventory vi
+    LEFT JOIN products p ON vi.product_id = p.id
+    LEFT JOIN categories c ON p.category_id = c.id
+    WHERE vi.van_id = ? AND vi.tenant_id = ?
+    ORDER BY p.name
+  `, [vanId, tenantId]);
+
   res.json({
     success: true,
-    data: []
+    data: inventory || []
   });
 }));
 
@@ -514,10 +533,40 @@ router.get('/trends', asyncHandler(async (req, res) => {
 router.get('/agent/:agentId', asyncHandler(async (req, res) => {
   const { agentId } = req.params;
   const tenantId = req.tenantId;
+  const { start_date, end_date, status } = req.query;
+  
+  let query = `
+    SELECT 
+      vs.*,
+      v.registration_number as van_registration,
+      c.name as customer_name
+    FROM van_sales vs
+    LEFT JOIN vans v ON vs.van_id = v.id
+    LEFT JOIN customers c ON vs.customer_id = c.id
+    WHERE vs.agent_id = ? AND vs.tenant_id = ?
+  `;
+  const params = [agentId, tenantId];
+
+  if (start_date) {
+    query += ' AND vs.sale_date >= ?';
+    params.push(start_date);
+  }
+  if (end_date) {
+    query += ' AND vs.sale_date <= ?';
+    params.push(end_date);
+  }
+  if (status) {
+    query += ' AND vs.status = ?';
+    params.push(status);
+  }
+
+  query += ' ORDER BY vs.created_at DESC';
+
+  const sales = await getQuery(query, params);
   
   res.json({
     success: true,
-    data: []
+    data: sales || []
   });
 }));
 
@@ -569,10 +618,73 @@ router.get('/:id', asyncHandler(async (req, res) => {
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
+  const {
+    customer_id,
+    sale_date,
+    sale_type,
+    payment_method,
+    payment_reference,
+    amount_paid,
+    notes,
+    status
+  } = req.body;
+
+  // Check if van sale exists
+  const existingSale = await getOneQuery(
+    'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+    [id, tenantId]
+  );
+
+  if (!existingSale) {
+    return res.status(404).json({
+      success: false,
+      message: 'Van sale not found'
+    });
+  }
+
+  // Build update query dynamically
+  const updates = [];
+  const params = [];
+
+  if (customer_id !== undefined) { updates.push('customer_id = ?'); params.push(customer_id); }
+  if (sale_date !== undefined) { updates.push('sale_date = ?'); params.push(sale_date); }
+  if (sale_type !== undefined) { updates.push('sale_type = ?'); params.push(sale_type); }
+  if (payment_method !== undefined) { updates.push('payment_method = ?'); params.push(payment_method); }
+  if (payment_reference !== undefined) { updates.push('payment_reference = ?'); params.push(payment_reference); }
+  if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
+  if (status !== undefined) { updates.push('status = ?'); params.push(status); }
   
-  return res.status(404).json({
-    success: false,
-    message: 'Van sale not found'
+  if (amount_paid !== undefined) {
+    updates.push('amount_paid = ?');
+    params.push(amount_paid);
+    updates.push('amount_due = total_amount - ?');
+    params.push(amount_paid);
+  }
+
+  if (updates.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'No fields to update'
+    });
+  }
+
+  updates.push('updated_at = CURRENT_TIMESTAMP');
+  params.push(id, tenantId);
+
+  await runQuery(
+    `UPDATE van_sales SET ${updates.join(', ')} WHERE id = ? AND tenant_id = ?`,
+    params
+  );
+
+  // Fetch updated sale
+  const updatedSale = await getOneQuery(
+    'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+    [id, tenantId]
+  );
+
+  res.json({
+    success: true,
+    data: updatedSale
   });
 }));
 
@@ -580,10 +692,29 @@ router.put('/:id', asyncHandler(async (req, res) => {
 router.delete('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.tenantId;
+
+  // Check if van sale exists
+  const existingSale = await getOneQuery(
+    'SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?',
+    [id, tenantId]
+  );
+
+  if (!existingSale) {
+    return res.status(404).json({
+      success: false,
+      message: 'Van sale not found'
+    });
+  }
+
+  // Delete sale items first
+  await runQuery('DELETE FROM van_sale_items WHERE van_sale_id = ?', [id]);
   
-  return res.status(404).json({
-    success: false,
-    message: 'Van sale not found'
+  // Delete the sale
+  await runQuery('DELETE FROM van_sales WHERE id = ? AND tenant_id = ?', [id, tenantId]);
+
+  res.json({
+    success: true,
+    message: 'Van sale deleted successfully'
   });
 }));
 

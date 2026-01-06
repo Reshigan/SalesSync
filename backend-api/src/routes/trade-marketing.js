@@ -148,25 +148,88 @@ router.get('/promotions', async (req, res) => {
         pc.start_date as startDate,
         pc.end_date as endDate,
         pc.budget,
-        0 as spent,
+        COALESCE(pc.actual_cost, 0) as spent,
         pc.target_activations as participatingRetailers,
-        'Beverages' as category,
-        'Retail' as channel
+        COALESCE(pc.category, 'General') as category,
+        COALESCE(pc.channel, 'Retail') as channel,
+        pc.expected_roi,
+        pc.created_at
       FROM promotional_campaigns pc
       WHERE pc.tenant_id = ?
       ORDER BY pc.created_at DESC
     `, [tenantId]);
 
-    // Add performance data for each promotion
-    const promotionsWithPerformance = promotions.map(promo => ({
-      ...promo,
-      expectedROI: 3.5,
-      actualROI: promo.status === 'completed' ? 3.8 : null,
-      performance: {
-        volumeImpact: 15.2,
-        revenueImpact: 18.7,
-        marginImpact: 12.4
+    // Calculate actual performance data for each promotion from sales data
+    const promotionsWithPerformance = await Promise.all(promotions.map(async (promo) => {
+      let actualROI = null;
+      let volumeImpact = 0;
+      let revenueImpact = 0;
+      let marginImpact = 0;
+
+      // Only calculate actual metrics for active or completed promotions
+      if (promo.status === 'active' || promo.status === 'completed') {
+        // Get sales during promotion period
+        const promoSales = await getQuery(`
+          SELECT 
+            COALESCE(SUM(o.total_amount), 0) as promo_revenue,
+            COALESCE(SUM(oi.quantity), 0) as promo_volume
+          FROM orders o
+          JOIN order_items oi ON o.id = oi.order_id
+          WHERE o.tenant_id = ?
+            AND o.created_at >= ?
+            AND o.created_at <= COALESCE(?, CURRENT_TIMESTAMP)
+        `, [tenantId, promo.startDate, promo.endDate]);
+
+        // Get baseline sales (same duration before promotion)
+        const promoDuration = promo.endDate ? 
+          Math.ceil((new Date(promo.endDate) - new Date(promo.startDate)) / (1000 * 60 * 60 * 24)) : 30;
+        
+        const baselineStart = new Date(promo.startDate);
+        baselineStart.setDate(baselineStart.getDate() - promoDuration);
+        
+        const baselineSales = await getQuery(`
+          SELECT 
+            COALESCE(SUM(o.total_amount), 0) as baseline_revenue,
+            COALESCE(SUM(oi.quantity), 0) as baseline_volume
+          FROM orders o
+          JOIN order_items oi ON o.id = oi.order_id
+          WHERE o.tenant_id = ?
+            AND o.created_at >= ?
+            AND o.created_at < ?
+        `, [tenantId, baselineStart.toISOString(), promo.startDate]);
+
+        const promoRevenue = promoSales[0]?.promo_revenue || 0;
+        const promoVolume = promoSales[0]?.promo_volume || 0;
+        const baselineRevenue = baselineSales[0]?.baseline_revenue || 1;
+        const baselineVolume = baselineSales[0]?.baseline_volume || 1;
+
+        // Calculate impacts
+        volumeImpact = baselineVolume > 0 ? 
+          parseFloat((((promoVolume - baselineVolume) / baselineVolume) * 100).toFixed(1)) : 0;
+        revenueImpact = baselineRevenue > 0 ? 
+          parseFloat((((promoRevenue - baselineRevenue) / baselineRevenue) * 100).toFixed(1)) : 0;
+        
+        // Margin impact (revenue increase minus promotion cost as % of baseline)
+        const spent = promo.spent || 0;
+        marginImpact = baselineRevenue > 0 ? 
+          parseFloat((((promoRevenue - baselineRevenue - spent) / baselineRevenue) * 100).toFixed(1)) : 0;
+
+        // Calculate actual ROI (revenue generated / spend)
+        if (spent > 0) {
+          actualROI = parseFloat(((promoRevenue - baselineRevenue) / spent).toFixed(2));
+        }
       }
+
+      return {
+        ...promo,
+        expectedROI: promo.expected_roi || (promo.budget > 0 ? 3.0 : null),
+        actualROI,
+        performance: {
+          volumeImpact: isFinite(volumeImpact) ? volumeImpact : 0,
+          revenueImpact: isFinite(revenueImpact) ? revenueImpact : 0,
+          marginImpact: isFinite(marginImpact) ? marginImpact : 0
+        }
+      };
     }));
 
     res.json({

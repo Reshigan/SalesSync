@@ -294,7 +294,7 @@ router.post('/returns', async (req, res) => {
 
 /**
  * POST /api/orders-enhanced/returns/:id/approve
- * Approve a return and restock inventory
+ * Approve a return, restock inventory, and reverse commissions
  */
 router.post('/returns/:id/approve', async (req, res) => {
   try {
@@ -333,9 +333,52 @@ router.post('/returns/:id/approve', async (req, res) => {
       }
     }
 
+    // Reverse commissions for the returned items
+    const orderId = returnRecord.order_id;
+    if (orderId) {
+      // Find commissions associated with this order
+      const commissions = await getQuery(`
+        SELECT c.* FROM commissions c
+        WHERE c.order_id = ? AND c.tenant_id = ? AND c.status IN ('pending', 'approved', 'paid')
+      `, [orderId, tenantId]);
+
+      for (const commission of commissions) {
+        // Calculate reversal amount proportional to return value vs order total
+        const order = await getOneQuery('SELECT total_amount FROM orders WHERE id = ?', [orderId]);
+        const orderTotal = parseFloat(order?.total_amount) || 1;
+        const returnTotal = parseFloat(returnRecord.total_amount) || 0;
+        const reversalRatio = Math.min(returnTotal / orderTotal, 1);
+        const reversalAmount = parseFloat(commission.amount) * reversalRatio;
+
+        if (reversalAmount > 0) {
+          // Create commission reversal record
+          const reversalId = uuidv4();
+          await runQuery(`
+            INSERT INTO commission_reversals (id, tenant_id, commission_id, return_id, original_amount, reversal_amount, reason, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'Return approved - commission reversed', ?, CURRENT_TIMESTAMP)
+          `, [reversalId, tenantId, commission.id, id, commission.amount, reversalAmount, userId]);
+
+          // Update commission amount (reduce by reversal amount)
+          const newAmount = Math.max(0, parseFloat(commission.amount) - reversalAmount);
+          await runQuery(`
+            UPDATE commissions SET amount = ?, notes = COALESCE(notes, '') || ' [Partial reversal due to return]', updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+          `, [newAmount, commission.id]);
+
+          // If commission was already paid, create a deduction record for next payout
+          if (commission.status === 'paid') {
+            await runQuery(`
+              INSERT INTO commission_deductions (id, tenant_id, agent_id, amount, reason, reference_type, reference_id, created_at)
+              VALUES (?, ?, ?, ?, 'Return reversal - deducted from future payout', 'commission_reversal', ?, CURRENT_TIMESTAMP)
+            `, [uuidv4(), tenantId, commission.agent_id, reversalAmount, reversalId]);
+          }
+        }
+      }
+    }
+
     res.json({
       success: true,
-      message: 'Return approved and inventory restocked'
+      message: 'Return approved, inventory restocked, and commissions reversed'
     });
   } catch (error) {
     console.error('Error approving return:', error);
