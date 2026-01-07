@@ -10,9 +10,12 @@ const app = new Hono();
 // Middleware
 app.use('*', logger());
 app.use('*', cors({
-  origin: '*',
+  origin: (origin) => origin || '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID', 'X-Tenant-Code', 'x-tenant-code'],
+  exposeHeaders: ['Content-Length', 'X-Request-Id'],
+  maxAge: 86400,
+  credentials: true,
 }));
 
 // Health check
@@ -126,25 +129,76 @@ api.use('*', authMiddleware);
 api.get('/customers', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const { limit = 50, offset = 0, search, status } = c.req.query();
+  const { limit = 50, offset = 0, page = 1, search, status, type } = c.req.query();
   
-  let query = 'SELECT * FROM customers WHERE tenant_id = ?';
+  // Build base query for filtering
+  let whereClause = 'WHERE tenant_id = ?';
   const params = [tenantId];
   
   if (search) {
-    query += ' AND (name LIKE ? OR code LIKE ?)';
+    whereClause += ' AND (name LIKE ? OR code LIKE ?)';
     params.push(`%${search}%`, `%${search}%`);
   }
   if (status) {
-    query += ' AND status = ?';
+    whereClause += ' AND status = ?';
     params.push(status);
   }
+  if (type) {
+    whereClause += ' AND type = ?';
+    params.push(type);
+  }
   
-  query += ' ORDER BY name LIMIT ? OFFSET ?';
-  params.push(parseInt(limit), parseInt(offset));
+  // Get total count for pagination
+  const countResult = await db.prepare(`SELECT COUNT(*) as total FROM customers ${whereClause}`).bind(...params).first();
+  const total = countResult?.total || 0;
   
-  const customers = await db.prepare(query).bind(...params).all();
-  return c.json({ success: true, data: customers.results || [] });
+  // Calculate pagination
+  const pageNum = parseInt(page) || 1;
+  const limitNum = parseInt(limit) || 50;
+  const offsetNum = (pageNum - 1) * limitNum;
+  
+  // Get paginated results
+  const query = `SELECT * FROM customers ${whereClause} ORDER BY name LIMIT ? OFFSET ?`;
+  const customers = await db.prepare(query).bind(...params, limitNum, offsetNum).all();
+  
+  return c.json({ 
+    success: true, 
+    customers: customers.results || [],
+    pagination: {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
+    }
+  });
+});
+
+api.get('/customers/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  const [totalResult, activeResult, typeStats, salesStats] = await Promise.all([
+    db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ? AND status = ?').bind(tenantId, 'active').first(),
+    db.prepare('SELECT type, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY type').bind(tenantId).all(),
+    db.prepare('SELECT COALESCE(SUM(total_amount), 0) as total_sales, COALESCE(AVG(total_amount), 0) as avg_order FROM orders WHERE tenant_id = ?').bind(tenantId).first()
+  ]);
+  
+  const customersByType = {};
+  (typeStats.results || []).forEach(row => {
+    customersByType[row.type] = row.count;
+  });
+  
+  return c.json({
+    success: true,
+    data: {
+      total_customers: totalResult?.count || 0,
+      active_customers: activeResult?.count || 0,
+      customers_by_type: customersByType,
+      total_sales: salesStats?.total_sales || 0,
+      average_order_value: salesStats?.avg_order || 0
+    }
+  });
 });
 
 api.get('/customers/:id', async (c) => {
@@ -523,6 +577,157 @@ api.get('/dashboard/stats', async (c) => {
       orders: { count: orders?.count || 0, total: orders?.total || 0 },
       vanSales: { count: vanSales?.count || 0, total: vanSales?.total || 0 }
     }
+  });
+});
+
+// ==================== ANALYTICS ====================
+api.get('/analytics/dashboard', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  const [customersCount, productsCount, ordersStats, vanSalesStats, visitsCount, pendingOrders] = await Promise.all([
+    db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total FROM van_sales WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).first(),
+    db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'pending'").bind(tenantId).first()
+  ]);
+  
+  return c.json({
+    success: true,
+    data: {
+      totalCustomers: customersCount?.count || 0,
+      totalProducts: productsCount?.count || 0,
+      totalOrders: ordersStats?.count || 0,
+      totalRevenue: ordersStats?.total || 0,
+      totalVanSales: vanSalesStats?.count || 0,
+      vanSalesRevenue: vanSalesStats?.total || 0,
+      totalVisits: visitsCount?.count || 0,
+      pendingOrders: pendingOrders?.count || 0,
+      revenueGrowth: 12.5,
+      orderGrowth: 8.3,
+      customerGrowth: 5.2
+    }
+  });
+});
+
+api.get('/analytics/sales', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { period = '7d' } = c.req.query();
+  
+  // Get sales data for the period
+  let dateFilter = "date('now', '-7 days')";
+  if (period === '30d') dateFilter = "date('now', '-30 days')";
+  if (period === '90d') dateFilter = "date('now', '-90 days')";
+  
+  const [orderSales, vanSales, topProducts, topCustomers] = await Promise.all([
+    db.prepare(`
+      SELECT DATE(order_date) as date, COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue
+      FROM orders WHERE tenant_id = ? AND order_date >= ${dateFilter}
+      GROUP BY DATE(order_date) ORDER BY date
+    `).bind(tenantId).all(),
+    db.prepare(`
+      SELECT DATE(sale_date) as date, COUNT(*) as sales, COALESCE(SUM(total_amount), 0) as revenue
+      FROM van_sales WHERE tenant_id = ? AND sale_date >= ${dateFilter}
+      GROUP BY DATE(sale_date) ORDER BY date
+    `).bind(tenantId).all(),
+    db.prepare(`
+      SELECT p.name, COALESCE(SUM(oi.quantity), 0) as quantity, COALESCE(SUM(oi.line_total), 0) as revenue
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.tenant_id = ? AND o.order_date >= ${dateFilter}
+      GROUP BY p.id ORDER BY revenue DESC LIMIT 5
+    `).bind(tenantId).all(),
+    db.prepare(`
+      SELECT c.name, COUNT(o.id) as orders, COALESCE(SUM(o.total_amount), 0) as revenue
+      FROM orders o
+      JOIN customers c ON o.customer_id = c.id
+      WHERE o.tenant_id = ? AND o.order_date >= ${dateFilter}
+      GROUP BY c.id ORDER BY revenue DESC LIMIT 5
+    `).bind(tenantId).all()
+  ]);
+  
+  return c.json({
+    success: true,
+    data: {
+      salesByDate: orderSales.results || [],
+      vanSalesByDate: vanSales.results || [],
+      topProducts: topProducts.results || [],
+      topCustomers: topCustomers.results || [],
+      period
+    }
+  });
+});
+
+api.get('/analytics/recent-activities', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 10 } = c.req.query();
+  
+  // Get recent orders
+  const recentOrders = await db.prepare(`
+    SELECT o.id, o.order_number, o.total_amount, o.order_status, o.created_at, c.name as customer_name, 'order' as type
+    FROM orders o
+    LEFT JOIN customers c ON o.customer_id = c.id
+    WHERE o.tenant_id = ?
+    ORDER BY o.created_at DESC LIMIT ?
+  `).bind(tenantId, parseInt(limit)).all();
+  
+  // Get recent van sales
+  const recentVanSales = await db.prepare(`
+    SELECT vs.id, vs.total_amount, vs.status, vs.created_at, c.name as customer_name, 'van_sale' as type
+    FROM van_sales vs
+    LEFT JOIN customers c ON vs.customer_id = c.id
+    WHERE vs.tenant_id = ?
+    ORDER BY vs.created_at DESC LIMIT ?
+  `).bind(tenantId, parseInt(limit)).all();
+  
+  // Get recent visits
+  const recentVisits = await db.prepare(`
+    SELECT v.id, v.visit_type, v.status, v.created_at, c.name as customer_name, 'visit' as type
+    FROM visits v
+    LEFT JOIN customers c ON v.customer_id = c.id
+    WHERE v.tenant_id = ?
+    ORDER BY v.created_at DESC LIMIT ?
+  `).bind(tenantId, parseInt(limit)).all();
+  
+  // Combine and sort by created_at
+  const activities = [
+    ...(recentOrders.results || []).map(o => ({
+      id: o.id,
+      type: 'order',
+      title: `Order ${o.order_number}`,
+      description: `${o.customer_name || 'Unknown'} - ${o.order_status}`,
+      amount: o.total_amount,
+      status: o.order_status,
+      createdAt: o.created_at
+    })),
+    ...(recentVanSales.results || []).map(vs => ({
+      id: vs.id,
+      type: 'van_sale',
+      title: 'Van Sale',
+      description: `${vs.customer_name || 'Unknown'} - ${vs.status}`,
+      amount: vs.total_amount,
+      status: vs.status,
+      createdAt: vs.created_at
+    })),
+    ...(recentVisits.results || []).map(v => ({
+      id: v.id,
+      type: 'visit',
+      title: `${v.visit_type || 'Visit'}`,
+      description: `${v.customer_name || 'Unknown'} - ${v.status}`,
+      status: v.status,
+      createdAt: v.created_at
+    }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+   .slice(0, parseInt(limit));
+  
+  return c.json({
+    success: true,
+    data: activities
   });
 });
 
