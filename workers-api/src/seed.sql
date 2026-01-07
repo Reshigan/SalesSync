@@ -6,7 +6,7 @@ VALUES ('default-tenant-001', 'Demo Company', 'DEMO', 'demo.salessync.com', 'act
 
 -- Admin user (password: admin123)
 INSERT OR IGNORE INTO users (id, tenant_id, email, password_hash, first_name, last_name, phone, role, status, created_at)
-VALUES ('admin-user-001', 'default-tenant-001', 'admin@demo.com', '$2a$10$rQnM1.5xJ5Z5Z5Z5Z5Z5ZuZ5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', 'Admin', 'User', '+1234567890', 'admin', 'active', datetime('now'));
+VALUES ('admin-user-001', 'default-tenant-001', 'admin@demo.com', '$2b$10$KjbItQZTANkje1iozLTl3e9v57UTrSkwo12chehtr8IEr6HMhBGky', 'Admin', 'User', '+1234567890', 'admin', 'active', datetime('now'));
 
 -- Sample regions
 INSERT OR IGNORE INTO regions (id, tenant_id, name, code, status, created_at)
