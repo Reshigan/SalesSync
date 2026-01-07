@@ -1,0 +1,19 @@
+name = "salessync-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "salessync-db"
+database_id = "462033c0-2856-44cd-b559-3e781f24b9af"
+
+[[r2_buckets]]
+binding = "UPLOADS"
+bucket_name = "salessync-uploads"
+
+[placement]
+mode = "smart"
