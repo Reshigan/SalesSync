@@ -163,12 +163,14 @@ api.get('/customers', async (c) => {
   
   return c.json({ 
     success: true, 
-    customers: customers.results || [],
-    pagination: {
-      total,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(total / limitNum)
+    data: {
+      customers: customers.results || [],
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      }
     }
   });
 });
