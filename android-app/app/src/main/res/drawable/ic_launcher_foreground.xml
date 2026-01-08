@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Background circle -->
+    <path
+        android:fillColor="#2563EB"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+    
+    <!-- S letter stylized -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30c-8.8,0 -16,5.4 -16,12c0,4.4 3.2,8.2 8,10.2l8,3.2c3.2,1.2 5.2,3.4 5.2,6c0,3.8 -4,6.6 -9.2,6.6c-4.4,0 -8.2,-2 -10,-5l-4.8,4c2.8,4.4 8.4,7 14.8,7c8.8,0 16,-5.4 16,-12c0,-4.4 -3.2,-8.2 -8,-10.2l-8,-3.2c-3.2,-1.2 -5.2,-3.4 -5.2,-6c0,-3.8 4,-6.6 9.2,-6.6c3.6,0 6.8,1.4 8.8,3.8l4.4,-4.2c-3,-3.4 -7.8,-5.6 -13.2,-5.6z"/>
+    
+    <!-- Sync arrows -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M74,44l6,-6l-2,-2l-10,10l10,10l2,-2l-6,-6h10v-4z"/>
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M34,64l-6,6l2,2l10,-10l-10,-10l-2,2l6,6h-10v4z"/>
+</vector>

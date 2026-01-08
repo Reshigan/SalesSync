@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SalesSync</string>
+    <string name="app_description">Field Force Management &amp; Van Sales Platform</string>
+    
+    <!-- Auth -->
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="tenant_code">Company Code</string>
+    <string name="login_button">Sign In</string>
+    <string name="login_error">Login failed. Please check your credentials.</string>
+    
+    <!-- Navigation -->
+    <string name="dashboard">Dashboard</string>
+    <string name="customers">Customers</string>
+    <string name="products">Products</string>
+    <string name="orders">Orders</string>
+    <string name="van_sales">Van Sales</string>
+    <string name="visits">Visits</string>
+    <string name="settings">Settings</string>
+    
+    <!-- Dashboard -->
+    <string name="total_revenue">Total Revenue</string>
+    <string name="active_customers">Active Customers</string>
+    <string name="pending_orders">Pending Orders</string>
+    <string name="today_visits">Today\'s Visits</string>
+    
+    <!-- Customers -->
+    <string name="search_customers">Search customers...</string>
+    <string name="customer_details">Customer Details</string>
+    <string name="credit_limit">Credit Limit</string>
+    <string name="payment_terms">Payment Terms</string>
+    <string name="days">days</string>
+    
+    <!-- Orders -->
+    <string name="new_order">New Order</string>
+    <string name="order_total">Order Total</string>
+    <string name="submit_order">Submit Order</string>
+    <string name="order_submitted">Order submitted successfully</string>
+    
+    <!-- Van Sales -->
+    <string name="start_sale">Start Sale</string>
+    <string name="complete_sale">Complete Sale</string>
+    <string name="add_item">Add Item</string>
+    <string name="sale_total">Sale Total</string>
+    
+    <!-- Visits -->
+    <string name="check_in">Check In</string>
+    <string name="check_out">Check Out</string>
+    <string name="visit_notes">Visit Notes</string>
+    <string name="location_required">Location permission required for check-in</string>
+    
+    <!-- Common -->
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
+    <string name="offline_mode">Offline Mode</string>
+    <string name="sync_pending">Sync Pending</string>
+    <string name="last_synced">Last synced: %1$s</string>
+</resources>
