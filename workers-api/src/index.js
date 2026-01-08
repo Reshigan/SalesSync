@@ -621,6 +621,219 @@ api.post('/returns', async (c) => {
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
 });
 
+// ==================== ORDERS-ENHANCED RETURNS (for frontend compatibility) ====================
+api.get('/orders-enhanced/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, order_id } = c.req.query();
+  
+  let query = 'SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON o.customer_id = c.id WHERE r.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND r.status = ?';
+    params.push(status);
+  }
+  if (order_id) {
+    query += ' AND r.order_id = ?';
+    params.push(order_id);
+  }
+  
+  query += ' ORDER BY r.created_at DESC';
+  
+  const returns = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: returns.results || [] });
+});
+
+api.get('/orders-enhanced/returns/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  
+  const returnItem = await db.prepare('SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON o.customer_id = c.id WHERE r.id = ? AND r.tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!returnItem) {
+    return c.json({ success: false, error: 'Return not found' }, 404);
+  }
+  
+  return c.json({ success: true, data: returnItem });
+});
+
+api.post('/orders-enhanced/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
+  
+  await db.prepare(`
+    INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
+    VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
+  
+  return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
+});
+
+api.post('/orders-enhanced/returns/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  
+  await db.prepare('UPDATE returns SET status = ? WHERE id = ? AND tenant_id = ?').bind('approved', id, tenantId).run();
+  
+  return c.json({ success: true, message: 'Return approved' });
+});
+
+api.post('/orders-enhanced/returns/:id/reject', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  
+  await db.prepare('UPDATE returns SET status = ?, rejection_reason = ? WHERE id = ? AND tenant_id = ?').bind('rejected', body.reason, id, tenantId).run();
+  
+  return c.json({ success: true, message: 'Return rejected' });
+});
+
+api.post('/orders-enhanced/returns/:id/credit-note', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const returnId = c.req.param('id');
+  
+  // Get return details
+  const returnItem = await db.prepare('SELECT * FROM returns WHERE id = ? AND tenant_id = ?').bind(returnId, tenantId).first();
+  
+  if (!returnItem) {
+    return c.json({ success: false, error: 'Return not found' }, 404);
+  }
+  
+  // Get customer from order
+  const order = await db.prepare('SELECT customer_id FROM orders WHERE id = ?').bind(returnItem.order_id).first();
+  
+  const creditNoteId = uuidv4();
+  const creditNoteNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+  
+  await db.prepare(`
+    INSERT INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'issued', ?, datetime('now'))
+  `).bind(creditNoteId, tenantId, order?.customer_id, returnId, creditNoteNumber, returnItem.total_amount, userId).run();
+  
+  return c.json({ success: true, data: { id: creditNoteId, creditNoteNumber }, message: 'Credit note generated' }, 201);
+});
+
+// ==================== SALES RETURNS (for sales.service.ts compatibility) ====================
+api.get('/sales/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, order_id } = c.req.query();
+  
+  let query = 'SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON o.customer_id = c.id WHERE r.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND r.status = ?';
+    params.push(status);
+  }
+  if (order_id) {
+    query += ' AND r.order_id = ?';
+    params.push(order_id);
+  }
+  
+  query += ' ORDER BY r.created_at DESC';
+  
+  const returns = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: returns.results || [] });
+});
+
+api.get('/sales/returns/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  
+  const returnItem = await db.prepare('SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON o.customer_id = c.id WHERE r.id = ? AND r.tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!returnItem) {
+    return c.json({ success: false, error: 'Return not found' }, 404);
+  }
+  
+  return c.json({ success: true, data: returnItem });
+});
+
+api.post('/sales/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
+  
+  await db.prepare(`
+    INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
+    VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
+  
+  return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
+});
+
+// ==================== SALES CREDIT NOTES (for sales.service.ts compatibility) ====================
+api.get('/sales/credit-notes', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id } = c.req.query();
+  
+  let query = 'SELECT cn.*, c.name as customer_name FROM credit_notes cn LEFT JOIN customers c ON cn.customer_id = c.id WHERE cn.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND cn.status = ?';
+    params.push(status);
+  }
+  if (customer_id) {
+    query += ' AND cn.customer_id = ?';
+    params.push(customer_id);
+  }
+  
+  query += ' ORDER BY cn.created_at DESC';
+  
+  const creditNotes = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: creditNotes.results || [] });
+});
+
+api.get('/sales/credit-notes/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  
+  const creditNote = await db.prepare('SELECT cn.*, c.name as customer_name FROM credit_notes cn LEFT JOIN customers c ON cn.customer_id = c.id WHERE cn.id = ? AND cn.tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!creditNote) {
+    return c.json({ success: false, error: 'Credit note not found' }, 404);
+  }
+  
+  return c.json({ success: true, data: creditNote });
+});
+
+api.post('/sales/credit-notes', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  const creditNoteNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+  
+  await db.prepare(`
+    INSERT INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'issued', ?, datetime('now'))
+  `).bind(id, tenantId, body.customer_id, body.return_id, creditNoteNumber, body.amount || 0, userId).run();
+  
+  return c.json({ success: true, data: { id, creditNoteNumber }, message: 'Credit note created' }, 201);
+});
+
 // ==================== CREDIT NOTES ====================
 api.get('/credit-notes', async (c) => {
   const db = c.env.DB;

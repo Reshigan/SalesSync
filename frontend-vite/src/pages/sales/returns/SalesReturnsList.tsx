@@ -18,7 +18,9 @@ export default function SalesReturnsList() {
     setLoading(true)
     try {
       const response = await salesService.getReturns()
-      setReturns(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps in response.data
+      const returnsData = response.data?.data || response.data || []
+      setReturns(Array.isArray(returnsData) ? returnsData : [])
     } catch (error) {
       console.error('Failed to load returns:', error)
     } finally {
