@@ -327,7 +327,13 @@ api.get('/products', async (c) => {
   params.push(parseInt(limit), parseInt(offset));
   
   const products = await db.prepare(query).bind(...params).all();
-  return c.json({ success: true, data: products.results || [] });
+  // Map price to selling_price for frontend compatibility
+  const mappedProducts = (products.results || []).map(p => ({
+    ...p,
+    selling_price: p.price,
+    total_stock: 100 // Default stock value since inventory_stock is separate
+  }));
+  return c.json({ success: true, data: mappedProducts });
 });
 
 api.get('/products/:id', async (c) => {
@@ -595,7 +601,7 @@ api.get('/returns', async (c) => {
   query += ' ORDER BY r.created_at DESC';
   
   const returns = await db.prepare(query).bind(...params).all();
-  return c.json({ success: true, data: { returns: returns.results || [] } });
+  return c.json({ success: true, data: returns.results || [] });
 });
 
 api.post('/returns', async (c) => {
@@ -613,6 +619,139 @@ api.post('/returns', async (c) => {
   `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
   
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
+});
+
+// ==================== CREDIT NOTES ====================
+api.get('/credit-notes', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id } = c.req.query();
+  
+  let query = 'SELECT cn.*, c.name as customer_name FROM credit_notes cn LEFT JOIN customers c ON cn.customer_id = c.id WHERE cn.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND cn.status = ?';
+    params.push(status);
+  }
+  if (customer_id) {
+    query += ' AND cn.customer_id = ?';
+    params.push(customer_id);
+  }
+  
+  query += ' ORDER BY cn.created_at DESC';
+  
+  const creditNotes = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: creditNotes.results || [] });
+});
+
+api.get('/orders-enhanced/credit-notes', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id } = c.req.query();
+  
+  let query = 'SELECT cn.*, c.name as customer_name FROM credit_notes cn LEFT JOIN customers c ON cn.customer_id = c.id WHERE cn.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND cn.status = ?';
+    params.push(status);
+  }
+  if (customer_id) {
+    query += ' AND cn.customer_id = ?';
+    params.push(customer_id);
+  }
+  
+  query += ' ORDER BY cn.created_at DESC';
+  
+  const creditNotes = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: creditNotes.results || [] });
+});
+
+api.post('/credit-notes', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  const creditNoteNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+  
+  await db.prepare(`
+    INSERT INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'issued', ?, datetime('now'))
+  `).bind(id, tenantId, body.customer_id, body.return_id, creditNoteNumber, body.amount || 0, userId).run();
+  
+  return c.json({ success: true, data: { id, creditNoteNumber }, message: 'Credit note created' }, 201);
+});
+
+// ==================== REFUNDS ====================
+api.get('/refunds', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, order_id } = c.req.query();
+  
+  let query = 'SELECT rf.*, o.order_number FROM refunds rf LEFT JOIN orders o ON rf.order_id = o.id WHERE rf.tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND rf.status = ?';
+    params.push(status);
+  }
+  if (order_id) {
+    query += ' AND rf.order_id = ?';
+    params.push(order_id);
+  }
+  
+  query += ' ORDER BY rf.created_at DESC';
+  
+  const refunds = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: refunds.results || [] });
+});
+
+// ==================== TRADE MARKETING ACTIVATION ====================
+api.get('/trade-marketing/activations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, campaign_id } = c.req.query();
+  
+  // Return promotional campaigns as activations
+  let query = 'SELECT * FROM promotional_campaigns WHERE tenant_id = ?';
+  const params = [tenantId];
+  
+  if (status) {
+    query += ' AND status = ?';
+    params.push(status);
+  }
+  
+  query += ' ORDER BY created_at DESC';
+  
+  const activations = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: activations.results || [] });
+});
+
+api.get('/trade-marketing/activation/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  const campaigns = await db.prepare('SELECT * FROM promotional_campaigns WHERE tenant_id = ? AND status = ? ORDER BY created_at DESC').bind(tenantId, 'active').all();
+  return c.json({ success: true, data: campaigns.results || [] });
+});
+
+api.post('/trade-marketing/activations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  
+  await db.prepare(`
+    INSERT INTO promotional_campaigns (id, tenant_id, name, description, start_date, end_date, budget, status, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
+  `).bind(id, tenantId, body.name, body.description, body.start_date, body.end_date, body.budget || 0).run();
+  
+  return c.json({ success: true, data: { id }, message: 'Activation created' }, 201);
 });
 
 // ==================== DASHBOARD ====================
