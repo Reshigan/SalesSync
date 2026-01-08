@@ -28,6 +28,10 @@ fun DashboardScreen(
     onNavigateToVanSales: () -> Unit,
     onNavigateToVisits: () -> Unit,
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToTradeMarketing: () -> Unit = {},
+    onNavigateToCompetitorAnalysis: () -> Unit = {},
+    onNavigateToFieldMarketing: () -> Unit = {},
+    onNavigateToAnalytics: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -189,6 +193,34 @@ fun DashboardScreen(
                             title = stringResource(R.string.settings),
                             icon = Icons.Default.Settings,
                             onClick = onNavigateToSettings
+                        )
+                    }
+                    item {
+                        QuickActionCard(
+                            title = "Trade Marketing",
+                            icon = Icons.Default.Campaign,
+                            onClick = onNavigateToTradeMarketing
+                        )
+                    }
+                    item {
+                        QuickActionCard(
+                            title = "Competitors",
+                            icon = Icons.Default.Business,
+                            onClick = onNavigateToCompetitorAnalysis
+                        )
+                    }
+                    item {
+                        QuickActionCard(
+                            title = "Field Marketing",
+                            icon = Icons.Default.Assignment,
+                            onClick = onNavigateToFieldMarketing
+                        )
+                    }
+                    item {
+                        QuickActionCard(
+                            title = "Analytics",
+                            icon = Icons.Default.Analytics,
+                            onClick = onNavigateToAnalytics
                         )
                     }
                 }

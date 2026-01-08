@@ -9,15 +9,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.salessync.app.ui.analytics.AnalyticsScreen
 import com.salessync.app.ui.auth.LoginScreen
 import com.salessync.app.ui.auth.LoginViewModel
+import com.salessync.app.ui.competitors.CompetitorAnalysisScreen
 import com.salessync.app.ui.customers.CustomerDetailScreen
 import com.salessync.app.ui.customers.CustomersScreen
 import com.salessync.app.ui.dashboard.DashboardScreen
+import com.salessync.app.ui.fieldmarketing.FieldMarketingScreen
 import com.salessync.app.ui.orders.CreateOrderScreenEnhanced
 import com.salessync.app.ui.orders.OrdersScreen
 import com.salessync.app.ui.products.ProductsScreen
 import com.salessync.app.ui.settings.SettingsScreen
+import com.salessync.app.ui.trademarketing.TradeMarketingScreen
 import com.salessync.app.ui.vansales.CreateVanSaleScreen
 import com.salessync.app.ui.vansales.VanSalesScreen
 import com.salessync.app.ui.visits.CreateVisitScreen
@@ -38,6 +42,10 @@ sealed class Screen(val route: String) {
     object Visits : Screen("visits")
     object CreateVisit : Screen("visits/create")
     object Settings : Screen("settings")
+    object TradeMarketing : Screen("trade-marketing")
+    object CompetitorAnalysis : Screen("competitor-analysis")
+    object FieldMarketing : Screen("field-marketing")
+    object Analytics : Screen("analytics")
 }
 
 @Composable
@@ -70,6 +78,10 @@ fun SalesSyncApp() {
                 onNavigateToVanSales = { navController.navigate(Screen.VanSales.route) },
                 onNavigateToVisits = { navController.navigate(Screen.Visits.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToTradeMarketing = { navController.navigate(Screen.TradeMarketing.route) },
+                onNavigateToCompetitorAnalysis = { navController.navigate(Screen.CompetitorAnalysis.route) },
+                onNavigateToFieldMarketing = { navController.navigate(Screen.FieldMarketing.route) },
+                onNavigateToAnalytics = { navController.navigate(Screen.Analytics.route) },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
@@ -159,6 +171,30 @@ fun SalesSyncApp() {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.TradeMarketing.route) {
+            TradeMarketingScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.CompetitorAnalysis.route) {
+            CompetitorAnalysisScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.FieldMarketing.route) {
+            FieldMarketingScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Analytics.route) {
+            AnalyticsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

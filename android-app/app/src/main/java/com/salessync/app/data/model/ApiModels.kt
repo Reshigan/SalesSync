@@ -186,3 +186,124 @@ data class DashboardStats(
     val orderGrowth: Double = 0.0,
     val customerGrowth: Double = 0.0
 )
+
+// Trade Marketing Models
+@Serializable
+data class Campaign(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    @SerialName("campaign_type") val campaignType: String = "promotion",
+    @SerialName("start_date") val startDate: String? = null,
+    @SerialName("end_date") val endDate: String? = null,
+    val budget: Double = 0.0,
+    @SerialName("target_audience") val targetAudience: String? = null,
+    val status: String = "draft",
+    @SerialName("created_at") val createdAt: String? = null
+)
+
+@Serializable
+data class TradeMarketingMetrics(
+    val activeCampaigns: Int = 0,
+    val completedCampaigns: Int = 0,
+    val totalBudget: Double = 0.0,
+    val totalRevenue: Double = 0.0,
+    val roi: Double = 0.0,
+    val conversionRate: Double = 0.0,
+    val reachCount: Int = 0
+)
+
+// Competitor Analysis Models
+@Serializable
+data class Competitor(
+    val id: String,
+    val name: String,
+    @SerialName("market_share") val marketShare: Double = 0.0,
+    val strength: String? = null,
+    val weakness: String? = null,
+    val products: Int = 0,
+    val notes: String? = null
+)
+
+@Serializable
+data class CompetitorAnalysis(
+    val ourMarketShare: Double = 0.0,
+    val totalMarketSize: Double = 0.0,
+    val ourRevenue: Double = 0.0,
+    val ourProducts: Int = 0,
+    val ourCustomers: Int = 0,
+    val competitorCount: Int = 0,
+    val marketTrend: String = "stable",
+    val growthRate: Double = 0.0
+)
+
+// Field Marketing Models
+@Serializable
+data class FieldMarketingActivity(
+    val id: String,
+    @SerialName("activity_type") val activityType: String,
+    @SerialName("customer_id") val customerId: String? = null,
+    @SerialName("customer_name") val customerName: String? = null,
+    val location: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val status: String = "pending",
+    @SerialName("photo_url") val photoUrl: String? = null,
+    val notes: String? = null,
+    @SerialName("created_at") val createdAt: String? = null
+)
+
+@Serializable
+data class FieldMarketingMetrics(
+    val totalActivities: Int = 0,
+    val completedActivities: Int = 0,
+    val todayActivities: Int = 0,
+    val boardPlacements: Int = 0,
+    val displaySetups: Int = 0,
+    val samplingEvents: Int = 0,
+    val coverageRate: Double = 0.0,
+    val completionRate: Int = 0
+)
+
+@Serializable
+data class CreateFieldActivityRequest(
+    @SerialName("activity_type") val activityType: String,
+    @SerialName("customer_id") val customerId: String? = null,
+    val location: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    @SerialName("photo_url") val photoUrl: String? = null,
+    val notes: String? = null
+)
+
+// Analytics Models
+@Serializable
+data class SalesAnalytics(
+    val salesByDate: List<SalesDataPoint> = emptyList(),
+    val vanSalesByDate: List<SalesDataPoint> = emptyList(),
+    val topProducts: List<TopProduct> = emptyList(),
+    val topCustomers: List<TopCustomer> = emptyList(),
+    val period: String = "7d"
+)
+
+@Serializable
+data class SalesDataPoint(
+    val date: String,
+    val orders: Int = 0,
+    val sales: Int = 0,
+    val revenue: Double = 0.0
+)
+
+@Serializable
+data class TopProduct(
+    val name: String,
+    val quantity: Int = 0,
+    val revenue: Double = 0.0
+)
+
+@Serializable
+data class TopCustomer(
+    val name: String,
+    val orders: Int = 0,
+    val revenue: Double = 0.0
+)

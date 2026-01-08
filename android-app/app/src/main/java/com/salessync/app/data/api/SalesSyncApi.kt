@@ -83,4 +83,45 @@ interface SalesSyncApi {
 
     @PUT("visits/{id}")
     suspend fun updateVisit(@Path("id") id: String, @Body visit: Visit): ApiResponse<Visit>
+
+    // Trade Marketing
+    @GET("trade-marketing/campaigns")
+    suspend fun getCampaigns(
+        @Query("status") status: String? = null
+    ): ApiResponse<List<Campaign>>
+
+    @POST("trade-marketing/campaigns")
+    suspend fun createCampaign(@Body campaign: Campaign): ApiResponse<Campaign>
+
+    @GET("trade-marketing/metrics")
+    suspend fun getTradeMarketingMetrics(): ApiResponse<TradeMarketingMetrics>
+
+    // Competitor Analysis
+    @GET("competitors")
+    suspend fun getCompetitors(): ApiResponse<List<Competitor>>
+
+    @POST("competitors")
+    suspend fun addCompetitor(@Body competitor: Competitor): ApiResponse<Competitor>
+
+    @GET("competitors/analysis")
+    suspend fun getCompetitorAnalysis(): ApiResponse<CompetitorAnalysis>
+
+    // Field Marketing
+    @GET("field-marketing/activities")
+    suspend fun getFieldMarketingActivities(
+        @Query("status") status: String? = null,
+        @Query("type") type: String? = null
+    ): ApiResponse<List<FieldMarketingActivity>>
+
+    @POST("field-marketing/activities")
+    suspend fun createFieldMarketingActivity(@Body request: CreateFieldActivityRequest): ApiResponse<FieldMarketingActivity>
+
+    @GET("field-marketing/metrics")
+    suspend fun getFieldMarketingMetrics(): ApiResponse<FieldMarketingMetrics>
+
+    // Analytics
+    @GET("analytics/sales")
+    suspend fun getSalesAnalytics(
+        @Query("period") period: String = "7d"
+    ): ApiResponse<SalesAnalytics>
 }
