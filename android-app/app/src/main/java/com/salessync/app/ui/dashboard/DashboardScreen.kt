@@ -32,6 +32,7 @@ fun DashboardScreen(
     onNavigateToCompetitorAnalysis: () -> Unit = {},
     onNavigateToFieldMarketing: () -> Unit = {},
     onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToRoleManagement: () -> Unit = {},
     onLogout: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -221,6 +222,13 @@ fun DashboardScreen(
                             title = "Analytics",
                             icon = Icons.Default.Analytics,
                             onClick = onNavigateToAnalytics
+                        )
+                    }
+                    item {
+                        QuickActionCard(
+                            title = "Roles & Access",
+                            icon = Icons.Default.Security,
+                            onClick = onNavigateToRoleManagement
                         )
                     }
                 }

@@ -115,10 +115,66 @@ const authMiddleware = async (c, next) => {
     c.set('tenantId', payload.tenantId);
     c.set('role', payload.role);
     
+    // Load user permissions from database
+    const db = c.env.DB;
+    const userId = payload.userId;
+    
+    try {
+      const userPermissions = await db.prepare(`
+        SELECT DISTINCT p.name 
+        FROM permissions p
+        JOIN role_permissions rp ON p.id = rp.permission_id
+        JOIN user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = ? AND ur.is_active = 1
+        AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+      `).bind(userId).all();
+      
+      const permissions = (userPermissions.results || []).map(p => p.name);
+      c.set('permissions', permissions);
+    } catch (e) {
+      // If RBAC tables don't exist yet, grant all permissions to admin
+      c.set('permissions', payload.role === 'admin' ? ['*'] : []);
+    }
+    
     await next();
   } catch (error) {
     return c.json({ success: false, message: 'Invalid token' }, 401);
   }
+};
+
+// Permission checking middleware factory
+const requirePermission = (permission) => {
+  return async (c, next) => {
+    const permissions = c.get('permissions') || [];
+    const role = c.get('role');
+    
+    // Admin role or wildcard permission bypasses checks
+    if (role === 'admin' || permissions.includes('*') || permissions.includes(permission)) {
+      await next();
+    } else {
+      return c.json({ success: false, message: `Permission denied: ${permission} required` }, 403);
+    }
+  };
+};
+
+// Check if user has any of the specified permissions
+const requireAnyPermission = (permissionList) => {
+  return async (c, next) => {
+    const permissions = c.get('permissions') || [];
+    const role = c.get('role');
+    
+    if (role === 'admin' || permissions.includes('*')) {
+      await next();
+      return;
+    }
+    
+    const hasPermission = permissionList.some(p => permissions.includes(p));
+    if (hasPermission) {
+      await next();
+    } else {
+      return c.json({ success: false, message: `Permission denied: one of [${permissionList.join(', ')}] required` }, 403);
+    }
+  };
 };
 
 // Protected routes group
@@ -1029,6 +1085,434 @@ api.get('/field-marketing/metrics', async (c) => {
       coverageRate: 78.5,
       completionRate: completedVisits?.count && totalVisits?.count ? Math.round(completedVisits.count / totalVisits.count * 100) : 0
     }
+  });
+});
+
+// ==================== RBAC - ROLES ====================
+api.get('/roles', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const roles = await db.prepare(`
+      SELECT r.*, 
+        (SELECT COUNT(*) FROM user_roles ur WHERE ur.role_id = r.id AND ur.is_active = 1) as user_count,
+        (SELECT COUNT(*) FROM role_permissions rp WHERE rp.role_id = r.id) as permission_count
+      FROM roles r 
+      WHERE r.tenant_id = ? 
+      ORDER BY r.is_system_role DESC, r.name
+    `).bind(tenantId).all();
+    
+    return c.json({ success: true, data: roles.results || [] });
+  } catch (e) {
+    // If tables don't exist, return empty array
+    return c.json({ success: true, data: [] });
+  }
+});
+
+api.get('/roles/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const role = await db.prepare('SELECT * FROM roles WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!role) {
+    return c.json({ success: false, message: 'Role not found' }, 404);
+  }
+  
+  // Get permissions for this role
+  const permissions = await db.prepare(`
+    SELECT p.* FROM permissions p
+    JOIN role_permissions rp ON p.id = rp.permission_id
+    WHERE rp.role_id = ?
+  `).bind(id).all();
+  
+  // Get users with this role
+  const users = await db.prepare(`
+    SELECT u.id, u.email, u.first_name, u.last_name, ur.assigned_at, ur.expires_at
+    FROM users u
+    JOIN user_roles ur ON u.id = ur.user_id
+    WHERE ur.role_id = ? AND ur.is_active = 1
+  `).bind(id).all();
+  
+  return c.json({ 
+    success: true, 
+    data: { 
+      ...role, 
+      permissions: permissions.results || [],
+      users: users.results || []
+    } 
+  });
+});
+
+api.post('/roles', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  
+  await db.prepare(`
+    INSERT INTO roles (id, tenant_id, name, description, is_system_role, is_active, created_at, updated_at)
+    VALUES (?, ?, ?, ?, 0, 1, datetime('now'), datetime('now'))
+  `).bind(id, tenantId, body.name, body.description).run();
+  
+  // Assign permissions if provided
+  if (body.permissions && body.permissions.length > 0) {
+    for (const permissionId of body.permissions) {
+      const rpId = uuidv4();
+      await db.prepare(`
+        INSERT OR IGNORE INTO role_permissions (id, role_id, permission_id, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `).bind(rpId, id, permissionId).run();
+    }
+  }
+  
+  return c.json({ success: true, data: { id }, message: 'Role created' }, 201);
+});
+
+api.put('/roles/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  // Check if role exists and is not a system role
+  const role = await db.prepare('SELECT * FROM roles WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!role) {
+    return c.json({ success: false, message: 'Role not found' }, 404);
+  }
+  
+  if (role.is_system_role && body.name !== role.name) {
+    return c.json({ success: false, message: 'Cannot rename system roles' }, 400);
+  }
+  
+  await db.prepare(`
+    UPDATE roles SET name = ?, description = ?, is_active = ?, updated_at = datetime('now')
+    WHERE id = ? AND tenant_id = ?
+  `).bind(body.name, body.description, body.is_active ? 1 : 0, id, tenantId).run();
+  
+  // Update permissions if provided
+  if (body.permissions !== undefined) {
+    // Remove existing permissions
+    await db.prepare('DELETE FROM role_permissions WHERE role_id = ?').bind(id).run();
+    
+    // Add new permissions
+    for (const permissionId of body.permissions) {
+      const rpId = uuidv4();
+      await db.prepare(`
+        INSERT INTO role_permissions (id, role_id, permission_id, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `).bind(rpId, id, permissionId).run();
+    }
+  }
+  
+  return c.json({ success: true, message: 'Role updated' });
+});
+
+api.delete('/roles/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const role = await db.prepare('SELECT * FROM roles WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+  
+  if (!role) {
+    return c.json({ success: false, message: 'Role not found' }, 404);
+  }
+  
+  if (role.is_system_role) {
+    return c.json({ success: false, message: 'Cannot delete system roles' }, 400);
+  }
+  
+  // Delete role (cascades to role_permissions and user_roles)
+  await db.prepare('DELETE FROM roles WHERE id = ?').bind(id).run();
+  
+  return c.json({ success: true, message: 'Role deleted' });
+});
+
+// ==================== RBAC - PERMISSIONS ====================
+api.get('/permissions', async (c) => {
+  const db = c.env.DB;
+  
+  try {
+    const permissions = await db.prepare(`
+      SELECT * FROM permissions ORDER BY module, action
+    `).all();
+    
+    // Group by module
+    const grouped = {};
+    (permissions.results || []).forEach(p => {
+      if (!grouped[p.module]) {
+        grouped[p.module] = [];
+      }
+      grouped[p.module].push(p);
+    });
+    
+    return c.json({ success: true, data: { permissions: permissions.results || [], grouped } });
+  } catch (e) {
+    return c.json({ success: true, data: { permissions: [], grouped: {} } });
+  }
+});
+
+// ==================== RBAC - USER ROLES ====================
+api.get('/users/:userId/roles', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { userId } = c.req.param();
+  
+  try {
+    const userRoles = await db.prepare(`
+      SELECT r.*, ur.assigned_at, ur.expires_at, ur.is_active,
+        (SELECT u2.first_name || ' ' || u2.last_name FROM users u2 WHERE u2.id = ur.assigned_by) as assigned_by_name
+      FROM roles r
+      JOIN user_roles ur ON r.id = ur.role_id
+      WHERE ur.user_id = ? AND r.tenant_id = ?
+      ORDER BY r.name
+    `).bind(userId, tenantId).all();
+    
+    return c.json({ success: true, data: userRoles.results || [] });
+  } catch (e) {
+    return c.json({ success: true, data: [] });
+  }
+});
+
+api.post('/users/:userId/roles', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const currentUserId = c.get('userId');
+  const { userId } = c.req.param();
+  const body = await c.req.json();
+  
+  // Verify role exists and belongs to tenant
+  const role = await db.prepare('SELECT * FROM roles WHERE id = ? AND tenant_id = ?').bind(body.role_id, tenantId).first();
+  
+  if (!role) {
+    return c.json({ success: false, message: 'Role not found' }, 404);
+  }
+  
+  const id = uuidv4();
+  
+  await db.prepare(`
+    INSERT INTO user_roles (id, user_id, role_id, assigned_by, assigned_at, expires_at, is_active)
+    VALUES (?, ?, ?, ?, datetime('now'), ?, 1)
+    ON CONFLICT(user_id, role_id) DO UPDATE SET is_active = 1, expires_at = ?, assigned_by = ?, assigned_at = datetime('now')
+  `).bind(id, userId, body.role_id, currentUserId, body.expires_at || null, body.expires_at || null, currentUserId).run();
+  
+  return c.json({ success: true, message: 'Role assigned to user' }, 201);
+});
+
+api.delete('/users/:userId/roles/:roleId', async (c) => {
+  const db = c.env.DB;
+  const { userId, roleId } = c.req.param();
+  
+  await db.prepare(`
+    UPDATE user_roles SET is_active = 0 WHERE user_id = ? AND role_id = ?
+  `).bind(userId, roleId).run();
+  
+  return c.json({ success: true, message: 'Role removed from user' });
+});
+
+// Get user's effective permissions (from all assigned roles)
+api.get('/users/:userId/permissions', async (c) => {
+  const db = c.env.DB;
+  const { userId } = c.req.param();
+  
+  try {
+    const permissions = await db.prepare(`
+      SELECT DISTINCT p.* 
+      FROM permissions p
+      JOIN role_permissions rp ON p.id = rp.permission_id
+      JOIN user_roles ur ON rp.role_id = ur.role_id
+      WHERE ur.user_id = ? AND ur.is_active = 1
+      AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+      ORDER BY p.module, p.action
+    `).bind(userId).all();
+    
+    return c.json({ success: true, data: permissions.results || [] });
+  } catch (e) {
+    return c.json({ success: true, data: [] });
+  }
+});
+
+// ==================== RBAC - INITIALIZE STANDARD ROLES ====================
+api.post('/roles/initialize', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  // Standard roles with their permissions
+  const standardRoles = [
+    {
+      name: 'Administrator',
+      description: 'Full system access with all permissions',
+      permissions: ['*'] // Will grant all permissions
+    },
+    {
+      name: 'Manager',
+      description: 'Manage teams, approve orders, view reports',
+      permissions: [
+        'customers:view', 'customers:create', 'customers:edit',
+        'products:view', 'products:create', 'products:edit',
+        'orders:view', 'orders:create', 'orders:edit', 'orders:approve',
+        'van-sales:view', 'van-sales:create', 'van-sales:edit',
+        'visits:view', 'visits:create', 'visits:edit',
+        'inventory:view', 'inventory:manage',
+        'trade-marketing:view', 'trade-marketing:create', 'trade-marketing:edit',
+        'field-marketing:view', 'field-marketing:create', 'field-marketing:edit',
+        'competitors:view', 'competitors:create', 'competitors:edit',
+        'analytics:view', 'analytics:export',
+        'reports:view', 'reports:create', 'reports:export',
+        'users:view',
+        'commissions:view', 'commissions:manage'
+      ]
+    },
+    {
+      name: 'Supervisor',
+      description: 'Supervise field agents, approve visits, view team performance',
+      permissions: [
+        'customers:view', 'customers:create', 'customers:edit',
+        'products:view',
+        'orders:view', 'orders:create', 'orders:edit',
+        'van-sales:view', 'van-sales:create',
+        'visits:view', 'visits:create', 'visits:edit',
+        'inventory:view',
+        'field-marketing:view', 'field-marketing:create', 'field-marketing:edit',
+        'competitors:view', 'competitors:create',
+        'analytics:view',
+        'reports:view',
+        'commissions:view'
+      ]
+    },
+    {
+      name: 'Field Agent',
+      description: 'Create orders, visits, and van sales in the field',
+      permissions: [
+        'customers:view', 'customers:create',
+        'products:view',
+        'orders:view', 'orders:create',
+        'van-sales:view', 'van-sales:create',
+        'visits:view', 'visits:create',
+        'field-marketing:view', 'field-marketing:create',
+        'competitors:view', 'competitors:create'
+      ]
+    },
+    {
+      name: 'Van Sales Rep',
+      description: 'Manage van inventory and sales',
+      permissions: [
+        'customers:view',
+        'products:view',
+        'van-sales:view', 'van-sales:create', 'van-sales:edit',
+        'inventory:view',
+        'visits:view', 'visits:create'
+      ]
+    },
+    {
+      name: 'Warehouse Staff',
+      description: 'Manage inventory and stock',
+      permissions: [
+        'products:view',
+        'inventory:view', 'inventory:manage', 'inventory:adjust',
+        'orders:view'
+      ]
+    },
+    {
+      name: 'Marketing',
+      description: 'Manage trade and field marketing campaigns',
+      permissions: [
+        'customers:view',
+        'products:view',
+        'trade-marketing:view', 'trade-marketing:create', 'trade-marketing:edit', 'trade-marketing:delete',
+        'field-marketing:view', 'field-marketing:create', 'field-marketing:edit', 'field-marketing:delete',
+        'competitors:view', 'competitors:create', 'competitors:edit', 'competitors:delete',
+        'analytics:view', 'analytics:export',
+        'reports:view', 'reports:create'
+      ]
+    },
+    {
+      name: 'Viewer',
+      description: 'Read-only access to view data',
+      permissions: [
+        'customers:view',
+        'products:view',
+        'orders:view',
+        'van-sales:view',
+        'visits:view',
+        'inventory:view',
+        'trade-marketing:view',
+        'field-marketing:view',
+        'competitors:view',
+        'analytics:view',
+        'reports:view'
+      ]
+    }
+  ];
+  
+  const createdRoles = [];
+  
+  for (const roleData of standardRoles) {
+    // Check if role already exists
+    const existing = await db.prepare('SELECT id FROM roles WHERE tenant_id = ? AND name = ?').bind(tenantId, roleData.name).first();
+    
+    if (existing) {
+      createdRoles.push({ name: roleData.name, status: 'exists', id: existing.id });
+      continue;
+    }
+    
+    const roleId = uuidv4();
+    
+    await db.prepare(`
+      INSERT INTO roles (id, tenant_id, name, description, is_system_role, is_active, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))
+    `).bind(roleId, tenantId, roleData.name, roleData.description).run();
+    
+    // Assign permissions
+    if (roleData.permissions[0] === '*') {
+      // Grant all permissions
+      const allPerms = await db.prepare('SELECT id FROM permissions').all();
+      for (const perm of (allPerms.results || [])) {
+        const rpId = uuidv4();
+        await db.prepare(`
+          INSERT OR IGNORE INTO role_permissions (id, role_id, permission_id, created_at)
+          VALUES (?, ?, ?, datetime('now'))
+        `).bind(rpId, roleId, perm.id).run();
+      }
+    } else {
+      for (const permName of roleData.permissions) {
+        const perm = await db.prepare('SELECT id FROM permissions WHERE name = ?').bind(permName).first();
+        if (perm) {
+          const rpId = uuidv4();
+          await db.prepare(`
+            INSERT OR IGNORE INTO role_permissions (id, role_id, permission_id, created_at)
+            VALUES (?, ?, ?, datetime('now'))
+          `).bind(rpId, roleId, perm.id).run();
+        }
+      }
+    }
+    
+    createdRoles.push({ name: roleData.name, status: 'created', id: roleId });
+  }
+  
+  return c.json({ success: true, data: createdRoles, message: 'Standard roles initialized' });
+});
+
+// Get current user's permissions
+api.get('/auth/me/permissions', async (c) => {
+  const permissions = c.get('permissions') || [];
+  const role = c.get('role');
+  const userId = c.get('userId');
+  
+  return c.json({ 
+    success: true, 
+    data: { 
+      userId,
+      role,
+      permissions,
+      isAdmin: role === 'admin' || permissions.includes('*')
+    } 
   });
 });
 

@@ -307,3 +307,103 @@ data class TopCustomer(
     val orders: Int = 0,
     val revenue: Double = 0.0
 )
+
+// RBAC Models
+@Serializable
+data class Role(
+    val id: String,
+    @SerialName("tenant_id") val tenantId: String? = null,
+    val name: String,
+    val description: String? = null,
+    @SerialName("is_system_role") val isSystemRole: Int = 0,
+    @SerialName("is_active") val isActive: Int = 1,
+    @SerialName("user_count") val userCount: Int = 0,
+    @SerialName("permission_count") val permissionCount: Int = 0,
+    @SerialName("created_at") val createdAt: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null
+)
+
+@Serializable
+data class Permission(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    val module: String,
+    val action: String
+)
+
+@Serializable
+data class PermissionsResponse(
+    val permissions: List<Permission> = emptyList(),
+    val grouped: Map<String, List<Permission>> = emptyMap()
+)
+
+@Serializable
+data class RoleDetail(
+    val id: String,
+    @SerialName("tenant_id") val tenantId: String? = null,
+    val name: String,
+    val description: String? = null,
+    @SerialName("is_system_role") val isSystemRole: Int = 0,
+    @SerialName("is_active") val isActive: Int = 1,
+    val permissions: List<Permission> = emptyList(),
+    val users: List<RoleUser> = emptyList()
+)
+
+@Serializable
+data class RoleUser(
+    val id: String,
+    val email: String,
+    @SerialName("first_name") val firstName: String? = null,
+    @SerialName("last_name") val lastName: String? = null,
+    @SerialName("assigned_at") val assignedAt: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null
+)
+
+@Serializable
+data class UserRole(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    @SerialName("is_system_role") val isSystemRole: Int = 0,
+    @SerialName("assigned_at") val assignedAt: String? = null,
+    @SerialName("expires_at") val expiresAt: String? = null,
+    @SerialName("is_active") val isActive: Int = 1,
+    @SerialName("assigned_by_name") val assignedByName: String? = null
+)
+
+@Serializable
+data class CreateRoleRequest(
+    val name: String,
+    val description: String? = null,
+    val permissions: List<String> = emptyList()
+)
+
+@Serializable
+data class UpdateRoleRequest(
+    val name: String,
+    val description: String? = null,
+    @SerialName("is_active") val isActive: Boolean = true,
+    val permissions: List<String>? = null
+)
+
+@Serializable
+data class AssignRoleRequest(
+    @SerialName("role_id") val roleId: String,
+    @SerialName("expires_at") val expiresAt: String? = null
+)
+
+@Serializable
+data class UserPermissions(
+    val userId: String,
+    val role: String,
+    val permissions: List<String> = emptyList(),
+    val isAdmin: Boolean = false
+)
+
+@Serializable
+data class InitializeRolesResult(
+    val name: String,
+    val status: String,
+    val id: String
+)

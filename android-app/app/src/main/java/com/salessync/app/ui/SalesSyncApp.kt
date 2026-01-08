@@ -21,6 +21,7 @@ import com.salessync.app.ui.orders.CreateOrderScreenEnhanced
 import com.salessync.app.ui.orders.OrdersScreen
 import com.salessync.app.ui.products.ProductsScreen
 import com.salessync.app.ui.settings.SettingsScreen
+import com.salessync.app.ui.roles.RoleManagementScreen
 import com.salessync.app.ui.trademarketing.TradeMarketingScreen
 import com.salessync.app.ui.vansales.CreateVanSaleScreen
 import com.salessync.app.ui.vansales.VanSalesScreen
@@ -46,6 +47,7 @@ sealed class Screen(val route: String) {
     object CompetitorAnalysis : Screen("competitor-analysis")
     object FieldMarketing : Screen("field-marketing")
     object Analytics : Screen("analytics")
+    object RoleManagement : Screen("role-management")
 }
 
 @Composable
@@ -82,6 +84,7 @@ fun SalesSyncApp() {
                 onNavigateToCompetitorAnalysis = { navController.navigate(Screen.CompetitorAnalysis.route) },
                 onNavigateToFieldMarketing = { navController.navigate(Screen.FieldMarketing.route) },
                 onNavigateToAnalytics = { navController.navigate(Screen.Analytics.route) },
+                onNavigateToRoleManagement = { navController.navigate(Screen.RoleManagement.route) },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
@@ -194,6 +197,12 @@ fun SalesSyncApp() {
 
         composable(Screen.Analytics.route) {
             AnalyticsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.RoleManagement.route) {
+            RoleManagementScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

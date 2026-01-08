@@ -124,4 +124,44 @@ interface SalesSyncApi {
     suspend fun getSalesAnalytics(
         @Query("period") period: String = "7d"
     ): ApiResponse<SalesAnalytics>
+
+    // RBAC - Roles
+    @GET("roles")
+    suspend fun getRoles(): ApiResponse<List<Role>>
+
+    @GET("roles/{id}")
+    suspend fun getRole(@Path("id") id: String): ApiResponse<RoleDetail>
+
+    @POST("roles")
+    suspend fun createRole(@Body request: CreateRoleRequest): ApiResponse<Role>
+
+    @PUT("roles/{id}")
+    suspend fun updateRole(@Path("id") id: String, @Body request: UpdateRoleRequest): ApiResponse<Role>
+
+    @DELETE("roles/{id}")
+    suspend fun deleteRole(@Path("id") id: String): ApiResponse<Unit>
+
+    @POST("roles/initialize")
+    suspend fun initializeStandardRoles(): ApiResponse<List<InitializeRolesResult>>
+
+    // RBAC - Permissions
+    @GET("permissions")
+    suspend fun getPermissions(): ApiResponse<PermissionsResponse>
+
+    // RBAC - User Roles
+    @GET("users/{userId}/roles")
+    suspend fun getUserRoles(@Path("userId") userId: String): ApiResponse<List<UserRole>>
+
+    @POST("users/{userId}/roles")
+    suspend fun assignRoleToUser(@Path("userId") userId: String, @Body request: AssignRoleRequest): ApiResponse<Unit>
+
+    @DELETE("users/{userId}/roles/{roleId}")
+    suspend fun removeRoleFromUser(@Path("userId") userId: String, @Path("roleId") roleId: String): ApiResponse<Unit>
+
+    @GET("users/{userId}/permissions")
+    suspend fun getUserPermissions(@Path("userId") userId: String): ApiResponse<List<Permission>>
+
+    // Current user permissions
+    @GET("auth/me/permissions")
+    suspend fun getMyPermissions(): ApiResponse<UserPermissions>
 }
