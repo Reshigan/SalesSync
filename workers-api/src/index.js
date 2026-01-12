@@ -5787,7 +5787,7 @@ api.get('/analytics/sales/by-customer', async (c) => {
   
   try {
     let query = `
-      SELECT c.id as customer_id, c.name as customer_name, c.customer_type,
+      SELECT c.id as customer_id, c.name as customer_name,
              COUNT(o.id) as order_count,
              SUM(o.total_amount) as total_revenue,
              AVG(o.total_amount) as avg_order_value,
