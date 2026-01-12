@@ -306,12 +306,51 @@ class VanSalesService extends ApiService {
   }
 
   async createVanSale(sale: Partial<VanSale>) {
-    const response = await this.post(`${this.baseUrl}`, sale)
+    const response = await this.post(`${this.baseUrl}/create`, sale)
     return response.data
   }
 
   async updateVanSale(id: string, sale: Partial<VanSale>) {
     const response = await this.put(`${this.baseUrl}/${id}`, sale)
+    return response.data
+  }
+
+  // Van Loads - use authoritative endpoints with inventory movements
+  async getVanLoads(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+    const response = await this.get(`${this.baseUrl}/van-loads?${params.toString()}`)
+    return response.data
+  }
+
+  async createVanLoad(data: any) {
+    const response = await this.post(`${this.baseUrl}/van-loads/create`, data)
+    return response.data
+  }
+
+  async transitionVanLoad(id: string, new_status: string, notes?: string) {
+    const response = await this.post(`${this.baseUrl}/van-loads/${id}/transition`, { new_status, notes })
+    return response.data
+  }
+
+  // Van Sales Returns - use authoritative endpoints with inventory movements
+  async getVanSalesReturns(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+    const response = await this.get(`${this.baseUrl}/returns?${params.toString()}`)
+    return response.data
+  }
+
+  async createVanSalesReturn(data: any) {
+    const response = await this.post(`${this.baseUrl}/returns/create`, data)
     return response.data
   }
 

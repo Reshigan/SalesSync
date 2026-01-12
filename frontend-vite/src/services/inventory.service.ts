@@ -103,7 +103,7 @@ class InventoryService {
 
   async getStockMovements(filter?: any): Promise<{ data: StockMovement[], total: number }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}-enhanced/transactions`, { params: filter })
+      const response = await apiClient.get('/stock-movements', { params: filter })
       return { data: response.data.data || [], total: response.data.total || 0 }
     } catch (error) {
       console.error('Failed to fetch stock movements:', error)
@@ -113,7 +113,7 @@ class InventoryService {
 
   async createStockMovement(data: Partial<StockMovement>): Promise<StockMovement> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}-enhanced/adjust`, data)
+      const response = await apiClient.post(`${this.baseUrl}/adjustments/create`, data)
       return response.data.data
     } catch (error) {
       console.error('Failed to create stock movement:', error)
@@ -123,7 +123,7 @@ class InventoryService {
 
   async transferStock(data: { from_warehouse_id: string, to_warehouse_id: string, product_id: string, quantity: number, notes?: string }): Promise<any> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}-enhanced/transfer`, data)
+      const response = await apiClient.post(`${this.baseUrl}/transfers/create`, data)
       return response.data.data
     } catch (error) {
       console.error('Failed to transfer stock:', error)
@@ -133,7 +133,7 @@ class InventoryService {
 
   async getStockCounts(filter?: any): Promise<{ data: StockCount[], total: number }> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/counts`, { params: filter })
+      const response = await apiClient.get(`${this.baseUrl}/stock-counts`, { params: filter })
       return { data: response.data.data || [], total: response.data.total || 0 }
     } catch (error) {
       console.error('Failed to fetch stock counts:', error)
@@ -143,10 +143,144 @@ class InventoryService {
 
   async createStockCount(data: Partial<StockCount>): Promise<StockCount> {
     try {
-      const response = await apiClient.post(`${this.baseUrl}/counts`, data)
+      const response = await apiClient.post(`${this.baseUrl}/stock-counts/create`, data)
       return response.data.data
     } catch (error) {
       console.error('Failed to create stock count:', error)
+      throw error
+    }
+  }
+  
+  // Adjustments - use authoritative endpoints with stock movements
+  async getAdjustments(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/adjustments`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch adjustments:', error)
+      throw error
+    }
+  }
+
+  async createAdjustment(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/adjustments/create`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create adjustment:', error)
+      throw error
+    }
+  }
+
+  async transitionAdjustment(id: string, new_status: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/adjustments/${id}/transition`, { new_status, notes })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition adjustment:', error)
+      throw error
+    }
+  }
+
+  // Transfers - use authoritative endpoints with stock movements
+  async getTransfers(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/transfers`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch transfers:', error)
+      throw error
+    }
+  }
+
+  async createTransfer(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/transfers/create`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create transfer:', error)
+      throw error
+    }
+  }
+
+  async transitionTransfer(id: string, new_status: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/transfers/${id}/transition`, { new_status, notes })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition transfer:', error)
+      throw error
+    }
+  }
+
+  // Receipts (GRN) - use authoritative endpoints with stock movements
+  async getReceipts(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/receipts`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch receipts:', error)
+      throw error
+    }
+  }
+
+  async createReceipt(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/receipts/create`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create receipt:', error)
+      throw error
+    }
+  }
+
+  async transitionReceipt(id: string, new_status: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/receipts/${id}/transition`, { new_status, notes })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition receipt:', error)
+      throw error
+    }
+  }
+
+  // Issues - use authoritative endpoints with stock movements
+  async getIssues(filter?: any): Promise<{ data: any[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/issues`, { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch issues:', error)
+      throw error
+    }
+  }
+
+  async createIssue(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/issues/create`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create issue:', error)
+      throw error
+    }
+  }
+
+  async transitionIssue(id: string, new_status: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/issues/${id}/transition`, { new_status, notes })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition issue:', error)
+      throw error
+    }
+  }
+
+  async transitionStockCount(id: string, new_status: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/stock-counts/${id}/transition`, { new_status, notes })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition stock count:', error)
       throw error
     }
   }
