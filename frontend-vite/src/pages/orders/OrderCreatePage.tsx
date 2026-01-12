@@ -1,12 +1,59 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TransactionForm from '../../components/transactions/TransactionForm'
+import { ArrowLeft, Plus, Trash2, ShoppingCart, User, Calculator, Save, Send, Package } from 'lucide-react'
 import { ordersService } from '../../services/orders.service'
 import { customersService } from '../../services/customers.service'
+import { productsService } from '../../services/products.service'
+
+interface Product {
+  id: string
+  name: string
+  code: string
+  sku: string
+  price: number
+  selling_price: number
+  tax_rate: number
+  unit_of_measure: string
+}
+
+interface Customer {
+  id: string
+  name: string
+  code: string
+  credit_limit: number
+  payment_terms: number
+}
+
+interface OrderLineItem {
+  product_id: string
+  product_name: string
+  quantity: number
+  unit_price: number
+  discount_percentage: number
+  discount_amount: number
+  tax_percentage: number
+  tax_amount: number
+  line_total: number
+}
 
 export default function OrderCreatePage() {
   const navigate = useNavigate()
-  const [customers, setCustomers] = useState([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [calculating, setCalculating] = useState(false)
+
+  const [selectedCustomer, setSelectedCustomer] = useState<string>('')
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0])
+  const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [notes, setNotes] = useState('')
+  const [lineItems, setLineItems] = useState<OrderLineItem[]>([])
+
+  const [subtotal, setSubtotal] = useState(0)
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [taxAmount, setTaxAmount] = useState(0)
+  const [totalAmount, setTotalAmount] = useState(0)
 
   useEffect(() => {
     loadFormData()
@@ -14,90 +61,366 @@ export default function OrderCreatePage() {
 
   const loadFormData = async () => {
     try {
-      const customersRes = await customersService.getCustomers()
+      setLoading(true)
+      const [customersRes, productsRes] = await Promise.all([
+        customersService.getCustomers(),
+        productsService.getProducts()
+      ])
       setCustomers(customersRes.customers || [])
+      setProducts(productsRes.products || productsRes || [])
     } catch (error) {
       console.error('Failed to load form data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fields = [
-    {
-      name: 'order_date',
-      label: 'Order Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'customer_id',
-      label: 'Customer',
-      type: 'select' as const,
-      required: true,
-      options: customers.map((c: any) => ({
-        value: c.id,
-        label: c.name
-      }))
-    },
-    {
-      name: 'delivery_date',
-      label: 'Delivery Date',
-      type: 'date' as const
-    },
-    {
-      name: 'payment_method',
-      label: 'Payment Method',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'cash', label: 'Cash' },
-        { value: 'credit', label: 'Credit' },
-        { value: 'mobile_money', label: 'Mobile Money' }
-      ]
-    },
-    {
-      name: 'payment_status',
-      label: 'Payment Status',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'pending', label: 'Pending' },
-        { value: 'paid', label: 'Paid' }
-      ]
-    },
-    {
-      name: 'status',
-      label: 'Order Status',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'pending', label: 'Pending' },
-        { value: 'processing', label: 'Processing' }
-      ]
-    },
-    {
-      name: 'notes',
-      label: 'Notes',
-      type: 'textarea' as const,
-      placeholder: 'Add order notes...'
-    }
-  ]
+  const addLineItem = () => {
+    setLineItems([
+      ...lineItems,
+      {
+        product_id: '',
+        product_name: '',
+        quantity: 1,
+        unit_price: 0,
+        discount_percentage: 0,
+        discount_amount: 0,
+        tax_percentage: 0,
+        tax_amount: 0,
+        line_total: 0
+      }
+    ])
+  }
 
-  const handleSubmit = async (data: any) => {
-    try {
-      await ordersService.createOrder(data)
-      navigate('/orders')
-    } catch (error: any) {
-      throw new Error(error.message || 'Failed to create order')
+  const removeLineItem = (index: number) => {
+    const newItems = lineItems.filter((_, i) => i !== index)
+    setLineItems(newItems)
+    calculateTotals(newItems)
+  }
+
+  const updateLineItem = (index: number, field: string, value: any) => {
+    const newItems = [...lineItems]
+    const item = { ...newItems[index] }
+
+    if (field === 'product_id') {
+      const product = products.find(p => p.id === value)
+      if (product) {
+        item.product_id = value
+        item.product_name = product.name
+        item.unit_price = product.selling_price || product.price || 0
+        item.tax_percentage = product.tax_rate || 0
+      }
+    } else if (field === 'quantity') {
+      item.quantity = Math.max(1, parseInt(value) || 1)
+    } else if (field === 'discount_percentage') {
+      item.discount_percentage = Math.min(100, Math.max(0, parseFloat(value) || 0))
+    } else if (field === 'unit_price') {
+      item.unit_price = Math.max(0, parseFloat(value) || 0)
     }
+
+    const sub = item.unit_price * item.quantity
+    item.discount_amount = (sub * item.discount_percentage) / 100
+    const discountedSubtotal = sub - item.discount_amount
+    item.tax_amount = (discountedSubtotal * item.tax_percentage) / 100
+    item.line_total = discountedSubtotal + item.tax_amount
+
+    newItems[index] = item
+    setLineItems(newItems)
+    calculateTotals(newItems)
+  }
+
+  const calculateTotals = (items: OrderLineItem[]) => {
+    const sub = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
+    const disc = items.reduce((sum, item) => sum + item.discount_amount, 0)
+    const tax = items.reduce((sum, item) => sum + item.tax_amount, 0)
+    const total = items.reduce((sum, item) => sum + item.line_total, 0)
+
+    setSubtotal(sub)
+    setDiscountAmount(disc)
+    setTaxAmount(tax)
+    setTotalAmount(total)
+  }
+
+  const recalculateFromServer = async () => {
+    if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) return
+
+    try {
+      setCalculating(true)
+      const itemsToCalculate = lineItems
+        .filter(item => item.product_id)
+        .map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          discount_percentage: item.discount_percentage
+        }))
+
+      const result = await ordersService.calculatePricing({
+        customer_id: selectedCustomer || undefined,
+        items: itemsToCalculate
+      })
+
+      if (result && result.items) {
+        const updatedItems = lineItems.map((item, index) => {
+          const calculated = result.items[index]
+          if (calculated) {
+            return {
+              ...item,
+              unit_price: calculated.unit_price,
+              discount_amount: calculated.discount_amount,
+              tax_percentage: calculated.tax_percentage,
+              tax_amount: calculated.tax_amount,
+              line_total: calculated.line_total
+            }
+          }
+          return item
+        })
+        setLineItems(updatedItems)
+        setSubtotal(result.subtotal)
+        setDiscountAmount(result.discount_amount)
+        setTaxAmount(result.tax_amount)
+        setTotalAmount(result.total_amount)
+      }
+    } catch (error) {
+      console.error('Failed to calculate pricing:', error)
+    } finally {
+      setCalculating(false)
+    }
+  }
+
+  const handleSubmit = async (submit: boolean = false) => {
+    if (!selectedCustomer) {
+      alert('Please select a customer')
+      return
+    }
+
+    if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
+      alert('Please add at least one product')
+      return
+    }
+
+    try {
+      setSaving(true)
+      const orderData = {
+        customer_id: selectedCustomer,
+        order_date: orderDate,
+        payment_method: paymentMethod,
+        notes,
+        submit,
+        items: lineItems
+          .filter(item => item.product_id)
+          .map(item => ({
+            product_id: item.product_id,
+            quantity: item.quantity,
+            discount_percentage: item.discount_percentage
+          }))
+      }
+
+      const result = await ordersService.createOrderWithPricing(orderData)
+      
+      if (result) {
+        navigate(`/orders/${result.id}`)
+      }
+    } catch (error: any) {
+      console.error('Failed to create order:', error)
+      alert(error.response?.data?.message || 'Failed to create order')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <TransactionForm
-      title="Create Order"
-      fields={fields}
-      onSubmit={handleSubmit}
-      onCancel={() => navigate('/orders')}
-      submitLabel="Create Order"
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create New Order</h1>
+            <p className="text-sm text-gray-600">Add products and calculate pricing</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <Save className="w-4 h-4" /> Save as Draft
+          </button>
+          <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Submit Order
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <User className="w-5 h-5" /> Customer Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name} ({customer.code})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+                <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="cash">Cash</option>
+                  <option value="credit">Credit</option>
+                  <option value="mobile_money">Mobile Money</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order notes..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <Package className="w-5 h-5" /> Order Items
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={recalculateFromServer} disabled={calculating} className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                  <Calculator className="w-4 h-4" /> {calculating ? 'Calculating...' : 'Recalculate'}
+                </button>
+                <button onClick={addLineItem} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
+                  <Plus className="w-4 h-4" /> Add Product
+                </button>
+              </div>
+            </div>
+
+            {lineItems.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                <p>No products added yet</p>
+                <button onClick={addLineItem} className="mt-2 text-blue-600 hover:text-blue-700 text-sm">Add your first product</button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Qty</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Unit Price</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Disc %</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Tax</th>
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Total</th>
+                      <th className="px-4 py-3 w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {lineItems.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <select value={item.product_id} onChange={(e) => updateLineItem(index, 'product_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">Select product</option>
+                            {products.map((product) => (
+                              <option key={product.id} value={product.id}>{product.name} - R {(product.selling_price || product.price || 0).toFixed(2)}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="number" min="1" value={item.quantity} onChange={(e) => updateLineItem(index, 'quantity', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="number" min="0" step="0.01" value={item.unit_price} onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <input type="number" min="0" max="100" value={item.discount_percentage} onChange={(e) => updateLineItem(index, 'discount_percentage', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm text-gray-600">R {item.tax_amount.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">R {item.line_total.toFixed(2)}</td>
+                        <td className="px-4 py-3">
+                          <button onClick={() => removeLineItem(index)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 className="w-4 h-4" /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Calculator className="w-5 h-5" /> Order Summary
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Items</span>
+                <span className="font-medium">{lineItems.filter(i => i.product_id).length}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Subtotal</span>
+                <span className="font-medium">R {subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Discount</span>
+                <span className="font-medium text-red-600">- R {discountAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Tax</span>
+                <span className="font-medium">R {taxAmount.toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-3 mt-3">
+                <div className="flex justify-between">
+                  <span className="text-lg font-semibold text-gray-900">Total</span>
+                  <span className="text-xl font-bold text-green-600">R {totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {selectedCustomer && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Customer</h4>
+                {(() => {
+                  const customer = customers.find(c => c.id === selectedCustomer)
+                  return customer ? (
+                    <div className="text-sm text-gray-600">
+                      <p className="font-medium text-gray-900">{customer.name}</p>
+                      <p>Code: {customer.code}</p>
+                      <p>Credit Limit: R {(customer.credit_limit || 0).toLocaleString()}</p>
+                      <p>Payment Terms: {customer.payment_terms || 0} days</p>
+                    </div>
+                  ) : null
+                })()}
+              </div>
+            )}
+
+            <div className="mt-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
+              </button>
+              <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> {saving ? 'Submitting...' : 'Submit Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

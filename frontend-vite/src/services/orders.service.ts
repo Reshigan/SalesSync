@@ -242,14 +242,80 @@ class OrdersService {
 
   async getOrderStatusHistory(orderId: string): Promise<any[]> {
     try {
-      const response = await apiClient.get(`${this.baseUrl}/${orderId}/status-history`)
-      return response.data.data?.statusHistory || []
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/history`)
+      return response.data.data || []
     } catch (error) {
       console.error('Failed to fetch order status history:', error)
       return []
     }
   }
 
+  // New lifecycle methods
+  async createOrderWithPricing(orderData: {
+    customer_id: string
+    items: Array<{ product_id: string; quantity: number; discount_percentage?: number }>
+    payment_method?: string
+    notes?: string
+    submit?: boolean
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/create`, orderData)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create order with pricing:', error)
+      throw error
+    }
+  }
+
+  async transitionOrderStatus(orderId: string, newStatus: string, notes?: string): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${orderId}/transition`, {
+        new_status: newStatus,
+        notes
+      })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to transition order status:', error)
+      throw error
+    }
+  }
+
+  async getAvailableTransitions(orderId: string): Promise<{
+    current_status: string
+    current_label: string
+    available_transitions: Array<{ status: string; label: string }>
+  }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${orderId}/transitions`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to get available transitions:', error)
+      return { current_status: '', current_label: '', available_transitions: [] }
+    }
+  }
+
+  async recalculateOrder(orderId: string, items: Array<{ product_id: string; quantity: number; discount_percentage?: number }>): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${orderId}/recalculate`, { items })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to recalculate order:', error)
+      throw error
+    }
+  }
+
+  async calculatePricing(data: {
+    customer_id?: string
+    items: Array<{ product_id: string; quantity: number; discount_percentage?: number }>
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post('/pricing/calculate', data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to calculate pricing:', error)
+      throw error
+    }
+  }
 }
 
 export const ordersService = new OrdersService()
