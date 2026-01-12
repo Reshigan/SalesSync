@@ -5744,6 +5744,288 @@ api.get('/promotions/:id/analytics', async (c) => {
   }
 });
 
+// ==================== MARKETING ENDPOINTS (Aliases for frontend compatibility) ====================
+
+// Marketing Campaigns - aliases for /campaigns endpoints
+api.get('/marketing/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { search, type, status, page = 1, limit = 20 } = c.req.query();
+  
+  try {
+    let query = 'SELECT * FROM campaigns WHERE tenant_id = ?';
+    const params = [tenantId];
+    
+    if (search) {
+      query += ' AND (name LIKE ? OR description LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (type) { query += ' AND type = ?'; params.push(type); }
+    if (status) { query += ' AND status = ?'; params.push(status); }
+    
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const campaigns = await db.prepare(query).bind(...params).all();
+    const countResult = await db.prepare('SELECT COUNT(*) as total FROM campaigns WHERE tenant_id = ?').bind(tenantId).first();
+    
+    return c.json({
+      success: true,
+      data: campaigns.results || [],
+      pagination: { page: parseInt(page), limit: parseInt(limit), total: countResult?.total || 0 }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/marketing/campaigns/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!campaign) return c.json({ success: false, message: 'Campaign not found' }, 404);
+    
+    const items = await db.prepare('SELECT * FROM campaign_items WHERE campaign_id = ?').bind(id).all();
+    campaign.items = items.results || [];
+    
+    return c.json({ success: true, data: campaign });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/marketing/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const campaignCode = `CAMP-${Date.now().toString(36).toUpperCase()}`;
+    
+    await db.prepare(`
+      INSERT INTO campaigns (id, tenant_id, campaign_code, name, description, type, status, start_date, end_date, budget, spent, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, campaignCode, body.name || body.campaign_name, body.description || '', body.type || 'promotion', body.status || 'draft', body.start_date, body.end_date, body.budget || 0, 0, userId, now, now).run();
+    
+    const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: campaign }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/marketing/campaigns/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const now = new Date().toISOString();
+    await db.prepare(`
+      UPDATE campaigns SET name = ?, description = ?, type = ?, status = ?, start_date = ?, end_date = ?, budget = ?, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind(body.name || body.campaign_name, body.description, body.type, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId).run();
+    
+    const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: campaign });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Marketing Promotions - aliases for /promotions endpoints
+api.get('/marketing/promotions', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { search, type, status } = c.req.query();
+  
+  try {
+    let query = 'SELECT * FROM promotions WHERE tenant_id = ?';
+    const params = [tenantId];
+    
+    if (search) {
+      query += ' AND (name LIKE ? OR description LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
+    if (type) { query += ' AND type = ?'; params.push(type); }
+    if (status) { query += ' AND status = ?'; params.push(status); }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const promotions = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: promotions.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/marketing/promotions/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const promotion = await db.prepare('SELECT * FROM promotions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!promotion) return c.json({ success: false, message: 'Promotion not found' }, 404);
+    
+    const items = await db.prepare('SELECT * FROM promotion_items WHERE promotion_id = ?').bind(id).all();
+    promotion.items = items.results || [];
+    
+    return c.json({ success: true, data: promotion });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/marketing/promotions', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO promotions (id, tenant_id, name, description, type, status, start_date, end_date, budget, spent, usage_count, usage_limit, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.name, body.description || '', body.type || 'discount', body.status || 'draft', body.start_date, body.end_date, body.budget || 0, 0, 0, body.usage_limit || null, userId, now, now).run();
+    
+    const promotion = await db.prepare('SELECT * FROM promotions WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: promotion }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Marketing Events
+api.get('/marketing/events', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const events = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ? AND type = ? ORDER BY created_at DESC').bind(tenantId, 'event').all();
+    return c.json({ success: true, data: events.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/marketing/events/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const event = await db.prepare('SELECT * FROM campaigns WHERE id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'event').first();
+    if (!event) return c.json({ success: false, message: 'Event not found' }, 404);
+    return c.json({ success: true, data: event });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/marketing/events', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const eventCode = `EVT-${Date.now().toString(36).toUpperCase()}`;
+    
+    await db.prepare(`
+      INSERT INTO campaigns (id, tenant_id, campaign_code, name, description, type, status, start_date, end_date, budget, spent, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, eventCode, body.name, body.description || '', 'event', body.status || 'draft', body.start_date, body.end_date, body.budget || 0, 0, userId, now, now).run();
+    
+    const event = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: event }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/marketing/events/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const now = new Date().toISOString();
+    await db.prepare(`
+      UPDATE campaigns SET name = ?, description = ?, status = ?, start_date = ?, end_date = ?, budget = ?, updated_at = ?
+      WHERE id = ? AND tenant_id = ? AND type = ?
+    `).bind(body.name, body.description, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId, 'event').run();
+    
+    const event = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: event });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Marketing Activations
+api.get('/marketing/activations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const activations = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ? AND type = ? ORDER BY created_at DESC').bind(tenantId, 'activation').all();
+    return c.json({ success: true, data: activations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/marketing/activations/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const activation = await db.prepare('SELECT * FROM campaigns WHERE id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'activation').first();
+    if (!activation) return c.json({ success: false, message: 'Activation not found' }, 404);
+    return c.json({ success: true, data: activation });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/marketing/activations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const activationCode = `ACT-${Date.now().toString(36).toUpperCase()}`;
+    
+    await db.prepare(`
+      INSERT INTO campaigns (id, tenant_id, campaign_code, name, description, type, status, start_date, end_date, budget, spent, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, activationCode, body.name, body.description || '', 'activation', body.status || 'draft', body.start_date, body.end_date, body.budget || 0, 0, userId, now, now).run();
+    
+    const activation = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
+    return c.json({ success: true, data: activation }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 // ==================== ENHANCED ANALYTICS ====================
 
 // Line-item level sales analytics
