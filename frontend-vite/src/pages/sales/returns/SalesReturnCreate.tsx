@@ -1,82 +1,196 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TransactionForm from '../../../components/transactions/TransactionForm'
+import { ArrowLeft, Save, Send, RotateCcw, FileText } from 'lucide-react'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary } from '../../../components/transactions/LineItemsEditor'
 import { salesService } from '../../../services/sales.service'
+import { productsService } from '../../../services/products.service'
+
+interface Order {
+  id: string
+  order_number: string
+  customer_name: string
+  status: string
+}
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  selling_price?: number
+  tax_rate?: number
+}
 
 export default function SalesReturnCreate() {
   const navigate = useNavigate()
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const [selectedOrder, setSelectedOrder] = useState('')
+  const [returnDate, setReturnDate] = useState(new Date().toISOString().split('T')[0])
+  const [reason, setReason] = useState('')
+  const [notes, setNotes] = useState('')
+  const [lineItems, setLineItems] = useState<LineItem[]>([])
+  const [totals, setTotals] = useState<LineItemsTotals>({ subtotal: 0, discount_amount: 0, tax_amount: 0, total_amount: 0, item_count: 0 })
 
   useEffect(() => {
-    loadOrders()
+    loadFormData()
   }, [])
 
-  const loadOrders = async () => {
+  const loadFormData = async () => {
     try {
-      const response = await salesService.getOrders()
-      const fulfilledOrders = (response.data || []).filter((o: any) => o.status === 'fulfilled')
+      setLoading(true)
+      const [ordersRes, productsRes] = await Promise.all([
+        salesService.getOrders(),
+        productsService.getProducts()
+      ])
+      const allOrders = ordersRes.data || ordersRes.orders || []
+      const fulfilledOrders = allOrders.filter((o: any) => o.status === 'fulfilled' || o.status === 'delivered' || o.status === 'completed')
       setOrders(fulfilledOrders)
+      setProducts(productsRes.products || productsRes.data || [])
     } catch (error) {
-      console.error('Failed to load orders:', error)
+      console.error('Failed to load form data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fields = [
-    {
-      name: 'return_date',
-      label: 'Return Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'order_id',
-      label: 'Order',
-      type: 'select' as const,
-      required: true,
-      options: orders.map((o: any) => ({
-        value: o.id.toString(),
-        label: `${o.order_number} - ${o.customer_name}`
-      }))
-    },
-    {
-      name: 'reason',
-      label: 'Return Reason',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'defective', label: 'Defective Product' },
-        { value: 'wrong_item', label: 'Wrong Item' },
-        { value: 'damaged', label: 'Damaged in Transit' },
-        { value: 'not_needed', label: 'No Longer Needed' },
-        { value: 'quality', label: 'Quality Issues' },
-        { value: 'other', label: 'Other' }
-      ]
-    },
-    {
-      name: 'notes',
-      label: 'Notes',
-      type: 'textarea' as const,
-      required: true,
-      placeholder: 'Provide details about the return...'
+  const handleSubmit = async (submit: boolean = false) => {
+    if (!selectedOrder) {
+      alert('Please select an order')
+      return
     }
-  ]
+    if (!reason) {
+      alert('Please select a return reason')
+      return
+    }
+    if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
+      alert('Please add at least one product to return')
+      return
+    }
 
-  const handleSubmit = async (data: any) => {
     try {
-      await salesService.createReturn(data)
+      setSaving(true)
+      const returnData = {
+        order_id: selectedOrder,
+        return_date: returnDate,
+        reason,
+        notes,
+        submit,
+        items: lineItems.filter(item => item.product_id).map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          reason: reason
+        })),
+        subtotal: totals.subtotal,
+        tax_amount: totals.tax_amount,
+        total_amount: totals.total_amount
+      }
+
+      await salesService.createReturn(returnData)
       navigate('/sales/returns')
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create return')
+      console.error('Failed to create return:', error)
+      alert(error.message || 'Failed to create return')
+    } finally {
+      setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <TransactionForm
-      title="Create Sales Return"
-      fields={fields}
-      onSubmit={handleSubmit}
-      onCancel={() => navigate('/sales/returns')}
-      submitLabel="Create Return"
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/sales/returns')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Sales Return</h1>
+            <p className="text-sm text-gray-600">Select products to return from an order</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <Save className="w-4 h-4" /> Save as Draft
+          </button>
+          <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Submit Return
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <RotateCcw className="w-5 h-5" /> Return Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order *</label>
+                <select value={selectedOrder} onChange={(e) => setSelectedOrder(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select an order</option>
+                  {orders.map((order) => (
+                    <option key={order.id} value={order.id}>{order.order_number} - {order.customer_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Return Date</label>
+                <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Return Reason *</label>
+                <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a reason</option>
+                  <option value="defective">Defective Product</option>
+                  <option value="wrong_item">Wrong Item</option>
+                  <option value="damaged">Damaged in Transit</option>
+                  <option value="not_needed">No Longer Needed</option>
+                  <option value="quality">Quality Issues</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Return notes..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <LineItemsEditor
+            products={products}
+            lineItems={lineItems}
+            onLineItemsChange={setLineItems}
+            onTotalsChange={setTotals}
+            title="Return Items"
+          />
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            <TotalsSummary totals={totals} />
+            <div className="bg-white rounded-lg shadow p-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
+              </button>
+              <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> {saving ? 'Submitting...' : 'Submit Return'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

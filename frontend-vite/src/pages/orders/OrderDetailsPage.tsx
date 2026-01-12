@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit2, Printer, Download, Package, DollarSign, Calendar, User, MapPin, CheckCircle, XCircle, Clock, Truck, FileText, CreditCard, Save, X, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit2, Printer, Download, Package, DollarSign, Calendar, User, MapPin, CheckCircle, XCircle, Clock, Truck, FileText, CreditCard, Save, X, Plus, Trash2, History, RefreshCw } from 'lucide-react'
+import { ordersService } from '../../services/orders.service'
 
 interface OrderItem {
   id: string
@@ -55,10 +56,40 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
+  const [availableTransitions, setAvailableTransitions] = useState<Array<{ status: string; label: string }>>([])
+  const [statusHistory, setStatusHistory] = useState<any[]>([])
+  const [transitioning, setTransitioning] = useState(false)
 
   useEffect(() => {
     fetchOrderDetails()
   }, [id])
+
+  useEffect(() => {
+    if (id) {
+      loadTransitions()
+      loadStatusHistory()
+    }
+  }, [id, order?.status])
+
+  const loadTransitions = async () => {
+    if (!id) return
+    try {
+      const data = await ordersService.getAvailableTransitions(id)
+      setAvailableTransitions(data.available_transitions || [])
+    } catch (error) {
+      console.error('Failed to load transitions:', error)
+    }
+  }
+
+  const loadStatusHistory = async () => {
+    if (!id) return
+    try {
+      const history = await ordersService.getOrderStatusHistory(id)
+      setStatusHistory(history)
+    } catch (error) {
+      console.error('Failed to load status history:', error)
+    }
+  }
 
   const fetchOrderDetails = async () => {
     try {
@@ -156,11 +187,38 @@ export default function OrderDetailsPage() {
   }
 
   const updateOrderStatus = async (newStatus: string) => {
+    if (!id || transitioning) return
     try {
-      console.log('Updating order status to:', newStatus)
-      setOrder({ ...order!, status: newStatus as any })
-    } catch (error) {
+      setTransitioning(true)
+      const result = await ordersService.transitionOrderStatus(id, newStatus)
+      setOrder({ ...order!, status: result.new_status as any })
+      setAvailableTransitions(result.allowed_transitions?.map((s: string) => ({ status: s, label: s.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()) })) || [])
+      await loadStatusHistory()
+    } catch (error: any) {
       console.error('Failed to update order status:', error)
+      alert(error.response?.data?.message || 'Failed to update order status')
+    } finally {
+      setTransitioning(false)
+    }
+  }
+
+  const getTransitionButtonStyle = (status: string) => {
+    switch (status) {
+      case 'approved':
+      case 'completed':
+      case 'paid':
+        return 'bg-green-600 hover:bg-green-700 text-white'
+      case 'fulfilled':
+      case 'delivered':
+        return 'bg-blue-600 hover:bg-blue-700 text-white'
+      case 'cancelled':
+      case 'rejected':
+        return 'bg-red-600 hover:bg-red-700 text-white'
+      case 'processing':
+      case 'submitted':
+        return 'bg-purple-600 hover:bg-purple-700 text-white'
+      default:
+        return 'bg-gray-600 hover:bg-gray-700 text-white'
     }
   }
 
@@ -350,38 +408,72 @@ export default function OrderDetailsPage() {
 
           {/* Status Update */}
           <div className="card lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Update Order Status</h3>
-            <div className="flex gap-3">
-              <button
-                onClick={() => updateOrderStatus('confirmed')}
-                disabled={order.status === 'confirmed'}
-                className="btn btn-secondary flex items-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" /> Confirm
-              </button>
-              <button
-                onClick={() => updateOrderStatus('shipped')}
-                disabled={order.status === 'shipped'}
-                className="btn btn-secondary flex items-center gap-2"
-              >
-                <Truck className="w-4 h-4" /> Mark as Shipped
-              </button>
-              <button
-                onClick={() => updateOrderStatus('delivered')}
-                disabled={order.status === 'delivered'}
-                className="btn btn-primary flex items-center gap-2"
-              >
-                <CheckCircle className="w-4 h-4" /> Mark as Delivered
-              </button>
-              <button
-                onClick={() => updateOrderStatus('cancelled')}
-                disabled={order.status === 'cancelled'}
-                className="btn btn-danger flex items-center gap-2"
-              >
-                <XCircle className="w-4 h-4" /> Cancel Order
-              </button>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <RefreshCw className="w-5 h-5" />
+              Update Order Status
+            </h3>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Current Status: <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{order.status.replace(/_/g, ' ').toUpperCase()}</span>
+              </p>
             </div>
+            {availableTransitions.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {availableTransitions.map((transition) => (
+                  <button
+                    key={transition.status}
+                    onClick={() => updateOrderStatus(transition.status)}
+                    disabled={transitioning}
+                    className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors ${getTransitionButtonStyle(transition.status)} ${transitioning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {transitioning ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : transition.status.includes('cancel') || transition.status.includes('reject') ? (
+                      <XCircle className="w-4 h-4" />
+                    ) : transition.status.includes('deliver') || transition.status.includes('fulfill') ? (
+                      <Truck className="w-4 h-4" />
+                    ) : (
+                      <CheckCircle className="w-4 h-4" />
+                    )}
+                    {transition.label}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No status transitions available for this order.</p>
+            )}
           </div>
+
+          {/* Status History */}
+          {statusHistory.length > 0 && (
+            <div className="card lg:col-span-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <History className="w-5 h-5" />
+                Status History
+              </h3>
+              <div className="space-y-3">
+                {statusHistory.map((entry, index) => (
+                  <div key={entry.id || index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className={`w-2 h-2 rounded-full mt-2 ${index === 0 ? 'bg-blue-600' : 'bg-gray-400'}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900">
+                          {entry.old_status ? `${entry.old_status} → ${entry.new_status}` : entry.new_status}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(entry.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      {entry.notes && <p className="text-sm text-gray-600 mt-1">{entry.notes}</p>}
+                      {entry.first_name && (
+                        <p className="text-xs text-gray-500 mt-1">By {entry.first_name} {entry.last_name}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

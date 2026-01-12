@@ -2245,6 +2245,2200 @@ api.post('/users/create-demo', async (c) => {
   }
 });
 
+// ==================== PRICING ENGINE ====================
+// Server-side pricing calculation - authoritative source of truth
+const calculateLineItem = async (db, tenantId, productId, quantity, customerId = null, discountOverride = null) => {
+  // Get product with price
+  const product = await db.prepare(
+    'SELECT id, name, price, cost_price, tax_rate FROM products WHERE id = ? AND tenant_id = ?'
+  ).bind(productId, tenantId).first();
+  
+  if (!product) {
+    throw new Error(`Product ${productId} not found`);
+  }
+  
+  // Get customer-specific price if exists
+  let unitPrice = product.price || 0;
+  if (customerId) {
+    const customerPrice = await db.prepare(
+      'SELECT price FROM customer_prices WHERE customer_id = ? AND product_id = ? AND tenant_id = ? AND (effective_from IS NULL OR effective_from <= date("now")) AND (effective_to IS NULL OR effective_to >= date("now"))'
+    ).bind(customerId, productId, tenantId).first();
+    if (customerPrice) {
+      unitPrice = customerPrice.price;
+    }
+  }
+  
+  // Get tax rate from product or default
+  const taxRate = product.tax_rate || 0;
+  
+  // Calculate discount
+  const discountPercentage = discountOverride !== null ? discountOverride : 0;
+  const discountAmount = (unitPrice * quantity * discountPercentage) / 100;
+  
+  // Calculate totals
+  const subtotal = unitPrice * quantity;
+  const discountedSubtotal = subtotal - discountAmount;
+  const taxAmount = (discountedSubtotal * taxRate) / 100;
+  const lineTotal = discountedSubtotal + taxAmount;
+  
+  return {
+    product_id: productId,
+    product_name: product.name,
+    quantity,
+    unit_price: unitPrice,
+    cost_price: product.cost_price || 0,
+    discount_percentage: discountPercentage,
+    discount_amount: discountAmount,
+    tax_percentage: taxRate,
+    tax_amount: taxAmount,
+    subtotal,
+    line_total: lineTotal
+  };
+};
+
+const calculateOrderTotals = (items) => {
+  const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
+  const discountAmount = items.reduce((sum, item) => sum + (item.discount_amount || 0), 0);
+  const taxAmount = items.reduce((sum, item) => sum + (item.tax_amount || 0), 0);
+  const totalAmount = items.reduce((sum, item) => sum + item.line_total, 0);
+  
+  return { subtotal, discount_amount: discountAmount, tax_amount: taxAmount, total_amount: totalAmount };
+};
+
+// Quote/Calculate endpoint - get pricing without creating order
+api.post('/pricing/calculate', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(
+        db, tenantId, item.product_id, item.quantity, body.customer_id, item.discount_percentage
+      );
+      calculatedItems.push(calculated);
+    }
+    
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    return c.json({
+      success: true,
+      data: {
+        items: calculatedItems,
+        ...totals
+      }
+    });
+  } catch (error) {
+    console.error('Pricing calculation error:', error);
+    return c.json({ success: false, message: error.message }, 400);
+  }
+});
+
+// ==================== ORDER LIFECYCLE STATE MACHINE ====================
+const ORDER_STATUSES = {
+  draft: { next: ['submitted', 'cancelled'], label: 'Draft' },
+  submitted: { next: ['pending_approval', 'approved', 'rejected'], label: 'Submitted' },
+  pending_approval: { next: ['approved', 'rejected'], label: 'Pending Approval' },
+  approved: { next: ['processing', 'fulfilled', 'cancelled'], label: 'Approved' },
+  rejected: { next: ['draft'], label: 'Rejected' },
+  processing: { next: ['fulfilled', 'cancelled'], label: 'Processing' },
+  fulfilled: { next: ['delivered', 'partially_delivered'], label: 'Fulfilled' },
+  partially_delivered: { next: ['delivered'], label: 'Partially Delivered' },
+  delivered: { next: ['invoiced', 'completed'], label: 'Delivered' },
+  invoiced: { next: ['paid', 'partially_paid'], label: 'Invoiced' },
+  partially_paid: { next: ['paid'], label: 'Partially Paid' },
+  paid: { next: ['completed'], label: 'Paid' },
+  completed: { next: [], label: 'Completed' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+const PAYMENT_STATUSES = {
+  pending: { next: ['partial', 'paid', 'overdue'], label: 'Pending' },
+  partial: { next: ['paid', 'overdue'], label: 'Partial' },
+  paid: { next: ['refunded'], label: 'Paid' },
+  overdue: { next: ['partial', 'paid'], label: 'Overdue' },
+  refunded: { next: [], label: 'Refunded' }
+};
+
+const canTransitionTo = (currentStatus, newStatus, statusMap) => {
+  const current = statusMap[currentStatus];
+  return current && current.next.includes(newStatus);
+};
+
+// Record status change in history
+const recordStatusChange = async (db, tenantId, entityType, entityId, oldStatus, newStatus, userId, notes = null) => {
+  const id = uuidv4();
+  await db.prepare(`
+    INSERT INTO status_history (id, tenant_id, entity_type, entity_id, old_status, new_status, changed_by, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, entityType, entityId, oldStatus, newStatus, userId, notes).run();
+};
+
+// Create stock movement
+const createStockMovement = async (db, tenantId, warehouseId, productId, quantity, movementType, referenceType, referenceId, userId, notes = null) => {
+  const id = uuidv4();
+  await db.prepare(`
+    INSERT INTO stock_movements (id, tenant_id, warehouse_id, product_id, quantity, movement_type, reference_type, reference_id, created_by, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, warehouseId, productId, quantity, movementType, referenceType, referenceId, userId, notes).run();
+  
+  // Update inventory stock
+  const existingStock = await db.prepare(
+    'SELECT id, quantity FROM inventory_stock WHERE warehouse_id = ? AND product_id = ? AND tenant_id = ?'
+  ).bind(warehouseId, productId, tenantId).first();
+  
+  if (existingStock) {
+    const newQuantity = existingStock.quantity + quantity;
+    await db.prepare(
+      'UPDATE inventory_stock SET quantity = ?, updated_at = datetime("now") WHERE id = ?'
+    ).bind(newQuantity, existingStock.id).run();
+  } else {
+    const stockId = uuidv4();
+    await db.prepare(`
+      INSERT INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity, created_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `).bind(stockId, tenantId, warehouseId, productId, quantity).run();
+  }
+  
+  return id;
+};
+
+// ==================== ENHANCED ORDER ENDPOINTS ====================
+// Create order with server-side pricing
+api.post('/orders/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    // Calculate pricing server-side
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(
+        db, tenantId, item.product_id, item.quantity, body.customer_id, item.discount_percentage
+      );
+      calculatedItems.push(calculated);
+    }
+    
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const initialStatus = body.submit ? 'submitted' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, 
+        subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, 
+        order_status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(
+      id, tenantId, orderNumber, body.customer_id, body.salesman_id || userId,
+      body.order_date || new Date().toISOString().split('T')[0],
+      totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
+      body.payment_method || 'cash', 'pending', initialStatus, body.notes, userId
+    ).run();
+    
+    // Insert order items with calculated values
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, cost_price,
+          discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(
+        itemId, id, item.product_id, item.quantity, item.unit_price, item.cost_price,
+        item.discount_percentage, item.discount_amount, item.tax_percentage, item.tax_amount, item.line_total
+      ).run();
+    }
+    
+    // Record initial status
+    await recordStatusChange(db, tenantId, 'order', id, null, initialStatus, userId, 'Order created');
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        order_number: orderNumber,
+        order_status: initialStatus,
+        items: calculatedItems,
+        ...totals
+      },
+      message: 'Order created'
+    }, 201);
+  } catch (error) {
+    console.error('Create order error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Update order status (lifecycle transition)
+api.post('/orders/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const { new_status, notes } = body;
+  
+  try {
+    const order = await db.prepare(
+      'SELECT * FROM orders WHERE id = ? AND tenant_id = ?'
+    ).bind(id, tenantId).first();
+    
+    if (!order) {
+      return c.json({ success: false, message: 'Order not found' }, 404);
+    }
+    
+    const currentStatus = order.order_status;
+    
+    // Validate transition
+    if (!canTransitionTo(currentStatus, new_status, ORDER_STATUSES)) {
+      return c.json({
+        success: false,
+        message: `Cannot transition from ${currentStatus} to ${new_status}`,
+        allowed_transitions: ORDER_STATUSES[currentStatus]?.next || []
+      }, 400);
+    }
+    
+    // Update order status
+    await db.prepare(
+      'UPDATE orders SET order_status = ?, updated_at = datetime("now") WHERE id = ?'
+    ).bind(new_status, id).run();
+    
+    // Record status change
+    await recordStatusChange(db, tenantId, 'order', id, currentStatus, new_status, userId, notes);
+    
+    // Handle side effects based on new status
+    if (new_status === 'fulfilled' || new_status === 'delivered') {
+      // Deduct inventory
+      const items = await db.prepare(
+        'SELECT product_id, quantity FROM order_items WHERE order_id = ?'
+      ).bind(id).all();
+      
+      // Get default warehouse
+      const warehouse = await db.prepare(
+        'SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1'
+      ).bind(tenantId).first();
+      
+      if (warehouse) {
+        for (const item of items.results || []) {
+          await createStockMovement(
+            db, tenantId, warehouse.id, item.product_id, -item.quantity,
+            'sale', 'order', id, userId, `Order ${order.order_number} fulfilled`
+          );
+        }
+      }
+    }
+    
+    if (new_status === 'cancelled') {
+      // If order was fulfilled, restore inventory
+      if (['fulfilled', 'delivered', 'partially_delivered'].includes(currentStatus)) {
+        const items = await db.prepare(
+          'SELECT product_id, quantity FROM order_items WHERE order_id = ?'
+        ).bind(id).all();
+        
+        const warehouse = await db.prepare(
+          'SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1'
+        ).bind(tenantId).first();
+        
+        if (warehouse) {
+          for (const item of items.results || []) {
+            await createStockMovement(
+              db, tenantId, warehouse.id, item.product_id, item.quantity,
+              'cancellation', 'order', id, userId, `Order ${order.order_number} cancelled - stock restored`
+            );
+          }
+        }
+      }
+    }
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        old_status: currentStatus,
+        new_status,
+        allowed_transitions: ORDER_STATUSES[new_status]?.next || []
+      },
+      message: `Order status updated to ${new_status}`
+    });
+  } catch (error) {
+    console.error('Order transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Get order status history
+api.get('/orders/:id/history', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const history = await db.prepare(`
+    SELECT sh.*, u.first_name, u.last_name, u.email as changed_by_email
+    FROM status_history sh
+    LEFT JOIN users u ON sh.changed_by = u.id
+    WHERE sh.entity_type = 'order' AND sh.entity_id = ? AND sh.tenant_id = ?
+    ORDER BY sh.created_at DESC
+  `).bind(id, tenantId).all();
+  
+  return c.json({ success: true, data: history.results || [] });
+});
+
+// Get available transitions for an order
+api.get('/orders/:id/transitions', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const order = await db.prepare(
+    'SELECT order_status FROM orders WHERE id = ? AND tenant_id = ?'
+  ).bind(id, tenantId).first();
+  
+  if (!order) {
+    return c.json({ success: false, message: 'Order not found' }, 404);
+  }
+  
+  const currentStatus = order.order_status;
+  const statusInfo = ORDER_STATUSES[currentStatus];
+  
+  return c.json({
+    success: true,
+    data: {
+      current_status: currentStatus,
+      current_label: statusInfo?.label || currentStatus,
+      available_transitions: (statusInfo?.next || []).map(status => ({
+        status,
+        label: ORDER_STATUSES[status]?.label || status
+      }))
+    }
+  });
+});
+
+// Recalculate order totals (for editing)
+api.post('/orders/:id/recalculate', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const order = await db.prepare(
+      'SELECT * FROM orders WHERE id = ? AND tenant_id = ?'
+    ).bind(id, tenantId).first();
+    
+    if (!order) {
+      return c.json({ success: false, message: 'Order not found' }, 404);
+    }
+    
+    // Only allow recalculation for draft/submitted orders
+    if (!['draft', 'submitted', 'pending_approval'].includes(order.order_status)) {
+      return c.json({ success: false, message: 'Cannot modify order in current status' }, 400);
+    }
+    
+    // Calculate new items
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(
+        db, tenantId, item.product_id, item.quantity, order.customer_id, item.discount_percentage
+      );
+      calculatedItems.push(calculated);
+    }
+    
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    // Delete existing items
+    await db.prepare('DELETE FROM order_items WHERE order_id = ?').bind(id).run();
+    
+    // Insert new items
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, cost_price,
+          discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(
+        itemId, id, item.product_id, item.quantity, item.unit_price, item.cost_price,
+        item.discount_percentage, item.discount_amount, item.tax_percentage, item.tax_amount, item.line_total
+      ).run();
+    }
+    
+    // Update order totals
+    await db.prepare(`
+      UPDATE orders SET subtotal = ?, tax_amount = ?, discount_amount = ?, total_amount = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount, id).run();
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        items: calculatedItems,
+        ...totals
+      },
+      message: 'Order recalculated'
+    });
+  } catch (error) {
+    console.error('Recalculate order error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== ENHANCED VAN SALES ====================
+const VAN_SALE_STATUSES = {
+  draft: { next: ['completed', 'cancelled'], label: 'Draft' },
+  completed: { next: ['returned'], label: 'Completed' },
+  returned: { next: [], label: 'Returned' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+// Create van sale with server-side pricing and inventory deduction
+api.post('/van-sales/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    // Calculate pricing server-side
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(
+        db, tenantId, item.product_id, item.quantity, body.customer_id, item.discount_percentage
+      );
+      calculatedItems.push(calculated);
+    }
+    
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const saleNumber = `VS-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.draft ? 'draft' : 'completed';
+    
+    // Calculate payment
+    const amountPaid = body.amount_paid || (status === 'completed' ? totals.total_amount : 0);
+    const amountDue = totals.total_amount - amountPaid;
+    
+    await db.prepare(`
+      INSERT INTO van_sales (id, tenant_id, sale_number, van_id, agent_id, customer_id, sale_date, sale_type,
+        subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due,
+        payment_method, payment_reference, status, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      id, tenantId, saleNumber, body.van_id, body.agent_id || userId, body.customer_id,
+      body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash',
+      totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
+      amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference, status, body.notes, userId
+    ).run();
+    
+    // Insert sale items
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO van_sale_items (id, van_sale_id, product_id, quantity, unit_price,
+          discount_percentage, tax_percentage, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(
+        itemId, id, item.product_id, item.quantity, item.unit_price,
+        item.discount_percentage, item.tax_percentage, item.line_total
+      ).run();
+    }
+    
+    // Deduct from van inventory if completed
+    if (status === 'completed' && body.van_id) {
+      for (const item of calculatedItems) {
+        // Deduct from van inventory
+        await db.prepare(`
+          UPDATE van_inventory SET quantity = quantity - ?, updated_at = datetime('now')
+          WHERE van_id = ? AND product_id = ? AND tenant_id = ?
+        `).bind(item.quantity, body.van_id, item.product_id, tenantId).run();
+        
+        // Record stock movement
+        await createStockMovement(
+          db, tenantId, body.van_id, item.product_id, -item.quantity,
+          'van_sale', 'van_sale', id, userId, `Van sale ${saleNumber}`
+        );
+      }
+    }
+    
+    // Record status
+    await recordStatusChange(db, tenantId, 'van_sale', id, null, status, userId, 'Van sale created');
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        sale_number: saleNumber,
+        status,
+        items: calculatedItems,
+        ...totals,
+        amount_paid: amountPaid,
+        amount_due: amountDue
+      },
+      message: 'Van sale created'
+    }, 201);
+  } catch (error) {
+    console.error('Create van sale error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== RETURNS WITH INVENTORY RESTORATION ====================
+api.post('/returns/process', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = uuidv4();
+    const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
+    
+    // Calculate return totals
+    let totalAmount = 0;
+    const returnItems = [];
+    
+    for (const item of body.items || []) {
+      const product = await db.prepare(
+        'SELECT price, tax_rate FROM products WHERE id = ? AND tenant_id = ?'
+      ).bind(item.product_id, tenantId).first();
+      
+      if (product) {
+        const lineTotal = (product.price || 0) * item.quantity;
+        totalAmount += lineTotal;
+        returnItems.push({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: product.price,
+          line_total: lineTotal,
+          reason: item.reason
+        });
+      }
+    }
+    
+    // Create return record
+    await db.prepare(`
+      INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, 
+        status, total_amount, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, date('now'), ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, body.order_id, returnNumber, body.reason, 'pending', totalAmount, body.notes, userId).run();
+    
+    // Insert return items
+    for (const item of returnItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO return_items (id, return_id, product_id, quantity, unit_price, line_total, reason, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.line_total, item.reason).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'return', id, null, 'pending', userId, 'Return created');
+    
+    return c.json({
+      success: true,
+      data: {
+        id,
+        return_number: returnNumber,
+        status: 'pending',
+        total_amount: totalAmount,
+        items: returnItems
+      },
+      message: 'Return created'
+    }, 201);
+  } catch (error) {
+    console.error('Create return error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Approve return and restore inventory
+api.post('/returns/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  
+  try {
+    const returnRecord = await db.prepare(
+      'SELECT * FROM returns WHERE id = ? AND tenant_id = ?'
+    ).bind(id, tenantId).first();
+    
+    if (!returnRecord) {
+      return c.json({ success: false, message: 'Return not found' }, 404);
+    }
+    
+    if (returnRecord.status !== 'pending') {
+      return c.json({ success: false, message: 'Return is not pending approval' }, 400);
+    }
+    
+    // Update return status
+    await db.prepare(
+      'UPDATE returns SET status = ?, approved_by = ?, approved_at = datetime("now") WHERE id = ?'
+    ).bind('approved', userId, id).run();
+    
+    // Restore inventory
+    const items = await db.prepare(
+      'SELECT product_id, quantity FROM return_items WHERE return_id = ?'
+    ).bind(id).all();
+    
+    const warehouse = await db.prepare(
+      'SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1'
+    ).bind(tenantId).first();
+    
+    if (warehouse) {
+      for (const item of items.results || []) {
+        await createStockMovement(
+          db, tenantId, warehouse.id, item.product_id, item.quantity,
+          'return', 'return', id, userId, `Return ${returnRecord.return_number} approved - stock restored`
+        );
+      }
+    }
+    
+    await recordStatusChange(db, tenantId, 'return', id, 'pending', 'approved', userId, 'Return approved');
+    
+    return c.json({
+      success: true,
+      message: 'Return approved and inventory restored'
+    });
+  } catch (error) {
+    console.error('Approve return error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== STOCK MOVEMENTS ====================
+api.get('/stock-movements', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { warehouse_id, product_id, movement_type, limit = 50, offset = 0 } = c.req.query();
+  
+  let query = `
+    SELECT sm.*, p.name as product_name, p.code as product_code, w.name as warehouse_name,
+           u.first_name, u.last_name
+    FROM stock_movements sm
+    LEFT JOIN products p ON sm.product_id = p.id
+    LEFT JOIN warehouses w ON sm.warehouse_id = w.id
+    LEFT JOIN users u ON sm.created_by = u.id
+    WHERE sm.tenant_id = ?
+  `;
+  const params = [tenantId];
+  
+  if (warehouse_id) {
+    query += ' AND sm.warehouse_id = ?';
+    params.push(warehouse_id);
+  }
+  if (product_id) {
+    query += ' AND sm.product_id = ?';
+    params.push(product_id);
+  }
+  if (movement_type) {
+    query += ' AND sm.movement_type = ?';
+    params.push(movement_type);
+  }
+  
+  query += ' ORDER BY sm.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const movements = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: movements.results || [] });
+});
+
+// ==================== PRICE LISTS ====================
+api.get('/price-lists', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  const priceLists = await db.prepare(
+    'SELECT * FROM price_lists WHERE tenant_id = ? ORDER BY name'
+  ).bind(tenantId).all();
+  
+  return c.json({ success: true, data: priceLists.results || [] });
+});
+
+api.post('/price-lists', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  await db.prepare(`
+    INSERT INTO price_lists (id, tenant_id, name, description, currency, is_default, 
+      effective_from, effective_to, status, created_by, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(
+    id, tenantId, body.name, body.description, body.currency || 'ZAR',
+    body.is_default ? 1 : 0, body.effective_from, body.effective_to, 'active', userId
+  ).run();
+  
+  return c.json({ success: true, data: { id }, message: 'Price list created' }, 201);
+});
+
+api.get('/price-lists/:id/items', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const items = await db.prepare(`
+    SELECT pli.*, p.name as product_name, p.code as product_code
+    FROM price_list_items pli
+    LEFT JOIN products p ON pli.product_id = p.id
+    WHERE pli.price_list_id = ? AND pli.tenant_id = ?
+    ORDER BY p.name
+  `).bind(id, tenantId).all();
+  
+  return c.json({ success: true, data: items.results || [] });
+});
+
+api.post('/price-lists/:id/items', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  const itemId = uuidv4();
+  await db.prepare(`
+    INSERT INTO price_list_items (id, tenant_id, price_list_id, product_id, price, min_quantity, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(itemId, tenantId, id, body.product_id, body.price, body.min_quantity || 1).run();
+  
+  return c.json({ success: true, data: { id: itemId }, message: 'Price list item added' }, 201);
+});
+
+// ==================== INITIALIZE LIFECYCLE TABLES ====================
+api.post('/lifecycle/initialize', async (c) => {
+  const db = c.env.DB;
+  
+  try {
+    // Create status_history table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS status_history (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        old_status TEXT,
+        new_status TEXT NOT NULL,
+        changed_by TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Create stock_movements table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS stock_movements (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        warehouse_id TEXT,
+        product_id TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        movement_type TEXT NOT NULL,
+        reference_type TEXT,
+        reference_id TEXT,
+        created_by TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Create price_lists table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS price_lists (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        currency TEXT DEFAULT 'ZAR',
+        is_default INTEGER DEFAULT 0,
+        effective_from TEXT,
+        effective_to TEXT,
+        status TEXT DEFAULT 'active',
+        created_by TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Create price_list_items table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS price_list_items (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        price_list_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        price REAL NOT NULL,
+        min_quantity INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Create customer_prices table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS customer_prices (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        customer_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        price REAL NOT NULL,
+        effective_from TEXT,
+        effective_to TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Create return_items table
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS return_items (
+        id TEXT PRIMARY KEY,
+        return_id TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        quantity REAL NOT NULL,
+        unit_price REAL,
+        line_total REAL,
+        reason TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `).run();
+    
+    // Add missing columns to orders table
+    try {
+      await db.prepare('ALTER TABLE orders ADD COLUMN created_by TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    try {
+      await db.prepare('ALTER TABLE orders ADD COLUMN updated_at TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    // Add sale_number to van_sales
+    try {
+      await db.prepare('ALTER TABLE van_sales ADD COLUMN sale_number TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    try {
+      await db.prepare('ALTER TABLE van_sales ADD COLUMN created_by TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    // Add approved_by and approved_at to returns
+    try {
+      await db.prepare('ALTER TABLE returns ADD COLUMN approved_by TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    try {
+      await db.prepare('ALTER TABLE returns ADD COLUMN approved_at TEXT').run();
+    } catch (e) { /* Column may already exist */ }
+    
+    return c.json({ success: true, message: 'Lifecycle tables initialized' });
+  } catch (error) {
+    console.error('Initialize lifecycle tables error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== INVOICES WITH LINE ITEMS ====================
+const INVOICE_STATUSES = {
+  draft: { next: ['issued', 'cancelled'], label: 'Draft' },
+  issued: { next: ['partially_paid', 'paid', 'overdue', 'void'], label: 'Issued' },
+  partially_paid: { next: ['paid', 'overdue', 'void'], label: 'Partially Paid' },
+  paid: { next: ['void'], label: 'Paid' },
+  overdue: { next: ['partially_paid', 'paid', 'void'], label: 'Overdue' },
+  void: { next: [], label: 'Void' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/invoices', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, customer_id } = c.req.query();
+  
+  let query = `SELECT i.*, c.name as customer_name FROM invoices i 
+    LEFT JOIN customers c ON i.customer_id = c.id 
+    WHERE i.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND i.status = ?'; params.push(status); }
+  if (customer_id) { query += ' AND i.customer_id = ?'; params.push(customer_id); }
+  
+  query += ' ORDER BY i.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const invoices = await db.prepare(query).bind(...params).all();
+  const countResult = await db.prepare('SELECT COUNT(*) as total FROM invoices WHERE tenant_id = ?').bind(tenantId).first();
+  
+  return c.json({ success: true, data: invoices.results || [], total: countResult?.total || 0 });
+});
+
+api.get('/invoices/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const invoice = await db.prepare(`SELECT i.*, c.name as customer_name FROM invoices i 
+    LEFT JOIN customers c ON i.customer_id = c.id 
+    WHERE i.id = ? AND i.tenant_id = ?`).bind(id, tenantId).first();
+  
+  if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+  
+  const items = await db.prepare(`SELECT ii.*, p.name as product_name, p.code as product_code 
+    FROM invoice_items ii LEFT JOIN products p ON ii.product_id = p.id 
+    WHERE ii.invoice_id = ?`).bind(id).all();
+  
+  return c.json({ success: true, data: { ...invoice, items: items.results || [] } });
+});
+
+api.post('/invoices/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity, body.customer_id, item.discount_percentage);
+      calculatedItems.push(calculated);
+    }
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'issued' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO invoices (id, tenant_id, invoice_number, customer_id, order_id, invoice_date, due_date,
+        subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, status, 
+        payment_terms, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, invoiceNumber, body.customer_id, body.order_id || null,
+      body.invoice_date || new Date().toISOString().split('T')[0], body.due_date,
+      totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
+      0, totals.total_amount, status, body.payment_terms || 30, body.notes, userId).run();
+    
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO invoice_items (id, invoice_id, product_id, quantity, unit_price, cost_price,
+          discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.cost_price,
+        item.discount_percentage, item.discount_amount, item.tax_percentage, item.tax_amount, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'invoice', id, null, status, userId, 'Invoice created');
+    
+    return c.json({ success: true, data: { id, invoice_number: invoiceNumber, status, items: calculatedItems, ...totals }, message: 'Invoice created' }, 201);
+  } catch (error) {
+    console.error('Create invoice error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/invoices/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+    
+    const currentStatus = invoice.status;
+    if (!canTransitionTo(currentStatus, new_status, INVOICE_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}`, allowed_transitions: INVOICE_STATUSES[currentStatus]?.next || [] }, 400);
+    }
+    
+    await db.prepare('UPDATE invoices SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'invoice', id, currentStatus, new_status, userId, notes);
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status, allowed_transitions: INVOICE_STATUSES[new_status]?.next || [] }, message: `Invoice status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Invoice transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/invoices/:id/transitions', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const invoice = await db.prepare('SELECT status FROM invoices WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+  if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+  
+  const currentStatus = invoice.status;
+  const statusInfo = INVOICE_STATUSES[currentStatus];
+  
+  return c.json({ success: true, data: { current_status: currentStatus, current_label: statusInfo?.label || currentStatus, available_transitions: (statusInfo?.next || []).map(status => ({ status, label: INVOICE_STATUSES[status]?.label || status })) } });
+});
+
+// ==================== CREDIT NOTES WITH LINE ITEMS ====================
+const CREDIT_NOTE_STATUSES = {
+  draft: { next: ['issued', 'cancelled'], label: 'Draft' },
+  issued: { next: ['applied', 'void'], label: 'Issued' },
+  applied: { next: [], label: 'Applied' },
+  void: { next: [], label: 'Void' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/credit-notes/list', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, customer_id } = c.req.query();
+  
+  let query = `SELECT cn.*, c.name as customer_name FROM credit_notes cn 
+    LEFT JOIN customers c ON cn.customer_id = c.id 
+    WHERE cn.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND cn.status = ?'; params.push(status); }
+  if (customer_id) { query += ' AND cn.customer_id = ?'; params.push(customer_id); }
+  
+  query += ' ORDER BY cn.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const creditNotes = await db.prepare(query).bind(...params).all();
+  const countResult = await db.prepare('SELECT COUNT(*) as total FROM credit_notes WHERE tenant_id = ?').bind(tenantId).first();
+  
+  return c.json({ success: true, data: creditNotes.results || [], total: countResult?.total || 0 });
+});
+
+api.post('/credit-notes/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity, body.customer_id, item.discount_percentage);
+      calculatedItems.push(calculated);
+    }
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const creditNoteNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'issued' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO credit_notes (id, tenant_id, credit_note_number, customer_id, invoice_id, return_id, credit_date,
+        subtotal, tax_amount, discount_amount, total_amount, reason, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, creditNoteNumber, body.customer_id, body.invoice_id || null, body.return_id || null,
+      body.credit_date || new Date().toISOString().split('T')[0],
+      totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
+      body.reason, status, body.notes, userId).run();
+    
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO credit_note_items (id, credit_note_id, product_id, quantity, unit_price,
+          discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price,
+        item.discount_percentage, item.discount_amount, item.tax_percentage, item.tax_amount, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'credit_note', id, null, status, userId, 'Credit note created');
+    
+    return c.json({ success: true, data: { id, credit_note_number: creditNoteNumber, status, items: calculatedItems, ...totals }, message: 'Credit note created' }, 201);
+  } catch (error) {
+    console.error('Create credit note error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/credit-notes/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const creditNote = await db.prepare('SELECT * FROM credit_notes WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!creditNote) return c.json({ success: false, message: 'Credit note not found' }, 404);
+    
+    const currentStatus = creditNote.status;
+    if (!canTransitionTo(currentStatus, new_status, CREDIT_NOTE_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE credit_notes SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'credit_note', id, currentStatus, new_status, userId, notes);
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Credit note status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Credit note transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== SALES RETURNS WITH LINE ITEMS ====================
+const RETURN_STATUSES = {
+  draft: { next: ['submitted', 'cancelled'], label: 'Draft' },
+  submitted: { next: ['approved', 'rejected'], label: 'Submitted' },
+  approved: { next: ['processed'], label: 'Approved' },
+  processed: { next: ['closed'], label: 'Processed' },
+  closed: { next: [], label: 'Closed' },
+  rejected: { next: [], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.post('/sales/returns/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity, body.customer_id, 0);
+      calculatedItems.push({ ...calculated, reason: item.reason });
+    }
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'submitted' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO returns (id, tenant_id, return_number, order_id, customer_id, return_date, reason,
+        subtotal, tax_amount, total_amount, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, returnNumber, body.order_id || null, body.customer_id,
+      body.return_date || new Date().toISOString().split('T')[0], body.reason,
+      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes, userId).run();
+    
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO return_items (id, return_id, product_id, quantity, unit_price, line_total, reason, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.line_total, item.reason).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'return', id, null, status, userId, 'Return created');
+    
+    return c.json({ success: true, data: { id, return_number: returnNumber, status, items: calculatedItems, ...totals }, message: 'Return created' }, 201);
+  } catch (error) {
+    console.error('Create return error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/sales/returns/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const returnRecord = await db.prepare('SELECT * FROM returns WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!returnRecord) return c.json({ success: false, message: 'Return not found' }, 404);
+    
+    const currentStatus = returnRecord.status;
+    if (!canTransitionTo(currentStatus, new_status, RETURN_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE returns SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'return', id, currentStatus, new_status, userId, notes);
+    
+    // Restore inventory when approved
+    if (new_status === 'approved' || new_status === 'processed') {
+      const items = await db.prepare('SELECT product_id, quantity FROM return_items WHERE return_id = ?').bind(id).all();
+      const warehouse = await db.prepare('SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1').bind(tenantId).first();
+      
+      if (warehouse) {
+        for (const item of items.results || []) {
+          await createStockMovement(db, tenantId, warehouse.id, item.product_id, item.quantity, 'return', 'return', id, userId, `Return ${returnRecord.return_number} - stock restored`);
+        }
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Return status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Return transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== VAN LOADS WITH INVENTORY MOVEMENTS ====================
+const VAN_LOAD_STATUSES = {
+  draft: { next: ['confirmed', 'cancelled'], label: 'Draft' },
+  confirmed: { next: ['loaded', 'cancelled'], label: 'Confirmed' },
+  loaded: { next: ['dispatched'], label: 'Loaded' },
+  dispatched: { next: ['completed'], label: 'Dispatched' },
+  completed: { next: [], label: 'Completed' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/van-sales/van-loads', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, van_id } = c.req.query();
+  
+  let query = `SELECT vl.*, v.code as van_code, v.license_plate, r.name as route_name 
+    FROM van_loads vl 
+    LEFT JOIN vans v ON vl.van_id = v.id 
+    LEFT JOIN routes r ON vl.route_id = r.id 
+    WHERE vl.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND vl.status = ?'; params.push(status); }
+  if (van_id) { query += ' AND vl.van_id = ?'; params.push(van_id); }
+  
+  query += ' ORDER BY vl.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const vanLoads = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: vanLoads.results || [] });
+});
+
+api.post('/van-sales/van-loads/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity, null, 0);
+      calculatedItems.push(calculated);
+    }
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const loadNumber = `VL-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'confirmed' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO van_loads (id, tenant_id, load_number, van_id, route_id, load_date,
+        total_items, total_value, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, loadNumber, body.van_id, body.route_id,
+      body.load_date || new Date().toISOString().split('T')[0],
+      totals.item_count, totals.total_amount, status, body.notes, userId).run();
+    
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO van_load_items (id, van_load_id, product_id, quantity, unit_price, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'van_load', id, null, status, userId, 'Van load created');
+    
+    // If confirmed, move inventory from warehouse to van
+    if (status === 'confirmed' || body.submit) {
+      const warehouse = await db.prepare('SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1').bind(tenantId).first();
+      if (warehouse) {
+        for (const item of calculatedItems) {
+          // Deduct from warehouse
+          await createStockMovement(db, tenantId, warehouse.id, item.product_id, -item.quantity, 'van_load', 'van_load', id, userId, `Van load ${loadNumber} - transferred to van`);
+          // Add to van inventory
+          await db.prepare(`
+            INSERT INTO van_inventory (id, tenant_id, van_id, product_id, quantity, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            ON CONFLICT(van_id, product_id) DO UPDATE SET quantity = quantity + ?, updated_at = datetime('now')
+          `).bind(uuidv4(), tenantId, body.van_id, item.product_id, item.quantity, item.quantity).run();
+        }
+      }
+    }
+    
+    return c.json({ success: true, data: { id, load_number: loadNumber, status, items: calculatedItems, ...totals }, message: 'Van load created' }, 201);
+  } catch (error) {
+    console.error('Create van load error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/van-sales/van-loads/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const vanLoad = await db.prepare('SELECT * FROM van_loads WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!vanLoad) return c.json({ success: false, message: 'Van load not found' }, 404);
+    
+    const currentStatus = vanLoad.status;
+    if (!canTransitionTo(currentStatus, new_status, VAN_LOAD_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE van_loads SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'van_load', id, currentStatus, new_status, userId, notes);
+    
+    // Handle inventory movements on status change
+    if (new_status === 'confirmed' && currentStatus === 'draft') {
+      const items = await db.prepare('SELECT product_id, quantity FROM van_load_items WHERE van_load_id = ?').bind(id).all();
+      const warehouse = await db.prepare('SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1').bind(tenantId).first();
+      
+      if (warehouse) {
+        for (const item of items.results || []) {
+          await createStockMovement(db, tenantId, warehouse.id, item.product_id, -item.quantity, 'van_load', 'van_load', id, userId, `Van load ${vanLoad.load_number} confirmed`);
+          await db.prepare(`
+            INSERT INTO van_inventory (id, tenant_id, van_id, product_id, quantity, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            ON CONFLICT(van_id, product_id) DO UPDATE SET quantity = quantity + ?, updated_at = datetime('now')
+          `).bind(uuidv4(), tenantId, vanLoad.van_id, item.product_id, item.quantity, item.quantity).run();
+        }
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Van load status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Van load transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== VAN SALES RETURNS ====================
+api.post('/van-sales/returns/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const calculatedItems = [];
+    for (const item of body.items || []) {
+      const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity, null, 0);
+      calculatedItems.push({ ...calculated, reason: item.reason });
+    }
+    const totals = calculateOrderTotals(calculatedItems);
+    
+    const id = uuidv4();
+    const returnNumber = `VR-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'submitted' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO van_sales_returns (id, tenant_id, return_number, van_sale_id, van_id, return_date, reason,
+        subtotal, tax_amount, total_amount, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, returnNumber, body.order_id || null, body.van_id,
+      body.return_date || new Date().toISOString().split('T')[0], body.reason,
+      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes, userId).run();
+    
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO van_sales_return_items (id, van_sales_return_id, product_id, quantity, unit_price, line_total, reason, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.line_total, item.reason).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'van_sales_return', id, null, status, userId, 'Van sales return created');
+    
+    // Restore van inventory when submitted
+    if (status === 'submitted' || body.submit) {
+      for (const item of calculatedItems) {
+        await db.prepare(`
+          UPDATE van_inventory SET quantity = quantity + ?, updated_at = datetime('now')
+          WHERE van_id = ? AND product_id = ? AND tenant_id = ?
+        `).bind(item.quantity, body.van_id, item.product_id, tenantId).run();
+      }
+    }
+    
+    return c.json({ success: true, data: { id, return_number: returnNumber, status, items: calculatedItems, ...totals }, message: 'Van sales return created' }, 201);
+  } catch (error) {
+    console.error('Create van sales return error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== INVENTORY ADJUSTMENTS ====================
+const ADJUSTMENT_STATUSES = {
+  draft: { next: ['pending_approval', 'approved', 'cancelled'], label: 'Draft' },
+  pending_approval: { next: ['approved', 'rejected'], label: 'Pending Approval' },
+  approved: { next: ['posted'], label: 'Approved' },
+  posted: { next: ['reversed'], label: 'Posted' },
+  reversed: { next: [], label: 'Reversed' },
+  rejected: { next: [], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/inventory/adjustments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, warehouse_id } = c.req.query();
+  
+  let query = `SELECT ia.*, w.name as warehouse_name FROM inventory_adjustments ia 
+    LEFT JOIN warehouses w ON ia.warehouse_id = w.id 
+    WHERE ia.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND ia.status = ?'; params.push(status); }
+  if (warehouse_id) { query += ' AND ia.warehouse_id = ?'; params.push(warehouse_id); }
+  
+  query += ' ORDER BY ia.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const adjustments = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: adjustments.results || [] });
+});
+
+api.post('/inventory/adjustments/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    let totalValue = 0;
+    const adjustmentItems = [];
+    
+    for (const item of body.items || []) {
+      const product = await db.prepare('SELECT price, cost_price FROM products WHERE id = ? AND tenant_id = ?').bind(item.product_id, tenantId).first();
+      const costPrice = product?.cost_price || product?.price || 0;
+      const lineTotal = costPrice * item.quantity;
+      totalValue += lineTotal;
+      adjustmentItems.push({ product_id: item.product_id, quantity: item.quantity, cost_price: costPrice, line_total: lineTotal });
+    }
+    
+    const id = uuidv4();
+    const adjustmentNumber = `ADJ-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'approved' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, adjustment_date, adjustment_type, reason,
+        total_items, total_value, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, adjustmentNumber, body.warehouse_id,
+      body.adjustment_date || new Date().toISOString().split('T')[0],
+      body.adjustment_type || 'increase', body.reason,
+      adjustmentItems.length, totalValue, status, body.notes, userId).run();
+    
+    for (const item of adjustmentItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO inventory_adjustment_items (id, adjustment_id, product_id, quantity, cost_price, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.cost_price, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'inventory_adjustment', id, null, status, userId, 'Adjustment created');
+    
+    // Post stock movements if approved
+    if (status === 'approved' || body.submit) {
+      const multiplier = body.adjustment_type === 'decrease' ? -1 : 1;
+      for (const item of adjustmentItems) {
+        await createStockMovement(db, tenantId, body.warehouse_id, item.product_id, item.quantity * multiplier, 'adjustment', 'inventory_adjustment', id, userId, `Adjustment ${adjustmentNumber} - ${body.reason}`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, adjustment_number: adjustmentNumber, status, items: adjustmentItems, total_value: totalValue }, message: 'Adjustment created' }, 201);
+  } catch (error) {
+    console.error('Create adjustment error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/inventory/adjustments/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const adjustment = await db.prepare('SELECT * FROM inventory_adjustments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!adjustment) return c.json({ success: false, message: 'Adjustment not found' }, 404);
+    
+    const currentStatus = adjustment.status;
+    if (!canTransitionTo(currentStatus, new_status, ADJUSTMENT_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE inventory_adjustments SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'inventory_adjustment', id, currentStatus, new_status, userId, notes);
+    
+    // Post stock movements when approved/posted
+    if ((new_status === 'approved' || new_status === 'posted') && !['approved', 'posted'].includes(currentStatus)) {
+      const items = await db.prepare('SELECT product_id, quantity FROM inventory_adjustment_items WHERE adjustment_id = ?').bind(id).all();
+      const multiplier = adjustment.adjustment_type === 'decrease' ? -1 : 1;
+      
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, adjustment.warehouse_id, item.product_id, item.quantity * multiplier, 'adjustment', 'inventory_adjustment', id, userId, `Adjustment ${adjustment.adjustment_number} approved`);
+      }
+    }
+    
+    // Reverse stock movements when reversed
+    if (new_status === 'reversed') {
+      const items = await db.prepare('SELECT product_id, quantity FROM inventory_adjustment_items WHERE adjustment_id = ?').bind(id).all();
+      const multiplier = adjustment.adjustment_type === 'decrease' ? 1 : -1;
+      
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, adjustment.warehouse_id, item.product_id, item.quantity * multiplier, 'reversal', 'inventory_adjustment', id, userId, `Adjustment ${adjustment.adjustment_number} reversed`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Adjustment status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Adjustment transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== INVENTORY TRANSFERS ====================
+const TRANSFER_STATUSES = {
+  draft: { next: ['pending_approval', 'approved', 'cancelled'], label: 'Draft' },
+  pending_approval: { next: ['approved', 'rejected'], label: 'Pending Approval' },
+  approved: { next: ['in_transit'], label: 'Approved' },
+  in_transit: { next: ['received', 'cancelled'], label: 'In Transit' },
+  received: { next: ['posted'], label: 'Received' },
+  posted: { next: ['reversed'], label: 'Posted' },
+  reversed: { next: [], label: 'Reversed' },
+  rejected: { next: [], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/inventory/transfers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status } = c.req.query();
+  
+  let query = `SELECT it.*, wf.name as from_warehouse_name, wt.name as to_warehouse_name 
+    FROM inventory_transfers it 
+    LEFT JOIN warehouses wf ON it.from_warehouse_id = wf.id 
+    LEFT JOIN warehouses wt ON it.to_warehouse_id = wt.id 
+    WHERE it.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND it.status = ?'; params.push(status); }
+  
+  query += ' ORDER BY it.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const transfers = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: transfers.results || [] });
+});
+
+api.post('/inventory/transfers/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    let totalValue = 0;
+    const transferItems = [];
+    
+    for (const item of body.items || []) {
+      const product = await db.prepare('SELECT price, cost_price FROM products WHERE id = ? AND tenant_id = ?').bind(item.product_id, tenantId).first();
+      const costPrice = product?.cost_price || product?.price || 0;
+      const lineTotal = costPrice * item.quantity;
+      totalValue += lineTotal;
+      transferItems.push({ product_id: item.product_id, quantity: item.quantity, cost_price: costPrice, line_total: lineTotal });
+    }
+    
+    const id = uuidv4();
+    const transferNumber = `TRF-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'approved' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO inventory_transfers (id, tenant_id, transfer_number, from_warehouse_id, to_warehouse_id, transfer_date,
+        total_items, total_value, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, transferNumber, body.from_warehouse_id, body.to_warehouse_id,
+      body.transfer_date || new Date().toISOString().split('T')[0],
+      transferItems.length, totalValue, status, body.notes, userId).run();
+    
+    for (const item of transferItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO inventory_transfer_items (id, transfer_id, product_id, quantity, cost_price, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.cost_price, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'inventory_transfer', id, null, status, userId, 'Transfer created');
+    
+    return c.json({ success: true, data: { id, transfer_number: transferNumber, status, items: transferItems, total_value: totalValue }, message: 'Transfer created' }, 201);
+  } catch (error) {
+    console.error('Create transfer error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/inventory/transfers/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const transfer = await db.prepare('SELECT * FROM inventory_transfers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!transfer) return c.json({ success: false, message: 'Transfer not found' }, 404);
+    
+    const currentStatus = transfer.status;
+    if (!canTransitionTo(currentStatus, new_status, TRANSFER_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE inventory_transfers SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'inventory_transfer', id, currentStatus, new_status, userId, notes);
+    
+    const items = await db.prepare('SELECT product_id, quantity FROM inventory_transfer_items WHERE transfer_id = ?').bind(id).all();
+    
+    // Deduct from source warehouse when in_transit
+    if (new_status === 'in_transit' && currentStatus === 'approved') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, transfer.from_warehouse_id, item.product_id, -item.quantity, 'transfer_out', 'inventory_transfer', id, userId, `Transfer ${transfer.transfer_number} - shipped`);
+      }
+    }
+    
+    // Add to destination warehouse when received/posted
+    if ((new_status === 'received' || new_status === 'posted') && currentStatus === 'in_transit') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, transfer.to_warehouse_id, item.product_id, item.quantity, 'transfer_in', 'inventory_transfer', id, userId, `Transfer ${transfer.transfer_number} - received`);
+      }
+    }
+    
+    // Reverse movements when reversed
+    if (new_status === 'reversed') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, transfer.from_warehouse_id, item.product_id, item.quantity, 'reversal', 'inventory_transfer', id, userId, `Transfer ${transfer.transfer_number} reversed - stock restored`);
+        await createStockMovement(db, tenantId, transfer.to_warehouse_id, item.product_id, -item.quantity, 'reversal', 'inventory_transfer', id, userId, `Transfer ${transfer.transfer_number} reversed - stock removed`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Transfer status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Transfer transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== STOCK COUNTS ====================
+const STOCK_COUNT_STATUSES = {
+  draft: { next: ['in_progress', 'cancelled'], label: 'Draft' },
+  in_progress: { next: ['completed', 'cancelled'], label: 'In Progress' },
+  completed: { next: ['approved', 'rejected'], label: 'Completed' },
+  approved: { next: ['posted'], label: 'Approved' },
+  posted: { next: [], label: 'Posted' },
+  rejected: { next: ['in_progress'], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/inventory/stock-counts', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, warehouse_id } = c.req.query();
+  
+  let query = `SELECT sc.*, w.name as warehouse_name FROM stock_counts sc 
+    LEFT JOIN warehouses w ON sc.warehouse_id = w.id 
+    WHERE sc.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND sc.status = ?'; params.push(status); }
+  if (warehouse_id) { query += ' AND sc.warehouse_id = ?'; params.push(warehouse_id); }
+  
+  query += ' ORDER BY sc.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const stockCounts = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: stockCounts.results || [] });
+});
+
+api.post('/inventory/stock-counts/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const countItems = [];
+    let totalVariance = 0;
+    
+    for (const item of body.items || []) {
+      const currentStock = await db.prepare('SELECT quantity FROM inventory_stock WHERE warehouse_id = ? AND product_id = ? AND tenant_id = ?').bind(body.warehouse_id, item.product_id, tenantId).first();
+      const systemQuantity = currentStock?.quantity || 0;
+      const countedQuantity = item.quantity;
+      const variance = countedQuantity - systemQuantity;
+      totalVariance += Math.abs(variance);
+      countItems.push({ product_id: item.product_id, system_quantity: systemQuantity, counted_quantity: countedQuantity, variance });
+    }
+    
+    const id = uuidv4();
+    const countNumber = `SC-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'completed' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, count_type,
+        total_items, total_variance, status, notes, counted_by, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, countNumber, body.warehouse_id,
+      body.count_date || new Date().toISOString().split('T')[0],
+      body.count_type || 'full', countItems.length, totalVariance, status, body.notes, userId, userId).run();
+    
+    for (const item of countItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO stock_count_items (id, stock_count_id, product_id, system_quantity, counted_quantity, variance, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.system_quantity, item.counted_quantity, item.variance).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'stock_count', id, null, status, userId, 'Stock count created');
+    
+    return c.json({ success: true, data: { id, count_number: countNumber, status, items: countItems, total_variance: totalVariance }, message: 'Stock count created' }, 201);
+  } catch (error) {
+    console.error('Create stock count error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/inventory/stock-counts/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const stockCount = await db.prepare('SELECT * FROM stock_counts WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!stockCount) return c.json({ success: false, message: 'Stock count not found' }, 404);
+    
+    const currentStatus = stockCount.status;
+    if (!canTransitionTo(currentStatus, new_status, STOCK_COUNT_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE stock_counts SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'stock_count', id, currentStatus, new_status, userId, notes);
+    
+    // Apply variances when posted
+    if (new_status === 'posted' && currentStatus === 'approved') {
+      const items = await db.prepare('SELECT product_id, variance FROM stock_count_items WHERE stock_count_id = ?').bind(id).all();
+      
+      for (const item of items.results || []) {
+        if (item.variance !== 0) {
+          await createStockMovement(db, tenantId, stockCount.warehouse_id, item.product_id, item.variance, 'count_adjustment', 'stock_count', id, userId, `Stock count ${stockCount.count_number} - variance adjustment`);
+        }
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Stock count status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Stock count transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== GOODS RECEIPTS (GRN) ====================
+const GRN_STATUSES = {
+  draft: { next: ['pending_inspection', 'received', 'cancelled'], label: 'Draft' },
+  pending_inspection: { next: ['received', 'rejected'], label: 'Pending Inspection' },
+  received: { next: ['posted'], label: 'Received' },
+  posted: { next: ['reversed'], label: 'Posted' },
+  reversed: { next: [], label: 'Reversed' },
+  rejected: { next: [], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/inventory/receipts', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, warehouse_id, supplier_id } = c.req.query();
+  
+  let query = `SELECT gr.*, w.name as warehouse_name, s.name as supplier_name 
+    FROM goods_receipts gr 
+    LEFT JOIN warehouses w ON gr.warehouse_id = w.id 
+    LEFT JOIN suppliers s ON gr.supplier_id = s.id 
+    WHERE gr.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND gr.status = ?'; params.push(status); }
+  if (warehouse_id) { query += ' AND gr.warehouse_id = ?'; params.push(warehouse_id); }
+  if (supplier_id) { query += ' AND gr.supplier_id = ?'; params.push(supplier_id); }
+  
+  query += ' ORDER BY gr.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const receipts = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: receipts.results || [] });
+});
+
+api.post('/inventory/receipts/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    let totalValue = 0;
+    const receiptItems = [];
+    
+    for (const item of body.items || []) {
+      const product = await db.prepare('SELECT price, cost_price FROM products WHERE id = ? AND tenant_id = ?').bind(item.product_id, tenantId).first();
+      const costPrice = item.unit_price || product?.cost_price || product?.price || 0;
+      const lineTotal = costPrice * item.quantity;
+      totalValue += lineTotal;
+      receiptItems.push({ product_id: item.product_id, quantity: item.quantity, cost_price: costPrice, line_total: lineTotal });
+    }
+    
+    const id = uuidv4();
+    const grnNumber = `GRN-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'received' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO goods_receipts (id, tenant_id, grn_number, warehouse_id, supplier_id, purchase_order_id, receipt_date,
+        total_items, total_value, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, grnNumber, body.warehouse_id, body.supplier_id, body.purchase_order_id || null,
+      body.receipt_date || new Date().toISOString().split('T')[0],
+      receiptItems.length, totalValue, status, body.notes, userId).run();
+    
+    for (const item of receiptItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO goods_receipt_items (id, goods_receipt_id, product_id, quantity, cost_price, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.cost_price, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'goods_receipt', id, null, status, userId, 'GRN created');
+    
+    // Add to inventory when received
+    if (status === 'received' || body.submit) {
+      for (const item of receiptItems) {
+        await createStockMovement(db, tenantId, body.warehouse_id, item.product_id, item.quantity, 'receipt', 'goods_receipt', id, userId, `GRN ${grnNumber} - goods received`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, grn_number: grnNumber, status, items: receiptItems, total_value: totalValue }, message: 'GRN created' }, 201);
+  } catch (error) {
+    console.error('Create GRN error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/inventory/receipts/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const receipt = await db.prepare('SELECT * FROM goods_receipts WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!receipt) return c.json({ success: false, message: 'GRN not found' }, 404);
+    
+    const currentStatus = receipt.status;
+    if (!canTransitionTo(currentStatus, new_status, GRN_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE goods_receipts SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'goods_receipt', id, currentStatus, new_status, userId, notes);
+    
+    const items = await db.prepare('SELECT product_id, quantity FROM goods_receipt_items WHERE goods_receipt_id = ?').bind(id).all();
+    
+    // Add to inventory when received
+    if (new_status === 'received' && currentStatus !== 'received') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, receipt.warehouse_id, item.product_id, item.quantity, 'receipt', 'goods_receipt', id, userId, `GRN ${receipt.grn_number} received`);
+      }
+    }
+    
+    // Reverse when reversed
+    if (new_status === 'reversed') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, receipt.warehouse_id, item.product_id, -item.quantity, 'reversal', 'goods_receipt', id, userId, `GRN ${receipt.grn_number} reversed`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `GRN status updated to ${new_status}` });
+  } catch (error) {
+    console.error('GRN transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== INVENTORY ISSUES ====================
+const ISSUE_STATUSES = {
+  draft: { next: ['pending_approval', 'approved', 'cancelled'], label: 'Draft' },
+  pending_approval: { next: ['approved', 'rejected'], label: 'Pending Approval' },
+  approved: { next: ['issued'], label: 'Approved' },
+  issued: { next: ['reversed'], label: 'Issued' },
+  reversed: { next: [], label: 'Reversed' },
+  rejected: { next: [], label: 'Rejected' },
+  cancelled: { next: [], label: 'Cancelled' }
+};
+
+api.get('/inventory/issues', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status, warehouse_id } = c.req.query();
+  
+  let query = `SELECT ii.*, w.name as warehouse_name FROM inventory_issues ii 
+    LEFT JOIN warehouses w ON ii.warehouse_id = w.id 
+    WHERE ii.tenant_id = ?`;
+  const params = [tenantId];
+  
+  if (status) { query += ' AND ii.status = ?'; params.push(status); }
+  if (warehouse_id) { query += ' AND ii.warehouse_id = ?'; params.push(warehouse_id); }
+  
+  query += ' ORDER BY ii.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), parseInt(offset));
+  
+  const issues = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: issues.results || [] });
+});
+
+api.post('/inventory/issues/create', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    let totalValue = 0;
+    const issueItems = [];
+    
+    for (const item of body.items || []) {
+      const product = await db.prepare('SELECT price, cost_price FROM products WHERE id = ? AND tenant_id = ?').bind(item.product_id, tenantId).first();
+      const costPrice = product?.cost_price || product?.price || 0;
+      const lineTotal = costPrice * item.quantity;
+      totalValue += lineTotal;
+      issueItems.push({ product_id: item.product_id, quantity: item.quantity, cost_price: costPrice, line_total: lineTotal });
+    }
+    
+    const id = uuidv4();
+    const issueNumber = `ISS-${Date.now().toString(36).toUpperCase()}`;
+    const status = body.submit ? 'approved' : 'draft';
+    
+    await db.prepare(`
+      INSERT INTO inventory_issues (id, tenant_id, issue_number, warehouse_id, issue_date, issue_type, issued_to,
+        total_items, total_value, status, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+    `).bind(id, tenantId, issueNumber, body.warehouse_id,
+      body.issue_date || new Date().toISOString().split('T')[0],
+      body.issue_type || 'internal', body.issued_to,
+      issueItems.length, totalValue, status, body.notes, userId).run();
+    
+    for (const item of issueItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO inventory_issue_items (id, issue_id, product_id, quantity, cost_price, line_total, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).bind(itemId, id, item.product_id, item.quantity, item.cost_price, item.line_total).run();
+    }
+    
+    await recordStatusChange(db, tenantId, 'inventory_issue', id, null, status, userId, 'Issue created');
+    
+    // Deduct from inventory when approved
+    if (status === 'approved' || body.submit) {
+      for (const item of issueItems) {
+        await createStockMovement(db, tenantId, body.warehouse_id, item.product_id, -item.quantity, 'issue', 'inventory_issue', id, userId, `Issue ${issueNumber} - ${body.issue_type}`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, issue_number: issueNumber, status, items: issueItems, total_value: totalValue }, message: 'Issue created' }, 201);
+  } catch (error) {
+    console.error('Create issue error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/inventory/issues/:id/transition', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { new_status, notes } = await c.req.json();
+  
+  try {
+    const issue = await db.prepare('SELECT * FROM inventory_issues WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!issue) return c.json({ success: false, message: 'Issue not found' }, 404);
+    
+    const currentStatus = issue.status;
+    if (!canTransitionTo(currentStatus, new_status, ISSUE_STATUSES)) {
+      return c.json({ success: false, message: `Cannot transition from ${currentStatus} to ${new_status}` }, 400);
+    }
+    
+    await db.prepare('UPDATE inventory_issues SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
+    await recordStatusChange(db, tenantId, 'inventory_issue', id, currentStatus, new_status, userId, notes);
+    
+    const items = await db.prepare('SELECT product_id, quantity FROM inventory_issue_items WHERE issue_id = ?').bind(id).all();
+    
+    // Deduct from inventory when approved/issued
+    if ((new_status === 'approved' || new_status === 'issued') && !['approved', 'issued'].includes(currentStatus)) {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, issue.warehouse_id, item.product_id, -item.quantity, 'issue', 'inventory_issue', id, userId, `Issue ${issue.issue_number} approved`);
+      }
+    }
+    
+    // Reverse when reversed
+    if (new_status === 'reversed') {
+      for (const item of items.results || []) {
+        await createStockMovement(db, tenantId, issue.warehouse_id, item.product_id, item.quantity, 'reversal', 'inventory_issue', id, userId, `Issue ${issue.issue_number} reversed`);
+      }
+    }
+    
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Issue status updated to ${new_status}` });
+  } catch (error) {
+    console.error('Issue transition error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== INITIALIZE TRANSACTION TABLES ====================
+api.post('/transactions/initialize', async (c) => {
+  const db = c.env.DB;
+  
+  try {
+    // Invoices
+    await db.prepare(`CREATE TABLE IF NOT EXISTS invoices (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, invoice_number TEXT NOT NULL, customer_id TEXT,
+      order_id TEXT, invoice_date TEXT, due_date TEXT, subtotal REAL DEFAULT 0, tax_amount REAL DEFAULT 0,
+      discount_amount REAL DEFAULT 0, total_amount REAL DEFAULT 0, amount_paid REAL DEFAULT 0,
+      amount_due REAL DEFAULT 0, status TEXT DEFAULT 'draft', payment_terms INTEGER DEFAULT 30,
+      notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS invoice_items (
+      id TEXT PRIMARY KEY, invoice_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      unit_price REAL DEFAULT 0, cost_price REAL DEFAULT 0, discount_percentage REAL DEFAULT 0,
+      discount_amount REAL DEFAULT 0, tax_percentage REAL DEFAULT 0, tax_amount REAL DEFAULT 0,
+      line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Credit Notes
+    await db.prepare(`CREATE TABLE IF NOT EXISTS credit_notes (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, credit_note_number TEXT NOT NULL, customer_id TEXT,
+      invoice_id TEXT, return_id TEXT, credit_date TEXT, subtotal REAL DEFAULT 0, tax_amount REAL DEFAULT 0,
+      discount_amount REAL DEFAULT 0, total_amount REAL DEFAULT 0, reason TEXT, status TEXT DEFAULT 'draft',
+      notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS credit_note_items (
+      id TEXT PRIMARY KEY, credit_note_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      unit_price REAL DEFAULT 0, discount_percentage REAL DEFAULT 0, discount_amount REAL DEFAULT 0,
+      tax_percentage REAL DEFAULT 0, tax_amount REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Van Loads
+    await db.prepare(`CREATE TABLE IF NOT EXISTS van_loads (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, load_number TEXT NOT NULL, van_id TEXT,
+      route_id TEXT, load_date TEXT, total_items INTEGER DEFAULT 0, total_value REAL DEFAULT 0,
+      status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS van_load_items (
+      id TEXT PRIMARY KEY, van_load_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      unit_price REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Van Sales Returns
+    await db.prepare(`CREATE TABLE IF NOT EXISTS van_sales_returns (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, return_number TEXT NOT NULL, van_sale_id TEXT,
+      van_id TEXT, return_date TEXT, reason TEXT, subtotal REAL DEFAULT 0, tax_amount REAL DEFAULT 0,
+      total_amount REAL DEFAULT 0, status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT,
+      created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS van_sales_return_items (
+      id TEXT PRIMARY KEY, van_sales_return_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      unit_price REAL DEFAULT 0, line_total REAL DEFAULT 0, reason TEXT, created_at TEXT
+    )`).run();
+    
+    // Inventory Adjustments
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_adjustments (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, adjustment_number TEXT NOT NULL, warehouse_id TEXT,
+      adjustment_date TEXT, adjustment_type TEXT DEFAULT 'increase', reason TEXT, total_items INTEGER DEFAULT 0,
+      total_value REAL DEFAULT 0, status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT,
+      created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_adjustment_items (
+      id TEXT PRIMARY KEY, adjustment_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      cost_price REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Inventory Transfers
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_transfers (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, transfer_number TEXT NOT NULL, from_warehouse_id TEXT,
+      to_warehouse_id TEXT, transfer_date TEXT, total_items INTEGER DEFAULT 0, total_value REAL DEFAULT 0,
+      status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_transfer_items (
+      id TEXT PRIMARY KEY, transfer_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      cost_price REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Stock Counts
+    await db.prepare(`CREATE TABLE IF NOT EXISTS stock_counts (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, count_number TEXT NOT NULL, warehouse_id TEXT,
+      count_date TEXT, count_type TEXT DEFAULT 'full', total_items INTEGER DEFAULT 0, total_variance REAL DEFAULT 0,
+      status TEXT DEFAULT 'draft', notes TEXT, counted_by TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS stock_count_items (
+      id TEXT PRIMARY KEY, stock_count_id TEXT NOT NULL, product_id TEXT, system_quantity REAL DEFAULT 0,
+      counted_quantity REAL DEFAULT 0, variance REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Goods Receipts (GRN)
+    await db.prepare(`CREATE TABLE IF NOT EXISTS goods_receipts (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, grn_number TEXT NOT NULL, warehouse_id TEXT,
+      supplier_id TEXT, purchase_order_id TEXT, receipt_date TEXT, total_items INTEGER DEFAULT 0,
+      total_value REAL DEFAULT 0, status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT,
+      created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS goods_receipt_items (
+      id TEXT PRIMARY KEY, goods_receipt_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      cost_price REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Inventory Issues
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_issues (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, issue_number TEXT NOT NULL, warehouse_id TEXT,
+      issue_date TEXT, issue_type TEXT DEFAULT 'internal', issued_to TEXT, total_items INTEGER DEFAULT 0,
+      total_value REAL DEFAULT 0, status TEXT DEFAULT 'draft', notes TEXT, created_by TEXT,
+      created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_issue_items (
+      id TEXT PRIMARY KEY, issue_id TEXT NOT NULL, product_id TEXT, quantity REAL DEFAULT 1,
+      cost_price REAL DEFAULT 0, line_total REAL DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Add customer_id to returns if missing
+    try { await db.prepare('ALTER TABLE returns ADD COLUMN customer_id TEXT').run(); } catch (e) {}
+    try { await db.prepare('ALTER TABLE returns ADD COLUMN subtotal REAL DEFAULT 0').run(); } catch (e) {}
+    try { await db.prepare('ALTER TABLE returns ADD COLUMN tax_amount REAL DEFAULT 0').run(); } catch (e) {}
+    try { await db.prepare('ALTER TABLE returns ADD COLUMN updated_at TEXT').run(); } catch (e) {}
+    
+    // Suppliers table
+    await db.prepare(`CREATE TABLE IF NOT EXISTS suppliers (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT,
+      contact_person TEXT, email TEXT, phone TEXT, address TEXT, status TEXT DEFAULT 'active',
+      created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    return c.json({ success: true, message: 'Transaction tables initialized' });
+  } catch (error) {
+    console.error('Initialize transaction tables error:', error);
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 // Mount protected routes
 app.route('/api', api);
 

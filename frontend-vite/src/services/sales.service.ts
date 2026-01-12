@@ -1,27 +1,41 @@
 import api from './api'
 
 export const salesService = {
-  // Orders
-  getOrders: () => api.get('/sales/orders'),
-  getOrder: (id: number) => api.get(`/sales/orders/${id}`),
-  createOrder: (data: any) => api.post('/sales/orders', data),
-  updateOrder: (id: number, data: any) => api.put(`/sales/orders/${id}`, data),
+  // Orders - use authoritative endpoints with server-side pricing
+  getOrders: () => api.get('/orders'),
+  getOrder: (id: string) => api.get(`/orders/${id}`),
+  createOrder: (data: any) => api.post('/orders/create', data),
+  updateOrder: (id: string, data: any) => api.put(`/orders/${id}`, data),
+  transitionOrder: (id: string, new_status: string, notes?: string) => 
+    api.post(`/orders/${id}/transition`, { new_status, notes }),
+  getOrderTransitions: (id: string) => api.get(`/orders/${id}/transitions`),
+  getOrderHistory: (id: string) => api.get(`/orders/${id}/history`),
+  recalculateOrder: (id: string, items: any[]) => api.post(`/orders/${id}/recalculate`, { items }),
   
-  // Invoices
-  getInvoices: () => api.get('/sales/invoices'),
-  getInvoice: (id: number) => api.get(`/sales/invoices/${id}`),
-  createInvoice: (data: any) => api.post('/sales/invoices', data),
+  // Invoices - use authoritative endpoints with server-side pricing
+  getInvoices: () => api.get('/invoices'),
+  getInvoice: (id: string) => api.get(`/invoices/${id}`),
+  createInvoice: (data: any) => api.post('/invoices/create', data),
+  transitionInvoice: (id: string, new_status: string, notes?: string) => 
+    api.post(`/invoices/${id}/transition`, { new_status, notes }),
+  getInvoiceTransitions: (id: string) => api.get(`/invoices/${id}/transitions`),
   
   // Payments
   getPayments: () => api.get('/sales/payments'),
-  getPayment: (id: number) => api.get(`/sales/payments/${id}`),
+  getPayment: (id: string) => api.get(`/sales/payments/${id}`),
   createPayment: (data: any) => api.post('/sales/payments', data),
   
-  getCreditNotes: () => api.get('/sales/credit-notes'),
-  getCreditNote: (id: number) => api.get(`/sales/credit-notes/${id}`),
-  createCreditNote: (data: any) => api.post('/sales/credit-notes', data),
+  // Credit Notes - use authoritative endpoints with server-side pricing
+  getCreditNotes: () => api.get('/credit-notes/list'),
+  getCreditNote: (id: string) => api.get(`/credit-notes/${id}`),
+  createCreditNote: (data: any) => api.post('/credit-notes/create', data),
+  transitionCreditNote: (id: string, new_status: string, notes?: string) => 
+    api.post(`/credit-notes/${id}/transition`, { new_status, notes }),
   
+  // Returns - use authoritative endpoints with server-side pricing
   getReturns: () => api.get('/sales/returns'),
-  getReturn: (id: number) => api.get(`/sales/returns/${id}`),
-  createReturn: (data: any) => api.post('/sales/returns', data),
+  getReturn: (id: string) => api.get(`/sales/returns/${id}`),
+  createReturn: (data: any) => api.post('/sales/returns/create', data),
+  transitionReturn: (id: string, new_status: string, notes?: string) => 
+    api.post(`/sales/returns/${id}/transition`, { new_status, notes }),
 }

@@ -1,73 +1,204 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TransactionForm from '../../../components/transactions/TransactionForm'
+import { ArrowLeft, Save, Send, FileText, User } from 'lucide-react'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary } from '../../../components/transactions/LineItemsEditor'
 import { salesService } from '../../../services/sales.service'
+import { productsService } from '../../../services/products.service'
+import { customersService } from '../../../services/customers.service'
+
+interface Customer {
+  id: string
+  name: string
+  code?: string
+}
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  selling_price?: number
+  tax_rate?: number
+}
 
 export default function InvoiceCreate() {
   const navigate = useNavigate()
-  const [orders, setOrders] = useState([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const [selectedCustomer, setSelectedCustomer] = useState('')
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0])
+  const [dueDate, setDueDate] = useState('')
+  const [paymentTerms, setPaymentTerms] = useState('30')
+  const [notes, setNotes] = useState('')
+  const [lineItems, setLineItems] = useState<LineItem[]>([])
+  const [totals, setTotals] = useState<LineItemsTotals>({ subtotal: 0, discount_amount: 0, tax_amount: 0, total_amount: 0, item_count: 0 })
 
   useEffect(() => {
-    loadOrders()
+    loadFormData()
   }, [])
 
-  const loadOrders = async () => {
+  useEffect(() => {
+    if (invoiceDate && paymentTerms) {
+      const date = new Date(invoiceDate)
+      date.setDate(date.getDate() + parseInt(paymentTerms))
+      setDueDate(date.toISOString().split('T')[0])
+    }
+  }, [invoiceDate, paymentTerms])
+
+  const loadFormData = async () => {
     try {
-      const response = await salesService.getOrders()
-      const uninvoicedOrders = (response.data || []).filter((o: any) => o.status === 'confirmed' && !o.invoiced)
-      setOrders(uninvoicedOrders)
+      setLoading(true)
+      const [customersRes, productsRes] = await Promise.all([
+        customersService.getCustomers(),
+        productsService.getProducts()
+      ])
+      setCustomers(customersRes.customers || customersRes.data || [])
+      setProducts(productsRes.products || productsRes.data || [])
     } catch (error) {
-      console.error('Failed to load orders:', error)
+      console.error('Failed to load form data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fields = [
-    {
-      name: 'invoice_date',
-      label: 'Invoice Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'order_id',
-      label: 'Order',
-      type: 'select' as const,
-      required: true,
-      options: orders.map((o: any) => ({
-        value: o.id.toString(),
-        label: `${o.order_number} - ${o.customer_name}`
-      }))
-    },
-    {
-      name: 'due_date',
-      label: 'Due Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'notes',
-      label: 'Notes',
-      type: 'textarea' as const,
-      placeholder: 'Add invoice notes...'
+  const handleSubmit = async (submit: boolean = false) => {
+    if (!selectedCustomer) {
+      alert('Please select a customer')
+      return
     }
-  ]
+    if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
+      alert('Please add at least one item')
+      return
+    }
 
-  const handleSubmit = async (data: any) => {
     try {
-      await salesService.createInvoice(data)
+      setSaving(true)
+      const invoiceData = {
+        customer_id: selectedCustomer,
+        invoice_date: invoiceDate,
+        due_date: dueDate,
+        payment_terms: parseInt(paymentTerms),
+        notes,
+        submit,
+        items: lineItems.filter(item => item.product_id).map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_percentage: item.discount_percentage
+        })),
+        subtotal: totals.subtotal,
+        discount_amount: totals.discount_amount,
+        tax_amount: totals.tax_amount,
+        total_amount: totals.total_amount
+      }
+
+      await salesService.createInvoice(invoiceData)
       navigate('/sales/invoices')
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create invoice')
+      console.error('Failed to create invoice:', error)
+      alert(error.message || 'Failed to create invoice')
+    } finally {
+      setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <TransactionForm
-      title="Create Sales Invoice"
-      fields={fields}
-      onSubmit={handleSubmit}
-      onCancel={() => navigate('/sales/invoices')}
-      submitLabel="Create Invoice"
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/sales/invoices')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Sales Invoice</h1>
+            <p className="text-sm text-gray-600">Add items and generate invoice</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <Save className="w-4 h-4" /> Save as Draft
+          </button>
+          <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Send Invoice
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FileText className="w-5 h-5" /> Invoice Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
+                <input type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms (days)</label>
+                <select value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="0">Due on Receipt</option>
+                  <option value="7">Net 7</option>
+                  <option value="14">Net 14</option>
+                  <option value="30">Net 30</option>
+                  <option value="60">Net 60</option>
+                  <option value="90">Net 90</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Invoice notes..." rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <LineItemsEditor
+            products={products}
+            lineItems={lineItems}
+            onLineItemsChange={setLineItems}
+            onTotalsChange={setTotals}
+            title="Invoice Items"
+          />
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            <TotalsSummary totals={totals} />
+            <div className="bg-white rounded-lg shadow p-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
+              </button>
+              <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> {saving ? 'Sending...' : 'Send Invoice'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

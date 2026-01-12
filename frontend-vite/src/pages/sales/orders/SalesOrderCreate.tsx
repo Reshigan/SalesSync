@@ -1,12 +1,44 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import TransactionForm from '../../../components/transactions/TransactionForm'
+import { ArrowLeft, Save, Send, ShoppingCart, User } from 'lucide-react'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary } from '../../../components/transactions/LineItemsEditor'
 import { salesService } from '../../../services/sales.service'
+import { productsService } from '../../../services/products.service'
+
+interface Customer {
+  id: string
+  name: string
+}
+
+interface SalesRep {
+  id: string
+  name: string
+}
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  selling_price?: number
+  tax_rate?: number
+}
 
 export default function SalesOrderCreate() {
   const navigate = useNavigate()
-  const [customers, setCustomers] = useState([])
-  const [salesReps, setSalesReps] = useState([])
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [salesReps, setSalesReps] = useState<SalesRep[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  const [selectedCustomer, setSelectedCustomer] = useState('')
+  const [selectedSalesRep, setSelectedSalesRep] = useState('')
+  const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0])
+  const [deliveryDate, setDeliveryDate] = useState('')
+  const [paymentTerms, setPaymentTerms] = useState('cash')
+  const [notes, setNotes] = useState('')
+  const [lineItems, setLineItems] = useState<LineItem[]>([])
+  const [totals, setTotals] = useState<LineItemsTotals>({ subtotal: 0, discount_amount: 0, tax_amount: 0, total_amount: 0, item_count: 0 })
 
   useEffect(() => {
     loadFormData()
@@ -14,86 +46,166 @@ export default function SalesOrderCreate() {
 
   const loadFormData = async () => {
     try {
-      const [customersRes, salesRepsRes] = await Promise.all([
+      setLoading(true)
+      const [customersRes, salesRepsRes, productsRes] = await Promise.all([
         salesService.getCustomers(),
-        salesService.getSalesReps()
+        salesService.getSalesReps(),
+        productsService.getProducts()
       ])
-      setCustomers(customersRes.data || [])
-      setSalesReps(salesRepsRes.data || [])
+      setCustomers(customersRes.data || customersRes.customers || [])
+      setSalesReps(salesRepsRes.data || salesRepsRes.sales_reps || [])
+      setProducts(productsRes.products || productsRes.data || [])
     } catch (error) {
       console.error('Failed to load form data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const fields = [
-    {
-      name: 'order_date',
-      label: 'Order Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'customer_id',
-      label: 'Customer',
-      type: 'select' as const,
-      required: true,
-      options: customers.map((c: any) => ({
-        value: c.id.toString(),
-        label: c.name
-      }))
-    },
-    {
-      name: 'sales_rep_id',
-      label: 'Sales Rep',
-      type: 'select' as const,
-      required: true,
-      options: salesReps.map((s: any) => ({
-        value: s.id.toString(),
-        label: s.name
-      }))
-    },
-    {
-      name: 'delivery_date',
-      label: 'Delivery Date',
-      type: 'date' as const,
-      required: true
-    },
-    {
-      name: 'payment_terms',
-      label: 'Payment Terms',
-      type: 'select' as const,
-      required: true,
-      options: [
-        { value: 'cash', label: 'Cash' },
-        { value: 'credit_7', label: 'Credit 7 Days' },
-        { value: 'credit_30', label: 'Credit 30 Days' },
-        { value: 'credit_60', label: 'Credit 60 Days' }
-      ]
-    },
-    {
-      name: 'notes',
-      label: 'Notes',
-      type: 'textarea' as const,
-      placeholder: 'Add order notes...'
+  const handleSubmit = async (submit: boolean = false) => {
+    if (!selectedCustomer) {
+      alert('Please select a customer')
+      return
     }
-  ]
+    if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
+      alert('Please add at least one product')
+      return
+    }
 
-  const handleSubmit = async (data: any) => {
     try {
-      await salesService.createOrder(data)
+      setSaving(true)
+      const orderData = {
+        customer_id: selectedCustomer,
+        sales_rep_id: selectedSalesRep || undefined,
+        order_date: orderDate,
+        delivery_date: deliveryDate || undefined,
+        payment_terms: paymentTerms,
+        notes,
+        submit,
+        items: lineItems.filter(item => item.product_id).map(item => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_percentage: item.discount_percentage
+        })),
+        subtotal: totals.subtotal,
+        discount_amount: totals.discount_amount,
+        tax_amount: totals.tax_amount,
+        total_amount: totals.total_amount
+      }
+
+      await salesService.createOrder(orderData)
       navigate('/sales/orders')
     } catch (error: any) {
-      throw new Error(error.message || 'Failed to create order')
+      console.error('Failed to create order:', error)
+      alert(error.message || 'Failed to create order')
+    } finally {
+      setSaving(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
   }
 
   return (
-    <TransactionForm
-      title="Create Sales Order"
-      fields={fields}
-      onSubmit={handleSubmit}
-      onCancel={() => navigate('/sales/orders')}
-      submitLabel="Create Order"
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/sales/orders')} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Create Sales Order</h1>
+            <p className="text-sm text-gray-600">Create a new sales order</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+            <Save className="w-4 h-4" /> Save as Draft
+          </button>
+          <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Submit Order
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5" /> Order Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>{customer.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sales Rep</label>
+                <select value={selectedSalesRep} onChange={(e) => setSelectedSalesRep(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a sales rep</option>
+                  {salesReps.map((rep) => (
+                    <option key={rep.id} value={rep.id}>{rep.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
+                <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Date</label>
+                <input type="date" value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+                <select value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="cash">Cash</option>
+                  <option value="credit_7">Credit 7 Days</option>
+                  <option value="credit_30">Credit 30 Days</option>
+                  <option value="credit_60">Credit 60 Days</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order notes..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+              </div>
+            </div>
+          </div>
+
+          <LineItemsEditor
+            products={products}
+            lineItems={lineItems}
+            onLineItemsChange={setLineItems}
+            onTotalsChange={setTotals}
+            title="Order Items"
+          />
+        </div>
+
+        <div className="lg:col-span-1">
+          <div className="sticky top-6 space-y-6">
+            <TotalsSummary totals={totals} />
+            <div className="bg-white rounded-lg shadow p-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+                <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
+              </button>
+              <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" /> {saving ? 'Submitting...' : 'Submit Order'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
