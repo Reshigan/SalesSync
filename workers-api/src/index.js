@@ -4439,47 +4439,6 @@ api.post('/transactions/initialize', async (c) => {
   }
 });
 
-// Mount protected routes
-app.route('/api', api);
-
-// File upload endpoint (R2)
-app.post('/api/upload', authMiddleware, async (c) => {
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get('file');
-    
-    if (!file) {
-      return c.json({ success: false, message: 'No file provided' }, 400);
-    }
-    
-    const filename = `${Date.now()}-${file.name}`;
-    await c.env.UPLOADS.put(filename, file.stream(), {
-      httpMetadata: { contentType: file.type }
-    });
-    
-    return c.json({ success: true, data: { filename, url: `/files/${filename}` } });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return c.json({ success: false, message: 'Upload failed' }, 500);
-  }
-});
-
-// Serve files from R2
-app.get('/files/:filename', async (c) => {
-  const { filename } = c.req.param();
-  const object = await c.env.UPLOADS.get(filename);
-  
-  if (!object) {
-    return c.json({ success: false, message: 'File not found' }, 404);
-  }
-  
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set('etag', object.httpEtag);
-  
-  return new Response(object.body, { headers });
-});
-
 // ==================== FIELD OPERATIONS ====================
 
 // Field Operations Stats
@@ -6655,6 +6614,47 @@ api.post('/initialize-field-ops-tables', async (c) => {
     console.error('Initialize field ops tables error:', error);
     return c.json({ success: false, message: error.message }, 500);
   }
+});
+
+// Mount protected routes
+app.route('/api', api);
+
+// File upload endpoint (R2)
+app.post('/api/upload', authMiddleware, async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    
+    if (!file) {
+      return c.json({ success: false, message: 'No file provided' }, 400);
+    }
+    
+    const filename = `${Date.now()}-${file.name}`;
+    await c.env.UPLOADS.put(filename, file.stream(), {
+      httpMetadata: { contentType: file.type }
+    });
+    
+    return c.json({ success: true, data: { filename, url: `/files/${filename}` } });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return c.json({ success: false, message: 'Upload failed' }, 500);
+  }
+});
+
+// Serve files from R2
+app.get('/files/:filename', async (c) => {
+  const { filename } = c.req.param();
+  const object = await c.env.UPLOADS.get(filename);
+  
+  if (!object) {
+    return c.json({ success: false, message: 'File not found' }, 404);
+  }
+  
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  
+  return new Response(object.body, { headers });
 });
 
 export default app;
