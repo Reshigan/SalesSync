@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, User, Truck } from 'lucide-react'
-import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary, createEmptyLineItem, calculateTotals } from '../../../components/transactions/LineItemsEditor'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary, createEmptyLineItem, calculateTotals, Discount } from '../../../components/transactions/LineItemsEditor'
 import { vanSalesService } from '../../../services/van-sales.service'
+import { discountsService } from '../../../services/discounts.service'
 
 interface Customer {
   id: string
@@ -28,6 +29,7 @@ export default function VanSalesOrderCreate() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [discounts, setDiscounts] = useState<Discount[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -47,14 +49,16 @@ export default function VanSalesOrderCreate() {
   const loadFormData = async () => {
     try {
       setLoading(true)
-      const [customersRes, routesRes, productsRes] = await Promise.all([
+      const [customersRes, routesRes, productsRes, discountsRes] = await Promise.all([
         vanSalesService.getCustomers(),
         vanSalesService.getRoutes(),
-        vanSalesService.getProducts()
+        vanSalesService.getProducts(),
+        discountsService.getDiscounts({ is_active: true })
       ])
       setCustomers(customersRes.data || customersRes.customers || [])
       setRoutes(routesRes.data || routesRes.routes || [])
       setProducts(productsRes.data || productsRes.products || [])
+      setDiscounts(discountsRes.map((d: any) => ({ id: d.id, name: d.name, value: d.value, discount_type: d.discount_type })))
     } catch (error) {
       console.error('Failed to load form data:', error)
     } finally {
@@ -188,6 +192,7 @@ export default function VanSalesOrderCreate() {
 
           <LineItemsEditor
             products={products}
+            discounts={discounts}
             lineItems={lineItems}
             onLineItemsChange={setLineItems}
             onTotalsChange={setTotals}

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, FileText, User } from 'lucide-react'
-import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary } from '../../../components/transactions/LineItemsEditor'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary, Discount } from '../../../components/transactions/LineItemsEditor'
 import { salesService } from '../../../services/sales.service'
 import { productsService } from '../../../services/products.service'
 import { customersService } from '../../../services/customers.service'
+import { discountsService } from '../../../services/discounts.service'
 
 interface Customer {
   id: string
@@ -24,6 +25,7 @@ export default function InvoiceCreate() {
   const navigate = useNavigate()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [discounts, setDiscounts] = useState<Discount[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -50,12 +52,14 @@ export default function InvoiceCreate() {
   const loadFormData = async () => {
     try {
       setLoading(true)
-      const [customersRes, productsRes] = await Promise.all([
+      const [customersRes, productsRes, discountsRes] = await Promise.all([
         customersService.getCustomers(),
-        productsService.getProducts()
+        productsService.getProducts(),
+        discountsService.getDiscounts({ is_active: true })
       ])
       setCustomers(customersRes.customers || customersRes.data || [])
       setProducts(productsRes.products || productsRes.data || [])
+      setDiscounts(discountsRes.map((d: any) => ({ id: d.id, name: d.name, value: d.value, discount_type: d.discount_type })))
     } catch (error) {
       console.error('Failed to load form data:', error)
     } finally {
@@ -178,6 +182,7 @@ export default function InvoiceCreate() {
 
           <LineItemsEditor
             products={products}
+            discounts={discounts}
             lineItems={lineItems}
             onLineItemsChange={setLineItems}
             onTotalsChange={setTotals}

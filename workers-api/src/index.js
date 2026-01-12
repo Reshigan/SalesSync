@@ -416,7 +416,7 @@ api.post('/orders', async (c) => {
   await db.prepare(`
     INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id, body.order_date || new Date().toISOString().split('T')[0], body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.payment_method, 'pending', 'pending', body.notes).run();
+  `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id, body.order_date || new Date().toISOString().split('T')[0], body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.payment_method, 'pending', 'pending', body.notes ?? null).run();
   
   // Insert order items
   if (body.items && body.items.length > 0) {
@@ -471,7 +471,7 @@ api.post('/van-sales', async (c) => {
   await db.prepare(`
     INSERT INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, payment_reference, status, notes, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.van_id, body.agent_id, body.customer_id, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.amount_paid || 0, body.amount_due || 0, body.payment_method, body.payment_reference, 'completed', body.notes).run();
+  `).bind(id, tenantId, body.van_id, body.agent_id, body.customer_id, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.amount_paid || 0, body.amount_due || 0, body.payment_method, body.payment_reference ?? null, 'completed', body.notes ?? null).run();
   
   // Insert sale items
   if (body.items && body.items.length > 0) {
@@ -575,7 +575,7 @@ api.post('/visits', async (c) => {
   await db.prepare(`
     INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, latitude, longitude, visit_type, purpose, notes, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.agent_id, body.customer_id, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time, body.latitude, body.longitude, body.visit_type, body.purpose, body.notes, 'in_progress').run();
+  `).bind(id, tenantId, body.agent_id, body.customer_id, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time, body.latitude, body.longitude, body.visit_type, body.purpose, body.notes ?? null, 'in_progress').run();
   
   return c.json({ success: true, data: { id }, message: 'Visit started' }, 201);
 });
@@ -616,7 +616,7 @@ api.post('/returns', async (c) => {
   await db.prepare(`
     INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
     VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
+  `).bind(id, tenantId, body.order_id, returnNumber, body.reason ?? null, body.total_amount || 0, body.notes ?? null, userId).run();
   
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
 });
@@ -671,7 +671,7 @@ api.post('/orders-enhanced/returns', async (c) => {
   await db.prepare(`
     INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
     VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
+  `).bind(id, tenantId, body.order_id, returnNumber, body.reason ?? null, body.total_amount || 0, body.notes ?? null, userId).run();
   
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
 });
@@ -692,7 +692,7 @@ api.post('/orders-enhanced/returns/:id/reject', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
   
-  await db.prepare('UPDATE returns SET status = ?, rejection_reason = ? WHERE id = ? AND tenant_id = ?').bind('rejected', body.reason, id, tenantId).run();
+  await db.prepare('UPDATE returns SET status = ?, rejection_reason = ? WHERE id = ? AND tenant_id = ?').bind('rejected', body.reason ?? null, id, tenantId).run();
   
   return c.json({ success: true, message: 'Return rejected' });
 });
@@ -774,7 +774,7 @@ api.post('/sales/returns', async (c) => {
   await db.prepare(`
     INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
     VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.order_id, returnNumber, body.reason, body.total_amount || 0, body.notes, userId).run();
+  `).bind(id, tenantId, body.order_id, returnNumber, body.reason ?? null, body.total_amount || 0, body.notes ?? null, userId).run();
   
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
 });
@@ -962,7 +962,7 @@ api.post('/trade-marketing/activations', async (c) => {
   await db.prepare(`
     INSERT INTO promotional_campaigns (id, tenant_id, name, description, start_date, end_date, budget, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))
-  `).bind(id, tenantId, body.name, body.description, body.start_date, body.end_date, body.budget || 0).run();
+  `).bind(id, tenantId, body.name, body.description ?? null, body.start_date, body.end_date, body.budget || 0).run();
   
   return c.json({ success: true, data: { id }, message: 'Activation created' }, 201);
 });
@@ -1248,7 +1248,7 @@ api.post('/trade-marketing/campaigns', async (c) => {
   await db.prepare(`
     INSERT INTO promotional_campaigns (id, tenant_id, name, description, campaign_type, start_date, end_date, budget, target_audience, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.name, body.description, body.campaign_type || 'promotion', body.start_date, body.end_date, body.budget || 0, body.target_audience, 'draft').run();
+  `).bind(id, tenantId, body.name, body.description ?? null, body.campaign_type || 'promotion', body.start_date, body.end_date, body.budget || 0, body.target_audience, 'draft').run();
   
   return c.json({ success: true, data: { id }, message: 'Campaign created' }, 201);
 });
@@ -1349,7 +1349,7 @@ api.post('/competitors', async (c) => {
     await db.prepare(`
       INSERT INTO competitors (id, tenant_id, name, market_share, strength, weakness, products, notes, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.name, body.market_share || 0, body.strength, body.weakness, body.products || 0, body.notes).run();
+    `).bind(id, tenantId, body.name, body.market_share || 0, body.strength, body.weakness, body.products || 0, body.notes ?? null).run();
     
     return c.json({ success: true, data: { id }, message: 'Competitor added' }, 201);
   } catch (e) {
@@ -1406,7 +1406,7 @@ api.post('/field-marketing/activities', async (c) => {
     await db.prepare(`
       INSERT INTO field_marketing_activities (id, tenant_id, activity_type, customer_id, location, latitude, longitude, status, photo_url, notes, agent_id, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.activity_type, body.customer_id, body.location, body.latitude, body.longitude, 'pending', body.photo_url, body.notes, userId).run();
+    `).bind(id, tenantId, body.activity_type, body.customer_id, body.location, body.latitude, body.longitude, 'pending', body.photo_url, body.notes ?? null, userId).run();
     
     return c.json({ success: true, data: { id }, message: 'Activity created' }, 201);
   } catch (e) {
@@ -1509,7 +1509,7 @@ api.post('/roles', async (c) => {
   await db.prepare(`
     INSERT INTO roles (id, tenant_id, name, description, is_system_role, is_active, created_at, updated_at)
     VALUES (?, ?, ?, ?, 0, 1, datetime('now'), datetime('now'))
-  `).bind(id, tenantId, body.name, body.description).run();
+  `).bind(id, tenantId, body.name, body.description ?? null).run();
   
   // Assign permissions if provided
   if (body.permissions && body.permissions.length > 0) {
@@ -1545,7 +1545,7 @@ api.put('/roles/:id', async (c) => {
   await db.prepare(`
     UPDATE roles SET name = ?, description = ?, is_active = ?, updated_at = datetime('now')
     WHERE id = ? AND tenant_id = ?
-  `).bind(body.name, body.description, body.is_active ? 1 : 0, id, tenantId).run();
+  `).bind(body.name, body.description ?? null, body.is_active ? 1 : 0, id, tenantId).run();
   
   // Update permissions if provided
   if (body.permissions !== undefined) {
@@ -2296,6 +2296,137 @@ const calculateLineItem = async (db, tenantId, productId, quantity, customerId =
   };
 };
 
+// ==================== DISCOUNTS ====================
+// Get all discounts
+api.get('/discounts', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { is_active, applicable_to } = c.req.query();
+  
+  let query = 'SELECT * FROM discounts WHERE tenant_id = ?';
+  const params = [tenantId];
+  
+  if (is_active !== undefined) {
+    query += ' AND is_active = ?';
+    params.push(is_active === 'true' ? 1 : 0);
+  }
+  if (applicable_to) {
+    query += ' AND (applicable_to = ? OR applicable_to = "all")';
+    params.push(applicable_to);
+  }
+  
+  query += ' ORDER BY name ASC';
+  
+  const discounts = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: discounts.results });
+});
+
+// Get single discount
+api.get('/discounts/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  const discount = await db.prepare(
+    'SELECT * FROM discounts WHERE id = ? AND tenant_id = ?'
+  ).bind(id, tenantId).first();
+  
+  if (!discount) {
+    return c.json({ success: false, message: 'Discount not found' }, 404);
+  }
+  
+  return c.json({ success: true, data: discount });
+});
+
+// Create discount
+api.post('/discounts', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const body = await c.req.json();
+  
+  const id = uuidv4();
+  
+  await db.prepare(`
+    INSERT INTO discounts (id, tenant_id, name, code, discount_type, value, min_order_amount, 
+      max_discount_amount, applicable_to, product_ids, category_ids, customer_ids, 
+      start_date, end_date, is_active, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+  `).bind(
+    id, tenantId, body.name, body.code ?? null, body.discount_type ?? 'percentage',
+    body.value ?? 0, body.min_order_amount ?? 0, body.max_discount_amount ?? null,
+    body.applicable_to ?? 'all', body.product_ids ?? null, body.category_ids ?? null,
+    body.customer_ids ?? null, body.start_date ?? null, body.end_date ?? null,
+    body.is_active !== false ? 1 : 0
+  ).run();
+  
+  return c.json({ success: true, data: { id }, message: 'Discount created' }, 201);
+});
+
+// Update discount
+api.put('/discounts/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  await db.prepare(`
+    UPDATE discounts SET name = ?, code = ?, discount_type = ?, value = ?, 
+      min_order_amount = ?, max_discount_amount = ?, applicable_to = ?,
+      product_ids = ?, category_ids = ?, customer_ids = ?,
+      start_date = ?, end_date = ?, is_active = ?, updated_at = datetime('now')
+    WHERE id = ? AND tenant_id = ?
+  `).bind(
+    body.name, body.code ?? null, body.discount_type ?? 'percentage',
+    body.value ?? 0, body.min_order_amount ?? 0, body.max_discount_amount ?? null,
+    body.applicable_to ?? 'all', body.product_ids ?? null, body.category_ids ?? null,
+    body.customer_ids ?? null, body.start_date ?? null, body.end_date ?? null,
+    body.is_active !== false ? 1 : 0, id, tenantId
+  ).run();
+  
+  return c.json({ success: true, message: 'Discount updated' });
+});
+
+// Delete discount
+api.delete('/discounts/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  await db.prepare('DELETE FROM discounts WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+  return c.json({ success: true, message: 'Discount deleted' });
+});
+
+// Get applicable discounts for a product/customer
+api.get('/discounts/applicable', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { product_id, customer_id, category_id } = c.req.query();
+  
+  const now = new Date().toISOString().split('T')[0];
+  
+  let query = `
+    SELECT * FROM discounts 
+    WHERE tenant_id = ? AND is_active = 1
+    AND (start_date IS NULL OR start_date <= ?)
+    AND (end_date IS NULL OR end_date >= ?)
+    AND (
+      applicable_to = 'all'
+      ${product_id ? "OR (applicable_to = 'product' AND product_ids LIKE ?)" : ''}
+      ${customer_id ? "OR (applicable_to = 'customer' AND customer_ids LIKE ?)" : ''}
+      ${category_id ? "OR (applicable_to = 'category' AND category_ids LIKE ?)" : ''}
+    )
+    ORDER BY value DESC
+  `;
+  
+  const params = [tenantId, now, now];
+  if (product_id) params.push(`%${product_id}%`);
+  if (customer_id) params.push(`%${customer_id}%`);
+  if (category_id) params.push(`%${category_id}%`);
+  
+  const discounts = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: discounts.results });
+});
+
 const calculateOrderTotals = (items) => {
   const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
   const discountAmount = items.reduce((sum, item) => sum + (item.discount_amount || 0), 0);
@@ -2434,10 +2565,10 @@ api.post('/orders/create', async (c) => {
         order_status, notes, created_by, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(
-      id, tenantId, orderNumber, body.customer_id, body.salesman_id || userId,
-      body.order_date || new Date().toISOString().split('T')[0],
-      totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
-      body.payment_method || 'cash', 'pending', initialStatus, body.notes, userId
+      id, tenantId, orderNumber, body.customer_id, body.salesman_id ?? userId,
+      body.order_date ?? new Date().toISOString().split('T')[0],
+      totals.subtotal ?? 0, totals.tax_amount ?? 0, totals.discount_amount ?? 0, totals.total_amount ?? 0,
+      body.payment_method ?? 'cash', 'pending', initialStatus, body.notes ?? null, userId
     ).run();
     
     // Insert order items with calculated values
@@ -2730,7 +2861,7 @@ api.post('/van-sales/create', async (c) => {
       id, tenantId, saleNumber, body.van_id, body.agent_id || userId, body.customer_id,
       body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash',
       totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
-      amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference, status, body.notes, userId
+      amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, status, body.notes ?? null, userId
     ).run();
     
     // Insert sale items
@@ -2823,7 +2954,7 @@ api.post('/returns/process', async (c) => {
       INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, 
         status, total_amount, notes, created_by, created_at)
       VALUES (?, ?, ?, ?, date('now'), ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.order_id, returnNumber, body.reason, 'pending', totalAmount, body.notes, userId).run();
+    `).bind(id, tenantId, body.order_id, returnNumber, body.reason ?? null, 'pending', totalAmount, body.notes ?? null, userId).run();
     
     // Insert return items
     for (const item of returnItems) {
@@ -2969,7 +3100,7 @@ api.post('/price-lists', async (c) => {
       effective_from, effective_to, status, created_by, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `).bind(
-    id, tenantId, body.name, body.description, body.currency || 'ZAR',
+    id, tenantId, body.name, body.description ?? null, body.currency || 'ZAR',
     body.is_default ? 1 : 0, body.effective_from, body.effective_to, 'active', userId
   ).run();
   
@@ -3213,7 +3344,7 @@ api.post('/invoices/create', async (c) => {
     `).bind(id, tenantId, invoiceNumber, body.customer_id, body.order_id || null,
       body.invoice_date || new Date().toISOString().split('T')[0], body.due_date,
       totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
-      0, totals.total_amount, status, body.payment_terms || 30, body.notes, userId).run();
+      0, totals.total_amount, status, body.payment_terms || 30, body.notes ?? null, userId).run();
     
     for (const item of calculatedItems) {
       const itemId = uuidv4();
@@ -3330,7 +3461,7 @@ api.post('/credit-notes/create', async (c) => {
     `).bind(id, tenantId, creditNoteNumber, body.customer_id, body.invoice_id || null, body.return_id || null,
       body.credit_date || new Date().toISOString().split('T')[0],
       totals.subtotal, totals.tax_amount, totals.discount_amount, totals.total_amount,
-      body.reason, status, body.notes, userId).run();
+      body.reason ?? null, status, body.notes ?? null, userId).run();
     
     for (const item of calculatedItems) {
       const itemId = uuidv4();
@@ -3411,8 +3542,8 @@ api.post('/sales/returns/create', async (c) => {
         subtotal, tax_amount, total_amount, status, notes, created_by, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, returnNumber, body.order_id || null, body.customer_id,
-      body.return_date || new Date().toISOString().split('T')[0], body.reason,
-      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes, userId).run();
+      body.return_date || new Date().toISOString().split('T')[0], body.reason ?? null,
+      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes ?? null, userId).run();
     
     for (const item of calculatedItems) {
       const itemId = uuidv4();
@@ -3525,7 +3656,7 @@ api.post('/van-sales/van-loads/create', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, loadNumber, body.van_id, body.route_id,
       body.load_date || new Date().toISOString().split('T')[0],
-      totals.item_count, totals.total_amount, status, body.notes, userId).run();
+      totals.item_count, totals.total_amount, status, body.notes ?? null, userId).run();
     
     for (const item of calculatedItems) {
       const itemId = uuidv4();
@@ -3628,8 +3759,8 @@ api.post('/van-sales/returns/create', async (c) => {
         subtotal, tax_amount, total_amount, status, notes, created_by, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, returnNumber, body.order_id || null, body.van_id,
-      body.return_date || new Date().toISOString().split('T')[0], body.reason,
-      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes, userId).run();
+      body.return_date || new Date().toISOString().split('T')[0], body.reason ?? null,
+      totals.subtotal, totals.tax_amount, totals.total_amount, status, body.notes ?? null, userId).run();
     
     for (const item of calculatedItems) {
       const itemId = uuidv4();
@@ -3717,8 +3848,8 @@ api.post('/inventory/adjustments/create', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, adjustmentNumber, body.warehouse_id,
       body.adjustment_date || new Date().toISOString().split('T')[0],
-      body.adjustment_type || 'increase', body.reason,
-      adjustmentItems.length, totalValue, status, body.notes, userId).run();
+      body.adjustment_type || 'increase', body.reason ?? null,
+      adjustmentItems.length, totalValue, status, body.notes ?? null, userId).run();
     
     for (const item of adjustmentItems) {
       const itemId = uuidv4();
@@ -3853,7 +3984,7 @@ api.post('/inventory/transfers/create', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, transferNumber, body.from_warehouse_id, body.to_warehouse_id,
       body.transfer_date || new Date().toISOString().split('T')[0],
-      transferItems.length, totalValue, status, body.notes, userId).run();
+      transferItems.length, totalValue, status, body.notes ?? null, userId).run();
     
     for (const item of transferItems) {
       const itemId = uuidv4();
@@ -3982,7 +4113,7 @@ api.post('/inventory/stock-counts/create', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, countNumber, body.warehouse_id,
       body.count_date || new Date().toISOString().split('T')[0],
-      body.count_type || 'full', countItems.length, totalVariance, status, body.notes, userId, userId).run();
+      body.count_type || 'full', countItems.length, totalVariance, status, body.notes ?? null, userId, userId).run();
     
     for (const item of countItems) {
       const itemId = uuidv4();
@@ -4100,7 +4231,7 @@ api.post('/inventory/receipts/create', async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `).bind(id, tenantId, grnNumber, body.warehouse_id, body.supplier_id, body.purchase_order_id || null,
       body.receipt_date || new Date().toISOString().split('T')[0],
-      receiptItems.length, totalValue, status, body.notes, userId).run();
+      receiptItems.length, totalValue, status, body.notes ?? null, userId).run();
     
     for (const item of receiptItems) {
       const itemId = uuidv4();
@@ -4228,7 +4359,7 @@ api.post('/inventory/issues/create', async (c) => {
     `).bind(id, tenantId, issueNumber, body.warehouse_id,
       body.issue_date || new Date().toISOString().split('T')[0],
       body.issue_type || 'internal', body.issued_to,
-      issueItems.length, totalValue, status, body.notes, userId).run();
+      issueItems.length, totalValue, status, body.notes ?? null, userId).run();
     
     for (const item of issueItems) {
       const itemId = uuidv4();
@@ -4769,7 +4900,7 @@ api.put('/field-operations/tasks/:id', async (c) => {
     await db.prepare(`
       UPDATE field_tasks SET title = ?, description = ?, type = ?, priority = ?, status = ?, assigned_to = ?, customer_id = ?, scheduled_date = ?, due_date = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.title, body.description, body.type, body.priority, body.status, body.assigned_to, body.customer_id, body.scheduled_date, body.due_date, now, id, tenantId).run();
+    `).bind(body.title, body.description ?? null, body.type, body.priority, body.status, body.assigned_to, body.customer_id, body.scheduled_date, body.due_date, now, id, tenantId).run();
     
     const task = await db.prepare('SELECT * FROM field_tasks WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: task });
@@ -4936,7 +5067,7 @@ api.put('/field-operations/visits/:id', async (c) => {
     await db.prepare(`
       UPDATE visits SET visit_type = ?, purpose = ?, status = ?, scheduled_date = ?, notes = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.visit_type, body.purpose, body.status, body.scheduled_date, body.notes, now, id, tenantId).run();
+    `).bind(body.visit_type, body.purpose, body.status, body.scheduled_date, body.notes ?? null, now, id, tenantId).run();
     
     const visit = await db.prepare('SELECT * FROM visits WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: visit });
@@ -5055,7 +5186,7 @@ api.put('/field-operations/territories/:id', async (c) => {
   try {
     const now = new Date().toISOString();
     await db.prepare('UPDATE territories SET name = ?, code = ?, description = ?, status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
-      .bind(body.name, body.code, body.description, body.status, now, id, tenantId).run();
+      .bind(body.name, body.code, body.description ?? null, body.status, now, id, tenantId).run();
     
     const territory = await db.prepare('SELECT * FROM territories WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: territory });
@@ -5357,7 +5488,7 @@ api.put('/campaigns/:id', async (c) => {
     await db.prepare(`
       UPDATE campaigns SET name = ?, description = ?, type = ?, status = ?, start_date = ?, end_date = ?, budget = ?, target_audience = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.name, body.description, body.type, body.status, body.start_date, body.end_date, body.budget, body.target_audience, now, id, tenantId).run();
+    `).bind(body.name, body.description ?? null, body.type, body.status, body.start_date, body.end_date, body.budget, body.target_audience, now, id, tenantId).run();
     
     const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: campaign });
@@ -5639,7 +5770,7 @@ api.put('/promotions/:id', async (c) => {
     await db.prepare(`
       UPDATE promotions SET name = ?, description = ?, type = ?, status = ?, start_date = ?, end_date = ?, budget = ?, usage_limit = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.name, body.description, body.type, body.status, body.start_date, body.end_date, body.budget, body.usage_limit, now, id, tenantId).run();
+    `).bind(body.name, body.description ?? null, body.type, body.status, body.start_date, body.end_date, body.budget, body.usage_limit, now, id, tenantId).run();
     
     const promotion = await db.prepare('SELECT * FROM promotions WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: promotion });
@@ -5831,7 +5962,7 @@ api.put('/marketing/campaigns/:id', async (c) => {
     await db.prepare(`
       UPDATE campaigns SET name = ?, description = ?, type = ?, status = ?, start_date = ?, end_date = ?, budget = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.name || body.campaign_name, body.description, body.type, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId).run();
+    `).bind(body.name || body.campaign_name, body.description ?? null, body.type, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId).run();
     
     const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: campaign });
@@ -5967,7 +6098,7 @@ api.put('/marketing/events/:id', async (c) => {
     await db.prepare(`
       UPDATE campaigns SET name = ?, description = ?, status = ?, start_date = ?, end_date = ?, budget = ?, updated_at = ?
       WHERE id = ? AND tenant_id = ? AND type = ?
-    `).bind(body.name, body.description, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId, 'event').run();
+    `).bind(body.name, body.description ?? null, body.status, body.start_date, body.end_date, body.budget, now, id, tenantId, 'event').run();
     
     const event = await db.prepare('SELECT * FROM campaigns WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: event });

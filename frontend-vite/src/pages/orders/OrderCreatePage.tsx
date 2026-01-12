@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Trash2, ShoppingCart, User, Calculator, Save, Send, Package } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, ShoppingCart, User, Calculator, Save, Send, Package, Percent } from 'lucide-react'
 import { ordersService } from '../../services/orders.service'
 import { customersService } from '../../services/customers.service'
 import { productsService } from '../../services/products.service'
+import { discountsService, Discount } from '../../services/discounts.service'
 
 interface Product {
   id: string
@@ -29,6 +30,7 @@ interface OrderLineItem {
   product_name: string
   quantity: number
   unit_price: number
+  discount_id: string
   discount_percentage: number
   discount_amount: number
   tax_percentage: number
@@ -40,6 +42,7 @@ export default function OrderCreatePage() {
   const navigate = useNavigate()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [discounts, setDiscounts] = useState<Discount[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [calculating, setCalculating] = useState(false)
@@ -62,12 +65,14 @@ export default function OrderCreatePage() {
   const loadFormData = async () => {
     try {
       setLoading(true)
-      const [customersRes, productsRes] = await Promise.all([
+      const [customersRes, productsRes, discountsRes] = await Promise.all([
         customersService.getCustomers(),
-        productsService.getProducts()
+        productsService.getProducts(),
+        discountsService.getDiscounts({ is_active: true })
       ])
       setCustomers(customersRes.customers || [])
       setProducts(productsRes.products || productsRes || [])
+      setDiscounts(discountsRes || [])
     } catch (error) {
       console.error('Failed to load form data:', error)
     } finally {
@@ -83,6 +88,7 @@ export default function OrderCreatePage() {
         product_name: '',
         quantity: 1,
         unit_price: 0,
+        discount_id: '',
         discount_percentage: 0,
         discount_amount: 0,
         tax_percentage: 0,
@@ -112,8 +118,10 @@ export default function OrderCreatePage() {
       }
     } else if (field === 'quantity') {
       item.quantity = Math.max(1, parseInt(value) || 1)
-    } else if (field === 'discount_percentage') {
-      item.discount_percentage = Math.min(100, Math.max(0, parseFloat(value) || 0))
+    } else if (field === 'discount_id') {
+      const discount = discounts.find(d => d.id === value)
+      item.discount_id = value
+      item.discount_percentage = discount ? discount.value : 0
     } else if (field === 'unit_price') {
       item.unit_price = Math.max(0, parseFloat(value) || 0)
     }
@@ -323,7 +331,7 @@ export default function OrderCreatePage() {
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Qty</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Unit Price</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Disc %</th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-36">Discount</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Tax</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Total</th>
                       <th className="px-4 py-3 w-12"></th>
@@ -347,7 +355,12 @@ export default function OrderCreatePage() {
                           <input type="number" min="0" step="0.01" value={item.unit_price} onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
                         </td>
                         <td className="px-4 py-3">
-                          <input type="number" min="0" max="100" value={item.discount_percentage} onChange={(e) => updateLineItem(index, 'discount_percentage', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                          <select value={item.discount_id} onChange={(e) => updateLineItem(index, 'discount_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <option value="">No discount</option>
+                            {discounts.map((discount) => (
+                              <option key={discount.id} value={discount.id}>{discount.name} ({discount.value}%)</option>
+                            ))}
+                          </select>
                         </td>
                         <td className="px-4 py-3 text-right text-sm text-gray-600">R {item.tax_amount.toFixed(2)}</td>
                         <td className="px-4 py-3 text-right text-sm font-medium text-gray-900">R {item.line_total.toFixed(2)}</td>
