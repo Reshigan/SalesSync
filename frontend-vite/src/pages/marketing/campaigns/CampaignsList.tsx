@@ -18,7 +18,9 @@ export default function CampaignsList() {
     setLoading(true)
     try {
       const response = await marketingService.getCampaigns()
-      setCampaigns(response.data || [])
+      // API returns {success, data, pagination} - extract the data array
+      const apiResponse = response.data
+      setCampaigns(apiResponse?.data || [])
     } catch (error) {
       console.error('Failed to load campaigns:', error)
     } finally {

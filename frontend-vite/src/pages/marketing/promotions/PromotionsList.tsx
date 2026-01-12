@@ -18,7 +18,9 @@ export default function PromotionsList() {
     setLoading(true)
     try {
       const response = await marketingService.getPromotions()
-      setPromotions(response.data || [])
+      // API returns {success, data} - extract the data array
+      const apiResponse = response.data
+      setPromotions(apiResponse?.data || [])
     } catch (error) {
       console.error('Failed to load promotions:', error)
     } finally {
