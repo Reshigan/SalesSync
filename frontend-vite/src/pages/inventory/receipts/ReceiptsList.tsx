@@ -18,7 +18,9 @@ export default function ReceiptsList() {
     setLoading(true)
     try {
       const response = await inventoryService.getReceipts()
-      setReceipts(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const receipts = response.data?.data || response.data?.receipts || response.data || []
+      setReceipts(Array.isArray(receipts) ? receipts : [])
     } catch (error) {
       console.error('Failed to load receipts:', error)
     } finally {

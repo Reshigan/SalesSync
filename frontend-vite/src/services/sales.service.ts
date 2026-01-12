@@ -1,6 +1,10 @@
 import api from './api'
 
 export const salesService = {
+  // Customers and Sales Reps
+  getCustomers: () => api.get('/customers'),
+  getSalesReps: () => api.get('/sales-reps'),
+  
   // Orders - use authoritative endpoints with server-side pricing
   getOrders: () => api.get('/orders'),
   getOrder: (id: string) => api.get(`/orders/${id}`),

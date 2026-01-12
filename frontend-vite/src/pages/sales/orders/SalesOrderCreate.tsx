@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, ShoppingCart, User } from 'lucide-react'
-import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary } from '../../../components/transactions/LineItemsEditor'
+import LineItemsEditor, { LineItem, LineItemsTotals, TotalsSummary, Discount } from '../../../components/transactions/LineItemsEditor'
 import { salesService } from '../../../services/sales.service'
 import { productsService } from '../../../services/products.service'
+import { discountsService } from '../../../services/discounts.service'
 
 interface Customer {
   id: string
@@ -28,6 +29,7 @@ export default function SalesOrderCreate() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [salesReps, setSalesReps] = useState<SalesRep[]>([])
   const [products, setProducts] = useState<Product[]>([])
+  const [discounts, setDiscounts] = useState<Discount[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -47,14 +49,31 @@ export default function SalesOrderCreate() {
   const loadFormData = async () => {
     try {
       setLoading(true)
-      const [customersRes, salesRepsRes, productsRes] = await Promise.all([
+      // Use Promise.allSettled to handle partial failures gracefully
+      const [customersRes, salesRepsRes, productsRes, discountsRes] = await Promise.allSettled([
         salesService.getCustomers(),
-        salesService.getSalesReps(),
-        productsService.getProducts()
+        salesService.getSalesReps().catch(() => ({ data: [] })), // Sales reps endpoint may not exist
+        productsService.getProducts(),
+        discountsService.getDiscounts({ is_active: true })
       ])
-      setCustomers(customersRes.data || customersRes.customers || [])
-      setSalesReps(salesRepsRes.data || salesRepsRes.sales_reps || [])
-      setProducts(productsRes.products || productsRes.data || [])
+      
+      // Extract data from settled promises
+      if (customersRes.status === 'fulfilled') {
+        const data = customersRes.value?.data?.data || customersRes.value?.data || []
+        setCustomers(Array.isArray(data) ? data : [])
+      }
+      if (salesRepsRes.status === 'fulfilled') {
+        const data = salesRepsRes.value?.data?.data || salesRepsRes.value?.data || []
+        setSalesReps(Array.isArray(data) ? data : [])
+      }
+      if (productsRes.status === 'fulfilled') {
+        const data = productsRes.value?.data?.data || productsRes.value?.data?.products || productsRes.value?.data || []
+        setProducts(Array.isArray(data) ? data : [])
+      }
+      if (discountsRes.status === 'fulfilled') {
+        const data = discountsRes.value || []
+        setDiscounts(Array.isArray(data) ? data.map((d: any) => ({ id: d.id, name: d.name, value: d.value, discount_type: d.discount_type })) : [])
+      }
     } catch (error) {
       console.error('Failed to load form data:', error)
     } finally {
@@ -185,6 +204,7 @@ export default function SalesOrderCreate() {
 
           <LineItemsEditor
             products={products}
+            discounts={discounts}
             lineItems={lineItems}
             onLineItemsChange={setLineItems}
             onTotalsChange={setTotals}

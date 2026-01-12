@@ -13,12 +13,20 @@ export interface Product {
   unit_of_measure?: string
 }
 
+export interface Discount {
+  id: string
+  name: string
+  value: number
+  discount_type: 'percentage' | 'fixed'
+}
+
 export interface LineItem {
   product_id: string
   product_name: string
   quantity: number
   unit_price: number
   cost_price: number
+  discount_id: string
   discount_percentage: number
   discount_amount: number
   tax_percentage: number
@@ -36,6 +44,7 @@ export interface LineItemsTotals {
 
 interface LineItemsEditorProps {
   products: Product[]
+  discounts?: Discount[]
   lineItems: LineItem[]
   onLineItemsChange: (items: LineItem[]) => void
   onTotalsChange?: (totals: LineItemsTotals) => void
@@ -54,6 +63,7 @@ export function createEmptyLineItem(): LineItem {
     quantity: 1,
     unit_price: 0,
     cost_price: 0,
+    discount_id: '',
     discount_percentage: 0,
     discount_amount: 0,
     tax_percentage: 0,
@@ -90,6 +100,7 @@ export function calculateTotals(items: LineItem[]): LineItemsTotals {
 
 export default function LineItemsEditor({
   products,
+  discounts = [],
   lineItems,
   onLineItemsChange,
   onTotalsChange,
@@ -125,17 +136,17 @@ export default function LineItemsEditor({
       if (product) {
         item.product_id = value
         item.product_name = product.name
+        // Pricing is set from product master data - salesmen cannot modify
         item.unit_price = product.selling_price || product.price || 0
         item.cost_price = product.cost_price || 0
         item.tax_percentage = product.tax_rate || 0
+        // Discount will be applied by backend based on customer/product rules
+        item.discount_percentage = 0
       }
     } else if (field === 'quantity') {
       item.quantity = Math.max(1, parseInt(value) || 1)
-    } else if (field === 'discount_percentage') {
-      item.discount_percentage = Math.min(100, Math.max(0, parseFloat(value) || 0))
-    } else if (field === 'unit_price') {
-      item.unit_price = Math.max(0, parseFloat(value) || 0)
     }
+    // Note: unit_price and discount are read-only - salesmen cannot affect pricing
 
     item = calculateLineItemTotals(item)
     newItems[index] = item
@@ -199,7 +210,7 @@ export default function LineItemsEditor({
                 {showCostPrice && (
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Cost</th>
                 )}
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-20">Disc %</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-36">Discount</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Tax</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Total</th>
                 {!readOnly && <th className="px-4 py-3 w-12"></th>}
@@ -239,37 +250,19 @@ export default function LineItemsEditor({
                       />
                     )}
                   </td>
-                  <td className="px-4 py-3">
-                    {readOnly ? (
-                      <span className="text-sm text-gray-900 text-right block">{currencySymbol} {item.unit_price.toFixed(2)}</span>
-                    ) : (
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unit_price}
-                        onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      />
-                    )}
+                  <td className="px-4 py-3 text-right text-sm text-gray-900">
+                    {currencySymbol} {item.unit_price.toFixed(2)}
                   </td>
                   {showCostPrice && (
                     <td className="px-4 py-3 text-right text-sm text-gray-600">
                       {currencySymbol} {item.cost_price.toFixed(2)}
                     </td>
                   )}
-                  <td className="px-4 py-3">
-                    {readOnly ? (
-                      <span className="text-sm text-gray-900 text-right block">{item.discount_percentage}%</span>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {item.discount_percentage > 0 ? (
+                      <span className="text-green-600">{item.discount_percentage}% off</span>
                     ) : (
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={item.discount_percentage}
-                        onChange={(e) => updateLineItem(index, 'discount_percentage', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      />
+                      <span className="text-gray-400">-</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-gray-600">

@@ -18,7 +18,9 @@ export default function StockCountsList() {
     setLoading(true)
     try {
       const response = await inventoryService.getStockCounts()
-      setStockCounts(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const stockCounts = response.data?.data || response.data?.stock_counts || response.data || []
+      setStockCounts(Array.isArray(stockCounts) ? stockCounts : [])
     } catch (error) {
       console.error('Failed to load stock counts:', error)
     } finally {

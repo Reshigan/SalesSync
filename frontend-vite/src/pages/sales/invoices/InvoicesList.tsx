@@ -18,7 +18,9 @@ export default function InvoicesList() {
     setLoading(true)
     try {
       const response = await salesService.getInvoices()
-      setInvoices(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const invoices = response.data?.data || response.data?.invoices || response.data || []
+      setInvoices(Array.isArray(invoices) ? invoices : [])
     } catch (error) {
       console.error('Failed to load invoices:', error)
     } finally {
