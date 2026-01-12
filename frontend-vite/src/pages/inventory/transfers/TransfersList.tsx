@@ -18,7 +18,9 @@ export default function TransfersList() {
     setLoading(true)
     try {
       const response = await inventoryService.getTransfers()
-      setTransfers(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const transfers = response.data?.data || response.data?.transfers || response.data || []
+      setTransfers(Array.isArray(transfers) ? transfers : [])
     } catch (error) {
       console.error('Failed to load transfers:', error)
     } finally {

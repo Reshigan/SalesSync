@@ -18,7 +18,9 @@ export default function CreditNotesList() {
     setLoading(true)
     try {
       const response = await salesService.getCreditNotes()
-      setCreditNotes(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const creditNotes = response.data?.data || response.data?.credit_notes || response.data || []
+      setCreditNotes(Array.isArray(creditNotes) ? creditNotes : [])
     } catch (error) {
       console.error('Failed to load credit notes:', error)
     } finally {

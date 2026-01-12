@@ -18,7 +18,9 @@ export default function VanLoadsList() {
     setLoading(true)
     try {
       const response = await vanSalesService.getVanLoads()
-      setVanLoads(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const vanLoads = response.data?.data || response.data?.van_loads || response.data || []
+      setVanLoads(Array.isArray(vanLoads) ? vanLoads : [])
     } catch (error) {
       console.error('Failed to load van loads:', error)
     } finally {

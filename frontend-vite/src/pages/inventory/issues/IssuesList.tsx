@@ -18,7 +18,9 @@ export default function IssuesList() {
     setLoading(true)
     try {
       const response = await inventoryService.getIssues()
-      setIssues(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const issues = response.data?.data || response.data?.issues || response.data || []
+      setIssues(Array.isArray(issues) ? issues : [])
     } catch (error) {
       console.error('Failed to load issues:', error)
     } finally {

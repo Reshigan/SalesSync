@@ -18,7 +18,9 @@ export default function SalesOrdersList() {
     setLoading(true)
     try {
       const response = await salesService.getOrders()
-      setOrders(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const orders = response.data?.data || response.data?.orders || response.data || []
+      setOrders(Array.isArray(orders) ? orders : [])
     } catch (error) {
       console.error('Failed to load orders:', error)
     } finally {

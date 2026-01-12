@@ -18,7 +18,9 @@ export default function VanSalesReturnsList() {
     setLoading(true)
     try {
       const response = await vanSalesService.getReturns()
-      setReturns(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const returns = response.data?.data || response.data?.returns || response.data || []
+      setReturns(Array.isArray(returns) ? returns : [])
     } catch (error) {
       console.error('Failed to load returns:', error)
     } finally {

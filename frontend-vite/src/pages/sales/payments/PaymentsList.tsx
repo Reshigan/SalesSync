@@ -18,7 +18,9 @@ export default function PaymentsList() {
     setLoading(true)
     try {
       const response = await salesService.getPayments()
-      setPayments(response.data || [])
+      // API returns { success: true, data: [...] }, axios wraps it in response.data
+      const payments = response.data?.data || response.data?.payments || response.data || []
+      setPayments(Array.isArray(payments) ? payments : [])
     } catch (error) {
       console.error('Failed to load payments:', error)
     } finally {
