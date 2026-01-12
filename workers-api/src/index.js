@@ -1868,6 +1868,383 @@ api.get('/auth/me/permissions', async (c) => {
   });
 });
 
+// ==================== SYSTEM SETTINGS ====================
+// Default settings configuration
+const DEFAULT_SETTINGS = {
+  // Company Settings
+  company_name: { value: '', category: 'company', label: 'Company Name', type: 'text', description: 'Your company or organization name' },
+  company_logo_url: { value: '', category: 'company', label: 'Company Logo URL', type: 'text', description: 'URL to your company logo' },
+  company_address: { value: '', category: 'company', label: 'Company Address', type: 'textarea', description: 'Physical address of your company' },
+  company_phone: { value: '', category: 'company', label: 'Company Phone', type: 'text', description: 'Main contact phone number' },
+  company_email: { value: '', category: 'company', label: 'Company Email', type: 'email', description: 'Main contact email address' },
+  company_website: { value: '', category: 'company', label: 'Company Website', type: 'text', description: 'Company website URL' },
+  company_tax_id: { value: '', category: 'company', label: 'Tax ID / VAT Number', type: 'text', description: 'Company tax identification number' },
+  
+  // Email Settings (SMTP)
+  smtp_host: { value: '', category: 'email', label: 'SMTP Host', type: 'text', description: 'SMTP server hostname (e.g., smtp.gmail.com)' },
+  smtp_port: { value: '587', category: 'email', label: 'SMTP Port', type: 'number', description: 'SMTP server port (usually 587 or 465)' },
+  smtp_user: { value: '', category: 'email', label: 'SMTP Username', type: 'text', description: 'SMTP authentication username' },
+  smtp_password: { value: '', category: 'email', label: 'SMTP Password', type: 'password', description: 'SMTP authentication password', sensitive: true },
+  smtp_from_email: { value: '', category: 'email', label: 'From Email', type: 'email', description: 'Default sender email address' },
+  smtp_from_name: { value: '', category: 'email', label: 'From Name', type: 'text', description: 'Default sender name' },
+  smtp_encryption: { value: 'tls', category: 'email', label: 'Encryption', type: 'select', options: ['none', 'tls', 'ssl'], description: 'Email encryption method' },
+  
+  // SMS Settings (Twilio)
+  twilio_account_sid: { value: '', category: 'sms', label: 'Twilio Account SID', type: 'text', description: 'Your Twilio Account SID' },
+  twilio_auth_token: { value: '', category: 'sms', label: 'Twilio Auth Token', type: 'password', description: 'Your Twilio Auth Token', sensitive: true },
+  twilio_phone_number: { value: '', category: 'sms', label: 'Twilio Phone Number', type: 'text', description: 'Your Twilio phone number for sending SMS' },
+  sms_enabled: { value: 'false', category: 'sms', label: 'Enable SMS Notifications', type: 'boolean', description: 'Enable or disable SMS notifications' },
+  
+  // Currency & Locale Settings
+  default_currency: { value: 'ZAR', category: 'locale', label: 'Default Currency', type: 'select', options: ['ZAR', 'USD', 'EUR', 'GBP', 'INR', 'AUD'], description: 'Default currency for transactions' },
+  currency_symbol: { value: 'R', category: 'locale', label: 'Currency Symbol', type: 'text', description: 'Currency symbol to display' },
+  date_format: { value: 'DD/MM/YYYY', category: 'locale', label: 'Date Format', type: 'select', options: ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'], description: 'Date display format' },
+  time_format: { value: '24h', category: 'locale', label: 'Time Format', type: 'select', options: ['12h', '24h'], description: 'Time display format' },
+  timezone: { value: 'Africa/Johannesburg', category: 'locale', label: 'Timezone', type: 'text', description: 'Default timezone for the system' },
+  decimal_separator: { value: '.', category: 'locale', label: 'Decimal Separator', type: 'select', options: ['.', ','], description: 'Decimal separator for numbers' },
+  thousand_separator: { value: ',', category: 'locale', label: 'Thousand Separator', type: 'select', options: [',', '.', ' '], description: 'Thousand separator for numbers' },
+  
+  // Order Settings
+  order_prefix: { value: 'ORD', category: 'orders', label: 'Order Number Prefix', type: 'text', description: 'Prefix for order numbers' },
+  order_auto_approve: { value: 'false', category: 'orders', label: 'Auto-Approve Orders', type: 'boolean', description: 'Automatically approve new orders' },
+  order_approval_threshold: { value: '10000', category: 'orders', label: 'Approval Threshold', type: 'number', description: 'Orders above this amount require approval' },
+  default_payment_terms: { value: '30', category: 'orders', label: 'Default Payment Terms (Days)', type: 'number', description: 'Default payment terms in days' },
+  allow_negative_stock: { value: 'false', category: 'orders', label: 'Allow Negative Stock', type: 'boolean', description: 'Allow orders when stock is insufficient' },
+  
+  // Invoice Settings
+  invoice_prefix: { value: 'INV', category: 'invoices', label: 'Invoice Number Prefix', type: 'text', description: 'Prefix for invoice numbers' },
+  invoice_footer_text: { value: '', category: 'invoices', label: 'Invoice Footer Text', type: 'textarea', description: 'Text to display at the bottom of invoices' },
+  invoice_terms: { value: '', category: 'invoices', label: 'Invoice Terms & Conditions', type: 'textarea', description: 'Terms and conditions for invoices' },
+  invoice_due_days: { value: '30', category: 'invoices', label: 'Invoice Due Days', type: 'number', description: 'Default number of days until invoice is due' },
+  
+  // Tax Settings
+  default_tax_rate: { value: '15', category: 'tax', label: 'Default Tax Rate (%)', type: 'number', description: 'Default tax rate percentage' },
+  tax_inclusive_pricing: { value: 'true', category: 'tax', label: 'Tax Inclusive Pricing', type: 'boolean', description: 'Prices include tax by default' },
+  tax_registration_number: { value: '', category: 'tax', label: 'Tax Registration Number', type: 'text', description: 'Company tax registration number' },
+  
+  // Commission Settings
+  default_commission_rate: { value: '5', category: 'commissions', label: 'Default Commission Rate (%)', type: 'number', description: 'Default sales commission percentage' },
+  commission_calculation: { value: 'gross', category: 'commissions', label: 'Commission Calculation Basis', type: 'select', options: ['gross', 'net', 'profit'], description: 'Calculate commission on gross, net, or profit' },
+  commission_payout_frequency: { value: 'monthly', category: 'commissions', label: 'Commission Payout Frequency', type: 'select', options: ['weekly', 'biweekly', 'monthly'], description: 'How often commissions are paid out' },
+  
+  // Inventory Settings
+  low_stock_threshold: { value: '10', category: 'inventory', label: 'Low Stock Threshold', type: 'number', description: 'Alert when stock falls below this level' },
+  reorder_point: { value: '20', category: 'inventory', label: 'Reorder Point', type: 'number', description: 'Suggest reorder when stock reaches this level' },
+  stock_valuation_method: { value: 'fifo', category: 'inventory', label: 'Stock Valuation Method', type: 'select', options: ['fifo', 'lifo', 'average'], description: 'Method for calculating stock value' },
+  
+  // Visit Settings
+  visit_check_in_radius: { value: '100', category: 'visits', label: 'Check-in Radius (meters)', type: 'number', description: 'Maximum distance from customer location for check-in' },
+  visit_photo_required: { value: 'true', category: 'visits', label: 'Photo Required for Visits', type: 'boolean', description: 'Require photo evidence for visits' },
+  visit_minimum_duration: { value: '5', category: 'visits', label: 'Minimum Visit Duration (minutes)', type: 'number', description: 'Minimum time required for a valid visit' },
+  
+  // Notification Settings
+  email_notifications_enabled: { value: 'true', category: 'notifications', label: 'Email Notifications', type: 'boolean', description: 'Enable email notifications' },
+  sms_notifications_enabled: { value: 'false', category: 'notifications', label: 'SMS Notifications', type: 'boolean', description: 'Enable SMS notifications' },
+  push_notifications_enabled: { value: 'true', category: 'notifications', label: 'Push Notifications', type: 'boolean', description: 'Enable push notifications' },
+  notify_on_new_order: { value: 'true', category: 'notifications', label: 'Notify on New Order', type: 'boolean', description: 'Send notification when new order is placed' },
+  notify_on_low_stock: { value: 'true', category: 'notifications', label: 'Notify on Low Stock', type: 'boolean', description: 'Send notification when stock is low' },
+  notify_on_payment_received: { value: 'true', category: 'notifications', label: 'Notify on Payment Received', type: 'boolean', description: 'Send notification when payment is received' },
+  
+  // Security Settings
+  session_timeout: { value: '480', category: 'security', label: 'Session Timeout (minutes)', type: 'number', description: 'Auto-logout after inactivity' },
+  password_min_length: { value: '8', category: 'security', label: 'Minimum Password Length', type: 'number', description: 'Minimum characters required for passwords' },
+  require_2fa: { value: 'false', category: 'security', label: 'Require Two-Factor Authentication', type: 'boolean', description: 'Require 2FA for all users' },
+  max_login_attempts: { value: '5', category: 'security', label: 'Max Login Attempts', type: 'number', description: 'Lock account after this many failed attempts' },
+  
+  // Integration Settings
+  api_rate_limit: { value: '1000', category: 'integrations', label: 'API Rate Limit (requests/hour)', type: 'number', description: 'Maximum API requests per hour' },
+  webhook_url: { value: '', category: 'integrations', label: 'Webhook URL', type: 'text', description: 'URL for webhook notifications' },
+  erp_integration_enabled: { value: 'false', category: 'integrations', label: 'ERP Integration Enabled', type: 'boolean', description: 'Enable ERP system integration' },
+  erp_api_url: { value: '', category: 'integrations', label: 'ERP API URL', type: 'text', description: 'ERP system API endpoint' },
+  erp_api_key: { value: '', category: 'integrations', label: 'ERP API Key', type: 'password', description: 'ERP system API key', sensitive: true }
+};
+
+// Get all settings
+api.get('/settings', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    // Get stored settings
+    const storedSettings = await db.prepare(
+      'SELECT key, value FROM system_settings WHERE tenant_id = ?'
+    ).bind(tenantId).all();
+    
+    const storedMap = {};
+    (storedSettings.results || []).forEach(s => {
+      storedMap[s.key] = s.value;
+    });
+    
+    // Merge with defaults
+    const settings = {};
+    for (const [key, config] of Object.entries(DEFAULT_SETTINGS)) {
+      settings[key] = {
+        ...config,
+        value: storedMap[key] !== undefined ? storedMap[key] : config.value,
+        key
+      };
+      // Hide sensitive values
+      if (config.sensitive && settings[key].value) {
+        settings[key].displayValue = '••••••••';
+      }
+    }
+    
+    // Group by category
+    const grouped = {};
+    for (const [key, setting] of Object.entries(settings)) {
+      const category = setting.category;
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push({ ...setting, key });
+    }
+    
+    return c.json({ success: true, data: { settings, grouped } });
+  } catch (error) {
+    console.error('Get settings error:', error);
+    // If table doesn't exist, return defaults
+    const settings = {};
+    for (const [key, config] of Object.entries(DEFAULT_SETTINGS)) {
+      settings[key] = { ...config, key };
+    }
+    return c.json({ success: true, data: { settings, grouped: {} } });
+  }
+});
+
+// Get settings by category
+api.get('/settings/category/:category', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { category } = c.req.param();
+  
+  try {
+    const storedSettings = await db.prepare(
+      'SELECT key, value FROM system_settings WHERE tenant_id = ?'
+    ).bind(tenantId).all();
+    
+    const storedMap = {};
+    (storedSettings.results || []).forEach(s => {
+      storedMap[s.key] = s.value;
+    });
+    
+    const settings = [];
+    for (const [key, config] of Object.entries(DEFAULT_SETTINGS)) {
+      if (config.category === category) {
+        const setting = {
+          ...config,
+          key,
+          value: storedMap[key] !== undefined ? storedMap[key] : config.value
+        };
+        if (config.sensitive && setting.value) {
+          setting.displayValue = '••••••••';
+        }
+        settings.push(setting);
+      }
+    }
+    
+    return c.json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Get settings by category error:', error);
+    return c.json({ success: false, message: 'Failed to get settings' }, 500);
+  }
+});
+
+// Get single setting
+api.get('/settings/:key', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { key } = c.req.param();
+  
+  const defaultConfig = DEFAULT_SETTINGS[key];
+  if (!defaultConfig) {
+    return c.json({ success: false, message: 'Setting not found' }, 404);
+  }
+  
+  try {
+    const stored = await db.prepare(
+      'SELECT value FROM system_settings WHERE tenant_id = ? AND key = ?'
+    ).bind(tenantId, key).first();
+    
+    const setting = {
+      ...defaultConfig,
+      key,
+      value: stored?.value !== undefined ? stored.value : defaultConfig.value
+    };
+    
+    if (defaultConfig.sensitive && setting.value) {
+      setting.displayValue = '••••••••';
+    }
+    
+    return c.json({ success: true, data: setting });
+  } catch (error) {
+    return c.json({ success: true, data: { ...defaultConfig, key } });
+  }
+});
+
+// Update single setting
+api.put('/settings/:key', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { key } = c.req.param();
+  const { value } = await c.req.json();
+  
+  const defaultConfig = DEFAULT_SETTINGS[key];
+  if (!defaultConfig) {
+    return c.json({ success: false, message: 'Setting not found' }, 404);
+  }
+  
+  try {
+    // Upsert the setting
+    await db.prepare(`
+      INSERT INTO system_settings (id, tenant_id, key, value, updated_by, updated_at)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+      ON CONFLICT(tenant_id, key) DO UPDATE SET value = ?, updated_by = ?, updated_at = datetime('now')
+    `).bind(uuidv4(), tenantId, key, value, userId, value, userId).run();
+    
+    return c.json({ success: true, message: 'Setting updated' });
+  } catch (error) {
+    console.error('Update setting error:', error);
+    return c.json({ success: false, message: 'Failed to update setting' }, 500);
+  }
+});
+
+// Bulk update settings
+api.put('/settings', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { settings } = await c.req.json();
+  
+  if (!settings || typeof settings !== 'object') {
+    return c.json({ success: false, message: 'Invalid settings data' }, 400);
+  }
+  
+  try {
+    for (const [key, value] of Object.entries(settings)) {
+      if (DEFAULT_SETTINGS[key]) {
+        await db.prepare(`
+          INSERT INTO system_settings (id, tenant_id, key, value, updated_by, updated_at)
+          VALUES (?, ?, ?, ?, ?, datetime('now'))
+          ON CONFLICT(tenant_id, key) DO UPDATE SET value = ?, updated_by = ?, updated_at = datetime('now')
+        `).bind(uuidv4(), tenantId, key, String(value), userId, String(value), userId).run();
+      }
+    }
+    
+    return c.json({ success: true, message: 'Settings updated' });
+  } catch (error) {
+    console.error('Bulk update settings error:', error);
+    return c.json({ success: false, message: 'Failed to update settings' }, 500);
+  }
+});
+
+// Get setting categories
+api.get('/settings-categories', async (c) => {
+  const categories = [
+    { id: 'company', name: 'Company Information', icon: 'Building2', description: 'Basic company details and branding' },
+    { id: 'email', name: 'Email Configuration', icon: 'Mail', description: 'SMTP settings for sending emails' },
+    { id: 'sms', name: 'SMS Configuration', icon: 'MessageSquare', description: 'Twilio settings for SMS notifications' },
+    { id: 'locale', name: 'Regional Settings', icon: 'Globe', description: 'Currency, date format, and timezone' },
+    { id: 'orders', name: 'Order Settings', icon: 'ShoppingCart', description: 'Order processing and approval rules' },
+    { id: 'invoices', name: 'Invoice Settings', icon: 'FileText', description: 'Invoice numbering and terms' },
+    { id: 'tax', name: 'Tax Settings', icon: 'Receipt', description: 'Tax rates and calculations' },
+    { id: 'commissions', name: 'Commission Settings', icon: 'DollarSign', description: 'Sales commission configuration' },
+    { id: 'inventory', name: 'Inventory Settings', icon: 'Package', description: 'Stock management rules' },
+    { id: 'visits', name: 'Visit Settings', icon: 'MapPin', description: 'Field visit requirements' },
+    { id: 'notifications', name: 'Notification Settings', icon: 'Bell', description: 'Alert and notification preferences' },
+    { id: 'security', name: 'Security Settings', icon: 'Shield', description: 'Authentication and access control' },
+    { id: 'integrations', name: 'Integration Settings', icon: 'Plug', description: 'Third-party integrations and APIs' }
+  ];
+  
+  return c.json({ success: true, data: categories });
+});
+
+// Initialize settings table
+api.post('/settings/initialize', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    // Create settings table if not exists
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT,
+        updated_by TEXT,
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(tenant_id, key)
+      )
+    `).run();
+    
+    return c.json({ success: true, message: 'Settings table initialized' });
+  } catch (error) {
+    console.error('Initialize settings error:', error);
+    return c.json({ success: false, message: 'Failed to initialize settings' }, 500);
+  }
+});
+
+// ==================== DEMO USER ====================
+api.post('/users/create-demo', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const demoUserId = 'demo-user-001';
+    const demoEmail = 'demo@salessync.com';
+    const demoPassword = 'demo123';
+    const hashedPassword = await bcrypt.hash(demoPassword, 10);
+    
+    // Check if demo user exists
+    const existing = await db.prepare('SELECT id FROM users WHERE email = ?').bind(demoEmail).first();
+    
+    if (existing) {
+      return c.json({ 
+        success: true, 
+        message: 'Demo user already exists',
+        data: {
+          email: demoEmail,
+          password: demoPassword,
+          role: 'demo'
+        }
+      });
+    }
+    
+    // Create demo user
+    await db.prepare(`
+      INSERT INTO users (id, tenant_id, email, password_hash, first_name, last_name, role, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(demoUserId, tenantId, demoEmail, hashedPassword, 'Demo', 'User', 'demo', 'active').run();
+    
+    // Assign Field Agent role to demo user
+    const fieldAgentRole = await db.prepare(
+      'SELECT id FROM roles WHERE tenant_id = ? AND name = ?'
+    ).bind(tenantId, 'Field Agent').first();
+    
+    if (fieldAgentRole) {
+      await db.prepare(`
+        INSERT INTO user_roles (id, user_id, role_id, assigned_by, assigned_at, is_active)
+        VALUES (?, ?, ?, ?, datetime('now'), 1)
+      `).bind(uuidv4(), demoUserId, fieldAgentRole.id, c.get('userId')).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: 'Demo user created',
+      data: {
+        email: demoEmail,
+        password: demoPassword,
+        role: 'Field Agent',
+        permissions: 'Create orders, visits, and van sales'
+      }
+    });
+  } catch (error) {
+    console.error('Create demo user error:', error);
+    return c.json({ success: false, message: 'Failed to create demo user' }, 500);
+  }
+});
+
 // Mount protected routes
 app.route('/api', api);
 
