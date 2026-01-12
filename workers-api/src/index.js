@@ -2516,18 +2516,18 @@ const createStockMovement = async (db, tenantId, warehouseId, productId, quantit
   
   // Update inventory stock
   const existingStock = await db.prepare(
-    'SELECT id, quantity FROM inventory_stock WHERE warehouse_id = ? AND product_id = ? AND tenant_id = ?'
+    'SELECT id, quantity_on_hand FROM inventory_stock WHERE warehouse_id = ? AND product_id = ? AND tenant_id = ?'
   ).bind(warehouseId, productId, tenantId).first();
   
   if (existingStock) {
-    const newQuantity = existingStock.quantity + quantity;
+    const newQuantity = existingStock.quantity_on_hand + quantity;
     await db.prepare(
-      'UPDATE inventory_stock SET quantity = ?, updated_at = datetime("now") WHERE id = ?'
+      'UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = datetime("now") WHERE id = ?'
     ).bind(newQuantity, existingStock.id).run();
   } else {
     const stockId = uuidv4();
     await db.prepare(`
-      INSERT INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity, created_at)
+      INSERT INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, created_at)
       VALUES (?, ?, ?, ?, ?, datetime('now'))
     `).bind(stockId, tenantId, warehouseId, productId, quantity).run();
   }
@@ -4555,6 +4555,19 @@ api.post('/transactions/initialize', async (c) => {
     try { await db.prepare('ALTER TABLE returns ADD COLUMN subtotal REAL DEFAULT 0').run(); } catch (e) {}
     try { await db.prepare('ALTER TABLE returns ADD COLUMN tax_amount REAL DEFAULT 0').run(); } catch (e) {}
     try { await db.prepare('ALTER TABLE returns ADD COLUMN updated_at TEXT').run(); } catch (e) {}
+    
+    // Create stock_movements table with correct schema
+    await db.prepare(`CREATE TABLE IF NOT EXISTS stock_movements (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, warehouse_id TEXT, product_id TEXT,
+      quantity REAL DEFAULT 0, movement_type TEXT, reference_type TEXT, reference_id TEXT,
+      created_by TEXT, notes TEXT, created_at TEXT
+    )`).run();
+    
+    // Create inventory_stock table if missing
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_stock (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, warehouse_id TEXT, product_id TEXT,
+      quantity REAL DEFAULT 0, created_at TEXT, updated_at TEXT
+    )`).run();
     
     // Suppliers table
     await db.prepare(`CREATE TABLE IF NOT EXISTS suppliers (
