@@ -6942,6 +6942,915 @@ api.get('/documents/delivery/:id', async (c) => {
   }
 });
 
+// ==================== BOARD PLACEMENTS ====================
+
+const BOARD_PLACEMENT_STATUSES = ['planned', 'installed', 'submitted', 'verified', 'rejected', 'removed'];
+
+api.get('/board-placements', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id, brand_id, agent_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT bp.*, c.name as customer_name, u.name as agent_name 
+                 FROM board_placements bp 
+                 LEFT JOIN customers c ON bp.customer_id = c.id 
+                 LEFT JOIN users u ON bp.created_by = u.id 
+                 WHERE bp.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND bp.status = ?'; params.push(status); }
+    if (customer_id) { query += ' AND bp.customer_id = ?'; params.push(customer_id); }
+    if (brand_id) { query += ' AND bp.brand_id = ?'; params.push(brand_id); }
+    if (agent_id) { query += ' AND bp.created_by = ?'; params.push(agent_id); }
+    
+    query += ' ORDER BY bp.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/board-placements/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const placement = await db.prepare(`
+      SELECT bp.*, c.name as customer_name, u.name as agent_name 
+      FROM board_placements bp 
+      LEFT JOIN customers c ON bp.customer_id = c.id 
+      LEFT JOIN users u ON bp.created_by = u.id 
+      WHERE bp.id = ? AND bp.tenant_id = ?
+    `).bind(id, tenantId).first();
+    
+    if (!placement) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    
+    // Get photos
+    const { results: photos } = await db.prepare(
+      'SELECT * FROM board_placement_photos WHERE placement_id = ? ORDER BY created_at DESC'
+    ).bind(id).all();
+    
+    // Get status history
+    const { results: history } = await db.prepare(
+      'SELECT * FROM board_placement_history WHERE placement_id = ? ORDER BY created_at DESC'
+    ).bind(id).all();
+    
+    return c.json({ success: true, data: { ...placement, photos: photos || [], history: history || [] } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO board_placements (id, tenant_id, customer_id, brand_id, board_type, board_size, 
+        placement_location, latitude, longitude, status, notes, visit_id, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.customer_id ?? null, body.brand_id ?? null, body.board_type ?? null, 
+      body.board_size ?? null, body.placement_location ?? null, body.latitude ?? null, body.longitude ?? null,
+      body.notes ?? null, body.visit_id ?? null, userId, now, now).run();
+    
+    // Record history
+    await db.prepare(`
+      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
+      VALUES (?, ?, 'planned', ?, 'Board placement created', ?)
+    `).bind(crypto.randomUUID(), id, userId, now).run();
+    
+    return c.json({ success: true, data: { id }, message: 'Board placement created' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/board-placements/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    
+    await db.prepare(`
+      UPDATE board_placements SET customer_id = ?, brand_id = ?, board_type = ?, board_size = ?,
+        placement_location = ?, latitude = ?, longitude = ?, notes = ?, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind(body.customer_id ?? existing.customer_id, body.brand_id ?? existing.brand_id, 
+      body.board_type ?? existing.board_type, body.board_size ?? existing.board_size,
+      body.placement_location ?? existing.placement_location, body.latitude ?? existing.latitude,
+      body.longitude ?? existing.longitude, body.notes ?? existing.notes,
+      new Date().toISOString(), id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Board placement updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements/:id/install', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    if (existing.status !== 'planned') return c.json({ success: false, message: 'Can only install planned placements' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare(`
+      UPDATE board_placements SET status = 'installed', installed_at = ?, 
+        latitude = COALESCE(?, latitude), longitude = COALESCE(?, longitude), updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind(now, body.latitude ?? null, body.longitude ?? null, now, id, tenantId).run();
+    
+    await db.prepare(`
+      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
+      VALUES (?, ?, 'installed', ?, ?, ?)
+    `).bind(crypto.randomUUID(), id, userId, body.notes ?? 'Board installed', now).run();
+    
+    return c.json({ success: true, message: 'Board placement marked as installed' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements/:id/submit', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    if (existing.status !== 'installed') return c.json({ success: false, message: 'Can only submit installed placements' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE board_placements SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('submitted', now, id, tenantId).run();
+    
+    await db.prepare(`
+      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
+      VALUES (?, ?, 'submitted', ?, ?, ?)
+    `).bind(crypto.randomUUID(), id, userId, body.notes ?? 'Submitted for verification', now).run();
+    
+    return c.json({ success: true, message: 'Board placement submitted for verification' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements/:id/verify', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    if (existing.status !== 'submitted') return c.json({ success: false, message: 'Can only verify submitted placements' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE board_placements SET status = ?, verified_by = ?, verified_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('verified', userId, now, now, id, tenantId).run();
+    
+    await db.prepare(`
+      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
+      VALUES (?, ?, 'verified', ?, ?, ?)
+    `).bind(crypto.randomUUID(), id, userId, body.notes ?? 'Placement verified', now).run();
+    
+    return c.json({ success: true, message: 'Board placement verified' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements/:id/reject', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    if (existing.status !== 'submitted') return c.json({ success: false, message: 'Can only reject submitted placements' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE board_placements SET status = ?, rejection_reason = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('rejected', body.reason ?? null, now, id, tenantId).run();
+    
+    await db.prepare(`
+      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
+      VALUES (?, ?, 'rejected', ?, ?, ?)
+    `).bind(crypto.randomUUID(), id, userId, body.reason ?? 'Placement rejected', now).run();
+    
+    return c.json({ success: true, message: 'Board placement rejected' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/board-placements/:id/photos', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
+    
+    const photoId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO board_placement_photos (id, placement_id, photo_url, photo_type, latitude, longitude, captured_at, uploaded_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(photoId, id, body.photo_url, body.photo_type ?? 'installation', body.latitude ?? null, 
+      body.longitude ?? null, body.captured_at ?? now, userId, now).run();
+    
+    return c.json({ success: true, data: { id: photoId }, message: 'Photo added to board placement' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/board-placements/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'planned' THEN 1 ELSE 0 END) as planned,
+        SUM(CASE WHEN status = 'installed' THEN 1 ELSE 0 END) as installed,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_verification,
+        SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+        SUM(CASE WHEN status = 'removed' THEN 1 ELSE 0 END) as removed
+      FROM board_placements WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== SURVEYS ====================
+
+api.get('/surveys', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, type, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = 'SELECT * FROM surveys WHERE tenant_id = ?';
+    const params = [tenantId];
+    
+    if (status) { query += ' AND status = ?'; params.push(status); }
+    if (type) { query += ' AND survey_type = ?'; params.push(type); }
+    
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/surveys/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const survey = await db.prepare('SELECT * FROM surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!survey) return c.json({ success: false, message: 'Survey not found' }, 404);
+    
+    const { results: questions } = await db.prepare(
+      'SELECT * FROM survey_questions WHERE survey_id = ? ORDER BY order_index ASC'
+    ).bind(id).all();
+    
+    return c.json({ success: true, data: { ...survey, questions: questions || [] } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/surveys', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO surveys (id, tenant_id, name, description, survey_type, status, start_date, end_date, 
+        target_audience, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.name, body.description ?? null, body.survey_type ?? 'general',
+      body.start_date ?? null, body.end_date ?? null, body.target_audience ?? null, userId, now, now).run();
+    
+    // Add questions if provided
+    if (body.questions && Array.isArray(body.questions)) {
+      for (let i = 0; i < body.questions.length; i++) {
+        const q = body.questions[i];
+        await db.prepare(`
+          INSERT INTO survey_questions (id, survey_id, question_text, question_type, options, required, order_index, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(crypto.randomUUID(), id, q.question_text, q.question_type ?? 'text', 
+          q.options ? JSON.stringify(q.options) : null, q.required ? 1 : 0, i, now).run();
+      }
+    }
+    
+    return c.json({ success: true, data: { id }, message: 'Survey created' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/surveys/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Survey not found' }, 404);
+    
+    await db.prepare(`
+      UPDATE surveys SET name = ?, description = ?, survey_type = ?, start_date = ?, end_date = ?, 
+        target_audience = ?, updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind(body.name ?? existing.name, body.description ?? existing.description, 
+      body.survey_type ?? existing.survey_type, body.start_date ?? existing.start_date,
+      body.end_date ?? existing.end_date, body.target_audience ?? existing.target_audience,
+      new Date().toISOString(), id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Survey updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/surveys/:id/activate', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Survey not found' }, 404);
+    
+    await db.prepare('UPDATE surveys SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('active', new Date().toISOString(), id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Survey activated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/surveys/:id/deactivate', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('UPDATE surveys SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('inactive', new Date().toISOString(), id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Survey deactivated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/surveys/:id/questions', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Survey not found' }, 404);
+    
+    const questionId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    // Get max order index
+    const maxOrder = await db.prepare('SELECT MAX(order_index) as max_order FROM survey_questions WHERE survey_id = ?').bind(id).first();
+    const orderIndex = (maxOrder?.max_order ?? -1) + 1;
+    
+    await db.prepare(`
+      INSERT INTO survey_questions (id, survey_id, question_text, question_type, options, required, order_index, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(questionId, id, body.question_text, body.question_type ?? 'text',
+      body.options ? JSON.stringify(body.options) : null, body.required ? 1 : 0, orderIndex, now).run();
+    
+    return c.json({ success: true, data: { id: questionId }, message: 'Question added' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/survey-responses', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { survey_id, customer_id, agent_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT sr.*, s.name as survey_name, c.name as customer_name, u.name as agent_name
+                 FROM survey_responses sr
+                 LEFT JOIN surveys s ON sr.survey_id = s.id
+                 LEFT JOIN customers c ON sr.customer_id = c.id
+                 LEFT JOIN users u ON sr.submitted_by = u.id
+                 WHERE s.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (survey_id) { query += ' AND sr.survey_id = ?'; params.push(survey_id); }
+    if (customer_id) { query += ' AND sr.customer_id = ?'; params.push(customer_id); }
+    if (agent_id) { query += ' AND sr.submitted_by = ?'; params.push(agent_id); }
+    
+    query += ' ORDER BY sr.submitted_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/survey-responses/:id', async (c) => {
+  const db = c.env.DB;
+  const { id } = c.req.param();
+  
+  try {
+    const response = await db.prepare(`
+      SELECT sr.*, s.name as survey_name, c.name as customer_name
+      FROM survey_responses sr
+      LEFT JOIN surveys s ON sr.survey_id = s.id
+      LEFT JOIN customers c ON sr.customer_id = c.id
+      WHERE sr.id = ?
+    `).bind(id).first();
+    
+    if (!response) return c.json({ success: false, message: 'Survey response not found' }, 404);
+    
+    const { results: answers } = await db.prepare(`
+      SELECT sra.*, sq.question_text, sq.question_type
+      FROM survey_response_answers sra
+      LEFT JOIN survey_questions sq ON sra.question_id = sq.id
+      WHERE sra.response_id = ?
+      ORDER BY sq.order_index ASC
+    `).bind(id).all();
+    
+    return c.json({ success: true, data: { ...response, answers: answers || [] } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/survey-responses', async (c) => {
+  const db = c.env.DB;
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO survey_responses (id, survey_id, customer_id, visit_id, latitude, longitude, submitted_by, submitted_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, body.survey_id, body.customer_id ?? null, body.visit_id ?? null, 
+      body.latitude ?? null, body.longitude ?? null, userId, now, now).run();
+    
+    // Save answers
+    if (body.answers && Array.isArray(body.answers)) {
+      for (const answer of body.answers) {
+        await db.prepare(`
+          INSERT INTO survey_response_answers (id, response_id, question_id, answer_text, answer_value, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(crypto.randomUUID(), id, answer.question_id, answer.answer_text ?? null, 
+          answer.answer_value ?? null, now).run();
+      }
+    }
+    
+    // Update survey response count
+    await db.prepare('UPDATE surveys SET response_count = COALESCE(response_count, 0) + 1 WHERE id = ?')
+      .bind(body.survey_id).run();
+    
+    return c.json({ success: true, data: { id }, message: 'Survey response submitted' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/surveys/:id/analytics', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const survey = await db.prepare('SELECT * FROM surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!survey) return c.json({ success: false, message: 'Survey not found' }, 404);
+    
+    const responseCount = await db.prepare('SELECT COUNT(*) as count FROM survey_responses WHERE survey_id = ?').bind(id).first();
+    
+    const { results: questionStats } = await db.prepare(`
+      SELECT sq.id, sq.question_text, sq.question_type, COUNT(sra.id) as answer_count
+      FROM survey_questions sq
+      LEFT JOIN survey_response_answers sra ON sq.id = sra.question_id
+      WHERE sq.survey_id = ?
+      GROUP BY sq.id
+      ORDER BY sq.order_index
+    `).bind(id).all();
+    
+    return c.json({ 
+      success: true, 
+      data: { 
+        survey,
+        total_responses: responseCount?.count || 0,
+        question_stats: questionStats || []
+      } 
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== STORE AUDITS (MERCHANDISING COMPLIANCE) ====================
+
+const AUDIT_STATUSES = ['draft', 'in_progress', 'submitted', 'approved', 'rejected'];
+
+api.get('/store-audits', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id, agent_id, audit_type, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT sa.*, c.name as customer_name, u.name as agent_name
+                 FROM store_audits sa
+                 LEFT JOIN customers c ON sa.customer_id = c.id
+                 LEFT JOIN users u ON sa.created_by = u.id
+                 WHERE sa.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND sa.status = ?'; params.push(status); }
+    if (customer_id) { query += ' AND sa.customer_id = ?'; params.push(customer_id); }
+    if (agent_id) { query += ' AND sa.created_by = ?'; params.push(agent_id); }
+    if (audit_type) { query += ' AND sa.audit_type = ?'; params.push(audit_type); }
+    
+    query += ' ORDER BY sa.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/store-audits/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const audit = await db.prepare(`
+      SELECT sa.*, c.name as customer_name, u.name as agent_name
+      FROM store_audits sa
+      LEFT JOIN customers c ON sa.customer_id = c.id
+      LEFT JOIN users u ON sa.created_by = u.id
+      WHERE sa.id = ? AND sa.tenant_id = ?
+    `).bind(id, tenantId).first();
+    
+    if (!audit) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    
+    const { results: items } = await db.prepare(`
+      SELECT sai.*, p.name as product_name, p.sku
+      FROM store_audit_items sai
+      LEFT JOIN products p ON sai.product_id = p.id
+      WHERE sai.audit_id = ?
+      ORDER BY sai.created_at ASC
+    `).bind(id).all();
+    
+    const { results: photos } = await db.prepare(
+      'SELECT * FROM store_audit_photos WHERE audit_id = ? ORDER BY created_at DESC'
+    ).bind(id).all();
+    
+    return c.json({ success: true, data: { ...audit, items: items || [], photos: photos || [] } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO store_audits (id, tenant_id, customer_id, visit_id, audit_type, status, 
+        latitude, longitude, started_at, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.customer_id, body.visit_id ?? null, body.audit_type ?? 'general',
+      body.latitude ?? null, body.longitude ?? null, now, body.notes ?? null, userId, now, now).run();
+    
+    return c.json({ success: true, data: { id }, message: 'Store audit created' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/items', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    
+    const itemId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO store_audit_items (id, audit_id, product_id, is_listed, is_on_shelf, facings, 
+        shelf_price, promo_present, out_of_stock, competitor_price, remarks, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(itemId, id, body.product_id, body.is_listed ? 1 : 0, body.is_on_shelf ? 1 : 0,
+      body.facings ?? 0, body.shelf_price ?? null, body.promo_present ? 1 : 0, 
+      body.out_of_stock ? 1 : 0, body.competitor_price ?? null, body.remarks ?? null, now).run();
+    
+    return c.json({ success: true, data: { id: itemId }, message: 'Audit item added' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/start', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE store_audits SET status = ?, started_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('in_progress', now, now, id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Store audit started' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/submit', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    
+    // Calculate compliance score
+    const items = await db.prepare('SELECT * FROM store_audit_items WHERE audit_id = ?').bind(id).all();
+    let totalItems = items.results?.length || 0;
+    let compliantItems = items.results?.filter(i => i.is_on_shelf && !i.out_of_stock).length || 0;
+    let complianceScore = totalItems > 0 ? Math.round((compliantItems / totalItems) * 100) : 0;
+    let oosCount = items.results?.filter(i => i.out_of_stock).length || 0;
+    let totalFacings = items.results?.reduce((sum, i) => sum + (i.facings || 0), 0) || 0;
+    
+    const now = new Date().toISOString();
+    await db.prepare(`
+      UPDATE store_audits SET status = ?, finished_at = ?, compliance_score = ?, 
+        oos_count = ?, total_facings = ?, notes = COALESCE(?, notes), updated_at = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind('submitted', now, complianceScore, oosCount, totalFacings, body.notes ?? null, now, id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Store audit submitted', data: { compliance_score: complianceScore } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    if (existing.status !== 'submitted') return c.json({ success: false, message: 'Can only approve submitted audits' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE store_audits SET status = ?, approved_by = ?, approved_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('approved', userId, now, now, id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Store audit approved' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/reject', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    if (existing.status !== 'submitted') return c.json({ success: false, message: 'Can only reject submitted audits' }, 400);
+    
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE store_audits SET status = ?, rejection_reason = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('rejected', body.reason ?? null, now, id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Store audit rejected' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/store-audits/:id/photos', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  
+  try {
+    const existing = await db.prepare('SELECT * FROM store_audits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Store audit not found' }, 404);
+    
+    const photoId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO store_audit_photos (id, audit_id, photo_url, photo_type, latitude, longitude, captured_at, uploaded_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(photoId, id, body.photo_url, body.photo_type ?? 'shelf', body.latitude ?? null,
+      body.longitude ?? null, body.captured_at ?? now, userId, now).run();
+    
+    return c.json({ success: true, data: { id: photoId }, message: 'Photo added to store audit' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/store-audits/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total_audits,
+        AVG(compliance_score) as avg_compliance_score,
+        SUM(oos_count) as total_oos,
+        SUM(total_facings) as total_facings,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_approval,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved
+      FROM store_audits WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/store-audits/compliance-trends', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { days = 30 } = c.req.query();
+  
+  try {
+    const { results } = await db.prepare(`
+      SELECT DATE(created_at) as date, AVG(compliance_score) as avg_score, COUNT(*) as audit_count
+      FROM store_audits 
+      WHERE tenant_id = ? AND created_at >= datetime('now', '-' || ? || ' days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).bind(tenantId, parseInt(days)).all();
+    
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== ATTACHMENTS (GENERIC) ====================
+
+api.get('/attachments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { entity_type, entity_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = 'SELECT * FROM attachments WHERE tenant_id = ?';
+    const params = [tenantId];
+    
+    if (entity_type) { query += ' AND entity_type = ?'; params.push(entity_type); }
+    if (entity_id) { query += ' AND entity_id = ?'; params.push(entity_id); }
+    
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/attachments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO attachments (id, tenant_id, entity_type, entity_id, file_url, file_name, file_type, 
+        file_size, latitude, longitude, captured_at, uploaded_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.entity_type, body.entity_id, body.file_url, body.file_name ?? null,
+      body.file_type ?? null, body.file_size ?? null, body.latitude ?? null, body.longitude ?? null,
+      body.captured_at ?? now, userId, now).run();
+    
+    return c.json({ success: true, data: { id }, message: 'Attachment created' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/attachments/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM attachments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Attachment deleted' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 // ==================== INITIALIZE ADDITIONAL TABLES ====================
 
 api.post('/initialize-field-ops-tables', async (c) => {
@@ -7022,6 +7931,88 @@ api.post('/initialize-field-ops-tables', async (c) => {
       id TEXT PRIMARY KEY, promotion_id TEXT NOT NULL, product_id TEXT,
       discount_type TEXT DEFAULT 'percentage', discount_value REAL DEFAULT 0,
       min_quantity INTEGER DEFAULT 1, created_at TEXT
+    )`).run();
+    
+    // Board Placements
+    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placements (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, customer_id TEXT, brand_id TEXT,
+      board_type TEXT, board_size TEXT, placement_location TEXT,
+      latitude REAL, longitude REAL, status TEXT DEFAULT 'planned',
+      notes TEXT, visit_id TEXT, installed_at TEXT, removed_at TEXT,
+      verified_by TEXT, verified_at TEXT, rejection_reason TEXT,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    // Board Placement Photos
+    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placement_photos (
+      id TEXT PRIMARY KEY, placement_id TEXT NOT NULL, photo_url TEXT NOT NULL,
+      photo_type TEXT DEFAULT 'installation', latitude REAL, longitude REAL,
+      captured_at TEXT, uploaded_by TEXT, created_at TEXT
+    )`).run();
+    
+    // Board Placement History
+    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placement_history (
+      id TEXT PRIMARY KEY, placement_id TEXT NOT NULL, status TEXT NOT NULL,
+      changed_by TEXT, notes TEXT, created_at TEXT
+    )`).run();
+    
+    // Surveys
+    await db.prepare(`CREATE TABLE IF NOT EXISTS surveys (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, description TEXT,
+      survey_type TEXT DEFAULT 'general', status TEXT DEFAULT 'draft',
+      start_date TEXT, end_date TEXT, target_audience TEXT,
+      response_count INTEGER DEFAULT 0, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    // Survey Questions
+    await db.prepare(`CREATE TABLE IF NOT EXISTS survey_questions (
+      id TEXT PRIMARY KEY, survey_id TEXT NOT NULL, question_text TEXT NOT NULL,
+      question_type TEXT DEFAULT 'text', options TEXT, required INTEGER DEFAULT 0,
+      order_index INTEGER DEFAULT 0, created_at TEXT
+    )`).run();
+    
+    // Survey Responses
+    await db.prepare(`CREATE TABLE IF NOT EXISTS survey_responses (
+      id TEXT PRIMARY KEY, survey_id TEXT NOT NULL, customer_id TEXT, visit_id TEXT,
+      latitude REAL, longitude REAL, submitted_by TEXT, submitted_at TEXT, created_at TEXT
+    )`).run();
+    
+    // Survey Response Answers
+    await db.prepare(`CREATE TABLE IF NOT EXISTS survey_response_answers (
+      id TEXT PRIMARY KEY, response_id TEXT NOT NULL, question_id TEXT NOT NULL,
+      answer_text TEXT, answer_value TEXT, created_at TEXT
+    )`).run();
+    
+    // Store Audits (Merchandising Compliance)
+    await db.prepare(`CREATE TABLE IF NOT EXISTS store_audits (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, customer_id TEXT NOT NULL, visit_id TEXT,
+      audit_type TEXT DEFAULT 'general', status TEXT DEFAULT 'draft',
+      latitude REAL, longitude REAL, started_at TEXT, finished_at TEXT,
+      compliance_score INTEGER, oos_count INTEGER DEFAULT 0, total_facings INTEGER DEFAULT 0,
+      notes TEXT, approved_by TEXT, approved_at TEXT, rejection_reason TEXT,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    // Store Audit Items (SKU-level checks)
+    await db.prepare(`CREATE TABLE IF NOT EXISTS store_audit_items (
+      id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, product_id TEXT,
+      is_listed INTEGER DEFAULT 0, is_on_shelf INTEGER DEFAULT 0, facings INTEGER DEFAULT 0,
+      shelf_price REAL, promo_present INTEGER DEFAULT 0, out_of_stock INTEGER DEFAULT 0,
+      competitor_price REAL, remarks TEXT, created_at TEXT
+    )`).run();
+    
+    // Store Audit Photos
+    await db.prepare(`CREATE TABLE IF NOT EXISTS store_audit_photos (
+      id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, photo_url TEXT NOT NULL,
+      photo_type TEXT DEFAULT 'shelf', latitude REAL, longitude REAL,
+      captured_at TEXT, uploaded_by TEXT, created_at TEXT
+    )`).run();
+    
+    // Generic Attachments
+    await db.prepare(`CREATE TABLE IF NOT EXISTS attachments (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id TEXT NOT NULL,
+      file_url TEXT NOT NULL, file_name TEXT, file_type TEXT, file_size INTEGER,
+      latitude REAL, longitude REAL, captured_at TEXT, uploaded_by TEXT, created_at TEXT
     )`).run();
     
     // Add missing columns to visits table
