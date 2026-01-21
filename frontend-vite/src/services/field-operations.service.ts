@@ -582,6 +582,54 @@ class FieldOperationsService extends ApiService {
     const response = await this.get(`${this.baseUrl}/metrics?${params.toString()}`)
     return response.data
   }
+
+  // Board Placements
+  async getBoardPlacements(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+
+    const response = await this.get(`${this.baseUrl}/boards?${params.toString()}`)
+    return response.data
+  }
+
+  async getBoardPlacement(id: string) {
+    const response = await this.get(`${this.baseUrl}/boards/${id}`)
+    return response.data
+  }
+
+  async createBoardPlacement(data: any) {
+    const response = await this.post(`${this.baseUrl}/boards`, data)
+    return response.data
+  }
+
+  async updateBoardPlacement(id: string, data: any) {
+    const response = await this.put(`${this.baseUrl}/boards/${id}`, data)
+    return response.data
+  }
+
+  async reverseBoardPlacement(id: string | number) {
+    const response = await this.post(`${this.baseUrl}/boards/${id}/reverse`)
+    return response.data
+  }
+
+  async deleteBoardPlacement(id: string) {
+    const response = await this.delete(`${this.baseUrl}/boards/${id}`)
+    return response.data
+  }
+
+  // Dashboard
+  async getDashboard(dateRange?: any) {
+    const params = new URLSearchParams()
+    if (dateRange?.start_date) params.append('start_date', dateRange.start_date)
+    if (dateRange?.end_date) params.append('end_date', dateRange.end_date)
+
+    const response = await this.get(`${this.baseUrl}/dashboard?${params.toString()}`)
+    return response.data
+  }
 }
 
 export const fieldOperationsService = new FieldOperationsService()
