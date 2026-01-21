@@ -224,6 +224,232 @@ class BeatRoutesService {
       throw error
     }
   }
+
+  // Routes - Enhanced methods matching new backend endpoints
+  async getRouteDetail(id: string): Promise<RouteDetail> {
+    try {
+      const response = await apiClient.get(`/routes/${id}`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch route detail:', error)
+      throw error
+    }
+  }
+
+  async createRoute(data: {
+    name: string
+    code?: string
+    description?: string
+    area_id?: string
+    route_type?: string
+  }): Promise<BeatRoute> {
+    try {
+      const response = await apiClient.post('/routes', data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create route:', error)
+      throw error
+    }
+  }
+
+  async updateRoute(id: string, data: Partial<BeatRoute>): Promise<BeatRoute> {
+    try {
+      const response = await apiClient.put(`/routes/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update route:', error)
+      throw error
+    }
+  }
+
+  async assignRouteAgent(routeId: string, agentId: string): Promise<BeatRoute> {
+    try {
+      const response = await apiClient.post(`/routes/${routeId}/assign`, { agent_id: agentId })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to assign route agent:', error)
+      throw error
+    }
+  }
+
+  // Route Stops - New endpoints
+  async getRouteStopsForRoute(routeId: string): Promise<RouteStop[]> {
+    try {
+      const response = await apiClient.get('/route-stops', { params: { route_id: routeId } })
+      return response.data.data?.stops || response.data.data || []
+    } catch (error) {
+      console.error('Failed to fetch route stops:', error)
+      throw error
+    }
+  }
+
+  async createRouteStop(data: {
+    route_id: string
+    customer_id?: string
+    sequence_order?: number
+    planned_arrival_time?: string
+    planned_duration?: number
+    visit_type?: string
+    notes?: string
+  }): Promise<RouteStop> {
+    try {
+      const response = await apiClient.post('/route-stops', data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create route stop:', error)
+      throw error
+    }
+  }
+
+  async updateRouteStop(id: string, data: Partial<RouteStop>): Promise<RouteStop> {
+    try {
+      const response = await apiClient.put(`/route-stops/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update route stop:', error)
+      throw error
+    }
+  }
+
+  async deleteRouteStop(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`/route-stops/${id}`)
+    } catch (error) {
+      console.error('Failed to delete route stop:', error)
+      throw error
+    }
+  }
+
+  async checkInRouteStop(id: string, data: {
+    latitude?: number
+    longitude?: number
+    notes?: string
+  }): Promise<RouteStop> {
+    try {
+      const response = await apiClient.post(`/route-stops/${id}/check-in`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to check in route stop:', error)
+      throw error
+    }
+  }
+
+  async checkOutRouteStop(id: string, data: {
+    latitude?: number
+    longitude?: number
+    completion_notes?: string
+  }): Promise<RouteStop> {
+    try {
+      const response = await apiClient.post(`/route-stops/${id}/check-out`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to check out route stop:', error)
+      throw error
+    }
+  }
+
+  async skipRouteStop(id: string, reason: string): Promise<RouteStop> {
+    try {
+      const response = await apiClient.post(`/route-stops/${id}/skip`, { skip_reason: reason })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to skip route stop:', error)
+      throw error
+    }
+  }
+
+  // Areas - New endpoints
+  async getAreas(filter?: any): Promise<{ areas: Area[], total: number }> {
+    try {
+      const response = await apiClient.get('/areas', { params: filter })
+      return {
+        areas: response.data.data?.areas || response.data.data || [],
+        total: response.data.data?.total || 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch areas:', error)
+      throw error
+    }
+  }
+
+  async createArea(data: {
+    name: string
+    code?: string
+    description?: string
+    region?: string
+  }): Promise<Area> {
+    try {
+      const response = await apiClient.post('/areas', data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create area:', error)
+      throw error
+    }
+  }
+
+  async updateArea(id: string, data: Partial<Area>): Promise<Area> {
+    try {
+      const response = await apiClient.put(`/areas/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update area:', error)
+      throw error
+    }
+  }
+
+  async deleteArea(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`/areas/${id}`)
+    } catch (error) {
+      console.error('Failed to delete area:', error)
+      throw error
+    }
+  }
+}
+
+// Additional interfaces for new endpoints
+export interface RouteDetail extends BeatRoute {
+  stops?: RouteStop[]
+  assigned_agent_name?: string
+  area_name?: string
+  route_type?: string
+}
+
+export interface RouteStop {
+  id: string
+  route_id: string
+  customer_id?: string
+  customer_name?: string
+  sequence_order: number
+  planned_arrival_time?: string
+  planned_duration: number
+  visit_type: string
+  notes?: string
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped'
+  actual_arrival_time?: string
+  actual_departure_time?: string
+  check_in_latitude?: number
+  check_in_longitude?: number
+  check_out_latitude?: number
+  check_out_longitude?: number
+  completion_notes?: string
+  skip_reason?: string
+  created_by?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface Area {
+  id: string
+  tenant_id: string
+  name: string
+  code?: string
+  description?: string
+  region?: string
+  status: 'active' | 'inactive'
+  created_by?: string
+  created_at: string
+  updated_at?: string
 }
 
 export const beatRoutesService = new BeatRoutesService()

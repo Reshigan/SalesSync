@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, HelpCircle } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import OfflineIndicator from '../ui/OfflineIndicator'
+import HelpPanel from '../help/HelpPanel'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [helpPanelOpen, setHelpPanelOpen] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -80,6 +82,18 @@ export default function DashboardLayout() {
       
       {/* Offline Indicator */}
       <OfflineIndicator />
+
+      {/* Help Button - Fixed position */}
+      <button
+        onClick={() => setHelpPanelOpen(true)}
+        className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105"
+        title="Help & Training"
+      >
+        <HelpCircle className="h-6 w-6" />
+      </button>
+
+      {/* Help Panel */}
+      <HelpPanel isOpen={helpPanelOpen} onClose={() => setHelpPanelOpen(false)} />
     </div>
   )
 }

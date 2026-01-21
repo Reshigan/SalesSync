@@ -228,6 +228,130 @@ class CommissionsService {
       throw error
     }
   }
+
+  // Commission Lifecycle Methods - matching new backend endpoints
+  async getCommissionDetail(id: string): Promise<CommissionDetail> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch commission detail:', error)
+      throw error
+    }
+  }
+
+  async createCommissionRecord(data: {
+    agent_id: string
+    period_start: string
+    period_end: string
+    notes?: string
+  }): Promise<Commission> {
+    try {
+      const response = await apiClient.post(this.baseUrl, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create commission record:', error)
+      throw error
+    }
+  }
+
+  async calculateCommissionRecord(id: string): Promise<Commission> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${id}/calculate`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to calculate commission:', error)
+      throw error
+    }
+  }
+
+  async approveCommission(id: string): Promise<Commission> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${id}/approve`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to approve commission:', error)
+      throw error
+    }
+  }
+
+  async payCommission(id: string, data: {
+    payment_reference?: string
+    payment_method?: string
+    notes?: string
+  }): Promise<Commission> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${id}/pay`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to pay commission:', error)
+      throw error
+    }
+  }
+
+  async reverseCommission(id: string, reason: string): Promise<Commission> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${id}/reverse`, { reversal_reason: reason })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to reverse commission:', error)
+      throw error
+    }
+  }
+
+  async getCommissionStatsSummary(): Promise<CommissionStatsSummary> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/stats`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch commission stats:', error)
+      throw error
+    }
+  }
+}
+
+// Additional interfaces for new endpoints
+export interface CommissionDetail extends Commission {
+  items?: CommissionItem[]
+  agent_name?: string
+  period_start?: string
+  period_end?: string
+  base_amount?: number
+  bonus_amount?: number
+  deductions?: number
+  total_amount?: number
+  calculated_at?: string
+  approved_by?: string
+  approved_at?: string
+  paid_by?: string
+  paid_at?: string
+  payment_reference?: string
+  payment_method?: string
+  reversal_reason?: string
+  reversed_by?: string
+  reversed_at?: string
+}
+
+export interface CommissionItem {
+  id: string
+  commission_id: string
+  order_id?: string
+  order_amount: number
+  commission_rate: number
+  commission_amount: number
+  notes?: string
+  created_at: string
+}
+
+export interface CommissionStatsSummary {
+  total_commissions: number
+  pending_count: number
+  calculated_count: number
+  approved_count: number
+  paid_count: number
+  reversed_count: number
+  total_pending_amount: number
+  total_paid_amount: number
 }
 
 export const commissionsService = new CommissionsService()

@@ -385,6 +385,79 @@ class KYCService extends ApiService {
     const response = await this.get(`${this.baseUrl}/agents`)
     return response.data
   }
+
+  // KYC Cases - New lifecycle methods matching backend
+  async getKYCCases(filter: any = {}) {
+    const params = new URLSearchParams()
+    Object.entries(filter).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value))
+      }
+    })
+    const response = await this.get(`/kyc-cases?${params.toString()}`)
+    return response.data
+  }
+
+  async getKYCCase(id: string) {
+    const response = await this.get(`/kyc-cases/${id}`)
+    return response.data
+  }
+
+  async createKYCCase(data: {
+    customer_id?: string
+    case_type?: string
+    business_name?: string
+    registration_number?: string
+    tax_id?: string
+    contact_person?: string
+    contact_phone?: string
+    contact_email?: string
+    address?: string
+    notes?: string
+  }) {
+    const response = await this.post('/kyc-cases', data)
+    return response.data
+  }
+
+  async updateKYCCase(id: string, data: any) {
+    const response = await this.put(`/kyc-cases/${id}`, data)
+    return response.data
+  }
+
+  async uploadKYCCaseDocument(id: string, data: {
+    document_type: string
+    document_name?: string
+    file_url: string
+    expiry_date?: string
+  }) {
+    const response = await this.post(`/kyc-cases/${id}/documents`, data)
+    return response.data
+  }
+
+  async startKYCReview(id: string) {
+    const response = await this.post(`/kyc-cases/${id}/start-review`)
+    return response.data
+  }
+
+  async requestKYCDocuments(id: string, data: { documents_requested: string; notes?: string }) {
+    const response = await this.post(`/kyc-cases/${id}/request-documents`, data)
+    return response.data
+  }
+
+  async approveKYCCase(id: string, notes?: string) {
+    const response = await this.post(`/kyc-cases/${id}/approve`, { notes })
+    return response.data
+  }
+
+  async rejectKYCCase(id: string, reason: string, notes?: string) {
+    const response = await this.post(`/kyc-cases/${id}/reject`, { rejection_reason: reason, notes })
+    return response.data
+  }
+
+  async getKYCCaseStats() {
+    const response = await this.get('/kyc-cases/stats')
+    return response.data
+  }
 }
 
 export const kycService = new KYCService()

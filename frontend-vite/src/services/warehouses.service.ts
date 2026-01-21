@@ -202,6 +202,106 @@ class WarehousesService {
       throw error
     }
   }
+
+  // Enhanced Warehouse Methods - matching new backend endpoints
+  async getWarehouseDetail(id: string): Promise<WarehouseDetail> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch warehouse detail:', error)
+      throw error
+    }
+  }
+
+  async createWarehouseRecord(data: {
+    name: string
+    code?: string
+    location?: string
+    address?: string
+    city?: string
+    region?: string
+    country?: string
+    latitude?: number
+    longitude?: number
+    warehouse_type?: string
+    manager_id?: string
+    capacity?: number
+  }): Promise<Warehouse> {
+    try {
+      const response = await apiClient.post(this.baseUrl, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create warehouse:', error)
+      throw error
+    }
+  }
+
+  async getWarehouseInventory(warehouseId: string, filter?: any): Promise<{ inventory: WarehouseInventoryItem[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${warehouseId}/inventory`, { params: filter })
+      return {
+        inventory: response.data.data?.inventory || response.data.data || [],
+        total: response.data.data?.total || 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch warehouse inventory:', error)
+      throw error
+    }
+  }
+
+  async getWarehouseStockMovements(warehouseId: string, filter?: any): Promise<{ movements: StockMovement[], total: number }> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${warehouseId}/stock-movements`, { params: filter })
+      return {
+        movements: response.data.data?.movements || response.data.data || [],
+        total: response.data.data?.total || 0
+      }
+    } catch (error) {
+      console.error('Failed to fetch warehouse stock movements:', error)
+      throw error
+    }
+  }
+}
+
+// Additional interfaces for new endpoints
+export interface WarehouseDetail extends Warehouse {
+  inventory_summary?: {
+    total_products: number
+    total_quantity: number
+    total_value: number
+    low_stock_count: number
+  }
+  manager_name?: string
+  warehouse_type?: string
+  region?: string
+}
+
+export interface WarehouseInventoryItem {
+  product_id: string
+  product_name: string
+  product_code: string
+  quantity_on_hand: number
+  unit_cost: number
+  total_value: number
+  min_stock_level?: number
+  max_stock_level?: number
+  reorder_point?: number
+  last_movement_date?: string
+}
+
+export interface StockMovement {
+  id: string
+  warehouse_id: string
+  product_id: string
+  product_name?: string
+  movement_type: 'in' | 'out' | 'adjustment' | 'transfer'
+  quantity: number
+  reference_type?: string
+  reference_id?: string
+  notes?: string
+  created_by?: string
+  created_at: string
 }
 
 export const warehousesService = new WarehousesService()

@@ -339,6 +339,160 @@ class FieldMarketingService {
     );
     return response.data;
   }
+
+  async getSurveys(params?: { status?: string; survey_type?: string }): Promise<{ surveys: Survey[] }> {
+    const response = await axios.get(
+      `${API_URL}/surveys`,
+      { params, headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getSurveyResponses(surveyId: number): Promise<{ responses: any[] }> {
+    const response = await axios.get(
+      `${API_URL}/surveys/${surveyId}/responses`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getSurveyStats(): Promise<{ stats: any }> {
+    const response = await axios.get(
+      `${API_URL}/surveys/stats`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  // Store Audits
+  async getStoreAudits(params?: { status?: string; customer_id?: string }): Promise<{ audits: any[] }> {
+    const response = await axios.get(
+      `${API_URL}/store-audits`,
+      { params, headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getStoreAudit(auditId: number): Promise<{ audit: any; items: any[] }> {
+    const response = await axios.get(
+      `${API_URL}/store-audits/${auditId}`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async createStoreAudit(data: {
+    customer_id: string;
+    audit_type: string;
+    scheduled_date?: string;
+    notes?: string;
+  }): Promise<{ audit: any }> {
+    const response = await axios.post(
+      `${API_URL}/store-audits`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async startStoreAudit(auditId: number, data: { latitude?: number; longitude?: number }): Promise<{ audit: any }> {
+    const response = await axios.post(
+      `${API_URL}/store-audits/${auditId}/start`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async addStoreAuditItem(auditId: number, data: {
+    category: string;
+    item_name: string;
+    expected_value?: string;
+    actual_value?: string;
+    compliance_status?: string;
+    photo_url?: string;
+    notes?: string;
+  }): Promise<{ item: any }> {
+    const response = await axios.post(
+      `${API_URL}/store-audits/${auditId}/items`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async completeStoreAudit(auditId: number, data: {
+    overall_score?: number;
+    recommendations?: string;
+    latitude?: number;
+    longitude?: number;
+  }): Promise<{ audit: any }> {
+    const response = await axios.post(
+      `${API_URL}/store-audits/${auditId}/complete`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getStoreAuditStats(): Promise<{ stats: any }> {
+    const response = await axios.get(
+      `${API_URL}/store-audits/stats`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  // Board Placements - Additional methods
+  async getBoardPlacements(params?: { status?: string; customer_id?: string }): Promise<{ placements: BoardPlacement[] }> {
+    const response = await axios.get(
+      `${API_URL}/board-placements`,
+      { params, headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getBoardPlacement(placementId: number): Promise<{ placement: BoardPlacement; photos: any[]; history: any[] }> {
+    const response = await axios.get(
+      `${API_URL}/board-placements/${placementId}`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async updateBoardPlacementStatus(placementId: number, data: {
+    status: string;
+    notes?: string;
+  }): Promise<{ placement: BoardPlacement }> {
+    const response = await axios.post(
+      `${API_URL}/board-placements/${placementId}/status`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async addBoardPlacementPhoto(placementId: number, data: {
+    photo_url: string;
+    photo_type?: string;
+    latitude?: number;
+    longitude?: number;
+  }): Promise<{ photo: any }> {
+    const response = await axios.post(
+      `${API_URL}/board-placements/${placementId}/photos`,
+      data,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
+
+  async getBoardPlacementStats(): Promise<{ stats: any }> {
+    const response = await axios.get(
+      `${API_URL}/board-placements/stats`,
+      { headers: this.getHeaders() }
+    );
+    return response.data;
+  }
 }
 
 export default new FieldMarketingService();
