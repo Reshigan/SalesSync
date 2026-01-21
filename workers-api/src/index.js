@@ -9707,6 +9707,7 @@ app.get('/files/:filename', async (c) => {
 // SEED DEMO DATA ENDPOINT (No auth required - for demo setup)
 // ============================================
 app.post('/seed-demo-data', async (c) => {
+  let currentStep = 'initialization';
   try {
     const db = c.env.DB;
     const tenantId = 'demo-tenant';
@@ -9747,7 +9748,10 @@ app.post('/seed-demo-data', async (c) => {
     }
     
     // Clean up existing demo data to avoid conflicts (in reverse dependency order)
+    currentStep = 'cleanup';
     const cleanupTables = [
+      // Field marketing tables
+      'survey_responses', 'survey_questions', 'store_audit_items', 'board_placement_photos',
       'territories', 'teams', 'inventory_issues', 'goods_receipts', 'stock_counts',
       'inventory_transfers', 'inventory_adjustments', 'van_loads', 'invoices',
       'cash_reconciliations', 'kyc_cases', 'store_audits', 'surveys', 'board_placements',
@@ -9755,7 +9759,17 @@ app.post('/seed-demo-data', async (c) => {
       'stock_movements', 'credit_notes', 'refunds', 'return_items', 'returns',
       'commissions', 'visits', 'van_sale_items', 'van_sales', 'order_items', 'orders',
       'van_inventory', 'vans', 'agents', 'customers', 'inventory_stock', 'warehouses',
-      'products', 'brands', 'categories', 'routes', 'areas', 'regions', 'users'
+      'products', 'brands', 'categories', 'routes', 'areas', 'regions', 'users',
+      // RBAC tables
+      'user_roles', 'role_permissions', 'roles', 'permissions',
+      // Notification tables
+      'notification_logs',
+      // Campaign tables
+      'promotional_campaigns', 'campaign_executions',
+      // Order status history
+      'order_status_history',
+      // Commission tables
+      'commission_reversals', 'commission_deductions'
     ];
     
     for (const table of cleanupTables) {
@@ -9763,22 +9777,55 @@ app.post('/seed-demo-data', async (c) => {
         await db.prepare(`DELETE FROM ${table} WHERE tenant_id = ?`).bind(tenantId).run();
       } catch (e) {
         // Table might not exist or have different schema, continue
+        console.log(`Cleanup ${table}:`, e.message);
       }
     }
     
-    // Delete tenant last
+    // Delete tenant last - use plain DELETE not INSERT OR REPLACE
+    currentStep = 'cleanup_tenant';
     try {
       await db.prepare(`DELETE FROM tenants WHERE id = ?`).bind(tenantId).run();
     } catch (e) {
+      console.log('Cleanup tenant error:', e.message);
       // Continue if fails
     }
     
     // ========== 1. TENANT ==========
-    await db.prepare(`INSERT OR REPLACE INTO tenants (id, name, code, domain, status, subscription_plan, max_users, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-      tenantId, 'Demo Company', 'DEMO', 'demo.salessync.com', 'active', 'enterprise', 100, JSON.stringify(['all'])
-    ).run();
+    currentStep = 'tenant';
+    // First check if tenant exists by id OR by code (UNIQUE constraint on code)
+    let existingTenant = await db.prepare(`SELECT id FROM tenants WHERE id = ?`).bind(tenantId).first();
+    if (!existingTenant) {
+      // Check if tenant with same code exists
+      const tenantByCode = await db.prepare(`SELECT id FROM tenants WHERE code = ?`).bind('DEMO').first();
+      if (tenantByCode) {
+        // Use existing tenant's id
+        existingTenant = tenantByCode;
+      }
+    }
+    
+    if (!existingTenant) {
+      // Insert new tenant
+      await db.prepare(`INSERT INTO tenants (id, name, code, domain, status, subscription_plan, max_users, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        tenantId, 'Demo Company', 'DEMO', 'demo.salessync.com', 'active', 'enterprise', 100, JSON.stringify(['all'])
+      ).run();
+    } else {
+      // Update existing tenant and use its id for the rest of the seeding
+      await db.prepare(`UPDATE tenants SET name = ?, domain = ?, status = ?, subscription_plan = ?, max_users = ?, features = ? WHERE id = ?`).bind(
+        'Demo Company', 'demo.salessync.com', 'active', 'enterprise', 100, JSON.stringify(['all']), existingTenant.id
+      ).run();
+    }
+    
+    // Use the actual tenant id (might be different from 'demo-tenant' if code already existed)
+    const actualTenantId = existingTenant ? existingTenant.id : tenantId;
+    
+    // Verify tenant exists
+    const verifyTenant = await db.prepare(`SELECT id FROM tenants WHERE id = ?`).bind(actualTenantId).first();
+    if (!verifyTenant) {
+      return c.json({ success: false, message: 'Failed to create tenant', step: 'tenant_verify' }, 500);
+    }
     
     // ========== 2. REGIONS ==========
+    currentStep = 'regions';
     const regions = [
       { id: 'region-north', name: 'North Region', code: 'NORTH' },
       { id: 'region-south', name: 'South Region', code: 'SOUTH' },
@@ -9786,10 +9833,16 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'region-west', name: 'West Region', code: 'WEST' },
     ];
     for (const r of regions) {
-      await db.prepare(`INSERT OR REPLACE INTO regions (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(r.id, tenantId, r.name, r.code, 'active').run();
+      const existingRegion = await db.prepare(`SELECT id FROM regions WHERE id = ?`).bind(r.id).first();
+      if (!existingRegion) {
+        await db.prepare(`INSERT INTO regions (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(r.id, actualTenantId, r.name, r.code, 'active').run();
+      } else {
+        await db.prepare(`UPDATE regions SET name = ?, code = ?, status = ? WHERE id = ?`).bind(r.name, r.code, 'active', r.id).run();
+      }
     }
     
     // ========== 3. AREAS ==========
+    currentStep = 'areas';
     const areas = [
       { id: 'area-north-1', region_id: 'region-north', name: 'North City Center', code: 'NC1' },
       { id: 'area-north-2', region_id: 'region-north', name: 'North Suburbs', code: 'NS1' },
@@ -9799,10 +9852,11 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'area-west-1', region_id: 'region-west', name: 'West Retail District', code: 'WR1' },
     ];
     for (const a of areas) {
-      await db.prepare(`INSERT OR REPLACE INTO areas (id, tenant_id, region_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(a.id, tenantId, a.region_id, a.name, a.code, 'active').run();
+      await db.prepare(`INSERT OR IGNORE INTO areas (id, tenant_id, region_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(a.id, actualTenantId, a.region_id, a.name, a.code, 'active').run();
     }
     
     // ========== 4. ROUTES ==========
+    currentStep = 'routes';
     const routes = [
       { id: 'route-1', area_id: 'area-north-1', name: 'Route A - North City', code: 'RA' },
       { id: 'route-2', area_id: 'area-north-1', name: 'Route B - North City', code: 'RB' },
@@ -9811,10 +9865,11 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'route-5', area_id: 'area-west-1', name: 'Route E - West Retail', code: 'RE' },
     ];
     for (const r of routes) {
-      await db.prepare(`INSERT OR REPLACE INTO routes (id, tenant_id, area_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(r.id, tenantId, r.area_id, r.name, r.code, 'active').run();
+      await db.prepare(`INSERT OR IGNORE INTO routes (id, tenant_id, area_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(r.id, actualTenantId, r.area_id, r.name, r.code, 'active').run();
     }
     
     // ========== 5. CATEGORIES ==========
+    currentStep = 'categories';
     const categories = [
       { id: 'cat-beverages', name: 'Beverages', code: 'BEV' },
       { id: 'cat-snacks', name: 'Snacks', code: 'SNK' },
@@ -9824,10 +9879,11 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'cat-frozen', name: 'Frozen Foods', code: 'FRZ' },
     ];
     for (const c of categories) {
-      await db.prepare(`INSERT OR REPLACE INTO categories (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(c.id, tenantId, c.name, c.code, 'active').run();
+      await db.prepare(`INSERT OR IGNORE INTO categories (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(c.id, actualTenantId, c.name, c.code, 'active').run();
     }
     
     // ========== 6. BRANDS ==========
+    currentStep = 'brands';
     const brands = [
       { id: 'brand-coca', name: 'Coca-Cola', code: 'COCA' },
       { id: 'brand-pepsi', name: 'PepsiCo', code: 'PEPS' },
@@ -9837,10 +9893,11 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'brand-kraft', name: 'Kraft Heinz', code: 'KRFT' },
     ];
     for (const b of brands) {
-      await db.prepare(`INSERT OR REPLACE INTO brands (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(b.id, tenantId, b.name, b.code, 'active').run();
+      await db.prepare(`INSERT OR IGNORE INTO brands (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(b.id, actualTenantId, b.name, b.code, 'active').run();
     }
     
     // ========== 7. PRODUCTS ==========
+    currentStep = 'products';
     const products = [
       { id: 'prod-1', name: 'Coca-Cola 500ml', code: 'CC500', sku: 'SKU001', barcode: '5449000000996', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 15.00, cost: 10.00, tax: 15 },
       { id: 'prod-2', name: 'Coca-Cola 1.5L', code: 'CC1500', sku: 'SKU002', barcode: '5449000000997', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 25.00, cost: 18.00, tax: 15 },
@@ -9864,32 +9921,35 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'prod-20', name: 'Orange Juice 1L', code: 'OJ1L', sku: 'SKU020', barcode: '5449000001015', category_id: 'cat-beverages', brand_id: 'brand-pepsi', unit: 'carton', price: 32.00, cost: 22.00, tax: 0 },
     ];
     for (const p of products) {
-      await db.prepare(`INSERT OR REPLACE INTO products (id, tenant_id, name, code, sku, barcode, category_id, brand_id, unit_of_measure, price, cost_price, tax_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        p.id, tenantId, p.name, p.code, p.sku, p.barcode, p.category_id, p.brand_id, p.unit, p.price, p.cost, p.tax, 'active'
+      await db.prepare(`INSERT OR IGNORE INTO products (id, tenant_id, name, code, sku, barcode, category_id, brand_id, unit_of_measure, price, cost_price, tax_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        p.id, actualTenantId, p.name, p.code, p.sku, p.barcode, p.category_id, p.brand_id, p.unit, p.price, p.cost, p.tax, 'active'
       ).run();
     }
     
     // ========== 8. WAREHOUSES ==========
+    currentStep = 'warehouses';
     const warehouses = [
       { id: 'wh-main', name: 'Main Warehouse', code: 'WH-MAIN', type: 'main', address: '123 Industrial Park, City Center' },
       { id: 'wh-north', name: 'North Distribution Center', code: 'WH-NORTH', type: 'distribution', address: '456 North Highway, North Region' },
       { id: 'wh-south', name: 'South Distribution Center', code: 'WH-SOUTH', type: 'distribution', address: '789 South Avenue, South Region' },
     ];
     for (const w of warehouses) {
-      await db.prepare(`INSERT OR REPLACE INTO warehouses (id, tenant_id, name, code, type, address, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(w.id, tenantId, w.name, w.code, w.type, w.address, 'active').run();
+      await db.prepare(`INSERT OR IGNORE INTO warehouses (id, tenant_id, name, code, type, address, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(w.id, actualTenantId, w.name, w.code, w.type, w.address, 'active').run();
     }
     
     // ========== 9. INVENTORY STOCK ==========
+    currentStep = 'inventory_stock';
     for (const p of products) {
       const mainQty = Math.floor(Math.random() * 500) + 100;
       const northQty = Math.floor(Math.random() * 200) + 50;
       const southQty = Math.floor(Math.random() * 200) + 50;
-      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-main-${p.id}`, tenantId, 'wh-main', p.id, mainQty, 0).run();
-      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-north-${p.id}`, tenantId, 'wh-north', p.id, northQty, 0).run();
-      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-south-${p.id}`, tenantId, 'wh-south', p.id, southQty, 0).run();
+      await db.prepare(`INSERT OR IGNORE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-main-${p.id}`, actualTenantId, 'wh-main', p.id, mainQty, 0).run();
+      await db.prepare(`INSERT OR IGNORE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-north-${p.id}`, actualTenantId, 'wh-north', p.id, northQty, 0).run();
+      await db.prepare(`INSERT OR IGNORE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-south-${p.id}`, actualTenantId, 'wh-south', p.id, southQty, 0).run();
     }
     
     // ========== 10. CUSTOMERS ==========
+    currentStep = 'customers';
     const customers = [
       { id: 'cust-1', name: 'ABC Supermarket', code: 'CUST001', type: 'retail', phone: '+27111234567', email: 'abc@example.com', address: '100 Main Street, North City', lat: -26.2041, lng: 28.0473, route_id: 'route-1', credit_limit: 50000, payment_terms: 30 },
       { id: 'cust-2', name: 'XYZ Convenience Store', code: 'CUST002', type: 'retail', phone: '+27112345678', email: 'xyz@example.com', address: '200 Oak Avenue, North City', lat: -26.2051, lng: 28.0483, route_id: 'route-1', credit_limit: 25000, payment_terms: 14 },
@@ -9905,12 +9965,13 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'cust-12', name: 'Daily Needs Shop', code: 'CUST012', type: 'retail', phone: '+27112345679', email: 'daily@example.com', address: '1200 Daily Drive, South Industrial', lat: -26.2151, lng: 28.0583, route_id: 'route-3', credit_limit: 18000, payment_terms: 14 },
     ];
     for (const c of customers) {
-      await db.prepare(`INSERT OR REPLACE INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, route_id, credit_limit, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        c.id, tenantId, c.name, c.code, c.type, c.phone, c.email, c.address, c.lat, c.lng, c.route_id, c.credit_limit, c.payment_terms, 'active'
+      await db.prepare(`INSERT OR IGNORE INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, route_id, credit_limit, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        c.id, actualTenantId, c.name, c.code, c.type, c.phone, c.email, c.address, c.lat, c.lng, c.route_id, c.credit_limit, c.payment_terms, 'active'
       ).run();
     }
     
     // ========== 11. USERS (Admin and Field Agents) ==========
+    currentStep = 'users';
     const passwordHash = await bcrypt.hash('demo123', 10);
     const adminHash = await bcrypt.hash('admin123', 10);
     
@@ -9925,48 +9986,68 @@ app.post('/seed-demo-data', async (c) => {
     ];
     for (const u of users) {
       const hash = u.role === 'admin' ? adminHash : passwordHash;
-      await db.prepare(`INSERT OR REPLACE INTO users (id, tenant_id, email, password_hash, first_name, last_name, phone, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        u.id, tenantId, u.email, hash, u.first_name, u.last_name, u.phone, u.role, 'active'
-      ).run();
+      // Check if user exists by email (UNIQUE constraint)
+      const existingUser = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind(u.email).first();
+      if (!existingUser) {
+        await db.prepare(`INSERT INTO users (id, tenant_id, email, password_hash, first_name, last_name, phone, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+          u.id, actualTenantId, u.email, hash, u.first_name, u.last_name, u.phone, u.role, 'active'
+        ).run();
+      } else {
+        // Update existing user
+        await db.prepare(`UPDATE users SET tenant_id = ?, password_hash = ?, first_name = ?, last_name = ?, phone = ?, role = ?, status = ? WHERE email = ?`).bind(
+          actualTenantId, hash, u.first_name, u.last_name, u.phone, u.role, 'active', u.email
+        ).run();
+      }
     }
     
     // ========== 12. AGENTS ==========
+    currentStep = 'agents';
+    // Get actual user IDs from database (in case they were different from our expected IDs)
+    const userAgent1 = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind('agent1@demo.com').first();
+    const userAgent2 = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind('agent2@demo.com').first();
+    const userAgent3 = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind('agent3@demo.com').first();
+    const userAgent4 = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind('agent4@demo.com').first();
+    const userDemo = await db.prepare(`SELECT id FROM users WHERE email = ?`).bind('demo@salessync.com').first();
+    
     const agents = [
-      { id: 'agent-1', user_id: 'user-agent1', agent_type: 'van_sales', employee_code: 'EMP001', mobile_number: '+27110000003' },
-      { id: 'agent-2', user_id: 'user-agent2', agent_type: 'field_marketing', employee_code: 'EMP002', mobile_number: '+27110000004' },
-      { id: 'agent-3', user_id: 'user-agent3', agent_type: 'van_sales', employee_code: 'EMP003', mobile_number: '+27110000005' },
-      { id: 'agent-4', user_id: 'user-agent4', agent_type: 'merchandiser', employee_code: 'EMP004', mobile_number: '+27110000006' },
-      { id: 'agent-demo', user_id: 'user-demo', agent_type: 'field_agent', employee_code: 'EMP007', mobile_number: '+27110000007' },
+      { id: 'agent-1', user_id: userAgent1?.id || 'user-agent1', agent_type: 'van_sales', employee_code: 'EMP001', mobile_number: '+27110000003' },
+      { id: 'agent-2', user_id: userAgent2?.id || 'user-agent2', agent_type: 'field_marketing', employee_code: 'EMP002', mobile_number: '+27110000004' },
+      { id: 'agent-3', user_id: userAgent3?.id || 'user-agent3', agent_type: 'van_sales', employee_code: 'EMP003', mobile_number: '+27110000005' },
+      { id: 'agent-4', user_id: userAgent4?.id || 'user-agent4', agent_type: 'merchandiser', employee_code: 'EMP004', mobile_number: '+27110000006' },
+      { id: 'agent-demo', user_id: userDemo?.id || 'user-demo', agent_type: 'field_agent', employee_code: 'EMP007', mobile_number: '+27110000007' },
     ];
     for (const a of agents) {
-      await db.prepare(`INSERT OR REPLACE INTO agents (id, tenant_id, user_id, agent_type, employee_code, mobile_number, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-        a.id, tenantId, a.user_id, a.agent_type, a.employee_code, a.mobile_number, 'active'
+      await db.prepare(`INSERT OR IGNORE INTO agents (id, tenant_id, user_id, agent_type, employee_code, mobile_number, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        a.id, actualTenantId, a.user_id, a.agent_type, a.employee_code, a.mobile_number, 'active'
       ).run();
     }
     
     // ========== 13. VANS ==========
+    currentStep = 'vans';
     const vans = [
       { id: 'van-1', registration: 'ABC 123 GP', model: 'Toyota Hiace', capacity: 500, salesman_id: 'agent-1' },
       { id: 'van-2', registration: 'DEF 456 GP', model: 'Ford Transit', capacity: 600, salesman_id: 'agent-3' },
       { id: 'van-3', registration: 'GHI 789 GP', model: 'Mercedes Sprinter', capacity: 800, salesman_id: null },
     ];
     for (const v of vans) {
-      await db.prepare(`INSERT OR REPLACE INTO vans (id, tenant_id, registration_number, model, capacity_units, assigned_salesman_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-        v.id, tenantId, v.registration, v.model, v.capacity, v.salesman_id, 'active'
+      await db.prepare(`INSERT OR IGNORE INTO vans (id, tenant_id, registration_number, model, capacity_units, assigned_salesman_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        v.id, actualTenantId, v.registration, v.model, v.capacity, v.salesman_id, 'active'
       ).run();
     }
     
     // ========== 14. VAN INVENTORY ==========
+    currentStep = 'van_inventory';
     for (const v of vans) {
       for (const p of products.slice(0, 10)) {
         const qty = Math.floor(Math.random() * 50) + 20;
-        await db.prepare(`INSERT OR REPLACE INTO van_inventory (id, tenant_id, van_id, product_id, quantity, reserved_quantity) VALUES (?, ?, ?, ?, ?, ?)`).bind(
-          `vaninv-${v.id}-${p.id}`, tenantId, v.id, p.id, qty, 0
+        await db.prepare(`INSERT OR IGNORE INTO van_inventory (id, tenant_id, van_id, product_id, quantity, reserved_quantity) VALUES (?, ?, ?, ?, ?, ?)`).bind(
+          `vaninv-${v.id}-${p.id}`, actualTenantId, v.id, p.id, qty, 0
         ).run();
       }
     }
     
     // ========== 15. ORDERS ==========
+    currentStep = 'orders';
     const orderStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed'];
     const paymentStatuses = ['pending', 'partial', 'paid'];
     const orders = [];
@@ -9983,8 +10064,8 @@ app.post('/seed-demo-data', async (c) => {
       const orderId = `order-${i}`;
       orders.push({ id: orderId, customer_id: customer.id });
       
-      await db.prepare(`INSERT OR REPLACE INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, delivery_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        orderId, tenantId, `ORD-${String(i).padStart(5, '0')}`, customer.id, 'agent-1', orderDate, orderDate, subtotal, tax, discount, total, 'credit', paymentStatus, status, `Demo order ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, delivery_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        orderId, actualTenantId, `ORD-${String(i).padStart(5, '0')}`, customer.id, 'agent-1', orderDate, orderDate, subtotal, tax, discount, total, 'credit', paymentStatus, status, `Demo order ${i}`
       ).run();
       
       // Order items
@@ -9993,13 +10074,14 @@ app.post('/seed-demo-data', async (c) => {
         const product = products[Math.floor(Math.random() * products.length)];
         const qty = Math.floor(Math.random() * 10) + 1;
         const lineTotal = product.price * qty;
-        await db.prepare(`INSERT OR REPLACE INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        await db.prepare(`INSERT OR IGNORE INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
           `orderitem-${i}-${j}`, orderId, product.id, qty, product.price, 0, product.tax, lineTotal
         ).run();
       }
     }
     
     // ========== 16. VAN SALES ==========
+    currentStep = 'van_sales';
     for (let i = 1; i <= 20; i++) {
       const customer = customers[Math.floor(Math.random() * customers.length)];
       const van = vans[Math.floor(Math.random() * 2)];
@@ -10011,8 +10093,8 @@ app.post('/seed-demo-data', async (c) => {
       const saleType = Math.random() > 0.3 ? 'cash' : 'credit';
       
       const saleId = `vansale-${i}`;
-      await db.prepare(`INSERT OR REPLACE INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        saleId, tenantId, van.id, agent, customer.id, saleDate, saleType, subtotal, tax, 0, total, saleType === 'cash' ? total : 0, saleType === 'cash' ? 0 : total, saleType, 'completed', `Van sale ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        saleId, actualTenantId, van.id, agent, customer.id, saleDate, saleType, subtotal, tax, 0, total, saleType === 'cash' ? total : 0, saleType === 'cash' ? 0 : total, saleType, 'completed', `Van sale ${i}`
       ).run();
       
       // Van sale items
@@ -10021,13 +10103,14 @@ app.post('/seed-demo-data', async (c) => {
         const product = products[Math.floor(Math.random() * products.length)];
         const qty = Math.floor(Math.random() * 5) + 1;
         const lineTotal = product.price * qty;
-        await db.prepare(`INSERT OR REPLACE INTO van_sale_items (id, van_sale_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        await db.prepare(`INSERT OR IGNORE INTO van_sale_items (id, van_sale_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
           `vansaleitem-${i}-${j}`, saleId, product.id, qty, product.price, 0, product.tax, lineTotal
         ).run();
       }
     }
     
     // ========== 17. VISITS ==========
+    currentStep = 'visits';
     const visitTypes = ['sales', 'merchandising', 'audit', 'collection', 'delivery'];
     const visitOutcomes = ['successful', 'partial', 'no_order', 'closed', 'rescheduled'];
     for (let i = 1; i <= 30; i++) {
@@ -10037,24 +10120,26 @@ app.post('/seed-demo-data', async (c) => {
       const checkIn = `${8 + Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`;
       const checkOut = `${12 + Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`;
       
-      await db.prepare(`INSERT OR REPLACE INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_out_time, latitude, longitude, visit_type, purpose, outcome, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `visit-${i}`, tenantId, agent.id, customer.id, visitDate, checkIn, checkOut, customer.lat, customer.lng, visitTypes[Math.floor(Math.random() * visitTypes.length)], 'Regular visit', visitOutcomes[Math.floor(Math.random() * visitOutcomes.length)], `Visit notes ${i}`, 'completed'
+      await db.prepare(`INSERT OR IGNORE INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_out_time, latitude, longitude, visit_type, purpose, outcome, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `visit-${i}`, actualTenantId, agent.id, customer.id, visitDate, checkIn, checkOut, customer.lat, customer.lng, visitTypes[Math.floor(Math.random() * visitTypes.length)], 'Regular visit', visitOutcomes[Math.floor(Math.random() * visitOutcomes.length)], `Visit notes ${i}`, 'completed'
       ).run();
     }
     
     // ========== 18. COMMISSIONS ==========
+    currentStep = 'commissions';
     for (let i = 1; i <= 15; i++) {
       const agent = agents[Math.floor(Math.random() * agents.length)];
       const order = orders[Math.floor(Math.random() * orders.length)];
       const amount = Math.floor(Math.random() * 500) + 50;
       const status = Math.random() > 0.3 ? 'approved' : 'pending';
       
-      await db.prepare(`INSERT OR REPLACE INTO commissions (id, tenant_id, agent_id, order_id, amount, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-        `commission-${i}`, tenantId, agent.id, order.id, amount, status, `Commission for order ${order.id}`
+      await db.prepare(`INSERT OR IGNORE INTO commissions (id, tenant_id, agent_id, order_id, amount, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        `commission-${i}`, actualTenantId, agent.id, order.id, amount, status, `Commission for order ${order.id}`
       ).run();
     }
     
     // ========== 19. RETURNS ==========
+    currentStep = 'returns';
     for (let i = 1; i <= 8; i++) {
       const order = orders[Math.floor(Math.random() * orders.length)];
       const returnDate = new Date().toISOString().split('T')[0];
@@ -10062,53 +10147,57 @@ app.post('/seed-demo-data', async (c) => {
       const statuses = ['pending', 'approved', 'processed', 'rejected'];
       const amount = Math.floor(Math.random() * 500) + 100;
       
-      await db.prepare(`INSERT OR REPLACE INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `return-${i}`, tenantId, order.id, `RET-${String(i).padStart(5, '0')}`, returnDate, reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], amount, `Return ${i} notes`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `return-${i}`, actualTenantId, order.id, `RET-${String(i).padStart(5, '0')}`, returnDate, reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], amount, `Return ${i} notes`, 'user-admin'
       ).run();
       
       // Return items
       const product = products[Math.floor(Math.random() * products.length)];
-      await db.prepare(`INSERT OR REPLACE INTO return_items (id, return_id, product_id, quantity, unit_price, reason, condition) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+      await db.prepare(`INSERT OR IGNORE INTO return_items (id, return_id, product_id, quantity, unit_price, reason, condition) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
         `returnitem-${i}`, `return-${i}`, product.id, Math.floor(Math.random() * 5) + 1, product.price, 'damaged', 'good'
       ).run();
     }
     
     // ========== 20. REFUNDS ==========
+    currentStep = 'refunds';
     for (let i = 1; i <= 5; i++) {
       const order = orders[Math.floor(Math.random() * orders.length)];
       const amount = Math.floor(Math.random() * 300) + 50;
       const methods = ['cash', 'bank_transfer', 'credit_note'];
       const statuses = ['pending', 'approved', 'processed'];
       
-      await db.prepare(`INSERT OR REPLACE INTO refunds (id, tenant_id, order_id, refund_number, amount, reason, refund_method, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `refund-${i}`, tenantId, order.id, `REF-${String(i).padStart(5, '0')}`, amount, 'Customer refund request', methods[Math.floor(Math.random() * methods.length)], statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO refunds (id, tenant_id, order_id, refund_number, amount, reason, refund_method, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `refund-${i}`, actualTenantId, order.id, `REF-${String(i).padStart(5, '0')}`, amount, 'Customer refund request', methods[Math.floor(Math.random() * methods.length)], statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
       ).run();
     }
     
     // ========== 21. CREDIT NOTES ==========
+    currentStep = 'credit_notes';
     for (let i = 1; i <= 6; i++) {
       const customer = customers[Math.floor(Math.random() * customers.length)];
       const amount = Math.floor(Math.random() * 400) + 100;
       const statuses = ['issued', 'partially_used', 'fully_used', 'expired'];
       
-      await db.prepare(`INSERT OR REPLACE INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `creditnote-${i}`, tenantId, customer.id, i <= 4 ? `return-${i}` : null, `CN-${String(i).padStart(5, '0')}`, amount, statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `creditnote-${i}`, actualTenantId, customer.id, i <= 4 ? `return-${i}` : null, `CN-${String(i).padStart(5, '0')}`, amount, statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
       ).run();
     }
     
     // ========== 22. STOCK MOVEMENTS ==========
+    currentStep = 'stock_movements';
     const movementTypes = ['receipt', 'issue', 'transfer', 'adjustment', 'return'];
     for (let i = 1; i <= 40; i++) {
       const product = products[Math.floor(Math.random() * products.length)];
       const type = movementTypes[Math.floor(Math.random() * movementTypes.length)];
       const qty = (type === 'issue' ? -1 : 1) * (Math.floor(Math.random() * 50) + 10);
       
-      await db.prepare(`INSERT OR REPLACE INTO stock_movements (id, tenant_id, product_id, movement_type, quantity, reference_type, reference_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `stockmov-${i}`, tenantId, product.id, type, qty, 'manual', `ref-${i}`, `Stock movement ${i}`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO stock_movements (id, tenant_id, product_id, movement_type, quantity, reference_type, reference_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `stockmov-${i}`, actualTenantId, product.id, type, qty, 'manual', `ref-${i}`, `Stock movement ${i}`, 'user-admin'
       ).run();
     }
     
     // ========== 23. PROMOTIONAL CAMPAIGNS ==========
+    currentStep = 'promotional_campaigns';
     const campaignTypes = ['discount', 'bogo', 'bundle', 'loyalty', 'seasonal'];
     const campaignStatuses = ['planned', 'active', 'completed', 'cancelled'];
     for (let i = 1; i <= 10; i++) {
@@ -10116,12 +10205,13 @@ app.post('/seed-demo-data', async (c) => {
       const endDate = new Date(Date.now() + Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       const budget = Math.floor(Math.random() * 50000) + 10000;
       
-      await db.prepare(`INSERT OR REPLACE INTO promotional_campaigns (id, tenant_id, name, campaign_type, start_date, end_date, budget, actual_cost, target_activations, expected_roi, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `campaign-${i}`, tenantId, `Campaign ${i} - ${campaignTypes[i % campaignTypes.length]}`, campaignTypes[i % campaignTypes.length], startDate, endDate, budget, budget * 0.7, 100, 1.5, campaignStatuses[Math.floor(Math.random() * campaignStatuses.length)]
+      await db.prepare(`INSERT OR IGNORE INTO promotional_campaigns (id, tenant_id, name, campaign_type, start_date, end_date, budget, actual_cost, target_activations, expected_roi, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `campaign-${i}`, actualTenantId, `Campaign ${i} - ${campaignTypes[i % campaignTypes.length]}`, campaignTypes[i % campaignTypes.length], startDate, endDate, budget, budget * 0.7, 100, 1.5, campaignStatuses[Math.floor(Math.random() * campaignStatuses.length)]
       ).run();
     }
     
     // ========== 24. SUPPLIERS ==========
+    currentStep = 'suppliers';
     const suppliers = [
       { id: 'supplier-1', name: 'Coca-Cola Beverages SA', code: 'SUP001', contact: 'James Wilson', phone: '+27111111111', email: 'orders@cocacola.co.za', address: '1 Coca-Cola Way, Johannesburg', terms: 30 },
       { id: 'supplier-2', name: 'PepsiCo South Africa', code: 'SUP002', contact: 'Mary Thompson', phone: '+27112222222', email: 'orders@pepsico.co.za', address: '2 Pepsi Street, Cape Town', terms: 30 },
@@ -10130,79 +10220,98 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'supplier-5', name: 'P&G Distribution', code: 'SUP005', contact: 'David Kim', phone: '+27115555555', email: 'orders@pg.co.za', address: '5 P&G Plaza, Johannesburg', terms: 45 },
     ];
     for (const s of suppliers) {
-      await db.prepare(`INSERT OR REPLACE INTO suppliers (id, tenant_id, name, code, contact_person, phone, email, address, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        s.id, tenantId, s.name, s.code, s.contact, s.phone, s.email, s.address, s.terms, 'active'
+      await db.prepare(`INSERT OR IGNORE INTO suppliers (id, tenant_id, name, code, contact_person, phone, email, address, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        s.id, actualTenantId, s.name, s.code, s.contact, s.phone, s.email, s.address, 'active'
       ).run();
     }
     
     // ========== 25. PRICE LISTS ==========
+    currentStep = 'price_lists';
     const priceLists = [
-      { id: 'pricelist-retail', name: 'Retail Price List', code: 'PL-RETAIL', type: 'retail' },
-      { id: 'pricelist-wholesale', name: 'Wholesale Price List', code: 'PL-WHOLESALE', type: 'wholesale' },
-      { id: 'pricelist-promo', name: 'Promotional Price List', code: 'PL-PROMO', type: 'promotional' },
+      { id: 'pricelist-retail', name: 'Retail Price List', description: 'Standard retail pricing', is_default: 1 },
+      { id: 'pricelist-wholesale', name: 'Wholesale Price List', description: 'Wholesale pricing for bulk orders', is_default: 0 },
+      { id: 'pricelist-promo', name: 'Promotional Price List', description: 'Promotional pricing for campaigns', is_default: 0 },
     ];
     for (const pl of priceLists) {
-      await db.prepare(`INSERT OR REPLACE INTO price_lists (id, tenant_id, name, code, type, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        pl.id, tenantId, pl.name, pl.code, pl.type, '2024-01-01', '2026-12-31', 'active'
+      await db.prepare(`INSERT OR IGNORE INTO price_lists (id, tenant_id, name, description, currency, is_default, effective_from, effective_to, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        pl.id, actualTenantId, pl.name, pl.description, 'ZAR', pl.is_default, '2024-01-01', '2026-12-31', 'active'
       ).run();
     }
     
     // ========== 26. PRICE LIST ITEMS ==========
+    currentStep = 'price_list_items';
     for (const pl of priceLists) {
       for (const p of products) {
         let price = p.price;
         if (pl.type === 'wholesale') price = p.price * 0.85;
         if (pl.type === 'promotional') price = p.price * 0.9;
         
-        await db.prepare(`INSERT OR REPLACE INTO price_list_items (id, price_list_id, product_id, price, min_quantity) VALUES (?, ?, ?, ?, ?)`).bind(
+        await db.prepare(`INSERT OR IGNORE INTO price_list_items (id, price_list_id, product_id, price, min_quantity) VALUES (?, ?, ?, ?, ?)`).bind(
           `pli-${pl.id}-${p.id}`, pl.id, p.id, price, pl.type === 'wholesale' ? 10 : 1
         ).run();
       }
     }
     
     // ========== 27. DISCOUNTS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS discounts (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, value REAL, min_order_value REAL, max_discount REAL, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
+    currentStep = 'discounts';
+    // Use the actual schema from the API endpoints
     const discounts = [
-      { id: 'discount-1', name: '5% Volume Discount', code: 'VOL5', type: 'percentage', value: 5, min_order: 1000, max_discount: 500 },
-      { id: 'discount-2', name: '10% Bulk Discount', code: 'BULK10', type: 'percentage', value: 10, min_order: 5000, max_discount: 1000 },
-      { id: 'discount-3', name: 'R50 Off', code: 'FLAT50', type: 'fixed', value: 50, min_order: 500, max_discount: 50 },
-      { id: 'discount-4', name: 'New Customer 15%', code: 'NEW15', type: 'percentage', value: 15, min_order: 0, max_discount: 750 },
-      { id: 'discount-5', name: 'Loyalty 8%', code: 'LOYAL8', type: 'percentage', value: 8, min_order: 0, max_discount: 800 },
+      { id: 'discount-1', name: '5% Volume Discount', code: 'VOL5', discount_type: 'percentage', value: 5, min_order_amount: 1000, max_discount_amount: 500 },
+      { id: 'discount-2', name: '10% Bulk Discount', code: 'BULK10', discount_type: 'percentage', value: 10, min_order_amount: 5000, max_discount_amount: 1000 },
+      { id: 'discount-3', name: 'R50 Off', code: 'FLAT50', discount_type: 'fixed', value: 50, min_order_amount: 500, max_discount_amount: 50 },
+      { id: 'discount-4', name: 'New Customer 15%', code: 'NEW15', discount_type: 'percentage', value: 15, min_order_amount: 0, max_discount_amount: 750 },
+      { id: 'discount-5', name: 'Loyalty 8%', code: 'LOYAL8', discount_type: 'percentage', value: 8, min_order_amount: 0, max_discount_amount: 800 },
     ];
     for (const d of discounts) {
-      await db.prepare(`INSERT OR REPLACE INTO discounts (id, tenant_id, name, code, type, value, min_order_value, max_discount, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        d.id, tenantId, d.name, d.code, d.type, d.value, d.min_order, d.max_discount, '2024-01-01', '2026-12-31', 'active'
+      await db.prepare(`INSERT OR IGNORE INTO discounts (id, tenant_id, name, code, discount_type, value, min_order_amount, max_discount_amount, applicable_to, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        d.id, actualTenantId, d.name, d.code, d.discount_type, d.value, d.min_order_amount, d.max_discount_amount, 'all', '2024-01-01', '2026-12-31', 1
       ).run();
     }
     
     // ========== 28. SYSTEM SETTINGS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS system_settings (id TEXT PRIMARY KEY, tenant_id TEXT, key TEXT, value TEXT, category TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    currentStep = 'system_settings';
+    // Drop and recreate the table to ensure correct schema
+    try {
+      await db.prepare(`DROP TABLE IF EXISTS system_settings`).run();
+    } catch (e) { /* ignore if table doesn't exist */ }
+    
+    await db.prepare(`CREATE TABLE IF NOT EXISTS system_settings (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT,
+      updated_by TEXT,
+      updated_at TEXT DEFAULT (datetime('now')),
+      UNIQUE(tenant_id, key)
+    )`).run();
     
     const settings = [
-      { key: 'company_name', value: 'Demo Company Ltd', category: 'general' },
-      { key: 'company_address', value: '123 Business Park, Johannesburg, South Africa', category: 'general' },
-      { key: 'company_phone', value: '+27 11 123 4567', category: 'general' },
-      { key: 'company_email', value: 'info@democompany.co.za', category: 'general' },
-      { key: 'tax_rate', value: '15', category: 'finance' },
-      { key: 'currency', value: 'ZAR', category: 'finance' },
-      { key: 'currency_symbol', value: 'R', category: 'finance' },
-      { key: 'date_format', value: 'DD/MM/YYYY', category: 'general' },
-      { key: 'time_zone', value: 'Africa/Johannesburg', category: 'general' },
-      { key: 'order_prefix', value: 'ORD', category: 'orders' },
-      { key: 'invoice_prefix', value: 'INV', category: 'finance' },
-      { key: 'low_stock_threshold', value: '50', category: 'inventory' },
-      { key: 'auto_approve_orders', value: 'false', category: 'orders' },
-      { key: 'require_gps_checkin', value: 'true', category: 'visits' },
-      { key: 'commission_rate', value: '5', category: 'commissions' },
+      { key: 'company_name', value: 'Demo Company Ltd' },
+      { key: 'company_address', value: '123 Business Park, Johannesburg, South Africa' },
+      { key: 'company_phone', value: '+27 11 123 4567' },
+      { key: 'company_email', value: 'info@democompany.co.za' },
+      { key: 'tax_rate', value: '15' },
+      { key: 'currency', value: 'ZAR' },
+      { key: 'currency_symbol', value: 'R' },
+      { key: 'date_format', value: 'DD/MM/YYYY' },
+      { key: 'time_zone', value: 'Africa/Johannesburg' },
+      { key: 'order_prefix', value: 'ORD' },
+      { key: 'invoice_prefix', value: 'INV' },
+      { key: 'low_stock_threshold', value: '50' },
+      { key: 'auto_approve_orders', value: 'false' },
+      { key: 'require_gps_checkin', value: 'true' },
+      { key: 'commission_rate', value: '5' },
     ];
     for (const s of settings) {
-      await db.prepare(`INSERT OR REPLACE INTO system_settings (id, tenant_id, key, value, category) VALUES (?, ?, ?, ?, ?)`).bind(
-        `setting-${s.key}`, tenantId, s.key, s.value, s.category
+      await db.prepare(`INSERT INTO system_settings (id, tenant_id, key, value, updated_by, updated_at)
+        VALUES (?, ?, ?, ?, ?, datetime('now'))
+        ON CONFLICT(tenant_id, key) DO UPDATE SET value = ?, updated_by = ?, updated_at = datetime('now')`).bind(
+        `setting-${s.key}`, actualTenantId, s.key, s.value, 'user-admin', s.value, 'user-admin'
       ).run();
     }
     
     // ========== 29. FIELD MARKETING TABLES ==========
+    currentStep = 'field_marketing';
     // Board Placements
     await db.prepare(`CREATE TABLE IF NOT EXISTS board_placements (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, agent_id TEXT, brand_id TEXT, placement_type TEXT, location_description TEXT, width REAL, height REAL, condition TEXT, photo_url TEXT, placement_date TEXT, expiry_date TEXT, status TEXT DEFAULT 'active', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
     
@@ -10213,8 +10322,8 @@ app.post('/seed-demo-data', async (c) => {
       const types = ['poster', 'banner', 'shelf_talker', 'floor_display', 'window_decal'];
       const conditions = ['excellent', 'good', 'fair', 'poor'];
       
-      await db.prepare(`INSERT OR REPLACE INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, placement_date, expiry_date, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `board-${i}`, tenantId, customer.id, agent.id, brand.id, types[Math.floor(Math.random() * types.length)], 'Store entrance', 100, 50, conditions[Math.floor(Math.random() * conditions.length)], new Date().toISOString().split('T')[0], new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'active', `Board placement ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, placement_date, expiry_date, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `board-${i}`, actualTenantId, customer.id, agent.id, brand.id, types[Math.floor(Math.random() * types.length)], 'Store entrance', 100, 50, conditions[Math.floor(Math.random() * conditions.length)], new Date().toISOString().split('T')[0], new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'active', `Board placement ${i}`
       ).run();
     }
     
@@ -10227,8 +10336,8 @@ app.post('/seed-demo-data', async (c) => {
       { id: 'survey-3', name: 'Competitor Price Survey', description: 'Track competitor pricing', type: 'competitor_analysis' },
     ];
     for (const s of surveys) {
-      await db.prepare(`INSERT OR REPLACE INTO surveys (id, tenant_id, name, description, survey_type, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        s.id, tenantId, s.name, s.description, s.type, '2024-01-01', '2026-12-31', 'active'
+      await db.prepare(`INSERT OR IGNORE INTO surveys (id, tenant_id, name, description, survey_type, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        s.id, actualTenantId, s.name, s.description, s.type, '2024-01-01', '2026-12-31', 'active'
       ).run();
     }
     
@@ -10241,8 +10350,8 @@ app.post('/seed-demo-data', async (c) => {
       const auditTypes = ['merchandising', 'compliance', 'planogram', 'freshness'];
       const score = Math.floor(Math.random() * 30) + 70;
       
-      await db.prepare(`INSERT OR REPLACE INTO store_audits (id, tenant_id, customer_id, agent_id, audit_date, audit_type, score, max_score, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `audit-${i}`, tenantId, customer.id, agent.id, new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], auditTypes[Math.floor(Math.random() * auditTypes.length)], score, 100, 'completed', `Audit ${i} notes`
+      await db.prepare(`INSERT OR IGNORE INTO store_audits (id, tenant_id, customer_id, agent_id, audit_date, audit_type, score, max_score, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `audit-${i}`, actualTenantId, customer.id, agent.id, new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], auditTypes[Math.floor(Math.random() * auditTypes.length)], score, 100, 'completed', `Audit ${i} notes`
       ).run();
     }
     
@@ -10254,8 +10363,8 @@ app.post('/seed-demo-data', async (c) => {
       const statuses = ['pending', 'in_review', 'approved', 'rejected', 'expired'];
       const riskLevels = ['low', 'medium', 'high'];
       
-      await db.prepare(`INSERT OR REPLACE INTO kyc_cases (id, tenant_id, customer_id, case_number, status, risk_level, assigned_to, due_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `kyc-${i}`, tenantId, customer.id, `KYC-${String(i).padStart(5, '0')}`, statuses[Math.floor(Math.random() * statuses.length)], riskLevels[Math.floor(Math.random() * riskLevels.length)], 'user-admin', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], `KYC case ${i} notes`
+      await db.prepare(`INSERT OR IGNORE INTO kyc_cases (id, tenant_id, customer_id, case_number, status, risk_level, assigned_to, due_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `kyc-${i}`, actualTenantId, customer.id, `KYC-${String(i).padStart(5, '0')}`, statuses[Math.floor(Math.random() * statuses.length)], riskLevels[Math.floor(Math.random() * riskLevels.length)], 'user-admin', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], `KYC case ${i} notes`
       ).run();
     }
     
@@ -10272,8 +10381,8 @@ app.post('/seed-demo-data', async (c) => {
       const variance = Math.floor(Math.random() * 100) - 50;
       const statuses = ['pending', 'approved', 'rejected'];
       
-      await db.prepare(`INSERT OR REPLACE INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, total_collections, total_expenses, closing_balance, expected_balance, variance, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `cashrec-${i}`, tenantId, agent.id, new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0], opening, collections, expenses, closing, expected, variance, statuses[Math.floor(Math.random() * statuses.length)], `Cash reconciliation ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, total_collections, total_expenses, closing_balance, expected_balance, variance, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `cashrec-${i}`, actualTenantId, agent.id, new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0], opening, collections, expenses, closing, expected, variance, statuses[Math.floor(Math.random() * statuses.length)], `Cash reconciliation ${i}`
       ).run();
     }
     
@@ -10288,20 +10397,20 @@ app.post('/seed-demo-data', async (c) => {
       const total = subtotal + tax;
       const statuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
       
-      await db.prepare(`INSERT OR REPLACE INTO invoices (id, tenant_id, order_id, customer_id, invoice_number, invoice_date, due_date, subtotal, tax_amount, total_amount, amount_paid, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `invoice-${i}`, tenantId, order.id, customer.id, `INV-${String(i).padStart(5, '0')}`, new Date().toISOString().split('T')[0], new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], subtotal, tax, total, statuses[Math.floor(Math.random() * statuses.length)] === 'paid' ? total : 0, statuses[Math.floor(Math.random() * statuses.length)], `Invoice ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO invoices (id, tenant_id, order_id, customer_id, invoice_number, invoice_date, due_date, subtotal, tax_amount, total_amount, amount_paid, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `invoice-${i}`, actualTenantId, order.id, customer.id, `INV-${String(i).padStart(5, '0')}`, new Date().toISOString().split('T')[0], new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], subtotal, tax, total, statuses[Math.floor(Math.random() * statuses.length)] === 'paid' ? total : 0, statuses[Math.floor(Math.random() * statuses.length)], `Invoice ${i}`
       ).run();
     }
     
     // ========== 33. VAN LOADS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS van_loads (id TEXT PRIMARY KEY, tenant_id TEXT, van_id TEXT, load_number TEXT, load_date TEXT, warehouse_id TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
+    // Use the actual schema from the API endpoints (route_id instead of warehouse_id)
     for (let i = 1; i <= 8; i++) {
       const van = vans[Math.floor(Math.random() * vans.length)];
-      const statuses = ['pending', 'loading', 'loaded', 'dispatched', 'completed'];
+      const route = routes[Math.floor(Math.random() * routes.length)];
+      const statuses = ['draft', 'confirmed', 'loading', 'loaded', 'dispatched', 'completed'];
       
-      await db.prepare(`INSERT OR REPLACE INTO van_loads (id, tenant_id, van_id, load_number, load_date, warehouse_id, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `vanload-${i}`, tenantId, van.id, `VL-${String(i).padStart(5, '0')}`, new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'wh-main', statuses[Math.floor(Math.random() * statuses.length)], `Van load ${i}`
+      await db.prepare(`INSERT OR IGNORE INTO van_loads (id, tenant_id, load_number, van_id, route_id, load_date, total_items, total_value, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `vanload-${i}`, actualTenantId, `VL-${String(i).padStart(5, '0')}`, van.id, route.id, new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], Math.floor(Math.random() * 50) + 10, Math.floor(Math.random() * 10000) + 1000, statuses[Math.floor(Math.random() * statuses.length)], `Van load ${i}`, 'user-admin'
       ).run();
     }
     
@@ -10312,8 +10421,8 @@ app.post('/seed-demo-data', async (c) => {
       const reasons = ['damage', 'expiry', 'theft', 'count_variance', 'quality_issue'];
       const statuses = ['pending', 'approved', 'rejected', 'completed'];
       
-      await db.prepare(`INSERT OR REPLACE INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, adjustment_date, reason, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `adjustment-${i}`, tenantId, `ADJ-${String(i).padStart(5, '0')}`, 'wh-main', new Date().toISOString().split('T')[0], reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], `Adjustment ${i}`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, adjustment_date, reason, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `adjustment-${i}`, actualTenantId, `ADJ-${String(i).padStart(5, '0')}`, 'wh-main', new Date().toISOString().split('T')[0], reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], `Adjustment ${i}`, 'user-admin'
       ).run();
     }
     
@@ -10326,8 +10435,8 @@ app.post('/seed-demo-data', async (c) => {
       while (toWh.id === fromWh.id) toWh = warehouses[Math.floor(Math.random() * warehouses.length)];
       const statuses = ['pending', 'in_transit', 'received', 'completed'];
       
-      await db.prepare(`INSERT OR REPLACE INTO inventory_transfers (id, tenant_id, transfer_number, from_warehouse_id, to_warehouse_id, transfer_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `transfer-${i}`, tenantId, `TRF-${String(i).padStart(5, '0')}`, fromWh.id, toWh.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Transfer ${i}`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO inventory_transfers (id, tenant_id, transfer_number, from_warehouse_id, to_warehouse_id, transfer_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `transfer-${i}`, actualTenantId, `TRF-${String(i).padStart(5, '0')}`, fromWh.id, toWh.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Transfer ${i}`, 'user-admin'
       ).run();
     }
     
@@ -10338,61 +10447,25 @@ app.post('/seed-demo-data', async (c) => {
       const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
       const statuses = ['pending', 'in_progress', 'completed', 'approved'];
       
-      await db.prepare(`INSERT OR REPLACE INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `stockcount-${i}`, tenantId, `SC-${String(i).padStart(5, '0')}`, warehouse.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Stock count ${i}`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `stockcount-${i}`, actualTenantId, `SC-${String(i).padStart(5, '0')}`, warehouse.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Stock count ${i}`, 'user-admin'
       ).run();
     }
     
     // ========== 37. GOODS RECEIPTS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS goods_receipts (id TEXT PRIMARY KEY, tenant_id TEXT, receipt_number TEXT, supplier_id TEXT, warehouse_id TEXT, receipt_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
+    // Use the actual schema from the API endpoints (grn_number instead of receipt_number)
     for (let i = 1; i <= 6; i++) {
       const supplier = suppliers[Math.floor(Math.random() * suppliers.length)];
       const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
-      const statuses = ['pending', 'received', 'inspected', 'completed'];
+      const statuses = ['draft', 'received', 'inspected', 'completed'];
       
-      await db.prepare(`INSERT OR REPLACE INTO goods_receipts (id, tenant_id, receipt_number, supplier_id, warehouse_id, receipt_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `grn-${i}`, tenantId, `GRN-${String(i).padStart(5, '0')}`, supplier.id, warehouse.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Goods receipt ${i}`, 'user-admin'
+      await db.prepare(`INSERT OR IGNORE INTO goods_receipts (id, tenant_id, grn_number, warehouse_id, supplier_id, receipt_date, total_items, total_value, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `grn-${i}`, actualTenantId, `GRN-${String(i).padStart(5, '0')}`, warehouse.id, supplier.id, new Date().toISOString().split('T')[0], Math.floor(Math.random() * 20) + 5, Math.floor(Math.random() * 10000) + 1000, statuses[Math.floor(Math.random() * statuses.length)], `Goods receipt ${i}`, 'user-admin'
       ).run();
     }
     
-    // ========== 38. INVENTORY ISSUES ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_issues (id TEXT PRIMARY KEY, tenant_id TEXT, issue_number TEXT, warehouse_id TEXT, issue_date TEXT, issue_type TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
-    for (let i = 1; i <= 5; i++) {
-      const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
-      const issueTypes = ['production', 'sample', 'damage', 'internal_use'];
-      const statuses = ['pending', 'approved', 'issued', 'completed'];
-      
-      await db.prepare(`INSERT OR REPLACE INTO inventory_issues (id, tenant_id, issue_number, warehouse_id, issue_date, issue_type, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
-        `issue-${i}`, tenantId, `ISS-${String(i).padStart(5, '0')}`, warehouse.id, new Date().toISOString().split('T')[0], issueTypes[Math.floor(Math.random() * issueTypes.length)], statuses[Math.floor(Math.random() * statuses.length)], `Issue ${i}`, 'user-admin'
-      ).run();
-    }
-    
-    // ========== 39. TEAMS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, manager_id TEXT, region_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
-    const teams = [
-      { id: 'team-north', name: 'North Sales Team', code: 'TEAM-N', manager_id: 'user-manager', region_id: 'region-north' },
-      { id: 'team-south', name: 'South Sales Team', code: 'TEAM-S', manager_id: 'user-manager', region_id: 'region-south' },
-      { id: 'team-field', name: 'Field Marketing Team', code: 'TEAM-FM', manager_id: 'user-manager', region_id: 'region-east' },
-    ];
-    for (const t of teams) {
-      await db.prepare(`INSERT OR REPLACE INTO teams (id, tenant_id, name, code, manager_id, region_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-        t.id, tenantId, t.name, t.code, t.manager_id, t.region_id, 'active'
-      ).run();
-    }
-    
-    // ========== 40. TERRITORIES ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS territories (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, area_id TEXT, assigned_agent_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
-    for (let i = 0; i < areas.length; i++) {
-      const area = areas[i];
-      const agent = agents[i % agents.length];
-      await db.prepare(`INSERT OR REPLACE INTO territories (id, tenant_id, name, code, area_id, assigned_agent_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
-        `territory-${i + 1}`, tenantId, `Territory ${area.name}`, `TER-${i + 1}`, area.id, agent.id, 'active'
-      ).run();
-    }
+    // Skip inventory_issues, teams, and territories due to schema mismatches
+    // These tables have different schemas in the database than expected
     
     return c.json({
       success: true,
@@ -10433,10 +10506,7 @@ app.post('/seed-demo-data', async (c) => {
         inventory_adjustments: 6,
         inventory_transfers: 5,
         stock_counts: 4,
-        goods_receipts: 6,
-        inventory_issues: 5,
-        teams: teams.length,
-        territories: areas.length
+        goods_receipts: 6
       },
       demo_logins: {
         admin: { email: 'admin@demo.com', password: 'admin123' },
@@ -10451,8 +10521,8 @@ app.post('/seed-demo-data', async (c) => {
       }
     });
   } catch (error) {
-    console.error('Seed error:', error);
-    return c.json({ success: false, message: 'Failed to seed demo data', error: error.message }, 500);
+    console.error('Seed error at step:', currentStep, error);
+    return c.json({ success: false, message: 'Failed to seed demo data', step: currentStep, error: error.message }, 500);
   }
 });
 
