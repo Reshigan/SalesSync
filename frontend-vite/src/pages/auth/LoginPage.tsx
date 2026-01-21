@@ -51,10 +51,10 @@ export default function LoginPage() {
   return (
     <div className={`space-y-6 transition-all duration-500 ease-out ${isFormVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900">
+        <h2 className="text-3xl font-bold text-white">
           Welcome Back
         </h2>
-        <p className="mt-3 text-base text-gray-600">
+        <p className="mt-3 text-base text-slate-400">
           Sign in to your account
         </p>
       </div>
@@ -62,12 +62,12 @@ export default function LoginPage() {
       <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
         {/* Email field */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
             Email Address
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+              <Mail className="h-5 w-5 text-slate-500" />
             </div>
             <input
               {...register('email', {
@@ -78,24 +78,24 @@ export default function LoginPage() {
                 },
               })}
               type="email"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="w-full pl-10 pr-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="you@company.com"
               autoComplete="email"
             />
           </div>
           {errors.email && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.email.message}</p>
+            <p className="mt-1.5 text-sm text-red-400">{errors.email.message}</p>
           )}
         </div>
 
         {/* Password field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
             Password
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-slate-500" />
             </div>
             <input
               {...register('password', {
@@ -106,13 +106,13 @@ export default function LoginPage() {
                 },
               })}
               type={showPassword ? 'text' : 'password'}
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="w-full pl-10 pr-12 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               placeholder="••••••••"
               autoComplete="current-password"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
@@ -123,7 +123,7 @@ export default function LoginPage() {
             </button>
           </div>
           {errors.password && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.password.message}</p>
+            <p className="mt-1.5 text-sm text-red-400">{errors.password.message}</p>
           )}
         </div>
 
@@ -134,9 +134,9 @@ export default function LoginPage() {
               {...register('remember_me')}
               id="remember-me"
               type="checkbox"
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
+              className="h-4 w-4 bg-slate-900 border-slate-600 rounded text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-800 transition-colors"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 hover:text-gray-900 transition-colors">
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-400 hover:text-slate-300 transition-colors">
               Remember me
             </label>
           </div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
           <div className="text-sm">
             <Link
               to="/auth/forgot-password"
-              className="font-medium text-blue-600 hover:text-blue-500 transition-colors hover:underline"
+              className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
             >
               Forgot password?
             </Link>
@@ -153,8 +153,8 @@ export default function LoginPage() {
 
         {/* Error message */}
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 p-4">
-            <div className="text-sm text-red-700">{error}</div>
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+            <div className="text-sm text-red-400">{error}</div>
           </div>
         )}
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex justify-center items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3.5 px-4 rounded-xl transition-all flex justify-center items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
           >
             {isLoading ? (
               <>
@@ -184,7 +184,7 @@ export default function LoginPage() {
       <div className="mt-6 text-center">
         <Link
           to="/auth/mobile-login"
-          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
         >
           Agent? Login with mobile number →
         </Link>
