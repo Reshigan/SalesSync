@@ -9712,6 +9712,9 @@ app.post('/seed-demo-data', async (c) => {
     const tenantId = 'demo-tenant';
     const now = new Date().toISOString();
     
+    // Disable foreign key checks for seeding
+    await db.prepare('PRAGMA foreign_keys = OFF').run();
+    
     // Helper function to generate UUIDs
     const uuid = () => crypto.randomUUID();
     
@@ -10341,6 +10344,9 @@ app.post('/seed-demo-data', async (c) => {
         `territory-${i + 1}`, tenantId, `Territory ${area.name}`, `TER-${i + 1}`, area.id, agent.id, 'active'
       ).run();
     }
+    
+    // Re-enable foreign key checks
+    await db.prepare('PRAGMA foreign_keys = ON').run();
     
     return c.json({
       success: true,
