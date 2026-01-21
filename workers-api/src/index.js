@@ -9712,11 +9712,35 @@ app.post('/seed-demo-data', async (c) => {
     const tenantId = 'demo-tenant';
     const now = new Date().toISOString();
     
-    // Disable foreign key checks for seeding
-    await db.prepare('PRAGMA foreign_keys = OFF').run();
-    
     // Helper function to generate UUIDs
     const uuid = () => crypto.randomUUID();
+    
+    // First, clean up existing demo data to avoid conflicts
+    const cleanupTables = [
+      'territories', 'teams', 'inventory_issues', 'goods_receipts', 'stock_counts',
+      'inventory_transfers', 'inventory_adjustments', 'van_loads', 'invoices',
+      'cash_reconciliations', 'kyc_cases', 'store_audits', 'surveys', 'board_placements',
+      'price_list_items', 'price_lists', 'discounts', 'suppliers', 'system_settings',
+      'stock_movements', 'credit_notes', 'refunds', 'return_items', 'returns',
+      'commissions', 'visits', 'van_sale_items', 'van_sales', 'order_items', 'orders',
+      'van_inventory', 'vans', 'agents', 'customers', 'inventory_stock', 'warehouses',
+      'products', 'brands', 'categories', 'routes', 'areas', 'regions', 'users'
+    ];
+    
+    for (const table of cleanupTables) {
+      try {
+        await db.prepare(`DELETE FROM ${table} WHERE tenant_id = ?`).bind(tenantId).run();
+      } catch (e) {
+        // Table might not exist, continue
+      }
+    }
+    
+    // Delete tenant last
+    try {
+      await db.prepare(`DELETE FROM tenants WHERE id = ?`).bind(tenantId).run();
+    } catch (e) {
+      // Continue if fails
+    }
     
     // ========== 1. TENANT ==========
     await db.prepare(`INSERT OR REPLACE INTO tenants (id, name, code, domain, status, subscription_plan, max_users, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
@@ -10344,9 +10368,6 @@ app.post('/seed-demo-data', async (c) => {
         `territory-${i + 1}`, tenantId, `Territory ${area.name}`, `TER-${i + 1}`, area.id, agent.id, 'active'
       ).run();
     }
-    
-    // Re-enable foreign key checks
-    await db.prepare('PRAGMA foreign_keys = ON').run();
     
     return c.json({
       success: true,
