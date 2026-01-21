@@ -9704,9 +9704,9 @@ app.get('/files/:filename', async (c) => {
 });
 
 // ============================================
-// SEED DEMO DATA ENDPOINT
+// SEED DEMO DATA ENDPOINT (No auth required - for demo setup)
 // ============================================
-app.post('/api/seed-demo-data', async (c) => {
+app.post('/seed-demo-data', async (c) => {
   try {
     const db = c.env.DB;
     const tenantId = 'demo-tenant';
