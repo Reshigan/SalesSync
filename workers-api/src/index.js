@@ -9897,6 +9897,890 @@ api.post('/initialize-field-ops-tables', async (c) => {
 });
 
 // Mount protected routes
+// ==================== COMPREHENSIVE REPORTING SYSTEM ====================
+
+// Helper function to generate CSV from data
+function generateCSV(data, columns) {
+  if (!data || data.length === 0) return '';
+  const headers = columns.map(c => c.label).join(',');
+  const rows = data.map(row => 
+    columns.map(c => {
+      const val = row[c.key];
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n') 
+        ? `"${str.replace(/"/g, '""')}"` 
+        : str;
+    }).join(',')
+  );
+  return [headers, ...rows].join('\n');
+}
+
+// Helper function to generate HTML for PDF
+function generateReportHTML(title, subtitle, data, columns, summary = null, filters = null) {
+  const filterHtml = filters ? `
+    <div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+      <strong>Filters Applied:</strong> ${Object.entries(filters).filter(([k,v]) => v).map(([k,v]) => `${k}: ${v}`).join(' | ') || 'None'}
+    </div>
+  ` : '';
+  
+  const summaryHtml = summary ? `
+    <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+      ${Object.entries(summary).map(([key, value]) => `
+        <div style="padding: 15px; background: #e3f2fd; border-radius: 8px; min-width: 150px;">
+          <div style="font-size: 12px; color: #666;">${key}</div>
+          <div style="font-size: 24px; font-weight: bold; color: #1976d2;">${value}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+  
+  const tableHtml = `
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+      <thead>
+        <tr style="background: #1976d2; color: white;">
+          ${columns.map(c => `<th style="padding: 10px; text-align: left; border: 1px solid #ddd;">${c.label}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map((row, i) => `
+          <tr style="background: ${i % 2 === 0 ? '#fff' : '#f9f9f9'};">
+            ${columns.map(c => `<td style="padding: 8px; border: 1px solid #ddd;">${row[c.key] ?? ''}</td>`).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+        @media print { body { margin: 20px; } }
+      </style>
+    </head>
+    <body>
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="margin: 0; color: #1976d2;">${title}</h1>
+        <p style="margin: 5px 0; color: #666;">${subtitle}</p>
+        <p style="margin: 5px 0; color: #999; font-size: 12px;">Generated: ${new Date().toLocaleString()}</p>
+      </div>
+      ${filterHtml}
+      ${summaryHtml}
+      ${tableHtml}
+      <div style="margin-top: 30px; text-align: center; color: #999; font-size: 10px;">
+        <p>SalesSync ERP - Comprehensive Business Management System</p>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+// Get available reports list
+api.get('/reports', async (c) => {
+  const reports = [
+    // Sales Reports
+    { id: 'sales-summary', name: 'Sales Summary Report', category: 'Sales', description: 'Overview of sales performance by period' },
+    { id: 'sales-by-customer', name: 'Sales by Customer', category: 'Sales', description: 'Sales breakdown by customer' },
+    { id: 'sales-by-product', name: 'Sales by Product', category: 'Sales', description: 'Sales breakdown by product' },
+    { id: 'sales-by-agent', name: 'Sales by Agent', category: 'Sales', description: 'Sales performance by sales agent' },
+    { id: 'sales-trends', name: 'Sales Trends', category: 'Sales', description: 'Sales trends over time' },
+    // Inventory Reports
+    { id: 'stock-levels', name: 'Stock Levels Report', category: 'Inventory', description: 'Current stock levels across warehouses' },
+    { id: 'stock-movements', name: 'Stock Movements', category: 'Inventory', description: 'Stock movement history' },
+    { id: 'low-stock-alerts', name: 'Low Stock Alerts', category: 'Inventory', description: 'Products below reorder level' },
+    { id: 'inventory-valuation', name: 'Inventory Valuation', category: 'Inventory', description: 'Total inventory value by warehouse' },
+    // Field Operations Reports
+    { id: 'visit-report', name: 'Visit Report', category: 'Field Operations', description: 'Field visit summary and details' },
+    { id: 'agent-performance', name: 'Agent Performance', category: 'Field Operations', description: 'Field agent performance metrics' },
+    { id: 'territory-coverage', name: 'Territory Coverage', category: 'Field Operations', description: 'Territory coverage analysis' },
+    { id: 'board-placements', name: 'Board Placements Report', category: 'Field Operations', description: 'Board placement summary' },
+    // Finance Reports
+    { id: 'revenue-report', name: 'Revenue Report', category: 'Finance', description: 'Revenue summary by period' },
+    { id: 'collections-report', name: 'Collections Report', category: 'Finance', description: 'Payment collections summary' },
+    { id: 'outstanding-payments', name: 'Outstanding Payments', category: 'Finance', description: 'Unpaid invoices and aging' },
+    { id: 'aging-analysis', name: 'Aging Analysis', category: 'Finance', description: 'Receivables aging breakdown' },
+    // Van Sales Reports
+    { id: 'van-sales-summary', name: 'Van Sales Summary', category: 'Van Sales', description: 'Van sales performance overview' },
+    { id: 'route-performance', name: 'Route Performance', category: 'Van Sales', description: 'Sales by route analysis' },
+    { id: 'van-inventory', name: 'Van Inventory Report', category: 'Van Sales', description: 'Current van stock levels' },
+    // Statutory Reports
+    { id: 'tax-summary', name: 'Tax Summary Report', category: 'Statutory', description: 'VAT/GST summary for tax filing' },
+    { id: 'audit-trail', name: 'Audit Trail Report', category: 'Statutory', description: 'System activity audit log' },
+    { id: 'compliance-report', name: 'Compliance Report', category: 'Statutory', description: 'Regulatory compliance summary' },
+  ];
+  
+  return c.json({ success: true, data: reports });
+});
+
+// Sales Summary Report
+api.get('/reports/sales-summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, format = 'json' } = c.req.query();
+  
+  try {
+    const dateFilter = start_date && end_date 
+      ? `AND DATE(o.created_at) BETWEEN ? AND ?` 
+      : '';
+    const params = [tenantId];
+    if (start_date && end_date) params.push(start_date, end_date);
+    
+    const [summary, dailySales, topProducts, topCustomers] = await Promise.all([
+      db.prepare(`
+        SELECT COUNT(*) as total_orders, 
+               COALESCE(SUM(total_amount), 0) as total_revenue,
+               COALESCE(AVG(total_amount), 0) as avg_order_value,
+               COUNT(DISTINCT customer_id) as unique_customers
+        FROM orders o WHERE tenant_id = ? ${dateFilter}
+      `).bind(...params).first(),
+      db.prepare(`
+        SELECT DATE(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue
+        FROM orders WHERE tenant_id = ? ${dateFilter}
+        GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30
+      `).bind(...params).all(),
+      db.prepare(`
+        SELECT p.name as product_name, SUM(oi.quantity) as quantity_sold, SUM(oi.total_price) as revenue
+        FROM order_items oi
+        JOIN orders o ON oi.order_id = o.id
+        JOIN products p ON oi.product_id = p.id
+        WHERE o.tenant_id = ? ${dateFilter}
+        GROUP BY p.id ORDER BY revenue DESC LIMIT 10
+      `).bind(...params).all(),
+      db.prepare(`
+        SELECT c.name as customer_name, COUNT(o.id) as order_count, COALESCE(SUM(o.total_amount), 0) as total_spent
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.id
+        WHERE o.tenant_id = ? ${dateFilter}
+        GROUP BY c.id ORDER BY total_spent DESC LIMIT 10
+      `).bind(...params).all()
+    ]);
+    
+    const data = {
+      summary: {
+        total_orders: summary?.total_orders || 0,
+        total_revenue: summary?.total_revenue || 0,
+        avg_order_value: summary?.avg_order_value || 0,
+        unique_customers: summary?.unique_customers || 0
+      },
+      daily_sales: dailySales.results || [],
+      top_products: topProducts.results || [],
+      top_customers: topCustomers.results || []
+    };
+    
+    if (format === 'csv') {
+      const columns = [
+        { key: 'date', label: 'Date' },
+        { key: 'orders', label: 'Orders' },
+        { key: 'revenue', label: 'Revenue' }
+      ];
+      const csv = generateCSV(data.daily_sales, columns);
+      return new Response(csv, {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="sales-summary.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const columns = [
+        { key: 'date', label: 'Date' },
+        { key: 'orders', label: 'Orders' },
+        { key: 'revenue', label: 'Revenue' }
+      ];
+      const html = generateReportHTML(
+        'Sales Summary Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data.daily_sales,
+        columns,
+        {
+          'Total Orders': data.summary.total_orders,
+          'Total Revenue': `R ${data.summary.total_revenue.toFixed(2)}`,
+          'Avg Order Value': `R ${data.summary.avg_order_value.toFixed(2)}`,
+          'Unique Customers': data.summary.unique_customers
+        },
+        { 'Start Date': start_date, 'End Date': end_date }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Sales by Customer Report
+api.get('/reports/sales-by-customer', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, customer_id, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT c.id, c.name as customer_name, c.email, c.phone, c.address,
+             COUNT(o.id) as order_count, 
+             COALESCE(SUM(o.total_amount), 0) as total_spent,
+             COALESCE(AVG(o.total_amount), 0) as avg_order_value,
+             MAX(o.created_at) as last_order_date
+      FROM customers c
+      LEFT JOIN orders o ON c.id = o.customer_id
+      WHERE c.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND (o.created_at IS NULL OR DATE(o.created_at) BETWEEN ? AND ?)`;
+      params.push(start_date, end_date);
+    }
+    if (customer_id) {
+      query += ` AND c.id = ?`;
+      params.push(customer_id);
+    }
+    
+    query += ` GROUP BY c.id ORDER BY total_spent DESC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'email', label: 'Email' },
+      { key: 'order_count', label: 'Orders' },
+      { key: 'total_spent', label: 'Total Spent' },
+      { key: 'avg_order_value', label: 'Avg Order' },
+      { key: 'last_order_date', label: 'Last Order' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="sales-by-customer.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totalRevenue = data.reduce((sum, r) => sum + (r.total_spent || 0), 0);
+      const html = generateReportHTML(
+        'Sales by Customer Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Customers': data.length, 'Total Revenue': `R ${totalRevenue.toFixed(2)}` },
+        { 'Start Date': start_date, 'End Date': end_date, 'Customer': customer_id }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Sales by Product Report
+api.get('/reports/sales-by-product', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, product_id, category_id, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT p.id, p.name as product_name, p.sku, p.category_id,
+             COALESCE(cat.name, 'Uncategorized') as category_name,
+             COALESCE(SUM(oi.quantity), 0) as quantity_sold,
+             COALESCE(SUM(oi.total_price), 0) as revenue,
+             COUNT(DISTINCT o.id) as order_count
+      FROM products p
+      LEFT JOIN order_items oi ON p.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id AND o.tenant_id = ?
+      LEFT JOIN categories cat ON p.category_id = cat.id
+      WHERE p.tenant_id = ?
+    `;
+    const params = [tenantId, tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND (o.created_at IS NULL OR DATE(o.created_at) BETWEEN ? AND ?)`;
+      params.push(start_date, end_date);
+    }
+    if (product_id) { query += ` AND p.id = ?`; params.push(product_id); }
+    if (category_id) { query += ` AND p.category_id = ?`; params.push(category_id); }
+    
+    query += ` GROUP BY p.id ORDER BY revenue DESC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'product_name', label: 'Product' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'category_name', label: 'Category' },
+      { key: 'quantity_sold', label: 'Qty Sold' },
+      { key: 'revenue', label: 'Revenue' },
+      { key: 'order_count', label: 'Orders' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="sales-by-product.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totalRevenue = data.reduce((sum, r) => sum + (r.revenue || 0), 0);
+      const totalQty = data.reduce((sum, r) => sum + (r.quantity_sold || 0), 0);
+      const html = generateReportHTML(
+        'Sales by Product Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Products': data.length, 'Total Qty Sold': totalQty, 'Total Revenue': `R ${totalRevenue.toFixed(2)}` },
+        { 'Start Date': start_date, 'End Date': end_date }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Stock Levels Report
+api.get('/reports/stock-levels', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { warehouse_id, low_stock_only, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT p.id, p.name as product_name, p.sku, p.reorder_level,
+             w.name as warehouse_name,
+             COALESCE(ist.quantity_on_hand, 0) as quantity_on_hand,
+             COALESCE(ist.quantity_reserved, 0) as quantity_reserved,
+             COALESCE(ist.quantity_on_hand, 0) - COALESCE(ist.quantity_reserved, 0) as available_qty,
+             p.unit_price,
+             COALESCE(ist.quantity_on_hand, 0) * p.unit_price as stock_value
+      FROM products p
+      LEFT JOIN inventory_stock ist ON p.id = ist.product_id
+      LEFT JOIN warehouses w ON ist.warehouse_id = w.id
+      WHERE p.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (warehouse_id) { query += ` AND ist.warehouse_id = ?`; params.push(warehouse_id); }
+    if (low_stock_only === 'true') { query += ` AND COALESCE(ist.quantity_on_hand, 0) <= p.reorder_level`; }
+    
+    query += ` ORDER BY p.name`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'product_name', label: 'Product' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'warehouse_name', label: 'Warehouse' },
+      { key: 'quantity_on_hand', label: 'On Hand' },
+      { key: 'quantity_reserved', label: 'Reserved' },
+      { key: 'available_qty', label: 'Available' },
+      { key: 'reorder_level', label: 'Reorder Level' },
+      { key: 'stock_value', label: 'Stock Value' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="stock-levels.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totalValue = data.reduce((sum, r) => sum + (r.stock_value || 0), 0);
+      const totalQty = data.reduce((sum, r) => sum + (r.quantity_on_hand || 0), 0);
+      const lowStockCount = data.filter(r => r.quantity_on_hand <= r.reorder_level).length;
+      const html = generateReportHTML(
+        'Stock Levels Report',
+        low_stock_only === 'true' ? 'Low Stock Items Only' : 'All Stock Items',
+        data, columns,
+        { 'Total Products': data.length, 'Total Qty': totalQty, 'Total Value': `R ${totalValue.toFixed(2)}`, 'Low Stock Items': lowStockCount },
+        { 'Warehouse': warehouse_id, 'Low Stock Only': low_stock_only }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Visit Report
+api.get('/reports/visit-report', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, agent_id, status, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT v.id, v.visit_type, v.status, v.scheduled_date, v.check_in_time, v.check_out_time,
+             v.notes, v.created_at,
+             c.name as customer_name, c.address as customer_address,
+             COALESCE(u.first_name || ' ' || u.last_name, u.email) as agent_name
+      FROM visits v
+      LEFT JOIN customers c ON v.customer_id = c.id
+      LEFT JOIN agents a ON v.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE v.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND DATE(v.scheduled_date) BETWEEN ? AND ?`;
+      params.push(start_date, end_date);
+    }
+    if (agent_id) { query += ` AND v.agent_id = ?`; params.push(agent_id); }
+    if (status) { query += ` AND v.status = ?`; params.push(status); }
+    
+    query += ` ORDER BY v.scheduled_date DESC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'scheduled_date', label: 'Date' },
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'agent_name', label: 'Agent' },
+      { key: 'visit_type', label: 'Type' },
+      { key: 'status', label: 'Status' },
+      { key: 'check_in_time', label: 'Check In' },
+      { key: 'check_out_time', label: 'Check Out' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="visit-report.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const completedCount = data.filter(r => r.status === 'completed').length;
+      const html = generateReportHTML(
+        'Visit Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Visits': data.length, 'Completed': completedCount, 'Completion Rate': `${data.length ? ((completedCount/data.length)*100).toFixed(1) : 0}%` },
+        { 'Start Date': start_date, 'End Date': end_date, 'Agent': agent_id, 'Status': status }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Outstanding Payments Report
+api.get('/reports/outstanding-payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { customer_id, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT i.id, i.invoice_number, i.invoice_date, i.due_date, i.total_amount,
+             COALESCE(i.amount_paid, 0) as amount_paid,
+             i.total_amount - COALESCE(i.amount_paid, 0) as balance_due,
+             i.status, c.name as customer_name, c.email as customer_email,
+             CASE 
+               WHEN DATE(i.due_date) < DATE('now') THEN julianday('now') - julianday(i.due_date)
+               ELSE 0 
+             END as days_overdue
+      FROM invoices i
+      LEFT JOIN customers c ON i.customer_id = c.id
+      WHERE i.tenant_id = ? AND i.status != 'paid' AND i.total_amount > COALESCE(i.amount_paid, 0)
+    `;
+    const params = [tenantId];
+    
+    if (customer_id) { query += ` AND i.customer_id = ?`; params.push(customer_id); }
+    
+    query += ` ORDER BY i.due_date ASC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'invoice_number', label: 'Invoice #' },
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'invoice_date', label: 'Invoice Date' },
+      { key: 'due_date', label: 'Due Date' },
+      { key: 'total_amount', label: 'Total' },
+      { key: 'amount_paid', label: 'Paid' },
+      { key: 'balance_due', label: 'Balance' },
+      { key: 'days_overdue', label: 'Days Overdue' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="outstanding-payments.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totalOutstanding = data.reduce((sum, r) => sum + (r.balance_due || 0), 0);
+      const overdueCount = data.filter(r => r.days_overdue > 0).length;
+      const html = generateReportHTML(
+        'Outstanding Payments Report',
+        'Unpaid Invoices',
+        data, columns,
+        { 'Total Invoices': data.length, 'Total Outstanding': `R ${totalOutstanding.toFixed(2)}`, 'Overdue': overdueCount },
+        { 'Customer': customer_id }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Aging Analysis Report
+api.get('/reports/aging-analysis', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { format = 'json' } = c.req.query();
+  
+  try {
+    const results = await db.prepare(`
+      SELECT c.id, c.name as customer_name,
+             SUM(CASE WHEN julianday('now') - julianday(i.due_date) <= 0 THEN i.total_amount - COALESCE(i.amount_paid, 0) ELSE 0 END) as current_amount,
+             SUM(CASE WHEN julianday('now') - julianday(i.due_date) BETWEEN 1 AND 30 THEN i.total_amount - COALESCE(i.amount_paid, 0) ELSE 0 END) as days_1_30,
+             SUM(CASE WHEN julianday('now') - julianday(i.due_date) BETWEEN 31 AND 60 THEN i.total_amount - COALESCE(i.amount_paid, 0) ELSE 0 END) as days_31_60,
+             SUM(CASE WHEN julianday('now') - julianday(i.due_date) BETWEEN 61 AND 90 THEN i.total_amount - COALESCE(i.amount_paid, 0) ELSE 0 END) as days_61_90,
+             SUM(CASE WHEN julianday('now') - julianday(i.due_date) > 90 THEN i.total_amount - COALESCE(i.amount_paid, 0) ELSE 0 END) as days_over_90,
+             SUM(i.total_amount - COALESCE(i.amount_paid, 0)) as total_outstanding
+      FROM customers c
+      LEFT JOIN invoices i ON c.id = i.customer_id AND i.status != 'paid'
+      WHERE c.tenant_id = ?
+      GROUP BY c.id
+      HAVING total_outstanding > 0
+      ORDER BY total_outstanding DESC
+    `).bind(tenantId).all();
+    
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'current_amount', label: 'Current' },
+      { key: 'days_1_30', label: '1-30 Days' },
+      { key: 'days_31_60', label: '31-60 Days' },
+      { key: 'days_61_90', label: '61-90 Days' },
+      { key: 'days_over_90', label: '90+ Days' },
+      { key: 'total_outstanding', label: 'Total' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="aging-analysis.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totals = data.reduce((acc, r) => ({
+        current: acc.current + (r.current_amount || 0),
+        d30: acc.d30 + (r.days_1_30 || 0),
+        d60: acc.d60 + (r.days_31_60 || 0),
+        d90: acc.d90 + (r.days_61_90 || 0),
+        over90: acc.over90 + (r.days_over_90 || 0),
+        total: acc.total + (r.total_outstanding || 0)
+      }), { current: 0, d30: 0, d60: 0, d90: 0, over90: 0, total: 0 });
+      
+      const html = generateReportHTML(
+        'Aging Analysis Report',
+        'Receivables Aging by Customer',
+        data, columns,
+        { 
+          'Current': `R ${totals.current.toFixed(2)}`,
+          '1-30 Days': `R ${totals.d30.toFixed(2)}`,
+          '31-60 Days': `R ${totals.d60.toFixed(2)}`,
+          '61-90 Days': `R ${totals.d90.toFixed(2)}`,
+          '90+ Days': `R ${totals.over90.toFixed(2)}`,
+          'Total': `R ${totals.total.toFixed(2)}`
+        }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Van Sales Summary Report
+api.get('/reports/van-sales-summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, agent_id, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT vs.id, vs.sale_number, vs.sale_date, vs.total_amount, vs.status,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, u.email) as agent_name
+      FROM van_sales vs
+      LEFT JOIN customers c ON vs.customer_id = c.id
+      LEFT JOIN agents a ON vs.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE vs.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND DATE(vs.sale_date) BETWEEN ? AND ?`;
+      params.push(start_date, end_date);
+    }
+    if (agent_id) { query += ` AND vs.agent_id = ?`; params.push(agent_id); }
+    
+    query += ` ORDER BY vs.sale_date DESC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'sale_number', label: 'Sale #' },
+      { key: 'sale_date', label: 'Date' },
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'agent_name', label: 'Agent' },
+      { key: 'total_amount', label: 'Amount' },
+      { key: 'status', label: 'Status' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="van-sales-summary.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const totalRevenue = data.reduce((sum, r) => sum + (r.total_amount || 0), 0);
+      const html = generateReportHTML(
+        'Van Sales Summary Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Sales': data.length, 'Total Revenue': `R ${totalRevenue.toFixed(2)}` },
+        { 'Start Date': start_date, 'End Date': end_date, 'Agent': agent_id }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Tax Summary Report (Statutory)
+api.get('/reports/tax-summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, format = 'json' } = c.req.query();
+  
+  try {
+    const dateFilter = start_date && end_date ? `AND DATE(created_at) BETWEEN ? AND ?` : '';
+    const params = [tenantId];
+    if (start_date && end_date) params.push(start_date, end_date);
+    
+    const [salesTax, purchaseTax] = await Promise.all([
+      db.prepare(`
+        SELECT 
+          COUNT(*) as invoice_count,
+          COALESCE(SUM(total_amount), 0) as gross_sales,
+          COALESCE(SUM(tax_amount), 0) as output_tax,
+          COALESCE(SUM(total_amount - tax_amount), 0) as net_sales
+        FROM invoices WHERE tenant_id = ? ${dateFilter}
+      `).bind(...params).first(),
+      db.prepare(`
+        SELECT 
+          COUNT(*) as grn_count,
+          COALESCE(SUM(total_amount), 0) as gross_purchases,
+          COALESCE(SUM(total_amount * 0.15), 0) as input_tax,
+          COALESCE(SUM(total_amount * 0.85), 0) as net_purchases
+        FROM goods_received_notes WHERE tenant_id = ? ${dateFilter}
+      `).bind(...params).first()
+    ]);
+    
+    const outputTax = salesTax?.output_tax || 0;
+    const inputTax = purchaseTax?.input_tax || 0;
+    const netTax = outputTax - inputTax;
+    
+    const data = [
+      { description: 'Gross Sales', amount: salesTax?.gross_sales || 0 },
+      { description: 'Output VAT (15%)', amount: outputTax },
+      { description: 'Net Sales', amount: salesTax?.net_sales || 0 },
+      { description: 'Gross Purchases', amount: purchaseTax?.gross_purchases || 0 },
+      { description: 'Input VAT (15%)', amount: inputTax },
+      { description: 'Net Purchases', amount: purchaseTax?.net_purchases || 0 },
+      { description: 'VAT Payable/(Refundable)', amount: netTax }
+    ];
+    
+    const columns = [
+      { key: 'description', label: 'Description' },
+      { key: 'amount', label: 'Amount (R)' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="tax-summary.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const html = generateReportHTML(
+        'VAT/Tax Summary Report',
+        `Tax Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 
+          'Output VAT': `R ${outputTax.toFixed(2)}`,
+          'Input VAT': `R ${inputTax.toFixed(2)}`,
+          'Net VAT': `R ${netTax.toFixed(2)}`,
+          'Status': netTax >= 0 ? 'Payable' : 'Refundable'
+        },
+        { 'Start Date': start_date, 'End Date': end_date }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data: { sales_tax: salesTax, purchase_tax: purchaseTax, net_tax: netTax, details: data } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Audit Trail Report (Statutory)
+api.get('/reports/audit-trail', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, entity_type, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT al.id, al.entity_type, al.entity_id, al.action, al.changes,
+             al.created_at, COALESCE(u.first_name || ' ' || u.last_name, u.email) as user_name
+      FROM audit_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      WHERE al.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND DATE(al.created_at) BETWEEN ? AND ?`;
+      params.push(start_date, end_date);
+    }
+    if (entity_type) { query += ` AND al.entity_type = ?`; params.push(entity_type); }
+    
+    query += ` ORDER BY al.created_at DESC LIMIT 1000`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'created_at', label: 'Timestamp' },
+      { key: 'user_name', label: 'User' },
+      { key: 'entity_type', label: 'Entity' },
+      { key: 'entity_id', label: 'Entity ID' },
+      { key: 'action', label: 'Action' },
+      { key: 'changes', label: 'Changes' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="audit-trail.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const html = generateReportHTML(
+        'Audit Trail Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Records': data.length },
+        { 'Start Date': start_date, 'End Date': end_date, 'Entity Type': entity_type }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Board Placements Report
+api.get('/reports/board-placements', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date, status, agent_id, format = 'json' } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT bp.id, bp.placement_type as board_type, bp.location_description as location,
+             bp.placement_date, bp.expiry_date, bp.status, bp.condition,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN agents a ON bp.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE bp.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (start_date && end_date) {
+      query += ` AND DATE(bp.placement_date) BETWEEN ? AND ?`;
+      params.push(start_date, end_date);
+    }
+    if (status) { query += ` AND bp.status = ?`; params.push(status); }
+    if (agent_id) { query += ` AND bp.agent_id = ?`; params.push(agent_id); }
+    
+    query += ` ORDER BY bp.placement_date DESC`;
+    
+    const results = await db.prepare(query).bind(...params).all();
+    const data = results.results || [];
+    
+    const columns = [
+      { key: 'placement_date', label: 'Date' },
+      { key: 'customer_name', label: 'Customer' },
+      { key: 'agent_name', label: 'Agent' },
+      { key: 'board_type', label: 'Type' },
+      { key: 'location', label: 'Location' },
+      { key: 'condition', label: 'Condition' },
+      { key: 'status', label: 'Status' }
+    ];
+    
+    if (format === 'csv') {
+      return new Response(generateCSV(data, columns), {
+        headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="board-placements.csv"' }
+      });
+    }
+    
+    if (format === 'html' || format === 'pdf') {
+      const activeCount = data.filter(r => r.status === 'active').length;
+      const html = generateReportHTML(
+        'Board Placements Report',
+        `Period: ${start_date || 'All Time'} to ${end_date || 'Present'}`,
+        data, columns,
+        { 'Total Placements': data.length, 'Active': activeCount },
+        { 'Start Date': start_date, 'End Date': end_date, 'Status': status, 'Agent': agent_id }
+      );
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+    
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
