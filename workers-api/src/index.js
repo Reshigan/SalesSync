@@ -9703,4 +9703,705 @@ app.get('/files/:filename', async (c) => {
   return new Response(object.body, { headers });
 });
 
+// ============================================
+// SEED DEMO DATA ENDPOINT
+// ============================================
+app.post('/api/seed-demo-data', async (c) => {
+  try {
+    const db = c.env.DB;
+    const tenantId = 'demo-tenant';
+    const now = new Date().toISOString();
+    
+    // Helper function to generate UUIDs
+    const uuid = () => crypto.randomUUID();
+    
+    // ========== 1. TENANT ==========
+    await db.prepare(`INSERT OR REPLACE INTO tenants (id, name, code, domain, status, subscription_plan, max_users, features) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      tenantId, 'Demo Company', 'DEMO', 'demo.salessync.com', 'active', 'enterprise', 100, JSON.stringify(['all'])
+    ).run();
+    
+    // ========== 2. REGIONS ==========
+    const regions = [
+      { id: 'region-north', name: 'North Region', code: 'NORTH' },
+      { id: 'region-south', name: 'South Region', code: 'SOUTH' },
+      { id: 'region-east', name: 'East Region', code: 'EAST' },
+      { id: 'region-west', name: 'West Region', code: 'WEST' },
+    ];
+    for (const r of regions) {
+      await db.prepare(`INSERT OR REPLACE INTO regions (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(r.id, tenantId, r.name, r.code, 'active').run();
+    }
+    
+    // ========== 3. AREAS ==========
+    const areas = [
+      { id: 'area-north-1', region_id: 'region-north', name: 'North City Center', code: 'NC1' },
+      { id: 'area-north-2', region_id: 'region-north', name: 'North Suburbs', code: 'NS1' },
+      { id: 'area-south-1', region_id: 'region-south', name: 'South Downtown', code: 'SD1' },
+      { id: 'area-south-2', region_id: 'region-south', name: 'South Industrial', code: 'SI1' },
+      { id: 'area-east-1', region_id: 'region-east', name: 'East Commercial', code: 'EC1' },
+      { id: 'area-west-1', region_id: 'region-west', name: 'West Retail District', code: 'WR1' },
+    ];
+    for (const a of areas) {
+      await db.prepare(`INSERT OR REPLACE INTO areas (id, tenant_id, region_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(a.id, tenantId, a.region_id, a.name, a.code, 'active').run();
+    }
+    
+    // ========== 4. ROUTES ==========
+    const routes = [
+      { id: 'route-1', area_id: 'area-north-1', name: 'Route A - North City', code: 'RA' },
+      { id: 'route-2', area_id: 'area-north-1', name: 'Route B - North City', code: 'RB' },
+      { id: 'route-3', area_id: 'area-south-1', name: 'Route C - South Downtown', code: 'RC' },
+      { id: 'route-4', area_id: 'area-east-1', name: 'Route D - East Commercial', code: 'RD' },
+      { id: 'route-5', area_id: 'area-west-1', name: 'Route E - West Retail', code: 'RE' },
+    ];
+    for (const r of routes) {
+      await db.prepare(`INSERT OR REPLACE INTO routes (id, tenant_id, area_id, name, code, status) VALUES (?, ?, ?, ?, ?, ?)`).bind(r.id, tenantId, r.area_id, r.name, r.code, 'active').run();
+    }
+    
+    // ========== 5. CATEGORIES ==========
+    const categories = [
+      { id: 'cat-beverages', name: 'Beverages', code: 'BEV' },
+      { id: 'cat-snacks', name: 'Snacks', code: 'SNK' },
+      { id: 'cat-dairy', name: 'Dairy Products', code: 'DRY' },
+      { id: 'cat-personal', name: 'Personal Care', code: 'PER' },
+      { id: 'cat-household', name: 'Household Items', code: 'HOU' },
+      { id: 'cat-frozen', name: 'Frozen Foods', code: 'FRZ' },
+    ];
+    for (const c of categories) {
+      await db.prepare(`INSERT OR REPLACE INTO categories (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(c.id, tenantId, c.name, c.code, 'active').run();
+    }
+    
+    // ========== 6. BRANDS ==========
+    const brands = [
+      { id: 'brand-coca', name: 'Coca-Cola', code: 'COCA' },
+      { id: 'brand-pepsi', name: 'PepsiCo', code: 'PEPS' },
+      { id: 'brand-nestle', name: 'Nestle', code: 'NEST' },
+      { id: 'brand-unilever', name: 'Unilever', code: 'UNIL' },
+      { id: 'brand-pg', name: 'Procter & Gamble', code: 'PG' },
+      { id: 'brand-kraft', name: 'Kraft Heinz', code: 'KRFT' },
+    ];
+    for (const b of brands) {
+      await db.prepare(`INSERT OR REPLACE INTO brands (id, tenant_id, name, code, status) VALUES (?, ?, ?, ?, ?)`).bind(b.id, tenantId, b.name, b.code, 'active').run();
+    }
+    
+    // ========== 7. PRODUCTS ==========
+    const products = [
+      { id: 'prod-1', name: 'Coca-Cola 500ml', code: 'CC500', sku: 'SKU001', barcode: '5449000000996', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 15.00, cost: 10.00, tax: 15 },
+      { id: 'prod-2', name: 'Coca-Cola 1.5L', code: 'CC1500', sku: 'SKU002', barcode: '5449000000997', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 25.00, cost: 18.00, tax: 15 },
+      { id: 'prod-3', name: 'Sprite 500ml', code: 'SP500', sku: 'SKU003', barcode: '5449000000998', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 14.00, cost: 9.50, tax: 15 },
+      { id: 'prod-4', name: 'Fanta Orange 500ml', code: 'FO500', sku: 'SKU004', barcode: '5449000000999', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'bottle', price: 14.00, cost: 9.50, tax: 15 },
+      { id: 'prod-5', name: 'Pepsi 500ml', code: 'PE500', sku: 'SKU005', barcode: '5449000001000', category_id: 'cat-beverages', brand_id: 'brand-pepsi', unit: 'bottle', price: 14.50, cost: 9.80, tax: 15 },
+      { id: 'prod-6', name: 'Lays Classic Chips 150g', code: 'LC150', sku: 'SKU006', barcode: '5449000001001', category_id: 'cat-snacks', brand_id: 'brand-pepsi', unit: 'pack', price: 35.00, cost: 25.00, tax: 15 },
+      { id: 'prod-7', name: 'Doritos Nacho 150g', code: 'DN150', sku: 'SKU007', barcode: '5449000001002', category_id: 'cat-snacks', brand_id: 'brand-pepsi', unit: 'pack', price: 38.00, cost: 27.00, tax: 15 },
+      { id: 'prod-8', name: 'Nestle Milk 1L', code: 'NM1000', sku: 'SKU008', barcode: '5449000001003', category_id: 'cat-dairy', brand_id: 'brand-nestle', unit: 'carton', price: 22.00, cost: 16.00, tax: 0 },
+      { id: 'prod-9', name: 'Nestle Yogurt 500g', code: 'NY500', sku: 'SKU009', barcode: '5449000001004', category_id: 'cat-dairy', brand_id: 'brand-nestle', unit: 'tub', price: 45.00, cost: 32.00, tax: 0 },
+      { id: 'prod-10', name: 'Dove Soap 100g', code: 'DS100', sku: 'SKU010', barcode: '5449000001005', category_id: 'cat-personal', brand_id: 'brand-unilever', unit: 'bar', price: 28.00, cost: 18.00, tax: 15 },
+      { id: 'prod-11', name: 'Sunlight Dish Liquid 750ml', code: 'SDL750', sku: 'SKU011', barcode: '5449000001006', category_id: 'cat-household', brand_id: 'brand-unilever', unit: 'bottle', price: 42.00, cost: 30.00, tax: 15 },
+      { id: 'prod-12', name: 'Omo Washing Powder 2kg', code: 'OWP2K', sku: 'SKU012', barcode: '5449000001007', category_id: 'cat-household', brand_id: 'brand-unilever', unit: 'bag', price: 85.00, cost: 60.00, tax: 15 },
+      { id: 'prod-13', name: 'Tide Pods 42ct', code: 'TP42', sku: 'SKU013', barcode: '5449000001008', category_id: 'cat-household', brand_id: 'brand-pg', unit: 'pack', price: 120.00, cost: 85.00, tax: 15 },
+      { id: 'prod-14', name: 'Gillette Razor 5pk', code: 'GR5', sku: 'SKU014', barcode: '5449000001009', category_id: 'cat-personal', brand_id: 'brand-pg', unit: 'pack', price: 95.00, cost: 65.00, tax: 15 },
+      { id: 'prod-15', name: 'Heinz Ketchup 500ml', code: 'HK500', sku: 'SKU015', barcode: '5449000001010', category_id: 'cat-snacks', brand_id: 'brand-kraft', unit: 'bottle', price: 48.00, cost: 32.00, tax: 15 },
+      { id: 'prod-16', name: 'Ice Cream Vanilla 1L', code: 'ICV1L', sku: 'SKU016', barcode: '5449000001011', category_id: 'cat-frozen', brand_id: 'brand-nestle', unit: 'tub', price: 65.00, cost: 45.00, tax: 0 },
+      { id: 'prod-17', name: 'Frozen Pizza Pepperoni', code: 'FPP', sku: 'SKU017', barcode: '5449000001012', category_id: 'cat-frozen', brand_id: 'brand-kraft', unit: 'box', price: 75.00, cost: 52.00, tax: 0 },
+      { id: 'prod-18', name: 'Energy Drink 250ml', code: 'ED250', sku: 'SKU018', barcode: '5449000001013', category_id: 'cat-beverages', brand_id: 'brand-coca', unit: 'can', price: 22.00, cost: 15.00, tax: 15 },
+      { id: 'prod-19', name: 'Mineral Water 1L', code: 'MW1L', sku: 'SKU019', barcode: '5449000001014', category_id: 'cat-beverages', brand_id: 'brand-nestle', unit: 'bottle', price: 12.00, cost: 6.00, tax: 0 },
+      { id: 'prod-20', name: 'Orange Juice 1L', code: 'OJ1L', sku: 'SKU020', barcode: '5449000001015', category_id: 'cat-beverages', brand_id: 'brand-pepsi', unit: 'carton', price: 32.00, cost: 22.00, tax: 0 },
+    ];
+    for (const p of products) {
+      await db.prepare(`INSERT OR REPLACE INTO products (id, tenant_id, name, code, sku, barcode, category_id, brand_id, unit_of_measure, price, cost_price, tax_rate, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        p.id, tenantId, p.name, p.code, p.sku, p.barcode, p.category_id, p.brand_id, p.unit, p.price, p.cost, p.tax, 'active'
+      ).run();
+    }
+    
+    // ========== 8. WAREHOUSES ==========
+    const warehouses = [
+      { id: 'wh-main', name: 'Main Warehouse', code: 'WH-MAIN', type: 'main', address: '123 Industrial Park, City Center' },
+      { id: 'wh-north', name: 'North Distribution Center', code: 'WH-NORTH', type: 'distribution', address: '456 North Highway, North Region' },
+      { id: 'wh-south', name: 'South Distribution Center', code: 'WH-SOUTH', type: 'distribution', address: '789 South Avenue, South Region' },
+    ];
+    for (const w of warehouses) {
+      await db.prepare(`INSERT OR REPLACE INTO warehouses (id, tenant_id, name, code, type, address, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(w.id, tenantId, w.name, w.code, w.type, w.address, 'active').run();
+    }
+    
+    // ========== 9. INVENTORY STOCK ==========
+    for (const p of products) {
+      const mainQty = Math.floor(Math.random() * 500) + 100;
+      const northQty = Math.floor(Math.random() * 200) + 50;
+      const southQty = Math.floor(Math.random() * 200) + 50;
+      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-main-${p.id}`, tenantId, 'wh-main', p.id, mainQty, 0).run();
+      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-north-${p.id}`, tenantId, 'wh-north', p.id, northQty, 0).run();
+      await db.prepare(`INSERT OR REPLACE INTO inventory_stock (id, tenant_id, warehouse_id, product_id, quantity_on_hand, quantity_reserved) VALUES (?, ?, ?, ?, ?, ?)`).bind(`stock-south-${p.id}`, tenantId, 'wh-south', p.id, southQty, 0).run();
+    }
+    
+    // ========== 10. CUSTOMERS ==========
+    const customers = [
+      { id: 'cust-1', name: 'ABC Supermarket', code: 'CUST001', type: 'retail', phone: '+27111234567', email: 'abc@example.com', address: '100 Main Street, North City', lat: -26.2041, lng: 28.0473, route_id: 'route-1', credit_limit: 50000, payment_terms: 30 },
+      { id: 'cust-2', name: 'XYZ Convenience Store', code: 'CUST002', type: 'retail', phone: '+27112345678', email: 'xyz@example.com', address: '200 Oak Avenue, North City', lat: -26.2051, lng: 28.0483, route_id: 'route-1', credit_limit: 25000, payment_terms: 14 },
+      { id: 'cust-3', name: 'Fresh Foods Market', code: 'CUST003', type: 'wholesale', phone: '+27113456789', email: 'fresh@example.com', address: '300 Market Street, South Downtown', lat: -26.2061, lng: 28.0493, route_id: 'route-3', credit_limit: 100000, payment_terms: 45 },
+      { id: 'cust-4', name: 'Quick Stop Mini Mart', code: 'CUST004', type: 'retail', phone: '+27114567890', email: 'quickstop@example.com', address: '400 Highway Road, North Suburbs', lat: -26.2071, lng: 28.0503, route_id: 'route-2', credit_limit: 15000, payment_terms: 7 },
+      { id: 'cust-5', name: 'Metro Cash & Carry', code: 'CUST005', type: 'wholesale', phone: '+27115678901', email: 'metro@example.com', address: '500 Industrial Zone, East Commercial', lat: -26.2081, lng: 28.0513, route_id: 'route-4', credit_limit: 200000, payment_terms: 60 },
+      { id: 'cust-6', name: 'Corner Shop Express', code: 'CUST006', type: 'retail', phone: '+27116789012', email: 'corner@example.com', address: '600 Residential Area, West Retail', lat: -26.2091, lng: 28.0523, route_id: 'route-5', credit_limit: 10000, payment_terms: 7 },
+      { id: 'cust-7', name: 'Sunrise Groceries', code: 'CUST007', type: 'retail', phone: '+27117890123', email: 'sunrise@example.com', address: '700 Sunrise Boulevard, North City', lat: -26.2101, lng: 28.0533, route_id: 'route-1', credit_limit: 30000, payment_terms: 14 },
+      { id: 'cust-8', name: 'Family Mart', code: 'CUST008', type: 'retail', phone: '+27118901234', email: 'family@example.com', address: '800 Family Lane, South Downtown', lat: -26.2111, lng: 28.0543, route_id: 'route-3', credit_limit: 20000, payment_terms: 14 },
+      { id: 'cust-9', name: 'Bulk Buy Warehouse', code: 'CUST009', type: 'wholesale', phone: '+27119012345', email: 'bulkbuy@example.com', address: '900 Warehouse District, East Commercial', lat: -26.2121, lng: 28.0553, route_id: 'route-4', credit_limit: 150000, payment_terms: 45 },
+      { id: 'cust-10', name: 'Neighborhood Store', code: 'CUST010', type: 'retail', phone: '+27110123456', email: 'neighbor@example.com', address: '1000 Neighborhood Street, West Retail', lat: -26.2131, lng: 28.0563, route_id: 'route-5', credit_limit: 12000, payment_terms: 7 },
+      { id: 'cust-11', name: 'Premium Foods Ltd', code: 'CUST011', type: 'wholesale', phone: '+27111234568', email: 'premium@example.com', address: '1100 Premium Plaza, North City', lat: -26.2141, lng: 28.0573, route_id: 'route-2', credit_limit: 80000, payment_terms: 30 },
+      { id: 'cust-12', name: 'Daily Needs Shop', code: 'CUST012', type: 'retail', phone: '+27112345679', email: 'daily@example.com', address: '1200 Daily Drive, South Industrial', lat: -26.2151, lng: 28.0583, route_id: 'route-3', credit_limit: 18000, payment_terms: 14 },
+    ];
+    for (const c of customers) {
+      await db.prepare(`INSERT OR REPLACE INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, route_id, credit_limit, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        c.id, tenantId, c.name, c.code, c.type, c.phone, c.email, c.address, c.lat, c.lng, c.route_id, c.credit_limit, c.payment_terms, 'active'
+      ).run();
+    }
+    
+    // ========== 11. USERS (Admin and Field Agents) ==========
+    const passwordHash = await bcrypt.hash('demo123', 10);
+    const adminHash = await bcrypt.hash('admin123', 10);
+    
+    const users = [
+      { id: 'user-admin', email: 'admin@demo.com', first_name: 'Admin', last_name: 'User', phone: '+27110000001', role: 'admin' },
+      { id: 'user-manager', email: 'manager@demo.com', first_name: 'Sales', last_name: 'Manager', phone: '+27110000002', role: 'manager' },
+      { id: 'user-agent1', email: 'agent1@demo.com', first_name: 'John', last_name: 'Smith', phone: '+27110000003', role: 'field_agent' },
+      { id: 'user-agent2', email: 'agent2@demo.com', first_name: 'Sarah', last_name: 'Johnson', phone: '+27110000004', role: 'field_agent' },
+      { id: 'user-agent3', email: 'agent3@demo.com', first_name: 'Michael', last_name: 'Brown', phone: '+27110000005', role: 'field_agent' },
+      { id: 'user-agent4', email: 'agent4@demo.com', first_name: 'Emily', last_name: 'Davis', phone: '+27110000006', role: 'field_agent' },
+      { id: 'user-demo', email: 'demo@salessync.com', first_name: 'Demo', last_name: 'User', phone: '+27110000007', role: 'field_agent' },
+    ];
+    for (const u of users) {
+      const hash = u.role === 'admin' ? adminHash : passwordHash;
+      await db.prepare(`INSERT OR REPLACE INTO users (id, tenant_id, email, password_hash, first_name, last_name, phone, role, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        u.id, tenantId, u.email, hash, u.first_name, u.last_name, u.phone, u.role, 'active'
+      ).run();
+    }
+    
+    // ========== 12. AGENTS ==========
+    const agents = [
+      { id: 'agent-1', user_id: 'user-agent1', agent_type: 'van_sales', employee_code: 'EMP001', mobile_number: '+27110000003' },
+      { id: 'agent-2', user_id: 'user-agent2', agent_type: 'field_marketing', employee_code: 'EMP002', mobile_number: '+27110000004' },
+      { id: 'agent-3', user_id: 'user-agent3', agent_type: 'van_sales', employee_code: 'EMP003', mobile_number: '+27110000005' },
+      { id: 'agent-4', user_id: 'user-agent4', agent_type: 'merchandiser', employee_code: 'EMP004', mobile_number: '+27110000006' },
+      { id: 'agent-demo', user_id: 'user-demo', agent_type: 'field_agent', employee_code: 'EMP007', mobile_number: '+27110000007' },
+    ];
+    for (const a of agents) {
+      await db.prepare(`INSERT OR REPLACE INTO agents (id, tenant_id, user_id, agent_type, employee_code, mobile_number, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        a.id, tenantId, a.user_id, a.agent_type, a.employee_code, a.mobile_number, 'active'
+      ).run();
+    }
+    
+    // ========== 13. VANS ==========
+    const vans = [
+      { id: 'van-1', registration: 'ABC 123 GP', model: 'Toyota Hiace', capacity: 500, salesman_id: 'agent-1' },
+      { id: 'van-2', registration: 'DEF 456 GP', model: 'Ford Transit', capacity: 600, salesman_id: 'agent-3' },
+      { id: 'van-3', registration: 'GHI 789 GP', model: 'Mercedes Sprinter', capacity: 800, salesman_id: null },
+    ];
+    for (const v of vans) {
+      await db.prepare(`INSERT OR REPLACE INTO vans (id, tenant_id, registration_number, model, capacity_units, assigned_salesman_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        v.id, tenantId, v.registration, v.model, v.capacity, v.salesman_id, 'active'
+      ).run();
+    }
+    
+    // ========== 14. VAN INVENTORY ==========
+    for (const v of vans) {
+      for (const p of products.slice(0, 10)) {
+        const qty = Math.floor(Math.random() * 50) + 20;
+        await db.prepare(`INSERT OR REPLACE INTO van_inventory (id, tenant_id, van_id, product_id, quantity, reserved_quantity) VALUES (?, ?, ?, ?, ?, ?)`).bind(
+          `vaninv-${v.id}-${p.id}`, tenantId, v.id, p.id, qty, 0
+        ).run();
+      }
+    }
+    
+    // ========== 15. ORDERS ==========
+    const orderStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'completed'];
+    const paymentStatuses = ['pending', 'partial', 'paid'];
+    const orders = [];
+    for (let i = 1; i <= 25; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const orderDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const subtotal = Math.floor(Math.random() * 5000) + 500;
+      const tax = subtotal * 0.15;
+      const discount = Math.floor(Math.random() * 200);
+      const total = subtotal + tax - discount;
+      const status = orderStatuses[Math.floor(Math.random() * orderStatuses.length)];
+      const paymentStatus = paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)];
+      
+      const orderId = `order-${i}`;
+      orders.push({ id: orderId, customer_id: customer.id });
+      
+      await db.prepare(`INSERT OR REPLACE INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, delivery_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        orderId, tenantId, `ORD-${String(i).padStart(5, '0')}`, customer.id, 'agent-1', orderDate, orderDate, subtotal, tax, discount, total, 'credit', paymentStatus, status, `Demo order ${i}`
+      ).run();
+      
+      // Order items
+      const numItems = Math.floor(Math.random() * 5) + 1;
+      for (let j = 0; j < numItems; j++) {
+        const product = products[Math.floor(Math.random() * products.length)];
+        const qty = Math.floor(Math.random() * 10) + 1;
+        const lineTotal = product.price * qty;
+        await db.prepare(`INSERT OR REPLACE INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+          `orderitem-${i}-${j}`, orderId, product.id, qty, product.price, 0, product.tax, lineTotal
+        ).run();
+      }
+    }
+    
+    // ========== 16. VAN SALES ==========
+    for (let i = 1; i <= 20; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const van = vans[Math.floor(Math.random() * 2)];
+      const agent = van.salesman_id || 'agent-1';
+      const saleDate = new Date(Date.now() - Math.floor(Math.random() * 14) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const subtotal = Math.floor(Math.random() * 2000) + 200;
+      const tax = subtotal * 0.15;
+      const total = subtotal + tax;
+      const saleType = Math.random() > 0.3 ? 'cash' : 'credit';
+      
+      const saleId = `vansale-${i}`;
+      await db.prepare(`INSERT OR REPLACE INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        saleId, tenantId, van.id, agent, customer.id, saleDate, saleType, subtotal, tax, 0, total, saleType === 'cash' ? total : 0, saleType === 'cash' ? 0 : total, saleType, 'completed', `Van sale ${i}`
+      ).run();
+      
+      // Van sale items
+      const numItems = Math.floor(Math.random() * 4) + 1;
+      for (let j = 0; j < numItems; j++) {
+        const product = products[Math.floor(Math.random() * products.length)];
+        const qty = Math.floor(Math.random() * 5) + 1;
+        const lineTotal = product.price * qty;
+        await db.prepare(`INSERT OR REPLACE INTO van_sale_items (id, van_sale_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+          `vansaleitem-${i}-${j}`, saleId, product.id, qty, product.price, 0, product.tax, lineTotal
+        ).run();
+      }
+    }
+    
+    // ========== 17. VISITS ==========
+    const visitTypes = ['sales', 'merchandising', 'audit', 'collection', 'delivery'];
+    const visitOutcomes = ['successful', 'partial', 'no_order', 'closed', 'rescheduled'];
+    for (let i = 1; i <= 30; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const visitDate = new Date(Date.now() - Math.floor(Math.random() * 14) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const checkIn = `${8 + Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`;
+      const checkOut = `${12 + Math.floor(Math.random() * 4)}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:00`;
+      
+      await db.prepare(`INSERT OR REPLACE INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_out_time, latitude, longitude, visit_type, purpose, outcome, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `visit-${i}`, tenantId, agent.id, customer.id, visitDate, checkIn, checkOut, customer.lat, customer.lng, visitTypes[Math.floor(Math.random() * visitTypes.length)], 'Regular visit', visitOutcomes[Math.floor(Math.random() * visitOutcomes.length)], `Visit notes ${i}`, 'completed'
+      ).run();
+    }
+    
+    // ========== 18. COMMISSIONS ==========
+    for (let i = 1; i <= 15; i++) {
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const amount = Math.floor(Math.random() * 500) + 50;
+      const status = Math.random() > 0.3 ? 'approved' : 'pending';
+      
+      await db.prepare(`INSERT OR REPLACE INTO commissions (id, tenant_id, agent_id, order_id, amount, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        `commission-${i}`, tenantId, agent.id, order.id, amount, status, `Commission for order ${order.id}`
+      ).run();
+    }
+    
+    // ========== 19. RETURNS ==========
+    for (let i = 1; i <= 8; i++) {
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const returnDate = new Date().toISOString().split('T')[0];
+      const reasons = ['damaged', 'wrong_item', 'quality_issue', 'expired', 'customer_changed_mind'];
+      const statuses = ['pending', 'approved', 'processed', 'rejected'];
+      const amount = Math.floor(Math.random() * 500) + 100;
+      
+      await db.prepare(`INSERT OR REPLACE INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `return-${i}`, tenantId, order.id, `RET-${String(i).padStart(5, '0')}`, returnDate, reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], amount, `Return ${i} notes`, 'user-admin'
+      ).run();
+      
+      // Return items
+      const product = products[Math.floor(Math.random() * products.length)];
+      await db.prepare(`INSERT OR REPLACE INTO return_items (id, return_id, product_id, quantity, unit_price, reason, condition) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        `returnitem-${i}`, `return-${i}`, product.id, Math.floor(Math.random() * 5) + 1, product.price, 'damaged', 'good'
+      ).run();
+    }
+    
+    // ========== 20. REFUNDS ==========
+    for (let i = 1; i <= 5; i++) {
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const amount = Math.floor(Math.random() * 300) + 50;
+      const methods = ['cash', 'bank_transfer', 'credit_note'];
+      const statuses = ['pending', 'approved', 'processed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO refunds (id, tenant_id, order_id, refund_number, amount, reason, refund_method, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `refund-${i}`, tenantId, order.id, `REF-${String(i).padStart(5, '0')}`, amount, 'Customer refund request', methods[Math.floor(Math.random() * methods.length)], statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
+      ).run();
+    }
+    
+    // ========== 21. CREDIT NOTES ==========
+    for (let i = 1; i <= 6; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const amount = Math.floor(Math.random() * 400) + 100;
+      const statuses = ['issued', 'partially_used', 'fully_used', 'expired'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `creditnote-${i}`, tenantId, customer.id, i <= 4 ? `return-${i}` : null, `CN-${String(i).padStart(5, '0')}`, amount, statuses[Math.floor(Math.random() * statuses.length)], 'user-admin'
+      ).run();
+    }
+    
+    // ========== 22. STOCK MOVEMENTS ==========
+    const movementTypes = ['receipt', 'issue', 'transfer', 'adjustment', 'return'];
+    for (let i = 1; i <= 40; i++) {
+      const product = products[Math.floor(Math.random() * products.length)];
+      const type = movementTypes[Math.floor(Math.random() * movementTypes.length)];
+      const qty = (type === 'issue' ? -1 : 1) * (Math.floor(Math.random() * 50) + 10);
+      
+      await db.prepare(`INSERT OR REPLACE INTO stock_movements (id, tenant_id, product_id, movement_type, quantity, reference_type, reference_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `stockmov-${i}`, tenantId, product.id, type, qty, 'manual', `ref-${i}`, `Stock movement ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 23. PROMOTIONAL CAMPAIGNS ==========
+    const campaignTypes = ['discount', 'bogo', 'bundle', 'loyalty', 'seasonal'];
+    const campaignStatuses = ['planned', 'active', 'completed', 'cancelled'];
+    for (let i = 1; i <= 10; i++) {
+      const startDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const endDate = new Date(Date.now() + Math.floor(Math.random() * 60) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const budget = Math.floor(Math.random() * 50000) + 10000;
+      
+      await db.prepare(`INSERT OR REPLACE INTO promotional_campaigns (id, tenant_id, name, campaign_type, start_date, end_date, budget, actual_cost, target_activations, expected_roi, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `campaign-${i}`, tenantId, `Campaign ${i} - ${campaignTypes[i % campaignTypes.length]}`, campaignTypes[i % campaignTypes.length], startDate, endDate, budget, budget * 0.7, 100, 1.5, campaignStatuses[Math.floor(Math.random() * campaignStatuses.length)]
+      ).run();
+    }
+    
+    // ========== 24. SUPPLIERS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, contact_person TEXT, phone TEXT, email TEXT, address TEXT, payment_terms INTEGER, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const suppliers = [
+      { id: 'supplier-1', name: 'Coca-Cola Beverages SA', code: 'SUP001', contact: 'James Wilson', phone: '+27111111111', email: 'orders@cocacola.co.za', address: '1 Coca-Cola Way, Johannesburg', terms: 30 },
+      { id: 'supplier-2', name: 'PepsiCo South Africa', code: 'SUP002', contact: 'Mary Thompson', phone: '+27112222222', email: 'orders@pepsico.co.za', address: '2 Pepsi Street, Cape Town', terms: 30 },
+      { id: 'supplier-3', name: 'Nestle SA', code: 'SUP003', contact: 'Robert Chen', phone: '+27113333333', email: 'orders@nestle.co.za', address: '3 Nestle Avenue, Durban', terms: 45 },
+      { id: 'supplier-4', name: 'Unilever South Africa', code: 'SUP004', contact: 'Lisa Anderson', phone: '+27114444444', email: 'orders@unilever.co.za', address: '4 Unilever Road, Pretoria', terms: 30 },
+      { id: 'supplier-5', name: 'P&G Distribution', code: 'SUP005', contact: 'David Kim', phone: '+27115555555', email: 'orders@pg.co.za', address: '5 P&G Plaza, Johannesburg', terms: 45 },
+    ];
+    for (const s of suppliers) {
+      await db.prepare(`INSERT OR REPLACE INTO suppliers (id, tenant_id, name, code, contact_person, phone, email, address, payment_terms, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        s.id, tenantId, s.name, s.code, s.contact, s.phone, s.email, s.address, s.terms, 'active'
+      ).run();
+    }
+    
+    // ========== 25. PRICE LISTS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS price_lists (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const priceLists = [
+      { id: 'pricelist-retail', name: 'Retail Price List', code: 'PL-RETAIL', type: 'retail' },
+      { id: 'pricelist-wholesale', name: 'Wholesale Price List', code: 'PL-WHOLESALE', type: 'wholesale' },
+      { id: 'pricelist-promo', name: 'Promotional Price List', code: 'PL-PROMO', type: 'promotional' },
+    ];
+    for (const pl of priceLists) {
+      await db.prepare(`INSERT OR REPLACE INTO price_lists (id, tenant_id, name, code, type, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        pl.id, tenantId, pl.name, pl.code, pl.type, '2024-01-01', '2026-12-31', 'active'
+      ).run();
+    }
+    
+    // ========== 26. PRICE LIST ITEMS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS price_list_items (id TEXT PRIMARY KEY, price_list_id TEXT, product_id TEXT, price REAL, min_quantity INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (const pl of priceLists) {
+      for (const p of products) {
+        let price = p.price;
+        if (pl.type === 'wholesale') price = p.price * 0.85;
+        if (pl.type === 'promotional') price = p.price * 0.9;
+        
+        await db.prepare(`INSERT OR REPLACE INTO price_list_items (id, price_list_id, product_id, price, min_quantity) VALUES (?, ?, ?, ?, ?)`).bind(
+          `pli-${pl.id}-${p.id}`, pl.id, p.id, price, pl.type === 'wholesale' ? 10 : 1
+        ).run();
+      }
+    }
+    
+    // ========== 27. DISCOUNTS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS discounts (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, value REAL, min_order_value REAL, max_discount REAL, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const discounts = [
+      { id: 'discount-1', name: '5% Volume Discount', code: 'VOL5', type: 'percentage', value: 5, min_order: 1000, max_discount: 500 },
+      { id: 'discount-2', name: '10% Bulk Discount', code: 'BULK10', type: 'percentage', value: 10, min_order: 5000, max_discount: 1000 },
+      { id: 'discount-3', name: 'R50 Off', code: 'FLAT50', type: 'fixed', value: 50, min_order: 500, max_discount: 50 },
+      { id: 'discount-4', name: 'New Customer 15%', code: 'NEW15', type: 'percentage', value: 15, min_order: 0, max_discount: 750 },
+      { id: 'discount-5', name: 'Loyalty 8%', code: 'LOYAL8', type: 'percentage', value: 8, min_order: 0, max_discount: 800 },
+    ];
+    for (const d of discounts) {
+      await db.prepare(`INSERT OR REPLACE INTO discounts (id, tenant_id, name, code, type, value, min_order_value, max_discount, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        d.id, tenantId, d.name, d.code, d.type, d.value, d.min_order, d.max_discount, '2024-01-01', '2026-12-31', 'active'
+      ).run();
+    }
+    
+    // ========== 28. SYSTEM SETTINGS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS system_settings (id TEXT PRIMARY KEY, tenant_id TEXT, key TEXT, value TEXT, category TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const settings = [
+      { key: 'company_name', value: 'Demo Company Ltd', category: 'general' },
+      { key: 'company_address', value: '123 Business Park, Johannesburg, South Africa', category: 'general' },
+      { key: 'company_phone', value: '+27 11 123 4567', category: 'general' },
+      { key: 'company_email', value: 'info@democompany.co.za', category: 'general' },
+      { key: 'tax_rate', value: '15', category: 'finance' },
+      { key: 'currency', value: 'ZAR', category: 'finance' },
+      { key: 'currency_symbol', value: 'R', category: 'finance' },
+      { key: 'date_format', value: 'DD/MM/YYYY', category: 'general' },
+      { key: 'time_zone', value: 'Africa/Johannesburg', category: 'general' },
+      { key: 'order_prefix', value: 'ORD', category: 'orders' },
+      { key: 'invoice_prefix', value: 'INV', category: 'finance' },
+      { key: 'low_stock_threshold', value: '50', category: 'inventory' },
+      { key: 'auto_approve_orders', value: 'false', category: 'orders' },
+      { key: 'require_gps_checkin', value: 'true', category: 'visits' },
+      { key: 'commission_rate', value: '5', category: 'commissions' },
+    ];
+    for (const s of settings) {
+      await db.prepare(`INSERT OR REPLACE INTO system_settings (id, tenant_id, key, value, category) VALUES (?, ?, ?, ?, ?)`).bind(
+        `setting-${s.key}`, tenantId, s.key, s.value, s.category
+      ).run();
+    }
+    
+    // ========== 29. FIELD MARKETING TABLES ==========
+    // Board Placements
+    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placements (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, agent_id TEXT, brand_id TEXT, placement_type TEXT, location_description TEXT, width REAL, height REAL, condition TEXT, photo_url TEXT, placement_date TEXT, expiry_date TEXT, status TEXT DEFAULT 'active', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 15; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const brand = brands[Math.floor(Math.random() * brands.length)];
+      const types = ['poster', 'banner', 'shelf_talker', 'floor_display', 'window_decal'];
+      const conditions = ['excellent', 'good', 'fair', 'poor'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, placement_date, expiry_date, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `board-${i}`, tenantId, customer.id, agent.id, brand.id, types[Math.floor(Math.random() * types.length)], 'Store entrance', 100, 50, conditions[Math.floor(Math.random() * conditions.length)], new Date().toISOString().split('T')[0], new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'active', `Board placement ${i}`
+      ).run();
+    }
+    
+    // Surveys
+    await db.prepare(`CREATE TABLE IF NOT EXISTS surveys (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, description TEXT, survey_type TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const surveys = [
+      { id: 'survey-1', name: 'Customer Satisfaction Survey', description: 'Monthly customer feedback', type: 'customer_feedback' },
+      { id: 'survey-2', name: 'Product Availability Check', description: 'Check product availability in stores', type: 'product_audit' },
+      { id: 'survey-3', name: 'Competitor Price Survey', description: 'Track competitor pricing', type: 'competitor_analysis' },
+    ];
+    for (const s of surveys) {
+      await db.prepare(`INSERT OR REPLACE INTO surveys (id, tenant_id, name, description, survey_type, start_date, end_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        s.id, tenantId, s.name, s.description, s.type, '2024-01-01', '2026-12-31', 'active'
+      ).run();
+    }
+    
+    // Store Audits
+    await db.prepare(`CREATE TABLE IF NOT EXISTS store_audits (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, agent_id TEXT, audit_date TEXT, audit_type TEXT, score REAL, max_score REAL, status TEXT DEFAULT 'completed', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 12; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const auditTypes = ['merchandising', 'compliance', 'planogram', 'freshness'];
+      const score = Math.floor(Math.random() * 30) + 70;
+      
+      await db.prepare(`INSERT OR REPLACE INTO store_audits (id, tenant_id, customer_id, agent_id, audit_date, audit_type, score, max_score, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `audit-${i}`, tenantId, customer.id, agent.id, new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], auditTypes[Math.floor(Math.random() * auditTypes.length)], score, 100, 'completed', `Audit ${i} notes`
+      ).run();
+    }
+    
+    // ========== 30. KYC CASES ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS kyc_cases (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, case_number TEXT, status TEXT, risk_level TEXT, assigned_to TEXT, due_date TEXT, completed_date TEXT, notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 8; i++) {
+      const customer = customers[Math.floor(Math.random() * customers.length)];
+      const statuses = ['pending', 'in_review', 'approved', 'rejected', 'expired'];
+      const riskLevels = ['low', 'medium', 'high'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO kyc_cases (id, tenant_id, customer_id, case_number, status, risk_level, assigned_to, due_date, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `kyc-${i}`, tenantId, customer.id, `KYC-${String(i).padStart(5, '0')}`, statuses[Math.floor(Math.random() * statuses.length)], riskLevels[Math.floor(Math.random() * riskLevels.length)], 'user-admin', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], `KYC case ${i} notes`
+      ).run();
+    }
+    
+    // ========== 31. CASH RECONCILIATIONS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS cash_reconciliations (id TEXT PRIMARY KEY, tenant_id TEXT, agent_id TEXT, reconciliation_date TEXT, opening_balance REAL, total_collections REAL, total_expenses REAL, closing_balance REAL, expected_balance REAL, variance REAL, status TEXT DEFAULT 'pending', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 10; i++) {
+      const agent = agents[Math.floor(Math.random() * agents.length)];
+      const opening = Math.floor(Math.random() * 1000) + 500;
+      const collections = Math.floor(Math.random() * 5000) + 1000;
+      const expenses = Math.floor(Math.random() * 500) + 100;
+      const closing = opening + collections - expenses;
+      const expected = closing;
+      const variance = Math.floor(Math.random() * 100) - 50;
+      const statuses = ['pending', 'approved', 'rejected'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, total_collections, total_expenses, closing_balance, expected_balance, variance, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `cashrec-${i}`, tenantId, agent.id, new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().split('T')[0], opening, collections, expenses, closing, expected, variance, statuses[Math.floor(Math.random() * statuses.length)], `Cash reconciliation ${i}`
+      ).run();
+    }
+    
+    // ========== 32. INVOICES ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS invoices (id TEXT PRIMARY KEY, tenant_id TEXT, order_id TEXT, customer_id TEXT, invoice_number TEXT, invoice_date TEXT, due_date TEXT, subtotal REAL, tax_amount REAL, total_amount REAL, amount_paid REAL, status TEXT DEFAULT 'draft', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 15; i++) {
+      const order = orders[Math.floor(Math.random() * orders.length)];
+      const customer = customers.find(c => c.id === order.customer_id) || customers[0];
+      const subtotal = Math.floor(Math.random() * 5000) + 500;
+      const tax = subtotal * 0.15;
+      const total = subtotal + tax;
+      const statuses = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO invoices (id, tenant_id, order_id, customer_id, invoice_number, invoice_date, due_date, subtotal, tax_amount, total_amount, amount_paid, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `invoice-${i}`, tenantId, order.id, customer.id, `INV-${String(i).padStart(5, '0')}`, new Date().toISOString().split('T')[0], new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], subtotal, tax, total, statuses[Math.floor(Math.random() * statuses.length)] === 'paid' ? total : 0, statuses[Math.floor(Math.random() * statuses.length)], `Invoice ${i}`
+      ).run();
+    }
+    
+    // ========== 33. VAN LOADS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS van_loads (id TEXT PRIMARY KEY, tenant_id TEXT, van_id TEXT, load_number TEXT, load_date TEXT, warehouse_id TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 8; i++) {
+      const van = vans[Math.floor(Math.random() * vans.length)];
+      const statuses = ['pending', 'loading', 'loaded', 'dispatched', 'completed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO van_loads (id, tenant_id, van_id, load_number, load_date, warehouse_id, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `vanload-${i}`, tenantId, van.id, `VL-${String(i).padStart(5, '0')}`, new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'wh-main', statuses[Math.floor(Math.random() * statuses.length)], `Van load ${i}`
+      ).run();
+    }
+    
+    // ========== 34. INVENTORY ADJUSTMENTS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_adjustments (id TEXT PRIMARY KEY, tenant_id TEXT, adjustment_number TEXT, warehouse_id TEXT, adjustment_date TEXT, reason TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, approved_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 6; i++) {
+      const reasons = ['damage', 'expiry', 'theft', 'count_variance', 'quality_issue'];
+      const statuses = ['pending', 'approved', 'rejected', 'completed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, adjustment_date, reason, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `adjustment-${i}`, tenantId, `ADJ-${String(i).padStart(5, '0')}`, 'wh-main', new Date().toISOString().split('T')[0], reasons[Math.floor(Math.random() * reasons.length)], statuses[Math.floor(Math.random() * statuses.length)], `Adjustment ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 35. INVENTORY TRANSFERS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_transfers (id TEXT PRIMARY KEY, tenant_id TEXT, transfer_number TEXT, from_warehouse_id TEXT, to_warehouse_id TEXT, transfer_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 5; i++) {
+      const fromWh = warehouses[Math.floor(Math.random() * warehouses.length)];
+      let toWh = warehouses[Math.floor(Math.random() * warehouses.length)];
+      while (toWh.id === fromWh.id) toWh = warehouses[Math.floor(Math.random() * warehouses.length)];
+      const statuses = ['pending', 'in_transit', 'received', 'completed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO inventory_transfers (id, tenant_id, transfer_number, from_warehouse_id, to_warehouse_id, transfer_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `transfer-${i}`, tenantId, `TRF-${String(i).padStart(5, '0')}`, fromWh.id, toWh.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Transfer ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 36. STOCK COUNTS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS stock_counts (id TEXT PRIMARY KEY, tenant_id TEXT, count_number TEXT, warehouse_id TEXT, count_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 4; i++) {
+      const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
+      const statuses = ['pending', 'in_progress', 'completed', 'approved'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `stockcount-${i}`, tenantId, `SC-${String(i).padStart(5, '0')}`, warehouse.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Stock count ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 37. GOODS RECEIPTS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS goods_receipts (id TEXT PRIMARY KEY, tenant_id TEXT, receipt_number TEXT, supplier_id TEXT, warehouse_id TEXT, receipt_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 6; i++) {
+      const supplier = suppliers[Math.floor(Math.random() * suppliers.length)];
+      const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
+      const statuses = ['pending', 'received', 'inspected', 'completed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO goods_receipts (id, tenant_id, receipt_number, supplier_id, warehouse_id, receipt_date, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `grn-${i}`, tenantId, `GRN-${String(i).padStart(5, '0')}`, supplier.id, warehouse.id, new Date().toISOString().split('T')[0], statuses[Math.floor(Math.random() * statuses.length)], `Goods receipt ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 38. INVENTORY ISSUES ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS inventory_issues (id TEXT PRIMARY KEY, tenant_id TEXT, issue_number TEXT, warehouse_id TEXT, issue_date TEXT, issue_type TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 1; i <= 5; i++) {
+      const warehouse = warehouses[Math.floor(Math.random() * warehouses.length)];
+      const issueTypes = ['production', 'sample', 'damage', 'internal_use'];
+      const statuses = ['pending', 'approved', 'issued', 'completed'];
+      
+      await db.prepare(`INSERT OR REPLACE INTO inventory_issues (id, tenant_id, issue_number, warehouse_id, issue_date, issue_type, status, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+        `issue-${i}`, tenantId, `ISS-${String(i).padStart(5, '0')}`, warehouse.id, new Date().toISOString().split('T')[0], issueTypes[Math.floor(Math.random() * issueTypes.length)], statuses[Math.floor(Math.random() * statuses.length)], `Issue ${i}`, 'user-admin'
+      ).run();
+    }
+    
+    // ========== 39. TEAMS ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, manager_id TEXT, region_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    const teams = [
+      { id: 'team-north', name: 'North Sales Team', code: 'TEAM-N', manager_id: 'user-manager', region_id: 'region-north' },
+      { id: 'team-south', name: 'South Sales Team', code: 'TEAM-S', manager_id: 'user-manager', region_id: 'region-south' },
+      { id: 'team-field', name: 'Field Marketing Team', code: 'TEAM-FM', manager_id: 'user-manager', region_id: 'region-east' },
+    ];
+    for (const t of teams) {
+      await db.prepare(`INSERT OR REPLACE INTO teams (id, tenant_id, name, code, manager_id, region_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        t.id, tenantId, t.name, t.code, t.manager_id, t.region_id, 'active'
+      ).run();
+    }
+    
+    // ========== 40. TERRITORIES ==========
+    await db.prepare(`CREATE TABLE IF NOT EXISTS territories (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, area_id TEXT, assigned_agent_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
+    
+    for (let i = 0; i < areas.length; i++) {
+      const area = areas[i];
+      const agent = agents[i % agents.length];
+      await db.prepare(`INSERT OR REPLACE INTO territories (id, tenant_id, name, code, area_id, assigned_agent_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(
+        `territory-${i + 1}`, tenantId, `Territory ${area.name}`, `TER-${i + 1}`, area.id, agent.id, 'active'
+      ).run();
+    }
+    
+    return c.json({
+      success: true,
+      message: 'Demo data seeded successfully',
+      data: {
+        tenant: 1,
+        regions: regions.length,
+        areas: areas.length,
+        routes: routes.length,
+        categories: categories.length,
+        brands: brands.length,
+        products: products.length,
+        warehouses: warehouses.length,
+        customers: customers.length,
+        users: users.length,
+        agents: agents.length,
+        vans: vans.length,
+        orders: 25,
+        van_sales: 20,
+        visits: 30,
+        commissions: 15,
+        returns: 8,
+        refunds: 5,
+        credit_notes: 6,
+        stock_movements: 40,
+        campaigns: 10,
+        suppliers: suppliers.length,
+        price_lists: priceLists.length,
+        discounts: discounts.length,
+        settings: settings.length,
+        board_placements: 15,
+        surveys: surveys.length,
+        store_audits: 12,
+        kyc_cases: 8,
+        cash_reconciliations: 10,
+        invoices: 15,
+        van_loads: 8,
+        inventory_adjustments: 6,
+        inventory_transfers: 5,
+        stock_counts: 4,
+        goods_receipts: 6,
+        inventory_issues: 5,
+        teams: teams.length,
+        territories: areas.length
+      },
+      demo_logins: {
+        admin: { email: 'admin@demo.com', password: 'admin123' },
+        manager: { email: 'manager@demo.com', password: 'demo123' },
+        field_agent: { email: 'demo@salessync.com', password: 'demo123' },
+        agents: [
+          { email: 'agent1@demo.com', password: 'demo123' },
+          { email: 'agent2@demo.com', password: 'demo123' },
+          { email: 'agent3@demo.com', password: 'demo123' },
+          { email: 'agent4@demo.com', password: 'demo123' }
+        ]
+      }
+    });
+  } catch (error) {
+    console.error('Seed error:', error);
+    return c.json({ success: false, message: 'Failed to seed demo data', error: error.message }, 500);
+  }
+});
+
 export default app;
