@@ -351,6 +351,7 @@ import WarehouseManagementPage from './pages/inventory-management/WarehouseManag
 
 import AnalyticsDashboardPage from './pages/reports/AnalyticsDashboardPage'
 import ReportBuilderPage from './pages/reports/ReportBuilderPage'
+import ReportsHub from './pages/reports/ReportsHub'
 import ReportTemplatesPage from './pages/reports/ReportTemplatesPage'
 import CommissionSummaryReport from './pages/reports/finance/CommissionSummaryReport'
 import InventorySnapshotReport from './pages/reports/inventory/InventorySnapshotReport'
@@ -456,9 +457,10 @@ function App() {
             <Route path="analytics-dashboard/advanced" element={<AdvancedAnalyticsDashboard />} />
             <Route path="analytics-dashboard/executive" element={<ExecutiveDashboard />} />
             
-            {/* Reports Routes */}
-            <Route path="reports" element={<AnalyticsDashboardPage />} />
-            <Route path="reports/builder" element={<ReportBuilderPage />} />
+                        {/* Reports Routes */}
+                        <Route path="reports" element={<ReportsHub />} />
+                        <Route path="reports/hub" element={<ReportsHub />} />
+                        <Route path="reports/builder" element={<ReportBuilderPage />} />
             <Route path="reports/templates" element={<ReportTemplatesPage />} />
             <Route path="reports/create" element={<ReportCreate />} />
             <Route path="reports/:id" element={<ReportDetail />} />
