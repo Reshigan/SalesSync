@@ -9715,7 +9715,38 @@ app.post('/seed-demo-data', async (c) => {
     // Helper function to generate UUIDs
     const uuid = () => crypto.randomUUID();
     
-    // First, clean up existing demo data to avoid conflicts
+    // Create additional tables that might not exist in the schema
+    const createTableStatements = [
+      `CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, contact_person TEXT, phone TEXT, email TEXT, address TEXT, payment_terms INTEGER, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS price_lists (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS price_list_items (id TEXT PRIMARY KEY, price_list_id TEXT, product_id TEXT, price REAL, min_quantity INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS discounts (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, value REAL, min_order_value REAL, max_discount REAL, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS system_settings (id TEXT PRIMARY KEY, tenant_id TEXT, key TEXT, value TEXT, category TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS board_placements (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, agent_id TEXT, brand_id TEXT, placement_type TEXT, location_description TEXT, width REAL, height REAL, condition TEXT, photo_url TEXT, placement_date TEXT, expiry_date TEXT, status TEXT DEFAULT 'active', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS surveys (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, description TEXT, survey_type TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS store_audits (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, agent_id TEXT, audit_date TEXT, audit_type TEXT, score REAL, max_score REAL, status TEXT DEFAULT 'completed', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS kyc_cases (id TEXT PRIMARY KEY, tenant_id TEXT, customer_id TEXT, case_number TEXT, status TEXT, risk_level TEXT, assigned_to TEXT, due_date TEXT, completed_date TEXT, notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS cash_reconciliations (id TEXT PRIMARY KEY, tenant_id TEXT, agent_id TEXT, reconciliation_date TEXT, opening_balance REAL, total_collections REAL, total_expenses REAL, closing_balance REAL, expected_balance REAL, variance REAL, status TEXT DEFAULT 'pending', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS invoices (id TEXT PRIMARY KEY, tenant_id TEXT, order_id TEXT, customer_id TEXT, invoice_number TEXT, invoice_date TEXT, due_date TEXT, subtotal REAL, tax_amount REAL, total_amount REAL, amount_paid REAL, status TEXT DEFAULT 'draft', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS van_loads (id TEXT PRIMARY KEY, tenant_id TEXT, van_id TEXT, load_number TEXT, load_date TEXT, warehouse_id TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS inventory_adjustments (id TEXT PRIMARY KEY, tenant_id TEXT, adjustment_number TEXT, warehouse_id TEXT, adjustment_date TEXT, reason TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, approved_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS inventory_transfers (id TEXT PRIMARY KEY, tenant_id TEXT, transfer_number TEXT, from_warehouse_id TEXT, to_warehouse_id TEXT, transfer_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS stock_counts (id TEXT PRIMARY KEY, tenant_id TEXT, count_number TEXT, warehouse_id TEXT, count_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS goods_receipts (id TEXT PRIMARY KEY, tenant_id TEXT, receipt_number TEXT, supplier_id TEXT, warehouse_id TEXT, receipt_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS inventory_issues (id TEXT PRIMARY KEY, tenant_id TEXT, issue_number TEXT, warehouse_id TEXT, issue_date TEXT, issue_type TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, manager_id TEXT, region_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS territories (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, area_id TEXT, assigned_agent_id TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`
+    ];
+    
+    for (const stmt of createTableStatements) {
+      try {
+        await db.prepare(stmt).run();
+      } catch (e) {
+        console.log('Table creation error (may already exist):', e.message);
+      }
+    }
+    
+    // Clean up existing demo data to avoid conflicts (in reverse dependency order)
     const cleanupTables = [
       'territories', 'teams', 'inventory_issues', 'goods_receipts', 'stock_counts',
       'inventory_transfers', 'inventory_adjustments', 'van_loads', 'invoices',
@@ -9731,7 +9762,7 @@ app.post('/seed-demo-data', async (c) => {
       try {
         await db.prepare(`DELETE FROM ${table} WHERE tenant_id = ?`).bind(tenantId).run();
       } catch (e) {
-        // Table might not exist, continue
+        // Table might not exist or have different schema, continue
       }
     }
     
@@ -10091,8 +10122,6 @@ app.post('/seed-demo-data', async (c) => {
     }
     
     // ========== 24. SUPPLIERS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, contact_person TEXT, phone TEXT, email TEXT, address TEXT, payment_terms INTEGER, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
     const suppliers = [
       { id: 'supplier-1', name: 'Coca-Cola Beverages SA', code: 'SUP001', contact: 'James Wilson', phone: '+27111111111', email: 'orders@cocacola.co.za', address: '1 Coca-Cola Way, Johannesburg', terms: 30 },
       { id: 'supplier-2', name: 'PepsiCo South Africa', code: 'SUP002', contact: 'Mary Thompson', phone: '+27112222222', email: 'orders@pepsico.co.za', address: '2 Pepsi Street, Cape Town', terms: 30 },
@@ -10107,8 +10136,6 @@ app.post('/seed-demo-data', async (c) => {
     }
     
     // ========== 25. PRICE LISTS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS price_lists (id TEXT PRIMARY KEY, tenant_id TEXT, name TEXT, code TEXT, type TEXT, start_date TEXT, end_date TEXT, status TEXT DEFAULT 'active', created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
     const priceLists = [
       { id: 'pricelist-retail', name: 'Retail Price List', code: 'PL-RETAIL', type: 'retail' },
       { id: 'pricelist-wholesale', name: 'Wholesale Price List', code: 'PL-WHOLESALE', type: 'wholesale' },
@@ -10121,8 +10148,6 @@ app.post('/seed-demo-data', async (c) => {
     }
     
     // ========== 26. PRICE LIST ITEMS ==========
-    await db.prepare(`CREATE TABLE IF NOT EXISTS price_list_items (id TEXT PRIMARY KEY, price_list_id TEXT, product_id TEXT, price REAL, min_quantity INTEGER DEFAULT 1, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`).run();
-    
     for (const pl of priceLists) {
       for (const p of products) {
         let price = p.price;
