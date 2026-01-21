@@ -4653,7 +4653,7 @@ api.get('/field-operations/analytics', async (c) => {
   try {
     const [topAgents, recentActivities, territoryCoverage] = await Promise.all([
       db.prepare(`
-        SELECT u.id as agent_id, u.name as agent_name, 
+        SELECT u.id as agent_id, COALESCE(u.first_name || ' ' || u.last_name, u.email) as agent_name, 
                COUNT(v.id) as completed_tasks, 85 as performance_score,
                'Territory A' as territory_name
         FROM users u
@@ -4662,7 +4662,7 @@ api.get('/field-operations/analytics', async (c) => {
         GROUP BY u.id ORDER BY completed_tasks DESC LIMIT 5
       `).bind(tenantId).all(),
       db.prepare(`
-        SELECT v.id, u.name as agent_name, 'Visit completed' as description,
+        SELECT v.id, COALESCE(u.first_name || ' ' || u.last_name, u.email) as agent_name, 'Visit completed' as description,
                v.created_at, c.address as location, 'visit_completed' as type
         FROM visits v
         LEFT JOIN users u ON v.agent_id = u.id
@@ -5377,6 +5377,240 @@ api.post('/field-operations/tasks/bulk-update-status', async (c) => {
         .bind(status, now, taskId, tenantId).run();
     }
     return c.json({ success: true, message: `${task_ids.length} tasks updated` });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== FIELD OPERATIONS DASHBOARD ====================
+
+api.get('/field-operations/dashboard', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { start_date, end_date } = c.req.query();
+  
+  try {
+    // Get agent stats
+    const agentStats = await db.prepare(`
+      SELECT COUNT(*) as total_agents,
+             SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active_agents,
+             SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive_agents
+      FROM agents WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    // Get task stats
+    const taskStats = await db.prepare(`
+      SELECT COUNT(*) as total_tasks,
+             SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_tasks,
+             SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_tasks
+      FROM field_tasks WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    // Get visit stats
+    const visitStats = await db.prepare(`
+      SELECT COUNT(*) as total_visits,
+             SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_visits
+      FROM visits WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    // Get territory stats
+    const territoryStats = await db.prepare(`
+      SELECT COUNT(*) as territories_covered FROM territories WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({
+      success: true,
+      data: {
+        total_agents: agentStats?.total_agents || 0,
+        active_agents: agentStats?.active_agents || 0,
+        inactive_agents: agentStats?.inactive_agents || 0,
+        total_tasks: taskStats?.total_tasks || 0,
+        completed_tasks: taskStats?.completed_tasks || 0,
+        pending_tasks: taskStats?.pending_tasks || 0,
+        task_completion_growth: 5.2,
+        total_visits: visitStats?.total_visits || 0,
+        completed_visits: visitStats?.completed_visits || 0,
+        territories_covered: territoryStats?.territories_covered || 0,
+        coverage_percentage: 85,
+        average_performance_score: 78,
+        performance_trend: 2.3
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== BOARD PLACEMENTS ====================
+
+api.get('/field-operations/boards', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { search, status, customer_id, agent_id, page = 1, limit = 20 } = c.req.query();
+  
+  try {
+    let query = `
+      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+             bp.placement_type as board_type, bp.location_description as location,
+             bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+             bp.expiry_date, bp.status, bp.notes, bp.created_at,
+             'BP-' || substr(bp.id, -8) as placement_number,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name,
+             0 as commission_amount
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN agents a ON bp.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE bp.tenant_id = ?
+    `;
+    const params = [tenantId];
+    
+    if (search) { query += ' AND (bp.id LIKE ? OR c.name LIKE ? OR bp.location_description LIKE ?)'; params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
+    if (status) { query += ' AND bp.status = ?'; params.push(status); }
+    if (customer_id) { query += ' AND bp.customer_id = ?'; params.push(customer_id); }
+    if (agent_id) { query += ' AND bp.agent_id = ?'; params.push(agent_id); }
+    
+    query += ` ORDER BY bp.created_at DESC LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+    
+    const placements = await db.prepare(query).bind(...params).all();
+    const countResult = await db.prepare('SELECT COUNT(*) as total FROM board_placements WHERE tenant_id = ?').bind(tenantId).first();
+    
+    return c.json({
+      success: true,
+      data: placements.results || [],
+      pagination: { page: parseInt(page), limit: parseInt(limit), total: countResult?.total || 0 }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/field-operations/boards/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const placement = await db.prepare(`
+      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+             bp.placement_type as board_type, bp.location_description as location,
+             bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+             bp.expiry_date, bp.status, bp.notes, bp.created_at,
+             'BP-' || substr(bp.id, -8) as placement_number,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name,
+             0 as commission_amount
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN agents a ON bp.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
+      WHERE bp.id = ? AND bp.tenant_id = ?
+    `).bind(id, tenantId).first();
+    
+    if (!placement) {
+      return c.json({ success: false, message: 'Board placement not found' }, 404);
+    }
+    
+    return c.json({ success: true, data: placement });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/field-operations/boards', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const data = await c.req.json();
+  
+  try {
+    const id = `bp-${Date.now()}`;
+    const now = new Date().toISOString();
+    
+    await db.prepare(`
+      INSERT INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, photo_url, placement_date, expiry_date, status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, tenantId, data.customer_id, data.agent_id, data.brand_id || null, 
+      data.placement_type || data.board_type || 'standard', data.location_description || data.location || '',
+      data.width || null, data.height || null, data.condition || 'good', data.photo_url || null,
+      data.placement_date || now.split('T')[0], data.expiry_date || null, 'active', data.notes || '', now
+    ).run();
+    
+    return c.json({ success: true, data: { id, placement_number: `BP-${id.slice(-8)}` } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/field-operations/boards/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const data = await c.req.json();
+  
+  try {
+    await db.prepare(`
+      UPDATE board_placements SET 
+        customer_id = COALESCE(?, customer_id),
+        agent_id = COALESCE(?, agent_id),
+        brand_id = COALESCE(?, brand_id),
+        placement_type = COALESCE(?, placement_type),
+        location_description = COALESCE(?, location_description),
+        width = COALESCE(?, width),
+        height = COALESCE(?, height),
+        condition = COALESCE(?, condition),
+        notes = COALESCE(?, notes)
+      WHERE id = ? AND tenant_id = ?
+    `).bind(
+      data.customer_id, data.agent_id, data.brand_id, 
+      data.placement_type || data.board_type, data.location_description || data.location,
+      data.width, data.height, data.condition, data.notes, id, tenantId
+    ).run();
+    
+    return c.json({ success: true, message: 'Board placement updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/field-operations/boards/:id/reverse', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    // Get the original placement
+    const placement = await db.prepare('SELECT * FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!placement) {
+      return c.json({ success: false, message: 'Board placement not found' }, 404);
+    }
+    
+    if (placement.status === 'reversed') {
+      return c.json({ success: false, message: 'Board placement already reversed' }, 400);
+    }
+    
+    // Update status to reversed
+    await db.prepare(`
+      UPDATE board_placements SET status = 'reversed'
+      WHERE id = ? AND tenant_id = ?
+    `).bind(id, tenantId).run();
+    
+    return c.json({ success: true, message: 'Board placement reversed successfully' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/field-operations/boards/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Board placement deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
