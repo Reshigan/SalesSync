@@ -127,6 +127,154 @@ class CashReconciliationService {
       throw error
     }
   }
+
+  // Cash Reconciliations - New lifecycle methods matching backend
+  async getReconciliations(filter?: any): Promise<{ data: CashReconciliation[], total: number }> {
+    try {
+      const response = await apiClient.get('/cash-reconciliations', { params: filter })
+      return { data: response.data.data || [], total: response.data.total || 0 }
+    } catch (error) {
+      console.error('Failed to fetch cash reconciliations:', error)
+      throw error
+    }
+  }
+
+  async getReconciliation(id: string): Promise<CashReconciliation & { items: CashReconciliationItem[] }> {
+    try {
+      const response = await apiClient.get(`/cash-reconciliations/${id}`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async createReconciliation(data: {
+    agent_id?: string
+    reconciliation_date: string
+    opening_balance?: number
+    expected_cash?: number
+    actual_cash?: number
+    notes?: string
+  }): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.post('/cash-reconciliations', data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async updateReconciliation(id: string, data: Partial<CashReconciliation>): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.put(`/cash-reconciliations/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async addReconciliationItem(id: string, data: {
+    payment_id?: string
+    payment_type?: string
+    amount: number
+    reference?: string
+    notes?: string
+  }): Promise<CashReconciliationItem> {
+    try {
+      const response = await apiClient.post(`/cash-reconciliations/${id}/items`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to add reconciliation item:', error)
+      throw error
+    }
+  }
+
+  async submitReconciliation(id: string): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.post(`/cash-reconciliations/${id}/submit`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to submit cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async approveReconciliation(id: string): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.post(`/cash-reconciliations/${id}/approve`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to approve cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async rejectReconciliation(id: string, reason: string): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.post(`/cash-reconciliations/${id}/reject`, { rejection_reason: reason })
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to reject cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async closeReconciliation(id: string): Promise<CashReconciliation> {
+    try {
+      const response = await apiClient.post(`/cash-reconciliations/${id}/close`)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to close cash reconciliation:', error)
+      throw error
+    }
+  }
+
+  async getReconciliationStats(): Promise<any> {
+    try {
+      const response = await apiClient.get('/cash-reconciliations/stats')
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to fetch reconciliation stats:', error)
+      throw error
+    }
+  }
+}
+
+// Additional interfaces for new endpoints
+export interface CashReconciliation {
+  id: string
+  tenant_id: string
+  agent_id?: string
+  reconciliation_date: string
+  opening_balance: number
+  expected_cash: number
+  actual_cash: number
+  discrepancy: number
+  discrepancy_reason?: string
+  status: 'open' | 'submitted' | 'approved' | 'rejected' | 'closed'
+  submitted_at?: string
+  approved_by?: string
+  approved_at?: string
+  rejection_reason?: string
+  closed_by?: string
+  closed_at?: string
+  created_by?: string
+  created_at: string
+  updated_at?: string
+}
+
+export interface CashReconciliationItem {
+  id: string
+  reconciliation_id: string
+  payment_id?: string
+  payment_type: string
+  amount: number
+  reference?: string
+  notes?: string
+  created_at: string
 }
 
 export const cashReconciliationService = new CashReconciliationService()
