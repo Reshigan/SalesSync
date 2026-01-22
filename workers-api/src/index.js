@@ -11632,9 +11632,9 @@ api.post('/seed/marketing', async (c) => {
     
     for (const camp of campaigns) {
       await db.prepare(`
-        INSERT OR REPLACE INTO campaigns (id, tenant_id, campaign_code, name, description, type, status, start_date, end_date, budget, spent_amount, target_audience, created_by, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'admin-user-001', ?, ?)
-      `).bind(camp.id, tenantId, camp.code, camp.name, `${camp.name} - Marketing campaign`, camp.type, camp.status, today, nextQuarter, camp.budget, camp.target, now, now).run();
+        INSERT OR REPLACE INTO campaigns (id, tenant_id, name, description, type, status, start_date, end_date, budget, spent_amount, target_audience, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'admin-user-001', ?, ?)
+      `).bind(camp.id, tenantId, camp.name, `${camp.name} - Marketing campaign`, camp.type, camp.status, today, nextQuarter, camp.budget, camp.target, now, now).run();
     }
     
     // Seed promotions with different types
