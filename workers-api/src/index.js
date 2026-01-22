@@ -10817,6 +10817,219 @@ api.get('/reports/board-placements', async (c) => {
   }
 });
 
+// ============================================
+// ROUTE ALIASES - Map frontend expected paths to existing endpoints
+// ============================================
+
+// Van Sales route aliases
+api.get('/van-sales/loads', async (c) => {
+  // Redirect to existing van-loads endpoint
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const loads = await db.prepare(`
+      SELECT vl.*, v.registration_number as van_registration, u.first_name || ' ' || u.last_name as agent_name
+      FROM van_loads vl
+      LEFT JOIN vans v ON vl.van_id = v.id
+      LEFT JOIN users u ON vl.agent_id = u.id
+      WHERE vl.tenant_id = ?
+      ORDER BY vl.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: loads.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/van-sales/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const returns = await db.prepare(`
+      SELECT vr.*, v.registration_number as van_registration, c.name as customer_name
+      FROM van_returns vr
+      LEFT JOIN vans v ON vr.van_id = v.id
+      LEFT JOIN customers c ON vr.customer_id = c.id
+      WHERE vr.tenant_id = ?
+      ORDER BY vr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: returns.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/van-sales/cash-reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const reconciliations = await db.prepare(`
+      SELECT cr.*, v.registration_number as van_registration, u.first_name || ' ' || u.last_name as agent_name
+      FROM cash_reconciliations cr
+      LEFT JOIN vans v ON cr.van_id = v.id
+      LEFT JOIN users u ON cr.agent_id = u.id
+      WHERE cr.tenant_id = ?
+      ORDER BY cr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: reconciliations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Finance route aliases
+api.get('/finance/cash-reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const reconciliations = await db.prepare(`
+      SELECT cr.*, v.registration_number as van_registration, u.first_name || ' ' || u.last_name as agent_name
+      FROM cash_reconciliations cr
+      LEFT JOIN vans v ON cr.van_id = v.id
+      LEFT JOIN users u ON cr.agent_id = u.id
+      WHERE cr.tenant_id = ?
+      ORDER BY cr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: reconciliations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Payments endpoint
+api.get('/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const payments = await db.prepare(`
+      SELECT p.*, c.name as customer_name, i.invoice_number
+      FROM payments p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      LEFT JOIN invoices i ON p.invoice_id = i.id
+      WHERE p.tenant_id = ?
+      ORDER BY p.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: payments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/payments/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  const { id } = c.req.param();
+  try {
+    const payment = await db.prepare(`
+      SELECT p.*, c.name as customer_name, i.invoice_number
+      FROM payments p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      LEFT JOIN invoices i ON p.invoice_id = i.id
+      WHERE p.id = ? AND p.tenant_id = ?
+    `).bind(id, tenantId).first();
+    if (!payment) {
+      return c.json({ success: false, message: 'Payment not found' }, 404);
+    }
+    return c.json({ success: true, data: payment });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  const userId = c.get('userId');
+  try {
+    const data = await c.req.json();
+    const id = crypto.randomUUID();
+    const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
+    
+    await db.prepare(`
+      INSERT INTO payments (id, tenant_id, payment_number, customer_id, invoice_id, amount, payment_date, payment_method, reference, status, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, paymentNumber, data.customer_id, data.invoice_id, data.amount, data.payment_date, data.payment_method, data.reference, 'pending', data.notes, userId).run();
+    
+    return c.json({ success: true, data: { id, payment_number: paymentNumber } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// KYC endpoint alias
+api.get('/kyc', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const cases = await db.prepare(`
+      SELECT k.*, c.name as customer_name
+      FROM kyc_cases k
+      LEFT JOIN customers c ON k.customer_id = c.id
+      WHERE k.tenant_id = ?
+      ORDER BY k.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: cases.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Field Operations competitor alias
+api.get('/field-operations/competitor', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const competitors = await db.prepare(`
+      SELECT * FROM competitors WHERE tenant_id = ? ORDER BY created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: competitors.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// GPS tracking endpoint
+api.get('/gps/agents/active', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const agents = await db.prepare(`
+      SELECT a.*, u.first_name, u.last_name, u.email,
+             gl.latitude, gl.longitude, gl.recorded_at as last_location_time
+      FROM agents a
+      LEFT JOIN users u ON a.user_id = u.id
+      LEFT JOIN (
+        SELECT agent_id, latitude, longitude, recorded_at,
+               ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY recorded_at DESC) as rn
+        FROM gps_locations
+      ) gl ON a.id = gl.agent_id AND gl.rn = 1
+      WHERE a.tenant_id = ? AND a.status = 'active'
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: agents.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Inventory GRN endpoint
+api.get('/inventory/grn', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const grns = await db.prepare(`
+      SELECT g.*, w.name as warehouse_name, s.name as supplier_name
+      FROM goods_received_notes g
+      LEFT JOIN warehouses w ON g.warehouse_id = w.id
+      LEFT JOIN suppliers s ON g.supplier_id = s.id
+      WHERE g.tenant_id = ?
+      ORDER BY g.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: grns.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
