@@ -44,21 +44,57 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ success: false, message: 'Invalid credentials' }, 401);
     }
     
-    // Generate JWT token
-    const token = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, c.env.JWT_SECRET || 'default-secret');
+    // Generate JWT tokens
+    const accessToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, c.env.JWT_SECRET || 'default-secret');
+    const refreshToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role, type: 'refresh' }, c.env.JWT_SECRET || 'default-secret', 604800); // 7 days
+    
+    // Load user permissions
+    let permissions = [];
+    try {
+      const userPermissions = await db.prepare(`
+        SELECT DISTINCT p.name 
+        FROM permissions p
+        JOIN role_permissions rp ON p.id = rp.permission_id
+        JOIN user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = ? AND ur.is_active = 1
+        AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+      `).bind(user.id).all();
+      permissions = userPermissions.results?.map(p => p.name) || [];
+    } catch (e) {
+      // Permissions table may not exist yet, continue with empty permissions
+      console.log('Could not load permissions:', e.message);
+    }
+    
+    // Update last login
+    try {
+      await db.prepare('UPDATE users SET last_login = datetime("now") WHERE id = ?').bind(user.id).run();
+    } catch (e) {
+      console.log('Could not update last login:', e.message);
+    }
     
     return c.json({
       success: true,
       data: {
-        token,
         user: {
           id: user.id,
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          tenantId: user.tenant_id
-        }
+          status: user.status || 'active',
+          permissions: permissions,
+          tenantId: user.tenant_id,
+          lastLogin: user.last_login,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at
+        },
+        tokens: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: 86400,
+          token_type: 'Bearer'
+        },
+        token: accessToken // Keep for backward compatibility
       }
     });
   } catch (error) {
@@ -68,10 +104,10 @@ app.post('/api/auth/login', async (c) => {
 });
 
 // Simple JWT generation (Workers-compatible)
-async function generateToken(payload, secret) {
+async function generateToken(payload, secret, expiresIn = 86400) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
-  const tokenPayload = { ...payload, iat: now, exp: now + 86400 }; // 24 hours
+  const tokenPayload = { ...payload, iat: now, exp: now + expiresIn };
   
   const base64Header = btoa(JSON.stringify(header));
   const base64Payload = btoa(JSON.stringify(tokenPayload));

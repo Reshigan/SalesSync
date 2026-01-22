@@ -59,7 +59,7 @@ export default function SalesOrderCreate() {
       
       // Extract data from settled promises
       if (customersRes.status === 'fulfilled') {
-        const data = customersRes.value?.data?.data || customersRes.value?.data || []
+        const data = customersRes.value?.data?.data?.customers || customersRes.value?.data?.data || customersRes.value?.data?.customers || customersRes.value?.data || []
         setCustomers(Array.isArray(data) ? data : [])
       }
       if (salesRepsRes.status === 'fulfilled') {
@@ -67,7 +67,8 @@ export default function SalesOrderCreate() {
         setSalesReps(Array.isArray(data) ? data : [])
       }
       if (productsRes.status === 'fulfilled') {
-        const data = productsRes.value?.data?.data || productsRes.value?.data?.products || productsRes.value?.data || []
+        // productsService.getProducts() returns { products, categories, brands, pagination } directly
+        const data = productsRes.value?.products || productsRes.value?.data?.data?.products || productsRes.value?.data?.products || productsRes.value?.data || []
         setProducts(Array.isArray(data) ? data : [])
       }
       if (discountsRes.status === 'fulfilled') {
