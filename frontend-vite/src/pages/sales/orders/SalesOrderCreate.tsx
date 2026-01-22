@@ -59,8 +59,22 @@ export default function SalesOrderCreate() {
       
       // Extract data from settled promises
       if (customersRes.status === 'fulfilled') {
-        const data = customersRes.value?.data?.data?.customers || customersRes.value?.data?.data || customersRes.value?.data?.customers || customersRes.value?.data || []
-        setCustomers(Array.isArray(data) ? data : [])
+        // Handle various response shapes from the API
+        const response = customersRes.value
+        let customersData: any[] = []
+        
+        // Try different paths to find the customers array
+        if (response?.data?.data?.customers && Array.isArray(response.data.data.customers)) {
+          customersData = response.data.data.customers
+        } else if (response?.data?.customers && Array.isArray(response.data.customers)) {
+          customersData = response.data.customers
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          customersData = response.data.data
+        } else if (response?.data && Array.isArray(response.data)) {
+          customersData = response.data
+        }
+        
+        setCustomers(customersData)
       }
       if (salesRepsRes.status === 'fulfilled') {
         const data = salesRepsRes.value?.data?.data || salesRepsRes.value?.data || []
@@ -68,8 +82,23 @@ export default function SalesOrderCreate() {
       }
       if (productsRes.status === 'fulfilled') {
         // productsService.getProducts() returns { products, categories, brands, pagination } directly
-        const data = productsRes.value?.products || productsRes.value?.data?.data?.products || productsRes.value?.data?.products || productsRes.value?.data || []
-        setProducts(Array.isArray(data) ? data : [])
+        const response = productsRes.value
+        let productsData: any[] = []
+        
+        // Try different paths to find the products array
+        if (response?.products && Array.isArray(response.products)) {
+          productsData = response.products
+        } else if (response?.data?.data?.products && Array.isArray(response.data.data.products)) {
+          productsData = response.data.data.products
+        } else if (response?.data?.products && Array.isArray(response.data.products)) {
+          productsData = response.data.products
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          productsData = response.data.data
+        } else if (response?.data && Array.isArray(response.data)) {
+          productsData = response.data
+        }
+        
+        setProducts(productsData)
       }
       if (discountsRes.status === 'fulfilled') {
         const data = discountsRes.value || []
