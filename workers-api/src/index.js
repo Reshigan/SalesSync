@@ -44,21 +44,57 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ success: false, message: 'Invalid credentials' }, 401);
     }
     
-    // Generate JWT token
-    const token = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, c.env.JWT_SECRET || 'default-secret');
+    // Generate JWT tokens
+    const accessToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, c.env.JWT_SECRET || 'default-secret');
+    const refreshToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role, type: 'refresh' }, c.env.JWT_SECRET || 'default-secret', 604800); // 7 days
+    
+    // Load user permissions
+    let permissions = [];
+    try {
+      const userPermissions = await db.prepare(`
+        SELECT DISTINCT p.name 
+        FROM permissions p
+        JOIN role_permissions rp ON p.id = rp.permission_id
+        JOIN user_roles ur ON rp.role_id = ur.role_id
+        WHERE ur.user_id = ? AND ur.is_active = 1
+        AND (ur.expires_at IS NULL OR ur.expires_at > datetime('now'))
+      `).bind(user.id).all();
+      permissions = userPermissions.results?.map(p => p.name) || [];
+    } catch (e) {
+      // Permissions table may not exist yet, continue with empty permissions
+      console.log('Could not load permissions:', e.message);
+    }
+    
+    // Update last login
+    try {
+      await db.prepare('UPDATE users SET last_login = datetime("now") WHERE id = ?').bind(user.id).run();
+    } catch (e) {
+      console.log('Could not update last login:', e.message);
+    }
     
     return c.json({
       success: true,
       data: {
-        token,
         user: {
           id: user.id,
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          tenantId: user.tenant_id
-        }
+          status: user.status || 'active',
+          permissions: permissions,
+          tenantId: user.tenant_id,
+          lastLogin: user.last_login,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at
+        },
+        tokens: {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          expires_in: 86400,
+          token_type: 'Bearer'
+        },
+        token: accessToken // Keep for backward compatibility
       }
     });
   } catch (error) {
@@ -68,10 +104,10 @@ app.post('/api/auth/login', async (c) => {
 });
 
 // Simple JWT generation (Workers-compatible)
-async function generateToken(payload, secret) {
+async function generateToken(payload, secret, expiresIn = 86400) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
-  const tokenPayload = { ...payload, iat: now, exp: now + 86400 }; // 24 hours
+  const tokenPayload = { ...payload, iat: now, exp: now + expiresIn };
   
   const base64Header = btoa(JSON.stringify(header));
   const base64Payload = btoa(JSON.stringify(tokenPayload));
@@ -408,28 +444,51 @@ api.get('/orders/:id', async (c) => {
 api.post('/orders', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const body = await c.req.json();
+  const userId = c.get('userId');
   
-  const id = uuidv4();
-  const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-  
-  await db.prepare(`
-    INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id, body.order_date || new Date().toISOString().split('T')[0], body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.payment_method, 'pending', 'pending', body.notes ?? null).run();
-  
-  // Insert order items
-  if (body.items && body.items.length > 0) {
-    for (const item of body.items) {
-      const itemId = uuidv4();
-      await db.prepare(`
-        INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total).run();
+  try {
+    const body = await c.req.json();
+    
+    const id = uuidv4();
+    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    
+    // Calculate totals from items if not provided
+    let subtotal = body.subtotal || 0;
+    let totalAmount = body.total_amount || 0;
+    
+    if (body.items && body.items.length > 0 && !body.subtotal) {
+      // Fetch product prices and calculate totals
+      for (const item of body.items) {
+        const product = await db.prepare('SELECT price FROM products WHERE id = ?').bind(item.product_id).first();
+        const unitPrice = item.unit_price || (product?.price || 0);
+        const lineTotal = unitPrice * (item.quantity || 1);
+        item.unit_price = unitPrice;
+        item.line_total = lineTotal;
+        subtotal += lineTotal;
+      }
+      totalAmount = subtotal - (body.discount_amount || 0) + (body.tax_amount || 0);
     }
+    
+    await db.prepare(`
+      INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id || userId, body.order_date || new Date().toISOString().split('T')[0], subtotal, body.tax_amount || 0, body.discount_amount || 0, totalAmount, body.payment_method || 'cash', 'pending', 'pending', body.notes ?? null).run();
+    
+    // Insert order items
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        const itemId = uuidv4();
+        await db.prepare(`
+          INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total || 0).run();
+      }
+    }
+    
+    return c.json({ success: true, data: { id, order_number: orderNumber }, message: 'Order created' }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
   }
-  
-  return c.json({ success: true, data: { id, orderNumber }, message: 'Order created' }, 201);
 });
 
 // ==================== VAN SALES ====================
@@ -7186,17 +7245,25 @@ api.get('/board-placements', async (c) => {
   const { status, customer_id, brand_id, agent_id, limit = 50, offset = 0 } = c.req.query();
   
   try {
-    let query = `SELECT bp.*, c.name as customer_name, u.name as agent_name 
+    // Use the actual existing table schema
+    let query = `SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+                 bp.placement_type as board_type, bp.location_description as placement_location,
+                 bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+                 bp.expiry_date, bp.status, bp.notes, bp.created_at,
+                 'BP-' || substr(bp.id, -8) as placement_number,
+                 c.name as customer_name,
+                 COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name
                  FROM board_placements bp 
                  LEFT JOIN customers c ON bp.customer_id = c.id 
-                 LEFT JOIN users u ON bp.created_by = u.id 
+                 LEFT JOIN agents a ON bp.agent_id = a.id
+                 LEFT JOIN users u ON a.user_id = u.id
                  WHERE bp.tenant_id = ?`;
     const params = [tenantId];
     
     if (status) { query += ' AND bp.status = ?'; params.push(status); }
     if (customer_id) { query += ' AND bp.customer_id = ?'; params.push(customer_id); }
     if (brand_id) { query += ' AND bp.brand_id = ?'; params.push(brand_id); }
-    if (agent_id) { query += ' AND bp.created_by = ?'; params.push(agent_id); }
+    if (agent_id) { query += ' AND bp.agent_id = ?'; params.push(agent_id); }
     
     query += ' ORDER BY bp.created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
@@ -7215,26 +7282,23 @@ api.get('/board-placements/:id', async (c) => {
   
   try {
     const placement = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, u.name as agent_name 
+      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+             bp.placement_type as board_type, bp.location_description as placement_location,
+             bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+             bp.expiry_date, bp.status, bp.notes, bp.created_at,
+             'BP-' || substr(bp.id, -8) as placement_number,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name
       FROM board_placements bp 
       LEFT JOIN customers c ON bp.customer_id = c.id 
-      LEFT JOIN users u ON bp.created_by = u.id 
+      LEFT JOIN agents a ON bp.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
       WHERE bp.id = ? AND bp.tenant_id = ?
     `).bind(id, tenantId).first();
     
     if (!placement) return c.json({ success: false, message: 'Board placement not found' }, 404);
     
-    // Get photos
-    const { results: photos } = await db.prepare(
-      'SELECT * FROM board_placement_photos WHERE placement_id = ? ORDER BY created_at DESC'
-    ).bind(id).all();
-    
-    // Get status history
-    const { results: history } = await db.prepare(
-      'SELECT * FROM board_placement_history WHERE placement_id = ? ORDER BY created_at DESC'
-    ).bind(id).all();
-    
-    return c.json({ success: true, data: { ...placement, photos: photos || [], history: history || [] } });
+    return c.json({ success: true, data: placement });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -7243,28 +7307,23 @@ api.get('/board-placements/:id', async (c) => {
 api.post('/board-placements', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const userId = c.get('userId');
   const body = await c.req.json();
   
   try {
-    const id = crypto.randomUUID();
+    const id = `bp-${Date.now()}`;
     const now = new Date().toISOString();
     
     await db.prepare(`
-      INSERT INTO board_placements (id, tenant_id, customer_id, brand_id, board_type, board_size, 
-        placement_location, latitude, longitude, status, notes, visit_id, created_by, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?, ?, ?)
-    `).bind(id, tenantId, body.customer_id ?? null, body.brand_id ?? null, body.board_type ?? null, 
-      body.board_size ?? null, body.placement_location ?? null, body.latitude ?? null, body.longitude ?? null,
-      body.notes ?? null, body.visit_id ?? null, userId, now, now).run();
+      INSERT INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, photo_url, placement_date, expiry_date, status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, tenantId, body.customer_id, body.agent_id || null, body.brand_id || null, 
+      body.placement_type || body.board_type || 'standard', body.location_description || body.placement_location || '',
+      body.width || null, body.height || null, body.condition || 'good', body.photo_url || null,
+      body.placement_date || now.split('T')[0], body.expiry_date || null, 'active', body.notes || '', now
+    ).run();
     
-    // Record history
-    await db.prepare(`
-      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
-      VALUES (?, ?, 'planned', ?, 'Board placement created', ?)
-    `).bind(crypto.randomUUID(), id, userId, now).run();
-    
-    return c.json({ success: true, data: { id }, message: 'Board placement created' });
+    return c.json({ success: true, data: { id, placement_number: `BP-${id.slice(-8)}` } });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -7281,14 +7340,18 @@ api.put('/board-placements/:id', async (c) => {
     if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
     
     await db.prepare(`
-      UPDATE board_placements SET customer_id = ?, brand_id = ?, board_type = ?, board_size = ?,
-        placement_location = ?, latitude = ?, longitude = ?, notes = ?, updated_at = ?
+      UPDATE board_placements SET customer_id = ?, agent_id = ?, brand_id = ?, placement_type = ?,
+        location_description = ?, width = ?, height = ?, condition = ?, photo_url = ?,
+        placement_date = ?, expiry_date = ?, notes = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.customer_id ?? existing.customer_id, body.brand_id ?? existing.brand_id, 
-      body.board_type ?? existing.board_type, body.board_size ?? existing.board_size,
-      body.placement_location ?? existing.placement_location, body.latitude ?? existing.latitude,
-      body.longitude ?? existing.longitude, body.notes ?? existing.notes,
-      new Date().toISOString(), id, tenantId).run();
+    `).bind(
+      body.customer_id ?? existing.customer_id, body.agent_id ?? existing.agent_id,
+      body.brand_id ?? existing.brand_id, body.placement_type ?? body.board_type ?? existing.placement_type,
+      body.location_description ?? body.placement_location ?? existing.location_description,
+      body.width ?? existing.width, body.height ?? existing.height, body.condition ?? existing.condition,
+      body.photo_url ?? existing.photo_url, body.placement_date ?? existing.placement_date,
+      body.expiry_date ?? existing.expiry_date, body.notes ?? existing.notes, id, tenantId
+    ).run();
     
     return c.json({ success: true, message: 'Board placement updated' });
   } catch (error) {
@@ -10776,6 +10839,515 @@ api.get('/reports/board-placements', async (c) => {
     }
     
     return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ============================================
+// ROUTE ALIASES - Map frontend expected paths to existing endpoints
+// ============================================
+
+// Van Sales route aliases
+api.get('/van-sales/loads', async (c) => {
+  // Redirect to existing van-loads endpoint
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const loads = await db.prepare(`
+      SELECT vl.*, v.registration_number as van_registration, r.name as route_name
+      FROM van_loads vl
+      LEFT JOIN vans v ON vl.van_id = v.id
+      LEFT JOIN routes r ON vl.route_id = r.id
+      WHERE vl.tenant_id = ?
+      ORDER BY vl.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: loads.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/van-sales/returns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const returns = await db.prepare(`
+      SELECT vsr.*, v.registration_number as van_registration
+      FROM van_sales_returns vsr
+      LEFT JOIN vans v ON vsr.van_id = v.id
+      WHERE vsr.tenant_id = ?
+      ORDER BY vsr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: returns.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/van-sales/cash-reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const reconciliations = await db.prepare(`
+      SELECT cr.*, u.first_name || ' ' || u.last_name as agent_name
+      FROM cash_reconciliations cr
+      LEFT JOIN users u ON cr.agent_id = u.id
+      WHERE cr.tenant_id = ?
+      ORDER BY cr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: reconciliations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Finance route aliases
+api.get('/finance/cash-reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const reconciliations = await db.prepare(`
+      SELECT cr.*, u.first_name || ' ' || u.last_name as agent_name
+      FROM cash_reconciliations cr
+      LEFT JOIN users u ON cr.agent_id = u.id
+      WHERE cr.tenant_id = ?
+      ORDER BY cr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: reconciliations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Payments endpoint - Create table if not exists and return data
+api.get('/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    // Ensure payments table exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, payment_number TEXT NOT NULL,
+      customer_id TEXT, invoice_id TEXT, amount REAL DEFAULT 0, payment_date TEXT,
+      payment_method TEXT DEFAULT 'cash', reference TEXT, status TEXT DEFAULT 'pending',
+      notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    const payments = await db.prepare(`
+      SELECT p.*, c.name as customer_name, i.invoice_number
+      FROM payments p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      LEFT JOIN invoices i ON p.invoice_id = i.id
+      WHERE p.tenant_id = ?
+      ORDER BY p.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: payments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/payments/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  const { id } = c.req.param();
+  try {
+    const payment = await db.prepare(`
+      SELECT p.*, c.name as customer_name, i.invoice_number
+      FROM payments p
+      LEFT JOIN customers c ON p.customer_id = c.id
+      LEFT JOIN invoices i ON p.invoice_id = i.id
+      WHERE p.id = ? AND p.tenant_id = ?
+    `).bind(id, tenantId).first();
+    if (!payment) {
+      return c.json({ success: false, message: 'Payment not found' }, 404);
+    }
+    return c.json({ success: true, data: payment });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  const userId = c.get('userId');
+  try {
+    // Ensure payments table exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, payment_number TEXT NOT NULL,
+      customer_id TEXT, invoice_id TEXT, amount REAL DEFAULT 0, payment_date TEXT,
+      payment_method TEXT DEFAULT 'cash', reference TEXT, status TEXT DEFAULT 'pending',
+      notes TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    const data = await c.req.json();
+    const id = crypto.randomUUID();
+    const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
+    
+    await db.prepare(`
+      INSERT INTO payments (id, tenant_id, payment_number, customer_id, invoice_id, amount, payment_date, payment_method, reference, status, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, paymentNumber, data.customer_id, data.invoice_id, data.amount, data.payment_date, data.payment_method, data.reference, 'pending', data.notes, userId).run();
+    
+    return c.json({ success: true, data: { id, payment_number: paymentNumber } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// KYC endpoint alias
+api.get('/kyc', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const cases = await db.prepare(`
+      SELECT k.*, c.name as customer_name
+      FROM kyc_cases k
+      LEFT JOIN customers c ON k.customer_id = c.id
+      WHERE k.tenant_id = ?
+      ORDER BY k.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: cases.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Field Operations competitor alias
+api.get('/field-operations/competitor', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const competitors = await db.prepare(`
+      SELECT * FROM competitors WHERE tenant_id = ? ORDER BY created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: competitors.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// GPS tracking endpoint - Create table if not exists
+api.get('/gps/agents/active', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    // Ensure gps_locations table exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS gps_locations (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, agent_id TEXT,
+      latitude REAL, longitude REAL, accuracy REAL, speed REAL,
+      heading REAL, altitude REAL, recorded_at TEXT, created_at TEXT
+    )`).run();
+    
+    // Get active agents with their latest GPS location
+    const agents = await db.prepare(`
+      SELECT u.id, u.first_name, u.last_name, u.email, u.role, u.status,
+             gl.latitude, gl.longitude, gl.recorded_at as last_location_time
+      FROM users u
+      LEFT JOIN (
+        SELECT agent_id, latitude, longitude, recorded_at,
+               ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY recorded_at DESC) as rn
+        FROM gps_locations WHERE tenant_id = ?
+      ) gl ON u.id = gl.agent_id AND gl.rn = 1
+      WHERE u.tenant_id = ? AND u.status = 'active' AND u.role IN ('field_agent', 'sales_rep', 'van_sales')
+    `).bind(tenantId, tenantId).all();
+    return c.json({ success: true, data: agents.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Route aliases for transfers and adjustments
+api.get('/transfers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, from_warehouse_id, to_warehouse_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT it.*, fw.name as from_warehouse_name, tw.name as to_warehouse_name 
+                 FROM inventory_transfers it 
+                 LEFT JOIN warehouses fw ON it.from_warehouse_id = fw.id 
+                 LEFT JOIN warehouses tw ON it.to_warehouse_id = tw.id 
+                 WHERE it.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND it.status = ?'; params.push(status); }
+    if (from_warehouse_id) { query += ' AND it.from_warehouse_id = ?'; params.push(from_warehouse_id); }
+    if (to_warehouse_id) { query += ' AND it.to_warehouse_id = ?'; params.push(to_warehouse_id); }
+    
+    query += ' ORDER BY it.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const transfers = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: transfers.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/adjustments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, warehouse_id, adjustment_type, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT ia.*, w.name as warehouse_name FROM inventory_adjustments ia 
+                 LEFT JOIN warehouses w ON ia.warehouse_id = w.id 
+                 WHERE ia.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND ia.status = ?'; params.push(status); }
+    if (warehouse_id) { query += ' AND ia.warehouse_id = ?'; params.push(warehouse_id); }
+    if (adjustment_type) { query += ' AND ia.adjustment_type = ?'; params.push(adjustment_type); }
+    
+    query += ' ORDER BY ia.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const adjustments = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: adjustments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// Inventory GRN endpoint - Use correct table name (goods_receipts)
+api.get('/inventory/grn', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const grns = await db.prepare(`
+      SELECT g.*, w.name as warehouse_name, s.name as supplier_name
+      FROM goods_receipts g
+      LEFT JOIN warehouses w ON g.warehouse_id = w.id
+      LEFT JOIN suppliers s ON g.supplier_id = s.id
+      WHERE g.tenant_id = ?
+      ORDER BY g.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: grns.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== TASKS ENDPOINT ====================
+api.get('/tasks', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, agent_id, customer_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    // Create tasks table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, task_number TEXT,
+      title TEXT NOT NULL, description TEXT, task_type TEXT DEFAULT 'general',
+      priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'pending',
+      assigned_to TEXT, customer_id TEXT, visit_id TEXT,
+      due_date TEXT, completed_at TEXT, notes TEXT,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    let query = `SELECT t.*, u.first_name || ' ' || u.last_name as assigned_to_name, c.name as customer_name
+                 FROM tasks t
+                 LEFT JOIN users u ON t.assigned_to = u.id
+                 LEFT JOIN customers c ON t.customer_id = c.id
+                 WHERE t.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND t.status = ?'; params.push(status); }
+    if (agent_id) { query += ' AND t.assigned_to = ?'; params.push(agent_id); }
+    if (customer_id) { query += ' AND t.customer_id = ?'; params.push(customer_id); }
+    
+    query += ' ORDER BY t.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/tasks', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = `task-${uuidv4()}`;
+    const taskNumber = `TSK-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    await db.prepare(`INSERT INTO tasks (id, tenant_id, task_number, title, description, task_type, priority, status, assigned_to, customer_id, visit_id, due_date, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      id, tenantId, taskNumber, body.title, body.description || null, body.task_type || 'general',
+      body.priority || 'medium', 'pending', body.assigned_to || null, body.customer_id || null,
+      body.visit_id || null, body.due_date || null, body.notes || null, userId, now, now
+    ).run();
+    
+    return c.json({ success: true, data: { id, task_number: taskNumber } }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const task = await db.prepare(`SELECT t.*, u.first_name || ' ' || u.last_name as assigned_to_name, c.name as customer_name
+      FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN customers c ON t.customer_id = c.id
+      WHERE t.id = ? AND t.tenant_id = ?`).bind(id, tenantId).first();
+    if (!task) return c.json({ success: false, message: 'Task not found' }, 404);
+    return c.json({ success: true, data: task });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  
+  try {
+    const completedAt = body.status === 'completed' ? now : null;
+    await db.prepare(`UPDATE tasks SET title = COALESCE(?, title), description = COALESCE(?, description),
+      task_type = COALESCE(?, task_type), priority = COALESCE(?, priority), status = COALESCE(?, status),
+      assigned_to = COALESCE(?, assigned_to), customer_id = COALESCE(?, customer_id), due_date = COALESCE(?, due_date),
+      notes = COALESCE(?, notes), completed_at = COALESCE(?, completed_at), updated_at = ? WHERE id = ? AND tenant_id = ?`).bind(
+      body.title, body.description, body.task_type, body.priority, body.status,
+      body.assigned_to, body.customer_id, body.due_date, body.notes, completedAt, now, id, tenantId
+    ).run();
+    return c.json({ success: true, message: 'Task updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Task deleted' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== COLLECTIONS ENDPOINT ====================
+api.get('/collections', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id, agent_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    // Create collections table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS collections (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, collection_number TEXT,
+      customer_id TEXT, invoice_id TEXT, amount REAL DEFAULT 0,
+      collection_date TEXT, payment_method TEXT DEFAULT 'cash',
+      reference TEXT, status TEXT DEFAULT 'pending', notes TEXT,
+      collected_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    let query = `SELECT col.*, c.name as customer_name, u.first_name || ' ' || u.last_name as collector_name, i.invoice_number
+                 FROM collections col
+                 LEFT JOIN customers c ON col.customer_id = c.id
+                 LEFT JOIN users u ON col.collected_by = u.id
+                 LEFT JOIN invoices i ON col.invoice_id = i.id
+                 WHERE col.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND col.status = ?'; params.push(status); }
+    if (customer_id) { query += ' AND col.customer_id = ?'; params.push(customer_id); }
+    if (agent_id) { query += ' AND col.collected_by = ?'; params.push(agent_id); }
+    
+    query += ' ORDER BY col.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/collections', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = `col-${uuidv4()}`;
+    const collectionNumber = `COL-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    await db.prepare(`INSERT INTO collections (id, tenant_id, collection_number, customer_id, invoice_id, amount, collection_date, payment_method, reference, status, notes, collected_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      id, tenantId, collectionNumber, body.customer_id, body.invoice_id || null, body.amount || 0,
+      body.collection_date || now.substring(0, 10), body.payment_method || 'cash', body.reference || null,
+      'completed', body.notes || null, userId, now, now
+    ).run();
+    
+    return c.json({ success: true, data: { id, collection_number: collectionNumber } }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const collection = await db.prepare(`SELECT col.*, c.name as customer_name, u.first_name || ' ' || u.last_name as collector_name
+      FROM collections col LEFT JOIN customers c ON col.customer_id = c.id LEFT JOIN users u ON col.collected_by = u.id
+      WHERE col.id = ? AND col.tenant_id = ?`).bind(id, tenantId).first();
+    if (!collection) return c.json({ success: false, message: 'Collection not found' }, 404);
+    return c.json({ success: true, data: collection });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  
+  try {
+    await db.prepare(`UPDATE collections SET amount = COALESCE(?, amount), payment_method = COALESCE(?, payment_method),
+      reference = COALESCE(?, reference), status = COALESCE(?, status), notes = COALESCE(?, notes), updated_at = ?
+      WHERE id = ? AND tenant_id = ?`).bind(
+      body.amount, body.payment_method, body.reference, body.status, body.notes, now, id, tenantId
+    ).run();
+    return c.json({ success: true, message: 'Collection updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM collections WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Collection deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
