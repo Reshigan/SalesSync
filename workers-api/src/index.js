@@ -7222,28 +7222,25 @@ api.get('/board-placements', async (c) => {
   const { status, customer_id, brand_id, agent_id, limit = 50, offset = 0 } = c.req.query();
   
   try {
-    // Ensure board_placements table exists with all columns
-    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placements (
-      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, customer_id TEXT, brand_id TEXT,
-      board_type TEXT, board_size TEXT, placement_location TEXT,
-      latitude REAL, longitude REAL, status TEXT DEFAULT 'planned',
-      notes TEXT, visit_id TEXT, installed_at TEXT, removed_at TEXT,
-      verified_by TEXT, verified_at TEXT, rejection_reason TEXT,
-      created_by TEXT, created_at TEXT, updated_at TEXT
-    )`).run();
-    
-    let query = `SELECT bp.id, bp.tenant_id, bp.customer_id, bp.brand_id, bp.board_type, bp.board_size,
-                 bp.placement_location, bp.latitude, bp.longitude, bp.status, bp.notes, bp.visit_id,
-                 bp.installed_at, bp.removed_at, bp.verified_by, bp.verified_at, bp.rejection_reason,
-                 bp.created_at, bp.updated_at, c.name as customer_name
+    // Use the actual existing table schema
+    let query = `SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+                 bp.placement_type as board_type, bp.location_description as placement_location,
+                 bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+                 bp.expiry_date, bp.status, bp.notes, bp.created_at,
+                 'BP-' || substr(bp.id, -8) as placement_number,
+                 c.name as customer_name,
+                 COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name
                  FROM board_placements bp 
                  LEFT JOIN customers c ON bp.customer_id = c.id 
+                 LEFT JOIN agents a ON bp.agent_id = a.id
+                 LEFT JOIN users u ON a.user_id = u.id
                  WHERE bp.tenant_id = ?`;
     const params = [tenantId];
     
     if (status) { query += ' AND bp.status = ?'; params.push(status); }
     if (customer_id) { query += ' AND bp.customer_id = ?'; params.push(customer_id); }
     if (brand_id) { query += ' AND bp.brand_id = ?'; params.push(brand_id); }
+    if (agent_id) { query += ' AND bp.agent_id = ?'; params.push(agent_id); }
     
     query += ' ORDER BY bp.created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
@@ -7262,28 +7259,23 @@ api.get('/board-placements/:id', async (c) => {
   
   try {
     const placement = await db.prepare(`
-      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.brand_id, bp.board_type, bp.board_size,
-             bp.placement_location, bp.latitude, bp.longitude, bp.status, bp.notes, bp.visit_id,
-             bp.installed_at, bp.removed_at, bp.verified_by, bp.verified_at, bp.rejection_reason,
-             bp.created_at, bp.updated_at, c.name as customer_name
+      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.agent_id, bp.brand_id,
+             bp.placement_type as board_type, bp.location_description as placement_location,
+             bp.width, bp.height, bp.condition, bp.photo_url, bp.placement_date,
+             bp.expiry_date, bp.status, bp.notes, bp.created_at,
+             'BP-' || substr(bp.id, -8) as placement_number,
+             c.name as customer_name,
+             COALESCE(u.first_name || ' ' || u.last_name, a.employee_code, 'Unassigned') as agent_name
       FROM board_placements bp 
       LEFT JOIN customers c ON bp.customer_id = c.id 
+      LEFT JOIN agents a ON bp.agent_id = a.id
+      LEFT JOIN users u ON a.user_id = u.id
       WHERE bp.id = ? AND bp.tenant_id = ?
     `).bind(id, tenantId).first();
     
     if (!placement) return c.json({ success: false, message: 'Board placement not found' }, 404);
     
-    // Get photos
-    const { results: photos } = await db.prepare(
-      'SELECT * FROM board_placement_photos WHERE placement_id = ? ORDER BY created_at DESC'
-    ).bind(id).all();
-    
-    // Get status history
-    const { results: history } = await db.prepare(
-      'SELECT * FROM board_placement_history WHERE placement_id = ? ORDER BY created_at DESC'
-    ).bind(id).all();
-    
-    return c.json({ success: true, data: { ...placement, photos: photos || [], history: history || [] } });
+    return c.json({ success: true, data: placement });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -7292,28 +7284,23 @@ api.get('/board-placements/:id', async (c) => {
 api.post('/board-placements', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const userId = c.get('userId');
   const body = await c.req.json();
   
   try {
-    const id = crypto.randomUUID();
+    const id = `bp-${Date.now()}`;
     const now = new Date().toISOString();
     
     await db.prepare(`
-      INSERT INTO board_placements (id, tenant_id, customer_id, brand_id, board_type, board_size, 
-        placement_location, latitude, longitude, status, notes, visit_id, created_by, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'planned', ?, ?, ?, ?, ?)
-    `).bind(id, tenantId, body.customer_id ?? null, body.brand_id ?? null, body.board_type ?? null, 
-      body.board_size ?? null, body.placement_location ?? null, body.latitude ?? null, body.longitude ?? null,
-      body.notes ?? null, body.visit_id ?? null, userId, now, now).run();
+      INSERT INTO board_placements (id, tenant_id, customer_id, agent_id, brand_id, placement_type, location_description, width, height, condition, photo_url, placement_date, expiry_date, status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      id, tenantId, body.customer_id, body.agent_id || null, body.brand_id || null, 
+      body.placement_type || body.board_type || 'standard', body.location_description || body.placement_location || '',
+      body.width || null, body.height || null, body.condition || 'good', body.photo_url || null,
+      body.placement_date || now.split('T')[0], body.expiry_date || null, 'active', body.notes || '', now
+    ).run();
     
-    // Record history
-    await db.prepare(`
-      INSERT INTO board_placement_history (id, placement_id, status, changed_by, notes, created_at)
-      VALUES (?, ?, 'planned', ?, 'Board placement created', ?)
-    `).bind(crypto.randomUUID(), id, userId, now).run();
-    
-    return c.json({ success: true, data: { id }, message: 'Board placement created' });
+    return c.json({ success: true, data: { id, placement_number: `BP-${id.slice(-8)}` } });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -7330,14 +7317,18 @@ api.put('/board-placements/:id', async (c) => {
     if (!existing) return c.json({ success: false, message: 'Board placement not found' }, 404);
     
     await db.prepare(`
-      UPDATE board_placements SET customer_id = ?, brand_id = ?, board_type = ?, board_size = ?,
-        placement_location = ?, latitude = ?, longitude = ?, notes = ?, updated_at = ?
+      UPDATE board_placements SET customer_id = ?, agent_id = ?, brand_id = ?, placement_type = ?,
+        location_description = ?, width = ?, height = ?, condition = ?, photo_url = ?,
+        placement_date = ?, expiry_date = ?, notes = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.customer_id ?? existing.customer_id, body.brand_id ?? existing.brand_id, 
-      body.board_type ?? existing.board_type, body.board_size ?? existing.board_size,
-      body.placement_location ?? existing.placement_location, body.latitude ?? existing.latitude,
-      body.longitude ?? existing.longitude, body.notes ?? existing.notes,
-      new Date().toISOString(), id, tenantId).run();
+    `).bind(
+      body.customer_id ?? existing.customer_id, body.agent_id ?? existing.agent_id,
+      body.brand_id ?? existing.brand_id, body.placement_type ?? body.board_type ?? existing.placement_type,
+      body.location_description ?? body.placement_location ?? existing.location_description,
+      body.width ?? existing.width, body.height ?? existing.height, body.condition ?? existing.condition,
+      body.photo_url ?? existing.photo_url, body.placement_date ?? existing.placement_date,
+      body.expiry_date ?? existing.expiry_date, body.notes ?? existing.notes, id, tenantId
+    ).run();
     
     return c.json({ success: true, message: 'Board placement updated' });
   } catch (error) {
