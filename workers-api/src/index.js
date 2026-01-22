@@ -441,6 +441,51 @@ api.get('/orders/:id', async (c) => {
   return c.json({ success: true, data: { ...order, items: items.results || [] } });
 });
 
+// Quote/Calculate endpoint - preview pricing with promotions before order submission
+api.post('/orders/quote', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const body = await c.req.json();
+    const customerId = body.customer_id;
+    const calculatedItems = [];
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let totalTax = 0;
+    const appliedPromotions = [];
+    
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity || 1, customerId);
+        calculatedItems.push(calculated);
+        subtotal += calculated.subtotal;
+        totalDiscount += calculated.discount_amount;
+        totalTax += calculated.tax_amount;
+        if (calculated.applied_promotion) {
+          appliedPromotions.push({ ...calculated.applied_promotion, product_id: item.product_id });
+        }
+      }
+    }
+    
+    const totalAmount = subtotal - totalDiscount + totalTax;
+    
+    return c.json({
+      success: true,
+      data: {
+        items: calculatedItems,
+        subtotal,
+        discount_amount: totalDiscount,
+        tax_amount: totalTax,
+        total_amount: totalAmount,
+        applied_promotions: appliedPromotions
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.post('/orders', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -451,41 +496,67 @@ api.post('/orders', async (c) => {
     
     const id = uuidv4();
     const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    const customerId = body.customer_id;
     
-    // Calculate totals from items if not provided
-    let subtotal = body.subtotal || 0;
-    let totalAmount = body.total_amount || 0;
+    // Use pricing engine with automatic promotion application
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let totalTax = 0;
+    const calculatedItems = [];
+    const appliedPromotions = [];
     
-    if (body.items && body.items.length > 0 && !body.subtotal) {
-      // Fetch product prices and calculate totals
+    if (body.items && body.items.length > 0) {
       for (const item of body.items) {
-        const product = await db.prepare('SELECT price FROM products WHERE id = ?').bind(item.product_id).first();
-        const unitPrice = item.unit_price || (product?.price || 0);
-        const lineTotal = unitPrice * (item.quantity || 1);
-        item.unit_price = unitPrice;
-        item.line_total = lineTotal;
-        subtotal += lineTotal;
+        // Use the pricing engine which auto-applies promotions
+        const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity || 1, customerId);
+        calculatedItems.push(calculated);
+        subtotal += calculated.subtotal;
+        totalDiscount += calculated.discount_amount;
+        totalTax += calculated.tax_amount;
+        if (calculated.applied_promotion) {
+          appliedPromotions.push({ ...calculated.applied_promotion, product_id: item.product_id });
+        }
       }
-      totalAmount = subtotal - (body.discount_amount || 0) + (body.tax_amount || 0);
     }
+    
+    const totalAmount = subtotal - totalDiscount + totalTax;
+    
+    // Store applied promotions as JSON in notes or a separate field
+    const promotionInfo = appliedPromotions.length > 0 ? `Applied promotions: ${appliedPromotions.map(p => p.name).join(', ')}` : '';
+    const orderNotes = body.notes ? `${body.notes}${promotionInfo ? ' | ' + promotionInfo : ''}` : promotionInfo;
     
     await db.prepare(`
       INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id || userId, body.order_date || new Date().toISOString().split('T')[0], subtotal, body.tax_amount || 0, body.discount_amount || 0, totalAmount, body.payment_method || 'cash', 'pending', 'pending', body.notes ?? null).run();
+    `).bind(id, tenantId, orderNumber, customerId, body.salesman_id || userId, body.order_date || new Date().toISOString().split('T')[0], subtotal, totalTax, totalDiscount, totalAmount, body.payment_method || 'cash', 'pending', 'pending', orderNotes || null).run();
     
-    // Insert order items
-    if (body.items && body.items.length > 0) {
-      for (const item of body.items) {
-        const itemId = uuidv4();
-        await db.prepare(`
-          INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `).bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total || 0).run();
-      }
+    // Insert order items with calculated prices
+    for (const item of calculatedItems) {
+      const itemId = uuidv4();
+      await db.prepare(`
+        INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.discount_percentage, item.tax_percentage, item.line_total).run();
     }
     
-    return c.json({ success: true, data: { id, order_number: orderNumber }, message: 'Order created' }, 201);
+    // Update promotion usage counts
+    for (const promo of appliedPromotions) {
+      await db.prepare('UPDATE promotions SET usage_count = usage_count + 1 WHERE id = ?').bind(promo.id).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      data: { 
+        id, 
+        order_number: orderNumber,
+        subtotal,
+        discount_amount: totalDiscount,
+        tax_amount: totalTax,
+        total_amount: totalAmount,
+        applied_promotions: appliedPromotions
+      }, 
+      message: 'Order created' 
+    }, 201);
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -520,30 +591,122 @@ api.get('/van-sales', async (c) => {
   return c.json({ success: true, data: sales.results || [] });
 });
 
+// Van sales quote endpoint - preview pricing with promotions
+api.post('/van-sales/quote', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const body = await c.req.json();
+    const customerId = body.customer_id;
+    const calculatedItems = [];
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let totalTax = 0;
+    const appliedPromotions = [];
+    
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity || 1, customerId);
+        calculatedItems.push(calculated);
+        subtotal += calculated.subtotal;
+        totalDiscount += calculated.discount_amount;
+        totalTax += calculated.tax_amount;
+        if (calculated.applied_promotion) {
+          appliedPromotions.push({ ...calculated.applied_promotion, product_id: item.product_id });
+        }
+      }
+    }
+    
+    const totalAmount = subtotal - totalDiscount + totalTax;
+    
+    return c.json({
+      success: true,
+      data: {
+        items: calculatedItems,
+        subtotal,
+        discount_amount: totalDiscount,
+        tax_amount: totalTax,
+        total_amount: totalAmount,
+        applied_promotions: appliedPromotions
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.post('/van-sales', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const body = await c.req.json();
   
-  const id = uuidv4();
-  
-  await db.prepare(`
-    INSERT INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, payment_reference, status, notes, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.van_id, body.agent_id, body.customer_id, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.amount_paid || 0, body.amount_due || 0, body.payment_method, body.payment_reference ?? null, 'completed', body.notes ?? null).run();
-  
-  // Insert sale items
-  if (body.items && body.items.length > 0) {
-    for (const item of body.items) {
+  try {
+    const body = await c.req.json();
+    const id = uuidv4();
+    const customerId = body.customer_id;
+    
+    // Use pricing engine with automatic promotion application
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let totalTax = 0;
+    const calculatedItems = [];
+    const appliedPromotions = [];
+    
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        const calculated = await calculateLineItem(db, tenantId, item.product_id, item.quantity || 1, customerId);
+        calculatedItems.push(calculated);
+        subtotal += calculated.subtotal;
+        totalDiscount += calculated.discount_amount;
+        totalTax += calculated.tax_amount;
+        if (calculated.applied_promotion) {
+          appliedPromotions.push({ ...calculated.applied_promotion, product_id: item.product_id });
+        }
+      }
+    }
+    
+    const totalAmount = subtotal - totalDiscount + totalTax;
+    const amountPaid = body.sale_type === 'cash' ? totalAmount : (body.amount_paid || 0);
+    const amountDue = totalAmount - amountPaid;
+    
+    // Store applied promotions info
+    const promotionInfo = appliedPromotions.length > 0 ? `Applied promotions: ${appliedPromotions.map(p => p.name).join(', ')}` : '';
+    const saleNotes = body.notes ? `${body.notes}${promotionInfo ? ' | ' + promotionInfo : ''}` : promotionInfo;
+    
+    await db.prepare(`
+      INSERT INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, payment_reference, status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, body.van_id, body.agent_id, customerId, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', subtotal, totalTax, totalDiscount, totalAmount, amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, 'completed', saleNotes || null).run();
+    
+    // Insert sale items with calculated prices
+    for (const item of calculatedItems) {
       const itemId = uuidv4();
       await db.prepare(`
         INSERT INTO van_sale_items (id, van_sale_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total).run();
+      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.discount_percentage, item.tax_percentage, item.line_total).run();
     }
+    
+    // Update promotion usage counts
+    for (const promo of appliedPromotions) {
+      await db.prepare('UPDATE promotions SET usage_count = usage_count + 1 WHERE id = ?').bind(promo.id).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      data: { 
+        id,
+        subtotal,
+        discount_amount: totalDiscount,
+        tax_amount: totalTax,
+        total_amount: totalAmount,
+        applied_promotions: appliedPromotions
+      }, 
+      message: 'Van sale created' 
+    }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
   }
-  
-  return c.json({ success: true, data: { id }, message: 'Van sale created' }, 201);
 });
 
 // ==================== INVENTORY ====================
@@ -2306,6 +2469,63 @@ api.post('/users/create-demo', async (c) => {
 
 // ==================== PRICING ENGINE ====================
 // Server-side pricing calculation - authoritative source of truth
+
+// Find applicable promotions for a product
+const findApplicablePromotions = async (db, tenantId, productId, quantity, orderSubtotal = 0) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Get active promotions that are within date range
+  const promotions = await db.prepare(`
+    SELECT p.*, pi.discount_type, pi.discount_value, pi.min_quantity, pi.product_id as promo_product_id
+    FROM promotions p
+    LEFT JOIN promotion_items pi ON p.id = pi.promotion_id
+    WHERE p.tenant_id = ? 
+    AND p.status = 'active'
+    AND (p.start_date IS NULL OR p.start_date <= ?)
+    AND (p.end_date IS NULL OR p.end_date >= ?)
+    AND (p.usage_limit IS NULL OR p.usage_count < p.usage_limit)
+    AND (pi.product_id = ? OR pi.product_id IS NULL)
+    AND (pi.min_quantity IS NULL OR pi.min_quantity <= ?)
+    ORDER BY pi.discount_value DESC
+  `).bind(tenantId, today, today, productId, quantity).all();
+  
+  return promotions.results || [];
+};
+
+// Calculate best promotion discount for a line item
+const calculatePromotionDiscount = (promotions, unitPrice, quantity) => {
+  if (!promotions || promotions.length === 0) {
+    return { discountPercentage: 0, discountAmount: 0, appliedPromotion: null };
+  }
+  
+  let bestDiscount = 0;
+  let bestPromotion = null;
+  
+  for (const promo of promotions) {
+    let discount = 0;
+    const lineSubtotal = unitPrice * quantity;
+    
+    if (promo.discount_type === 'percentage') {
+      discount = (lineSubtotal * (promo.discount_value || 0)) / 100;
+    } else if (promo.discount_type === 'fixed' || promo.discount_type === 'amount') {
+      discount = promo.discount_value || 0;
+    }
+    
+    if (discount > bestDiscount) {
+      bestDiscount = discount;
+      bestPromotion = promo;
+    }
+  }
+  
+  const discountPercentage = bestPromotion?.discount_type === 'percentage' ? bestPromotion.discount_value : 0;
+  
+  return {
+    discountPercentage,
+    discountAmount: bestDiscount,
+    appliedPromotion: bestPromotion ? { id: bestPromotion.id, name: bestPromotion.name, type: bestPromotion.discount_type } : null
+  };
+};
+
 const calculateLineItem = async (db, tenantId, productId, quantity, customerId = null, discountOverride = null) => {
   // Get product with price
   const product = await db.prepare(
@@ -2330,9 +2550,23 @@ const calculateLineItem = async (db, tenantId, productId, quantity, customerId =
   // Get tax rate from product or default
   const taxRate = product.tax_rate || 0;
   
-  // Calculate discount
-  const discountPercentage = discountOverride !== null ? discountOverride : 0;
-  const discountAmount = (unitPrice * quantity * discountPercentage) / 100;
+  // Find and apply promotions (server-side, salesman cannot override)
+  let discountPercentage = 0;
+  let discountAmount = 0;
+  let appliedPromotion = null;
+  
+  if (discountOverride === null) {
+    // Auto-apply promotions when no manual override
+    const promotions = await findApplicablePromotions(db, tenantId, productId, quantity);
+    const promoResult = calculatePromotionDiscount(promotions, unitPrice, quantity);
+    discountPercentage = promoResult.discountPercentage;
+    discountAmount = promoResult.discountAmount;
+    appliedPromotion = promoResult.appliedPromotion;
+  } else {
+    // Use override (for admin/manager adjustments only)
+    discountPercentage = discountOverride;
+    discountAmount = (unitPrice * quantity * discountPercentage) / 100;
+  }
   
   // Calculate totals
   const subtotal = unitPrice * quantity;
@@ -2351,7 +2585,8 @@ const calculateLineItem = async (db, tenantId, productId, quantity, customerId =
     tax_percentage: taxRate,
     tax_amount: taxAmount,
     subtotal,
-    line_total: lineTotal
+    line_total: lineTotal,
+    applied_promotion: appliedPromotion
   };
 };
 
@@ -11374,6 +11609,112 @@ app.post('/api/upload', authMiddleware, async (c) => {
   } catch (error) {
     console.error('Upload error:', error);
     return c.json({ success: false, message: 'Upload failed' }, 500);
+  }
+});
+
+// Seed campaigns and promotions with promotion_items
+api.post('/seed/marketing', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const now = new Date().toISOString();
+  const today = now.split('T')[0];
+  const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const nextQuarter = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
+  try {
+    // Create campaigns table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS campaigns (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, campaign_code TEXT, name TEXT NOT NULL, description TEXT,
+      type TEXT DEFAULT 'promotional', status TEXT DEFAULT 'draft',
+      start_date TEXT, end_date TEXT, budget REAL DEFAULT 0, spent_amount REAL DEFAULT 0,
+      target_audience TEXT, created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    // Create promotions table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS promotions (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, description TEXT,
+      type TEXT DEFAULT 'discount', status TEXT DEFAULT 'draft',
+      start_date TEXT, end_date TEXT, budget REAL DEFAULT 0, spent REAL DEFAULT 0,
+      usage_count INTEGER DEFAULT 0, usage_limit INTEGER,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    // Create promotion_items table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS promotion_items (
+      id TEXT PRIMARY KEY, promotion_id TEXT NOT NULL, product_id TEXT,
+      discount_type TEXT DEFAULT 'percentage', discount_value REAL DEFAULT 0,
+      min_quantity INTEGER DEFAULT 1, created_at TEXT
+    )`).run();
+    
+    // Seed campaigns
+    const campaigns = [
+      { id: 'camp-summer-2026', code: 'SUMMER2026', name: 'Summer Sales Campaign 2026', type: 'seasonal', status: 'active', budget: 50000, target: 'All Retailers' },
+      { id: 'camp-new-product', code: 'NEWPROD01', name: 'New Product Launch - Energy Drinks', type: 'product_launch', status: 'active', budget: 25000, target: 'Premium Retailers' },
+      { id: 'camp-loyalty', code: 'LOYALTY2026', name: 'Customer Loyalty Program', type: 'loyalty', status: 'active', budget: 100000, target: 'Top 100 Customers' },
+      { id: 'camp-brand-awareness', code: 'BRAND2026', name: 'Brand Awareness Drive', type: 'brand_awareness', status: 'planned', budget: 75000, target: 'New Markets' }
+    ];
+    
+    for (const camp of campaigns) {
+      await db.prepare(`
+        INSERT OR REPLACE INTO campaigns (id, tenant_id, campaign_code, name, description, type, status, start_date, end_date, budget, spent_amount, target_audience, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'admin-user-001', ?, ?)
+      `).bind(camp.id, tenantId, camp.code, camp.name, `${camp.name} - Marketing campaign`, camp.type, camp.status, today, nextQuarter, camp.budget, camp.target, now, now).run();
+    }
+    
+    // Seed promotions with different types
+    const promotions = [
+      { id: 'promo-10-off', name: '10% Off All Beverages', type: 'discount', status: 'active', desc: 'Get 10% off on all beverage products' },
+      { id: 'promo-15-off', name: '15% Off Bulk Orders', type: 'discount', status: 'active', desc: 'Get 15% off when ordering 10+ units' },
+      { id: 'promo-summer', name: 'Summer Special - 20% Off', type: 'discount', status: 'active', desc: 'Summer promotion - 20% off selected items' },
+      { id: 'promo-new-customer', name: 'New Customer Welcome', type: 'discount', status: 'active', desc: 'First order 25% discount for new customers' }
+    ];
+    
+    for (const promo of promotions) {
+      await db.prepare(`
+        INSERT OR REPLACE INTO promotions (id, tenant_id, name, description, type, status, start_date, end_date, budget, spent, usage_count, usage_limit, created_by, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 10000, 0, 0, 1000, 'admin-user-001', ?, ?)
+      `).bind(promo.id, tenantId, promo.name, promo.desc, promo.type, promo.status, today, nextMonth, now, now).run();
+    }
+    
+    // Get some product IDs for promotion_items
+    const products = await db.prepare('SELECT id FROM products WHERE tenant_id = ? LIMIT 10').bind(tenantId).all();
+    const productIds = (products.results || []).map(p => p.id);
+    
+    // Seed promotion_items - link promotions to products with discounts
+    const promoItems = [
+      // 10% off all beverages
+      { promoId: 'promo-10-off', productId: productIds[0] || 'prod-1', discountType: 'percentage', discountValue: 10, minQty: 1 },
+      { promoId: 'promo-10-off', productId: productIds[1] || 'prod-2', discountType: 'percentage', discountValue: 10, minQty: 1 },
+      { promoId: 'promo-10-off', productId: productIds[2] || 'prod-3', discountType: 'percentage', discountValue: 10, minQty: 1 },
+      // 15% off bulk orders
+      { promoId: 'promo-15-off', productId: productIds[0] || 'prod-1', discountType: 'percentage', discountValue: 15, minQty: 10 },
+      { promoId: 'promo-15-off', productId: productIds[1] || 'prod-2', discountType: 'percentage', discountValue: 15, minQty: 10 },
+      // Summer special 20% off
+      { promoId: 'promo-summer', productId: productIds[3] || 'prod-4', discountType: 'percentage', discountValue: 20, minQty: 1 },
+      { promoId: 'promo-summer', productId: productIds[4] || 'prod-5', discountType: 'percentage', discountValue: 20, minQty: 1 },
+      // New customer 25% off (applies to all products - null product_id)
+      { promoId: 'promo-new-customer', productId: null, discountType: 'percentage', discountValue: 25, minQty: 1 }
+    ];
+    
+    for (let i = 0; i < promoItems.length; i++) {
+      const item = promoItems[i];
+      await db.prepare(`
+        INSERT OR REPLACE INTO promotion_items (id, promotion_id, product_id, discount_type, discount_value, min_quantity, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(`promo-item-${i + 1}`, item.promoId, item.productId, item.discountType, item.discountValue, item.minQty, now).run();
+    }
+    
+    return c.json({ 
+      success: true, 
+      message: 'Marketing data seeded successfully',
+      data: {
+        campaigns_created: campaigns.length,
+        promotions_created: promotions.length,
+        promotion_items_created: promoItems.length
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
   }
 });
 
