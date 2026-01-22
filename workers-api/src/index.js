@@ -444,28 +444,51 @@ api.get('/orders/:id', async (c) => {
 api.post('/orders', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
-  const body = await c.req.json();
+  const userId = c.get('userId');
   
-  const id = uuidv4();
-  const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
-  
-  await db.prepare(`
-    INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id, body.order_date || new Date().toISOString().split('T')[0], body.subtotal, body.tax_amount || 0, body.discount_amount || 0, body.total_amount, body.payment_method, 'pending', 'pending', body.notes ?? null).run();
-  
-  // Insert order items
-  if (body.items && body.items.length > 0) {
-    for (const item of body.items) {
-      const itemId = uuidv4();
-      await db.prepare(`
-        INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total).run();
+  try {
+    const body = await c.req.json();
+    
+    const id = uuidv4();
+    const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+    
+    // Calculate totals from items if not provided
+    let subtotal = body.subtotal || 0;
+    let totalAmount = body.total_amount || 0;
+    
+    if (body.items && body.items.length > 0 && !body.subtotal) {
+      // Fetch product prices and calculate totals
+      for (const item of body.items) {
+        const product = await db.prepare('SELECT price FROM products WHERE id = ?').bind(item.product_id).first();
+        const unitPrice = item.unit_price || (product?.price || 0);
+        const lineTotal = unitPrice * (item.quantity || 1);
+        item.unit_price = unitPrice;
+        item.line_total = lineTotal;
+        subtotal += lineTotal;
+      }
+      totalAmount = subtotal - (body.discount_amount || 0) + (body.tax_amount || 0);
     }
+    
+    await db.prepare(`
+      INSERT INTO orders (id, tenant_id, order_number, customer_id, salesman_id, order_date, subtotal, tax_amount, discount_amount, total_amount, payment_method, payment_status, order_status, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(id, tenantId, orderNumber, body.customer_id, body.salesman_id || userId, body.order_date || new Date().toISOString().split('T')[0], subtotal, body.tax_amount || 0, body.discount_amount || 0, totalAmount, body.payment_method || 'cash', 'pending', 'pending', body.notes ?? null).run();
+    
+    // Insert order items
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        const itemId = uuidv4();
+        await db.prepare(`
+          INSERT INTO order_items (id, order_id, product_id, quantity, unit_price, discount_percentage, tax_percentage, line_total)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, item.discount_percentage || 0, item.tax_percentage || 0, item.line_total || 0).run();
+      }
+    }
+    
+    return c.json({ success: true, data: { id, order_number: orderNumber }, message: 'Order created' }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
   }
-  
-  return c.json({ success: true, data: { id, orderNumber }, message: 'Order created' }, 201);
 });
 
 // ==================== VAN SALES ====================
