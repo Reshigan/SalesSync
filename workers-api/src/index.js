@@ -11588,30 +11588,6 @@ api.delete('/collections/:id', async (c) => {
   }
 });
 
-app.route('/api', api);
-
-// File upload endpoint (R2)
-app.post('/api/upload', authMiddleware, async (c) => {
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get('file');
-    
-    if (!file) {
-      return c.json({ success: false, message: 'No file provided' }, 400);
-    }
-    
-    const filename = `${Date.now()}-${file.name}`;
-    await c.env.UPLOADS.put(filename, file.stream(), {
-      httpMetadata: { contentType: file.type }
-    });
-    
-    return c.json({ success: true, data: { filename, url: `/files/${filename}` } });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return c.json({ success: false, message: 'Upload failed' }, 500);
-  }
-});
-
 // Seed campaigns and promotions with promotion_items
 api.post('/seed/marketing', async (c) => {
   const db = c.env.DB;
@@ -11715,6 +11691,30 @@ api.post('/seed/marketing', async (c) => {
     });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+app.route('/api', api);
+
+// File upload endpoint (R2)
+app.post('/api/upload', authMiddleware, async (c) => {
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    
+    if (!file) {
+      return c.json({ success: false, message: 'No file provided' }, 400);
+    }
+    
+    const filename = `${Date.now()}-${file.name}`;
+    await c.env.UPLOADS.put(filename, file.stream(), {
+      httpMetadata: { contentType: file.type }
+    });
+    
+    return c.json({ success: true, data: { filename, url: `/files/${filename}` } });
+  } catch (error) {
+    console.error('Upload error:', error);
+    return c.json({ success: false, message: 'Upload failed' }, 500);
   }
 });
 
