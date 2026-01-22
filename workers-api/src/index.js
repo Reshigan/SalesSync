@@ -7222,7 +7222,7 @@ api.get('/board-placements', async (c) => {
   const { status, customer_id, brand_id, agent_id, limit = 50, offset = 0 } = c.req.query();
   
   try {
-    let query = `SELECT bp.*, c.name as customer_name, u.name as agent_name 
+    let query = `SELECT bp.*, c.name as customer_name, u.first_name || ' ' || u.last_name as agent_name 
                  FROM board_placements bp 
                  LEFT JOIN customers c ON bp.customer_id = c.id 
                  LEFT JOIN users u ON bp.created_by = u.id 
@@ -7251,7 +7251,7 @@ api.get('/board-placements/:id', async (c) => {
   
   try {
     const placement = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, u.name as agent_name 
+      SELECT bp.*, c.name as customer_name, u.first_name || ' ' || u.last_name as agent_name 
       FROM board_placements bp 
       LEFT JOIN customers c ON bp.customer_id = c.id 
       LEFT JOIN users u ON bp.created_by = u.id 
@@ -11045,6 +11045,229 @@ api.get('/inventory/grn', async (c) => {
       ORDER BY g.created_at DESC
     `).bind(tenantId).all();
     return c.json({ success: true, data: grns.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== TASKS ENDPOINT ====================
+api.get('/tasks', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, agent_id, customer_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    // Create tasks table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, task_number TEXT,
+      title TEXT NOT NULL, description TEXT, task_type TEXT DEFAULT 'general',
+      priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'pending',
+      assigned_to TEXT, customer_id TEXT, visit_id TEXT,
+      due_date TEXT, completed_at TEXT, notes TEXT,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    let query = `SELECT t.*, u.first_name || ' ' || u.last_name as assigned_to_name, c.name as customer_name
+                 FROM tasks t
+                 LEFT JOIN users u ON t.assigned_to = u.id
+                 LEFT JOIN customers c ON t.customer_id = c.id
+                 WHERE t.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND t.status = ?'; params.push(status); }
+    if (agent_id) { query += ' AND t.assigned_to = ?'; params.push(agent_id); }
+    if (customer_id) { query += ' AND t.customer_id = ?'; params.push(customer_id); }
+    
+    query += ' ORDER BY t.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/tasks', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = `task-${uuidv4()}`;
+    const taskNumber = `TSK-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    await db.prepare(`INSERT INTO tasks (id, tenant_id, task_number, title, description, task_type, priority, status, assigned_to, customer_id, visit_id, due_date, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      id, tenantId, taskNumber, body.title, body.description || null, body.task_type || 'general',
+      body.priority || 'medium', 'pending', body.assigned_to || null, body.customer_id || null,
+      body.visit_id || null, body.due_date || null, body.notes || null, userId, now, now
+    ).run();
+    
+    return c.json({ success: true, data: { id, task_number: taskNumber } }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const task = await db.prepare(`SELECT t.*, u.first_name || ' ' || u.last_name as assigned_to_name, c.name as customer_name
+      FROM tasks t LEFT JOIN users u ON t.assigned_to = u.id LEFT JOIN customers c ON t.customer_id = c.id
+      WHERE t.id = ? AND t.tenant_id = ?`).bind(id, tenantId).first();
+    if (!task) return c.json({ success: false, message: 'Task not found' }, 404);
+    return c.json({ success: true, data: task });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  
+  try {
+    const completedAt = body.status === 'completed' ? now : null;
+    await db.prepare(`UPDATE tasks SET title = COALESCE(?, title), description = COALESCE(?, description),
+      task_type = COALESCE(?, task_type), priority = COALESCE(?, priority), status = COALESCE(?, status),
+      assigned_to = COALESCE(?, assigned_to), customer_id = COALESCE(?, customer_id), due_date = COALESCE(?, due_date),
+      notes = COALESCE(?, notes), completed_at = COALESCE(?, completed_at), updated_at = ? WHERE id = ? AND tenant_id = ?`).bind(
+      body.title, body.description, body.task_type, body.priority, body.status,
+      body.assigned_to, body.customer_id, body.due_date, body.notes, completedAt, now, id, tenantId
+    ).run();
+    return c.json({ success: true, message: 'Task updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/tasks/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Task deleted' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== COLLECTIONS ENDPOINT ====================
+api.get('/collections', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, customer_id, agent_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    // Create collections table if not exists
+    await db.prepare(`CREATE TABLE IF NOT EXISTS collections (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, collection_number TEXT,
+      customer_id TEXT, invoice_id TEXT, amount REAL DEFAULT 0,
+      collection_date TEXT, payment_method TEXT DEFAULT 'cash',
+      reference TEXT, status TEXT DEFAULT 'pending', notes TEXT,
+      collected_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    let query = `SELECT col.*, c.name as customer_name, u.first_name || ' ' || u.last_name as collector_name, i.invoice_number
+                 FROM collections col
+                 LEFT JOIN customers c ON col.customer_id = c.id
+                 LEFT JOIN users u ON col.collected_by = u.id
+                 LEFT JOIN invoices i ON col.invoice_id = i.id
+                 WHERE col.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND col.status = ?'; params.push(status); }
+    if (customer_id) { query += ' AND col.customer_id = ?'; params.push(customer_id); }
+    if (agent_id) { query += ' AND col.collected_by = ?'; params.push(agent_id); }
+    
+    query += ' ORDER BY col.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const { results } = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/collections', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  
+  try {
+    const id = `col-${uuidv4()}`;
+    const collectionNumber = `COL-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    
+    await db.prepare(`INSERT INTO collections (id, tenant_id, collection_number, customer_id, invoice_id, amount, collection_date, payment_method, reference, status, notes, collected_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(
+      id, tenantId, collectionNumber, body.customer_id, body.invoice_id || null, body.amount || 0,
+      body.collection_date || now.substring(0, 10), body.payment_method || 'cash', body.reference || null,
+      'completed', body.notes || null, userId, now, now
+    ).run();
+    
+    return c.json({ success: true, data: { id, collection_number: collectionNumber } }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    const collection = await db.prepare(`SELECT col.*, c.name as customer_name, u.first_name || ' ' || u.last_name as collector_name
+      FROM collections col LEFT JOIN customers c ON col.customer_id = c.id LEFT JOIN users u ON col.collected_by = u.id
+      WHERE col.id = ? AND col.tenant_id = ?`).bind(id, tenantId).first();
+    if (!collection) return c.json({ success: false, message: 'Collection not found' }, 404);
+    return c.json({ success: true, data: collection });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.put('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+  
+  try {
+    await db.prepare(`UPDATE collections SET amount = COALESCE(?, amount), payment_method = COALESCE(?, payment_method),
+      reference = COALESCE(?, reference), status = COALESCE(?, status), notes = COALESCE(?, notes), updated_at = ?
+      WHERE id = ? AND tenant_id = ?`).bind(
+      body.amount, body.payment_method, body.reference, body.status, body.notes, now, id, tenantId
+    ).run();
+    return c.json({ success: true, message: 'Collection updated' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.delete('/collections/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  
+  try {
+    await db.prepare('DELETE FROM collections WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Collection deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
