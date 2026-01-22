@@ -7222,17 +7222,28 @@ api.get('/board-placements', async (c) => {
   const { status, customer_id, brand_id, agent_id, limit = 50, offset = 0 } = c.req.query();
   
   try {
-    let query = `SELECT bp.*, c.name as customer_name, u.first_name || ' ' || u.last_name as agent_name 
+    // Ensure board_placements table exists with all columns
+    await db.prepare(`CREATE TABLE IF NOT EXISTS board_placements (
+      id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, customer_id TEXT, brand_id TEXT,
+      board_type TEXT, board_size TEXT, placement_location TEXT,
+      latitude REAL, longitude REAL, status TEXT DEFAULT 'planned',
+      notes TEXT, visit_id TEXT, installed_at TEXT, removed_at TEXT,
+      verified_by TEXT, verified_at TEXT, rejection_reason TEXT,
+      created_by TEXT, created_at TEXT, updated_at TEXT
+    )`).run();
+    
+    let query = `SELECT bp.id, bp.tenant_id, bp.customer_id, bp.brand_id, bp.board_type, bp.board_size,
+                 bp.placement_location, bp.latitude, bp.longitude, bp.status, bp.notes, bp.visit_id,
+                 bp.installed_at, bp.removed_at, bp.verified_by, bp.verified_at, bp.rejection_reason,
+                 bp.created_at, bp.updated_at, c.name as customer_name
                  FROM board_placements bp 
                  LEFT JOIN customers c ON bp.customer_id = c.id 
-                 LEFT JOIN users u ON bp.created_by = u.id 
                  WHERE bp.tenant_id = ?`;
     const params = [tenantId];
     
     if (status) { query += ' AND bp.status = ?'; params.push(status); }
     if (customer_id) { query += ' AND bp.customer_id = ?'; params.push(customer_id); }
     if (brand_id) { query += ' AND bp.brand_id = ?'; params.push(brand_id); }
-    if (agent_id) { query += ' AND bp.created_by = ?'; params.push(agent_id); }
     
     query += ' ORDER BY bp.created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
@@ -7251,10 +7262,12 @@ api.get('/board-placements/:id', async (c) => {
   
   try {
     const placement = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, u.first_name || ' ' || u.last_name as agent_name 
+      SELECT bp.id, bp.tenant_id, bp.customer_id, bp.brand_id, bp.board_type, bp.board_size,
+             bp.placement_location, bp.latitude, bp.longitude, bp.status, bp.notes, bp.visit_id,
+             bp.installed_at, bp.removed_at, bp.verified_by, bp.verified_at, bp.rejection_reason,
+             bp.created_at, bp.updated_at, c.name as customer_name
       FROM board_placements bp 
       LEFT JOIN customers c ON bp.customer_id = c.id 
-      LEFT JOIN users u ON bp.created_by = u.id 
       WHERE bp.id = ? AND bp.tenant_id = ?
     `).bind(id, tenantId).first();
     
