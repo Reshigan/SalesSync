@@ -11058,6 +11058,59 @@ api.get('/gps/agents/active', async (c) => {
   }
 });
 
+// Route aliases for transfers and adjustments
+api.get('/transfers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, from_warehouse_id, to_warehouse_id, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT it.*, fw.name as from_warehouse_name, tw.name as to_warehouse_name 
+                 FROM inventory_transfers it 
+                 LEFT JOIN warehouses fw ON it.from_warehouse_id = fw.id 
+                 LEFT JOIN warehouses tw ON it.to_warehouse_id = tw.id 
+                 WHERE it.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND it.status = ?'; params.push(status); }
+    if (from_warehouse_id) { query += ' AND it.from_warehouse_id = ?'; params.push(from_warehouse_id); }
+    if (to_warehouse_id) { query += ' AND it.to_warehouse_id = ?'; params.push(to_warehouse_id); }
+    
+    query += ' ORDER BY it.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const transfers = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: transfers.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/adjustments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { status, warehouse_id, adjustment_type, limit = 50, offset = 0 } = c.req.query();
+  
+  try {
+    let query = `SELECT ia.*, w.name as warehouse_name FROM inventory_adjustments ia 
+                 LEFT JOIN warehouses w ON ia.warehouse_id = w.id 
+                 WHERE ia.tenant_id = ?`;
+    const params = [tenantId];
+    
+    if (status) { query += ' AND ia.status = ?'; params.push(status); }
+    if (warehouse_id) { query += ' AND ia.warehouse_id = ?'; params.push(warehouse_id); }
+    if (adjustment_type) { query += ' AND ia.adjustment_type = ?'; params.push(adjustment_type); }
+    
+    query += ' ORDER BY ia.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    
+    const adjustments = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: adjustments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 // Inventory GRN endpoint - Use correct table name (goods_receipts)
 api.get('/inventory/grn', async (c) => {
   const db = c.env.DB;
