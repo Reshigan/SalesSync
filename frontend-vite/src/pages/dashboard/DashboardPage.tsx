@@ -63,51 +63,51 @@ export default function DashboardPage() {
     refetch()
   }
 
-  const StatCard = ({ title, value, icon: Icon, change, color = 'blue', subtitle }: any) => (
-    <div className="card">
-      <div className="flex items-center">
-        <div className="flex-shrink-0">
-          <div className={`p-3 rounded-lg ${
-            color === 'blue' ? 'bg-blue-100' :
-            color === 'green' ? 'bg-green-100' :
-            color === 'yellow' ? 'bg-yellow-100' :
-            color === 'red' ? 'bg-red-100' :
-            color === 'purple' ? 'bg-purple-100' :
-            'bg-gray-100'
-          }`}>
-            <Icon className={`h-6 w-6 ${
-              color === 'blue' ? 'text-blue-600' :
-              color === 'green' ? 'text-green-600' :
-              color === 'yellow' ? 'text-yellow-600' :
-              color === 'red' ? 'text-red-600' :
-              color === 'purple' ? 'text-purple-600' :
-              'text-gray-600'
-            }`} />
+  const StatCard = ({ title, value, icon: Icon, change, color = 'blue', subtitle }: any) => {
+    const gradientClasses: Record<string, string> = {
+      blue: 'bg-gradient-to-br from-[#36A2EB] to-[#4FC3F7]',
+      green: 'bg-gradient-to-br from-[#2ECC71] to-[#27AE60]',
+      purple: 'bg-gradient-to-br from-[#9B59B6] to-[#8E44AD]',
+      yellow: 'bg-gradient-to-br from-[#F39C12] to-[#E67E22]',
+      red: 'bg-gradient-to-br from-[#E74C3C] to-[#C0392B]',
+    }
+    
+    return (
+      <div className={`rounded-2xl p-6 text-white shadow-stat relative overflow-hidden ${gradientClasses[color] || gradientClasses.blue}`}>
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+        
+        <div className="relative z-10">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-white/80">{title}</p>
+              <p className="text-3xl font-bold mt-2">{value}</p>
+              {change !== undefined && (
+                <div className="flex items-center text-sm mt-2">
+                  {change >= 0 ? (
+                    <TrendingUp className="w-4 h-4 text-white/90 mr-1" />
+                  ) : (
+                    <TrendingUp className="w-4 h-4 text-white/90 mr-1 rotate-180" />
+                  )}
+                  <span className="text-white/90">
+                    {change >= 0 ? '+' : ''}{change}%
+                  </span>
+                  <span className="text-white/60 ml-1">vs last period</span>
+                </div>
+              )}
+              {subtitle && (
+                <p className="text-sm text-white/70 mt-1">{subtitle}</p>
+              )}
+            </div>
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Icon className="h-6 w-6 text-white" />
+            </div>
           </div>
         </div>
-        <div className="ml-4 flex-1">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-semibold text-gray-900">{value}</p>
-          {change !== undefined && (
-            <div className="flex items-center text-sm">
-              {change >= 0 ? (
-                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-              ) : (
-                <TrendingUp className="w-4 h-4 text-red-500 mr-1 rotate-180" />
-              )}
-              <span className={change >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {Math.abs(change)}%
-              </span>
-              <span className="text-gray-500 ml-1">vs last period</span>
-            </div>
-          )}
-          {subtitle && (
-            <p className="text-sm text-gray-500">{subtitle}</p>
-          )}
-        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   if (isLoading) {
     return (
