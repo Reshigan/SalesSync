@@ -27,7 +27,7 @@ export default function DashboardLayout() {
   }, [sidebarOpen])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-secondary">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">

@@ -17,18 +17,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
   }
 
   return (
-    <div className="sticky top-0 z-[1000] flex-shrink-0 flex h-16 bg-white shadow">
+    <div className="sticky top-0 z-[1000] flex-shrink-0 flex h-16 bg-white border-b border-gray-100">
       {/* Mobile menu button */}
       <button
         type="button"
-        className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden"
+        className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
         onClick={onMenuClick}
       >
         <Menu className="h-6 w-6" />
       </button>
 
       {/* Logo on desktop */}
-      <div className="hidden lg:flex items-center px-4 border-r border-gray-200">
+      <div className="hidden lg:flex items-center px-6 border-r border-gray-100">
         <img src="/salessync-logo.svg" alt="SalesSync" className="h-8" />
       </div>
 
@@ -62,19 +62,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="relative">
             <button
               type="button"
-              className="bg-white p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="relative p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
               onClick={() => setShowNotifications(!showNotifications)}
             >
-              <Bell className="h-6 w-6" />
+              <Bell className="h-5 w-5" />
               {/* Notification badge */}
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-xs text-white">3</span>
+              <span className="absolute top-1 right-1 h-4 w-4 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white">
+                <span className="text-[10px] font-medium text-white">3</span>
               </span>
             </button>
 
             {/* Notifications dropdown */}
             {showNotifications && (
-              <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-2xl shadow-dropdown bg-white border border-gray-100 focus:outline-none overflow-hidden">
                 <div className="py-1">
                   <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-200">
                     Notifications
@@ -109,20 +109,24 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <div>
               <button
                 type="button"
-                className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="flex items-center space-x-3 p-1.5 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
                 onClick={() => setShowUserMenu(!showUserMenu)}
               >
-                <div className="h-8 w-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-primary-600">
+                <div className="h-9 w-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
+                  <span className="text-sm font-semibold text-white">
                     {user?.first_name?.[0]}{user?.last_name?.[0]}
                   </span>
+                </div>
+                <div className="hidden md:block text-left">
+                  <div className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</div>
+                  <div className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</div>
                 </div>
               </button>
             </div>
 
             {/* User menu dropdown */}
             {showUserMenu && (
-              <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-2xl shadow-dropdown bg-white border border-gray-100 focus:outline-none overflow-hidden">
                 <div className="py-1">
                   <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
                     <div className="font-medium">{user?.first_name} {user?.last_name}</div>
