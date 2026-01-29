@@ -192,7 +192,7 @@ export const PerformanceAnalyticsPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {reportData.top_performers.slice(0, 10).map((performer: any, index: number) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                     <span className="text-blue-600 font-medium text-sm">#{index + 1}</span>
@@ -214,7 +214,7 @@ export const PerformanceAnalyticsPage: React.FC = () => {
 
       {/* Performance Metrics Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Detailed Performance Metrics</h2>
         </div>
         {reportData.performance_metrics.length === 0 ? (
@@ -228,7 +228,7 @@ export const PerformanceAnalyticsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {metricType.charAt(0).toUpperCase() + metricType.slice(1)}
@@ -255,7 +255,7 @@ export const PerformanceAnalyticsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.performance_metrics.map((metric: any, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{metric.name}</div>
                     </td>

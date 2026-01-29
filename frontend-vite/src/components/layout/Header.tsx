@@ -21,7 +21,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       {/* Mobile menu button */}
       <button
         type="button"
-        className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
+        className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
         onClick={onMenuClick}
       >
         <Menu className="h-6 w-6" />
@@ -76,7 +76,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {showNotifications && (
               <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-2xl shadow-dropdown bg-white border border-gray-100 focus:outline-none overflow-hidden">
                 <div className="py-1">
-                  <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-200">
+                  <div className="px-4 py-2 text-sm font-medium text-gray-900 border-b border-gray-100">
                     Notifications
                   </div>
                   <div className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
@@ -94,7 +94,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     <div className="text-gray-500">Premium Widget A is running low</div>
                     <div className="text-xs text-gray-400 mt-1">1 hour ago</div>
                   </div>
-                  <div className="px-4 py-2 text-center border-t border-gray-200">
+                  <div className="px-4 py-2 text-center border-t border-gray-100">
                     <button className="text-sm text-primary-600 hover:text-primary-500">
                       View all notifications
                     </button>
@@ -128,7 +128,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             {showUserMenu && (
               <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-2xl shadow-dropdown bg-white border border-gray-100 focus:outline-none overflow-hidden">
                 <div className="py-1">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
                     <div className="font-medium">{user?.first_name} {user?.last_name}</div>
                     <div className="text-gray-500">{user?.email}</div>
                   </div>
@@ -143,7 +143,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     Preferences
                   </button>
                   
-                  <div className="border-t border-gray-200">
+                  <div className="border-t border-gray-100">
                     <button 
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

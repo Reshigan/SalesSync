@@ -103,7 +103,7 @@ export const CashCollectionPage: React.FC = () => {
 
       {/* Collection Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-surface-secondary0 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Record Cash Collection</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -169,7 +169,7 @@ export const CashCollectionPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-surface-secondary"
                 >
                   Cancel
                 </button>
@@ -199,7 +199,7 @@ export const CashCollectionPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Time
@@ -220,7 +220,7 @@ export const CashCollectionPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {collections.map((collection) => (
-                  <tr key={collection.id} className="hover:bg-gray-50">
+                  <tr key={collection.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(collection.collected_at).toLocaleTimeString()}
                     </td>

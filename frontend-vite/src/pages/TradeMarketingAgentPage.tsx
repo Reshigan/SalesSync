@@ -40,7 +40,7 @@ const TradeMarketingAgentPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-secondary p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -175,7 +175,7 @@ const TradeMarketingAgentPage: React.FC = () => {
                 {visits.slice(0, 5).map((visit: any) => (
                   <div 
                     key={visit.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-surface-secondary cursor-pointer"
                     onClick={() => navigate(`/trade-marketing/visits/${visit.id}`)}
                   >
                     <div className="flex-1">

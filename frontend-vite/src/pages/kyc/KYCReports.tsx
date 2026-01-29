@@ -150,7 +150,7 @@ export default function KYCReports() {
               className={`p-4 rounded-lg border-2 text-left transition-all ${
                 selectedReport === type.id
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-gray-100 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center mb-2">
@@ -370,7 +370,7 @@ export default function KYCReports() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Detailed Submissions</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Customer
@@ -494,7 +494,7 @@ export default function KYCReports() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Agent Performance</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface-secondary">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Agent

@@ -285,7 +285,7 @@ export default function CustomerSelection() {
             <button
               key={customer.id}
               onClick={() => handleSelectCustomer(customer)}
-              className="w-full p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all text-left"
+              className="w-full p-4 bg-white border border-gray-100 rounded-lg hover:border-blue-500 hover:shadow-md transition-all text-left"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1">
@@ -343,7 +343,7 @@ export default function CustomerSelection() {
       )}
 
       {/* Footer Info */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+      <div className="mt-6 p-4 bg-surface-secondary rounded-lg">
         <p className="text-sm text-gray-600 text-center">
           {filteredCustomers.length} customer
           {filteredCustomers.length !== 1 ? 's' : ''} available

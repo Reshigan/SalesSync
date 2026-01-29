@@ -102,7 +102,7 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
             className={`p-3 rounded-lg border transition-all cursor-pointer ${
               completedSteps.includes(step.step)
                 ? 'bg-green-50 border-green-200'
-                : 'bg-white border-gray-200 hover:border-blue-300'
+                : 'bg-white border-gray-100 hover:border-blue-300'
             }`}
             onClick={() => toggleStepComplete(step.step)}
           >
@@ -144,7 +144,7 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
 
   return (
     <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-xl z-50 flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="flex items-center text-white">
           <HelpCircle className="h-5 w-5 mr-2" />
           <span className="font-semibold">Help & Training</span>
@@ -159,7 +159,7 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
 
       {helpContent ? (
         <>
-          <div className="flex border-b border-gray-200">
+          <div className="flex border-b border-gray-100">
             <button
               onClick={() => setActiveTab('help')}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
@@ -201,7 +201,7 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
         </div>
       )}
 
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+      <div className="p-4 border-t border-gray-100 bg-surface-secondary">
         <p className="text-xs text-gray-500 text-center">
           Need more help? Contact support at support@salessync.com
         </p>

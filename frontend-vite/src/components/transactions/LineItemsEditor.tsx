@@ -167,7 +167,7 @@ export default function LineItemsEditor({
                 type="button"
                 onClick={onRecalculate}
                 disabled={calculating}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1"
+                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center gap-1"
               >
                 <Calculator className="w-4 h-4" />
                 {calculating ? 'Calculating...' : 'Recalculate'}
@@ -202,7 +202,7 @@ export default function LineItemsEditor({
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-20">Qty</th>
@@ -218,7 +218,7 @@ export default function LineItemsEditor({
             </thead>
             <tbody className="divide-y divide-gray-200">
               {lineItems.map((item, index) => (
-                <tr key={index} className="hover:bg-gray-50">
+                <tr key={index} className="hover:bg-surface-secondary">
                   <td className="px-4 py-3">
                     {readOnly ? (
                       <span className="text-sm text-gray-900">{item.product_name || '-'}</span>

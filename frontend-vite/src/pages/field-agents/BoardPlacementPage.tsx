@@ -357,7 +357,7 @@ export default function BoardPlacementPage() {
       <div className="card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Board Details
@@ -384,7 +384,7 @@ export default function BoardPlacementPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPlacements.map((placement) => (
-                <tr key={placement.id} className="hover:bg-gray-50">
+                <tr key={placement.id} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
@@ -488,7 +488,7 @@ export default function BoardPlacementPage() {
                 {/* Location */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
-                  <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="bg-surface-secondary p-3 rounded-lg">
                     <div className="text-sm text-gray-900">{selectedPlacement.location.address}</div>
                     <div className="text-sm text-gray-500">{selectedPlacement.location.landmark}</div>
                   </div>
@@ -498,11 +498,11 @@ export default function BoardPlacementPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Performance Metrics</label>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <div className="bg-surface-secondary p-3 rounded-lg text-center">
                       <div className="text-2xl font-bold text-primary-600">{selectedPlacement.metrics.visibility_score}%</div>
                       <div className="text-sm text-gray-500">Visibility Score</div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded-lg text-center">
+                    <div className="bg-surface-secondary p-3 rounded-lg text-center">
                       <div className="text-2xl font-bold text-green-600">{selectedPlacement.metrics.estimated_impressions.toLocaleString()}</div>
                       <div className="text-sm text-gray-500">Est. Impressions</div>
                     </div>
@@ -542,7 +542,7 @@ export default function BoardPlacementPage() {
                 {selectedPlacement.notes && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                    <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="bg-surface-secondary p-3 rounded-lg">
                       <div className="text-sm text-gray-900">{selectedPlacement.notes}</div>
                     </div>
                   </div>

@@ -47,7 +47,7 @@ export default function CustomerPayments() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Payment Date
@@ -71,7 +71,7 @@ export default function CustomerPayments() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {payments.map((payment: any) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
+                  <tr key={payment.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(payment.payment_date).toLocaleDateString()}
                     </td>

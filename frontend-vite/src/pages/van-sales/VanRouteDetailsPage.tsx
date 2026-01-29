@@ -91,7 +91,7 @@ export default function VanRouteDetailsPage() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Route Stops</h2>
         <div className="space-y-3">
           {Array.from({ length: route.planned_stops }).map((_, idx) => (
-            <div key={idx} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+            <div key={idx} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
               {idx < route.completed_stops ? (
                 <CheckCircle className="h-5 w-5 text-green-500" />
               ) : (

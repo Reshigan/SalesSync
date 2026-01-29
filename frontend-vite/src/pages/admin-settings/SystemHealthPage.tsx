@@ -107,7 +107,7 @@ export const SystemHealthPage: React.FC = () => {
         <h2 className="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mockHealthData.metrics.map((metric, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
+            <div key={index} className="border border-gray-100 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-900">{metric.name}</h3>
                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(metric.status)}`}>
@@ -140,12 +140,12 @@ export const SystemHealthPage: React.FC = () => {
 
       {/* Services Status */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Services</h2>
         </div>
         <div className="divide-y divide-gray-200">
           {mockHealthData.services.map((service, index) => (
-            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-surface-secondary">
               <div className="flex items-center">
                 <div className={`h-3 w-3 rounded-full ${
                   service.status === 'running' ? 'bg-green-500' : 'bg-red-500'
@@ -182,7 +182,7 @@ export const SystemHealthPage: React.FC = () => {
         ) : (
           <div className="space-y-4">
             {mockHealthData.recent_incidents.map((incident: any, index: number) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div key={index} className="border border-gray-100 rounded-lg p-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900">{incident.title}</h3>

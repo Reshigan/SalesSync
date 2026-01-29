@@ -132,9 +132,9 @@ export default function MyCommissions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-secondary">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-semibold text-gray-900 flex items-center">
@@ -144,12 +144,12 @@ export default function MyCommissions() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </button>
-              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </button>
@@ -206,7 +206,7 @@ export default function MyCommissions() {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-100">
             <div className="flex overflow-x-auto">
               {[
                 { key: 'all', label: 'All', count: commissions.length },
@@ -247,7 +247,7 @@ export default function MyCommissions() {
                 <div
                   key={commission.id}
                   onClick={() => setSelectedCommission(commission)}
-                  className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="p-6 hover:bg-surface-secondary cursor-pointer transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
@@ -295,7 +295,7 @@ export default function MyCommissions() {
 
         {/* Payment History */}
         <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FileText className="w-5 h-5 mr-2" />
               Payment History
@@ -320,7 +320,7 @@ export default function MyCommissions() {
                 items: 52
               }
             ].map((payment, index) => (
-              <div key={index} className="p-6 hover:bg-gray-50">
+              <div key={index} className="p-6 hover:bg-surface-secondary">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 mb-1">{payment.month}</h3>
@@ -353,7 +353,7 @@ export default function MyCommissions() {
       {selectedCommission && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Commission Details</h2>
               <button
                 onClick={() => setSelectedCommission(null)}
@@ -377,7 +377,7 @@ export default function MyCommissions() {
               </div>
 
               {/* Amount */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-surface-secondary rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-1">Commission Amount</p>
                 <p className="text-3xl font-bold text-gray-900">R{selectedCommission.amount.toFixed(2)}</p>
               </div>

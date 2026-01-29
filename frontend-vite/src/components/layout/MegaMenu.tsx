@@ -158,7 +158,7 @@ export default function MegaMenu() {
                             `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                               isActive
                                 ? 'bg-blue-50 text-blue-700'
-                                : 'hover:bg-gray-50'
+                                : 'hover:bg-surface-secondary'
                             }`
                           }
                         >
@@ -184,7 +184,7 @@ export default function MegaMenu() {
                                     `block px-3 py-2 rounded-md text-sm transition-colors ${
                                       isActive
                                         ? 'bg-blue-50 text-blue-700 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        : 'text-gray-600 hover:bg-surface-secondary hover:text-gray-900'
                                     }`
                                   }
                                 >

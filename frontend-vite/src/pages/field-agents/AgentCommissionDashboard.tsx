@@ -114,7 +114,7 @@ export default function AgentCommissionDashboard() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-surface-secondary pb-20">
         {/* Header */}
         <div className="bg-primary-600 text-white p-6">
           <h1 className="text-2xl font-bold">My Earnings</h1>
@@ -284,12 +284,12 @@ export default function AgentCommissionDashboard() {
 
         {/* Commission Table */}
         <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
+          <div className="p-6 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900">Recent Commissions</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Type

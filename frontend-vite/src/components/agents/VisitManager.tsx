@@ -166,7 +166,7 @@ export default function VisitManager({ agent, onVisitUpdate }: VisitManagerProps
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-100">
         <nav className="-mb-px flex space-x-8">
           {[
             { key: 'today', label: 'Today', count: visits.filter(v => new Date(v.scheduled_time).toDateString() === new Date().toDateString()).length },
@@ -256,7 +256,7 @@ export default function VisitManager({ agent, onVisitUpdate }: VisitManagerProps
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setSelectedVisit(visit)}

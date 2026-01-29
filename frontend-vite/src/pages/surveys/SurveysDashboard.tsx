@@ -342,7 +342,7 @@ export default function SurveysDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_surveys || []).slice(0, 5).map((survey: any) => (
-              <div key={survey.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={survey.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{survey.title}</p>
                   <p className="text-sm text-gray-500">by {survey.created_by_name}</p>
@@ -373,7 +373,7 @@ export default function SurveysDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.top_surveys || []).slice(0, 5).map((survey: any, index: number) => (
-              <div key={survey.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={survey.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
@@ -406,7 +406,7 @@ export default function SurveysDashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(analytics?.category_performance || []).map((category: any) => (
-            <div key={category.category} className="p-4 bg-gray-50 rounded-lg">
+            <div key={category.category} className="p-4 bg-surface-secondary rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{category.category}</h4>
                 <span className="text-sm text-gray-500">{category.survey_count} surveys</span>

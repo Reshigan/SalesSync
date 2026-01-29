@@ -111,7 +111,7 @@ export default function ExecutiveDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Products</h3>
         <div className="space-y-3">
           {topProducts.map((product, index) => (
-            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div key={index} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold">{index + 1}</div>
                 <div>

@@ -96,7 +96,7 @@ export const ProductImportExportPage: React.FC = () => {
             </div>
 
             {selectedFile && (
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-surface-secondary rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,7 +162,7 @@ export const ProductImportExportPage: React.FC = () => {
               </div>
             )}
 
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-gray-100 pt-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Import Template</h3>
               <p className="text-sm text-gray-500 mb-3">
                 Download a template file to see the required format
@@ -194,7 +194,7 @@ export const ProductImportExportPage: React.FC = () => {
               <div className="space-y-2">
                 <button
                   onClick={() => handleExport('csv')}
-                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-surface-secondary"
                 >
                   <div className="flex items-center">
                     <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -212,7 +212,7 @@ export const ProductImportExportPage: React.FC = () => {
 
                 <button
                   onClick={() => handleExport('excel')}
-                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-surface-secondary"
                 >
                   <div className="flex items-center">
                     <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,7 +230,7 @@ export const ProductImportExportPage: React.FC = () => {
 
                 <button
                   onClick={() => handleExport('pdf')}
-                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full flex items-center justify-between p-4 border border-gray-300 rounded-lg hover:bg-surface-secondary"
                 >
                   <div className="flex items-center">
                     <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -248,7 +248,7 @@ export const ProductImportExportPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-gray-100 pt-4">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Export Options</h3>
               <div className="space-y-2">
                 <label className="flex items-center">

@@ -196,7 +196,7 @@ export default function TransactionForm({
             ))}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
             <Button
               type="button"
               variant="secondary"

@@ -29,7 +29,7 @@ export default function MobileButton({
   const variantClasses = {
     primary: 'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 active:bg-gray-800',
-    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100',
+    outline: 'border-2 border-gray-300 text-gray-700 hover:bg-surface-secondary active:bg-gray-100',
     danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
   }
   

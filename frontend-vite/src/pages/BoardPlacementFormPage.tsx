@@ -92,7 +92,7 @@ const BoardPlacementFormPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-secondary p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -121,7 +121,7 @@ const BoardPlacementFormPage: React.FC = () => {
                   className={`w-full p-4 border-2 rounded-lg text-left transition ${
                     selectedBoard?.id === board.id
                       ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
+                      : 'border-gray-100 hover:border-blue-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">

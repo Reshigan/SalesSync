@@ -148,7 +148,7 @@ export default function GPSVerification() {
       </div>
 
       {/* Customer Info Card */}
-      <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="mb-6 p-4 bg-white border border-gray-100 rounded-lg">
         <h3 className="font-semibold text-gray-900 mb-1">
           {customer.store_name}
         </h3>
@@ -194,7 +194,7 @@ export default function GPSVerification() {
 
       {/* GPS Position Details */}
       {position && (
-        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="mb-6 p-4 bg-surface-secondary border border-gray-100 rounded-lg">
           <h4 className="font-semibold text-gray-900 mb-3">
             Location Information
           </h4>
@@ -309,7 +309,7 @@ export default function GPSVerification() {
 
         <button
           onClick={handleCancel}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold flex items-center justify-center"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold flex items-center justify-center"
         >
           <X className="w-5 h-5 mr-2" />
           Cancel Visit

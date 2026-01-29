@@ -414,7 +414,7 @@ export default function RolePermissionsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-6 pt-4 border-t border-gray-200">
+                <div className="flex gap-2 mt-6 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => handleEditRole(role)}
                     className="btn btn-secondary flex-1 flex items-center justify-center gap-2"
@@ -453,7 +453,7 @@ export default function RolePermissionsPage() {
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   {selectedRole ? `${editingRole.isSystem ? 'View' : 'Edit'} Role` : 'Create New Role'}
@@ -534,7 +534,7 @@ export default function RolePermissionsPage() {
                         const someSelected = modulePerms.some(p => editingRole.permissions?.includes(p.id))
 
                         return (
-                          <div key={module} className="border border-gray-200 rounded-lg p-4">
+                          <div key={module} className="border border-gray-100 rounded-lg p-4">
                             <div className="flex items-center justify-between mb-3">
                               <h4 className="font-semibold text-gray-900 flex items-center gap-2">
                                 <Shield className="w-4 h-4 text-blue-600" />
@@ -556,7 +556,7 @@ export default function RolePermissionsPage() {
                                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                                     editingRole.permissions?.includes(permission.id)
                                       ? 'bg-blue-50 border-blue-200'
-                                      : 'bg-white border-gray-200 hover:bg-gray-50'
+                                      : 'bg-white border-gray-100 hover:bg-surface-secondary'
                                   } ${editingRole.isSystem ? 'cursor-not-allowed opacity-75' : ''}`}
                                 >
                                   <input
@@ -587,7 +587,7 @@ export default function RolePermissionsPage() {
 
             {/* Footer */}
             {!editingRole.isSystem && (
-              <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
                 <button
                   onClick={() => {
                     setIsEditModalOpen(false)

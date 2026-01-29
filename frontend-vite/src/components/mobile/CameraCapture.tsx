@@ -63,7 +63,7 @@ export default function CameraCapture({
           <img
             src={photo}
             alt="Captured"
-            className="w-full h-64 object-cover rounded-lg border-2 border-gray-200"
+            className="w-full h-64 object-cover rounded-lg border-2 border-gray-100"
           />
           <div className="absolute top-2 right-2 flex gap-2">
             <button

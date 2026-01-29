@@ -42,11 +42,11 @@ export default function VanOrdersListPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
+            <thead className="bg-surface-secondary"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Delivery</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th></tr></thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {orders.length === 0 ? <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500"><ShoppingCart className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No orders found</p></td></tr>
               : orders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50">
+                <tr key={order.id} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4 text-sm font-medium">{order.order_number}</td>
                   <td className="px-6 py-4 text-sm">{order.customer_name}</td>
                   <td className="px-6 py-4 text-sm">{new Date(order.order_date).toLocaleDateString()}</td>

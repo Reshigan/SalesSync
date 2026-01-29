@@ -55,7 +55,7 @@ export default function WarehouseManagementPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
@@ -71,7 +71,7 @@ export default function WarehouseManagementPage() {
                 <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500"><Warehouse className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No warehouses found</p></td></tr>
               ) : (
                 warehouses.map(warehouse => (
-                  <tr key={warehouse.id} className="hover:bg-gray-50">
+                  <tr key={warehouse.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{warehouse.warehouse_name}</div><div className="text-sm text-gray-500">{warehouse.warehouse_code}</div></td>
                     <td className="px-6 py-4"><div className="text-sm text-gray-900">{warehouse.address}</div><div className="text-sm text-gray-500">{warehouse.city}, {warehouse.country}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">{warehouse.manager_name || '-'}</td>

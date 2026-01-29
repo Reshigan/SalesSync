@@ -110,7 +110,7 @@ export default function DeliveryStops() {
               </button>
             </div>
             {idx < stops.length - 1 && (
-              <div className="ml-5 mt-4 border-l-2 border-gray-200 h-4" />
+              <div className="ml-5 mt-4 border-l-2 border-gray-100 h-4" />
             )}
           </div>
         ))}

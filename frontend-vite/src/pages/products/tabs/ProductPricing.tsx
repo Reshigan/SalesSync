@@ -43,7 +43,7 @@ export default function ProductPricing() {
       </div>
 
       <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">Pricing History</h3>
         </div>
         {isLoading ? (
@@ -56,7 +56,7 @@ export default function ProductPricing() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Effective Date
@@ -80,7 +80,7 @@ export default function ProductPricing() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {pricing.map((price: any) => (
-                  <tr key={price.id} className="hover:bg-gray-50">
+                  <tr key={price.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-gray-400" />

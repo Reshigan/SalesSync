@@ -21,7 +21,7 @@ export function ServiceWorkerUpdatePrompt() {
   return (
     <>
       {needRefresh && (
-        <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm z-50 border border-gray-200">
+        <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm z-50 border border-gray-100">
           <div className="flex items-start">
             <div className="flex-1">
               <h3 className="text-sm font-medium text-gray-900">

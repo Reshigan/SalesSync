@@ -45,7 +45,7 @@ export const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onCurrencyCh
   const previewAmount = 1234.56
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Currency Settings</h3>
         <p className="text-sm text-gray-600">
@@ -66,7 +66,7 @@ export const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onCurrencyCh
                   relative rounded-lg border-2 cursor-pointer transition-all duration-200
                   ${selectedCurrency === code 
                     ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                    : 'border-gray-100 hover:border-gray-300 bg-white'
                   }
                   ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
@@ -104,7 +104,7 @@ export const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onCurrencyCh
         </div>
 
         <div className="border-t pt-4">
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-surface-secondary rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-2">Preview</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">

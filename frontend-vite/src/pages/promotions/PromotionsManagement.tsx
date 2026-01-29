@@ -633,7 +633,7 @@ export default function PromotionsManagement() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Conditions</h3>
                 <div className="space-y-2">
                   {selectedPromotion.conditions.map((condition: any, index: number) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="p-3 bg-surface-secondary rounded-lg">
                       <p className="text-sm text-gray-900">{condition.description}</p>
                     </div>
                   ))}

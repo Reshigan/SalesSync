@@ -402,7 +402,7 @@ export default function ProductDistributionPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Items</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface-secondary">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
@@ -416,7 +416,7 @@ export default function ProductDistributionPage() {
                   {distributionItems.map((item) => {
                     const progress = Math.round((item.deliveredQuantity / item.loadedQuantity) * 100)
                     return (
-                      <tr key={item.id} className="hover:bg-gray-50">
+                      <tr key={item.id} className="hover:bg-surface-secondary">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.productName}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">{item.sku}</td>
                         <td className="px-4 py-3 text-sm text-gray-900 text-right">{item.loadedQuantity}</td>

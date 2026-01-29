@@ -202,7 +202,7 @@ export default function CommissionDashboard() {
       {/* Commissions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Agent
@@ -239,7 +239,7 @@ export default function CommissionDashboard() {
               </tr>
             ) : (
               commissions.map((commission) => (
-                <tr key={commission.id} className="hover:bg-gray-50">
+                <tr key={commission.id} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900">
                       {commission.agent_name || 'Unknown Agent'}
@@ -362,7 +362,7 @@ export default function CommissionDashboard() {
               {selectedCommission.calculation_details && (
                 <div>
                   <p className="text-sm text-gray-600 mb-2">Calculation Details</p>
-                  <pre className="bg-gray-50 p-4 rounded-lg text-xs overflow-x-auto">
+                  <pre className="bg-surface-secondary p-4 rounded-lg text-xs overflow-x-auto">
                     {JSON.stringify(selectedCommission.calculation_details, null, 2)}
                   </pre>
                 </div>
@@ -419,7 +419,7 @@ export default function CommissionDashboard() {
               )}
               <button
                 onClick={() => setShowDetails(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary"
               >
                 Close
               </button>

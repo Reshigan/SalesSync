@@ -148,7 +148,7 @@ export const CustomerSegmentationPage: React.FC = () => {
                     <span className="font-semibold text-gray-900">{formatCurrency(segment.avg_order_value)}</span>
                   </div>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mt-4 pt-4 border-t border-gray-100">
                   <button className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium">
                     View Customers →
                   </button>
@@ -161,7 +161,7 @@ export const CustomerSegmentationPage: React.FC = () => {
 
       {/* Segment Details Modal */}
       {selectedSegment && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-surface-secondary0 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -179,15 +179,15 @@ export const CustomerSegmentationPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-surface-secondary rounded-lg p-4">
                 <p className="text-sm text-gray-500">Customers</p>
                 <p className="text-2xl font-semibold text-gray-900 mt-1">{selectedSegment.customer_count}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-surface-secondary rounded-lg p-4">
                 <p className="text-sm text-gray-500">Total Sales</p>
                 <p className="text-2xl font-semibold text-gray-900 mt-1">{formatCurrency(selectedSegment.total_sales)}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-surface-secondary rounded-lg p-4">
                 <p className="text-sm text-gray-500">Avg Order Value</p>
                 <p className="text-2xl font-semibold text-gray-900 mt-1">{formatCurrency(selectedSegment.avg_order_value)}</p>
               </div>
@@ -195,7 +195,7 @@ export const CustomerSegmentationPage: React.FC = () => {
 
             <div className="mb-6">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Segment Criteria</h4>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="bg-surface-secondary rounded-lg p-4 space-y-2">
                 {selectedSegment.criteria.type && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Customer Types</span>
@@ -226,7 +226,7 @@ export const CustomerSegmentationPage: React.FC = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setSelectedSegment(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-surface-secondary"
               >
                 Close
               </button>

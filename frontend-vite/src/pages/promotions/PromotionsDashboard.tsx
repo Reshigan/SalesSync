@@ -354,7 +354,7 @@ export default function PromotionsDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.active_promotions || []).slice(0, 5).map((promotion: any) => (
-              <div key={promotion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={promotion.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{promotion.name}</p>
                   <p className="text-sm text-gray-500">{promotion.type} • {promotion.discount_value}% off</p>
@@ -376,11 +376,11 @@ export default function PromotionsDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_activity || []).slice(0, 5).map((activity: any) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-3 ${
                     activity.type === 'conversion' ? 'bg-green-500' : 
-                    activity.type === 'view' ? 'bg-blue-500' : 'bg-gray-500'
+                    activity.type === 'view' ? 'bg-blue-500' : 'bg-surface-secondary0'
                   }`}></div>
                   <div>
                     <p className="font-medium text-gray-900">{activity.customer_name}</p>
@@ -409,7 +409,7 @@ export default function PromotionsDashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(analytics?.category_performance || []).map((category: any) => (
-            <div key={category.category} className="p-4 bg-gray-50 rounded-lg">
+            <div key={category.category} className="p-4 bg-surface-secondary rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{category.category}</h4>
                 <span className="text-sm text-gray-500">{category.promotion_count} promotions</span>

@@ -84,7 +84,7 @@ export default function StockCountListPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Count #</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
@@ -101,7 +101,7 @@ export default function StockCountListPage() {
                 <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-500"><Clock className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No stock counts found</p></td></tr>
               ) : (
                 counts.map(count => (
-                  <tr key={count.id} className="hover:bg-gray-50">
+                  <tr key={count.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{count.count_number}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{count.warehouse_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(count.count_date).toLocaleDateString()}</td>

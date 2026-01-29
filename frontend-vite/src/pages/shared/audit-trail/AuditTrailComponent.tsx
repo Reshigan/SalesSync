@@ -47,7 +47,7 @@ export default function AuditTrailComponent({ entityType, entityId }: AuditTrail
               </div>
             </div>
             {entry.details && Object.keys(entry.details).length > 0 && (
-              <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+              <div className="mt-2 p-2 bg-surface-secondary rounded text-xs">
                 {Object.entries(entry.details).map(([key, value]) => (
                   <div key={key} className="flex gap-2">
                     <span className="font-medium capitalize">{key.replace('_', ' ')}:</span>

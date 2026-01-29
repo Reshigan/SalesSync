@@ -180,7 +180,7 @@ export default function InvoiceManagementPage() {
       <div className="card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
@@ -193,7 +193,7 @@ export default function InvoiceManagementPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-gray-50">
+                <tr key={invoice.id} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-gray-900">{invoice.invoiceNumber}</div>
                     <div className="text-sm text-gray-500">{invoice.paymentTerms}</div>
@@ -245,7 +245,7 @@ export default function InvoiceManagementPage() {
       {isViewModalOpen && selectedInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">{selectedInvoice.invoiceNumber}</h2>
               <button
                 onClick={() => setIsViewModalOpen(false)}
@@ -269,8 +269,8 @@ export default function InvoiceManagementPage() {
                 </div>
 
                 <div>
-                  <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                    <thead className="bg-gray-50">
+                  <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg">
+                    <thead className="bg-surface-secondary">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
                         <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Qty</th>
@@ -296,7 +296,7 @@ export default function InvoiceManagementPage() {
 
                 <div className="flex justify-end">
                   <div className="w-64 space-y-2">
-                    <div className="flex justify-between py-2 border-t border-gray-200">
+                    <div className="flex justify-between py-2 border-t border-gray-100">
                       <span className="text-gray-600">Subtotal:</span>
                       <span className="font-semibold text-gray-900">${selectedInvoice.amount.toFixed(2)}</span>
                     </div>
@@ -313,7 +313,7 @@ export default function InvoiceManagementPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
               <button className="btn btn-outline flex items-center gap-2">
                 <Printer className="w-4 h-4" />
                 Print

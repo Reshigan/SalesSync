@@ -130,7 +130,7 @@ export const BackupManagementPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Backup Schedule</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Daily Full Backup</div>
               <div className="text-sm text-gray-500">Runs every day at 2:00 AM</div>
@@ -145,7 +145,7 @@ export const BackupManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Hourly Incremental Backup</div>
               <div className="text-sm text-gray-500">Runs every hour</div>
@@ -160,7 +160,7 @@ export const BackupManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Weekly Differential Backup</div>
               <div className="text-sm text-gray-500">Runs every Sunday at 3:00 AM</div>
@@ -179,7 +179,7 @@ export const BackupManagementPage: React.FC = () => {
 
       {/* Backups List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Backup History</h2>
         </div>
         {mockBackups.length === 0 ? (
@@ -193,7 +193,7 @@ export const BackupManagementPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Name
@@ -220,7 +220,7 @@ export const BackupManagementPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {mockBackups.map((backup) => (
-                  <tr key={backup.id} className="hover:bg-gray-50">
+                  <tr key={backup.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{backup.name}</div>
                     </td>

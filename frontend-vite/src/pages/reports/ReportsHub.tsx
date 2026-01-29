@@ -173,7 +173,7 @@ const ReportsHub: React.FC = () => {
           </thead>
           <tbody>
             {dataArray.map((row: any, i: number) => (
-              <tr key={i} className="border-t hover:bg-gray-50">
+              <tr key={i} className="border-t hover:bg-surface-secondary">
                 {columns.map((col) => (
                   <td key={col} className="px-4 py-3 text-sm">
                     {typeof row[col] === 'number' 
@@ -238,7 +238,7 @@ const ReportsHub: React.FC = () => {
                     className={`w-full text-left p-3 rounded-lg border transition-all ${
                       selectedReport?.id === report.id
                         ? 'border-blue-500 bg-blue-50 shadow-md'
-                        : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                        : 'border-gray-100 hover:border-blue-300 hover:bg-surface-secondary'
                     }`}
                   >
                     <div className="flex items-center gap-2">

@@ -65,7 +65,7 @@ export default function VanCashCollectionPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-surface-secondary">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
@@ -76,7 +76,7 @@ export default function VanCashCollectionPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {collections.map((collection, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50">
+                      <tr key={idx} className="hover:bg-surface-secondary">
                         <td className="px-6 py-4 text-sm text-gray-900">{new Date(collection.timestamp).toLocaleTimeString()}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-900">{collection.order_number}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{collection.customer_name}</td>

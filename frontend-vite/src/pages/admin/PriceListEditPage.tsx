@@ -332,7 +332,7 @@ export default function PriceListEditPage() {
 
           <div className="space-y-3">
             {items.map((item, index) => (
-              <div key={index} className="flex gap-3 items-start p-3 border border-gray-200 rounded-lg">
+              <div key={index} className="flex gap-3 items-start p-3 border border-gray-100 rounded-lg">
                 <div className="flex-1 grid grid-cols-6 gap-3">
                   <div className="col-span-2">
                     <label className="block text-xs font-medium text-gray-700 mb-1">Product *</label>
@@ -423,7 +423,7 @@ export default function PriceListEditPage() {
           <button
             type="button"
             onClick={() => navigate('/admin/price-lists')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary"
           >
             Cancel
           </button>

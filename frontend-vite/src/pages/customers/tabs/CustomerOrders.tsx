@@ -42,7 +42,7 @@ export default function CustomerOrders() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Order #
@@ -63,7 +63,7 @@ export default function CustomerOrders() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orders.map((order: any) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
+                  <tr key={order.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{order.order_number}</div>
                     </td>

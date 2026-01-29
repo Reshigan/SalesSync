@@ -213,7 +213,7 @@ export default function ProductDistribution() {
       </div>
 
       {/* Customer Info */}
-      <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="mb-4 p-4 bg-white border border-gray-100 rounded-lg">
         <h3 className="font-semibold text-gray-900">{customer.store_name}</h3>
         <p className="text-sm text-gray-600">{customer.owner_name}</p>
       </div>
@@ -379,7 +379,7 @@ export default function ProductDistribution() {
             {distributions.map((dist) => (
               <div
                 key={dist.id}
-                className="p-4 bg-white border border-gray-200 rounded-lg flex items-start justify-between"
+                className="p-4 bg-white border border-gray-100 rounded-lg flex items-start justify-between"
               >
                 <div className="flex items-start flex-1">
                   <Package className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
@@ -452,7 +452,7 @@ export default function ProductDistribution() {
         <button
           onClick={handleSkip}
           disabled={submitting}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold"
         >
           Skip for Now
         </button>

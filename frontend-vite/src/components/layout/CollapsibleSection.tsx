@@ -18,7 +18,7 @@ export default function CollapsibleSection({
     <div className="mb-2">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center w-full px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-gray-50 rounded-lg transition-colors"
+        className="flex items-center w-full px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:bg-surface-secondary rounded-lg transition-colors"
       >
         {isExpanded ? (
           <ChevronDown className="w-4 h-4 mr-2" />

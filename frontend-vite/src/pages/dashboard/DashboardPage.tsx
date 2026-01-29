@@ -285,12 +285,12 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             {(recentActivity?.activities || []).slice(0, 8).map((activity: any) => (
-              <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div key={activity.id} className="flex items-center space-x-3 p-3 bg-surface-secondary rounded-lg">
                 <div className={`w-2 h-2 rounded-full ${
                   activity.type === 'order' ? 'bg-green-500' :
                   activity.type === 'visit' ? 'bg-blue-500' :
                   activity.type === 'customer' ? 'bg-purple-500' :
-                  'bg-gray-500'
+                  'bg-surface-secondary0'
                 }`}></div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
@@ -318,7 +318,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             {(dashboardData?.top_performers || []).slice(0, 5).map((performer: any, index: number) => (
-              <div key={performer.agent_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={performer.agent_id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
@@ -351,7 +351,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             onClick={() => window.open('/orders/create', '_blank')}
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary transition-colors"
           >
             <ShoppingCart className="w-8 h-8 text-blue-600 mr-3" />
             <div className="text-left">
@@ -362,7 +362,7 @@ export default function DashboardPage() {
           
           <button
             onClick={() => window.open('/customers/create', '_blank')}
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary transition-colors"
           >
             <Users className="w-8 h-8 text-green-600 mr-3" />
             <div className="text-left">
@@ -373,7 +373,7 @@ export default function DashboardPage() {
           
           <button
             onClick={() => window.open('/visits/create', '_blank')}
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary transition-colors"
           >
             <MapPin className="w-8 h-8 text-purple-600 mr-3" />
             <div className="text-left">
@@ -384,7 +384,7 @@ export default function DashboardPage() {
           
           <button
             onClick={() => window.open('/reports', '_blank')}
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary transition-colors"
           >
             <FileText className="w-8 h-8 text-yellow-600 mr-3" />
             <div className="text-left">

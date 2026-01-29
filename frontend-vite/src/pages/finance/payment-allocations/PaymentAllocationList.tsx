@@ -49,7 +49,7 @@ export default function PaymentAllocationList() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Invoice Amount</th>
@@ -61,7 +61,7 @@ export default function PaymentAllocationList() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {allocations?.map((allocation) => (
-              <tr key={allocation.id} className="hover:bg-gray-50">
+              <tr key={allocation.id} className="hover:bg-surface-secondary">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {allocation.invoice_number}
                 </td>

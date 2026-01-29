@@ -29,9 +29,9 @@ export default function MobileWorkflowLayout({
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-surface-secondary flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-10">
         <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
         {showProgress && (
           <div className="mt-2">
@@ -55,12 +55,12 @@ export default function MobileWorkflowLayout({
       </div>
 
       {/* Footer Actions */}
-      <div className="bg-white border-t border-gray-200 px-4 py-3 sticky bottom-0 z-10">
+      <div className="bg-white border-t border-gray-100 px-4 py-3 sticky bottom-0 z-10">
         <div className="flex gap-3">
           {onBack && currentStep > 0 && (
             <button
               onClick={onBack}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-surface-secondary active:bg-gray-100 transition-colors touch-manipulation"
             >
               <ChevronLeft className="h-5 w-5" />
               {backLabel}

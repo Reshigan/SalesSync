@@ -163,7 +163,7 @@ export const SkeletonLoader: React.FC<{
 // Card skeleton for loading states
 export const CardSkeleton: React.FC<{ className?: string }> = ({ className = '' }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-100 p-6 ${className}`}>
       <div className="animate-pulse">
         <div className="flex items-center space-x-4 mb-4">
           <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
@@ -193,10 +193,10 @@ export const TableSkeleton: React.FC<{
   className = ''
 }) => {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden ${className}`}>
       <div className="animate-pulse">
         {/* Header */}
-        <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+        <div className="bg-surface-secondary px-6 py-3 border-b border-gray-100">
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
             {Array.from({ length: columns }).map((_, index) => (
               <div key={index} className="h-4 bg-gray-200 rounded"></div>
@@ -206,7 +206,7 @@ export const TableSkeleton: React.FC<{
         
         {/* Rows */}
         {Array.from({ length: rows }).map((_, rowIndex) => (
-          <div key={rowIndex} className="px-6 py-4 border-b border-gray-200 last:border-b-0">
+          <div key={rowIndex} className="px-6 py-4 border-b border-gray-100 last:border-b-0">
             <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
               {Array.from({ length: columns }).map((_, colIndex) => (
                 <div key={colIndex} className="h-4 bg-gray-200 rounded"></div>

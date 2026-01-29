@@ -147,7 +147,7 @@ export default function AdjustmentJustification() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
           <div className="space-y-3">
             {item.supporting_documents.map((doc) => (
-              <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50">
+              <div key={doc.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-surface-secondary">
                 <FileText className="h-5 w-5 text-gray-400" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{doc.name}</p>

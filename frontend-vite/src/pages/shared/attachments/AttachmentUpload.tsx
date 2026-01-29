@@ -72,7 +72,7 @@ export default function AttachmentUpload({ entityType, entityId }: AttachmentUpl
             />
             <label
               htmlFor="file-upload"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-surface-secondary cursor-pointer"
             >
               Select Files
             </label>

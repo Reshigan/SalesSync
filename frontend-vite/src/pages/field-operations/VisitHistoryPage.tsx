@@ -40,7 +40,7 @@ export default function VisitHistoryPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
@@ -57,7 +57,7 @@ export default function VisitHistoryPage() {
                 visits.map(visit => {
                   const duration = visit.check_in_time && visit.check_out_time ? Math.round((new Date(visit.check_out_time).getTime() - new Date(visit.check_in_time).getTime()) / 60000) : null
                   return (
-                    <tr key={visit.id} className="hover:bg-gray-50">
+                    <tr key={visit.id} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4 text-sm text-gray-900">{new Date(visit.visit_date).toLocaleDateString()}</td>
                       <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{visit.customer_name}</div></td>
                       <td className="px-6 py-4 text-sm text-gray-900">Agent #{visit.agent_id?.substring(0,8)}</td>

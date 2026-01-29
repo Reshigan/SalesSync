@@ -289,7 +289,7 @@ export default function CustomerDetailsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-100">
         <nav className="-mb-px flex space-x-8">
           {['overview', 'orders', 'payments', 'visits'].map((tab) => (
             <button
@@ -422,7 +422,7 @@ export default function CustomerDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Order History</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -433,7 +433,7 @@ export default function CustomerDetailsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/orders/${order.id}`)}>
+                  <tr key={order.id} className="hover:bg-surface-secondary cursor-pointer" onClick={() => navigate(`/orders/${order.id}`)}>
                     <td className="px-6 py-4 text-sm font-medium text-blue-600">{order.orderNumber}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">${order.totalAmount.toLocaleString()}</td>
@@ -456,7 +456,7 @@ export default function CustomerDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment History</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
@@ -467,7 +467,7 @@ export default function CustomerDetailsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
+                  <tr key={payment.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{payment.paymentNumber}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(payment.paymentDate).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm text-green-600 font-medium">${payment.amount.toLocaleString()}</td>
@@ -490,7 +490,7 @@ export default function CustomerDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Visit History</h3>
           <div className="space-y-4">
             {visits.map((visit) => (
-              <div key={visit.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+              <div key={visit.id} className="border border-gray-100 rounded-lg p-4 hover:bg-surface-secondary">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">

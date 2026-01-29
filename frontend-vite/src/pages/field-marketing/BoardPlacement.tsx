@@ -245,7 +245,7 @@ export default function BoardPlacement() {
       </div>
 
       {/* Customer Info */}
-      <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="mb-4 p-4 bg-white border border-gray-100 rounded-lg">
         <h3 className="font-semibold text-gray-900">{customer.store_name}</h3>
         <p className="text-sm text-gray-600">{customer.owner_name}</p>
       </div>
@@ -268,7 +268,7 @@ export default function BoardPlacement() {
             return (
               <div
                 key={brand.id}
-                className="p-4 bg-white border border-gray-200 rounded-lg"
+                className="p-4 bg-white border border-gray-100 rounded-lg"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div>
@@ -387,7 +387,7 @@ export default function BoardPlacement() {
         <button
           onClick={handleCancel}
           disabled={uploading}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>

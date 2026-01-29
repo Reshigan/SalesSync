@@ -83,7 +83,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-secondary p-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <button onClick={() => navigate(-1)} className="mb-4 text-blue-600">← Back</button>
@@ -130,7 +130,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
                   className={`p-3 border-2 rounded-lg ${
                     formData.availabilityStatus === status.value
                       ? `border-${status.color}-600 bg-${status.color}-50`
-                      : 'border-gray-200'
+                      : 'border-gray-100'
                   }`}
                 >
                   {status.label}
@@ -250,7 +250,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
                   className={`p-3 border-2 rounded-lg ${
                     formData.productCondition === condition.value
                       ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200'
+                      : 'border-gray-100'
                   }`}
                 >
                   {condition.label}

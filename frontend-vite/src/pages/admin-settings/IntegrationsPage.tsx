@@ -140,7 +140,7 @@ export const IntegrationsPage: React.FC = () => {
       {/* Integrations by Category */}
       {categories.map((category) => (
         <div key={category} className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-medium text-gray-900">{category}</h2>
           </div>
           <div className="p-6">
@@ -150,7 +150,7 @@ export const IntegrationsPage: React.FC = () => {
                 .map((integration) => (
                   <div
                     key={integration.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center">
@@ -209,7 +209,7 @@ export const IntegrationsPage: React.FC = () => {
           Use these API keys to integrate SalesSync with custom applications
         </p>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Production API Key</div>
               <div className="text-sm text-gray-500 font-mono">sk_live_••••••••••••••••</div>
@@ -227,7 +227,7 @@ export const IntegrationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Test API Key</div>
               <div className="text-sm text-gray-500 font-mono">sk_test_••••••••••••••••</div>

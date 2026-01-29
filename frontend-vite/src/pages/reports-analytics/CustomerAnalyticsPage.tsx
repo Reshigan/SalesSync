@@ -192,7 +192,7 @@ export const CustomerAnalyticsPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {reportData.customers_by_segment.map((segment: any, index: number) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <div key={index} className="border border-gray-100 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">{segment.name}</h3>
                 <p className="text-3xl font-bold text-gray-900 mb-1">{segment.count}</p>
                 <p className="text-sm text-gray-500 mb-3">
@@ -216,7 +216,7 @@ export const CustomerAnalyticsPage: React.FC = () => {
 
       {/* Top Customers */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Top Customers by Revenue</h2>
         </div>
         {reportData.top_customers.length === 0 ? (
@@ -230,7 +230,7 @@ export const CustomerAnalyticsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rank
@@ -257,7 +257,7 @@ export const CustomerAnalyticsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.top_customers.slice(0, 20).map((customer: any, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100">
                         <span className="text-blue-600 font-medium text-sm">#{index + 1}</span>

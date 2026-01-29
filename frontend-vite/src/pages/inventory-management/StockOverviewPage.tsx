@@ -64,7 +64,7 @@ export default function StockOverviewPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
@@ -84,7 +84,7 @@ export default function StockOverviewPage() {
                   const isLowStock = item.current_stock <= item.min_stock_level
                   const isOutOfStock = item.current_stock === 0
                   return (
-                    <tr key={item.id} className="hover:bg-gray-50">
+                    <tr key={item.id} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.category}</div></td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.sku}</td>
                       <td className="px-6 py-4 text-sm text-gray-900">{item.warehouse_name}</td>
