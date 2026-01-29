@@ -118,7 +118,7 @@ export default function SurveyAnalysis() {
             <div
               key={question.question_id}
               onClick={() => navigate(`/field-operations/surveys/${surveyId}/questions/${question.question_id}/answers`)}
-              className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+              className="p-4 border rounded-lg hover:bg-surface-secondary cursor-pointer transition-colors"
             >
               <div className="flex items-start justify-between mb-2">
                 <p className="text-sm font-medium text-gray-900">{question.question_text}</p>

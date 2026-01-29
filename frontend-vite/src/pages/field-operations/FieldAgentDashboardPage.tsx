@@ -60,7 +60,7 @@ export default function FieldAgentDashboardPage() {
               <p className="text-gray-500 text-center py-8">No visits scheduled for today</p>
             ) : (
               visits.map(visit => (
-                <div key={visit.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                <div key={visit.id} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
                   {visit.status === 'completed' ? <CheckCircle className="h-5 w-5 text-green-500" /> : visit.status === 'in_progress' ? <MapPin className="h-5 w-5 text-blue-500" /> : <Clock className="h-5 w-5 text-gray-400" />}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{visit.customer_name}</p>

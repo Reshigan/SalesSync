@@ -120,7 +120,7 @@ export default function SalesReturnCreate() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center gap-2">
             <Save className="w-4 h-4" /> Save as Draft
           </button>
           <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function SalesReturnCreate() {
           <div className="sticky top-6 space-y-6">
             <TotalsSummary totals={totals} />
             <div className="bg-white rounded-lg shadow p-6 space-y-3">
-              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">

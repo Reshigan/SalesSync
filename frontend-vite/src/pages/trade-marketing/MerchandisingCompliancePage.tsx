@@ -68,7 +68,7 @@ export default function MerchandisingCompliancePage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Store</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
@@ -84,7 +84,7 @@ export default function MerchandisingCompliancePage() {
                 <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500"><AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No compliance audits found</p></td></tr>
               ) : (
                 audits.map(audit => (
-                  <tr key={audit.id} className="hover:bg-gray-50">
+                  <tr key={audit.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{audit.store_name}</div><div className="text-sm text-gray-500">{audit.store_location}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">{audit.brand_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(audit.audit_date).toLocaleDateString()}</td>

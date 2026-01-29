@@ -102,7 +102,7 @@ export default function StockLedgerByProduct() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -118,7 +118,7 @@ export default function StockLedgerByProduct() {
             {entries?.map((entry) => {
               const isIncrease = entry.quantity_change > 0
               return (
-                <tr key={entry.id} className="hover:bg-gray-50">
+                <tr key={entry.id} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {entry.warehouse_name}
                   </td>

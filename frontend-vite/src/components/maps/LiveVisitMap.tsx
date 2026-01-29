@@ -85,7 +85,7 @@ export default function LiveVisitMap({ visits, center, zoom = 13 }: LiveVisitMap
   }
 
   return (
-    <div className="w-full h-full rounded-lg overflow-hidden border border-gray-200">
+    <div className="w-full h-full rounded-lg overflow-hidden border border-gray-100">
       <MapContainer
         center={mapCenter}
         zoom={mapZoom}

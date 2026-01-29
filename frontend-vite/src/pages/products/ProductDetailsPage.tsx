@@ -236,7 +236,7 @@ export default function ProductDetailsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-100">
         <nav className="-mb-px flex space-x-8">
           {['overview', 'stock', 'analytics', 'pricing'].map((tab) => (
             <button
@@ -401,7 +401,7 @@ export default function ProductDetailsPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Movement History</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface-secondary">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
@@ -411,7 +411,7 @@ export default function ProductDetailsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {stockHistory.map((entry, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={index} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {new Date(entry.date).toLocaleDateString()}
                       </td>
@@ -476,11 +476,11 @@ export default function ProductDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Analysis</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-surface-secondary rounded-lg">
                 <span className="text-sm text-gray-600">List Price</span>
                 <span className="text-lg font-semibold text-gray-900">${product.unitPrice.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-surface-secondary rounded-lg">
                 <span className="text-sm text-gray-600">Cost Price</span>
                 <span className="text-lg font-semibold text-gray-900">${product.costPrice.toFixed(2)}</span>
               </div>

@@ -215,7 +215,7 @@ const POSMaterialTrackerPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-surface-secondary p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -246,7 +246,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-100">
             <nav className="flex">
               {[
                 { id: 'library', label: 'Material Library', count: materials.length },
@@ -294,7 +294,7 @@ const POSMaterialTrackerPage: React.FC = () => {
             {/* Materials Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredMaterials.map(material => (
-                <div key={material.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={material.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{material.name}</h3>
@@ -397,7 +397,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                         value={formData.qrCode || ''}
                         readOnly
                         placeholder="Scan QR code..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-surface-secondary"
                       />
                       <button
                         onClick={handleQRScan}
@@ -498,7 +498,7 @@ const POSMaterialTrackerPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="space-y-4">
               {installations.map(installation => (
-                <div key={installation.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div key={installation.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{installation.materialName}</h3>

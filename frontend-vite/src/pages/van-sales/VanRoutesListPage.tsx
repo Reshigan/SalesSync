@@ -50,7 +50,7 @@ export default function VanRoutesListPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Route Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Van</th>
@@ -65,7 +65,7 @@ export default function VanRoutesListPage() {
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500"><MapPin className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No routes found</p></td></tr>
               ) : (
                 routes.map(route => (
-                  <tr key={route.id} className="hover:bg-gray-50">
+                  <tr key={route.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{route.route_name}</div><div className="text-sm text-gray-500">{route.start_location} → {route.end_location}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">Van #{route.van_id?.substring(0,8)}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(route.route_date).toLocaleDateString()}</td>

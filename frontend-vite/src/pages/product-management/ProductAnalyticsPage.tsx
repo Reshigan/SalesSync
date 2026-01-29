@@ -220,7 +220,7 @@ export const ProductAnalyticsPage: React.FC = () => {
 
       {/* Top Selling Products */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Top Selling Products</h2>
         </div>
         {productStats.top_selling_products.length === 0 ? (
@@ -234,7 +234,7 @@ export const ProductAnalyticsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rank
@@ -258,7 +258,7 @@ export const ProductAnalyticsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {productStats.top_selling_products.slice(0, 10).map((product, index) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">#{index + 1}</div>
                     </td>

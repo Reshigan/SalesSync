@@ -389,7 +389,7 @@ export default function ProductsPage() {
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="mt-6 pt-6 border-t border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
@@ -453,7 +453,7 @@ export default function ProductsPage() {
 
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
               Products ({filteredProducts.length})
@@ -474,7 +474,7 @@ export default function ProductsPage() {
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -511,7 +511,7 @@ export default function ProductsPage() {
               {paginatedProducts.map((product) => {
                 const stockStatus = getStockStatus(product)
                 return (
-                  <tr key={product.id} className="hover:bg-gray-50">
+                  <tr key={product.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"
@@ -610,7 +610,7 @@ export default function ProductsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200">
+          <div className="px-6 py-4 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredProducts.length)} of {filteredProducts.length} products

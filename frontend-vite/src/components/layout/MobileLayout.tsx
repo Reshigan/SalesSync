@@ -24,7 +24,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-surface-secondary flex flex-col">
       {/* Mobile Header */}
       <header className="bg-primary-600 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-md">
         <div className="flex items-center">
@@ -51,7 +51,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 shadow-lg z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 shadow-lg z-50">
         <div className="flex items-center justify-around">
           <NavLink
             to="/dashboard"
@@ -59,7 +59,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               `flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 isActive
                   ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                  : 'text-gray-600 hover:text-primary-600 hover:bg-surface-secondary'
               }`
             }
           >
@@ -73,7 +73,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               `flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 isActive
                   ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                  : 'text-gray-600 hover:text-primary-600 hover:bg-surface-secondary'
               }`
             }
           >
@@ -87,7 +87,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               `flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 isActive
                   ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                  : 'text-gray-600 hover:text-primary-600 hover:bg-surface-secondary'
               }`
             }
           >
@@ -101,7 +101,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
               `flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 isActive
                   ? 'text-primary-600 bg-primary-50'
-                  : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                  : 'text-gray-600 hover:text-primary-600 hover:bg-surface-secondary'
               }`
             }
           >

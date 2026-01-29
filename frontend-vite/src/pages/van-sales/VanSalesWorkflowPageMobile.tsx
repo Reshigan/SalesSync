@@ -445,7 +445,7 @@ export default function VanSalesWorkflowPageMobile() {
                   <span className="text-gray-600">Items:</span>
                   <span className="font-medium">{orderItems.length}</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-gray-200">
+                <div className="flex justify-between pt-2 border-t border-gray-100">
                   <span className="font-semibold">Total:</span>
                   <span className="font-bold text-primary-600">${orderTotal.toFixed(2)}</span>
                 </div>
@@ -514,7 +514,7 @@ export default function VanSalesWorkflowPageMobile() {
                   <h3 className="text-xl font-bold text-gray-900">Order Complete!</h3>
                   <p className="text-gray-600 mt-1">Order #{orderId?.slice(0, 8)}</p>
                 </div>
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-gray-100">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
                       <p className="text-2xl font-bold text-gray-900">{orderItems.length}</p>

@@ -112,11 +112,11 @@ export default function BatchAllocation() {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Allocation Details</h2>
         </div>
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
@@ -129,7 +129,7 @@ export default function BatchAllocation() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {allocations?.map((allocation) => (
-              <tr key={allocation.id} className="hover:bg-gray-50">
+              <tr key={allocation.id} className="hover:bg-surface-secondary">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {allocation.order_number}
                 </td>

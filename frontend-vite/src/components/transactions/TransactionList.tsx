@@ -105,7 +105,7 @@ export default function TransactionList({
 
       {/* Filters Panel */}
       {showFilters && filters && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+        <div className="bg-surface-secondary p-4 rounded-lg border border-gray-100">
           {filters}
         </div>
       )}

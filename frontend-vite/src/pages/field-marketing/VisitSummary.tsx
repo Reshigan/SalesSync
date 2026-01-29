@@ -131,9 +131,9 @@ export default function VisitSummary() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-surface-secondary pb-20">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div>
@@ -200,7 +200,7 @@ export default function VisitSummary() {
         <div className="bg-white rounded-lg shadow mb-4">
           <button
             onClick={() => toggleSection('surveys')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
           >
             <div className="flex items-center">
               <CheckCircle className="w-5 h-5 text-blue-600 mr-3" />
@@ -216,7 +216,7 @@ export default function VisitSummary() {
           </button>
 
           {expandedSection === 'surveys' && (
-            <div className="px-6 pb-4 border-t border-gray-200">
+            <div className="px-6 pb-4 border-t border-gray-100">
               <div className="mt-4 space-y-3">
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                   <div className="flex items-center">
@@ -247,7 +247,7 @@ export default function VisitSummary() {
           <div className="bg-white rounded-lg shadow mb-4">
             <button
               onClick={() => toggleSection('boards')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
             >
               <div className="flex items-center">
                 <Target className="w-5 h-5 text-purple-600 mr-3" />
@@ -262,10 +262,10 @@ export default function VisitSummary() {
             </button>
 
             {expandedSection === 'boards' && (
-              <div className="px-6 pb-4 border-t border-gray-200">
+              <div className="px-6 pb-4 border-t border-gray-100">
                 <div className="mt-4 space-y-3">
                   {visitData.boards.map((board) => (
-                    <div key={board.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={board.id} className="border border-gray-100 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h4 className="font-medium text-gray-900">{board.brandName}</h4>
@@ -306,7 +306,7 @@ export default function VisitSummary() {
           <div className="bg-white rounded-lg shadow mb-4">
             <button
               onClick={() => toggleSection('products')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
             >
               <div className="flex items-center">
                 <Package className="w-5 h-5 text-orange-600 mr-3" />
@@ -321,10 +321,10 @@ export default function VisitSummary() {
             </button>
 
             {expandedSection === 'products' && (
-              <div className="px-6 pb-4 border-t border-gray-200">
+              <div className="px-6 pb-4 border-t border-gray-100">
                 <div className="mt-4 space-y-3">
                   {visitData.products.map((product) => (
-                    <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={product.id} className="border border-gray-100 rounded-lg p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h4 className="font-medium text-gray-900">{product.productName}</h4>
@@ -409,7 +409,7 @@ export default function VisitSummary() {
         </div>
 
         {/* Complete Visit Button */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-4 shadow-lg">
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 p-4 -mx-4 shadow-lg">
           <button
             onClick={handleCompleteVisit}
             disabled={isCompleting}

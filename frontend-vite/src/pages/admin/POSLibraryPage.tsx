@@ -89,7 +89,7 @@ const POSLibraryPage: React.FC = () => {
           </thead>
           <tbody>
             {materials.map(m => (
-              <tr key={m.id} className="border-t hover:bg-gray-50">
+              <tr key={m.id} className="border-t hover:bg-surface-secondary">
                 <td className="px-4 py-3 font-medium">{m.name}</td>
                 <td className="px-4 py-3">{m.type}</td>
                 <td className="px-4 py-3">{m.brand}</td>

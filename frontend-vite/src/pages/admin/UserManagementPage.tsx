@@ -355,7 +355,7 @@ export default function UserManagementPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     User
@@ -379,7 +379,7 @@ export default function UserManagementPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr key={user.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -544,7 +544,7 @@ export default function UserManagementPage() {
                       setShowCreateModal(false)
                       resetForm()
                     }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors"
                   >
                     Cancel
                   </button>
@@ -649,7 +649,7 @@ export default function UserManagementPage() {
                       setShowEditModal(false)
                       setSelectedUser(null)
                     }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors"
                   >
                     Cancel
                   </button>
@@ -721,7 +721,7 @@ export default function UserManagementPage() {
                       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
                       setSelectedUser(null)
                     }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors"
                   >
                     Cancel
                   </button>

@@ -212,7 +212,7 @@ export default function TradeMarketingPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-100">
         <nav className="-mb-px flex space-x-8">
           {[
             { id: 'overview', name: 'Overview', icon: BarChart3 },
@@ -324,7 +324,7 @@ export default function TradeMarketingPage() {
             <CardContent>
               <div className="space-y-4">
                 {promotions.slice(0, 3).map((promotion) => (
-                  <div key={promotion.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={promotion.id} className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                     <div>
                       <div className="font-medium text-gray-900">{promotion.name}</div>
                       <div className="text-sm text-gray-500">{promotion.category} • {promotion.channel}</div>
@@ -350,7 +350,7 @@ export default function TradeMarketingPage() {
             <CardContent>
               <div className="space-y-4">
                 {channelPartners.map((partner) => (
-                  <div key={partner.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div key={partner.id} className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                     <div className="flex items-center">
                       <div className={`w-3 h-3 rounded-full mr-3 ${
                         partner.tier === 'platinum' ? 'bg-purple-500' :
@@ -382,7 +382,7 @@ export default function TradeMarketingPage() {
           <CardContent>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface-secondary">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Program Details
@@ -409,7 +409,7 @@ export default function TradeMarketingPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {promotions.map((promotion) => (
-                    <tr key={promotion.id} className="hover:bg-gray-50">
+                    <tr key={promotion.id} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
@@ -551,7 +551,7 @@ export default function TradeMarketingPage() {
           <CardContent>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-surface-secondary">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Competitor
@@ -575,7 +575,7 @@ export default function TradeMarketingPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {competitorData.map((competitor, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={index} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{competitor.competitor}</div>
                       </td>

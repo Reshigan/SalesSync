@@ -164,7 +164,7 @@ export const CashSessionDashboardPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Agent
@@ -194,7 +194,7 @@ export const CashSessionDashboardPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {sessions.map((session) => (
-                  <tr key={session.id} className="hover:bg-gray-50">
+                  <tr key={session.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{session.agent_name}</div>
                     </td>
@@ -240,19 +240,19 @@ export const CashSessionDashboardPage: React.FC = () => {
 
       {/* Pagination */}
       {total > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow">
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-lg shadow">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-surface-secondary disabled:opacity-50"
             >
               Previous
             </button>
             <button
               onClick={() => setPage(p => p + 1)}
               disabled={page * limit >= total}
-              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-surface-secondary disabled:opacity-50"
             >
               Next
             </button>
@@ -270,14 +270,14 @@ export const CashSessionDashboardPage: React.FC = () => {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-surface-secondary disabled:opacity-50"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage(p => p + 1)}
                   disabled={page * limit >= total}
-                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50"
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-surface-secondary disabled:opacity-50"
                 >
                   Next
                 </button>

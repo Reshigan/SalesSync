@@ -88,7 +88,7 @@ export default function CalculationLog() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Calculation Date</th>
@@ -101,7 +101,7 @@ export default function CalculationLog() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {calculations?.map((calc) => (
-              <tr key={calc.id} className="hover:bg-gray-50">
+              <tr key={calc.id} className="hover:bg-surface-secondary">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(calc.period_start).toLocaleDateString()} - {new Date(calc.period_end).toLocaleDateString()}
                 </td>

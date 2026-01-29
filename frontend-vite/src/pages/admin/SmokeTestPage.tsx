@@ -238,7 +238,7 @@ export default function SmokeTestPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
+      <div className="mb-6 border-b border-gray-100">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('api')}
@@ -322,7 +322,7 @@ export default function SmokeTestPage() {
       {/* Results Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Route

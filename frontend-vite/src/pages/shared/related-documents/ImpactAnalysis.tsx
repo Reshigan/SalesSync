@@ -35,7 +35,7 @@ export default function ImpactAnalysis({ entityType, entityId, action }: ImpactA
       case 'high': return 'bg-red-50 border-red-200 text-red-900'
       case 'medium': return 'bg-yellow-50 border-yellow-200 text-yellow-900'
       case 'low': return 'bg-blue-50 border-blue-200 text-blue-900'
-      default: return 'bg-gray-50 border-gray-200 text-gray-900'
+      default: return 'bg-surface-secondary border-gray-100 text-gray-900'
     }
   }
 

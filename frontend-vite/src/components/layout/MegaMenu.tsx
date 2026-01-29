@@ -137,11 +137,16 @@ export default function MegaMenu() {
             {/* Mega Menu Dropdown */}
             {activeMenu === category && (
               <div
-                className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-xl border border-gray-200 z-[1100] w-[90vw] max-w-[800px] max-h-[70vh] overflow-y-auto overscroll-contain"
+                className="absolute top-full left-0 pt-1 z-[1100]"
                 onMouseEnter={cancelClose}
                 onMouseLeave={scheduleClose}
-                onWheelCapture={(e) => e.stopPropagation()}
               >
+                {/* Hover bridge - invisible element to maintain hover state */}
+                <div className="absolute -top-2 left-0 w-full h-3" />
+                <div
+                  className="bg-white rounded-2xl shadow-xl border border-gray-100 w-[90vw] max-w-[800px] max-h-[70vh] overflow-y-auto overscroll-contain"
+                  onWheelCapture={(e) => e.stopPropagation()}
+                >
                 <div className="p-6">
                   <div className="grid grid-cols-2 gap-6">
                     {visibleItems.map((item) => (
@@ -153,7 +158,7 @@ export default function MegaMenu() {
                             `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
                               isActive
                                 ? 'bg-blue-50 text-blue-700'
-                                : 'hover:bg-gray-50'
+                                : 'hover:bg-surface-secondary'
                             }`
                           }
                         >
@@ -179,7 +184,7 @@ export default function MegaMenu() {
                                     `block px-3 py-2 rounded-md text-sm transition-colors ${
                                       isActive
                                         ? 'bg-blue-50 text-blue-700 font-medium'
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                        : 'text-gray-600 hover:bg-surface-secondary hover:text-gray-900'
                                     }`
                                   }
                                 >
@@ -196,6 +201,7 @@ export default function MegaMenu() {
                       </div>
                     ))}
                   </div>
+                </div>
                 </div>
               </div>
             )}

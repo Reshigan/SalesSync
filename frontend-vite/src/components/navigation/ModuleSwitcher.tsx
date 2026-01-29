@@ -113,7 +113,7 @@ const ModuleSwitcher: React.FC<ModuleSwitcherProps> = ({
       {/* Current Module Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors min-w-[280px]"
+        className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary transition-colors min-w-[280px]"
       >
         <div className={`p-2 rounded-lg ${currentModuleData.color}`}>
           <currentModuleData.icon className="w-5 h-5" />
@@ -135,7 +135,7 @@ const ModuleSwitcher: React.FC<ModuleSwitcherProps> = ({
           />
           
           {/* Menu */}
-          <div className="absolute top-full left-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-y-auto">
+          <div className="absolute top-full left-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-100 z-50 max-h-[600px] overflow-y-auto">
             {/* Recent Modules Section */}
             {recentModules.length > 0 && (
               <div className="p-3 border-b border-gray-100">
@@ -152,7 +152,7 @@ const ModuleSwitcher: React.FC<ModuleSwitcherProps> = ({
                       <button
                         key={moduleId}
                         onClick={() => handleModuleSelect(moduleId)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-secondary transition-colors text-left"
                       >
                         <div className={`p-1.5 rounded ${module.color}`}>
                           <Icon className="w-4 h-4" />
@@ -182,7 +182,7 @@ const ModuleSwitcher: React.FC<ModuleSwitcherProps> = ({
                       className={`w-full flex items-start gap-3 px-3 py-3 rounded-lg transition-colors text-left ${
                         isActive 
                           ? 'bg-gray-100' 
-                          : 'hover:bg-gray-50'
+                          : 'hover:bg-surface-secondary'
                       }`}
                     >
                       <div className={`p-2 rounded-lg ${module.color} flex-shrink-0`}>
@@ -209,7 +209,7 @@ const ModuleSwitcher: React.FC<ModuleSwitcherProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-100 bg-gray-50">
+            <div className="p-3 border-t border-gray-100 bg-surface-secondary">
               <div className="text-xs text-gray-500 text-center">
                 You have access to {accessibleModules.length} modules
               </div>

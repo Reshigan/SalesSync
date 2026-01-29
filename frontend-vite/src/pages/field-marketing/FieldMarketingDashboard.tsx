@@ -25,9 +25,9 @@ export default function FieldMarketingDashboard() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-surface-secondary">
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             {tabs.map((tab) => {
@@ -157,7 +157,7 @@ function OverviewTab() {
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
             <Package className="w-6 h-6 text-blue-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Create New Board</p>
@@ -165,7 +165,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
             <MapPin className="w-6 h-6 text-green-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">View Installations</p>
@@ -173,7 +173,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
             <BarChart3 className="w-6 h-6 text-purple-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Product Distributions</p>
@@ -181,7 +181,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors">
+          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors">
             <DollarSign className="w-6 h-6 text-yellow-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Review Commissions</p>

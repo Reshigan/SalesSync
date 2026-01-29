@@ -101,7 +101,7 @@ export const SystemSettingsPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-100">
           <nav className="flex -mb-px">
             {tabs.map((tab) => (
               <button
@@ -387,7 +387,7 @@ export const SystemSettingsPage: React.FC = () => {
           {/* Features Settings */}
           {activeTab === 'features' && (
             <div className="space-y-6">
-              <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <label className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-gray-900">Notifications</div>
                   <div className="text-sm text-gray-500">Enable system-wide notifications</div>
@@ -403,7 +403,7 @@ export const SystemSettingsPage: React.FC = () => {
                 />
               </label>
 
-              <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <label className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-gray-900">Analytics</div>
                   <div className="text-sm text-gray-500">Enable analytics and tracking</div>
@@ -419,7 +419,7 @@ export const SystemSettingsPage: React.FC = () => {
                 />
               </label>
 
-              <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <label className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-gray-900">API Access</div>
                   <div className="text-sm text-gray-500">Enable API access for integrations</div>
@@ -435,7 +435,7 @@ export const SystemSettingsPage: React.FC = () => {
                 />
               </label>
 
-              <label className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <label className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
                 <div>
                   <div className="text-sm font-medium text-gray-900">Mobile App</div>
                   <div className="text-sm text-gray-500">Enable mobile app access</div>

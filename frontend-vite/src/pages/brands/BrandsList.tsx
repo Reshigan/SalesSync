@@ -30,7 +30,7 @@ export default function BrandsList() {
       </div>
 
       <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-100">
           <div className="flex gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -58,7 +58,7 @@ export default function BrandsList() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Brand Name
@@ -79,7 +79,7 @@ export default function BrandsList() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {brands.map((brand: any) => (
-                  <tr key={brand.id} className="hover:bg-gray-50">
+                  <tr key={brand.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{brand.name}</div>
                     </td>

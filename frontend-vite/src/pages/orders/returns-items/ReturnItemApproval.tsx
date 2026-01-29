@@ -104,7 +104,7 @@ export default function ReturnItemApproval() {
               Decision *
             </label>
             <div className="space-y-3">
-              <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-surface-secondary">
                 <input
                   type="radio"
                   value="approved"
@@ -117,7 +117,7 @@ export default function ReturnItemApproval() {
                   <div className="text-sm text-gray-500">Accept the return and process refund</div>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-surface-secondary">
                 <input
                   type="radio"
                   value="rejected"

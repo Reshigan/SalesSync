@@ -129,19 +129,19 @@ export default function RouteAuditPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Total Routes</div>
           <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Success</div>
           <div className="text-2xl font-bold text-green-600">{stats.success}</div>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Errors</div>
           <div className="text-2xl font-bold text-red-600">{stats.error}</div>
         </div>
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Pending</div>
           <div className="text-2xl font-bold text-gray-600">{stats.pending}</div>
         </div>
@@ -195,8 +195,8 @@ export default function RouteAuditPage() {
           }
 
           return (
-            <div key={module} className="bg-white rounded-lg border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+            <div key={module} className="bg-white rounded-lg border border-gray-100">
+              <div className="px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold text-gray-900">{module}</h2>
                   <div className="flex items-center space-x-4 text-sm">
@@ -210,7 +210,7 @@ export default function RouteAuditPage() {
               </div>
               <div className="divide-y divide-gray-200">
                 {moduleRoutes.map((route, index) => (
-                  <div key={index} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
+                  <div key={index} className="px-6 py-3 flex items-center justify-between hover:bg-surface-secondary">
                     <div className="flex items-center space-x-3 flex-1">
                       {getStatusIcon(route.status)}
                       <div className="flex-1">

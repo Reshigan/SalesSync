@@ -63,7 +63,7 @@ export default function SurveyResponseDetail() {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+        <div className="mt-6 p-4 bg-surface-secondary rounded-lg">
           <p className="text-sm font-medium text-gray-500 mb-2">Answer</p>
           {response.question_type === 'rating' && (
             <div className="flex items-center gap-2">

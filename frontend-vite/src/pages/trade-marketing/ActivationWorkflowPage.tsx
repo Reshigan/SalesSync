@@ -285,8 +285,8 @@ const ActivationWorkflowPage: React.FC = () => {
     .every(t => !t.requires_photo || taskPhotos[t.id]);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-surface-secondary pb-20">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Trade Marketing Activation</h1>
           <p className="text-sm text-gray-600 mt-1">Complete activation workflow</p>
@@ -342,7 +342,7 @@ const ActivationWorkflowPage: React.FC = () => {
               <button
                 key={campaign.id}
                 onClick={() => handleCampaignSelect(campaign)}
-                className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                className="w-full bg-white border border-gray-100 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
               >
                 <h3 className="font-medium text-gray-900">{campaign.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">{campaign.campaign_type}</p>
@@ -366,7 +366,7 @@ const ActivationWorkflowPage: React.FC = () => {
               <button
                 key={customer.id}
                 onClick={() => handleCustomerSelect(customer)}
-                className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                className="w-full bg-white border border-gray-100 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
               >
                 <h3 className="font-medium text-gray-900">{customer.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">{customer.address}</p>
@@ -387,7 +387,7 @@ const ActivationWorkflowPage: React.FC = () => {
             </p>
 
             {gpsLocation && distance !== null && (
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+              <div className="mb-4 p-3 bg-surface-secondary rounded-lg text-sm text-gray-600">
                 <div>Distance: {distance.toFixed(0)}m from customer</div>
               </div>
             )}
@@ -412,7 +412,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
             <div className="space-y-3">
               {tasks.map((task) => (
-                <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div key={task.id} className="bg-white border border-gray-100 rounded-lg p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <div className="flex items-center">
@@ -491,7 +491,7 @@ const ActivationWorkflowPage: React.FC = () => {
             {/* Sample Allocations */}
             <div className="space-y-3 mb-4">
               {sampleAllocations.map((allocation) => (
-                <div key={allocation.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                <div key={allocation.id} className="bg-white border border-gray-100 rounded-lg p-4">
                   <h3 className="font-medium text-gray-900">{allocation.product_name}</h3>
                   <p className="text-sm text-gray-600">{allocation.brand_name}</p>
                   <div className="mt-2 text-sm text-gray-600">
@@ -517,7 +517,7 @@ const ActivationWorkflowPage: React.FC = () => {
 
             {/* Recipient Information */}
             {Object.values(sampleDistributions).some(qty => qty > 0) && (
-              <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+              <div className="bg-white border border-gray-100 rounded-lg p-4 mb-4">
                 <h3 className="font-medium text-gray-900 mb-3">Recipient Information</h3>
                 <div className="space-y-3">
                   <input
@@ -589,7 +589,7 @@ const ActivationWorkflowPage: React.FC = () => {
               Activation ID: {activationSummary.activation_id}
             </p>
 
-            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+            <div className="bg-surface-secondary rounded-lg p-4 mb-6 text-left">
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Campaign:</span>

@@ -153,7 +153,7 @@ export default function VisitConfigurationPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
@@ -174,7 +174,7 @@ export default function VisitConfigurationPage() {
                 </tr>
               ) : (
                 configurations?.map((config: VisitConfiguration) => (
-                  <tr key={config.id} className="hover:bg-gray-50">
+                  <tr key={config.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">{config.name}</div>
                       <div className="text-sm text-gray-500">{config.description}</div>
@@ -322,7 +322,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-900">
             {config ? 'Edit' : 'New'} Visit Configuration
           </h2>
@@ -424,7 +424,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-100 pt-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Survey Configuration</h3>
             <div className="space-y-3">
               <div>
@@ -454,7 +454,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-100 pt-4">
             <h3 className="text-sm font-medium text-gray-900 mb-3">Board Placement Configuration</h3>
             <div className="space-y-3">
               <label className="flex items-center space-x-2">
@@ -504,7 +504,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             </div>
           </div>
 
-          <div className="border-t border-gray-200 pt-4">
+          <div className="border-t border-gray-100 pt-4">
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -516,11 +516,11 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             </label>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-surface-secondary"
             >
               Cancel
             </button>

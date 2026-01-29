@@ -208,7 +208,7 @@ const BrandActivationFormPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-surface-secondary p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -391,7 +391,7 @@ const BrandActivationFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 {formData.teamMembers?.map((member, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
+                  <div key={index} className="flex items-center justify-between bg-surface-secondary px-4 py-2 rounded-lg">
                     <span className="text-gray-700">{member}</span>
                     <button
                       onClick={() => removeTeamMember(index)}
@@ -430,7 +430,7 @@ const BrandActivationFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 {formData.activities?.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
+                  <div key={index} className="flex items-center justify-between bg-surface-secondary px-4 py-2 rounded-lg">
                     <span className="text-gray-700">{activity}</span>
                     <button
                       onClick={() => removeActivity(index)}
@@ -469,7 +469,7 @@ const BrandActivationFormPage: React.FC = () => {
 
               <div className="space-y-2">
                 {formData.customerFeedback?.map((feedback, index) => (
-                  <div key={index} className="flex items-start justify-between bg-gray-50 px-4 py-3 rounded-lg">
+                  <div key={index} className="flex items-start justify-between bg-surface-secondary px-4 py-3 rounded-lg">
                     <span className="text-gray-700 text-sm italic">"{feedback}"</span>
                     <button
                       onClick={() => removeFeedback(index)}
@@ -626,7 +626,7 @@ const BrandActivationFormPage: React.FC = () => {
               </div>
 
               {formData.targetAttendance && formData.actualAttendance ? (
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="mt-4 pt-4 border-t border-gray-100">
                   <div className="text-sm text-gray-600 mb-1">Attendance Rate</div>
                   <div className="text-2xl font-bold text-pink-600">
                     {Math.round((formData.actualAttendance / formData.targetAttendance) * 100)}%

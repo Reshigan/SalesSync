@@ -68,7 +68,7 @@ export const CustomerHierarchyPage: React.FC = () => {
     return (
       <div key={node.id} style={{ marginLeft: `${level * 24}px` }}>
         <div
-          className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer rounded-lg ${
+          className={`flex items-center p-3 hover:bg-surface-secondary cursor-pointer rounded-lg ${
             selectedNode?.id === node.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
           }`}
           onClick={() => setSelectedNode(node)}
@@ -134,7 +134,7 @@ export const CustomerHierarchyPage: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
+          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-surface-secondary">
             Export Hierarchy
           </button>
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
@@ -215,7 +215,7 @@ export const CustomerHierarchyPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Hierarchy Tree */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-medium text-gray-900">Hierarchy Tree</h2>
           </div>
           <div className="p-6">
@@ -237,7 +237,7 @@ export const CustomerHierarchyPage: React.FC = () => {
 
         {/* Details Panel */}
         <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-medium text-gray-900">Details</h2>
           </div>
           <div className="p-6">
@@ -251,7 +251,7 @@ export const CustomerHierarchyPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="border-t border-gray-200 pt-4 space-y-3">
+                <div className="border-t border-gray-100 pt-4 space-y-3">
                   {selectedNode.customer_count !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-500">Customers</span>
@@ -274,7 +274,7 @@ export const CustomerHierarchyPage: React.FC = () => {
                   )}
                 </div>
 
-                <div className="border-t border-gray-200 pt-4">
+                <div className="border-t border-gray-100 pt-4">
                   <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                     View Details
                   </button>

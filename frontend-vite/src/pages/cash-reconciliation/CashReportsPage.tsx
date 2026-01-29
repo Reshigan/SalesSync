@@ -208,7 +208,7 @@ export const CashReportsPage: React.FC = () => {
                 {overages.length} ({formatCurrency(overages.reduce((sum, s) => sum + s.variance, 0))})
               </span>
             </div>
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
               <span className="text-sm font-medium text-gray-700">Net Variance</span>
               <span className={`text-xl font-bold ${totalVariance < 0 ? 'text-red-600' : totalVariance > 0 ? 'text-green-600' : 'text-gray-900'}`}>
                 {formatCurrency(totalVariance)}
@@ -234,7 +234,7 @@ export const CashReportsPage: React.FC = () => {
                 {formatCurrency(Math.abs(totalVariance))}
               </span>
             </div>
-            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+            <div className="flex justify-between items-center pt-4 border-t border-gray-100">
               <span className="text-sm font-medium text-gray-700">Accuracy Rate</span>
               <span className="text-xl font-bold text-blue-600">
                 {totalExpected > 0 ? ((1 - Math.abs(totalVariance) / totalExpected) * 100).toFixed(1) : '100.0'}%
@@ -246,7 +246,7 @@ export const CashReportsPage: React.FC = () => {
 
       {/* Top Variances */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Sessions with Largest Variances</h2>
         </div>
         {sessionsWithVariance.length === 0 ? (
@@ -260,7 +260,7 @@ export const CashReportsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Agent
@@ -287,7 +287,7 @@ export const CashReportsPage: React.FC = () => {
                   .sort((a, b) => Math.abs(b.variance) - Math.abs(a.variance))
                   .slice(0, 10)
                   .map((session) => (
-                    <tr key={session.id} className="hover:bg-gray-50">
+                    <tr key={session.id} className="hover:bg-surface-secondary">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {session.agent_name}
                       </td>

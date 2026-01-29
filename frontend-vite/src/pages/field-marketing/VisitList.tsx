@@ -206,7 +206,7 @@ export default function VisitList() {
       </div>
 
       {/* Customer & Brand Info */}
-      <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="mb-4 p-4 bg-white border border-gray-100 rounded-lg">
         <h3 className="font-semibold text-gray-900">{customer.store_name}</h3>
         <p className="text-sm text-gray-600 mb-2">{customer.owner_name}</p>
         <div className="flex flex-wrap gap-2">
@@ -298,7 +298,7 @@ export default function VisitList() {
                   ? 'border-green-500 bg-green-50'
                   : task.is_mandatory
                   ? 'border-red-200 bg-white hover:border-red-300'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  : 'border-gray-100 bg-white hover:border-gray-300'
               }`}
             >
               <div className="flex items-start">
@@ -393,7 +393,7 @@ export default function VisitList() {
 
         <button
           onClick={() => navigate('/field-marketing/select-customer')}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold"
         >
           Cancel Visit
         </button>

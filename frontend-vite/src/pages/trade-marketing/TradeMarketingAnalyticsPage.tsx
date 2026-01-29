@@ -117,15 +117,15 @@ export default function TradeMarketingAnalyticsPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Compliance & Quality</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Audits</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total_audits || 0}</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Compliance Rate</p>
             <p className="text-2xl font-bold text-green-600">{stats.compliance_rate || 0}%</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Avg Audit Score</p>
             <p className="text-2xl font-bold text-blue-600">{stats.avg_audit_score || 0}%</p>
           </div>
@@ -135,19 +135,19 @@ export default function TradeMarketingAnalyticsPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Promoter Performance</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Promoters</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total_promoters || 0}</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Active Promoters</p>
             <p className="text-2xl font-bold text-green-600">{stats.active_promoters || 0}</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Avg Activations/Promoter</p>
             <p className="text-2xl font-bold text-blue-600">{stats.avg_activations_per_promoter || 0}</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Avg Performance Score</p>
             <p className="text-2xl font-bold text-purple-600">{stats.avg_promoter_score || 0}%</p>
           </div>

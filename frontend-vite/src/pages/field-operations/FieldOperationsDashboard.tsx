@@ -337,7 +337,7 @@ export default function FieldOperationsDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.top_agents || []).slice(0, 5).map((agent: any, index: number) => (
-              <div key={agent.agent_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={agent.agent_id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :
@@ -369,13 +369,13 @@ export default function FieldOperationsDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_activities || []).slice(0, 5).map((activity: any) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-3 ${
                     activity.type === 'task_completed' ? 'bg-green-500' :
                     activity.type === 'visit_completed' ? 'bg-blue-500' :
                     activity.type === 'territory_assigned' ? 'bg-purple-500' :
-                    'bg-gray-500'
+                    'bg-surface-secondary0'
                   }`}></div>
                   <div>
                     <p className="font-medium text-gray-900">{activity.agent_name}</p>
@@ -402,7 +402,7 @@ export default function FieldOperationsDashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(analytics?.territory_coverage || []).map((territory: any) => (
-            <div key={territory.territory_id} className="p-4 bg-gray-50 rounded-lg">
+            <div key={territory.territory_id} className="p-4 bg-surface-secondary rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{territory.territory_name}</h4>
                 <span className="text-sm text-gray-500">{territory.agent_count} agents</span>
@@ -439,7 +439,7 @@ export default function FieldOperationsDashboard() {
           <BarChart3 className="w-5 h-5 text-gray-400" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-surface-secondary rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Task Completion Rate</h4>
               <CheckCircle className="w-4 h-4 text-green-500" />
@@ -464,7 +464,7 @@ export default function FieldOperationsDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-surface-secondary rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Response Time</h4>
               <Clock className="w-4 h-4 text-blue-500" />
@@ -489,7 +489,7 @@ export default function FieldOperationsDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-surface-secondary rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Territory Efficiency</h4>
               <Route className="w-4 h-4 text-purple-500" />
@@ -512,7 +512,7 @@ export default function FieldOperationsDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg">
+          <div className="p-4 bg-surface-secondary rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Agent Utilization</h4>
               <Users className="w-4 h-4 text-orange-500" />

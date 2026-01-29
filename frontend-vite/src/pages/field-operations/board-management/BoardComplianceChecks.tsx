@@ -171,7 +171,7 @@ export default function BoardComplianceChecks() {
             </dl>
 
             {check.notes && (
-              <div className="mt-3 p-3 bg-gray-50 rounded">
+              <div className="mt-3 p-3 bg-surface-secondary rounded">
                 <p className="text-sm text-gray-700">{check.notes}</p>
               </div>
             )}

@@ -136,7 +136,7 @@ export default function ExceptionDetail() {
               </dd>
             </div>
           </dl>
-          <div className="p-4 bg-gray-50 rounded">
+          <div className="p-4 bg-surface-secondary rounded">
             <p className="text-sm font-medium text-gray-500 mb-1">Resolution Action</p>
             <p className="text-sm text-gray-900">{exception.resolution_action}</p>
           </div>

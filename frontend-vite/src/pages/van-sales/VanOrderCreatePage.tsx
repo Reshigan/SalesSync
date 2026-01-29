@@ -103,7 +103,7 @@ export default function VanOrderCreatePage() {
           ) : (
             <div className="space-y-3">
               {formData.items.map((item, idx) => (
-                <div key={idx} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                <div key={idx} className="flex items-center space-x-3 p-3 border border-gray-100 rounded-lg">
                   <div className="flex-1 grid grid-cols-3 gap-3">
                     <input type="text" placeholder="Product ID" value={item.product_id} onChange={e => updateItem(idx, 'product_id', e.target.value)} className="border border-gray-300 rounded px-2 py-1 text-sm" />
                     <input type="number" placeholder="Quantity" min="1" value={item.quantity} onChange={e => updateItem(idx, 'quantity', parseInt(e.target.value))} className="border border-gray-300 rounded px-2 py-1 text-sm" />
@@ -124,7 +124,7 @@ export default function VanOrderCreatePage() {
         </div>
 
         <div className="flex justify-end space-x-3">
-          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary">Cancel</button>
           <button type="submit" disabled={createMutation.isPending} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
             {createMutation.isPending ? 'Creating...' : 'Create Order'}
           </button>

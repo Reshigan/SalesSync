@@ -120,7 +120,7 @@ export default function ReportPage({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
@@ -130,14 +130,14 @@ export default function ReportPage({
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary disabled:opacity-50 flex items-center gap-2"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
               Filters
@@ -177,7 +177,7 @@ export default function ReportPage({
         )}
 
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-surface-secondary rounded-lg mb-4">
             {filters.map(filter => (
               <div key={filter.key}>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -218,10 +218,10 @@ export default function ReportPage({
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 {columns.map(column => (
                   <th
@@ -258,7 +258,7 @@ export default function ReportPage({
                 </tr>
               ) : (
                 sortedData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50">
+                  <tr key={idx} className="hover:bg-surface-secondary">
                     {columns.map(column => (
                       <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatValue(row[column.key], column.type)}
@@ -272,7 +272,7 @@ export default function ReportPage({
         </div>
 
         {!loading && sortedData.length > 0 && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <div className="px-6 py-4 bg-surface-secondary border-t border-gray-100">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700">
                 Showing <span className="font-medium">{sortedData.length}</span> records

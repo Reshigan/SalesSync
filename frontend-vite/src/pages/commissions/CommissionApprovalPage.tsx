@@ -154,7 +154,7 @@ export const CommissionApprovalPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left">
                     <input
@@ -189,7 +189,7 @@ export const CommissionApprovalPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {mockPendingCommissions.map((commission) => (
-                  <tr key={commission.id} className="hover:bg-gray-50">
+                  <tr key={commission.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
@@ -244,7 +244,7 @@ export const CommissionApprovalPage: React.FC = () => {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-surface-secondary0 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Reject Commissions</h3>
             <p className="text-sm text-gray-500 mb-4">

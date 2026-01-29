@@ -248,23 +248,23 @@ export const FinancialReportsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Profit & Loss Summary</h2>
           <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b border-gray-200">
+            <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-600">Revenue</span>
               <span className="text-sm font-semibold text-gray-900">{formatCurrency(reportData.total_revenue)}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-200">
+            <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-600">Cost of Goods Sold</span>
               <span className="text-sm font-semibold text-red-600">-{formatCurrency(reportData.total_cost)}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-200">
+            <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-600">Gross Profit</span>
               <span className="text-sm font-semibold text-gray-900">{formatCurrency(reportData.gross_profit)}</span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-200">
+            <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-sm font-medium text-gray-600">Operating Expenses</span>
               <span className="text-sm font-semibold text-red-600">-{formatCurrency(0)}</span>
             </div>
-            <div className="flex justify-between py-3 bg-gray-50 px-3 rounded">
+            <div className="flex justify-between py-3 bg-surface-secondary px-3 rounded">
               <span className="text-base font-bold text-gray-900">Net Profit</span>
               <span className={`text-base font-bold ${reportData.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(reportData.net_profit)}
@@ -292,7 +292,7 @@ export const FinancialReportsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Period
@@ -316,7 +316,7 @@ export const FinancialReportsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.revenue_by_period.map((period: any, index: number) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{period.period}</div>
                     </td>

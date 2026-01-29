@@ -123,7 +123,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
     <div className="space-y-4">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-surface-secondary">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Product
@@ -155,7 +155,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50">
+              <tr key={index} className="hover:bg-surface-secondary">
                 {editingIndex === index ? (
                   <>
                     <td className="px-4 py-3">
@@ -371,7 +371,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
               </tr>
             )}
           </tbody>
-          <tfoot className="bg-gray-50">
+          <tfoot className="bg-surface-secondary">
             <tr>
               <td colSpan={readonly ? 6 : 7} className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                 Subtotal:

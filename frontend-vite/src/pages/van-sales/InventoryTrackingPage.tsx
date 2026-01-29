@@ -233,7 +233,7 @@ export default function InventoryTrackingPage() {
         <CardContent>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Product
@@ -260,7 +260,7 @@ export default function InventoryTrackingPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredInventory.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50">
+                  <tr key={item.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{item.productName}</div>

@@ -108,7 +108,7 @@ const ProductDistributionFormPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-surface-secondary p-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <button onClick={() => navigate(-1)} className="mb-4 text-blue-600 hover:text-blue-700">
@@ -269,7 +269,7 @@ const ProductDistributionFormPage: React.FC = () => {
               <button
                 type="button"
                 onClick={captureSignature}
-                className="w-full aspect-[3/1] bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 flex items-center justify-center"
+                className="w-full aspect-[3/1] bg-surface-secondary border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-100 flex items-center justify-center"
               >
                 <div className="text-center">
                   <div className="text-3xl mb-2">✍️</div>

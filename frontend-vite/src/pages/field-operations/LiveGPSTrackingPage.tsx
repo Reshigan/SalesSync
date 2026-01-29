@@ -59,7 +59,7 @@ export default function LiveGPSTrackingPage() {
             <p className="text-gray-500 text-center py-8">No agents currently tracked</p>
           ) : (
             agents.map(agent => (
-              <div key={agent.agent_id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+              <div key={agent.agent_id} className="flex items-center space-x-4 p-4 border border-gray-100 rounded-lg">
                 <div className={`w-3 h-3 rounded-full ${agent.status === 'active' ? 'bg-green-500' : agent.status === 'idle' ? 'bg-yellow-500' : 'bg-gray-400'}`}></div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">{agent.agent_name}</p>

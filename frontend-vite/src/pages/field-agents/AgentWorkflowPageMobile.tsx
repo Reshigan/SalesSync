@@ -468,7 +468,7 @@ export default function AgentWorkflowPageMobile() {
                   <h3 className="text-xl font-bold text-gray-900">Visit Complete!</h3>
                   <p className="text-gray-600 mt-1">Great work on completing this visit</p>
                 </div>
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-gray-100">
                   <div className="flex items-center justify-center gap-2 text-2xl font-bold text-green-600">
                     <DollarSign className="h-8 w-8" />
                     <span>${totalCommission.toFixed(2)}</span>

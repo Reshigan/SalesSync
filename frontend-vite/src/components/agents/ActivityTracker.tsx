@@ -159,7 +159,7 @@ export default function ActivityTracker({
             className={`border rounded-lg p-4 transition-all duration-200 ${
               activity.completed
                 ? 'bg-green-50 border-green-200'
-                : 'bg-white border-gray-200 hover:border-gray-300'
+                : 'bg-white border-gray-100 hover:border-gray-300'
             }`}
           >
             <div className="flex items-center justify-between">
@@ -459,7 +459,7 @@ function SurveyComponent({ onSurveyComplete }: { onSurveyComplete: (responses: a
           </label>
           <div className="flex space-x-2">
             {[1, 2, 3, 4, 5].map(rating => (
-              <button key={rating} className="p-2 border rounded hover:bg-gray-50">
+              <button key={rating} className="p-2 border rounded hover:bg-surface-secondary">
                 <Star className="h-5 w-5" />
               </button>
             ))}

@@ -58,7 +58,7 @@ export default function CustomerKYC() {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-surface-secondary">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Submission Date
@@ -82,7 +82,7 @@ export default function CustomerKYC() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {kycRecords.map((kyc: any) => (
-                  <tr key={kyc.id} className="hover:bg-gray-50">
+                  <tr key={kyc.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(kyc.submission_date).toLocaleDateString()}
                     </td>

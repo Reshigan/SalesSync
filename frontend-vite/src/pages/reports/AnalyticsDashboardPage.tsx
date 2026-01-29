@@ -47,7 +47,7 @@ const AnalyticsDashboardPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">Top Performing Agents</h2>
           <div className="space-y-3">
             {(metrics.topAgents || []).map((agent: any, i: number) => (
-              <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+              <div key={i} className="flex justify-between items-center p-3 bg-surface-secondary rounded">
                 <div>
                   <div className="font-medium">{agent.name}</div>
                   <div className="text-sm text-gray-600">{agent.visits} visits</div>
@@ -65,7 +65,7 @@ const AnalyticsDashboardPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-3">
             {(metrics.recentActivity || []).map((activity: any, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded">
+              <div key={i} className="flex items-start gap-3 p-3 bg-surface-secondary rounded">
                 <div className="p-2 bg-blue-100 rounded"><Activity className="w-4 h-4 text-blue-600" /></div>
                 <div className="flex-1">
                   <div className="font-medium">{activity.title}</div>

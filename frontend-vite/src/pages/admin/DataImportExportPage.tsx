@@ -283,7 +283,7 @@ export default function DataImportExportPage() {
 
       {/* Tabs */}
       <div className="card">
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-100">
           <nav className="-mb-px flex">
             <button
               onClick={() => setActiveTab('import')}
@@ -341,7 +341,7 @@ export default function DataImportExportPage() {
                     className={`p-4 border-2 rounded-lg text-left transition-all ${
                       selectedType === type.id
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        : 'border-gray-100 hover:border-gray-300 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -359,7 +359,7 @@ export default function DataImportExportPage() {
             {selectedDataType && (
               <>
                 {/* Template Download */}
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="bg-surface-secondary border border-gray-100 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-gray-900">CSV Template</h4>
@@ -510,7 +510,7 @@ export default function DataImportExportPage() {
                     className={`p-4 border-2 rounded-lg text-left transition-all ${
                       selectedType === type.id
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        : 'border-gray-100 hover:border-gray-300 bg-white'
                     }`}
                   >
                     <div className="flex items-start gap-3">

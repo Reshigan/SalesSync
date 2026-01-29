@@ -258,8 +258,8 @@ const StockCountWorkflowPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-surface-secondary pb-20">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Stock Count</h1>
           <p className="text-sm text-gray-600 mt-1">GPS-validated inventory count</p>
@@ -314,7 +314,7 @@ const StockCountWorkflowPage: React.FC = () => {
               <button
                 key={warehouse.id}
                 onClick={() => handleWarehouseSelect(warehouse)}
-                className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
+                className="w-full bg-white border border-gray-100 rounded-lg p-4 text-left hover:border-blue-500 hover:shadow-md transition-all"
               >
                 <h3 className="font-medium text-gray-900">{warehouse.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">{warehouse.code}</p>
@@ -335,7 +335,7 @@ const StockCountWorkflowPage: React.FC = () => {
             </p>
 
             {gpsLocation && distance !== null && (
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+              <div className="mb-4 p-3 bg-surface-secondary rounded-lg text-sm text-gray-600">
                 <div>Distance: {distance.toFixed(0)}m from warehouse</div>
               </div>
             )}

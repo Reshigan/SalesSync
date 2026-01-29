@@ -95,7 +95,7 @@ export const CloseCashSessionPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 border-t border-gray-200 pt-6">
+        <div className="mt-6 border-t border-gray-100 pt-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Collections Count</p>
@@ -233,7 +233,7 @@ export const CloseCashSessionPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/cash-reconciliation')}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-surface-secondary"
             >
               Cancel
             </button>

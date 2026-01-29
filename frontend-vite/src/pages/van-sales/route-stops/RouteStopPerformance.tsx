@@ -105,7 +105,7 @@ export default function RouteStopPerformance() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Stop Performance Details</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-surface-secondary">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
@@ -118,7 +118,7 @@ export default function RouteStopPerformance() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {performance.stops_detail.map((stop) => (
-                <tr key={stop.stop_number} className="hover:bg-gray-50">
+                <tr key={stop.stop_number} className="hover:bg-surface-secondary">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {stop.stop_number}
                   </td>

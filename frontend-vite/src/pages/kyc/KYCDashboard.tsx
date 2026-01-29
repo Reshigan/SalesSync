@@ -339,7 +339,7 @@ export default function KYCDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_submissions || []).slice(0, 5).map((submission: any) => (
-              <div key={submission.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={submission.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{submission.customer_name}</p>
                   <p className="text-sm text-gray-500">by {submission.agent_name}</p>
@@ -370,7 +370,7 @@ export default function KYCDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.top_agents || []).slice(0, 5).map((agent: any, index: number) => (
-              <div key={agent.agent_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={agent.agent_id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     index === 0 ? 'bg-yellow-100 text-yellow-800' :

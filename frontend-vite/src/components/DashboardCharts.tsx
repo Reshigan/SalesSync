@@ -57,6 +57,13 @@ interface KPICardProps {
   color?: string;
 }
 
+const gradientColors: Record<string, { from: string; to: string }> = {
+  primary: { from: '#36A2EB', to: '#4FC3F7' },
+  success: { from: '#2ECC71', to: '#27AE60' },
+  info: { from: '#9B59B6', to: '#8E44AD' },
+  warning: { from: '#F39C12', to: '#E67E22' },
+};
+
 export const KPICard: React.FC<KPICardProps> = ({
   title,
   value,
@@ -65,24 +72,48 @@ export const KPICard: React.FC<KPICardProps> = ({
   icon,
   color = 'primary',
 }) => {
-  const theme = useTheme();
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
+  const gradient = gradientColors[color] || gradientColors.primary;
 
   return (
-    <Card>
-      <CardContent>
+    <Card
+      sx={{
+        background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
+        color: 'white',
+        borderRadius: '1.25rem',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+        position: 'relative',
+        overflow: 'hidden',
+        border: 'none',
+      }}
+    >
+      {/* Background decoration */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: 120,
+          height: 120,
+          bgcolor: 'rgba(255,255,255,0.1)',
+          borderRadius: '50%',
+          transform: 'translate(30%, -30%)',
+        }}
+      />
+      <CardContent sx={{ position: 'relative', zIndex: 1 }}>
         <Stack spacing={2}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
               {title}
             </Typography>
             {icon && (
               <Avatar
                 sx={{
-                  bgcolor: `${color}.main`,
-                  width: 40,
-                  height: 40,
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  width: 44,
+                  height: 44,
+                  borderRadius: '0.75rem',
                 }}
               >
                 {icon}
@@ -90,17 +121,17 @@ export const KPICard: React.FC<KPICardProps> = ({
             )}
           </Box>
 
-          <Typography variant="h4" fontWeight="bold">
+          <Typography variant="h4" fontWeight="bold" sx={{ color: 'white' }}>
             {value}
           </Typography>
 
           {change !== undefined && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {isPositive && <TrendingUpIcon color="success" fontSize="small" />}
-              {isNegative && <TrendingDownIcon color="error" fontSize="small" />}
+              {isPositive && <TrendingUpIcon sx={{ color: 'rgba(255,255,255,0.9)' }} fontSize="small" />}
+              {isNegative && <TrendingDownIcon sx={{ color: 'rgba(255,255,255,0.9)' }} fontSize="small" />}
               <Typography
                 variant="body2"
-                color={isPositive ? 'success.main' : isNegative ? 'error.main' : 'text.secondary'}
+                sx={{ color: 'rgba(255,255,255,0.8)' }}
               >
                 {isPositive && '+'}
                 {change}% {changeLabel || 'vs last period'}

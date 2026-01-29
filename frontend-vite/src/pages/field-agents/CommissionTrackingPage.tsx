@@ -248,7 +248,7 @@ export default function CommissionTrackingPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-surface-secondary border-b border-gray-100">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Agent
@@ -281,7 +281,7 @@ export default function CommissionTrackingPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCommissions.map((comm) => (
-                  <tr key={comm.id} className="hover:bg-gray-50">
+                  <tr key={comm.id} className="hover:bg-surface-secondary">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -362,7 +362,7 @@ export default function CommissionTrackingPage() {
             const totalSales = agentComms.reduce((sum, c) => sum + c.salesAmount, 0)
             
             return (
-              <div key={agentId} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+              <div key={agentId} className="p-4 border border-gray-100 rounded-lg hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="h-12 w-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
                     {agentName.split(' ').map(n => n[0]).join('')}

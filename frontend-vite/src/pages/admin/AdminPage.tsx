@@ -376,7 +376,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => fetchDashboardData()}
-              className="flex items-center justify-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center justify-center p-4 bg-surface-secondary hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Activity className="w-5 h-5 text-gray-600 mr-2" />
               <span className="text-sm font-medium text-gray-900">Refresh</span>
@@ -395,7 +395,7 @@ export default function AdminPage() {
               <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
             ) : (
               recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <div key={activity.id} className="flex items-start space-x-3 p-3 hover:bg-surface-secondary rounded-lg transition-colors">
                   <div className={`p-2 rounded-lg ${getStatusColor(activity.status)}`}>
                     {getActivityIcon(activity.type)}
                   </div>

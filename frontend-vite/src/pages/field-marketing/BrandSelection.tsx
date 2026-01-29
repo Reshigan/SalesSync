@@ -146,7 +146,7 @@ export default function BrandSelection() {
       )}
 
       {/* Customer Info */}
-      <div className="mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+      <div className="mb-6 p-4 bg-white border border-gray-100 rounded-lg">
         <h3 className="font-semibold text-gray-900">{customer.store_name}</h3>
         <p className="text-sm text-gray-600">{customer.owner_name}</p>
       </div>
@@ -191,7 +191,7 @@ export default function BrandSelection() {
                 className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
                   isSelected
                     ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
+                    : 'border-gray-100 bg-white hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -258,7 +258,7 @@ export default function BrandSelection() {
 
         <button
           onClick={handleCancel}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold"
         >
           Cancel Visit
         </button>

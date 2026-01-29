@@ -118,7 +118,7 @@ export default function InventoryAnalyticsPage() {
         <h2 className="text-lg font-bold text-gray-900 mb-4">Top Products by Value</h2>
         <div className="space-y-3">
           {(stats.top_products || []).map((product: any, idx: number) => (
-            <div key={idx} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+            <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">{product.product_name}</p>
                 <p className="text-xs text-gray-500">{product.sku}</p>
@@ -138,7 +138,7 @@ export default function InventoryAnalyticsPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Stock Health Indicators</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <TrendingUp className="h-5 w-5 text-green-500" />
               <p className="text-sm font-medium text-gray-900">Healthy Stock</p>
@@ -146,7 +146,7 @@ export default function InventoryAnalyticsPage() {
             <p className="text-2xl font-bold text-green-600">{stats.healthy_stock_count || 0}</p>
             <p className="text-xs text-gray-500 mt-1">{stats.healthy_stock_percentage || 0}% of total</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <AlertCircle className="h-5 w-5 text-yellow-500" />
               <p className="text-sm font-medium text-gray-900">Low Stock</p>
@@ -154,7 +154,7 @@ export default function InventoryAnalyticsPage() {
             <p className="text-2xl font-bold text-yellow-600">{stats.low_stock_items || 0}</p>
             <p className="text-xs text-gray-500 mt-1">{stats.low_stock_percentage || 0}% of total</p>
           </div>
-          <div className="p-4 border border-gray-200 rounded-lg">
+          <div className="p-4 border border-gray-100 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <TrendingDown className="h-5 w-5 text-red-500" />
               <p className="text-sm font-medium text-gray-900">Out of Stock</p>
