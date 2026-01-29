@@ -44,9 +44,14 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ success: false, message: 'Invalid credentials' }, 401);
     }
     
-    // Generate JWT tokens
-    const accessToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, c.env.JWT_SECRET || 'default-secret');
-    const refreshToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role, type: 'refresh' }, c.env.JWT_SECRET || 'default-secret', 604800); // 7 days
+    // Generate JWT tokens - require JWT_SECRET in production
+    const jwtSecret = c.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('JWT_SECRET environment variable is not set');
+      return c.json({ success: false, message: 'Server configuration error' }, 500);
+    }
+    const accessToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role }, jwtSecret);
+    const refreshToken = await generateToken({ userId: user.id, tenantId: user.tenant_id, role: user.role, type: 'refresh' }, jwtSecret, 604800); // 7 days
     
     // Load user permissions
     let permissions = [];
@@ -1663,7 +1668,8 @@ api.get('/field-marketing/metrics', async (c) => {
 });
 
 // ==================== RBAC - ROLES ====================
-api.get('/roles', async (c) => {
+// Require admin permission for role management
+api.get('/roles', requirePermission('roles:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
@@ -1684,7 +1690,7 @@ api.get('/roles', async (c) => {
   }
 });
 
-api.get('/roles/:id', async (c) => {
+api.get('/roles/:id', requirePermission('roles:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
@@ -1720,7 +1726,7 @@ api.get('/roles/:id', async (c) => {
   });
 });
 
-api.post('/roles', async (c) => {
+api.post('/roles', requirePermission('roles:create'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
@@ -1747,7 +1753,7 @@ api.post('/roles', async (c) => {
   return c.json({ success: true, data: { id }, message: 'Role created' }, 201);
 });
 
-api.put('/roles/:id', async (c) => {
+api.put('/roles/:id', requirePermission('roles:edit'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
@@ -1787,7 +1793,7 @@ api.put('/roles/:id', async (c) => {
   return c.json({ success: true, message: 'Role updated' });
 });
 
-api.delete('/roles/:id', async (c) => {
+api.delete('/roles/:id', requirePermission('roles:delete'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
@@ -1833,7 +1839,7 @@ api.get('/permissions', async (c) => {
 });
 
 // ==================== RBAC - USER ROLES ====================
-api.get('/users/:userId/roles', async (c) => {
+api.get('/users/:userId/roles', requirePermission('users:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const { userId } = c.req.param();
@@ -1854,7 +1860,7 @@ api.get('/users/:userId/roles', async (c) => {
   }
 });
 
-api.post('/users/:userId/roles', async (c) => {
+api.post('/users/:userId/roles', requirePermission('users:manage'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const currentUserId = c.get('userId');
@@ -1879,7 +1885,7 @@ api.post('/users/:userId/roles', async (c) => {
   return c.json({ success: true, message: 'Role assigned to user' }, 201);
 });
 
-api.delete('/users/:userId/roles/:roleId', async (c) => {
+api.delete('/users/:userId/roles/:roleId', requirePermission('users:manage'), async (c) => {
   const db = c.env.DB;
   const { userId, roleId } = c.req.param();
   
@@ -1891,7 +1897,7 @@ api.delete('/users/:userId/roles/:roleId', async (c) => {
 });
 
 // Get user's effective permissions (from all assigned roles)
-api.get('/users/:userId/permissions', async (c) => {
+api.get('/users/:userId/permissions', requirePermission('users:view'), async (c) => {
   const db = c.env.DB;
   const { userId } = c.req.param();
   
@@ -1913,7 +1919,8 @@ api.get('/users/:userId/permissions', async (c) => {
 });
 
 // ==================== RBAC - INITIALIZE STANDARD ROLES ====================
-api.post('/roles/initialize', async (c) => {
+// Admin-only endpoint for initializing roles
+api.post('/roles/initialize', requirePermission('system:admin'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
@@ -2181,8 +2188,8 @@ const DEFAULT_SETTINGS = {
   erp_api_key: { value: '', category: 'integrations', label: 'ERP API Key', type: 'password', description: 'ERP system API key', sensitive: true }
 };
 
-// Get all settings
-api.get('/settings', async (c) => {
+// Get all settings - requires settings:view permission
+api.get('/settings', requirePermission('settings:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
@@ -2233,8 +2240,8 @@ api.get('/settings', async (c) => {
   }
 });
 
-// Get settings by category
-api.get('/settings/category/:category', async (c) => {
+// Get settings by category - requires settings:view permission
+api.get('/settings/category/:category', requirePermission('settings:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const { category } = c.req.param();
@@ -2303,8 +2310,8 @@ api.get('/settings/:key', async (c) => {
   }
 });
 
-// Update single setting
-api.put('/settings/:key', async (c) => {
+// Update single setting - requires settings:edit permission
+api.put('/settings/:key', requirePermission('settings:edit'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
@@ -2331,8 +2338,8 @@ api.put('/settings/:key', async (c) => {
   }
 });
 
-// Bulk update settings
-api.put('/settings', async (c) => {
+// Bulk update settings - requires settings:edit permission
+api.put('/settings', requirePermission('settings:edit'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
@@ -2381,8 +2388,8 @@ api.get('/settings-categories', async (c) => {
   return c.json({ success: true, data: categories });
 });
 
-// Initialize settings table
-api.post('/settings/initialize', async (c) => {
+// Initialize settings table - admin only
+api.post('/settings/initialize', requirePermission('system:admin'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
@@ -2408,7 +2415,8 @@ api.post('/settings/initialize', async (c) => {
 });
 
 // ==================== DEMO USER ====================
-api.post('/users/create-demo', async (c) => {
+// Admin-only endpoint for creating demo users
+api.post('/users/create-demo', requirePermission('system:admin'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
@@ -2830,8 +2838,8 @@ const createStockMovement = async (db, tenantId, warehouseId, productId, quantit
 };
 
 // ==================== ENHANCED ORDER ENDPOINTS ====================
-// Create order with server-side pricing
-api.post('/orders/create', async (c) => {
+// Create order with server-side pricing - requires orders:create permission
+api.post('/orders/create', requirePermission('orders:create'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
@@ -2898,8 +2906,8 @@ api.post('/orders/create', async (c) => {
   }
 });
 
-// Update order status (lifecycle transition)
-api.post('/orders/:id/transition', async (c) => {
+// Update order status (lifecycle transition) - requires orders:edit permission
+api.post('/orders/:id/transition', requirePermission('orders:edit'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
