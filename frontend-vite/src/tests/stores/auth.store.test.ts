@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 vi.mock('../../services/auth.service', () => ({
   authService: {
     login: vi.fn(),
-    logout: vi.fn(),
+    logout: vi.fn().mockResolvedValue(undefined),
     refreshToken: vi.fn(),
     forgotPassword: vi.fn(),
     resetPassword: vi.fn(),

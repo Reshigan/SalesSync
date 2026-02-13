@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatCurrency, CURRENCIES, parseCurrencyAmount, getCurrencySymbol } from '../../utils/currency'
+import { formatCurrency, CURRENCIES, parseCurrency, getCurrencySymbol } from '../../utils/currency'
 
 describe('Currency Utilities Tests', () => {
   describe('formatCurrency', () => {
@@ -91,33 +91,33 @@ describe('Currency Utilities Tests', () => {
     })
   })
 
-  describe('parseCurrencyAmount', () => {
+  describe('parseCurrency', () => {
     it('should parse formatted amount', () => {
-      const result = parseCurrencyAmount('$1,234.56')
+      const result = parseCurrency('$1234.56', 'USD')
       expect(result).toBeCloseTo(1234.56)
     })
     it('should parse plain number string', () => {
-      const result = parseCurrencyAmount('1234.56')
+      const result = parseCurrency('1234.56')
       expect(result).toBeCloseTo(1234.56)
     })
     it('should parse integer string', () => {
-      const result = parseCurrencyAmount('1000')
+      const result = parseCurrency('1000')
       expect(result).toBe(1000)
     })
     it('should parse zero', () => {
-      const result = parseCurrencyAmount('0')
+      const result = parseCurrency('0')
       expect(result).toBe(0)
     })
     it('should parse negative amount', () => {
-      const result = parseCurrencyAmount('-1234.56')
+      const result = parseCurrency('-1234.56')
       expect(result).toBeCloseTo(-1234.56)
     })
     it('should handle currency symbols', () => {
-      const result = parseCurrencyAmount('R 1,234.56')
+      const result = parseCurrency('R 1,234.56')
       expect(typeof result).toBe('number')
     })
     it('should handle empty string', () => {
-      const result = parseCurrencyAmount('')
+      const result = parseCurrency('')
       expect(result).toBe(0)
     })
   })

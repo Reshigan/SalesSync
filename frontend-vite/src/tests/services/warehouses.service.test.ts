@@ -117,7 +117,8 @@ describe('Warehouses Service Tests', () => {
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { warehousesService } = await import('../../services/warehouses.service')
-      await expect(warehousesService.getWarehouseStock('1')).rejects.toBeDefined()
+      const result = await warehousesService.getWarehouseStock('1')
+      expect(result).toEqual([])
     })
   })
 })

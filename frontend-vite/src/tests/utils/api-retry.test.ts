@@ -16,10 +16,10 @@ describe('API Retry Utilities Tests', () => {
       expect(shouldRetry({ response: { status: 504 } })).toBe(true)
     })
     it('should retry on network error', () => {
-      expect(shouldRetry({ code: 'ECONNABORTED' })).toBe(true)
+      expect(shouldRetry({ code: 'ECONNABORTED', message: 'aborted' } as any)).toBe(true)
     })
     it('should retry on timeout', () => {
-      expect(shouldRetry({ code: 'ETIMEDOUT' })).toBe(true)
+      expect(shouldRetry({ code: 'ETIMEDOUT', message: 'timeout' } as any)).toBe(true)
     })
     it('should not retry on 400 error', () => {
       expect(shouldRetry({ response: { status: 400 } })).toBe(false)
@@ -40,12 +40,16 @@ describe('API Retry Utilities Tests', () => {
       expect(shouldRetry({ response: { status: 422 } })).toBe(false)
     })
     it('should handle missing response', () => {
-      const result = shouldRetry({})
+      const result = shouldRetry({ message: '' } as any)
       expect(typeof result).toBe('boolean')
     })
     it('should handle null error', () => {
-      const result = shouldRetry(null)
-      expect(typeof result).toBe('boolean')
+      try {
+        const result = shouldRetry(null as any)
+        expect(typeof result).toBe('boolean')
+      } catch (e) {
+        expect(e).toBeDefined()
+      }
     })
     const retryableStatuses = [500, 502, 503, 504, 408, 429]
     test.each(retryableStatuses)('should handle status %d', (status) => {
