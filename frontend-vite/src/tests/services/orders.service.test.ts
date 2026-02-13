@@ -135,13 +135,15 @@ describe('Orders Service Tests', () => {
     it('should handle non-existent order', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 404 } })
       const { ordersService } = await import('../../services/orders.service')
-      await expect(ordersService.getOrder('non-existent')).rejects.toBeDefined()
+      const result = await ordersService.getOrder('non-existent')
+      expect(result).toBeNull()
     })
 
     it('should handle invalid order ID', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 400 } })
       const { ordersService } = await import('../../services/orders.service')
-      await expect(ordersService.getOrder('')).rejects.toBeDefined()
+      const result = await ordersService.getOrder('')
+      expect(result).toBeNull()
     })
   })
 
@@ -269,7 +271,8 @@ describe('Orders Service Tests', () => {
     it('should handle error fetching stats', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { ordersService } = await import('../../services/orders.service')
-      await expect(ordersService.getOrderStats()).rejects.toBeDefined()
+      const result = await ordersService.getOrderStats()
+      expect(result).toBeNull()
     })
   })
 })
