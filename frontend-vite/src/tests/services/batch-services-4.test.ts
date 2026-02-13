@@ -115,7 +115,7 @@ describe('Cash Reconciliation Service Tests', () => {
   it('should count denominations', () => {
     const denominations: Record<string, number> = { '5000': 2, '1000': 5, '500': 3, '100': 10, '50': 5, '20': 10, '10': 5 }
     const total = Object.entries(denominations).reduce((s, [denom, count]) => s + parseInt(denom) * count, 0)
-    expect(total).toBe(13200)
+    expect(total).toBe(18000)
   })
   it('should calculate variance', () => {
     const expected = 15000, actual = 13200

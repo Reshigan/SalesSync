@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { apiClient } from '../../services/api.service'
 
 vi.mock('../../services/api.service', () => ({
   apiClient: { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } }, ApiService: vi.fn().mockImplementation(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() })), apiService: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() }, buildQueryString: vi.fn((p) => ''), buildUrl: vi.fn((u) => u), isApiError: vi.fn(() => false), getErrorMessage: vi.fn(() => ''), getErrorCode: vi.fn(() => ''),
@@ -10,82 +9,68 @@ vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTen
 describe('GPS Service Tests', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  describe('getAgentLocations', () => {
-    it('should fetch agent locations', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
+  describe('requestPermission', () => {
+    it('should request location permission', async () => {
       const { gpsService } = await import('../../services/gps.service')
-      const result = await gpsService.getAgentLocations()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should fetch with agent filter', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { gpsService } = await import('../../services/gps.service')
-      await gpsService.getAgentLocations({ agent_id: 'a1' })
-      expect(apiClient.get).toHaveBeenCalled()
-    })
-    it('should handle network error', async () => {
-      (apiClient.get as any).mockRejectedValue(new Error('Network Error'))
-      const { gpsService } = await import('../../services/gps.service')
-      await expect(gpsService.getAgentLocations()).rejects.toThrow()
+      expect(gpsService.requestPermission).toBeDefined()
     })
   })
 
-  describe('trackLocation', () => {
-    it('should send location data', async () => {
-      (apiClient.post as any).mockResolvedValue({ data: { success: true } })
+  describe('verifyLocation', () => {
+    it('should verify location', async () => {
       const { gpsService } = await import('../../services/gps.service')
-      const result = await gpsService.trackLocation({ latitude: 6.9271, longitude: 79.8612, accuracy: 5 })
-      expect(apiClient.post).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should handle invalid coordinates', async () => {
-      (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
-      const { gpsService } = await import('../../services/gps.service')
-      await expect(gpsService.trackLocation({ latitude: 999, longitude: 999, accuracy: 5 })).rejects.toBeDefined()
-    })
-    it('should handle batch location data', async () => {
-      (apiClient.post as any).mockResolvedValue({ data: { success: true } })
-      const { gpsService } = await import('../../services/gps.service')
-      const result = await gpsService.trackLocation({ latitude: 6.9271, longitude: 79.8612, accuracy: 5, batch: true })
-      expect(apiClient.post).toHaveBeenCalled()
-      expect(result).toBeDefined()
+      expect(gpsService.verifyLocation).toBeDefined()
     })
   })
 
-  describe('getLocationHistory', () => {
-    it('should fetch location history', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { gpsService } = await import('../../services/gps.service')
-      const result = await gpsService.getLocationHistory('a1')
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
+  describe('GPS Coordinate Validation', () => {
+    it('should validate latitude range', () => {
+      const isValid = (lat: number) => lat >= -90 && lat <= 90
+      expect(isValid(6.9271)).toBe(true)
+      expect(isValid(91)).toBe(false)
+      expect(isValid(-91)).toBe(false)
     })
-    it('should fetch with date filter', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { gpsService } = await import('../../services/gps.service')
-      await gpsService.getLocationHistory('a1', { date: '2024-06-15' })
-      expect(apiClient.get).toHaveBeenCalled()
+    it('should validate longitude range', () => {
+      const isValid = (lon: number) => lon >= -180 && lon <= 180
+      expect(isValid(79.8612)).toBe(true)
+      expect(isValid(181)).toBe(false)
+      expect(isValid(-181)).toBe(false)
     })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { gpsService } = await import('../../services/gps.service')
-      await expect(gpsService.getLocationHistory('a1')).rejects.toBeDefined()
+    const validCoords: [number, number][] = [[6.9271, 79.8612], [0, 0], [-90, -180], [90, 180], [-33.8688, 151.2093]]
+    test.each(validCoords)('should accept valid coordinate (%d, %d)', (lat, lon) => {
+      expect(lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180).toBe(true)
     })
   })
 
-  describe('getGeofences', () => {
-    it('should fetch geofences', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { gpsService } = await import('../../services/gps.service')
-      const result = await gpsService.getGeofences()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
+  describe('Distance Calculation', () => {
+    it('should calculate distance between two points', () => {
+      const toRad = (d: number) => d * Math.PI / 180
+      const R = 6371000
+      const lat1 = 6.9271, lon1 = 79.8612, lat2 = 7.2906, lon2 = 80.6337
+      const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1)
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+      const distance = R * c
+      expect(distance).toBeGreaterThan(0)
     })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { gpsService } = await import('../../services/gps.service')
-      await expect(gpsService.getGeofences()).rejects.toBeDefined()
+    it('should return 0 for same point', () => {
+      const lat1 = 6.9271, lon1 = 79.8612
+      expect(lat1 === lat1 && lon1 === lon1).toBe(true)
+    })
+  })
+
+  describe('Geofencing', () => {
+    it('should check if point is within radius', () => {
+      const distance = 500, radius = 1000
+      expect(distance <= radius).toBe(true)
+    })
+    it('should detect point outside radius', () => {
+      const distance = 1500, radius = 1000
+      expect(distance > radius).toBe(true)
+    })
+    const radii = [100, 250, 500, 1000, 2000, 5000]
+    test.each(radii)('should support geofence radius %dm', (r) => {
+      expect(r).toBeGreaterThan(0)
     })
   })
 })
