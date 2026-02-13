@@ -61,78 +61,78 @@ describe('Commissions Service Tests', () => {
     })
   })
 
-  describe('getCommissionStructures', () => {
+  describe('getRules', () => {
     it('should fetch commission structures', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.getCommissionStructures()
+      const result = await commissionsService.getRules()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.getCommissionStructures()).rejects.toBeDefined()
+      await expect(commissionsService.getRules()).rejects.toBeDefined()
     })
   })
 
-  describe('createCommissionStructure', () => {
+  describe('createRule', () => {
     it('should create commission structure', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.createCommissionStructure({ name: 'Sales Commission', type: 'percentage', rate: 5, status: 'active' })
+      const result = await commissionsService.createRule({ name: 'Sales Commission', type: 'percentage', rate: 5, status: 'active' })
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle validation error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.createCommissionStructure({ name: '', type: '', rate: -1, status: '' })).rejects.toBeDefined()
+      await expect(commissionsService.createRule({ name: '', type: '', rate: -1, status: '' })).rejects.toBeDefined()
     })
   })
 
-  describe('calculateCommissions', () => {
+  describe('calculateCommission', () => {
     it('should calculate commissions', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { total: 5000 } } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.calculateCommissions({ period: '2024-06', agent_id: 'a1' })
+      const result = await commissionsService.calculateCommission('order-1')
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 500 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.calculateCommissions({ period: '2024-06' })).rejects.toBeDefined()
+      await expect(commissionsService.calculateCommission('order-1')).rejects.toBeDefined()
     })
   })
 
-  describe('approveCommissions', () => {
+  describe('payCommissions', () => {
     it('should approve commissions', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { approved: 10 } } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.approveCommissions({ commission_ids: ['c1', 'c2'] })
+      const result = await commissionsService.payCommissions(['c1', 'c2'])
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.approveCommissions({ commission_ids: [] })).rejects.toBeDefined()
+      await expect(commissionsService.payCommissions([])).rejects.toBeDefined()
     })
   })
 
-  describe('getCommissionSummary', () => {
+  describe('getCommissionStats', () => {
     it('should fetch commission summary', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: { total_pending: 10000 } } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.getCommissionSummary()
+      const result = await commissionsService.getCommissionStats()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.getCommissionSummary()).rejects.toBeDefined()
+      await expect(commissionsService.getCommissionStats()).rejects.toBeDefined()
     })
   })
 })

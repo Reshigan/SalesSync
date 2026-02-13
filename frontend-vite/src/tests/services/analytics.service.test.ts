@@ -79,82 +79,82 @@ describe('Analytics Service Tests', () => {
     })
   })
 
-  describe('getAgentPerformance', () => {
+  describe('getAgentAnalytics', () => {
     it('should fetch agent performance', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { analyticsService } = await import('../../services/analytics.service')
-      const result = await analyticsService.getAgentPerformance()
+      const result = await analyticsService.getAgentAnalytics()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should fetch with agent filter', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await analyticsService.getAgentPerformance({ agent_id: 'a1' })
+      await analyticsService.getAgentAnalytics({ agent_id: 'a1' })
       expect(apiClient.get).toHaveBeenCalled()
     })
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await expect(analyticsService.getAgentPerformance()).rejects.toBeDefined()
+      await expect(analyticsService.getAgentAnalytics()).rejects.toBeDefined()
     })
   })
 
-  describe('getRegionAnalytics', () => {
+  describe('getRevenueAnalytics', () => {
     it('should fetch region analytics', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { analyticsService } = await import('../../services/analytics.service')
-      const result = await analyticsService.getRegionAnalytics()
+      const result = await analyticsService.getRevenueAnalytics()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await expect(analyticsService.getRegionAnalytics()).rejects.toBeDefined()
+      await expect(analyticsService.getRevenueAnalytics()).rejects.toBeDefined()
     })
   })
 
-  describe('getTrendData', () => {
+  describe('getPerformanceAnalytics', () => {
     it('should fetch trend data', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { analyticsService } = await import('../../services/analytics.service')
-      const result = await analyticsService.getTrendData()
+      const result = await analyticsService.getPerformanceAnalytics()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should fetch with metric filter', async () => {
       (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await analyticsService.getTrendData({ metric: 'revenue' })
+      await analyticsService.getPerformanceAnalytics({ metric: 'revenue' })
       expect(apiClient.get).toHaveBeenCalled()
     })
     it('should handle error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await expect(analyticsService.getTrendData()).rejects.toBeDefined()
+      await expect(analyticsService.getPerformanceAnalytics()).rejects.toBeDefined()
     })
   })
 
-  describe('exportReport', () => {
+  describe('generateReport', () => {
     it('should export report', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: new Blob() })
+      (apiClient.post as any).mockResolvedValue({ data: new Blob() })
       const { analyticsService } = await import('../../services/analytics.service')
-      const result = await analyticsService.exportReport({ type: 'sales', format: 'csv' })
-      expect(apiClient.get).toHaveBeenCalled()
+      const result = await analyticsService.generateReport({ type: 'sales', format: 'csv' })
+      expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
+      (apiClient.post as any).mockRejectedValue({ response: { status: 500 } })
       const { analyticsService } = await import('../../services/analytics.service')
-      await expect(analyticsService.exportReport({ type: 'sales', format: 'csv' })).rejects.toBeDefined()
+      await expect(analyticsService.generateReport({ type: 'sales', format: 'csv' })).rejects.toBeDefined()
     })
     const formats = ['csv', 'xlsx', 'pdf']
     test.each(formats)('should export as "%s"', async (format) => {
-      (apiClient.get as any).mockResolvedValue({ data: new Blob() })
+      (apiClient.post as any).mockResolvedValue({ data: new Blob() })
       const { analyticsService } = await import('../../services/analytics.service')
-      await analyticsService.exportReport({ type: 'sales', format })
-      expect(apiClient.get).toHaveBeenCalled()
+      await analyticsService.generateReport({ type: 'sales', format })
+      expect(apiClient.post).toHaveBeenCalled()
     })
   })
 })

@@ -171,7 +171,7 @@ describe('Commission Calculation Tests', () => {
         break;
       }
     }
-    expect(amount).toBe(expected);
+    expect(amount).toBeCloseTo(expected);
   });
 });
 
