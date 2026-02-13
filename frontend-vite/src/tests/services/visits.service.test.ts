@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '../../services/api.service'
 
-vi.mock('../../services/api.service', () => ({
-  apiClient: { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } }, ApiService: vi.fn().mockImplementation(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() })), apiService: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() }, buildQueryString: vi.fn((p) => ''), buildUrl: vi.fn((u) => u), isApiError: vi.fn(() => false), getErrorMessage: vi.fn(() => ''), getErrorCode: vi.fn(() => ''),
-}))
+vi.mock('../../services/api.service', () => {
+  const mockClient = { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } }
+  return {
+    apiClient: mockClient,
+    ApiService: class { constructor() { (this as any).client = mockClient } async get(u: any, c?: any) { return mockClient.get(u, c) } async post(u: any, d?: any, c?: any) { return mockClient.post(u, d, c) } async put(u: any, d?: any, c?: any) { return mockClient.put(u, d, c) } async delete(u: any, c?: any) { return mockClient.delete(u, c) } async patch(u: any, d?: any, c?: any) { return mockClient.patch(u, d, c) } },
+    apiService: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() }, buildQueryString: vi.fn((p: any) => ''), buildUrl: vi.fn((u: any) => u), isApiError: vi.fn(() => false), getErrorMessage: vi.fn(() => ''), getErrorCode: vi.fn(() => ''),
+  }
+})
 vi.mock('../../store/auth.store', () => ({ getAuthToken: vi.fn(() => 'mock-token'), useAuthStore: { getState: vi.fn(() => ({ tokens: { access_token: 'mock' } })) } }))
 vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') } }))
 
@@ -111,33 +116,33 @@ describe('Visits Service Tests', () => {
     })
   })
 
-  describe('checkIn', () => {
+  describe('checkInVisit', () => {
     it('should check in to visit', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
       const { visitsService } = await import('../../services/visits.service')
-      const result = await visitsService.checkIn('1', { latitude: 6.9271, longitude: 79.8612 })
+      const result = await visitsService.checkInVisit('1', { latitude: 6.9271, longitude: 79.8612 })
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle invalid coordinates', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const { visitsService } = await import('../../services/visits.service')
-      await expect(visitsService.checkIn('1', { latitude: 999, longitude: 999 })).rejects.toBeDefined()
+      await expect(visitsService.checkInVisit('1', { latitude: 999, longitude: 999 })).rejects.toBeDefined()
     })
   })
 
-  describe('checkOut', () => {
+  describe('checkOutVisit', () => {
     it('should check out of visit', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
       const { visitsService } = await import('../../services/visits.service')
-      const result = await visitsService.checkOut('1', { latitude: 6.9271, longitude: 79.8612, notes: 'Completed' })
+      const result = await visitsService.checkOutVisit('1', { location: { latitude: 6.9271, longitude: 79.8612 }, notes: 'Completed' })
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const { visitsService } = await import('../../services/visits.service')
-      await expect(visitsService.checkOut('1', { latitude: 0, longitude: 0 })).rejects.toBeDefined()
+      await expect(visitsService.checkOutVisit('1', { location: { latitude: 0, longitude: 0 } })).rejects.toBeDefined()
     })
   })
 

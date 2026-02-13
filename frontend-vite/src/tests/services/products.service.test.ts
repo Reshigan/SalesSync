@@ -94,7 +94,8 @@ describe('Products Service Tests', () => {
     it('should handle non-existent product', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 404 } })
       const { productsService } = await import('../../services/products.service')
-      await expect(productsService.getProduct('non-existent')).rejects.toBeDefined()
+      const result = await productsService.getProduct('non-existent')
+      expect(result).toBeNull()
     })
   })
 

@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '../../services/api.service'
 
-vi.mock('../../services/api.service', () => ({
-  apiClient: { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } }, ApiService: vi.fn().mockImplementation(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() })), apiService: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() }, buildQueryString: vi.fn((p) => ''), buildUrl: vi.fn((u) => u), isApiError: vi.fn(() => false), getErrorMessage: vi.fn(() => ''), getErrorCode: vi.fn(() => ''),
-}))
+vi.mock('../../services/api.service', () => {
+  const mockClient = { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } }
+  return {
+    apiClient: mockClient,
+    ApiService: class { constructor() { (this as any).client = mockClient } async get(u: any, c?: any) { return mockClient.get(u, c) } async post(u: any, d?: any, c?: any) { return mockClient.post(u, d, c) } async put(u: any, d?: any, c?: any) { return mockClient.put(u, d, c) } async delete(u: any, c?: any) { return mockClient.delete(u, c) } async patch(u: any, d?: any, c?: any) { return mockClient.patch(u, d, c) } },
+    apiService: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn() }, buildQueryString: vi.fn((p: any) => ''), buildUrl: vi.fn((u: any) => u), isApiError: vi.fn(() => false), getErrorMessage: vi.fn(() => ''), getErrorCode: vi.fn(() => ''),
+  }
+})
 vi.mock('../../store/auth.store', () => ({ getAuthToken: vi.fn(() => 'mock-token'), useAuthStore: { getState: vi.fn(() => ({ tokens: { access_token: 'mock' } })) } }))
 vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') } }))
 
@@ -43,41 +48,37 @@ describe('Van Sales Service Tests', () => {
     })
   })
 
-  describe('startDay', () => {
-    it('should start van sales day', async () => {
+  describe('createVan', () => {
+    it('should create a van', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
       const mod = await import('../../services/van-sales.service')
       const service = mod.vanSalesService || mod.default
-      if (service?.startDay) {
-        const result = await service.startDay({ van_id: 'v1', opening_stock: [] })
-        expect(result).toBeDefined()
-      }
+      const result = await service.createVan({ registration_number: 'VAN-001' })
+      expect(result).toBeDefined()
       expect(apiClient.post).toHaveBeenCalled()
     })
     it('should handle validation error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const mod = await import('../../services/van-sales.service')
       const service = mod.vanSalesService || mod.default
-      if (service?.startDay) await expect(service.startDay({ van_id: '', opening_stock: [] })).rejects.toBeDefined()
+      await expect(service.createVan({ registration_number: '' })).rejects.toBeDefined()
     })
   })
 
-  describe('endDay', () => {
-    it('should end van sales day', async () => {
-      (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
+  describe('getVans', () => {
+    it('should fetch vans list', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: [], total: 0 } })
       const mod = await import('../../services/van-sales.service')
       const service = mod.vanSalesService || mod.default
-      if (service?.endDay) {
-        const result = await service.endDay({ day_id: 'd1', closing_stock: [], cash_collected: 5000 })
-        expect(result).toBeDefined()
-      }
-      expect(apiClient.post).toHaveBeenCalled()
+      const result = await service.getVans()
+      expect(result).toBeDefined()
+      expect(apiClient.get).toHaveBeenCalled()
     })
     it('should handle error', async () => {
-      (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
+      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const mod = await import('../../services/van-sales.service')
       const service = mod.vanSalesService || mod.default
-      if (service?.endDay) await expect(service.endDay({ day_id: '', closing_stock: [], cash_collected: 0 })).rejects.toBeDefined()
+      await expect(service.getVans()).rejects.toBeDefined()
     })
   })
 
