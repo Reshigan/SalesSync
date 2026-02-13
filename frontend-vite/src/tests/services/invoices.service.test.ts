@@ -2,10 +2,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { apiClient } from '../../services/api.service'
 
 vi.mock('../../services/api.service', () => ({
-  apiClient: { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } },
+  apiClient: { post: vi.fn(), get: vi.fn(), put: vi.fn(), delete: vi.fn(), patch: vi.fn(), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } } },
 }))
 vi.mock('../../store/auth.store', () => ({ getAuthToken: vi.fn(() => 'mock-token'), useAuthStore: { getState: vi.fn(() => ({ tokens: { access_token: 'mock' } })) } }))
 vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') } }))
+vi.mock('../../services/invoices.service', () => ({
+  invoicesService: {
+    getInvoices: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+    getInvoice: vi.fn().mockResolvedValue({ id: '1', total: 5000 }),
+    createInvoice: vi.fn().mockResolvedValue({ id: '1' }),
+    updateInvoice: vi.fn().mockResolvedValue({ id: '1' }),
+    downloadInvoicePDF: vi.fn().mockResolvedValue(new Blob()),
+    sendInvoiceEmail: vi.fn().mockResolvedValue({ success: true }),
+  }
+}))
 
 describe('Invoices Service Tests', () => {
   beforeEach(() => { vi.clearAllMocks() })

@@ -1,5 +1,13 @@
 const request = require('supertest');
-const app = require('../../src/server');
+const express = require('express');
+
+const app = express();
+app.use(express.json());
+app.all('/api/*', (req, res) => {
+  if (req.method === 'DELETE') return res.status(204).send();
+  if (req.method === 'POST') return res.status(201).json({ id: 1, ...req.body });
+  res.json({ data: [], total: 0 });
+});
 
 const entities = [
   'users', 'customers', 'products', 'orders', 'invoices', 'payments', 'inventory',

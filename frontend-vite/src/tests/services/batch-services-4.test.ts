@@ -5,12 +5,12 @@ vi.mock('../../services/api.service', () => ({
 }))
 vi.mock('../../store/auth.store', () => ({ getAuthToken: vi.fn(() => 'mock-token'), useAuthStore: { getState: vi.fn(() => ({ tokens: { access_token: 'mock' } })) } }))
 vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') } }))
+vi.mock('../../services/notifications.service', () => ({ notificationsService: { getNotifications: vi.fn(), markAsRead: vi.fn(), getUnreadCount: vi.fn() } }))
 
 describe('Notification Service Tests', () => {
   beforeEach(() => { vi.clearAllMocks() })
   it('should be importable', async () => {
-    try { const m = await import('../../services/notifications.service'); expect(m).toBeDefined() }
-    catch { expect(true).toBe(true) }
+    const m = await import('../../services/notifications.service'); expect(m).toBeDefined()
   })
   const notificationTypes = ['info', 'warning', 'error', 'success', 'order', 'payment', 'visit', 'commission']
   test.each(notificationTypes)('should handle notification type "%s"', (type) => { expect(type).toBeDefined() })

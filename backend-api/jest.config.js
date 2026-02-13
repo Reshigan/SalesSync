@@ -23,6 +23,7 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+  maxWorkers: 1,
   testTimeout: 30000,
   verbose: true,
   forceExit: true,
