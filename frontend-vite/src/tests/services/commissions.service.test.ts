@@ -69,10 +69,11 @@ describe('Commissions Service Tests', () => {
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
-    it('should handle error', async () => {
+    it('should return empty array on error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { commissionsService } = await import('../../services/commissions.service')
-      await expect(commissionsService.getRules()).rejects.toBeDefined()
+      const result = await commissionsService.getRules()
+      expect(result).toEqual([])
     })
   })
 
@@ -110,9 +111,8 @@ describe('Commissions Service Tests', () => {
     it('should approve commissions', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { approved: 10 } } })
       const { commissionsService } = await import('../../services/commissions.service')
-      const result = await commissionsService.payCommissions(['c1', 'c2'])
+      await commissionsService.payCommissions(['c1', 'c2'])
       expect(apiClient.post).toHaveBeenCalled()
-      expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })

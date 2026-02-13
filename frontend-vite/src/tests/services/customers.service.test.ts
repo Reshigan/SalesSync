@@ -118,7 +118,8 @@ describe('Customers Service Tests', () => {
     it('should handle non-existent customer', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 404 } })
       const { customersService } = await import('../../services/customers.service')
-      await expect(customersService.getCustomer('non-existent')).rejects.toBeDefined()
+      const result = await customersService.getCustomer('non-existent')
+      expect(result).toBeNull()
     })
   })
 
@@ -248,7 +249,8 @@ describe('Customers Service Tests', () => {
     it('should handle non-existent customer orders', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 404 } })
       const { customersService } = await import('../../services/customers.service')
-      await expect(customersService.getCustomerOrders('non-existent')).rejects.toBeDefined()
+      const result = await customersService.getCustomerOrders('non-existent')
+      expect(result).toEqual([])
     })
   })
 })

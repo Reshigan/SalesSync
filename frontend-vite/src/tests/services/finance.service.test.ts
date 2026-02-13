@@ -6,146 +6,149 @@ vi.mock('../../services/api.service', () => ({
 }))
 vi.mock('../../store/auth.store', () => ({ getAuthToken: vi.fn(() => 'mock-token'), useAuthStore: { getState: vi.fn(() => ({ tokens: { access_token: 'mock' } })) } }))
 vi.mock('../../services/tenant.service', () => ({ tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') } }))
+vi.mock('../../config/api.config', () => ({ API_CONFIG: { BASE_URL: 'http://localhost:3000', ENDPOINTS: { FINANCE: { BASE: '/finance' } } } }))
 
 describe('Finance Service Tests', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
-  describe('getFinancialSummary', () => {
-    it('should fetch financial summary', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: { revenue: 1000000, expenses: 500000 } } })
+  describe('getInvoices', () => {
+    it('should fetch invoices list', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { invoices: [], pagination: { total: 0 } } } })
       const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getFinancialSummary()
+      const result = await financeService.getInvoices()
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
-    it('should fetch with date range', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: {} } })
+    it('should fetch with filter', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { invoices: [], pagination: { total: 0 } } } })
       const { financeService } = await import('../../services/finance.service')
-      await financeService.getFinancialSummary({ startDate: '2024-01-01', endDate: '2024-12-31' })
+      await financeService.getInvoices({ status: 'paid' })
       expect(apiClient.get).toHaveBeenCalled()
     })
     it('should handle network error', async () => {
       (apiClient.get as any).mockRejectedValue(new Error('Network Error'))
       const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getFinancialSummary()).rejects.toThrow()
+      await expect(financeService.getInvoices()).rejects.toThrow()
     })
     it('should handle server error', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
       const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getFinancialSummary()).rejects.toBeDefined()
+      await expect(financeService.getInvoices()).rejects.toBeDefined()
     })
     it('should handle unauthorized', async () => {
       (apiClient.get as any).mockRejectedValue({ response: { status: 401 } })
       const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getFinancialSummary()).rejects.toBeDefined()
+      await expect(financeService.getInvoices()).rejects.toBeDefined()
     })
   })
 
-  describe('getAccountsReceivable', () => {
-    it('should fetch accounts receivable', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
+  describe('getInvoice', () => {
+    it('should fetch single invoice', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { id: '1', total_amount: 5000 } } })
       const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getAccountsReceivable()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should fetch with filters', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { financeService } = await import('../../services/finance.service')
-      await financeService.getAccountsReceivable({ status: 'overdue' })
-      expect(apiClient.get).toHaveBeenCalled()
-    })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getAccountsReceivable()).rejects.toBeDefined()
-    })
-  })
-
-  describe('getAccountsPayable', () => {
-    it('should fetch accounts payable', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getAccountsPayable()
+      const result = await financeService.getInvoice('1')
       expect(apiClient.get).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
+      (apiClient.get as any).mockRejectedValue({ response: { status: 404 } })
       const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getAccountsPayable()).rejects.toBeDefined()
+      await expect(financeService.getInvoice('x')).rejects.toBeDefined()
     })
   })
 
-  describe('getCashFlow', () => {
-    it('should fetch cash flow', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: { inflow: 500000, outflow: 300000 } } })
-      const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getCashFlow()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should fetch with period', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: {} } })
-      const { financeService } = await import('../../services/finance.service')
-      await financeService.getCashFlow({ period: 'monthly' })
-      expect(apiClient.get).toHaveBeenCalled()
-    })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getCashFlow()).rejects.toBeDefined()
-    })
-  })
-
-  describe('getBankReconciliation', () => {
-    it('should fetch bank reconciliation', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getBankReconciliation()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getBankReconciliation()).rejects.toBeDefined()
-    })
-  })
-
-  describe('getExpenses', () => {
-    it('should fetch expenses', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.getExpenses()
-      expect(apiClient.get).toHaveBeenCalled()
-      expect(result).toBeDefined()
-    })
-    it('should fetch with category filter', async () => {
-      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
-      const { financeService } = await import('../../services/finance.service')
-      await financeService.getExpenses({ category: 'travel' })
-      expect(apiClient.get).toHaveBeenCalled()
-    })
-    it('should handle error', async () => {
-      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
-      const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.getExpenses()).rejects.toBeDefined()
-    })
-  })
-
-  describe('createExpense', () => {
-    it('should create expense', async () => {
+  describe('createInvoice', () => {
+    it('should create invoice', async () => {
       (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
       const { financeService } = await import('../../services/finance.service')
-      const result = await financeService.createExpense({ category: 'travel', amount: 500, description: 'Business trip', date: '2024-06-15' })
+      const result = await financeService.createInvoice({ customer_id: 'c1', invoice_date: '2024-01-01', due_date: '2024-02-01' })
       expect(apiClient.post).toHaveBeenCalled()
       expect(result).toBeDefined()
     })
     it('should handle validation error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
       const { financeService } = await import('../../services/finance.service')
-      await expect(financeService.createExpense({ category: '', amount: -1, description: '', date: '' })).rejects.toBeDefined()
+      await expect(financeService.createInvoice({})).rejects.toBeDefined()
+    })
+  })
+
+  describe('getFinanceStats', () => {
+    it('should fetch finance stats', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { total_invoices: 100, total_revenue: 500000 } } })
+      const { financeService } = await import('../../services/finance.service')
+      const result = await financeService.getFinanceStats()
+      expect(apiClient.get).toHaveBeenCalled()
+      expect(result).toBeDefined()
+    })
+    it('should handle error', async () => {
+      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
+      const { financeService } = await import('../../services/finance.service')
+      await expect(financeService.getFinanceStats()).rejects.toBeDefined()
+    })
+  })
+
+  describe('getPayments', () => {
+    it('should fetch payments', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { payments: [], pagination: { total: 0 } } } })
+      const { financeService } = await import('../../services/finance.service')
+      const result = await financeService.getPayments()
+      expect(apiClient.get).toHaveBeenCalled()
+      expect(result).toBeDefined()
+    })
+    it('should fetch with filters', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: { payments: [], pagination: { total: 0 } } } })
+      const { financeService } = await import('../../services/finance.service')
+      await financeService.getPayments({ status: 'completed' })
+      expect(apiClient.get).toHaveBeenCalled()
+    })
+    it('should handle error', async () => {
+      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
+      const { financeService } = await import('../../services/finance.service')
+      await expect(financeService.getPayments()).rejects.toBeDefined()
+    })
+  })
+
+  describe('createPayment', () => {
+    it('should create payment', async () => {
+      (apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
+      const { financeService } = await import('../../services/finance.service')
+      const result = await financeService.createPayment({ customer_id: 'c1', amount: 500, payment_method: 'cash' })
+      expect(apiClient.post).toHaveBeenCalled()
+      expect(result).toBeDefined()
+    })
+    it('should handle validation error', async () => {
+      (apiClient.post as any).mockRejectedValue({ response: { status: 400 } })
+      const { financeService } = await import('../../services/finance.service')
+      await expect(financeService.createPayment({})).rejects.toBeDefined()
+    })
+  })
+
+  describe('getCashReconciliations', () => {
+    it('should fetch cash reconciliations', async () => {
+      (apiClient.get as any).mockResolvedValue({ data: { data: [] } })
+      const { financeService } = await import('../../services/finance.service')
+      const result = await financeService.getCashReconciliations()
+      expect(apiClient.get).toHaveBeenCalled()
+      expect(result).toBeDefined()
+    })
+    it('should handle error', async () => {
+      (apiClient.get as any).mockRejectedValue({ response: { status: 500 } })
+      const { financeService } = await import('../../services/finance.service')
+      await expect(financeService.getCashReconciliations()).rejects.toBeDefined()
+    })
+  })
+
+  describe('deleteInvoice', () => {
+    it('should delete invoice', async () => {
+      (apiClient.delete as any).mockResolvedValue({ data: {} })
+      const { financeService } = await import('../../services/finance.service')
+      await financeService.deleteInvoice('1')
+      expect(apiClient.delete).toHaveBeenCalled()
+    })
+    it('should handle error', async () => {
+      (apiClient.delete as any).mockRejectedValue({ response: { status: 404 } })
+      const { financeService } = await import('../../services/finance.service')
+      await expect(financeService.deleteInvoice('x')).rejects.toBeDefined()
     })
   })
 })

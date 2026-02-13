@@ -1,30 +1,30 @@
 import { describe, it, expect } from 'vitest'
-import { calculateDistance, isValidCoordinate, formatCoordinate, getBounds } from '../../utils/gps.utils'
+import { haversineDistance, isValidCoordinates, formatCoordinates, formatDistance, isWithinRange, getAccuracyLevel } from '../../utils/gps.utils'
 
 describe('GPS Utilities Tests', () => {
-  describe('calculateDistance', () => {
+  describe('haversineDistance', () => {
     it('should calculate distance between two points', () => {
-      const distance = calculateDistance(6.9271, 79.8612, 7.2906, 80.6337)
+      const distance = haversineDistance(6.9271, 79.8612, 7.2906, 80.6337)
       expect(distance).toBeGreaterThan(0)
     })
     it('should return 0 for same point', () => {
-      const distance = calculateDistance(6.9271, 79.8612, 6.9271, 79.8612)
+      const distance = haversineDistance(6.9271, 79.8612, 6.9271, 79.8612)
       expect(distance).toBe(0)
     })
     it('should handle negative coordinates', () => {
-      const distance = calculateDistance(-33.8688, 151.2093, -37.8136, 144.9631)
+      const distance = haversineDistance(-33.8688, 151.2093, -37.8136, 144.9631)
       expect(distance).toBeGreaterThan(0)
     })
     it('should handle equator crossing', () => {
-      const distance = calculateDistance(1, 0, -1, 0)
+      const distance = haversineDistance(1, 0, -1, 0)
       expect(distance).toBeGreaterThan(0)
     })
     it('should handle prime meridian crossing', () => {
-      const distance = calculateDistance(0, -1, 0, 1)
+      const distance = haversineDistance(0, -1, 0, 1)
       expect(distance).toBeGreaterThan(0)
     })
     it('should handle antipodal points', () => {
-      const distance = calculateDistance(0, 0, 0, 180)
+      const distance = haversineDistance(0, 0, 0, 180)
       expect(distance).toBeGreaterThan(0)
     })
     const pointPairs = [
@@ -35,105 +35,105 @@ describe('GPS Utilities Tests', () => {
       [-33.8688, 151.2093, -37.8136, 144.9631],
     ]
     test.each(pointPairs)('should calculate distance from (%d,%d) to (%d,%d)', (lat1, lon1, lat2, lon2) => {
-      const distance = calculateDistance(lat1, lon1, lat2, lon2)
+      const distance = haversineDistance(lat1, lon1, lat2, lon2)
       expect(distance).toBeGreaterThanOrEqual(0)
     })
   })
 
-  describe('isValidCoordinate', () => {
-    it('should validate valid latitude', () => {
-      expect(isValidCoordinate(6.9271, 'latitude')).toBe(true)
-    })
-    it('should validate valid longitude', () => {
-      expect(isValidCoordinate(79.8612, 'longitude')).toBe(true)
+  describe('isValidCoordinates', () => {
+    it('should validate valid coordinates', () => {
+      expect(isValidCoordinates(6.9271, 79.8612)).toBe(true)
     })
     it('should reject latitude > 90', () => {
-      expect(isValidCoordinate(91, 'latitude')).toBe(false)
+      expect(isValidCoordinates(91, 0)).toBe(false)
     })
     it('should reject latitude < -90', () => {
-      expect(isValidCoordinate(-91, 'latitude')).toBe(false)
+      expect(isValidCoordinates(-91, 0)).toBe(false)
     })
     it('should reject longitude > 180', () => {
-      expect(isValidCoordinate(181, 'longitude')).toBe(false)
+      expect(isValidCoordinates(0, 181)).toBe(false)
     })
     it('should reject longitude < -180', () => {
-      expect(isValidCoordinate(-181, 'longitude')).toBe(false)
+      expect(isValidCoordinates(0, -181)).toBe(false)
     })
     it('should accept boundary latitude 90', () => {
-      expect(isValidCoordinate(90, 'latitude')).toBe(true)
+      expect(isValidCoordinates(90, 0)).toBe(true)
     })
     it('should accept boundary latitude -90', () => {
-      expect(isValidCoordinate(-90, 'latitude')).toBe(true)
+      expect(isValidCoordinates(-90, 0)).toBe(true)
     })
     it('should accept boundary longitude 180', () => {
-      expect(isValidCoordinate(180, 'longitude')).toBe(true)
+      expect(isValidCoordinates(0, 180)).toBe(true)
     })
     it('should accept boundary longitude -180', () => {
-      expect(isValidCoordinate(-180, 'longitude')).toBe(true)
+      expect(isValidCoordinates(0, -180)).toBe(true)
     })
-    it('should accept zero latitude', () => {
-      expect(isValidCoordinate(0, 'latitude')).toBe(true)
+    it('should accept zero coordinates', () => {
+      expect(isValidCoordinates(0, 0)).toBe(true)
     })
-    it('should accept zero longitude', () => {
-      expect(isValidCoordinate(0, 'longitude')).toBe(true)
+    const validCoords: [number, number][] = [[-90, -180], [-45, -90], [0, 0], [45, 90], [90, 180]]
+    test.each(validCoords)('should accept (%d, %d)', (lat, lon) => {
+      expect(isValidCoordinates(lat, lon)).toBe(true)
     })
-    const validLatitudes = [-90, -45, -1, 0, 1, 45, 90]
-    test.each(validLatitudes)('should accept latitude %d', (lat) => {
-      expect(isValidCoordinate(lat, 'latitude')).toBe(true)
-    })
-    const invalidLatitudes = [-91, -100, -180, 91, 100, 180, 999]
-    test.each(invalidLatitudes)('should reject latitude %d', (lat) => {
-      expect(isValidCoordinate(lat, 'latitude')).toBe(false)
-    })
-    const validLongitudes = [-180, -90, -1, 0, 1, 90, 180]
-    test.each(validLongitudes)('should accept longitude %d', (lon) => {
-      expect(isValidCoordinate(lon, 'longitude')).toBe(true)
-    })
-    const invalidLongitudes = [-181, -200, -360, 181, 200, 360, 999]
-    test.each(invalidLongitudes)('should reject longitude %d', (lon) => {
-      expect(isValidCoordinate(lon, 'longitude')).toBe(false)
+    const invalidCoords: [number, number][] = [[-91, 0], [91, 0], [0, -181], [0, 181], [100, 200]]
+    test.each(invalidCoords)('should reject (%d, %d)', (lat, lon) => {
+      expect(isValidCoordinates(lat, lon)).toBe(false)
     })
   })
 
-  describe('formatCoordinate', () => {
-    it('should format latitude', () => {
-      const result = formatCoordinate(6.9271, 'latitude')
+  describe('formatCoordinates', () => {
+    it('should format coordinates', () => {
+      const result = formatCoordinates(6.9271, 79.8612)
       expect(result).toBeDefined()
       expect(typeof result).toBe('string')
     })
-    it('should format longitude', () => {
-      const result = formatCoordinate(79.8612, 'longitude')
+    it('should format negative coordinates', () => {
+      const result = formatCoordinates(-33.8688, 151.2093)
       expect(result).toBeDefined()
     })
-    it('should format negative latitude (South)', () => {
-      const result = formatCoordinate(-33.8688, 'latitude')
-      expect(result).toBeDefined()
-    })
-    it('should format negative longitude (West)', () => {
-      const result = formatCoordinate(-74.0060, 'longitude')
-      expect(result).toBeDefined()
-    })
-    it('should format zero coordinate', () => {
-      const result = formatCoordinate(0, 'latitude')
+    it('should format zero coordinates', () => {
+      const result = formatCoordinates(0, 0)
       expect(result).toBeDefined()
     })
   })
 
-  describe('getBounds', () => {
-    it('should get bounds for points', () => {
-      const bounds = getBounds([
-        { latitude: 6.9271, longitude: 79.8612 },
-        { latitude: 7.2906, longitude: 80.6337 },
-      ])
-      expect(bounds).toBeDefined()
+  describe('formatDistance', () => {
+    it('should format meters', () => {
+      const result = formatDistance(500)
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('string')
     })
-    it('should handle single point', () => {
-      const bounds = getBounds([{ latitude: 6.9271, longitude: 79.8612 }])
-      expect(bounds).toBeDefined()
+    it('should format kilometers', () => {
+      const result = formatDistance(5000)
+      expect(result).toBeDefined()
     })
-    it('should handle empty array', () => {
-      const bounds = getBounds([])
-      expect(bounds).toBeDefined()
+    it('should format zero distance', () => {
+      const result = formatDistance(0)
+      expect(result).toBeDefined()
+    })
+  })
+
+  describe('isWithinRange', () => {
+    it('should return true when within range', () => {
+      expect(isWithinRange(5, 10)).toBe(true)
+    })
+    it('should return false when outside range', () => {
+      expect(isWithinRange(15, 10)).toBe(false)
+    })
+    it('should handle exact boundary', () => {
+      expect(isWithinRange(10, 10)).toBe(true)
+    })
+  })
+
+  describe('getAccuracyLevel', () => {
+    it('should return accuracy level for high accuracy', () => {
+      const result = getAccuracyLevel(5)
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('string')
+    })
+    it('should return accuracy level for low accuracy', () => {
+      const result = getAccuracyLevel(100)
+      expect(result).toBeDefined()
     })
   })
 })

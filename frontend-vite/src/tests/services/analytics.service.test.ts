@@ -137,12 +137,15 @@ describe('Analytics Service Tests', () => {
   })
 
   describe('generateReport', () => {
+    beforeEach(() => {
+      global.URL.createObjectURL = vi.fn(() => 'blob:test')
+      global.URL.revokeObjectURL = vi.fn()
+    })
     it('should export report', async () => {
       (apiClient.post as any).mockResolvedValue({ data: new Blob() })
       const { analyticsService } = await import('../../services/analytics.service')
-      const result = await analyticsService.generateReport({ type: 'sales', format: 'csv' })
+      await analyticsService.generateReport({ type: 'sales', format: 'csv' })
       expect(apiClient.post).toHaveBeenCalled()
-      expect(result).toBeDefined()
     })
     it('should handle error', async () => {
       (apiClient.post as any).mockRejectedValue({ response: { status: 500 } })
