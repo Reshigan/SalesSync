@@ -126,7 +126,7 @@ describe('Cash Reconciliation Page Tests', () => {
   it('should calculate total from denominations', () => {
     const counts = { 1000: 5, 500: 3, 100: 10, 50: 5, 10: 20 };
     const total = Object.entries(counts).reduce((sum, [d, c]) => sum + Number(d) * c, 0);
-    expect(total).toBe(8000);
+    expect(total).toBe(7950);
   });
 });
 

@@ -247,7 +247,7 @@ describe('Business Logic Calculation Tests', () => {
     if (type === 'flat') amount = rate;
     else if (type === 'per_unit') amount = rate * units;
     else if (type === 'percentage') amount = value * (rate / 100);
-    expect(amount).toBe(expected);
+    expect(amount).toBeCloseTo(expected);
   });
 
   const gpsDistanceCalculations = [

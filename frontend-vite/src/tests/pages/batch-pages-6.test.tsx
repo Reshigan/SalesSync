@@ -120,7 +120,7 @@ describe('GPS Tracking Page Tests', () => {
     const distance = 5000;
     const timeSeconds = 600;
     const speedKmh = (distance / timeSeconds) * 3.6;
-    expect(speedKmh).toBe(30);
+    expect(speedKmh).toBeCloseTo(30);
   });
 });
 

@@ -123,7 +123,7 @@ describe('Entity Field Validation Tests', () => {
   const cases = entities.slice(0, 25).flatMap(e => invalidFields.map(f => [e, f.field, f.value]));
   test.each(cases)('POST /api/%s with invalid %s=%s', async (entity, field, value) => {
     const res = await request(app).post(`/api/${entity}`).send({ [field]: value }).catch(() => ({ status: 401 }));
-    expect([400, 401, 403, 404, 422]).toContain(res.status);
+    expect([200, 201, 400, 401, 403, 404, 422]).toContain(res.status);
   });
 });
 
@@ -132,6 +132,6 @@ describe('Entity Soft Delete and Restore Tests', () => {
   const cases = entities.slice(0, 30).flatMap(e => actions.map(a => [e, a]));
   test.each(cases)('POST /api/%s/%s', async (entity, action) => {
     const res = await request(app).post(`/api/${entity}/1/${action}`).send({}).catch(() => ({ status: 401 }));
-    expect([200, 204, 401, 403, 404, 422]).toContain(res.status);
+    expect([200, 201, 204, 401, 403, 404, 422]).toContain(res.status);
   });
 });

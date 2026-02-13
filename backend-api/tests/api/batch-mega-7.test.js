@@ -154,7 +154,7 @@ describe('Commission Calculation Tests', () => {
       case 'per_unit': result = rate * value; break;
       case 'tiered': result = value * (rate / 100); break;
     }
-    expect(result).toBe(expected);
+    expect(result).toBeCloseTo(expected, 2);
   });
 });
 
