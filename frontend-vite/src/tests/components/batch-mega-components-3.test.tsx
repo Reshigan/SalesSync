@@ -150,7 +150,7 @@ describe('Transaction Amount Calculation Tests', () => {
   const calcScenarios = [
     { items: 1, qty: 1, price: 100, disc: 0, tax: 10, total: 110 },
     { items: 1, qty: 5, price: 200, disc: 10, tax: 8, total: 972 },
-    { items: 2, qty: 3, price: 150, disc: 5, tax: 12, total: 958.32 },
+    { items: 2, qty: 3, price: 150, disc: 5, tax: 12, total: 957.6 },
     { items: 3, qty: 10, price: 50, disc: 15, tax: 0, total: 1275 },
     { items: 1, qty: 100, price: 10, disc: 20, tax: 18, total: 944 },
     { items: 5, qty: 2, price: 500, disc: 0, tax: 10, total: 5500 },
