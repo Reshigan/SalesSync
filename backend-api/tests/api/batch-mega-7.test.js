@@ -105,7 +105,7 @@ describe('API Versioning + Entity Tests', () => {
   const cases = entities.slice(0, 20).flatMap(e =>
     versions.flatMap(v => methods.map(m => [e, v, m]))
   );
-  test.each(cases)('%s /api/%s/%s', async (method, version, entity) => {
+  test.each(cases)('%s /api/%s/%s', async (entity, version, method) => {
     const res = await request(app)[method](`/api/${version}/${entity}`);
     expect([200, 201, 204, 400, 401, 403, 404, 405, 500]).toContain(res.status);
   });
