@@ -3717,6 +3717,100 @@ api.get('/orders-enhanced/orders', async (c) => {
   } catch (e) { return c.json({ success: true, data: { orders: [], pagination: { total: 0 } } }); }
 });
 
+api.get('/orders-enhanced/quotations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status } = c.req.query();
+  try {
+    let query = 'SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.tenant_id = ?';
+    const params = [tenantId];
+    if (status) { query += ' AND q.status = ?'; params.push(status); }
+    query += ' ORDER BY q.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    const quotes = await db.prepare(query).bind(...params).all();
+    const count = await db.prepare('SELECT COUNT(*) as total FROM quotations WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { quotations: quotes.results || [], pagination: { total: count?.total || 0 } } });
+  } catch (e) { return c.json({ success: true, data: { quotations: [], pagination: { total: 0 } } }); }
+});
+
+api.get('/orders-enhanced/quotations/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const quote = await db.prepare('SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.id = ? AND q.tenant_id = ?').bind(id, tenantId).first();
+    if (!quote) return c.json({ success: false, error: 'Not found' }, 404);
+    const items = await db.prepare('SELECT qi.*, p.name as product_name FROM quotation_items qi LEFT JOIN products p ON qi.product_id = p.id WHERE qi.quotation_id = ? AND qi.tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...quote, items: items.results || [] } });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
+api.post('/orders-enhanced/quotations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const quoteNumber = 'QT-' + Date.now();
+    const result = await db.prepare('INSERT INTO quotations (tenant_id, quotation_number, customer_id, status, total_amount, notes, valid_until, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, quoteNumber, body.customer_id, body.status || 'draft', body.total_amount || 0, body.notes || null, body.valid_until || null).run();
+    return c.json({ success: true, data: { id: result.meta.last_row_id, quotation_number: quoteNumber } }, 201);
+  } catch (e) { return c.json({ success: false, error: 'Error creating quotation' }, 500); }
+});
+
+api.put('/orders-enhanced/quotations/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare('UPDATE quotations SET customer_id = COALESCE(?, customer_id), status = COALESCE(?, status), total_amount = COALESCE(?, total_amount), notes = COALESCE(?, notes), valid_until = COALESCE(?, valid_until), updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(body.customer_id || null, body.status || null, body.total_amount || null, body.notes || null, body.valid_until || null, id, tenantId).run();
+    return c.json({ success: true, message: 'Updated' });
+  } catch (e) { return c.json({ success: false, error: 'Error updating' }, 500); }
+});
+
+api.post('/orders-enhanced/quotations/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    await db.prepare("UPDATE quotations SET status = 'approved', updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Quotation approved' });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
+api.post('/orders-enhanced/quotations/:id/reject', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE quotations SET status = 'rejected', notes = COALESCE(?, notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.reason || null, id, tenantId).run();
+    return c.json({ success: true, message: 'Quotation rejected' });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
+api.post('/orders-enhanced/quotations/:id/convert', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const quote = await db.prepare('SELECT * FROM quotations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!quote) return c.json({ success: false, error: 'Quotation not found' }, 404);
+    const orderNumber = 'ORD-' + Date.now();
+    const order = await db.prepare('INSERT INTO orders (tenant_id, order_number, customer_id, status, total_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, orderNumber, quote.customer_id, 'pending', quote.total_amount, 'Converted from ' + quote.quotation_number).run();
+    await db.prepare("UPDATE quotations SET status = 'converted', updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true, data: { orderId: order.meta.last_row_id, orderNumber } });
+  } catch (e) { return c.json({ success: false, error: 'Error converting' }, 500); }
+});
+
+api.get('/quotations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const quotes = await db.prepare('SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.tenant_id = ? ORDER BY q.created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: quotes.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
 api.get('/dashboard/customers', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
