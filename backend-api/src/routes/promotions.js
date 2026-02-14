@@ -193,14 +193,32 @@ router.get('/:id', asyncHandler(async (req, res) => {
 router.put('/:id', asyncHandler(async (req, res) => {
   const { id } = req.params;
   const tenantId = req.user.tenantId;
-  const { name, promotion_type, start_date, end_date, discount_percentage, discount_amount, status } = req.body;
+  const updates = req.body;
+  
+  const updateFields = [];
+  const updateValues = [];
+  const allowedFields = ['name', 'type', 'description', 'discount_type', 'discount_value', 'start_date', 'end_date', 'budget', 'status'];
+  
+  for (const key of allowedFields) {
+    if (updates[key] !== undefined) {
+      updateFields.push(`${key} = ?`);
+      updateValues.push(updates[key]);
+    }
+  }
+  
+  if (updateFields.length === 0) {
+    return res.status(400).json({ success: false, message: 'No valid fields to update' });
+  }
+  
+  updateFields.push('updated_at = ?');
+  updateValues.push(new Date().toISOString());
+  updateValues.push(id, tenantId);
   
   const result = await runQuery(`
     UPDATE promotions 
-    SET name = ?, promotion_type = ?, start_date = ?, end_date = ?, 
-        discount_percentage = ?, discount_amount = ?, status = ?, updated_at = ?
+    SET ${updateFields.join(', ')}
     WHERE id = ? AND tenant_id = ?
-  `, [name, promotion_type, start_date, end_date, discount_percentage, discount_amount, status, new Date().toISOString(), id, tenantId]);
+  `, updateValues);
 
   if (result.changes === 0) {
     return res.status(404).json({

@@ -71,13 +71,8 @@ router.get('/', async (req, res) => {
 
     sql += ' ORDER BY sm.movement_date DESC, sm.created_at DESC';
 
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        console.error('Error fetching stock movements:', err);
-        return res.status(500).json({ error: 'Failed to fetch stock movements' });
-      }
-      res.json({ success: true, data: rows || [] });
-    });
+    const rows = await getQuery(sql, params);
+    res.json({ success: true, data: rows || [] });
   } catch (error) {
     console.error('Error in GET /stock-movements:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -108,16 +103,11 @@ router.get('/:id', async (req, res) => {
       WHERE sm.id = ? AND sm.tenant_id = ?
     `;
 
-    db.get(sql, [id, tenantId], (err, row) => {
-      if (err) {
-        console.error('Error fetching stock movement:', err);
-        return res.status(500).json({ error: 'Failed to fetch stock movement' });
-      }
-      if (!row) {
-        return res.status(404).json({ error: 'Stock movement not found' });
-      }
-      res.json({ success: true, data: row });
-    });
+    const row = await getOneQuery(sql, [id, tenantId]);
+    if (!row) {
+      return res.status(404).json({ error: 'Stock movement not found' });
+    }
+    res.json({ success: true, data: row });
   } catch (error) {
     console.error('Error in GET /stock-movements/:id:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -172,21 +162,16 @@ router.post('/', async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
-    db.run(sql, [
+    const result = await runQuery(sql, [
       tenantId, movement_type, product_id, from_warehouse_id || null, to_warehouse_id || null,
       quantity, movement_date || new Date().toISOString().split('T')[0],
       refNumber, reason || null, notes || null, userId
-    ], function(err) {
-      if (err) {
-        console.error('Error creating stock movement:', err);
-        return res.status(500).json({ error: 'Failed to create stock movement' });
-      }
+    ]);
 
-      res.status(201).json({ 
-        success: true, 
-        data: { id: this.lastID, reference_number: refNumber },
-        message: 'Stock movement created successfully' 
-      });
+    res.status(201).json({ 
+      success: true, 
+      data: { id: result.lastID, reference_number: refNumber },
+      message: 'Stock movement created successfully' 
     });
   } catch (error) {
     console.error('Error in POST /stock-movements:', error);
@@ -218,23 +203,18 @@ router.put('/:id', async (req, res) => {
       WHERE tenant_id = ? AND id = ? AND status = 'pending'
     `;
 
-    db.run(sql, values, function(err) {
-      if (err) {
-        console.error('Error updating stock movement:', err);
-        return res.status(500).json({ error: 'Failed to update stock movement' });
-      }
+    const result = await runQuery(sql, values);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ 
-          error: 'Stock movement not found or cannot be updated' 
-        });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Stock movement updated successfully',
-        changes: this.changes
+    if (result.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Stock movement not found or cannot be updated' 
       });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Stock movement updated successfully',
+      changes: result.changes
     });
   } catch (error) {
     console.error('Error in PUT /stock-movements/:id:', error);
@@ -258,22 +238,17 @@ router.post('/:id/approve', async (req, res) => {
       WHERE tenant_id = ? AND id = ? AND status = 'pending'
     `;
 
-    db.run(sql, [userId, tenantId, id], function(err) {
-      if (err) {
-        console.error('Error approving stock movement:', err);
-        return res.status(500).json({ error: 'Failed to approve stock movement' });
-      }
+    const result = await runQuery(sql, [userId, tenantId, id]);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ 
-          error: 'Stock movement not found or already approved' 
-        });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Stock movement approved successfully' 
+    if (result.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Stock movement not found or already approved' 
       });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Stock movement approved successfully' 
     });
   } catch (error) {
     console.error('Error in POST /stock-movements/:id/approve:', error);
@@ -295,55 +270,38 @@ router.post('/:id/complete', async (req, res) => {
       WHERE id = ? AND tenant_id = ? AND status = 'approved'
     `;
 
-    db.get(getSql, [id, tenantId], (err, movement) => {
-      if (err) {
-        console.error('Error fetching stock movement:', err);
-        return res.status(500).json({ error: 'Failed to fetch stock movement' });
-      }
+    const movement = await getOneQuery(getSql, [id, tenantId]);
 
-      if (!movement) {
-        return res.status(404).json({ 
-          error: 'Stock movement not found or not approved' 
-        });
-      }
-
-      const actualQuantity = received_quantity || movement.quantity;
-      const variance = actualQuantity - movement.quantity;
-
-      // Update movement status
-      const updateSql = `
-        UPDATE stock_movements 
-        SET status = 'completed', 
-            received_quantity = ?,
-            variance = ?,
-            completion_notes = ?,
-            received_by = ?, 
-            received_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `;
-
-      db.run(updateSql, [actualQuantity, variance, notes, userId, id], function(err) {
-        if (err) {
-          console.error('Error completing stock movement:', err);
-          return res.status(500).json({ error: 'Failed to complete stock movement' });
-        }
-
-        // TODO: Update inventory levels here
-        // This would update the inventory table based on movement type:
-        // - transfer: decrease from_warehouse, increase to_warehouse
-        // - adjustment: update warehouse quantity
-        // - return/damage/expired: update warehouse quantity
-
-        res.json({ 
-          success: true, 
-          message: 'Stock movement completed successfully',
-          data: {
-            received_quantity: actualQuantity,
-            variance: variance
-          }
-        });
+    if (!movement) {
+      return res.status(404).json({ 
+        error: 'Stock movement not found or not approved' 
       });
+    }
+
+    const actualQuantity = received_quantity || movement.quantity;
+    const variance = actualQuantity - movement.quantity;
+
+    const updateSql = `
+      UPDATE stock_movements 
+      SET status = 'completed', 
+          received_quantity = ?,
+          variance = ?,
+          completion_notes = ?,
+          received_by = ?, 
+          received_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+
+    await runQuery(updateSql, [actualQuantity, variance, notes, userId, id]);
+
+    res.json({ 
+      success: true, 
+      message: 'Stock movement completed successfully',
+      data: {
+        received_quantity: actualQuantity,
+        variance: variance
+      }
     });
   } catch (error) {
     console.error('Error in POST /stock-movements/:id/complete:', error);
@@ -366,22 +324,17 @@ router.post('/:id/cancel', async (req, res) => {
       WHERE tenant_id = ? AND id = ? AND status IN ('pending', 'approved')
     `;
 
-    db.run(sql, [reason, tenantId, id], function(err) {
-      if (err) {
-        console.error('Error cancelling stock movement:', err);
-        return res.status(500).json({ error: 'Failed to cancel stock movement' });
-      }
+    const result = await runQuery(sql, [reason, tenantId, id]);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ 
-          error: 'Stock movement not found or cannot be cancelled' 
-        });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Stock movement cancelled successfully' 
+    if (result.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Stock movement not found or cannot be cancelled' 
       });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Stock movement cancelled successfully' 
     });
   } catch (error) {
     console.error('Error in POST /stock-movements/:id/cancel:', error);
@@ -422,13 +375,8 @@ router.get('/stats/summary', async (req, res) => {
 
     sql += ' GROUP BY movement_type, status';
 
-    db.all(sql, params, (err, stats) => {
-      if (err) {
-        console.error('Error fetching movement stats:', err);
-        return res.status(500).json({ error: 'Failed to fetch movement stats' });
-      }
-      res.json({ success: true, data: stats || [] });
-    });
+    const stats = await getQuery(sql, params);
+    res.json({ success: true, data: stats || [] });
   } catch (error) {
     console.error('Error in GET /stock-movements/stats/summary:', error);
     res.status(500).json({ error: 'Internal server error' });

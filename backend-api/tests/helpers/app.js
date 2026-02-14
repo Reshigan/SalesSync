@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env.test') });
 
 const { initializeDatabase, closeDatabase, resetTestDatabase } = require('../../src/database/init');
 const { errorHandler, notFoundHandler } = require('../../src/middleware/errorHandler');
+const { authTenantMiddleware } = require('../../src/middleware/authTenantMiddleware');
 
 // Import all routes
 const authRoutes = require('../../src/routes/auth');
@@ -61,30 +62,32 @@ async function createTestApp() {
     res.json({ status: 'ok', environment: 'test' });
   });
 
-  // API Routes
+  // Public routes (no auth required)
   app.use('/api/auth', authRoutes);
-  app.use('/api/users', usersRoutes);
-  app.use('/api/customers', customersRoutes);
-  app.use('/api/products', productsRoutes);
-  app.use('/api/orders', ordersRoutes);
-  app.use('/api/dashboard', dashboardRoutes);
-  app.use('/api/agents', agentsRoutes);
-  app.use('/api/analytics', analyticsRoutes);
-  app.use('/api/areas', areasRoutes);
-  app.use('/api/cash-management', cashManagementRoutes);
-  app.use('/api/inventory', inventoryRoutes);
-  app.use('/api/promotions', promotionsRoutes);
-  app.use('/api/purchase-orders', purchaseOrdersRoutes);
-  app.use('/api/routes', routesRoutes);
-  app.use('/api/stock-counts', stockCountsRoutes);
-  app.use('/api/stock-movements', stockMovementsRoutes);
-  app.use('/api/surveys', surveysRoutes);
   app.use('/api/tenants', tenantsRoutes);
-  app.use('/api/van-sales', vanSalesRoutes);
-  app.use('/api/van-sales-operations', vanSalesOperationsRoutes);
-  app.use('/api/vans', vansRoutes);
-  app.use('/api/visits', visitsRoutes);
-  app.use('/api/warehouses', warehousesRoutes);
+
+  // Protected routes (require authTenantMiddleware, matching server.js)
+  app.use('/api/users', authTenantMiddleware, usersRoutes);
+  app.use('/api/customers', authTenantMiddleware, customersRoutes);
+  app.use('/api/products', authTenantMiddleware, productsRoutes);
+  app.use('/api/orders', authTenantMiddleware, ordersRoutes);
+  app.use('/api/dashboard', authTenantMiddleware, dashboardRoutes);
+  app.use('/api/agents', authTenantMiddleware, agentsRoutes);
+  app.use('/api/analytics', authTenantMiddleware, analyticsRoutes);
+  app.use('/api/areas', authTenantMiddleware, areasRoutes);
+  app.use('/api/cash-management', authTenantMiddleware, cashManagementRoutes);
+  app.use('/api/inventory', authTenantMiddleware, inventoryRoutes);
+  app.use('/api/promotions', authTenantMiddleware, promotionsRoutes);
+  app.use('/api/purchase-orders', authTenantMiddleware, purchaseOrdersRoutes);
+  app.use('/api/routes', authTenantMiddleware, routesRoutes);
+  app.use('/api/stock-counts', authTenantMiddleware, stockCountsRoutes);
+  app.use('/api/stock-movements', authTenantMiddleware, stockMovementsRoutes);
+  app.use('/api/surveys', authTenantMiddleware, surveysRoutes);
+  app.use('/api/van-sales', authTenantMiddleware, vanSalesRoutes);
+  app.use('/api/van-sales-operations', authTenantMiddleware, vanSalesOperationsRoutes);
+  app.use('/api/vans', authTenantMiddleware, vansRoutes);
+  app.use('/api/visits', authTenantMiddleware, visitsRoutes);
+  app.use('/api/warehouses', authTenantMiddleware, warehousesRoutes);
 
   // Error handlers
   app.use(notFoundHandler);

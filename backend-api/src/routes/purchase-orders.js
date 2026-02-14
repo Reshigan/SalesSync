@@ -150,55 +150,32 @@ router.post('/', async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
 
-    db.run(poSql, [
+    const poResult = await runQuery(poSql, [
       tenantId, poNumber, supplier_id, warehouse_id, 
       order_date || new Date().toISOString().split('T')[0],
       expected_delivery_date, payment_terms, notes, tax_rate || 0, 
       discount || 0, userId
-    ], function(err) {
-      if (err) {
-        console.error('Error creating purchase order:', err);
-        return res.status(500).json({ error: 'Failed to create purchase order' });
-      }
+    ]);
 
-      const poId = this.lastID;
+    const poId = poResult.lastID;
 
-      // Insert PO items
-      const itemSql = `
-        INSERT INTO purchase_order_items (
-          purchase_order_id, product_id, quantity, unit_price, 
-          notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      `;
+    const itemSql = `
+      INSERT INTO purchase_order_items (
+        purchase_order_id, product_id, quantity, unit_price, 
+        notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `;
 
-      let insertedItems = 0;
-      const errors = [];
+    for (const item of items) {
+      await runQuery(itemSql, [
+        poId, item.product_id, item.quantity, item.unit_price, item.notes || null
+      ]);
+    }
 
-      items.forEach((item, index) => {
-        db.run(itemSql, [
-          poId, item.product_id, item.quantity, item.unit_price, item.notes || null
-        ], function(err) {
-          if (err) {
-            errors.push(`Item ${index + 1}: ${err.message}`);
-          }
-          insertedItems++;
-
-          if (insertedItems === items.length) {
-            if (errors.length > 0) {
-              return res.status(500).json({ 
-                error: 'Some items failed to insert', 
-                details: errors 
-              });
-            }
-
-            res.status(201).json({ 
-              success: true, 
-              data: { id: poId, po_number: poNumber }, 
-              message: 'Purchase order created successfully' 
-            });
-          }
-        });
-      });
+    res.status(201).json({ 
+      success: true, 
+      data: { id: poId, po_number: poNumber }, 
+      message: 'Purchase order created successfully' 
     });
   } catch (error) {
     console.error('Error in POST /purchase-orders:', error);
@@ -233,21 +210,16 @@ router.put('/:id', async (req, res) => {
       WHERE tenant_id = ? AND id = ?
     `;
 
-    db.run(sql, values, function(err) {
-      if (err) {
-        console.error('Error updating purchase order:', err);
-        return res.status(500).json({ error: 'Failed to update purchase order' });
-      }
+    const result = await runQuery(sql, values);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'Purchase order not found' });
-      }
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Purchase order not found' });
+    }
 
-      res.json({ 
-        success: true, 
-        message: 'Purchase order updated successfully',
-        changes: this.changes
-      });
+    res.json({ 
+      success: true, 
+      message: 'Purchase order updated successfully',
+      changes: result.changes
     });
   } catch (error) {
     console.error('Error in PUT /purchase-orders/:id:', error);
@@ -272,22 +244,17 @@ router.post('/:id/approve', async (req, res) => {
       WHERE tenant_id = ? AND id = ? AND status = 'draft'
     `;
 
-    db.run(sql, [userId, tenantId, id], function(err) {
-      if (err) {
-        console.error('Error approving purchase order:', err);
-        return res.status(500).json({ error: 'Failed to approve purchase order' });
-      }
+    const result = await runQuery(sql, [userId, tenantId, id]);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ 
-          error: 'Purchase order not found or already approved' 
-        });
-      }
-
-      res.json({ 
-        success: true, 
-        message: 'Purchase order approved successfully' 
+    if (result.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Purchase order not found or already approved' 
       });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Purchase order approved successfully' 
     });
   } catch (error) {
     console.error('Error in POST /purchase-orders/:id/approve:', error);
@@ -318,60 +285,33 @@ router.post('/:id/receive', async (req, res) => {
       WHERE tenant_id = ? AND id = ? AND status = 'approved'
     `;
 
-    db.run(poSql, [userId, notes, tenantId, id], function(err) {
-      if (err) {
-        console.error('Error updating PO status:', err);
-        return res.status(500).json({ error: 'Failed to update PO status' });
-      }
+    const poResult = await runQuery(poSql, [userId, notes, tenantId, id]);
 
-      if (this.changes === 0) {
-        return res.status(404).json({ 
-          error: 'Purchase order not found or not approved' 
-        });
-      }
-
-      // Update received quantities for each item
-      let updatedItems = 0;
-      const errors = [];
-
-      received_items.forEach((item, index) => {
-        const itemSql = `
-          UPDATE purchase_order_items 
-          SET received_quantity = ?, 
-              receive_notes = ?,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE purchase_order_id = ? AND product_id = ?
-        `;
-
-        db.run(itemSql, [
-          item.received_quantity, 
-          item.notes || null, 
-          id, 
-          item.product_id
-        ], function(err) {
-          if (err) {
-            errors.push(`Item ${index + 1}: ${err.message}`);
-          }
-          updatedItems++;
-
-          if (updatedItems === received_items.length) {
-            if (errors.length > 0) {
-              return res.status(500).json({ 
-                error: 'Some items failed to update', 
-                details: errors 
-              });
-            }
-
-            // TODO: Update inventory levels here
-            // This would typically trigger stock movements
-
-            res.json({ 
-              success: true, 
-              message: 'Purchase order received successfully' 
-            });
-          }
-        });
+    if (poResult.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Purchase order not found or not approved' 
       });
+    }
+
+    for (const item of received_items) {
+      const itemSql = `
+        UPDATE purchase_order_items 
+        SET received_quantity = ?, 
+            receive_notes = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE purchase_order_id = ? AND product_id = ?
+      `;
+      await runQuery(itemSql, [
+        item.received_quantity, 
+        item.notes || null, 
+        id, 
+        item.product_id
+      ]);
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Purchase order received successfully' 
     });
   } catch (error) {
     console.error('Error in POST /purchase-orders/:id/receive:', error);
@@ -394,35 +334,24 @@ router.delete('/:id', async (req, res) => {
       )
     `;
 
-    db.run(deleteItemsSql, [id, tenantId], function(err) {
-      if (err) {
-        console.error('Error deleting PO items:', err);
-        return res.status(500).json({ error: 'Failed to delete PO items' });
-      }
+    await runQuery(deleteItemsSql, [id, tenantId]);
 
-      // Delete PO header
-      const deletePoSql = `
-        DELETE FROM purchase_orders 
-        WHERE id = ? AND tenant_id = ? AND status = 'draft'
-      `;
+    const deletePoSql = `
+      DELETE FROM purchase_orders 
+      WHERE id = ? AND tenant_id = ? AND status = 'draft'
+    `;
 
-      db.run(deletePoSql, [id, tenantId], function(err) {
-        if (err) {
-          console.error('Error deleting purchase order:', err);
-          return res.status(500).json({ error: 'Failed to delete purchase order' });
-        }
+    const deleteResult = await runQuery(deletePoSql, [id, tenantId]);
 
-        if (this.changes === 0) {
-          return res.status(404).json({ 
-            error: 'Purchase order not found or cannot be deleted' 
-          });
-        }
-
-        res.json({ 
-          success: true, 
-          message: 'Purchase order deleted successfully' 
-        });
+    if (deleteResult.changes === 0) {
+      return res.status(404).json({ 
+        error: 'Purchase order not found or cannot be deleted' 
       });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Purchase order deleted successfully' 
     });
   } catch (error) {
     console.error('Error in DELETE /purchase-orders/:id:', error);
@@ -458,13 +387,8 @@ router.get('/stats/summary', async (req, res) => {
       params.push(to_date);
     }
 
-    db.get(sql, params, (err, stats) => {
-      if (err) {
-        console.error('Error fetching PO stats:', err);
-        return res.status(500).json({ error: 'Failed to fetch PO stats' });
-      }
-      res.json({ success: true, data: stats || {} });
-    });
+    const stats = await getOneQuery(sql, params);
+    res.json({ success: true, data: stats || {} });
   } catch (error) {
     console.error('Error in GET /purchase-orders/stats/summary:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -408,8 +408,7 @@ router.get('/:id', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
     const { id } = req.params;
-    const product = await new Promise((resolve, reject) => {
-      db.get(`
+    const product = await getOneQuery(`
         SELECT p.*, c.name as category_name, b.name as brand_name,
                COALESCE(SUM(i.quantity_on_hand), 0) as total_stock,
                COALESCE(SUM(i.quantity_reserved), 0) as reserved_stock
@@ -419,11 +418,7 @@ router.get('/:id', async (req, res) => {
         LEFT JOIN inventory_stock i ON p.id = i.product_id
         WHERE p.tenant_id = ? AND p.id = ?
         GROUP BY p.id
-      `, [tenantId, id], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+      `, [tenantId, id]);
     
     if (!product) {
       return res.status(404).json({ 
@@ -433,18 +428,13 @@ router.get('/:id', async (req, res) => {
     }
     
     // Get inventory details by warehouse
-    const inventoryDetails = await new Promise((resolve, reject) => {
-      db.all(`
+    const inventoryDetails = await getQuery(`
         SELECT i.*, w.name as warehouse_name
         FROM inventory_stock i
         JOIN warehouses w ON i.warehouse_id = w.id
         WHERE i.tenant_id = ? AND i.product_id = ?
         ORDER BY w.name
-      `, [tenantId, id], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
+      `, [tenantId, id]);
     
     res.json({
       success: true,
@@ -504,7 +494,7 @@ router.put('/:id', async (req, res) => {
     } = req.body;
     
     // Check if product exists
-    const existingProduct = await getOneQuery('products', { id }, tenantId);
+    const existingProduct = await getOneQuery('SELECT * FROM products WHERE id = ? AND tenant_id = ?', [id, tenantId]);
     if (!existingProduct) {
       return res.status(404).json({ 
         success: false, 
@@ -514,7 +504,7 @@ router.put('/:id', async (req, res) => {
     
     // Check if code is being changed and already exists
     if (code && code !== existingProduct.code) {
-      const codeExists = await getOneQuery('products', { code }, tenantId);
+      const codeExists = await getOneQuery('SELECT * FROM products WHERE code = ? AND tenant_id = ?', [code, tenantId]);
       if (codeExists) {
         return res.status(400).json({ 
           success: false, 
@@ -536,21 +526,25 @@ router.put('/:id', async (req, res) => {
     if (tax_rate !== undefined) updateData.tax_rate = tax_rate ? parseFloat(tax_rate) : 0;
     if (status) updateData.status = status;
     
-    await updateQuery('products', updateData, { id }, tenantId);
+    const updateFields = [];
+    const updateValues = [];
+    Object.keys(updateData).forEach(key => {
+      updateFields.push(`${key} = ?`);
+      updateValues.push(updateData[key]);
+    });
+    if (updateFields.length > 0) {
+      updateValues.push(id, tenantId);
+      await runQuery(`UPDATE products SET ${updateFields.join(', ')} WHERE id = ? AND tenant_id = ?`, updateValues);
+    }
     
     // Get updated product
-    const updatedProduct = await new Promise((resolve, reject) => {
-      db.get(`
+    const updatedProduct = await getOneQuery(`
         SELECT p.*, c.name as category_name, b.name as brand_name
         FROM products p
         LEFT JOIN categories c ON p.category_id = c.id
         LEFT JOIN brands b ON p.brand_id = b.id
         WHERE p.tenant_id = ? AND p.id = ?
-      `, [tenantId, id], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
+      `, [tenantId, id]);
     
     res.json({
       success: true,
@@ -590,7 +584,7 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     
     // Check if product exists
-    const existingProduct = await getOneQuery('products', { id }, tenantId);
+    const existingProduct = await getOneQuery('SELECT * FROM products WHERE id = ? AND tenant_id = ?', [id, tenantId]);
     if (!existingProduct) {
       return res.status(404).json({ 
         success: false, 
@@ -599,23 +593,19 @@ router.delete('/:id', async (req, res) => {
     }
     
     // Check if product is used in orders
-    const orderItems = await new Promise((resolve, reject) => {
-      db.get('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?', [id], (err, row) => {
-        if (err) reject(err);
-        else resolve(row.count);
-      });
-    });
+    const orderItemsRow = await getOneQuery('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?', [id]);
+    const orderItems = orderItemsRow ? orderItemsRow.count : 0;
     
     if (orderItems > 0) {
       // Soft delete - mark as inactive
-      await updateQuery('products', { status: 'inactive' }, { id }, tenantId);
+      await runQuery('UPDATE products SET status = ? WHERE id = ? AND tenant_id = ?', ['inactive', id, tenantId]);
       res.json({
         success: true,
         message: 'Product marked as inactive (has order history)'
       });
     } else {
       // Hard delete
-      await deleteQuery('products', { id }, tenantId);
+      await runQuery('DELETE FROM products WHERE id = ? AND tenant_id = ?', [id, tenantId]);
       res.json({
         success: true,
         message: 'Product deleted successfully'
@@ -631,7 +621,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/categories/list', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const categories = await getQuery('categories', { status: 'active' }, tenantId);
+    const categories = await getQuery('SELECT * FROM categories WHERE status = ? AND tenant_id = ?', ['active', tenantId]);
     
     res.json({
       success: true,
@@ -647,7 +637,7 @@ router.get('/categories/list', async (req, res) => {
 router.get('/brands/list', async (req, res) => {
   try {
     const tenantId = req.user.tenantId;
-    const brands = await getQuery('brands', { status: 'active' }, tenantId);
+    const brands = await getQuery('SELECT * FROM brands WHERE status = ? AND tenant_id = ?', ['active', tenantId]);
     
     res.json({
       success: true,
@@ -738,7 +728,7 @@ router.get('/:id/stock-history', async (req, res) => {
     const { start_date, end_date, warehouse_id, limit = 50 } = req.query;
     
     // Verify product exists
-    const product = await getOneQuery('products', { id }, tenantId);
+    const product = await getOneQuery('SELECT * FROM products WHERE id = ? AND tenant_id = ?', [id, tenantId]);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -786,12 +776,12 @@ router.get('/:id/stock-history', async (req, res) => {
     
     // Add filters
     if (start_date) {
-      sql += ' AND im.DATE(created_at) >= DATE(?)';
+      sql += ' AND DATE(im.created_at) >= DATE(?)';
       params.push(start_date);
     }
     
     if (end_date) {
-      sql += ' AND im.DATE(created_at) <= DATE(?)';
+      sql += ' AND DATE(im.created_at) <= DATE(?)';
       params.push(end_date);
     }
     
@@ -803,14 +793,10 @@ router.get('/:id/stock-history', async (req, res) => {
     sql += ' ORDER BY im.created_at DESC, im.id DESC LIMIT ?';
     params.push(parseInt(limit));
     
-    const movements = await new Promise((resolve, reject) => {
-      db.all(sql, params, (err, rows) => err ? reject(err) : resolve(rows || []));
-    });
+    const movements = await getQuery(sql, params);
     
     // Get current stock levels by warehouse
-    const stockLevels = await new Promise((resolve, reject) => {
-      db.all(
-        `SELECT 
+    let stockSql = `SELECT 
           i.warehouse_id,
           w.name as warehouse_name,
           i.quantity_on_hand,
@@ -820,13 +806,14 @@ router.get('/:id/stock-history', async (req, res) => {
         FROM inventory_stock i
         LEFT JOIN warehouses w ON i.warehouse_id = w.id
         WHERE i.product_id = ?
-        AND i.tenant_id = ?
-        ${warehouse_id ? 'AND i.warehouse_id = ?' : ''}
-        ORDER BY w.name`,
-        warehouse_id ? [id, tenantId, warehouse_id] : [id, tenantId],
-        (err, rows) => err ? reject(err) : resolve(rows || [])
-      );
-    });
+        AND i.tenant_id = ?`;
+    let stockParams = [id, tenantId];
+    if (warehouse_id) {
+      stockSql += ' AND i.warehouse_id = ?';
+      stockParams.push(warehouse_id);
+    }
+    stockSql += ' ORDER BY w.name';
+    const stockLevels = await getQuery(stockSql, stockParams);
     
     // Calculate summary
     const summary = movements.reduce((acc, mov) => {
@@ -901,7 +888,7 @@ router.get('/:id/sales-data', async (req, res) => {
     const tenantId = req.user.tenantId;
     const { period = 'monthly', months = 12 } = req.query;
     
-    const product = await getOneQuery('products', { id }, tenantId);
+    const product = await getOneQuery('SELECT * FROM products WHERE id = ? AND tenant_id = ?', [id, tenantId]);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
@@ -915,11 +902,9 @@ router.get('/:id/sales-data', async (req, res) => {
     }[period] || '%Y-%m';
     
     const [salesTrend, topCustomers, revenueStats] = await Promise.all([
-      // Sales trend by period
-      new Promise((resolve, reject) => {
-        db.all(
+      getQuery(
           `SELECT 
-            TO_CHAR(o.order_date, '${dateFormat}') as period,
+            strftime('${dateFormat}', o.order_date) as period,
             COUNT(DISTINCT o.id) as order_count,
             SUM(oi.quantity) as total_quantity,
             SUM(oi.quantity * oi.unit_price) as total_revenue,
@@ -932,14 +917,10 @@ router.get('/:id/sales-data', async (req, res) => {
           AND date(o.order_date) >= date('now', '-${parseInt(months)} months')
           GROUP BY period
           ORDER BY period DESC`,
-          [id, tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      }),
+          [id, tenantId]
+      ),
       
-      // Top customers for this product
-      new Promise((resolve, reject) => {
-        db.all(
+      getQuery(
           `SELECT 
             c.id,
             c.name,
@@ -957,14 +938,10 @@ router.get('/:id/sales-data', async (req, res) => {
           GROUP BY c.id, c.name, c.code
           ORDER BY total_spent DESC
           LIMIT 10`,
-          [id, tenantId],
-          (err, rows) => err ? reject(err) : resolve(rows || [])
-        );
-      }),
+          [id, tenantId]
+      ),
       
-      // Overall revenue statistics
-      new Promise((resolve, reject) => {
-        db.get(
+      getOneQuery(
           `SELECT 
             COUNT(DISTINCT o.id) as total_orders,
             SUM(oi.quantity) as total_quantity_sold,
@@ -979,10 +956,8 @@ router.get('/:id/sales-data', async (req, res) => {
           WHERE oi.product_id = ?
           AND o.tenant_id = ?
           AND o.status != 'cancelled'`,
-          [id, tenantId],
-          (err, row) => err ? reject(err) : resolve(row || {})
-        );
-      })
+          [id, tenantId]
+      )
     ]);
     
     // Calculate growth rate
