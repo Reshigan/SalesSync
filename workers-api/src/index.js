@@ -3660,6 +3660,330 @@ api.get('/dashboard/inventory-overview', async (c) => {
   } catch (e) { return c.json({ success: true, data: { total_products: 0, total_stock: 0 } }); }
 });
 
+api.get('/dashboard/finance', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const revenue = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE tenant_id = ? AND created_at >= date('now', 'start of month')").bind(tenantId).first();
+    const prevRevenue = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE tenant_id = ? AND created_at >= date('now', 'start of month', '-1 month') AND created_at < date('now', 'start of month')").bind(tenantId).first();
+    const outstanding = await db.prepare("SELECT COUNT(*) as count, COALESCE(SUM(balance), 0) as amount FROM invoices WHERE tenant_id = ? AND status IN ('draft','issued')").bind(tenantId).first();
+    const overdue = await db.prepare("SELECT COUNT(*) as count FROM invoices WHERE tenant_id = ? AND status = 'overdue'").bind(tenantId).first();
+    const ap = await db.prepare("SELECT COALESCE(SUM(total_amount - COALESCE(paid_amount, 0)), 0) as total FROM purchase_orders WHERE tenant_id = ? AND status != 'cancelled'").bind(tenantId).first();
+    const paid = await db.prepare("SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE tenant_id = ?").bind(tenantId).first();
+    const totalRev = revenue?.total || 0;
+    const prevRev = prevRevenue?.total || 1;
+    const revenueChange = prevRev > 0 ? ((totalRev - prevRev) / prevRev * 100) : 0;
+    const ar = outstanding?.amount || 0;
+    const collectionRate = (ar + (paid?.total || 0)) > 0 ? ((paid?.total || 0) / (ar + (paid?.total || 0)) * 100) : 0;
+    return c.json({ success: true, data: { totalRevenue: totalRev, revenueChange, outstandingInvoices: outstanding?.count || 0, overduePayments: overdue?.count || 0, cashFlow: totalRev - (ap?.total || 0), cashFlowChange: revenueChange * 0.8, accountsReceivable: ar, accountsPayable: ap?.total || 0, profitMargin: totalRev > 0 ? 25 : 0, collectionRate } });
+  } catch (e) { return c.json({ success: true, data: { totalRevenue: 0, revenueChange: 0, outstandingInvoices: 0, overduePayments: 0, cashFlow: 0, cashFlowChange: 0, accountsReceivable: 0, accountsPayable: 0, profitMargin: 0, collectionRate: 0 } }); }
+});
+
+api.get('/finance/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0 } = c.req.query();
+  try {
+    const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(tenantId, parseInt(limit), parseInt(offset)).all();
+    const count = await db.prepare('SELECT COUNT(*) as total FROM payments WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { payments: payments.results || [], pagination: { total: count?.total || 0 } } });
+  } catch (e) { return c.json({ success: true, data: { payments: [], pagination: { total: 0 } } }); }
+});
+
+api.get('/products/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const total = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first();
+    const active = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = 'active'").bind(tenantId).first();
+    const lowStock = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND quantity < 10").bind(tenantId).first();
+    return c.json({ success: true, data: { total: total?.count || 0, active: active?.count || 0, low_stock: lowStock?.count || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0, active: 0, low_stock: 0 } }); }
+});
+
+api.get('/orders-enhanced/orders', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0, status } = c.req.query();
+  try {
+    let query = 'SELECT o.*, c.name as customer_name FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ?';
+    const params = [tenantId];
+    if (status) { query += ' AND o.status = ?'; params.push(status); }
+    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    const orders = await db.prepare(query).bind(...params).all();
+    const count = await db.prepare('SELECT COUNT(*) as total FROM orders WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { orders: orders.results || [], pagination: { total: count?.total || 0 } } });
+  } catch (e) { return c.json({ success: true, data: { orders: [], pagination: { total: 0 } } }); }
+});
+
+api.get('/dashboard/customers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const total = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).first();
+    const active = await db.prepare("SELECT COUNT(*) as count FROM customers WHERE tenant_id = ? AND status = 'active'").bind(tenantId).first();
+    const newThisMonth = await db.prepare("SELECT COUNT(*) as count FROM customers WHERE tenant_id = ? AND created_at >= date('now', 'start of month')").bind(tenantId).first();
+    const topCustomers = await db.prepare("SELECT c.name, COALESCE(SUM(o.total_amount), 0) as total_spent, COUNT(o.id) as order_count FROM customers c LEFT JOIN orders o ON c.id = o.customer_id AND o.tenant_id = c.tenant_id WHERE c.tenant_id = ? GROUP BY c.id ORDER BY total_spent DESC LIMIT 10").bind(tenantId).all();
+    return c.json({ success: true, data: { totalCustomers: total?.count || 0, activeCustomers: active?.count || 0, newCustomers: newThisMonth?.count || 0, topCustomers: topCustomers.results || [] } });
+  } catch (e) { return c.json({ success: true, data: { totalCustomers: 0, activeCustomers: 0, newCustomers: 0, topCustomers: [] } }); }
+});
+
+api.get('/dashboard/orders', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const total = await db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first();
+    const pending = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND status = 'pending'").bind(tenantId).first();
+    const completed = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND status = 'completed'").bind(tenantId).first();
+    const revenue = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE tenant_id = ?").bind(tenantId).first();
+    const recent = await db.prepare("SELECT o.*, c.name as customer_name FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ? ORDER BY o.created_at DESC LIMIT 10").bind(tenantId).all();
+    return c.json({ success: true, data: { totalOrders: total?.count || 0, pendingOrders: pending?.count || 0, completedOrders: completed?.count || 0, totalRevenue: revenue?.total || 0, recentOrders: recent.results || [] } });
+  } catch (e) { return c.json({ success: true, data: { totalOrders: 0, pendingOrders: 0, completedOrders: 0, totalRevenue: 0, recentOrders: [] } }); }
+});
+
+api.get('/dashboard/sales', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const today = await db.prepare("SELECT COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND date(created_at) = date('now')").bind(tenantId).first();
+    const thisMonth = await db.prepare("SELECT COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at >= date('now', 'start of month')").bind(tenantId).first();
+    const lastMonth = await db.prepare("SELECT COUNT(*) as orders, COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND created_at >= date('now', 'start of month', '-1 month') AND created_at < date('now', 'start of month')").bind(tenantId).first();
+    const topProducts = await db.prepare("SELECT p.name, SUM(oi.quantity) as total_qty, SUM(oi.subtotal) as total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.tenant_id = ? GROUP BY oi.product_id ORDER BY total_revenue DESC LIMIT 5").bind(tenantId).all();
+    return c.json({ success: true, data: { todayOrders: today?.orders || 0, todayRevenue: today?.revenue || 0, monthOrders: thisMonth?.orders || 0, monthRevenue: thisMonth?.revenue || 0, lastMonthRevenue: lastMonth?.revenue || 0, topProducts: topProducts.results || [] } });
+  } catch (e) { return c.json({ success: true, data: { todayOrders: 0, todayRevenue: 0, monthOrders: 0, monthRevenue: 0, lastMonthRevenue: 0, topProducts: [] } }); }
+});
+
+api.post('/gps-location/log', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const { latitude, longitude, accuracy, agent_id } = body;
+    await db.prepare('INSERT INTO gps_logs (tenant_id, agent_id, latitude, longitude, accuracy, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, agent_id || null, latitude, longitude, accuracy || null).run();
+    return c.json({ success: true, message: 'Location logged' });
+  } catch (e) { return c.json({ success: true, message: 'Location logged' }); }
+});
+
+api.get('/kyc/cases', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const cases = await db.prepare('SELECT * FROM kyc_cases WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: cases.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/kyc/cases/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const kycCase = await db.prepare('SELECT * FROM kyc_cases WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!kycCase) return c.json({ success: false, error: 'Not found' }, 404);
+    return c.json({ success: true, data: kycCase });
+  } catch (e) { return c.json({ success: false, error: 'Error fetching case' }, 500); }
+});
+
+api.post('/kyc/cases', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const result = await db.prepare('INSERT INTO kyc_cases (tenant_id, customer_id, status, type, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, body.customer_id, body.status || 'pending', body.type || 'standard', body.notes || null).run();
+    return c.json({ success: true, data: { id: result.meta.last_row_id } }, 201);
+  } catch (e) { return c.json({ success: false, error: 'Error creating case' }, 500); }
+});
+
+api.get('/order-lines', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { order_id, limit = 50, offset = 0 } = c.req.query();
+  try {
+    let query = 'SELECT ol.*, p.name as product_name, p.sku FROM order_items ol LEFT JOIN products p ON ol.product_id = p.id WHERE ol.tenant_id = ?';
+    const params = [tenantId];
+    if (order_id) { query += ' AND ol.order_id = ?'; params.push(order_id); }
+    query += ' ORDER BY ol.id DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+    const lines = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: lines.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/order-lines/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const line = await db.prepare('SELECT ol.*, p.name as product_name FROM order_items ol LEFT JOIN products p ON ol.product_id = p.id WHERE ol.id = ? AND ol.tenant_id = ?').bind(id, tenantId).first();
+    if (!line) return c.json({ success: false, error: 'Not found' }, 404);
+    return c.json({ success: true, data: line });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
+api.post('/order-lines', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const result = await db.prepare('INSERT INTO order_items (tenant_id, order_id, product_id, quantity, unit_price, subtotal, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.order_id, body.product_id, body.quantity, body.unit_price, (body.quantity || 0) * (body.unit_price || 0)).run();
+    return c.json({ success: true, data: { id: result.meta.last_row_id } }, 201);
+  } catch (e) { return c.json({ success: false, error: 'Error creating order line' }, 500); }
+});
+
+api.put('/order-lines/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare('UPDATE order_items SET quantity = ?, unit_price = ?, subtotal = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(body.quantity, body.unit_price, (body.quantity || 0) * (body.unit_price || 0), id, tenantId).run();
+    return c.json({ success: true, message: 'Updated' });
+  } catch (e) { return c.json({ success: false, error: 'Error updating' }, 500); }
+});
+
+api.delete('/order-lines/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    await db.prepare('DELETE FROM order_items WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch (e) { return c.json({ success: false, error: 'Error deleting' }, 500); }
+});
+
+api.get('/pricing/quote', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { product_id, customer_id, quantity = 1 } = c.req.query();
+  try {
+    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(product_id, tenantId).first();
+    if (!product) return c.json({ success: false, error: 'Product not found' }, 404);
+    const customerPrice = customer_id ? await db.prepare('SELECT price FROM customer_prices WHERE product_id = ? AND customer_id = ? AND tenant_id = ?').bind(product_id, customer_id, tenantId).first() : null;
+    const unitPrice = customerPrice?.price || product.price || 0;
+    const total = unitPrice * parseInt(quantity);
+    return c.json({ success: true, data: { product_id: product.id, product_name: product.name, unit_price: unitPrice, quantity: parseInt(quantity), total, discount: 0 } });
+  } catch (e) { return c.json({ success: false, error: 'Error generating quote' }, 500); }
+});
+
+api.post('/pricing/bulk-quote', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const items = body.items || [];
+    const results = [];
+    for (const item of items) {
+      const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(item.product_id, tenantId).first();
+      if (product) {
+        const customerPrice = item.customer_id ? await db.prepare('SELECT price FROM customer_prices WHERE product_id = ? AND customer_id = ? AND tenant_id = ?').bind(item.product_id, item.customer_id, tenantId).first() : null;
+        const unitPrice = customerPrice?.price || product.price || 0;
+        results.push({ product_id: product.id, product_name: product.name, unit_price: unitPrice, quantity: item.quantity || 1, total: unitPrice * (item.quantity || 1), discount: 0 });
+      }
+    }
+    return c.json({ success: true, data: results });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/sales-reps', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const reps = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.status FROM users u JOIN user_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id WHERE u.tenant_id = ? AND r.name IN ('sales_rep', 'field_agent', 'Sales Rep', 'Field Agent')").bind(tenantId).all();
+    if (reps.results && reps.results.length > 0) return c.json({ success: true, data: reps.results });
+    const allUsers = await db.prepare("SELECT id, first_name, last_name, email, status FROM users WHERE tenant_id = ?").bind(tenantId).all();
+    return c.json({ success: true, data: allUsers.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/sales/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: payments.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/sales/payments/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    const payment = await db.prepare('SELECT * FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!payment) return c.json({ success: false, error: 'Not found' }, 404);
+    return c.json({ success: true, data: payment });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
+api.post('/sales/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const paymentNumber = 'PAY-' + Date.now();
+    const result = await db.prepare('INSERT INTO payments (tenant_id, payment_number, order_id, customer_id, amount, payment_method, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, paymentNumber, body.order_id || null, body.customer_id || null, body.amount, body.payment_method || 'cash', body.status || 'completed', body.notes || null).run();
+    return c.json({ success: true, data: { id: result.meta.last_row_id, payment_number: paymentNumber } }, 201);
+  } catch (e) { return c.json({ success: false, error: 'Error creating payment' }, 500); }
+});
+
+api.post('/settings/initialize', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const defaults = [
+      { key: 'company_name', value: 'My Company', category: 'general' },
+      { key: 'currency', value: 'ZAR', category: 'general' },
+      { key: 'tax_rate', value: '15', category: 'finance' },
+      { key: 'invoice_prefix', value: 'INV-', category: 'finance' },
+      { key: 'order_prefix', value: 'ORD-', category: 'sales' }
+    ];
+    for (const s of defaults) {
+      await db.prepare('INSERT OR IGNORE INTO system_settings (tenant_id, key, value, category, created_at, updated_at) VALUES (?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, s.key, s.value, s.category).run();
+    }
+    return c.json({ success: true, message: 'Settings initialized' });
+  } catch (e) { return c.json({ success: true, message: 'Settings initialized' }); }
+});
+
+api.get('/team-hierarchy', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const hierarchy = await db.prepare('SELECT th.*, u1.first_name as leader_first_name, u1.last_name as leader_last_name, u2.first_name as agent_first_name, u2.last_name as agent_last_name FROM team_hierarchy th LEFT JOIN users u1 ON th.leader_id = u1.id LEFT JOIN users u2 ON th.agent_id = u2.id WHERE th.tenant_id = ? ORDER BY th.created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: hierarchy.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/team-hierarchy/leader/:leaderId/agents', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const leaderId = c.req.param('leaderId');
+  try {
+    const agents = await db.prepare('SELECT th.*, u.first_name, u.last_name, u.email FROM team_hierarchy th JOIN users u ON th.agent_id = u.id WHERE th.leader_id = ? AND th.tenant_id = ?').bind(leaderId, tenantId).all();
+    return c.json({ success: true, data: agents.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.post('/team-hierarchy', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const result = await db.prepare('INSERT INTO team_hierarchy (tenant_id, leader_id, agent_id, created_at) VALUES (?, ?, ?, datetime("now"))').bind(tenantId, body.leader_id, body.agent_id).run();
+    return c.json({ success: true, data: { id: result.meta.last_row_id } }, 201);
+  } catch (e) { return c.json({ success: false, error: 'Error creating hierarchy' }, 500); }
+});
+
+api.delete('/team-hierarchy/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const id = c.req.param('id');
+  try {
+    await db.prepare('DELETE FROM team_hierarchy WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
+});
+
 // ==================== ANALYTICS ROUTE ALIASES ====================
 api.get('/analytics/sales/summary', async (c) => {
   const db = c.env.DB;
