@@ -35,7 +35,8 @@ export default defineConfig({
       'dist',
       '.idea',
       '.git',
-      '.cache'
+      '.cache',
+      'src/tests_backup/**'
     ]
   },
   resolve: {

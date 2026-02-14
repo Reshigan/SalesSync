@@ -20,7 +20,12 @@ if (process.env.NODE_ENV === 'production' && config.type === 'postgres') {
   
   function getDatabase() {
     if (!db) {
-      const dbPath = path.join(__dirname, '../../database/salessync.db');
+      let dbPath;
+      if (process.env.NODE_ENV === 'test') {
+        dbPath = path.join(__dirname, '../../database/salessync_test.db');
+      } else {
+        dbPath = path.join(__dirname, '../../database/salessync.db');
+      }
       db = new sqlite3.Database(dbPath);
     }
     return db;
