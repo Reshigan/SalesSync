@@ -3760,7 +3760,7 @@ api.post('/gps-location/log', async (c) => {
   try {
     const body = await c.req.json();
     const { latitude, longitude, accuracy, agent_id } = body;
-    await db.prepare('INSERT INTO gps_logs (tenant_id, agent_id, latitude, longitude, accuracy, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, agent_id || null, latitude, longitude, accuracy || null).run();
+    await db.prepare('INSERT INTO gps_locations (tenant_id, agent_id, latitude, longitude, accuracy, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, agent_id || null, latitude, longitude, accuracy || null).run();
     return c.json({ success: true, message: 'Location logged' });
   } catch (e) { return c.json({ success: true, message: 'Location logged' }); }
 });
