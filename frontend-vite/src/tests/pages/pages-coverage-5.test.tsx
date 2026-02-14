@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest"
 import React from "react"
-import { render } from "@testing-library/react"
+import { render, act } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom"
 
 const mockClient = { get: vi.fn().mockResolvedValue({ data: { data: [], total: 0, pagination: {} } }), post: vi.fn().mockResolvedValue({ data: { data: { id: "1" } } }), put: vi.fn().mockResolvedValue({ data: { data: { id: "1" } } }), delete: vi.fn().mockResolvedValue({ data: {} }), patch: vi.fn().mockResolvedValue({ data: { data: {} } }), interceptors: { request: { use: vi.fn() }, response: { use: vi.fn() } }, defaults: { headers: { common: {} } } }
@@ -21,12 +21,13 @@ vi.mock("../../services/tenant.service", () => ({ tenantService: { getCurrentTen
 const W = ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children)
 
 async function renderPage(path: string) {
+  await new Promise(r => setTimeout(r, 0))
   try {
     const mod = await import("../../pages/" + path)
     const Component = mod.default || Object.values(mod)[0] as any
     if (Component && typeof Component === "function") {
-      const { container } = render(React.createElement(Component), { wrapper: W })
-      return container
+      let container: any; await act(async () => { const result = render(React.createElement(Component), { wrapper: W }); container = result.container }); await act(async () => { await new Promise(r => setTimeout(r, 50)) })
+      return container!
     }
     return mod
   } catch (e) {
