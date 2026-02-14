@@ -3440,6 +3440,76 @@ api.post('/price-lists/:id/items', async (c) => {
   return c.json({ success: true, data: { id: itemId }, message: 'Price list item added' }, 201);
 });
 
+// ==================== PRICING ROUTE ALIASES ====================
+api.get('/pricing/price-lists', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const priceLists = await db.prepare('SELECT * FROM price_lists WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
+    return c.json({ success: true, data: priceLists.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/pricing/price-lists/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const pl = await db.prepare('SELECT * FROM price_lists WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!pl) return c.json({ success: false, message: 'Price list not found' }, 404);
+    return c.json({ success: true, data: pl });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.post('/pricing/price-lists', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const body = await c.req.json();
+  try {
+    const id = crypto.randomUUID();
+    await db.prepare(`INSERT INTO price_lists (id, tenant_id, name, description, currency, is_default, start_date, end_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).bind(id, tenantId, body.name, body.description || null, body.currency || 'USD', body.is_default ? 1 : 0, body.start_date || null, body.end_date || null, 'active').run();
+    return c.json({ success: true, data: { id }, message: 'Price list created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.put('/pricing/price-lists/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  try {
+    await db.prepare('UPDATE price_lists SET name = COALESCE(?, name), description = COALESCE(?, description), status = COALESCE(?, status), updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(body.name || null, body.description || null, body.status || null, id, tenantId).run();
+    return c.json({ success: true, message: 'Price list updated' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.delete('/pricing/price-lists/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    await db.prepare('DELETE FROM price_list_items WHERE price_list_id = ?').bind(id).run();
+    await db.prepare('DELETE FROM price_lists WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Price list deleted' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.post('/pricing/price-lists/:id/items', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const body = await c.req.json();
+  try {
+    const items = body.items || [body];
+    for (const item of items) {
+      const itemId = crypto.randomUUID();
+      await db.prepare('INSERT INTO price_list_items (id, tenant_id, price_list_id, product_id, price, min_quantity, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(itemId, tenantId, id, item.product_id, item.price, item.min_quantity || 1).run();
+    }
+    return c.json({ success: true, message: 'Price list items added' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
 // ==================== INITIALIZE LIFECYCLE TABLES ====================
 api.post('/lifecycle/initialize', async (c) => {
   const db = c.env.DB;
