@@ -26,20 +26,15 @@ vi.mock('../../services/tenant.service', () => ({
   tenantService: { getCurrentTenant: vi.fn(() => 'test-tenant') },
 }))
 
-const mockApiClient = () => {
-  const { apiClient } = require('../../services/api.service')
-  ;(apiClient.get as any).mockResolvedValue({ data: { data: [], total: 0, pagination: {}, customers: [], products: [], orders: [] } })
-  ;(apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
-  ;(apiClient.put as any).mockResolvedValue({ data: { data: { id: '1' } } })
-  ;(apiClient.patch as any).mockResolvedValue({ data: { data: { id: '1' } } })
-  ;(apiClient.delete as any).mockResolvedValue({ data: {} })
-  return apiClient
-}
-
 describe('Services Coverage Batch 1 - Customers, Products, Orders, Inventory', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
-    mockApiClient()
+    const { apiClient } = await import('../../services/api.service')
+    ;(apiClient.get as any).mockResolvedValue({ data: { data: [], total: 0, pagination: {}, customers: [], products: [], orders: [] } })
+    ;(apiClient.post as any).mockResolvedValue({ data: { data: { id: '1' } } })
+    ;(apiClient.put as any).mockResolvedValue({ data: { data: { id: '1' } } })
+    ;(apiClient.patch as any).mockResolvedValue({ data: { data: { id: '1' } } })
+    ;(apiClient.delete as any).mockResolvedValue({ data: {} })
   })
 
   describe('CustomersService', () => {
