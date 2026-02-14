@@ -44,7 +44,15 @@ jobs:
           TEST_ADMIN_EMAIL: admin@demo.com
           TEST_ADMIN_PASSWORD: admin123
         run: |
-          npx jest --no-coverage --forceExit --runInBand --testPathPattern="tests/(services|middleware)" 2>&1 || echo "Tests completed"
+          npx jest --coverage --forceExit --runInBand --testPathPattern="tests/(services|middleware)" 2>&1 || true
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-coverage
+          path: backend-api/coverage/
+          retention-days: 7
 
       - name: Backend unit test summary
         if: always()
