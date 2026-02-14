@@ -3471,18 +3471,6 @@ api.get('/finance/stats', async (c) => {
   } catch (e) { return c.json({ success: true, data: { total_invoices: 0, total_payments: 0, total_revenue: 0, outstanding_amount: 0, overdue_amount: 0, paid_invoices: 0, pending_invoices: 0, overdue_invoices: 0 } }); }
 });
 
-api.get('/finance/:id', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-  try {
-    const invoice = await db.prepare('SELECT i.*, c.name as customer_name FROM invoices i LEFT JOIN customers c ON i.customer_id = c.id WHERE i.id = ? AND i.tenant_id = ?').bind(id, tenantId).first();
-    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
-    const items = await db.prepare('SELECT ii.*, p.name as product_name FROM invoice_items ii LEFT JOIN products p ON ii.product_id = p.id WHERE ii.invoice_id = ?').bind(id).all();
-    return c.json({ success: true, data: { ...invoice, items: items.results || [] } });
-  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
-});
-
 api.post('/finance', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -3597,6 +3585,18 @@ api.get('/finance/ar-summary', async (c) => {
     const total = await db.prepare("SELECT COALESCE(SUM(total_amount),0) as total, COALESCE(SUM(paid_amount),0) as paid FROM invoices WHERE tenant_id = ?").bind(tenantId).first();
     return c.json({ success: true, data: { total_receivable: total?.total || 0, total_received: total?.paid || 0, outstanding: (total?.total || 0) - (total?.paid || 0) } });
   } catch (e) { return c.json({ success: true, data: { total_receivable: 0, total_received: 0, outstanding: 0 } }); }
+});
+
+api.get('/finance/:id', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const invoice = await db.prepare('SELECT i.*, c.name as customer_name FROM invoices i LEFT JOIN customers c ON i.customer_id = c.id WHERE i.id = ? AND i.tenant_id = ?').bind(id, tenantId).first();
+    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+    const items = await db.prepare('SELECT ii.*, p.name as product_name FROM invoice_items ii LEFT JOIN products p ON ii.product_id = p.id WHERE ii.invoice_id = ?').bind(id).all();
+    return c.json({ success: true, data: { ...invoice, items: items.results || [] } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
 // ==================== DASHBOARD ROUTE ALIASES ====================
