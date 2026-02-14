@@ -377,6 +377,17 @@ api.get('/products', async (c) => {
   return c.json({ success: true, data: mappedProducts });
 });
 
+api.get('/products/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const total = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first();
+    const active = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = 'active'").bind(tenantId).first();
+    const lowStock = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND quantity < 10").bind(tenantId).first();
+    return c.json({ success: true, data: { total: total?.count || 0, active: active?.count || 0, low_stock: lowStock?.count || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0, active: 0, low_stock: 0 } }); }
+});
+
 api.get('/products/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -3587,6 +3598,17 @@ api.get('/finance/ar-summary', async (c) => {
   } catch (e) { return c.json({ success: true, data: { total_receivable: 0, total_received: 0, outstanding: 0 } }); }
 });
 
+api.get('/finance/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 50, offset = 0 } = c.req.query();
+  try {
+    const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(tenantId, parseInt(limit), parseInt(offset)).all();
+    const count = await db.prepare('SELECT COUNT(*) as total FROM payments WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { payments: payments.results || [], pagination: { total: count?.total || 0 } } });
+  } catch (e) { return c.json({ success: true, data: { payments: [], pagination: { total: 0 } } }); }
+});
+
 api.get('/finance/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -3677,28 +3699,6 @@ api.get('/dashboard/finance', async (c) => {
     const collectionRate = (ar + (paid?.total || 0)) > 0 ? ((paid?.total || 0) / (ar + (paid?.total || 0)) * 100) : 0;
     return c.json({ success: true, data: { totalRevenue: totalRev, revenueChange, outstandingInvoices: outstanding?.count || 0, overduePayments: overdue?.count || 0, cashFlow: totalRev - (ap?.total || 0), cashFlowChange: revenueChange * 0.8, accountsReceivable: ar, accountsPayable: ap?.total || 0, profitMargin: totalRev > 0 ? 25 : 0, collectionRate } });
   } catch (e) { return c.json({ success: true, data: { totalRevenue: 0, revenueChange: 0, outstandingInvoices: 0, overduePayments: 0, cashFlow: 0, cashFlowChange: 0, accountsReceivable: 0, accountsPayable: 0, profitMargin: 0, collectionRate: 0 } }); }
-});
-
-api.get('/finance/payments', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { limit = 50, offset = 0 } = c.req.query();
-  try {
-    const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(tenantId, parseInt(limit), parseInt(offset)).all();
-    const count = await db.prepare('SELECT COUNT(*) as total FROM payments WHERE tenant_id = ?').bind(tenantId).first();
-    return c.json({ success: true, data: { payments: payments.results || [], pagination: { total: count?.total || 0 } } });
-  } catch (e) { return c.json({ success: true, data: { payments: [], pagination: { total: 0 } } }); }
-});
-
-api.get('/products/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const total = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first();
-    const active = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND status = 'active'").bind(tenantId).first();
-    const lowStock = await db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ? AND quantity < 10").bind(tenantId).first();
-    return c.json({ success: true, data: { total: total?.count || 0, active: active?.count || 0, low_stock: lowStock?.count || 0 } });
-  } catch (e) { return c.json({ success: true, data: { total: 0, active: 0, low_stock: 0 } }); }
 });
 
 api.get('/orders-enhanced/orders', async (c) => {
