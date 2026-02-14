@@ -25,7 +25,7 @@ test.describe('System Health Check', () => {
   });
 
   test('should check backend API health', async ({ page }) => {
-    const response = await page.request.get('http://localhost:12001/api/health');
+    const response = await page.request.get('https://ssreports-api.reshigan-085.workers.dev/health');
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();

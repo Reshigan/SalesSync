@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const API_URL = 'http://localhost:12001';
-const APP_URL = 'http://localhost:12000';
+const API_URL = 'https://ssreports-api.reshigan-085.workers.dev';
+const APP_URL = 'https://ss.vantax.co.za';
 
 test.describe('Field Marketing Module - End-to-End Tests', () => {
   let authToken: string;

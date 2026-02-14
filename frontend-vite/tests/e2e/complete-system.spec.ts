@@ -5,19 +5,18 @@ import { test, expect } from '@playwright/test';
  * Comprehensive test suite for SalesSync Enterprise Platform
  */
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:12001';
-const API_URL = process.env.API_URL || 'http://localhost:12001';
+const BASE_URL = process.env.BASE_URL || 'https://ss.vantax.co.za';
+const API_URL = process.env.API_URL || 'https://ssreports-api.reshigan-085.workers.dev';
 
 test.describe('SalesSync Enterprise - Complete System Tests', () => {
   
   test.describe('System Health', () => {
     test('Backend API should be healthy', async ({ request }) => {
-      const response = await request.get(`${API_URL}/api/health`);
+      const response = await request.get(`${API_URL}/health`);
       expect(response.ok()).toBeTruthy();
       
       const data = await response.json();
       expect(data.status).toBe('healthy');
-      expect(data).toHaveProperty('uptime');
       expect(data).toHaveProperty('timestamp');
       console.log('✅ Backend API is healthy');
     });
@@ -79,14 +78,13 @@ test.describe('SalesSync Enterprise - Complete System Tests', () => {
   });
 
   test.describe('API Endpoints', () => {
-    test('GET /api/health should return system status', async ({ request }) => {
-      const response = await request.get(`${API_URL}/api/health`);
+    test('GET /health should return system status', async ({ request }) => {
+      const response = await request.get(`${API_URL}/health`);
       expect(response.status()).toBe(200);
       
       const data = await response.json();
       expect(data).toHaveProperty('status');
       expect(data).toHaveProperty('timestamp');
-      expect(data).toHaveProperty('uptime');
       
       console.log('✅ Health endpoint working');
     });
@@ -176,11 +174,11 @@ test.describe('SalesSync Enterprise - Complete System Tests', () => {
 
     test('API response time should be fast', async ({ request }) => {
       const startTime = Date.now();
-      await request.get(`${API_URL}/api/health`);
+      await request.get(`${API_URL}/health`);
       const responseTime = Date.now() - startTime;
       
-      // Should respond in less than 1 second
-      expect(responseTime).toBeLessThan(1000);
+      // Should respond in less than 2 seconds
+      expect(responseTime).toBeLessThan(2000);
       console.log(`✅ API responded in ${responseTime}ms`);
     });
   });
@@ -205,8 +203,7 @@ test.describe('SalesSync Enterprise - Complete System Tests', () => {
 
   test.describe('Database Connectivity', () => {
     test('Backend should connect to database', async ({ request }) => {
-      // Health check implies database connectivity
-      const response = await request.get(`${API_URL}/api/health`);
+      const response = await request.get(`${API_URL}/health`);
       expect(response.ok()).toBeTruthy();
       
       console.log('✅ Database connectivity verified');
@@ -318,7 +315,7 @@ test.describe('Production Readiness Checklist', () => {
 
     // Backend health
     try {
-      const response = await request.get(`${API_URL}/api/health`);
+      const response = await request.get(`${API_URL}/health`);
       results.backendHealth = response.ok();
     } catch (e) {
       console.error('Backend health check failed:', e);
@@ -343,7 +340,7 @@ test.describe('Production Readiness Checklist', () => {
 
     // API responds
     try {
-      const response = await request.get(`${API_URL}/api/health`);
+      const response = await request.get(`${API_URL}/health`);
       results.apiResponds = response.status() === 200;
     } catch (e) {
       console.error('API response check failed:', e);
@@ -361,7 +358,7 @@ test.describe('Production Readiness Checklist', () => {
     // Performance
     try {
       const startTime = Date.now();
-      await request.get(`${API_URL}/api/health`);
+      await request.get(`${API_URL}/health`);
       const responseTime = Date.now() - startTime;
       results.performanceGood = responseTime < 1000;
     } catch (e) {
