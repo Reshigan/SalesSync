@@ -3670,6 +3670,110 @@ api.get('/analytics/sales/summary', async (c) => {
   } catch (e) { return c.json({ success: true, data: { total_orders: 0, total_revenue: 0 } }); }
 });
 
+api.get('/analytics/recent-activity', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { limit = 10 } = c.req.query();
+  try {
+    const orders = await db.prepare('SELECT id, order_number as title, status, created_at, "order" as type FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
+    const payments = await db.prepare('SELECT id, payment_number as title, status, created_at, "payment" as type FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
+    const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(limit));
+    return c.json({ success: true, data: activities });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/analytics/visits', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const visits = await db.prepare('SELECT COUNT(*) as total, SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { total: visits?.total || 0, completed: visits?.completed || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0, completed: 0 } }); }
+});
+
+api.get('/analytics/agents', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const agents = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active FROM field_agents WHERE tenant_id = ?").bind(tenantId).first();
+    return c.json({ success: true, data: { total: agents?.total || 0, active: agents?.active || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0, active: 0 } }); }
+});
+
+api.get('/analytics/customers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const customers = await db.prepare('SELECT COUNT(*) as total FROM customers WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { total: customers?.total || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0 } }); }
+});
+
+api.get('/analytics/products', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const products = await db.prepare('SELECT COUNT(*) as total FROM products WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { total: products?.total || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0 } }); }
+});
+
+api.get('/analytics/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const campaigns = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active FROM campaigns WHERE tenant_id = ?").bind(tenantId).first();
+    return c.json({ success: true, data: { total: campaigns?.total || 0, active: campaigns?.active || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total: 0, active: 0 } }); }
+});
+
+api.get('/analytics/revenue', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const rev = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as total_revenue, COUNT(*) as total_orders FROM orders WHERE tenant_id = ?").bind(tenantId).first();
+    return c.json({ success: true, data: { total_revenue: rev?.total_revenue || 0, total_orders: rev?.total_orders || 0 } });
+  } catch (e) { return c.json({ success: true, data: { total_revenue: 0, total_orders: 0 } }); }
+});
+
+api.get('/analytics/performance', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const perf = await db.prepare("SELECT date(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? GROUP BY date(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all();
+    return c.json({ success: true, data: perf.results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/analytics/realtime', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const activeAgents = await db.prepare("SELECT COUNT(*) as count FROM field_agents WHERE tenant_id = ? AND status = 'active'").bind(tenantId).first();
+    const todayOrders = await db.prepare("SELECT COUNT(*) as count, COALESCE(SUM(total_amount), 0) as revenue FROM orders WHERE tenant_id = ? AND date(created_at) = date('now')").bind(tenantId).first();
+    return c.json({ success: true, data: { active_agents: activeAgents?.count || 0, today_orders: todayOrders?.count || 0, today_revenue: todayOrders?.revenue || 0 } });
+  } catch (e) { return c.json({ success: true, data: { active_agents: 0, today_orders: 0, today_revenue: 0 } }); }
+});
+
+api.get('/analytics/comparative', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const current = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? AND created_at >= date('now', '-30 days')").bind(tenantId).first();
+    const previous = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? AND created_at >= date('now', '-60 days') AND created_at < date('now', '-30 days')").bind(tenantId).first();
+    return c.json({ success: true, data: { current_period: current, previous_period: previous } });
+  } catch (e) { return c.json({ success: true, data: { current_period: { revenue: 0, orders: 0 }, previous_period: { revenue: 0, orders: 0 } } }); }
+});
+
+api.get('/analytics/forecast', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const monthly = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as revenue FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 6").bind(tenantId).all();
+    return c.json({ success: true, data: { historical: monthly.results || [], forecast: [] } });
+  } catch (e) { return c.json({ success: true, data: { historical: [], forecast: [] } }); }
+});
+
 // ==================== OTHER MISSING ROUTE ALIASES ====================
 api.get('/trade-marketing/boards', async (c) => {
   const db = c.env.DB;
