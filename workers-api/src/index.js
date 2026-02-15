@@ -15349,6 +15349,89 @@ api.post('/routes/:routeId/assign', async (c) => {
   return c.json({ success: true, message: 'Agent assigned' });
 });
 
+
+// ==================== REMAINING MISSING CRUD ROUTES ====================
+api.put('/orders/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE orders SET customer_id = COALESCE(?,customer_id), total_amount = COALESCE(?,total_amount), notes = COALESCE(?,notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.customer_id||null, body.total_amount||null, body.notes||null, id, tenantId).run();
+    return c.json({ success: true, message: 'Order updated' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.delete('/orders/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const existing = await db.prepare('SELECT id FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Not found' }, 404);
+    await db.prepare('DELETE FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.put('/beat-routes/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE beat_routes SET name = COALESCE(?,name), description = COALESCE(?,description), status = COALESCE(?,status), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.name||null, body.description||null, body.status||null, id, tenantId).run();
+    return c.json({ success: true, message: 'Updated' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.delete('/beat-routes/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const existing = await db.prepare('SELECT id FROM beat_routes WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Not found' }, 404);
+    await db.prepare('DELETE FROM beat_routes WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.put('/commissions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE commissions SET amount = COALESCE(?,amount), status = COALESCE(?,status), notes = COALESCE(?,notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.amount||null, body.status||null, body.notes||null, id, tenantId).run();
+    return c.json({ success: true, message: 'Updated' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.delete('/commissions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const existing = await db.prepare('SELECT id FROM commissions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Not found' }, 404);
+    await db.prepare('DELETE FROM commissions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.get('/reports/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const report = await db.prepare('SELECT * FROM report_templates WHERE id = ? AND (tenant_id = ? OR tenant_id IS NULL)').bind(id, tenantId).first();
+    if (!report) return c.json({ success: false, message: 'Not found' }, 404);
+    return c.json({ success: true, data: report });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.delete('/reports/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const existing = await db.prepare('SELECT id FROM report_templates WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Not found' }, 404);
+    await db.prepare('DELETE FROM report_templates WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.delete('/warehouses/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const existing = await db.prepare('SELECT id FROM warehouses WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Not found' }, 404);
+    await db.prepare('DELETE FROM warehouses WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Deleted' });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.get('/finance/:id/status-history', async (c) => {
+  return c.json({ success: true, data: [] });
+});
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
