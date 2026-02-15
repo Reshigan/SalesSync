@@ -44,12 +44,12 @@ export default function SessionCollections() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Time</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">

@@ -131,7 +131,7 @@ export default function CountLineApproval() {
               Decision *
             </label>
             <div className="space-y-3">
-              <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="approve"
@@ -143,7 +143,7 @@ export default function CountLineApproval() {
                   <div className="text-sm text-gray-500">Accept the counted quantity and variance</div>
                 </div>
               </label>
-              <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex items-center gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="reject"

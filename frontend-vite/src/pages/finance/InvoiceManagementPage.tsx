@@ -180,20 +180,20 @@ export default function InvoiceManagementPage() {
       <div className="card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Due Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-surface-secondary">
+                <tr key={invoice.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-gray-900">{invoice.invoiceNumber}</div>
                     <div className="text-sm text-gray-500">{invoice.paymentTerms}</div>
@@ -270,7 +270,7 @@ export default function InvoiceManagementPage() {
 
                 <div>
                   <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg">
-                    <thead className="bg-surface-secondary">
+                    <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
                         <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Qty</th>

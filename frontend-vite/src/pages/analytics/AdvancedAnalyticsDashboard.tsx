@@ -193,19 +193,19 @@ export default function AdvancedAnalyticsDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Performance Matrix</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Units Sold</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Revenue</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Margin %</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Returns</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Return Rate</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Units Sold</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Revenue</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Margin %</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Returns</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Return Rate</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {productPerformance.map((product, index) => (
-                <tr key={index} className="hover:bg-surface-secondary">
+                <tr key={index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{product.product}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900">{product.unitsSold.toLocaleString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-gray-900">${product.revenue.toLocaleString()}</td>

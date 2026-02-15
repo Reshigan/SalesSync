@@ -273,31 +273,31 @@ export default function AuditLogsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-surface-secondary border-b border-gray-100">
+              <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Timestamp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Action
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Entity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     IP Address
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-surface-secondary">
+                  <tr key={log.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
@@ -339,16 +339,16 @@ export default function AuditLogsPage() {
             Showing {filteredLogs.length} of {logs.length} logs
           </p>
           <div className="flex gap-2">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary">
+            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
               Previous
             </button>
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               1
             </button>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary">
+            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
               2
             </button>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary">
+            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
               Next
             </button>
           </div>

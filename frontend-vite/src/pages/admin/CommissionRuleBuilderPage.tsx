@@ -67,12 +67,12 @@ const CommissionRuleBuilderPage: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 bg-surface-secondary border-b">
+        <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Active Rules</h2>
         </div>
         <div className="divide-y">
           {rules.map(r => (
-            <div key={r.id} className="px-6 py-4 hover:bg-surface-secondary">
+            <div key={r.id} className="px-6 py-4 hover:bg-gray-50">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-semibold text-lg">{r.name}</h3>

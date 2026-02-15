@@ -217,7 +217,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
           ) : (
             <div className="space-y-3">
               {reportData.top_products.slice(0, 5).map((product: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
                       <span className="text-blue-600 font-medium text-xs">#{index + 1}</span>
@@ -246,7 +246,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
           ) : (
             <div className="space-y-3">
               {reportData.top_agents.slice(0, 5).map((agent: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
                       <span className="text-green-600 font-medium text-xs">#{index + 1}</span>
@@ -280,28 +280,28 @@ export const ExecutiveDashboardPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Region
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Revenue
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Orders
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Customers
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Growth
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.regional_performance.map((region: any, index: number) => (
-                  <tr key={index} className="hover:bg-surface-secondary">
+                  <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{region.name}</div>
                     </td>

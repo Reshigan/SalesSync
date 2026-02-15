@@ -96,7 +96,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -277,7 +277,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {formData.competitors.map((comp, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-surface-secondary rounded">
+                  <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="font-medium">{comp.name}</span>
                     <span className="text-gray-600">{comp.facings} facings</span>
                   </div>

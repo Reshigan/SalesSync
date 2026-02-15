@@ -145,7 +145,7 @@ export const SystemHealthPage: React.FC = () => {
         </div>
         <div className="divide-y divide-gray-200">
           {mockHealthData.services.map((service, index) => (
-            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-surface-secondary">
+            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div className="flex items-center">
                 <div className={`h-3 w-3 rounded-full ${
                   service.status === 'running' ? 'bg-green-500' : 'bg-red-500'

@@ -86,7 +86,7 @@ const BoardManagementPage: React.FC = () => {
           </thead>
           <tbody>
             {boards.map(b => (
-              <tr key={b.id} className="border-t hover:bg-surface-secondary">
+              <tr key={b.id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium">{b.name}</td>
                 <td className="px-4 py-3">{b.type}</td>
                 <td className="px-4 py-3">{b.width} x {b.height} cm</td>

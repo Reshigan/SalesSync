@@ -210,7 +210,7 @@ export default function RouteAuditPage() {
               </div>
               <div className="divide-y divide-gray-200">
                 {moduleRoutes.map((route, index) => (
-                  <div key={index} className="px-6 py-3 flex items-center justify-between hover:bg-surface-secondary">
+                  <div key={index} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50">
                     <div className="flex items-center space-x-3 flex-1">
                       {getStatusIcon(route.status)}
                       <div className="flex-1">

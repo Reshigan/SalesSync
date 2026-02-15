@@ -68,20 +68,20 @@ export default function AuditTrail() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Field</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Old Value</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">New Value</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Changed By</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Action</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Field</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Old Value</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">New Value</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Changed By</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date/Time</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {auditLog?.map((entry) => (
-              <tr key={entry.id} className="hover:bg-surface-secondary">
+              <tr key={entry.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     entry.action === 'create' ? 'bg-green-100 text-green-800' :

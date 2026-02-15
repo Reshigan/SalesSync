@@ -35,10 +35,10 @@ export default function VanInventoryPage() {
         : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface-secondary"><tr><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Loaded</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sold</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Returned</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th><th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Updated</th></tr></thead>
+              <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Current</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loaded</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Sold</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Returned</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Value</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Updated</th></tr></thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {inventory?.map(item => (
-                  <tr key={item.product_id} className="hover:bg-surface-secondary">
+                  <tr key={item.product_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.product_code}</div></td>
                     <td className="px-6 py-4"><span className={`text-sm font-medium ${item.current_stock<10?'text-red-600':'text-gray-900'}`}>{item.current_stock}</span></td>
                     <td className="px-6 py-4 text-sm">{item.loaded_stock}</td>

@@ -209,7 +209,7 @@ export const IntegrationsPage: React.FC = () => {
           Use these API keys to integrate SalesSync with custom applications
         </p>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Production API Key</div>
               <div className="text-sm text-gray-500 font-mono">sk_live_••••••••••••••••</div>
@@ -227,7 +227,7 @@ export const IntegrationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Test API Key</div>
               <div className="text-sm text-gray-500 font-mono">sk_test_••••••••••••••••</div>

@@ -68,15 +68,15 @@ export default function MerchandisingCompliancePage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Store</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Audit Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Auditor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Score</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issues</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Store</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Audit Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Auditor</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Score</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Issues</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -84,7 +84,7 @@ export default function MerchandisingCompliancePage() {
                 <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500"><AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No compliance audits found</p></td></tr>
               ) : (
                 audits.map(audit => (
-                  <tr key={audit.id} className="hover:bg-surface-secondary">
+                  <tr key={audit.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{audit.store_name}</div><div className="text-sm text-gray-500">{audit.store_location}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">{audit.brand_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(audit.audit_date).toLocaleDateString()}</td>

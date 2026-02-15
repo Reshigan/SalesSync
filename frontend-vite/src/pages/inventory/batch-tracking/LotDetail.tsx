@@ -261,7 +261,7 @@ export default function LotDetail() {
             <button
               key={batch.id}
               onClick={() => navigate(`/inventory/batches/${batch.id}`)}
-              className="w-full flex items-center justify-between p-4 border rounded-lg hover:bg-surface-secondary"
+              className="w-full flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
             >
               <div className="flex items-center gap-3">
                 <Package className="h-5 w-5 text-gray-400" />

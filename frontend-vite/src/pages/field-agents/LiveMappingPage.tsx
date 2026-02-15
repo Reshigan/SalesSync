@@ -310,7 +310,7 @@ export default function LiveMappingPage() {
                 <div
                   key={agent.id}
                   onClick={() => setSelectedAgent(agent)}
-                  className={`p-4 cursor-pointer hover:bg-surface-secondary ${
+                  className={`p-4 cursor-pointer hover:bg-gray-50 ${
                     selectedAgent?.id === agent.id ? 'bg-primary-50 border-r-2 border-primary-500' : ''
                   }`}
                 >
@@ -495,7 +495,7 @@ export default function LiveMappingPage() {
             
             <div className="space-y-4">
               {visits.map((visit) => (
-                <div key={visit.id} className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+                <div key={visit.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       {visit.status === 'completed' && <CheckCircle className="h-5 w-5 text-green-500" />}

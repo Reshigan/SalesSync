@@ -223,21 +223,21 @@ export default function PaymentCollectionPage() {
       <div className="card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment #</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPayments.map((payment) => (
-                <tr key={payment.id} className="hover:bg-surface-secondary">
+                <tr key={payment.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-gray-900">{payment.paymentNumber}</div>
                   </td>

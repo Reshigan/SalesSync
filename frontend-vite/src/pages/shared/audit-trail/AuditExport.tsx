@@ -76,7 +76,7 @@ export default function AuditExport() {
               Export Format *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="csv"
@@ -86,7 +86,7 @@ export default function AuditExport() {
                 <Table className="h-8 w-8 text-gray-600" />
                 <span className="text-sm font-medium">CSV</span>
               </label>
-              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="excel"
@@ -96,7 +96,7 @@ export default function AuditExport() {
                 <Table className="h-8 w-8 text-green-600" />
                 <span className="text-sm font-medium">Excel</span>
               </label>
-              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="pdf"
@@ -106,7 +106,7 @@ export default function AuditExport() {
                 <FileText className="h-8 w-8 text-red-600" />
                 <span className="text-sm font-medium">PDF</span>
               </label>
-              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex flex-col items-center gap-2 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="json"

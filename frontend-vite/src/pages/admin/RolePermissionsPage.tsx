@@ -556,7 +556,7 @@ export default function RolePermissionsPage() {
                                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                                     editingRole.permissions?.includes(permission.id)
                                       ? 'bg-blue-50 border-blue-200'
-                                      : 'bg-white border-gray-100 hover:bg-surface-secondary'
+                                      : 'bg-white border-gray-100 hover:bg-gray-50'
                                   } ${editingRole.isSystem ? 'cursor-not-allowed opacity-75' : ''}`}
                                 >
                                   <input

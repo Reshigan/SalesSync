@@ -78,23 +78,23 @@ export default function AdjustmentItemList() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Value</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Unit Cost</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Total Value</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reason</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items?.map((item) => {
               const isIncrease = item.adjustment_type === 'increase'
               return (
-                <tr key={item.id} className="hover:bg-surface-secondary">
+                <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.product_name}
                   </td>

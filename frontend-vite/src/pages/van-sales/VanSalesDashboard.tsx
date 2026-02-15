@@ -338,13 +338,13 @@ export default function VanSalesDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.van_status || []).slice(0, 6).map((van: any) => (
-              <div key={van.van_id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+              <div key={van.van_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-3 ${
                     van.status === 'on_route' ? 'bg-green-500' :
                     van.status === 'loading' ? 'bg-yellow-500' :
                     van.status === 'maintenance' ? 'bg-red-500' :
-                    'bg-surface-secondary0'
+                    'bg-gray-500'
                   }`}></div>
                   <div>
                     <p className="font-medium text-gray-900">{van.van_code}</p>
@@ -368,13 +368,13 @@ export default function VanSalesDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_activities || []).slice(0, 6).map((activity: any) => (
-              <div key={activity.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+              <div key={activity.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-3 ${
                     activity.type === 'sale_completed' ? 'bg-green-500' :
                     activity.type === 'route_started' ? 'bg-blue-500' :
                     activity.type === 'delivery_completed' ? 'bg-purple-500' :
-                    'bg-surface-secondary0'
+                    'bg-gray-500'
                   }`}></div>
                   <div>
                     <p className="font-medium text-gray-900">{activity.van_code}</p>
@@ -401,7 +401,7 @@ export default function VanSalesDashboard() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(analytics?.route_performance || []).map((route: any) => (
-            <div key={route.route_id} className="p-4 bg-surface-secondary rounded-lg">
+            <div key={route.route_id} className="p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-gray-900">{route.route_name}</h4>
                 <span className="text-sm text-gray-500">{route.van_count} vans</span>
@@ -438,7 +438,7 @@ export default function VanSalesDashboard() {
           <BarChart3 className="w-5 h-5 text-gray-400" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Fuel Efficiency</h4>
               <Fuel className="w-4 h-4 text-green-500" />
@@ -463,7 +463,7 @@ export default function VanSalesDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">On-Time Delivery</h4>
               <Clock className="w-4 h-4 text-blue-500" />
@@ -486,7 +486,7 @@ export default function VanSalesDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Customer Satisfaction</h4>
               <Users className="w-4 h-4 text-purple-500" />
@@ -509,7 +509,7 @@ export default function VanSalesDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Load Utilization</h4>
               <Package className="w-4 h-4 text-orange-500" />

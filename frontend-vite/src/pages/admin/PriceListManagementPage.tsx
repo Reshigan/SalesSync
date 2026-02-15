@@ -102,30 +102,30 @@ export default function PriceListManagementPage() {
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Customer Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Channel
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Currency
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Effective Period
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Priority
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -141,7 +141,7 @@ export default function PriceListManagementPage() {
               </tr>
             ) : (
               filteredPriceLists.map((priceList) => (
-                <tr key={priceList.id} className="hover:bg-surface-secondary">
+                <tr key={priceList.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900">{priceList.name}</div>
                     {priceList.description && (

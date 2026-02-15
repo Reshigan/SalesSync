@@ -124,7 +124,7 @@ export default function VanOrderCreatePage() {
         </div>
 
         <div className="flex justify-end space-x-3">
-          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary">Cancel</button>
+          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
           <button type="submit" disabled={createMutation.isPending} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
             {createMutation.isPending ? 'Creating...' : 'Create Order'}
           </button>

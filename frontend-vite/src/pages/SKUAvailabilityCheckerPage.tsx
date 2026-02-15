@@ -83,7 +83,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary p-4">
+    <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
           <button onClick={() => navigate(-1)} className="mb-4 text-blue-600">← Back</button>

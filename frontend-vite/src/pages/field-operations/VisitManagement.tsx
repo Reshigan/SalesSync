@@ -366,27 +366,27 @@ const VisitManagement: React.FC = () => {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Agent
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Visit Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Type
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Purpose
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -406,7 +406,7 @@ const VisitManagement: React.FC = () => {
                 </tr>
               ) : (
                 filteredVisits.map((visit) => (
-                  <tr key={visit.id} className="hover:bg-surface-secondary">
+                  <tr key={visit.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{visit.customer_name}</div>
@@ -559,7 +559,7 @@ const VisitManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowCreateModal(false); resetForm(); }}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
                     Cancel
                   </button>
@@ -677,7 +677,7 @@ const VisitManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowEditModal(false); setSelectedVisit(null); resetForm(); }}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
                     Cancel
                   </button>

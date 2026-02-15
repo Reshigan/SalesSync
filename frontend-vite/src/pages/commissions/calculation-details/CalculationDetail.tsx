@@ -103,12 +103,12 @@ export default function CalculationDetail() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Commission Breakdown</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sales Amount</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rate</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Commission</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Category</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Sales Amount</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

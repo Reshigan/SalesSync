@@ -50,7 +50,7 @@ export default function DocumentFlowVisualization({ entityType, entityId }: Docu
           {flow.flow_stages.map((stage, stageIdx) => (
             <div key={stageIdx} className="flex items-center gap-4">
               <div className="flex flex-col items-center min-w-[150px]">
-                <p className="text-xs font-medium text-gray-500 uppercase mb-3">{stage.stage}</p>
+                <p className="text-xs font-bold text-gray-600 uppercase mb-3">{stage.stage}</p>
                 <div className="space-y-2 w-full">
                   {stage.documents.map((doc) => (
                     <div

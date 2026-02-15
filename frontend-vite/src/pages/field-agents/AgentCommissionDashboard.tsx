@@ -114,7 +114,7 @@ export default function AgentCommissionDashboard() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-surface-secondary pb-20">
+      <div className="min-h-screen bg-gray-50 pb-20">
         {/* Header */}
         <div className="bg-primary-600 text-white p-6">
           <h1 className="text-2xl font-bold">My Earnings</h1>
@@ -289,21 +289,21 @@ export default function AgentCommissionDashboard() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Description
                   </th>
                 </tr>

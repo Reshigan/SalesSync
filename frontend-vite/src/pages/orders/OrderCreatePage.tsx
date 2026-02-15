@@ -257,7 +257,7 @@ export default function OrderCreatePage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center gap-2">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save as Draft
           </button>
           <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
@@ -308,7 +308,7 @@ export default function OrderCreatePage() {
                 <Package className="w-5 h-5" /> Order Items
               </h3>
               <div className="flex gap-2">
-                <button onClick={recalculateFromServer} disabled={calculating} className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center gap-1">
+                <button onClick={recalculateFromServer} disabled={calculating} className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
                   <Calculator className="w-4 h-4" /> {calculating ? 'Calculating...' : 'Recalculate'}
                 </button>
                 <button onClick={addLineItem} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
@@ -326,20 +326,20 @@ export default function OrderCreatePage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-surface-secondary">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Qty</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Unit Price</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-36">Discount</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-24">Tax</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase w-28">Total</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase w-24">Qty</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase w-28">Unit Price</th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase w-36">Discount</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase w-24">Tax</th>
+                      <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase w-28">Total</th>
                       <th className="px-4 py-3 w-12"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {lineItems.map((item, index) => (
-                      <tr key={index} className="hover:bg-surface-secondary">
+                      <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <select value={item.product_id} onChange={(e) => updateLineItem(index, 'product_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
                             <option value="">Select product</option>
@@ -407,7 +407,7 @@ export default function OrderCreatePage() {
             </div>
 
             {selectedCustomer && (
-              <div className="mt-6 p-4 bg-surface-secondary rounded-lg">
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Customer</h4>
                 {(() => {
                   const customer = customers.find(c => c.id === selectedCustomer)
@@ -424,7 +424,7 @@ export default function OrderCreatePage() {
             )}
 
             <div className="mt-6 space-y-3">
-              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-surface-secondary flex items-center justify-center gap-2">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">

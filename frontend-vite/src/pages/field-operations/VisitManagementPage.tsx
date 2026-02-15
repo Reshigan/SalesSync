@@ -91,14 +91,14 @@ export default function VisitManagementPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date/Time</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Agent</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date/Time</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -106,7 +106,7 @@ export default function VisitManagementPage() {
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500"><Calendar className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No visits found</p></td></tr>
               ) : (
                 visits.map(visit => (
-                  <tr key={visit.id} className="hover:bg-surface-secondary">
+                  <tr key={visit.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{visit.customer_name}</div><div className="text-sm text-gray-500">ID: {visit.customer_id?.substring(0,8)}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">Agent #{visit.agent_id?.substring(0,8)}</td>
                     <td className="px-6 py-4"><div className="text-sm text-gray-900">{new Date(visit.visit_date).toLocaleDateString()}</div><div className="text-sm text-gray-500">{visit.check_in_time ? new Date(visit.check_in_time).toLocaleTimeString() : 'Not started'}</div></td>

@@ -453,7 +453,7 @@ export default function OrderDetailsPage() {
               </h3>
               <div className="space-y-3">
                 {statusHistory.map((entry, index) => (
-                  <div key={entry.id || index} className="flex items-start gap-3 p-3 bg-surface-secondary rounded-lg">
+                  <div key={entry.id || index} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className={`w-2 h-2 rounded-full mt-2 ${index === 0 ? 'bg-blue-600' : 'bg-gray-400'}`} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
@@ -482,20 +482,20 @@ export default function OrderDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tax</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Unit Price</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Subtotal</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Tax</th>
+                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {order.items.map((item) => (
-                  <tr key={item.id} className="hover:bg-surface-secondary">
+                  <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.productName}</td>
                     <td className="px-6 py-4 text-sm text-gray-600">{item.sku}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
@@ -506,7 +506,7 @@ export default function OrderDetailsPage() {
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-surface-secondary">
+              <tfoot className="bg-gray-50">
                 <tr>
                   <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Subtotal:</td>
                   <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.subtotal.toFixed(2)}</td>
@@ -565,7 +565,7 @@ export default function OrderDetailsPage() {
         <div className="card">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Related Documents</h3>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary">
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
               <div className="flex items-center gap-3">
                 <FileText className="w-8 h-8 text-blue-600" />
                 <div>
@@ -577,7 +577,7 @@ export default function OrderDetailsPage() {
                 <Download className="w-4 h-4" /> Download
               </button>
             </div>
-            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-surface-secondary">
+            <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50">
               <div className="flex items-center gap-3">
                 <FileText className="w-8 h-8 text-green-600" />
                 <div>

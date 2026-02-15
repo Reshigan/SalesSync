@@ -147,13 +147,13 @@ export default function SurveyComparison() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Question-by-Question Comparison</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Question</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Current</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Previous</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Change</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Trend</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Question</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Current</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Previous</th>
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Change</th>
+                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase">Trend</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

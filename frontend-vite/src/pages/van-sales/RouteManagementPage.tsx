@@ -278,21 +278,21 @@ export default function RouteManagementPage() {
                   <h3 className="text-lg font-medium mb-4">Customer Stops</h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-surface-secondary">
+                      <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">
                             Customer
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">
                             Address
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">
                             Visit Time
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">
                             Est. Value
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">
                             Status
                           </th>
                         </tr>

@@ -359,7 +359,7 @@ export default function DataImportExportPage() {
             {selectedDataType && (
               <>
                 {/* Template Download */}
-                <div className="bg-surface-secondary border border-gray-100 rounded-lg p-4">
+                <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-gray-900">CSV Template</h4>

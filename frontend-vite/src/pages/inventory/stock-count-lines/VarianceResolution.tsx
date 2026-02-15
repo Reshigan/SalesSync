@@ -116,7 +116,7 @@ export default function VarianceResolution() {
               Resolution Action *
             </label>
             <div className="space-y-3">
-              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="accept"
@@ -134,7 +134,7 @@ export default function VarianceResolution() {
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="recount"
@@ -152,7 +152,7 @@ export default function VarianceResolution() {
                 </div>
               </label>
 
-              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-surface-secondary has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
+              <label className="flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50">
                 <input
                   type="radio"
                   value="adjust"

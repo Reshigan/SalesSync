@@ -266,7 +266,7 @@ export default function NewCustomerRegistration() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -368,7 +368,7 @@ export default function NewCustomerRegistration() {
 
                 <button
                   onClick={getCurrentPosition}
-                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Refresh Location
                 </button>
@@ -608,7 +608,7 @@ export default function NewCustomerRegistration() {
                     <img src={storefrontPhotoPreview} alt="Storefront" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowStorefrontCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -635,7 +635,7 @@ export default function NewCustomerRegistration() {
                     <img src={interiorPhotoPreview} alt="Interior" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowInteriorCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -661,7 +661,7 @@ export default function NewCustomerRegistration() {
                     <img src={idDocumentPhotoPreview} alt="ID Document" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowIdCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -724,7 +724,7 @@ export default function NewCustomerRegistration() {
                   <h3 className="text-sm font-medium text-gray-700 mb-4">Brand Details</h3>
                   <div className="space-y-4">
                     {selectedBrands.map(brand => (
-                      <div key={brand.id} className="bg-surface-secondary rounded-lg p-4">
+                      <div key={brand.id} className="bg-gray-50 rounded-lg p-4">
                         <h4 className="font-medium mb-3">{brand.name}</h4>
                         <div className="space-y-3">
                           <div>
@@ -866,7 +866,7 @@ export default function NewCustomerRegistration() {
                 </h3>
                 <div className="space-y-2">
                   {selectedBrands.map(brand => (
-                    <div key={brand.id} className="flex items-center justify-between text-sm bg-surface-secondary rounded p-2">
+                    <div key={brand.id} className="flex items-center justify-between text-sm bg-gray-50 rounded p-2">
                       <span className="font-medium">{brand.name}</span>
                       {brand.interestLevel && (
                         <span className={`px-2 py-1 rounded text-xs ${
@@ -909,7 +909,7 @@ export default function NewCustomerRegistration() {
           <div className="mt-6 flex gap-4">
             <button
               onClick={handleBack}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-surface-secondary"
+              className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
             >
               Back
             </button>
