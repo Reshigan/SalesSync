@@ -9,7 +9,7 @@ const ReportBuilderPage: React.FC = () => {
   const generateReport = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/reports/generate', {
+      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/reports/generate', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(config)

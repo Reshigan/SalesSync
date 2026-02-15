@@ -151,7 +151,7 @@ const BrandActivationFormPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/trade-marketing-new/brand-activations', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/trade-marketing-new/brand-activations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

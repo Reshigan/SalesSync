@@ -34,7 +34,7 @@ export default function VisitConfigurationPage() {
   const { data: configurations, isLoading } = useQuery({
     queryKey: ['visit-configurations'],
     queryFn: async () => {
-      const response = await fetch('/api/visit-configurations', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/visit-configurations', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -48,7 +48,7 @@ export default function VisitConfigurationPage() {
   const { data: brands } = useQuery({
     queryKey: ['brands'],
     queryFn: async () => {
-      const response = await fetch('/api/brands', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/brands', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -62,7 +62,7 @@ export default function VisitConfigurationPage() {
   const { data: surveys } = useQuery({
     queryKey: ['surveys'],
     queryFn: async () => {
-      const response = await fetch('/api/surveys', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/surveys', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -76,7 +76,7 @@ export default function VisitConfigurationPage() {
   const { data: boards } = useQuery({
     queryKey: ['boards'],
     queryFn: async () => {
-      const response = await fetch('/api/boards', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/boards', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'

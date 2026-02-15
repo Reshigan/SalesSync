@@ -12,7 +12,7 @@ const CampaignManagementPage: React.FC = () => {
 
   const loadCampaigns = async () => {
     try {
-      const res = await fetch('/api/admin/campaigns', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/admin/campaigns', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setCampaigns((await res.json()).campaigns || []);
     } catch (err) { console.error(err); }
   };

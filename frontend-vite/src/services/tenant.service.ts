@@ -189,7 +189,7 @@ class TenantService {
    */
   private async detectTenantFromAPI(): Promise<TenantConfig | null> {
     try {
-      const response = await fetch('/api/tenant/resolve', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/tenant/resolve', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -253,7 +253,7 @@ class TenantService {
    */
   async loadTenantMappings(): Promise<void> {
     try {
-      const response = await fetch('/api/tenant/mappings')
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/tenant/mappings')
       if (response.ok) {
         const mappings = await response.json()
         this.tenantMappings = { ...this.tenantMappings, ...mappings.data }

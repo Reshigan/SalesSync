@@ -55,7 +55,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadMaterialLibrary = async () => {
     try {
-      const response = await fetch('/api/trade-marketing-new/materials/library', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/trade-marketing-new/materials/library', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -72,7 +72,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadInstallationHistory = async () => {
     try {
-      const response = await fetch('/api/trade-marketing-new/pos-materials', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/trade-marketing-new/pos-materials', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -157,7 +157,7 @@ const POSMaterialTrackerPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch('/api/trade-marketing-new/pos-materials', {
+      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/trade-marketing-new/pos-materials', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
