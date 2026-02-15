@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Package } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config'
 
 interface Material { id: number; name: string; type: string; brand: string; stockQty: number; cost: number; supplier: string; }
 
@@ -12,7 +13,7 @@ const POSLibraryPage: React.FC = () => {
 
   const loadMaterials = async () => {
     try {
-      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/admin/pos-library', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/pos-library`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setMaterials((await res.json()).materials || []);
     } catch (err) { console.error(err); }
   };

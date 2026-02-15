@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Calculator } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config'
 
 interface Rule { id: number; name: string; boardType: string; minQty: number; maxQty: number; rate: number; bonusRate: number; }
 
@@ -11,14 +12,14 @@ const CommissionRuleBuilderPage: React.FC = () => {
 
   const loadRules = async () => {
     try {
-      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/admin/commission-rules', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setRules((await res.json()).rules || []);
     } catch (err) { console.error(err); }
   };
 
   const saveRule = async () => {
     try {
-      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/admin/commission-rules', {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

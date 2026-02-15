@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Edit, Trash2, Calendar, MapPin, CheckSquare, Camera, BarChart3 } from 'lucide-react'
+import { API_CONFIG } from '../../config/api.config'
 
 interface VisitConfiguration {
   id: string
@@ -34,7 +35,7 @@ export default function VisitConfigurationPage() {
   const { data: configurations, isLoading } = useQuery({
     queryKey: ['visit-configurations'],
     queryFn: async () => {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/visit-configurations', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visit-configurations`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -48,7 +49,7 @@ export default function VisitConfigurationPage() {
   const { data: brands } = useQuery({
     queryKey: ['brands'],
     queryFn: async () => {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/brands', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/brands`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -62,7 +63,7 @@ export default function VisitConfigurationPage() {
   const { data: surveys } = useQuery({
     queryKey: ['surveys'],
     queryFn: async () => {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/surveys', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/surveys`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'
@@ -76,7 +77,7 @@ export default function VisitConfigurationPage() {
   const { data: boards } = useQuery({
     queryKey: ['boards'],
     queryFn: async () => {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/boards', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/boards`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO'

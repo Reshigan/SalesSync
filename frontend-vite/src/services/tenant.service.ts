@@ -1,4 +1,5 @@
 /**
+import { API_CONFIG } from '../config/api.config'
  * Tenant Service - Handles multi-tenant configuration and detection
  * Supports multiple tenant resolution strategies for scalable deployment
  */
@@ -189,7 +190,7 @@ class TenantService {
    */
   private async detectTenantFromAPI(): Promise<TenantConfig | null> {
     try {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/tenant/resolve', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/tenant/resolve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -253,7 +254,7 @@ class TenantService {
    */
   async loadTenantMappings(): Promise<void> {
     try {
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/tenant/mappings')
+      const response = await fetch(`${API_CONFIG.BASE_URL}/tenant/mappings`)
       if (response.ok) {
         const mappings = await response.json()
         this.tenantMappings = { ...this.tenantMappings, ...mappings.data }

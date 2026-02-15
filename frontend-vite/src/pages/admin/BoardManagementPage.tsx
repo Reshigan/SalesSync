@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config'
 
 interface Board { id: number; name: string; type: string; width: number; height: number; commissionRate: number; installCost: number; }
 
@@ -12,7 +13,7 @@ const BoardManagementPage: React.FC = () => {
 
   const loadBoards = async () => {
     try {
-      const res = await fetch('https://salessync-api.reshigan-085.workers.dev/api/admin/boards', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setBoards((await res.json()).boards || []);
     } catch (err) { console.error(err); }
   };

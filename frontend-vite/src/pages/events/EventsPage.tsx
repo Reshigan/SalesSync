@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Calendar, Users, MapPin, DollarSign, TrendingUp, Clock, Plus, Filter } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { API_CONFIG } from '../../config/api.config'
 
 interface Event {
   id: string
@@ -147,7 +148,7 @@ export default function EventsPage() {
   const fetchMetrics = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('https://salessync-api.reshigan-085.workers.dev/api/events/analytics/summary', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/events/analytics/summary`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
