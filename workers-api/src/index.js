@@ -15908,7 +15908,7 @@ api.get('/comprehensive-transactions/transactions/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
   try {
-    const transaction = await db.prepare('SELECT t.*, c.name as customer_name, (u.first_name || ' ' || u.last_name) as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id WHERE t.id = ? AND t.tenant_id = ?').bind(id, tenantId).first();
+    const transaction = await db.prepare(`SELECT t.*, c.name as customer_name, (u.first_name || ' ' || u.last_name) as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id WHERE t.id = ? AND t.tenant_id = ?`).bind(id, tenantId).first();
     if (!transaction) return c.json({ success: false, message: 'Transaction not found' }, 404);
     const items = await db.prepare('SELECT ti.*, p.name as product_name, p.code as product_sku FROM comprehensive_transaction_items ti LEFT JOIN products p ON p.id = ti.product_id WHERE ti.transaction_id = ?').bind(id).all();
     const payments = await db.prepare('SELECT * FROM comprehensive_transaction_payments WHERE transaction_id = ?').bind(id).all();
