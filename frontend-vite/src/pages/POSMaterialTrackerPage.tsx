@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, MapPin, Package, QrCode, Search, Calendar, CheckCircle2, AlertCircle, Upload, Download } from 'lucide-react';
+import { API_CONFIG } from '../config/api.config';
+import {Camera, MapPin, Package, QrCode, Search, Calendar, CheckCircle2, AlertCircle, Upload, Download } from 'lucide-react';
 
 interface POSMaterial {
   id: number;
@@ -55,7 +56,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadMaterialLibrary = async () => {
     try {
-      const response = await fetch('/api/trade-marketing-new/materials/library', {
+      const response = await fetch(API_CONFIG.BASE_URL + '/trade-marketing-new/materials/library', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'
@@ -72,15 +73,15 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadInstallationHistory = async () => {
     try {
-      const response = await fetch('/api/trade-marketing-new/pos-materials', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setInstallations(data.installations || []);
+            const response = await fetch(API_CONFIG.BASE_URL + '/trade-marketing-new/pos-materials', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            if (response.ok) {
+              const data = await response.json();
+              setInstallations(data.installations || []);
       }
     } catch (error) {
       console.error('Error loading installation history:', error);
@@ -157,8 +158,8 @@ const POSMaterialTrackerPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch('/api/trade-marketing-new/pos-materials', {
-        method: 'POST',
+            const response = await fetch(API_CONFIG.BASE_URL + '/trade-marketing-new/pos-materials', {
+              method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
           'Content-Type': 'application/json'

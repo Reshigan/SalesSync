@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../../config/api.config';
 import { Plus, Edit2, Trash2, Package } from 'lucide-react';
 
 interface Material { id: number; name: string; type: string; brand: string; stockQty: number; cost: number; supplier: string; }
@@ -12,7 +13,7 @@ const POSLibraryPage: React.FC = () => {
 
   const loadMaterials = async () => {
     try {
-      const res = await fetch('/api/admin/pos-library', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/pos-library`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setMaterials((await res.json()).materials || []);
     } catch (err) { console.error(err); }
   };
@@ -32,7 +33,7 @@ const POSLibraryPage: React.FC = () => {
   const deleteMaterial = async (id: number) => {
     if (!confirm('Delete material?')) return;
     try {
-      const res = await fetch(`/api/admin/pos-library/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/pos-library/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

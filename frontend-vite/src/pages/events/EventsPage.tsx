@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_CONFIG } from '../../config/api.config'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Calendar, Users, MapPin, DollarSign, TrendingUp, Clock, Plus, Filter } from 'lucide-react'
@@ -71,7 +72,7 @@ export default function EventsPage() {
       if (filter.start_date) queryParams.append('start_date', filter.start_date)
       if (filter.end_date) queryParams.append('end_date', filter.end_date)
 
-      const response = await fetch(`/api/events?${queryParams.toString()}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/events?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -147,7 +148,7 @@ export default function EventsPage() {
   const fetchMetrics = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch('/api/events/analytics/summary', {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/events/analytics/summary`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

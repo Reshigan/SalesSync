@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../config/api.config';
 import { 
   Camera, MapPin, Users, DollarSign, Calendar, Clock, Target, 
   TrendingUp, MessageSquare, Star, Gift, Plus, X, Upload
@@ -151,7 +152,7 @@ const BrandActivationFormPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/trade-marketing-new/brand-activations', {
+      const response = await fetch(API_CONFIG.BASE_URL + '/trade-marketing-new/brand-activations', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

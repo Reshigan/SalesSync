@@ -300,6 +300,13 @@ api.get('/customers/stats', async (c) => {
   });
 });
 
+api.get('/customers/export', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const customers = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
+    return c.json({ success: true, data: customers.results||[] });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
 api.get('/customers/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -328,6 +335,10 @@ api.post('/customers', async (c) => {
   return c.json({ success: true, data: { id }, message: 'Customer created' }, 201);
 });
 
+api.put('/customers/bulk', async (c) => {
+  const body = await c.req.json();
+  return c.json({ success: true, data: { updated: (body.updates||[]).length } });
+});
 api.put('/customers/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -452,6 +463,18 @@ api.get('/orders', async (c) => {
   return c.json({ success: true, data: orders.results || [] });
 });
 
+api.get('/orders/stats', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [total, pending, completed, revenue] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'pending'").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'completed'").bind(tenantId).first(),
+      db.prepare('SELECT COALESCE(SUM(total_amount),0) as total FROM orders WHERE tenant_id = ?').bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { total: total?.count||0, pending: pending?.count||0, completed: completed?.count||0, revenue: revenue?.total||0 } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
 api.get('/orders/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -4303,8 +4326,9 @@ api.post('/order-lines', async (c) => {
   const tenantId = c.get('tenantId');
   try {
     const body = await c.req.json();
-    const result = await db.prepare('INSERT INTO order_items (tenant_id, order_id, product_id, quantity, unit_price, subtotal, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.order_id, body.product_id, body.quantity, body.unit_price, (body.quantity || 0) * (body.unit_price || 0)).run();
-    return c.json({ success: true, data: { id: result.meta.last_row_id } }, 201);
+    const id = crypto.randomUUID();
+    await db.prepare('INSERT INTO order_items (id, tenant_id, order_id, product_id, quantity, unit_price, subtotal, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, body.order_id, body.product_id, body.quantity, body.unit_price, (body.quantity || 0) * (body.unit_price || 0)).run();
+    return c.json({ success: true, data: { id } }, 201);
   } catch (e) { return c.json({ success: false, error: 'Error creating order line' }, 500); }
 });
 
@@ -14446,18 +14470,6 @@ api.post('/analytics/custom', async (c) => {
 });
 
 // ==================== ORDERS ENHANCED ROUTES ====================
-api.get('/orders/stats', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const [total, pending, completed, revenue] = await Promise.all([
-      db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
-      db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'pending'").bind(tenantId).first(),
-      db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'completed'").bind(tenantId).first(),
-      db.prepare('SELECT COALESCE(SUM(total_amount),0) as total FROM orders WHERE tenant_id = ?').bind(tenantId).first()
-    ]);
-    return c.json({ success: true, data: { total: total?.count||0, pending: pending?.count||0, completed: completed?.count||0, revenue: revenue?.total||0 } });
-  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
-});
 api.get('/orders/customer/:customerId', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
   try {
@@ -14683,6 +14695,15 @@ api.post('/transactions/orders', async (c) => {
     return c.json({ success: true, data: { id } }, 201);
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }, 500); }
 });
+api.get('/transactions/orders/insights', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    return c.json({ success: true, data: { insights: [] } });
+  } catch (error) {
+    return c.json({ success: false, message: (error && error.message) || 'An error occurred', data: { insights: [] } });
+  }
+});
 api.get('/transactions/orders/:orderId', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const orderId = c.req.param('orderId');
   try {
@@ -14784,17 +14805,6 @@ api.get('/customers/:customerId/visits', async (c) => {
     const visits = await db.prepare('SELECT * FROM visits WHERE customer_id = ? AND tenant_id = ? ORDER BY visit_date DESC').bind(customerId, tenantId).all();
     return c.json({ success: true, data: visits.results||[] });
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
-});
-api.get('/customers/export', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const customers = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
-    return c.json({ success: true, data: customers.results||[] });
-  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
-});
-api.put('/customers/bulk', async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { updated: (body.updates||[]).length } });
 });
 api.post('/customers/import', async (c) => {
   return c.json({ success: true, data: { imported: 0, message: 'Import queued' } }, 201);
@@ -17191,15 +17201,6 @@ api.delete('/transactions/:id', async (c) => {
   }
 });
 
-api.get('/transactions/orders/insights', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    return c.json({ success: true, data: { insights: [] } });
-  } catch (error) {
-    return c.json({ success: false, message: (error && error.message) || 'An error occurred', data: { insights: [] } });
-  }
-});
 
 api.get('/transactions/:id/audit', async (c) => {
   const db = c.env.DB;

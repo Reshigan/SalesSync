@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../../config/api.config';
 import { Plus, Edit2, Trash2, MapPin } from 'lucide-react';
 
 interface Territory { id: number; name: string; region: string; agents: number; area: string; coordinates: string; }
@@ -12,14 +13,14 @@ const TerritoryManagementPage: React.FC = () => {
 
   const loadTerritories = async () => {
     try {
-      const res = await fetch('/api/admin/territories', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/territories`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setTerritories((await res.json()).territories || []);
     } catch (err) { console.error(err); }
   };
 
   const saveTerritory = async () => {
     try {
-      const url = editing ? `/api/admin/territories/${editing}` : '/api/admin/territories';
+      const url = editing ? `${API_CONFIG.BASE_URL}/admin/territories/${editing}` : `${API_CONFIG.BASE_URL}/admin/territories`;
       const res = await fetch(url, {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },

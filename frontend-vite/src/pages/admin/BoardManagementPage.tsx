@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../../config/api.config';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 
 interface Board { id: number; name: string; type: string; width: number; height: number; commissionRate: number; installCost: number; }
@@ -12,7 +13,7 @@ const BoardManagementPage: React.FC = () => {
 
   const loadBoards = async () => {
     try {
-      const res = await fetch('/api/admin/boards', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setBoards((await res.json()).boards || []);
     } catch (err) { console.error(err); }
   };
@@ -32,7 +33,7 @@ const BoardManagementPage: React.FC = () => {
   const deleteBoard = async (id: number) => {
     if (!confirm('Delete this board?')) return;
     try {
-      const res = await fetch(`/api/admin/boards/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

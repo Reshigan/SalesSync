@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_CONFIG } from '../../config/api.config';
 import { Plus, Trash2, Calculator } from 'lucide-react';
 
 interface Rule { id: number; name: string; boardType: string; minQty: number; maxQty: number; rate: number; bonusRate: number; }
@@ -11,14 +12,14 @@ const CommissionRuleBuilderPage: React.FC = () => {
 
   const loadRules = async () => {
     try {
-      const res = await fetch('/api/admin/commission-rules', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setRules((await res.json()).rules || []);
     } catch (err) { console.error(err); }
   };
 
   const saveRule = async () => {
     try {
-      const res = await fetch('/api/admin/commission-rules', {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -30,7 +31,7 @@ const CommissionRuleBuilderPage: React.FC = () => {
   const deleteRule = async (id: number) => {
     if (!confirm('Delete rule?')) return;
     try {
-      const res = await fetch(`/api/admin/commission-rules/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
