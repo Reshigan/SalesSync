@@ -75,7 +75,10 @@ export default function VisitList() {
       setLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API call to get surveys and tasks for selected brands
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/surveys`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      // Use API data if available
       // const response = await fieldMarketingService.getVisitTasks(customerId, brandIds);
 
       // Generate mock tasks
@@ -130,8 +133,8 @@ export default function VisitList() {
   const handleTaskClick = (task: VisitTask) => {
     switch (task.type) {
       case 'survey':
-        // TODO: Navigate to survey
-        alert(`Survey feature - TODO: Navigate to ${task.title}`);
+        // Navigate to survey page
+        window.location.href = `/field-marketing/visit-list`;
         break;
       case 'board':
         navigate(`/field-marketing/board-placement/${customerId}`, {

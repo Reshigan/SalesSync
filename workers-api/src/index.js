@@ -336,8 +336,19 @@ api.post('/customers', async (c) => {
 });
 
 api.put('/customers/bulk', async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { updated: (body.updates||[]).length } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    const updates = body.updates || [];
+    let updated = 0;
+    for (const u of updates) {
+      if (!u.id) continue;
+      await db.prepare("UPDATE customers SET name = COALESCE(?,name), phone = COALESCE(?,phone), email = COALESCE(?,email), status = COALESCE(?,status), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+        .bind(u.name||null, u.phone||null, u.email||null, u.status||null, u.id, tenantId).run();
+      updated++;
+    }
+    return c.json({ success: true, data: { updated } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 api.put('/customers/:id', async (c) => {
   const db = c.env.DB;
@@ -14772,16 +14783,28 @@ api.get('/transactions/export', async (c) => {
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
 });
 api.post('/transactions/batch', async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { processed: (body.transactions||[]).length, status: 'queued' } }, 201);
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json(); const txns = body.transactions || []; let processed = 0;
+    for (const t of txns) { const id = crypto.randomUUID(); await db.prepare("INSERT INTO comprehensive_transactions (id, tenant_id, transaction_type, customer_id, amount, status, created_by, created_at) VALUES (?,?,?,?,?,'pending',?,datetime('now'))").bind(id, tenantId, t.transaction_type||'sale', t.customer_id||null, t.amount||0, userId).run(); processed++; }
+    return c.json({ success: true, data: { processed, status: 'completed' } }, 201);
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 api.put('/transactions/batch', async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { updated: (body.updates||[]).length } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json(); const updates = body.updates || []; let updated = 0;
+    for (const u of updates) { if (!u.id) continue; await db.prepare("UPDATE comprehensive_transactions SET status = COALESCE(?,status), notes = COALESCE(?,notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(u.status||null, u.notes||null, u.id, tenantId).run(); updated++; }
+    return c.json({ success: true, data: { updated } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 api.post('/transactions/batch-reverse', async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { reversed: (body.reversals||[]).length } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json(); const reversals = body.reversals || []; let reversed = 0;
+    for (const r of reversals) { if (!r.id) continue; await db.prepare("UPDATE comprehensive_transactions SET status = 'reversed', reversed_by = ?, reversed_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(userId, r.id, tenantId).run(); reversed++; }
+    return c.json({ success: true, data: { reversed } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 
 // ==================== CUSTOMERS ENHANCED ROUTES ====================
@@ -14945,7 +14968,11 @@ api.get('/van-sales/routes/:routeId/stops', async (c) => {
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
 });
 api.get('/van-sales/routes/:routeId/exceptions', async (c) => {
-  return c.json({ success: true, data: [] });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const routeId = c.req.param('routeId');
+  try {
+    const exceptions = await db.prepare("SELECT vs.*, c.name as customer_name FROM van_sales vs LEFT JOIN customers c ON c.id = vs.customer_id WHERE vs.tenant_id = ? AND vs.status IN ('cancelled','returned','disputed') ORDER BY vs.created_at DESC LIMIT 100").bind(tenantId).all();
+    return c.json({ success: true, data: exceptions.results||[] });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
 });
 api.get('/van-sales/loads/:loadId/items', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const loadId = c.req.param('loadId');
@@ -15007,16 +15034,46 @@ api.get('/inventory/stats', async (c) => {
     return c.json({ success: true, data: { total_items: total?.count||0, total_quantity: total?.total_qty||0, low_stock: lowStock?.count||0, warehouses: warehouses?.count||0 } });
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
 });
-api.get('/inventory/stock-counts/:countId/lines', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/adjustments/:adjustmentId/items', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/transfers/:transferId/items', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/batches/:batchId/tracking', async (c) => { return c.json({ success: true, data: {} }); });
-api.get('/inventory/lots/:lotId/tracking', async (c) => { return c.json({ success: true, data: {} }); });
-api.get('/inventory/batches/:batchId/movements', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/batches/:batchId/allocations', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/stock-ledger/product/:productId', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/stock-ledger/warehouse/:warehouseId', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/inventory/serials/:serialNumber/tracking', async (c) => { return c.json({ success: true, data: {} }); });
+api.get('/inventory/stock-counts/:countId/lines', async (c) => {
+  const db = c.env.DB; const countId = c.req.param('countId');
+  try { const r = await db.prepare('SELECT scl.*, p.name as product_name FROM stock_count_lines scl LEFT JOIN products p ON p.id = scl.product_id WHERE scl.stock_count_id = ?').bind(countId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/adjustments/:adjustmentId/items', async (c) => {
+  const db = c.env.DB; const adjustmentId = c.req.param('adjustmentId');
+  try { const r = await db.prepare('SELECT ia.*, p.name as product_name FROM inventory_adjustment_items ia LEFT JOIN products p ON p.id = ia.product_id WHERE ia.adjustment_id = ?').bind(adjustmentId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/transfers/:transferId/items', async (c) => {
+  const db = c.env.DB; const transferId = c.req.param('transferId');
+  try { const r = await db.prepare('SELECT it.*, p.name as product_name FROM inventory_transfer_items it LEFT JOIN products p ON p.id = it.product_id WHERE it.transfer_id = ?').bind(transferId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/batches/:batchId/tracking', async (c) => {
+  const db = c.env.DB; const batchId = c.req.param('batchId');
+  try { const r = await db.prepare('SELECT * FROM inventory_batches WHERE id = ?').bind(batchId).first(); return c.json({ success: true, data: r || {} }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
+api.get('/inventory/lots/:lotId/tracking', async (c) => {
+  const db = c.env.DB; const lotId = c.req.param('lotId');
+  try { const r = await db.prepare('SELECT * FROM inventory_lots WHERE id = ?').bind(lotId).first(); return c.json({ success: true, data: r || {} }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
+api.get('/inventory/batches/:batchId/movements', async (c) => {
+  const db = c.env.DB; const batchId = c.req.param('batchId');
+  try { const r = await db.prepare('SELECT * FROM stock_movements WHERE reference_id = ? ORDER BY created_at DESC').bind(batchId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/batches/:batchId/allocations', async (c) => {
+  const db = c.env.DB; const batchId = c.req.param('batchId');
+  try { const r = await db.prepare('SELECT * FROM inventory_batch_allocations WHERE batch_id = ?').bind(batchId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/stock-ledger/product/:productId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const productId = c.req.param('productId');
+  try { const r = await db.prepare('SELECT sm.*, p.name as product_name FROM stock_movements sm LEFT JOIN products p ON p.id = sm.product_id WHERE sm.product_id = ? AND sm.tenant_id = ? ORDER BY sm.created_at DESC').bind(productId, tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/stock-ledger/warehouse/:warehouseId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const warehouseId = c.req.param('warehouseId');
+  try { const r = await db.prepare('SELECT is2.*, p.name as product_name FROM inventory_stock is2 LEFT JOIN products p ON p.id = is2.product_id WHERE is2.warehouse_id = ? AND is2.tenant_id = ? ORDER BY p.name').bind(warehouseId, tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/inventory/serials/:serialNumber/tracking', async (c) => {
+  const db = c.env.DB; const serialNumber = c.req.param('serialNumber');
+  try { const r = await db.prepare('SELECT * FROM inventory_serials WHERE serial_number = ?').bind(serialNumber).first(); return c.json({ success: true, data: r || {} }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
 
 // ==================== WAREHOUSES ENHANCED ====================
 api.get('/warehouses/:warehouseId/stock', async (c) => {
@@ -15126,14 +15183,33 @@ api.delete('/commissions/rules/:id', async (c) => {
     return c.json({ success: true, message: 'Deleted' });
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
-api.get('/commissions/payouts/:payoutId/lines', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/commissions/payouts/:payoutId/lines/:lineId/audit', async (c) => { return c.json({ success: true, data: {} }); });
-api.get('/commissions/agents/:agentId/calculations', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/commissions/payouts/:payoutId/lines/:lineId/transactions', async (c) => { return c.json({ success: true, data: [] }); });
+api.get('/commissions/payouts/:payoutId/lines', async (c) => {
+  const db = c.env.DB; const payoutId = c.req.param('payoutId');
+  try { const r = await db.prepare('SELECT ci.*, u.first_name, u.last_name FROM commission_items ci LEFT JOIN users u ON u.id = ci.agent_id WHERE ci.commission_id = ?').bind(payoutId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/commissions/payouts/:payoutId/lines/:lineId/audit', async (c) => {
+  const db = c.env.DB; const lineId = c.req.param('lineId');
+  try { const r = await db.prepare('SELECT * FROM commission_items WHERE id = ?').bind(lineId).first(); return c.json({ success: true, data: r || {} }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
+api.get('/commissions/agents/:agentId/calculations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try { const r = await db.prepare('SELECT * FROM commissions WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(agentId, tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/commissions/payouts/:payoutId/lines/:lineId/transactions', async (c) => {
+  const db = c.env.DB; const lineId = c.req.param('lineId');
+  try { const item = await db.prepare('SELECT * FROM commission_items WHERE id = ?').bind(lineId).first(); const txns = item && item.order_id ? await db.prepare('SELECT * FROM orders WHERE id = ?').bind(item.order_id).all() : { results: [] }; return c.json({ success: true, data: txns.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
 
 // ==================== REPORTS ENHANCED ====================
 api.get('/reports/stats', async (c) => {
-  return c.json({ success: true, data: { total_reports: 0, scheduled: 0 } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [total, scheduled] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as count FROM report_templates WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as count FROM report_templates WHERE tenant_id = ? AND status = 'scheduled'").bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { total_reports: total?.count||0, scheduled: scheduled?.count||0 } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { total_reports: 0, scheduled: 0 } }); }
 });
 api.get('/reports/:id/download', async (c) => {
   return c.json({ success: true, data: { url: null, message: 'Report generation in progress' } });
@@ -15158,10 +15234,22 @@ api.post('/reports/financial', async (c) => {
   const body = await c.req.json();
   return c.json({ success: true, data: { id: crypto.randomUUID(), type: 'financial', status: 'generating' } }, 201);
 });
-api.get('/reports/sales/:reportType', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/reports/field-operations/:reportType', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/reports/inventory/:reportType', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/reports/finance/:reportType', async (c) => { return c.json({ success: true, data: [] }); });
+api.get('/reports/sales/:reportType', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare("SELECT DATE(order_date) as date, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total FROM orders WHERE tenant_id = ? GROUP BY DATE(order_date) ORDER BY date DESC LIMIT 30").bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/reports/field-operations/:reportType', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare("SELECT DATE(visit_date) as date, COUNT(*) as total_visits, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ? GROUP BY DATE(visit_date) ORDER BY date DESC LIMIT 30").bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/reports/inventory/:reportType', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare("SELECT p.name as product_name, COALESCE(SUM(is2.quantity_on_hand),0) as total_stock, p.cost_price FROM inventory_stock is2 LEFT JOIN products p ON p.id = is2.product_id WHERE is2.tenant_id = ? GROUP BY is2.product_id ORDER BY total_stock ASC LIMIT 50").bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/reports/finance/:reportType', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare("SELECT DATE(created_at) as date, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM payments WHERE tenant_id = ? GROUP BY DATE(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
 api.get('/reports/:module/:reportType/export', async (c) => { return c.json({ success: true, data: { url: null, message: 'Export in progress' } }); });
 
 // ==================== TRADE MARKETING ENHANCED ====================
@@ -15239,10 +15327,29 @@ api.delete('/field-marketing/campaigns/:id', async (c) => {
     return c.json({ success: true, message: 'Deleted' });
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
-api.get('/field-marketing/promoters', async (c) => { return c.json({ success: true, data: [] }); });
-api.delete('/field-marketing/promoters/:id', async (c) => { return c.json({ success: true, message: 'Deleted' }); });
-api.get('/field-marketing/merchandising-compliance', async (c) => { return c.json({ success: true, data: [] }); });
-api.get('/field-marketing/analytics', async (c) => { return c.json({ success: true, data: {} }); });
+api.get('/field-marketing/promoters', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare("SELECT fa.*, u.first_name, u.last_name FROM field_agents fa LEFT JOIN users u ON u.id = fa.user_id WHERE fa.tenant_id = ? AND fa.role = 'promoter'").bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.delete('/field-marketing/promoters/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try { await db.prepare('DELETE FROM field_agents WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run(); return c.json({ success: true, message: 'Deleted' }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
+});
+api.get('/field-marketing/merchandising-compliance', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try { const r = await db.prepare('SELECT * FROM store_audits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: r.results||[] }); } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
+api.get('/field-marketing/analytics', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [campaigns, visits, activations] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as count FROM campaigns WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM marketing_activations WHERE tenant_id = ?').bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { total_campaigns: campaigns?.count||0, total_visits: visits?.total||0, completed_visits: visits?.completed||0, total_activations: activations?.count||0 } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
+});
 
 // ==================== FINANCE ENHANCED ====================
 api.get('/finance/invoices/stats', async (c) => {
@@ -15259,7 +15366,13 @@ api.get('/finance/payments/stats', async (c) => {
     return c.json({ success: true, data: { total: stats?.count||0, total_amount: stats?.total||0 } });
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
 });
-api.get('/finance/payments/:paymentId/status-history', async (c) => { return c.json({ success: true, data: [] }); });
+api.get('/finance/payments/:paymentId/status-history', async (c) => {
+  const db = c.env.DB; const paymentId = c.req.param('paymentId');
+  try {
+    const history = await db.prepare('SELECT * FROM order_status_history WHERE order_id = ? ORDER BY created_at DESC').bind(paymentId).all();
+    return c.json({ success: true, data: history.results||[] });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
+});
 api.put('/payments/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
   try {
@@ -15269,33 +15382,104 @@ api.put('/payments/:id', async (c) => {
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 api.get('/attachments/:attachmentId', async (c) => {
-  return c.json({ success: true, data: {} });
+  const db = c.env.DB; const attachmentId = c.req.param('attachmentId');
+  try {
+    const att = await db.prepare('SELECT * FROM attachments WHERE id = ?').bind(attachmentId).first();
+    return c.json({ success: true, data: att || {} });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: {} }); }
 });
 
 // ==================== AI ROUTES ====================
 api.get('/ai/field-agents/:agentId/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [], recommendations: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try {
+    const [visits, orders] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE agent_id = ? AND tenant_id = ?").bind(agentId, tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, COALESCE(SUM(total_amount),0) as revenue FROM orders WHERE salesman_id = ? AND tenant_id = ?").bind(agentId, tenantId).first()
+    ]);
+    const cr = visits?.total > 0 ? ((visits?.completed||0) / visits.total * 100).toFixed(1) : 0;
+    const insights = []; if (cr < 70) insights.push({ type: 'warning', message: 'Visit completion below target: ' + cr + '%' }); if (cr >= 90) insights.push({ type: 'success', message: 'Excellent completion: ' + cr + '%' });
+    insights.push({ type: 'info', message: 'Orders: ' + (orders?.total||0) + ', Revenue: ' + (orders?.revenue||0) });
+    return c.json({ success: true, data: { insights, recommendations: cr < 70 ? ['Improve visit planning','Focus on high-value customers'] : ['Maintain current performance'] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [], recommendations: [] } }); }
 });
 api.get('/ai/customers/:customerId/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [], recommendations: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const [orders, returns] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, COALESCE(SUM(total_amount),0) as revenue, COALESCE(AVG(total_amount),0) as avg_order FROM orders WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total FROM returns WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first()
+    ]);
+    const insights = [{ type: 'info', message: 'Orders: ' + (orders?.total||0) + ', Revenue: ' + (orders?.revenue||0) }, { type: 'info', message: 'Avg order: ' + (orders?.avg_order||0) }];
+    if ((returns?.total||0) > (orders?.total||0) * 0.3) insights.push({ type: 'warning', message: 'High return rate' });
+    return c.json({ success: true, data: { insights, recommendations: ['Review purchase patterns','Consider loyalty program'] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [], recommendations: [] } }); }
 });
 api.get('/ai/customers/:customerId/fraud-check', async (c) => {
-  return c.json({ success: true, data: { risk_score: 0, flags: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const customer = await db.prepare('SELECT * FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+    const returns = await db.prepare("SELECT COUNT(*) as count FROM returns WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first();
+    const orders = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first();
+    const flags = []; let rs = 0;
+    if (!customer?.phone) { flags.push('Missing phone'); rs += 15; }
+    if (!customer?.email) { flags.push('Missing email'); rs += 10; }
+    if (customer?.kyc_status !== 'verified') { flags.push('KYC not verified'); rs += 25; }
+    if ((returns?.count||0) > (orders?.count||0) * 0.5) { flags.push('Excessive returns'); rs += 30; }
+    return c.json({ success: true, data: { risk_score: Math.min(rs, 100), flags } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { risk_score: 0, flags: [] } }); }
 });
 api.get('/ai/orders/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [], trends: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [recent, trends] = await Promise.all([
+      db.prepare("SELECT DATE(order_date) as date, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total FROM orders WHERE tenant_id = ? GROUP BY DATE(order_date) ORDER BY date DESC LIMIT 7").bind(tenantId).all(),
+      db.prepare("SELECT order_status, COUNT(*) as count FROM orders WHERE tenant_id = ? GROUP BY order_status").bind(tenantId).all()
+    ]);
+    return c.json({ success: true, data: { insights: (recent.results||[]).map(r => ({ type: 'info', message: r.date + ': ' + r.count + ' orders, total ' + r.total })), trends: trends.results||[] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [], trends: [] } }); }
 });
 api.get('/ai/orders/:orderId/fraud-check', async (c) => {
-  return c.json({ success: true, data: { risk_score: 0, flags: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const orderId = c.req.param('orderId');
+  try {
+    const order = await db.prepare('SELECT o.*, c.kyc_status FROM orders o LEFT JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND o.tenant_id = ?').bind(orderId, tenantId).first();
+    const flags = []; let rs = 0;
+    if ((order?.total_amount||0) > 100000) { flags.push('Large order amount'); rs += 25; }
+    if (order?.kyc_status !== 'verified') { flags.push('Customer KYC not verified'); rs += 20; }
+    return c.json({ success: true, data: { risk_score: Math.min(rs, 100), flags } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { risk_score: 0, flags: [] } }); }
 });
 api.get('/ai/products/:productId/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [], recommendations: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const productId = c.req.param('productId');
+  try {
+    const [sales, stock] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as orders, COALESCE(SUM(oi.quantity),0) as qty, COALESCE(SUM(oi.line_total),0) as rev FROM order_items oi LEFT JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.tenant_id = ?").bind(productId, tenantId).first(),
+      db.prepare("SELECT COALESCE(SUM(quantity_on_hand),0) as total FROM inventory_stock WHERE product_id = ? AND tenant_id = ?").bind(productId, tenantId).first()
+    ]);
+    const insights = [{ type: 'info', message: 'Sold ' + (sales?.qty||0) + ' units in ' + (sales?.orders||0) + ' orders' }, { type: 'info', message: 'Stock: ' + (stock?.total||0) }];
+    if ((stock?.total||0) < 10) insights.push({ type: 'warning', message: 'Low stock' });
+    return c.json({ success: true, data: { insights, recommendations: (stock?.total||0) < 10 ? ['Reorder stock'] : ['Monitor trends'] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [], recommendations: [] } }); }
 });
 api.get('/ai/comprehensive-analysis', async (c) => {
-  return c.json({ success: true, data: { analysis: {}, recommendations: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [orders, customers, products, visits] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, COALESCE(SUM(total_amount),0) as revenue FROM orders WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total FROM customers WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total FROM products WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ?").bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { analysis: { total_orders: orders?.total||0, total_revenue: orders?.revenue||0, total_customers: customers?.total||0, total_products: products?.total||0, total_visits: visits?.total||0 }, recommendations: ['Review low-performing products','Follow up incomplete visits'] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { analysis: {}, recommendations: [] } }); }
 });
 api.get('/ai/config', async (c) => {
-  return c.json({ success: true, data: { enabled: false, model: 'gpt-4', features: {} } });
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const s = await db.prepare("SELECT value FROM settings WHERE tenant_id = ? AND key = 'ai_config'").bind(tenantId).first();
+    const config = s ? JSON.parse(s.value) : { enabled: true, features: { insights: true, fraud_detection: true, recommendations: true } };
+    return c.json({ success: true, data: config });
+  } catch(e) { return c.json({ success: true, data: { enabled: true, features: { insights: true, fraud_detection: true, recommendations: true } } }); }
 });
 api.put('/ai/config', async (c) => {
   const body = await c.req.json();
@@ -15439,7 +15623,11 @@ api.delete('/warehouses/:id', async (c) => {
   } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error' }); }
 });
 api.get('/finance/:id/status-history', async (c) => {
-  return c.json({ success: true, data: [] });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
+  try {
+    const history = await db.prepare('SELECT * FROM order_status_history WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: history.results||[] });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: [] }); }
 });
 
 app.route('/api', api);
@@ -17215,19 +17403,43 @@ api.get('/transactions/:id/audit', async (c) => {
 });
 
 api.get('/transactions/orders/:orderId/fraud-check', async (c) => {
-  return c.json({ success: true, data: { risk_level: 'low', flags: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const orderId = c.req.param('orderId');
+  try {
+    const order = await db.prepare('SELECT o.*, c.kyc_status FROM orders o LEFT JOIN customers c ON c.id = o.customer_id WHERE o.id = ? AND o.tenant_id = ?').bind(orderId, tenantId).first();
+    const flags = [];
+    if ((order?.total_amount||0) > 100000) flags.push('Large transaction');
+    if (order?.kyc_status !== 'verified') flags.push('KYC not verified');
+    return c.json({ success: true, data: { risk_level: flags.length >= 2 ? 'high' : flags.length === 1 ? 'medium' : 'low', flags } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { risk_level: 'low', flags: [] } }); }
 });
 
 api.get('/transactions/customers/:customerId/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const stats = await db.prepare("SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount),0) as spent, COALESCE(AVG(total_amount),0) as avg FROM orders WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first();
+    return c.json({ success: true, data: { insights: [{ type: 'summary', total_transactions: stats?.cnt||0, total_spent: stats?.spent||0, average_amount: stats?.avg||0 }] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [] } }); }
 });
 
 api.get('/transactions/products/:productId/insights', async (c) => {
-  return c.json({ success: true, data: { insights: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const productId = c.req.param('productId');
+  try {
+    const stats = await db.prepare("SELECT COUNT(DISTINCT oi.order_id) as orders, COALESCE(SUM(oi.quantity),0) as qty, COALESCE(SUM(oi.line_total),0) as rev FROM order_items oi LEFT JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.tenant_id = ?").bind(productId, tenantId).first();
+    return c.json({ success: true, data: { insights: [{ type: 'summary', order_count: stats?.orders||0, quantity_sold: stats?.qty||0, total_revenue: stats?.rev||0 }] } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { insights: [] } }); }
 });
 
 api.get('/transactions/customers/:customerId/fraud-check', async (c) => {
-  return c.json({ success: true, data: { risk_level: 'low', flags: [] } });
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const customer = await db.prepare('SELECT * FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+    const returns = await db.prepare("SELECT COUNT(*) as count FROM returns WHERE customer_id = ? AND tenant_id = ?").bind(customerId, tenantId).first();
+    const flags = [];
+    if (customer?.kyc_status !== 'verified') flags.push('KYC not verified');
+    if ((returns?.count||0) > 10) flags.push('High return frequency');
+    if (!customer?.phone && !customer?.email) flags.push('No contact info');
+    return c.json({ success: true, data: { risk_level: flags.length >= 2 ? 'high' : flags.length === 1 ? 'medium' : 'low', flags } });
+  } catch(e) { return c.json({ success: false, message: (e&&e.message)||'Error', data: { risk_level: 'low', flags: [] } }); }
 });
 
 // ==================== CASH RECONCILIATION SESSIONS ====================

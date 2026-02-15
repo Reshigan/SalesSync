@@ -173,7 +173,7 @@ const VisitWorkflowPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => alert('Survey feature coming soon!')}
+            onClick={() => window.location.href = '/field-marketing/visit-list'}
             className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left opacity-75"
           >
             <div className="flex items-center">

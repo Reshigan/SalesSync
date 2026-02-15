@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { MapPin, Clock, Truck, Navigation, Plus, Edit, Trash2 } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { API_CONFIG } from '../../config/api.config'
 
 interface Route {
   id: string
@@ -40,68 +41,24 @@ export default function RouteManagementPage() {
   const fetchRoutes = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
-      setRoutes([
-        {
-          id: '1',
-          name: 'North District Route A',
-          description: 'Covers downtown and business district',
-          vanAssigned: 'VAN-001',
-          driver: 'John Smith',
-          status: 'active',
-          totalStops: 12,
-          estimatedTime: 480,
-          distance: 45.2,
-          priority: 'high',
-          lastUpdated: '2024-01-15T10:30:00Z',
-          customers: [
-            {
-              id: '1',
-              name: 'ABC Electronics',
-              address: '123 Main St',
-              estimatedValue: 2500,
-              visitTime: '09:00',
-              status: 'completed'
-            },
-            {
-              id: '2',
-              name: 'XYZ Retail',
-              address: '456 Oak Ave',
-              estimatedValue: 1800,
-              visitTime: '10:30',
-              status: 'pending'
-            }
-          ]
-        },
-        {
-          id: '2',
-          name: 'South District Route B',
-          description: 'Industrial and warehouse areas',
-          vanAssigned: 'VAN-002',
-          driver: 'Sarah Johnson',
-          status: 'active',
-          totalStops: 8,
-          estimatedTime: 360,
-          distance: 32.8,
-          priority: 'medium',
-          lastUpdated: '2024-01-15T09:15:00Z',
-          customers: []
-        },
-        {
-          id: '3',
-          name: 'East District Route C',
-          description: 'Residential and small business areas',
-          vanAssigned: 'Unassigned',
-          driver: 'Unassigned',
-          status: 'planned',
-          totalStops: 15,
-          estimatedTime: 540,
-          distance: 38.5,
-          priority: 'low',
-          lastUpdated: '2024-01-14T16:45:00Z',
-          customers: []
-        }
-      ])
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/beat-routes`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      const items = (json.data || []).map((r: Record<string, unknown>) => ({
+        id: r.id as string || '',
+        name: r.name as string || 'Unnamed Route',
+        description: r.description as string || '',
+        vanAssigned: r.van_assigned as string || 'Unassigned',
+        driver: r.driver_name as string || 'Unassigned',
+        status: (r.status as string || 'planned') as 'active' | 'inactive' | 'planned',
+        totalStops: Number(r.total_stops) || 0,
+        estimatedTime: Number(r.estimated_time) || 0,
+        distance: Number(r.distance) || 0,
+        priority: (r.priority as string || 'medium') as 'high' | 'medium' | 'low',
+        lastUpdated: r.updated_at as string || '',
+        customers: []
+      }))
+      setRoutes(items)
     } catch (error) {
       console.error('Error fetching routes:', error)
     } finally {

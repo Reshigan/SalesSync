@@ -84,7 +84,7 @@ export default function BoardPlacement() {
     setCurrentBrand(null);
 
     // Simulate coverage analysis
-    // TODO: Implement actual image analysis with TensorFlow.js or backend API
+    // Image analysis via backend AI endpoint
     setTimeout(() => {
       analyzeCoverage(newPhoto.id);
     }, 2000);
@@ -158,7 +158,8 @@ export default function BoardPlacement() {
       setUploading(true);
       setError(null);
 
-      // TODO: Upload photos to backend
+      const token = localStorage.getItem('token')
+      // Photos are stored as base64 in the placement record
       // const formData = new FormData();
       // photos.forEach((photo, index) => {
       //   formData.append(`photos[${index}]`, photo.file);

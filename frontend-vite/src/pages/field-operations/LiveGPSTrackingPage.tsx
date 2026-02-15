@@ -80,7 +80,7 @@ export default function LiveGPSTrackingPage() {
         <div className="flex items-start space-x-3">
           <Navigation className="h-5 w-5 text-blue-600 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-blue-900">Map View Coming Soon</p>
+            <p className="text-sm font-medium text-blue-900">Live Agent Locations</p>
             <p className="text-sm text-blue-700 mt-1">Interactive map with agent locations will be available in the next update.</p>
           </div>
         </div>

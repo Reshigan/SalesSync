@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Megaphone, Users, Eye, MousePointer, TrendingUp, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { API_CONFIG } from '../../config/api.config'
 
 interface CampaignMetrics {
   totalCampaigns: number
@@ -51,17 +52,36 @@ export default function CampaignsPage() {
   const fetchCampaignsData = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/campaigns`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      const data = json.data || []
+      const active = data.filter((c: Record<string, unknown>) => c.status === 'active')
       setMetrics({
-        totalCampaigns: 24,
-        activeCampaigns: 8,
-        totalReach: 125000,
-        averageCTR: 3.2,
-        totalSpend: 85000,
-        averageROI: 4.5
+        totalCampaigns: data.length,
+        activeCampaigns: active.length,
+        totalReach: data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.reach) || 0), 0),
+        averageCTR: data.length > 0 ? data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.ctr) || 0), 0) / data.length : 0,
+        totalSpend: data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.spent) || Number(c.budget) || 0), 0),
+        averageROI: data.length > 0 ? data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.roi) || 0), 0) / data.length : 0
       })
-
-      setCampaigns([
+      setCampaigns(data.length > 0 ? data.map((c: Record<string, unknown>) => ({
+        id: c.id as string || '',
+        name: c.name as string || '',
+        type: (c.type as string || 'multi_channel') as Campaign['type'],
+        status: (c.status as string || 'draft') as Campaign['status'],
+        startDate: c.start_date as string || '',
+        endDate: c.end_date as string || '',
+        budget: Number(c.budget) || 0,
+        spent: Number(c.spent) || 0,
+        reach: Number(c.reach) || 0,
+        impressions: Number(c.impressions) || 0,
+        clicks: Number(c.clicks) || 0,
+        conversions: Number(c.conversions) || 0,
+        ctr: Number(c.ctr) || 0,
+        roi: Number(c.roi) || 0,
+        targetAudience: c.target_audience as string || ''
+      })) : [
         {
           id: '1',
           name: 'Summer Product Launch',

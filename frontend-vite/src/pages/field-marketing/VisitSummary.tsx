@@ -104,7 +104,8 @@ export default function VisitSummary() {
   const handleCompleteVisit = async () => {
     setIsCompleting(true);
     try {
-      // TODO: API call to complete visit
+      const token = localStorage.getItem('token')
+      await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/complete`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } })
       const payload = {
         visitId: visitData.visitId,
         notes,

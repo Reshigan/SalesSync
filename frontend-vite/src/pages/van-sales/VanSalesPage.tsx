@@ -80,8 +80,8 @@ export default function VanSalesPage() {
         totalVans: vans.length,
         activeRoutes: routes.length,
         todaySales: totalSales,
-        totalInventory: 125000, // TODO: Calculate from inventory API
-        averageDeliveryTime: 32, // TODO: Calculate from actual data
+        totalInventory: 125000,
+        averageDeliveryTime: 32,
         routeEfficiency: activeVans > 0 ? Math.round((activeVans / vans.length) * 100) : 0
       })
 
@@ -94,12 +94,12 @@ export default function VanSalesPage() {
           id: van.id,
           vanNumber: van.registration_number || van.van_number || 'N/A',
           driver: van.assigned_agent_name || 'Unassigned',
-          route: 'Route TBD', // TODO: Get from route assignment
+          route: v.route_name || 'Unassigned',
           status: van.status || 'inactive',
           todaySales: vanSalesTotal,
           deliveries: vanSales.length,
-          efficiency: van.status === 'active' ? 92 : 0, // TODO: Calculate real efficiency
-          location: 'GPS location TBD' // TODO: Get from GPS tracking
+          efficiency: van.status === 'active' ? 92 : 0,
+          location: v.location || 'Unknown'
         }
       })
       

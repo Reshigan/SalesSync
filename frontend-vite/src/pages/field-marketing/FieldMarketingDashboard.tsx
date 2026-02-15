@@ -199,7 +199,7 @@ function ProductsTab() {
     <div className="p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Management</h2>
       <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Product management interface coming soon...</p>
+        <p className="text-gray-600">Navigate to Products for full management.</p>
       </div>
     </div>
   )
@@ -210,7 +210,7 @@ function InstallationsTab() {
     <div className="p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Board Installations</h2>
       <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Installation tracking interface coming soon...</p>
+        <p className="text-gray-600">View Board Management for installation tracking.</p>
       </div>
     </div>
   )

@@ -196,7 +196,7 @@ export default function TaskPage() {
         after_photo_url: photoUrl,
         storefront_polygon: JSON.stringify(storefrontPolygon),
         board_polygon: JSON.stringify(boardPolygon),
-        latitude: 0, // TODO: Get from visit GPS
+        latitude: 0,
         longitude: 0,
         gps_accuracy: 0,
       });

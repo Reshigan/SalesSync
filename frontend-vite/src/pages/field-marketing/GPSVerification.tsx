@@ -49,7 +49,10 @@ export default function GPSVerification() {
   useEffect(() => {
     if (!customer) {
       // If customer data not passed, fetch from API
-      // TODO: Fetch customer data
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/customers/${customerId}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      if (json.data) return json.data
       console.error('Customer data not provided');
       navigate('/field-marketing/select-customer');
       return;

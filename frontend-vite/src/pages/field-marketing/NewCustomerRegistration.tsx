@@ -230,7 +230,9 @@ export default function NewCustomerRegistration() {
       // Add brand data
       formData.append('brands', JSON.stringify(selectedBrands));
 
-      // TODO: Make API call to register new customer
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/customers`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+      if (!res.ok) throw new Error('Failed to register customer')
       // const response = await fetch('/api/customers/register', {
       //   method: 'POST',
       //   body: formData
