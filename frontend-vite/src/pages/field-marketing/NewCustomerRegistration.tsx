@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Camera, Store, User, Phone, Mail, MapPinned, Building2, Users, Clock, CreditCard, ChevronRight, Save, AlertCircle } from 'lucide-react';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import CameraCapture from '../../components/CameraCapture';
+import { API_CONFIG } from '../../config/api.config';
 
 interface CustomerData {
   storeName: string;
@@ -230,30 +231,36 @@ export default function NewCustomerRegistration() {
       // Add brand data
       formData.append('brands', JSON.stringify(selectedBrands));
 
-      // TODO: Make API call to register new customer
-      // const response = await fetch('/api/customers/register', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-
-      console.log('Registering new customer:', {
-        customerData,
-        brands: selectedBrands,
-        photos: {
-          storefront: storefrontPhoto?.name,
-          interior: interiorPhoto?.name,
-          idDocument: idDocumentPhoto?.name
-        }
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_CONFIG.BASE_URL}/customers`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_name: customerData.storeName,
+          owner_name: customerData.ownerName,
+          phone: customerData.phoneNumber,
+          address: customerData.physicalAddress,
+          store_type: customerData.storeType,
+          email: customerData.email || null,
+          alternative_phone: customerData.alternativePhone || null,
+          store_size: customerData.storeSize || null,
+          number_of_employees: customerData.numberOfEmployees || null,
+          business_registration: customerData.businessRegistration || null,
+          opening_hours: customerData.openingHours || null,
+          payment_terms: customerData.paymentTerms || null,
+          gps_latitude: customerData.latitude,
+          gps_longitude: customerData.longitude,
+          gps_accuracy: customerData.accuracy || null,
+          brands: selectedBrands
+        })
       });
+      const result = await response.json();
+      const newCustomerId = result.data?.id || 'new-customer-id';
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Navigate to visit list or dashboard
       navigate('/field-marketing/visit-list', { 
         state: { 
           newCustomer: true,
-          customerId: 'new-customer-id',
+          customerId: newCustomerId,
           customerName: customerData.storeName
         } 
       });

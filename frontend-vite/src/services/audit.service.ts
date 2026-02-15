@@ -20,7 +20,7 @@ export interface AuditEntry {
 }
 
 class AuditService {
-  private readonly baseUrl = '/api/audit'
+  private readonly baseUrl = '/audit'
 
   async getAuditTrail(entityType: string, entityId: string): Promise<AuditEntry[]> {
     try {

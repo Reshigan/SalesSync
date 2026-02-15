@@ -23,7 +23,7 @@ export interface Attachment {
 }
 
 class AttachmentsService {
-  private readonly baseUrl = '/api/files'
+  private readonly baseUrl = '/attachments'
 
   async getAttachments(entityType: string, entityId: string): Promise<Attachment[]> {
     try {
