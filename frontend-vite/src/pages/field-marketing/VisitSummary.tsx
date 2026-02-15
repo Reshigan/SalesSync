@@ -131,7 +131,7 @@ export default function VisitSummary() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -200,7 +200,7 @@ export default function VisitSummary() {
         <div className="bg-white rounded-lg shadow mb-4">
           <button
             onClick={() => toggleSection('surveys')}
-            className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
+            className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
           >
             <div className="flex items-center">
               <CheckCircle className="w-5 h-5 text-blue-600 mr-3" />
@@ -247,7 +247,7 @@ export default function VisitSummary() {
           <div className="bg-white rounded-lg shadow mb-4">
             <button
               onClick={() => toggleSection('boards')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
             >
               <div className="flex items-center">
                 <Target className="w-5 h-5 text-purple-600 mr-3" />
@@ -306,7 +306,7 @@ export default function VisitSummary() {
           <div className="bg-white rounded-lg shadow mb-4">
             <button
               onClick={() => toggleSection('products')}
-              className="w-full px-6 py-4 flex items-center justify-between hover:bg-surface-secondary"
+              className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
             >
               <div className="flex items-center">
                 <Package className="w-5 h-5 text-orange-600 mr-3" />

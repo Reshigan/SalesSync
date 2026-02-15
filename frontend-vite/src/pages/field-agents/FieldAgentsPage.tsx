@@ -392,7 +392,7 @@ export default function FieldAgentsPage() {
               { agent: 'Mike Johnson', action: 'Started customer visit', location: 'XYZ Corp, Birmingham', time: '12 min ago', name: 'visit' },
               { agent: 'Sarah Wilson', action: 'Earned commission', location: 'Multiple locations', time: '18 min ago', name: 'commission' },
             ].map((activity, index) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-surface-secondary rounded-lg">
+              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                 <div className={`p-2 rounded-full ${
                   activity.name === 'placement' ? 'bg-purple-100' :
                   activity.name === 'distribution' ? 'bg-green-100' :

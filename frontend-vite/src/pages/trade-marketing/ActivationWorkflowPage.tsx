@@ -285,7 +285,7 @@ const ActivationWorkflowPage: React.FC = () => {
     .every(t => !t.requires_photo || taskPhotos[t.id]);
 
   return (
-    <div className="min-h-screen bg-surface-secondary pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Trade Marketing Activation</h1>
@@ -387,7 +387,7 @@ const ActivationWorkflowPage: React.FC = () => {
             </p>
 
             {gpsLocation && distance !== null && (
-              <div className="mb-4 p-3 bg-surface-secondary rounded-lg text-sm text-gray-600">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <div>Distance: {distance.toFixed(0)}m from customer</div>
               </div>
             )}
@@ -589,7 +589,7 @@ const ActivationWorkflowPage: React.FC = () => {
               Activation ID: {activationSummary.activation_id}
             </p>
 
-            <div className="bg-surface-secondary rounded-lg p-4 mb-6 text-left">
+            <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Campaign:</span>

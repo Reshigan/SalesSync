@@ -80,7 +80,7 @@ export default function CountLineEdit() {
 
       <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="bg-white rounded-lg shadow p-6">
         <div className="space-y-6">
-          <div className="bg-surface-secondary border border-gray-100 rounded-lg p-4">
+          <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
             <dl className="grid grid-cols-2 gap-4">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Expected Quantity</dt>

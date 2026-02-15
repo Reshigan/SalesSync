@@ -50,23 +50,23 @@ export default function VanLoadItemList() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Loaded</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sold</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Returned</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Remaining</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Sell-Through</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Loaded</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Sold</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Returned</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Remaining</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Sell-Through</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items?.map((item) => {
               const sellThrough = ((item.quantity_sold / item.quantity_loaded) * 100).toFixed(1)
               return (
-                <tr key={item.id} className="hover:bg-surface-secondary">
+                <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.product_name}
                   </td>

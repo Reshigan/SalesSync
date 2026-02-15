@@ -258,7 +258,7 @@ const StockCountWorkflowPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-surface-secondary pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="px-4 py-3">
           <h1 className="text-lg font-semibold text-gray-900">Stock Count</h1>
@@ -335,7 +335,7 @@ const StockCountWorkflowPage: React.FC = () => {
             </p>
 
             {gpsLocation && distance !== null && (
-              <div className="mb-4 p-3 bg-surface-secondary rounded-lg text-sm text-gray-600">
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
                 <div>Distance: {distance.toFixed(0)}m from warehouse</div>
               </div>
             )}

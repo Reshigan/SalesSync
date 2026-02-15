@@ -68,7 +68,7 @@ export const CustomerHierarchyPage: React.FC = () => {
     return (
       <div key={node.id} style={{ marginLeft: `${level * 24}px` }}>
         <div
-          className={`flex items-center p-3 hover:bg-surface-secondary cursor-pointer rounded-lg ${
+          className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer rounded-lg ${
             selectedNode?.id === node.id ? 'bg-blue-50 border-l-4 border-blue-600' : ''
           }`}
           onClick={() => setSelectedNode(node)}
@@ -134,7 +134,7 @@ export const CustomerHierarchyPage: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-surface-secondary">
+          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
             Export Hierarchy
           </button>
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">

@@ -118,20 +118,20 @@ export default function SourceTransactions() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transaction #</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rate</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Commission</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Transaction #</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Amount</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {transactions?.map((transaction) => (
-              <tr key={transaction.id} className="hover:bg-surface-secondary">
+              <tr key={transaction.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     transaction.transaction_type === 'order' ? 'bg-blue-100 text-blue-800' :

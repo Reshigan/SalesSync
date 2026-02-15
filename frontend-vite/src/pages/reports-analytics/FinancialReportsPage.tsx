@@ -264,7 +264,7 @@ export const FinancialReportsPage: React.FC = () => {
               <span className="text-sm font-medium text-gray-600">Operating Expenses</span>
               <span className="text-sm font-semibold text-red-600">-{formatCurrency(0)}</span>
             </div>
-            <div className="flex justify-between py-3 bg-surface-secondary px-3 rounded">
+            <div className="flex justify-between py-3 bg-gray-50 px-3 rounded">
               <span className="text-base font-bold text-gray-900">Net Profit</span>
               <span className={`text-base font-bold ${reportData.net_profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(reportData.net_profit)}
@@ -292,31 +292,31 @@ export const FinancialReportsPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Period
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Revenue
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Gross Profit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Margin
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Growth
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.revenue_by_period.map((period: any, index: number) => (
-                  <tr key={index} className="hover:bg-surface-secondary">
+                  <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{period.period}</div>
                     </td>

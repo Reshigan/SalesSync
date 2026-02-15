@@ -65,18 +65,18 @@ export default function VanCashCollectionPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-surface-secondary">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order #</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Time</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order #</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment Method</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {collections.map((collection, idx) => (
-                      <tr key={idx} className="hover:bg-surface-secondary">
+                      <tr key={idx} className="hover:bg-gray-50">
                         <td className="px-6 py-4 text-sm text-gray-900">{new Date(collection.timestamp).toLocaleTimeString()}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-900">{collection.order_number}</td>
                         <td className="px-6 py-4 text-sm text-gray-900">{collection.customer_name}</td>

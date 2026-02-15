@@ -423,7 +423,7 @@ export default function PriceListEditPage() {
           <button
             type="button"
             onClick={() => navigate('/admin/price-lists')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>

@@ -343,7 +343,7 @@ export default function CustomerSelection() {
       )}
 
       {/* Footer Info */}
-      <div className="mt-6 p-4 bg-surface-secondary rounded-lg">
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
         <p className="text-sm text-gray-600 text-center">
           {filteredCustomers.length} customer
           {filteredCustomers.length !== 1 ? 's' : ''} available

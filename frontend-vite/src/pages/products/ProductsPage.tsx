@@ -276,67 +276,31 @@ export default function ProductsPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 rounded-lg bg-blue-100">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-500">Total Products</p>
-                <p className="text-2xl font-semibold text-gray-900">{Number(stats.totalProducts || 0).toLocaleString()}</p>
-                <p className="text-sm text-blue-600">{stats.activeProducts} active</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="bg-[#1A1A1A] text-white rounded-3xl p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+            <p className="text-sm font-medium text-gray-400">Total Products</p>
+            <p className="text-2xl sm:text-3xl font-bold mt-1" style={{ color: '#C0E02E' }}>{Number(stats.totalProducts || 0).toLocaleString()}</p>
+            <p className="text-sm text-gray-400 mt-1">{stats.activeProducts} active</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 rounded-lg bg-green-100">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-500">In Stock</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {(Number(stats.totalProducts || 0) - Number(stats.outOfStockProducts || 0)).toLocaleString()}
-                </p>
-                <p className="text-sm text-green-600">Available for sale</p>
-              </div>
-            </div>
+          <div className="bg-[#F8F9FA] rounded-3xl p-5 sm:p-6 shadow-card">
+            <p className="text-sm font-medium text-gray-500">In Stock</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+              {(Number(stats.totalProducts || 0) - Number(stats.outOfStockProducts || 0)).toLocaleString()}
+            </p>
+            <p className="text-sm text-green-600 mt-1">Available for sale</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 rounded-lg bg-yellow-100">
-                  <AlertTriangle className="h-6 w-6 text-yellow-600" />
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-500">Low Stock</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.lowStockProducts}</p>
-                <p className="text-sm text-yellow-600">Needs attention</p>
-              </div>
-            </div>
+          <div className="bg-[#F8F9FA] rounded-3xl p-5 sm:p-6 shadow-card">
+            <p className="text-sm font-medium text-gray-500">Low Stock</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{stats.lowStockProducts}</p>
+            <p className="text-sm text-yellow-600 mt-1">Needs attention</p>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 rounded-lg bg-purple-100">
-                  <DollarSign className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-              <div className="ml-4 flex-1">
-                <p className="text-sm font-medium text-gray-500">Total Value</p>
-                <p className="text-2xl font-semibold text-gray-900">{formatCurrency(Number(stats.totalValue || 0))}</p>
-                <p className="text-sm text-purple-600">Inventory worth</p>
-              </div>
-            </div>
+          <div className="bg-[#F8F9FA] rounded-3xl p-5 sm:p-6 shadow-card">
+            <p className="text-sm font-medium text-gray-500">Total Value</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{formatCurrency(Number(stats.totalValue || 0))}</p>
+            <p className="text-sm text-purple-600 mt-1">Inventory worth</p>
           </div>
         </div>
       )}
@@ -474,7 +438,7 @@ export default function ProductsPage() {
 
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left">
                   <input
@@ -484,25 +448,25 @@ export default function ProductsPage() {
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Product
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Code
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -511,7 +475,7 @@ export default function ProductsPage() {
               {paginatedProducts.map((product) => {
                 const stockStatus = getStockStatus(product)
                 return (
-                  <tr key={product.id} className="hover:bg-surface-secondary">
+                  <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <input
                         type="checkbox"

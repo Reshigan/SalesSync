@@ -88,20 +88,20 @@ export default function CalculationLog() {
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Period</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Calculation Date</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total Sales</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Rate</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Commission</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Period</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Calculation Date</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Total Sales</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {calculations?.map((calc) => (
-              <tr key={calc.id} className="hover:bg-surface-secondary">
+              <tr key={calc.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(calc.period_start).toLocaleDateString()} - {new Date(calc.period_end).toLocaleDateString()}
                 </td>

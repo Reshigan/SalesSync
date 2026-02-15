@@ -130,7 +130,7 @@ export const BackupManagementPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Backup Schedule</h2>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Daily Full Backup</div>
               <div className="text-sm text-gray-500">Runs every day at 2:00 AM</div>
@@ -145,7 +145,7 @@ export const BackupManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Hourly Incremental Backup</div>
               <div className="text-sm text-gray-500">Runs every hour</div>
@@ -160,7 +160,7 @@ export const BackupManagementPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-surface-secondary rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
             <div>
               <div className="text-sm font-medium text-gray-900">Weekly Differential Backup</div>
               <div className="text-sm text-gray-500">Runs every Sunday at 3:00 AM</div>
@@ -193,34 +193,34 @@ export const BackupManagementPage: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Size
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Created By
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {mockBackups.map((backup) => (
-                  <tr key={backup.id} className="hover:bg-surface-secondary">
+                  <tr key={backup.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{backup.name}</div>
                     </td>

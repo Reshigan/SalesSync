@@ -314,43 +314,43 @@ export default function RolePermissionsPage() {
 
       {/* Search & Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Roles</p>
+              <p className="text-gray-400 text-sm">Total Roles</p>
               <p className="text-3xl font-bold mt-1">{roles.length}</p>
             </div>
-            <Shield className="w-12 h-12 text-blue-200" />
+            <Shield className="w-12 h-12 text-[#C0E02E]" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Total Users</p>
+              <p className="text-gray-500 text-sm">Total Users</p>
               <p className="text-3xl font-bold mt-1">{roles.reduce((sum, r) => sum + r.userCount, 0)}</p>
             </div>
-            <Users className="w-12 h-12 text-green-200" />
+            <Users className="w-12 h-12 text-green-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm">Permissions</p>
+              <p className="text-gray-500 text-sm">Permissions</p>
               <p className="text-3xl font-bold mt-1">{PERMISSIONS.length}</p>
             </div>
-            <Lock className="w-12 h-12 text-purple-200" />
+            <Lock className="w-12 h-12 text-purple-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm">Custom Roles</p>
+              <p className="text-gray-500 text-sm">Custom Roles</p>
               <p className="text-3xl font-bold mt-1">{roles.filter(r => !r.isSystem).length}</p>
             </div>
-            <FileEdit className="w-12 h-12 text-orange-200" />
+            <FileEdit className="w-12 h-12 text-orange-500" />
           </div>
         </div>
       </div>
@@ -556,7 +556,7 @@ export default function RolePermissionsPage() {
                                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                                     editingRole.permissions?.includes(permission.id)
                                       ? 'bg-blue-50 border-blue-200'
-                                      : 'bg-white border-gray-100 hover:bg-surface-secondary'
+                                      : 'bg-white border-gray-100 hover:bg-gray-50'
                                   } ${editingRole.isSystem ? 'cursor-not-allowed opacity-75' : ''}`}
                                 >
                                   <input

@@ -196,7 +196,7 @@ export const TableSkeleton: React.FC<{
     <div className={`bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden ${className}`}>
       <div className="animate-pulse">
         {/* Header */}
-        <div className="bg-surface-secondary px-6 py-3 border-b border-gray-100">
+        <div className="bg-gray-50 px-6 py-3 border-b border-gray-100">
           <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
             {Array.from({ length: columns }).map((_, index) => (
               <div key={index} className="h-4 bg-gray-200 rounded"></div>

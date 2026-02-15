@@ -132,7 +132,7 @@ export default function MyCommissions() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-secondary">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -144,12 +144,12 @@ export default function MyCommissions() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary"
+                className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </button>
-              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-surface-secondary">
+              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </button>
@@ -161,7 +161,7 @@ export default function MyCommissions() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <Clock className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Pending</span>
@@ -172,7 +172,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <CheckCircle className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Approved</span>
@@ -183,7 +183,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <DollarSign className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Paid This Month</span>
@@ -194,7 +194,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <TrendingUp className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Total Earned</span>
@@ -247,7 +247,7 @@ export default function MyCommissions() {
                 <div
                   key={commission.id}
                   onClick={() => setSelectedCommission(commission)}
-                  className="p-6 hover:bg-surface-secondary cursor-pointer transition-colors"
+                  className="p-6 hover:bg-gray-50 cursor-pointer transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
@@ -320,7 +320,7 @@ export default function MyCommissions() {
                 items: 52
               }
             ].map((payment, index) => (
-              <div key={index} className="p-6 hover:bg-surface-secondary">
+              <div key={index} className="p-6 hover:bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 mb-1">{payment.month}</h3>
@@ -377,7 +377,7 @@ export default function MyCommissions() {
               </div>
 
               {/* Amount */}
-              <div className="bg-surface-secondary rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-600 mb-1">Commission Amount</p>
                 <p className="text-3xl font-bold text-gray-900">R{selectedCommission.amount.toFixed(2)}</p>
               </div>

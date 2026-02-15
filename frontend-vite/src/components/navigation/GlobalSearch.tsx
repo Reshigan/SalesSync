@@ -248,7 +248,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
                     <button
                       key={index}
                       onClick={() => setQuery(search)}
-                      className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 hover:bg-surface-secondary rounded-lg transition-colors"
+                      className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
                     >
                       <Clock className="w-4 h-4 text-gray-400" />
                       {search}
@@ -277,7 +277,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
                       key={result.id}
                       onClick={() => handleSelectResult(result)}
                       className={`w-full flex items-start gap-3 px-3 py-3 rounded-lg transition-colors text-left ${
-                        isSelected ? 'bg-blue-50' : 'hover:bg-surface-secondary'
+                        isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
                       }`}
                     >
                       <div className={`p-2 rounded-lg ${getTypeColor(result.type)} flex-shrink-0`}>
@@ -311,7 +311,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-4 py-2 bg-surface-secondary border-t border-gray-100">
+          <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
             <div className="flex items-center justify-between text-xs text-gray-500">
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1">

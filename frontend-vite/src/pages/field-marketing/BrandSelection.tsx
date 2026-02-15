@@ -258,7 +258,7 @@ export default function BrandSelection() {
 
         <button
           onClick={handleCancel}
-          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-surface-secondary transition-colors font-semibold"
+          className="w-full px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
         >
           Cancel Visit
         </button>

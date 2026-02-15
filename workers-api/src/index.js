@@ -2848,6 +2848,224 @@ const createStockMovement = async (db, tenantId, warehouseId, productId, quantit
   return id;
 };
 
+// ==================== CROSS-MODULE BUSINESS RULE HELPERS ====================
+
+const generateInvoiceFromOrder = async (db, tenantId, orderId, userId) => {
+  const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
+  if (!order) return null;
+
+  const existingInvoice = await db.prepare('SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(orderId, tenantId, 'void').first();
+  if (existingInvoice) return existingInvoice.id;
+
+  const items = await db.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(orderId).all();
+  const id = uuidv4();
+  const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 30);
+
+  await db.prepare(`
+    INSERT INTO invoices (id, tenant_id, invoice_number, customer_id, order_id, invoice_date, due_date,
+      subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, status,
+      payment_terms, notes, created_by, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, date('now'), ?, ?, ?, ?, ?, 0, ?, 'issued', 30, ?, ?, datetime('now'), datetime('now'))
+  `).bind(id, tenantId, invoiceNumber, order.customer_id, orderId,
+    dueDate.toISOString().split('T')[0], order.subtotal || 0, order.tax_amount || 0,
+    order.discount_amount || 0, order.total_amount || 0, order.total_amount || 0,
+    `Auto-generated from order ${order.order_number}`, userId).run();
+
+  for (const item of (items.results || [])) {
+    const itemId = uuidv4();
+    await db.prepare(`
+      INSERT INTO invoice_items (id, invoice_id, product_id, quantity, unit_price, cost_price,
+        discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.cost_price || 0,
+      item.discount_percentage || 0, item.discount_amount || 0, item.tax_percentage || 0,
+      item.tax_amount || 0, item.line_total).run();
+  }
+
+  await recordStatusChange(db, tenantId, 'invoice', id, null, 'issued', userId, `Auto-generated from order ${order.order_number}`);
+  return id;
+};
+
+const updateInvoicePaymentStatus = async (db, tenantId, invoiceId, paymentAmount) => {
+  const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ? AND tenant_id = ?').bind(invoiceId, tenantId).first();
+  if (!invoice) return;
+
+  const newAmountPaid = (invoice.amount_paid || 0) + paymentAmount;
+  const newAmountDue = (invoice.total_amount || 0) - newAmountPaid;
+  let newStatus = invoice.status;
+
+  if (newAmountDue <= 0) {
+    newStatus = 'paid';
+  } else if (newAmountPaid > 0 && newAmountDue > 0) {
+    newStatus = 'partially_paid';
+  }
+
+  await db.prepare(`
+    UPDATE invoices SET amount_paid = ?, amount_due = ?, status = ?, updated_at = datetime('now') WHERE id = ?
+  `).bind(newAmountPaid, Math.max(0, newAmountDue), newStatus, invoiceId).run();
+
+  return { newStatus, newAmountPaid, newAmountDue: Math.max(0, newAmountDue) };
+};
+
+const updateCustomerBalance = async (db, tenantId, customerId, amount, transactionType, referenceType, referenceId) => {
+  if (!customerId) return;
+  const customer = await db.prepare('SELECT id, credit_balance FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+  if (!customer) return;
+
+  const currentBalance = customer.credit_balance || 0;
+  let newBalance = currentBalance;
+
+  if (transactionType === 'debit') {
+    newBalance = currentBalance + amount;
+  } else if (transactionType === 'credit') {
+    newBalance = currentBalance - amount;
+  }
+
+  await db.prepare('UPDATE customers SET credit_balance = ?, updated_at = datetime("now") WHERE id = ?').bind(newBalance, customerId).run();
+
+  const ledgerId = uuidv4();
+  await db.prepare(`
+    INSERT INTO customer_ledger (id, tenant_id, customer_id, transaction_type, amount, balance_after,
+      reference_type, reference_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(ledgerId, tenantId, customerId, transactionType, amount, newBalance, referenceType, referenceId).run();
+};
+
+const generateCreditNoteFromReturn = async (db, tenantId, returnId, userId) => {
+  const returnRecord = await db.prepare('SELECT * FROM returns WHERE id = ? AND tenant_id = ?').bind(returnId, tenantId).first();
+  if (!returnRecord) return null;
+
+  const existingCN = await db.prepare('SELECT id FROM credit_notes WHERE return_id = ? AND tenant_id = ? AND status != ?').bind(returnId, tenantId, 'void').first();
+  if (existingCN) return existingCN.id;
+
+  const returnItems = await db.prepare('SELECT * FROM return_items WHERE return_id = ?').bind(returnId).all();
+  const id = uuidv4();
+  const cnNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+
+  let invoiceId = null;
+  if (returnRecord.order_id) {
+    const invoice = await db.prepare('SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(returnRecord.order_id, tenantId, 'void').first();
+    if (invoice) invoiceId = invoice.id;
+  }
+
+  await db.prepare(`
+    INSERT INTO credit_notes (id, tenant_id, credit_note_number, customer_id, invoice_id, return_id,
+      issue_date, subtotal, tax_amount, total_amount, status, reason, notes, created_by, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, date('now'), ?, 0, ?, 'issued', ?, ?, ?, datetime('now'), datetime('now'))
+  `).bind(id, tenantId, cnNumber, returnRecord.customer_id || null, invoiceId, returnId,
+    returnRecord.total_amount || 0, returnRecord.total_amount || 0,
+    returnRecord.reason || 'Return', `Auto-generated from return ${returnRecord.return_number}`, userId).run();
+
+  for (const item of (returnItems.results || [])) {
+    const itemId = uuidv4();
+    await db.prepare(`
+      INSERT INTO credit_note_items (id, credit_note_id, product_id, quantity, unit_price, line_total, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(itemId, id, item.product_id, item.quantity, item.unit_price, item.line_total).run();
+  }
+
+  await recordStatusChange(db, tenantId, 'credit_note', id, null, 'issued', userId, `Auto-generated from return ${returnRecord.return_number}`);
+
+  if (returnRecord.customer_id) {
+    await updateCustomerBalance(db, tenantId, returnRecord.customer_id, returnRecord.total_amount || 0, 'credit', 'credit_note', id);
+  }
+
+  return id;
+};
+
+const createCommissionFromSale = async (db, tenantId, agentId, saleAmount, saleType, referenceId, referenceNumber) => {
+  if (!agentId || !saleAmount) return null;
+
+  const rateSetting = await db.prepare("SELECT value FROM system_settings WHERE tenant_id = ? AND key = 'commission_rate'").bind(tenantId).first();
+  const commissionRate = rateSetting ? parseFloat(rateSetting.value) / 100 : 0.05;
+
+  const commissionAmount = saleAmount * commissionRate;
+  if (commissionAmount <= 0) return null;
+
+  const id = uuidv4();
+  const now = new Date().toISOString();
+  const periodStart = new Date().toISOString().split('T')[0];
+  const periodEnd = periodStart;
+
+  await db.prepare(`
+    INSERT INTO commissions (id, tenant_id, agent_id, period_start, period_end,
+      base_amount, bonus_amount, deductions, total_amount, status, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, 'pending', ?, ?, ?)
+  `).bind(id, tenantId, agentId, periodStart, periodEnd,
+    commissionAmount, commissionAmount,
+    `Auto-calculated: ${commissionRate * 100}% of ${referenceNumber} (${saleType})`, now, now).run();
+
+  const itemId = uuidv4();
+  await db.prepare(`
+    INSERT INTO commission_items (id, commission_id, reference_type, reference_id, sale_amount,
+      commission_rate, commission_amount, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(itemId, id, saleType, referenceId, saleAmount, commissionRate, commissionAmount).run();
+
+  return id;
+};
+
+const generateInvoiceFromVanSale = async (db, tenantId, vanSaleId, userId) => {
+  const sale = await db.prepare('SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?').bind(vanSaleId, tenantId).first();
+  if (!sale || !sale.customer_id) return null;
+  if ((sale.amount_due || 0) <= 0) return null;
+
+  const existingInvoice = await db.prepare('SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(vanSaleId, tenantId, 'void').first();
+  if (existingInvoice) return existingInvoice.id;
+
+  const saleItems = await db.prepare('SELECT * FROM van_sale_items WHERE van_sale_id = ?').bind(vanSaleId).all();
+  const id = uuidv4();
+  const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 30);
+
+  await db.prepare(`
+    INSERT INTO invoices (id, tenant_id, invoice_number, customer_id, order_id, invoice_date, due_date,
+      subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, status,
+      payment_terms, notes, created_by, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, date('now'), ?, ?, ?, ?, ?, ?, ?, 'issued', 30, ?, ?, datetime('now'), datetime('now'))
+  `).bind(id, tenantId, invoiceNumber, sale.customer_id, vanSaleId,
+    dueDate.toISOString().split('T')[0], sale.subtotal || 0, sale.tax_amount || 0,
+    sale.discount_amount || 0, sale.total_amount || 0, sale.amount_paid || 0, sale.amount_due || 0,
+    `Auto-generated from van sale ${sale.sale_number}`, userId).run();
+
+  for (const item of (saleItems.results || [])) {
+    const itemId = uuidv4();
+    await db.prepare(`
+      INSERT INTO invoice_items (id, invoice_id, product_id, quantity, unit_price, cost_price,
+        discount_percentage, discount_amount, tax_percentage, tax_amount, line_total, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, ?, 0, ?, 0, ?, datetime('now'))
+    `).bind(itemId, id, item.product_id, item.quantity, item.unit_price,
+      item.discount_percentage || 0, item.tax_percentage || 0, item.line_total).run();
+  }
+
+  await recordStatusChange(db, tenantId, 'invoice', id, null, 'issued', userId, `Auto-generated from van sale ${sale.sale_number}`);
+  return id;
+};
+
+const applyCreditNoteToInvoice = async (db, tenantId, creditNoteId, invoiceId, userId) => {
+  const cn = await db.prepare('SELECT * FROM credit_notes WHERE id = ? AND tenant_id = ?').bind(creditNoteId, tenantId).first();
+  if (!cn || cn.status !== 'issued') return null;
+
+  const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ? AND tenant_id = ?').bind(invoiceId, tenantId).first();
+  if (!invoice) return null;
+
+  const creditAmount = Math.min(cn.total_amount || 0, invoice.amount_due || 0);
+  if (creditAmount <= 0) return null;
+
+  await updateInvoicePaymentStatus(db, tenantId, invoiceId, creditAmount);
+
+  await db.prepare(`
+    UPDATE credit_notes SET status = 'applied', applied_to_invoice_id = ?, applied_amount = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `).bind(invoiceId, creditAmount, creditNoteId).run();
+
+  await recordStatusChange(db, tenantId, 'credit_note', creditNoteId, 'issued', 'applied', userId, `Applied ${creditAmount} to invoice ${invoice.invoice_number}`);
+  return creditAmount;
+};
+
 // ==================== ENHANCED ORDER ENDPOINTS ====================
 // Create order with server-side pricing - requires orders:create permission
 api.post('/orders/create', requirePermission('orders:create'), async (c) => {
@@ -2955,13 +3173,23 @@ api.post('/orders/:id/transition', requirePermission('orders:edit'), async (c) =
     await recordStatusChange(db, tenantId, 'order', id, currentStatus, new_status, userId, notes);
     
     // Handle side effects based on new status
+    let invoiceId = null;
+    let commissionId = null;
+
+    if (new_status === 'confirmed' || new_status === 'submitted') {
+      try {
+        invoiceId = await generateInvoiceFromOrder(db, tenantId, id, userId);
+        if (order.customer_id) {
+          await updateCustomerBalance(db, tenantId, order.customer_id, order.total_amount || 0, 'debit', 'order', id);
+        }
+      } catch (e) { console.error('Auto-invoice generation error:', e); }
+    }
+
     if (new_status === 'fulfilled' || new_status === 'delivered') {
-      // Deduct inventory
       const items = await db.prepare(
         'SELECT product_id, quantity FROM order_items WHERE order_id = ?'
       ).bind(id).all();
       
-      // Get default warehouse
       const warehouse = await db.prepare(
         'SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1'
       ).bind(tenantId).first();
@@ -2974,10 +3202,22 @@ api.post('/orders/:id/transition', requirePermission('orders:edit'), async (c) =
           );
         }
       }
+
+      try {
+        if (!invoiceId) {
+          invoiceId = await generateInvoiceFromOrder(db, tenantId, id, userId);
+        }
+        commissionId = await createCommissionFromSale(db, tenantId, order.salesman_id || order.created_by, order.total_amount || 0, 'order', id, order.order_number);
+      } catch (e) { console.error('Auto-commission/invoice error:', e); }
+    }
+
+    if (new_status === 'completed') {
+      try {
+        commissionId = await createCommissionFromSale(db, tenantId, order.salesman_id || order.created_by, order.total_amount || 0, 'order', id, order.order_number);
+      } catch (e) { console.error('Auto-commission error:', e); }
     }
     
     if (new_status === 'cancelled') {
-      // If order was fulfilled, restore inventory
       if (['fulfilled', 'delivered', 'partially_delivered'].includes(currentStatus)) {
         const items = await db.prepare(
           'SELECT product_id, quantity FROM order_items WHERE order_id = ?'
@@ -2996,6 +3236,11 @@ api.post('/orders/:id/transition', requirePermission('orders:edit'), async (c) =
           }
         }
       }
+      if (order.customer_id) {
+        try {
+          await updateCustomerBalance(db, tenantId, order.customer_id, order.total_amount || 0, 'credit', 'order_cancellation', id);
+        } catch (e) { console.error('Balance reversal error:', e); }
+      }
     }
     
     return c.json({
@@ -3004,6 +3249,8 @@ api.post('/orders/:id/transition', requirePermission('orders:edit'), async (c) =
         id,
         old_status: currentStatus,
         new_status,
+        invoice_id: invoiceId,
+        commission_id: commissionId,
         allowed_transitions: ORDER_STATUSES[new_status]?.next || []
       },
       message: `Order status updated to ${new_status}`
@@ -3210,12 +3457,38 @@ api.post('/van-sales/create', async (c) => {
     // Record status
     await recordStatusChange(db, tenantId, 'van_sale', id, null, status, userId, 'Van sale created');
     
+    let invoiceId = null;
+    let commissionId = null;
+
+    if (status === 'completed') {
+      try {
+        commissionId = await createCommissionFromSale(db, tenantId, body.agent_id || userId, totals.total_amount, 'van_sale', id, saleNumber);
+      } catch (e) { console.error('Van sale auto-commission error:', e); }
+
+      if (amountDue > 0 && body.customer_id) {
+        try {
+          invoiceId = await generateInvoiceFromVanSale(db, tenantId, id, userId);
+        } catch (e) { console.error('Van sale auto-invoice error:', e); }
+      }
+
+      if (body.customer_id) {
+        try {
+          await updateCustomerBalance(db, tenantId, body.customer_id, totals.total_amount, 'debit', 'van_sale', id);
+          if (amountPaid > 0) {
+            await updateCustomerBalance(db, tenantId, body.customer_id, amountPaid, 'credit', 'van_sale_payment', id);
+          }
+        } catch (e) { console.error('Van sale customer balance error:', e); }
+      }
+    }
+
     return c.json({
       success: true,
       data: {
         id,
         sale_number: saleNumber,
         status,
+        invoice_id: invoiceId,
+        commission_id: commissionId,
         items: calculatedItems,
         ...totals,
         amount_paid: amountPaid,
@@ -3342,9 +3615,15 @@ api.post('/returns/:id/approve', async (c) => {
     
     await recordStatusChange(db, tenantId, 'return', id, 'pending', 'approved', userId, 'Return approved');
     
+    let creditNoteId = null;
+    try {
+      creditNoteId = await generateCreditNoteFromReturn(db, tenantId, id, userId);
+    } catch (e) { console.error('Auto credit note generation error:', e); }
+
     return c.json({
       success: true,
-      message: 'Return approved and inventory restored'
+      data: { credit_note_id: creditNoteId },
+      message: 'Return approved, inventory restored, and credit note generated'
     });
   } catch (error) {
     console.error('Approve return error:', error);
@@ -4013,12 +4292,41 @@ api.get('/sales/payments/:id', async (c) => {
 api.post('/sales/payments', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
   try {
     const body = await c.req.json();
+    const id = uuidv4();
     const paymentNumber = 'PAY-' + Date.now();
-    const result = await db.prepare('INSERT INTO payments (tenant_id, payment_number, order_id, customer_id, amount, payment_method, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, paymentNumber, body.order_id || null, body.customer_id || null, body.amount, body.payment_method || 'cash', body.status || 'completed', body.notes || null).run();
-    return c.json({ success: true, data: { id: result.meta.last_row_id, payment_number: paymentNumber } }, 201);
-  } catch (e) { return c.json({ success: false, error: 'Error creating payment' }, 500); }
+    await db.prepare(`INSERT INTO payments (id, tenant_id, payment_number, invoice_id, order_id, customer_id, amount, payment_method, status, notes, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))`).bind(id, tenantId, paymentNumber, body.invoice_id || null, body.order_id || null, body.customer_id || null, body.amount, body.payment_method || 'cash', body.status || 'completed', body.notes || null, userId).run();
+
+    let invoiceUpdate = null;
+    if (body.invoice_id) {
+      try {
+        invoiceUpdate = await updateInvoicePaymentStatus(db, tenantId, body.invoice_id, body.amount);
+      } catch (e) { console.error('Invoice payment update error:', e); }
+    } else if (body.order_id) {
+      try {
+        const invoice = await db.prepare('SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(body.order_id, tenantId, 'void').first();
+        if (invoice) {
+          invoiceUpdate = await updateInvoicePaymentStatus(db, tenantId, invoice.id, body.amount);
+        }
+      } catch (e) { console.error('Invoice lookup/update error:', e); }
+    }
+
+    if (body.customer_id && (body.status || 'completed') === 'completed') {
+      try {
+        await updateCustomerBalance(db, tenantId, body.customer_id, body.amount, 'credit', 'payment', id);
+      } catch (e) { console.error('Customer balance update error:', e); }
+    }
+
+    if (body.order_id) {
+      try {
+        await db.prepare("UPDATE orders SET payment_status = ? WHERE id = ? AND tenant_id = ?").bind(invoiceUpdate?.newStatus === 'paid' ? 'paid' : invoiceUpdate?.newStatus === 'partially_paid' ? 'partial' : 'pending', body.order_id, tenantId).run();
+      } catch (e) { console.error('Order payment status update error:', e); }
+    }
+
+    return c.json({ success: true, data: { id, payment_number: paymentNumber, invoice_update: invoiceUpdate } }, 201);
+  } catch (e) { console.error('Create payment error:', e); return c.json({ success: false, error: 'Error creating payment' }, 500); }
 });
 
 api.post('/settings/initialize', async (c) => {
@@ -4772,7 +5080,8 @@ api.post('/sales/returns/:id/transition', async (c) => {
     await db.prepare('UPDATE returns SET status = ?, updated_at = datetime("now") WHERE id = ?').bind(new_status, id).run();
     await recordStatusChange(db, tenantId, 'return', id, currentStatus, new_status, userId, notes);
     
-    // Restore inventory when approved
+    let creditNoteId = null;
+
     if (new_status === 'approved' || new_status === 'processed') {
       const items = await db.prepare('SELECT product_id, quantity FROM return_items WHERE return_id = ?').bind(id).all();
       const warehouse = await db.prepare('SELECT id FROM warehouses WHERE tenant_id = ? LIMIT 1').bind(tenantId).first();
@@ -4782,9 +5091,13 @@ api.post('/sales/returns/:id/transition', async (c) => {
           await createStockMovement(db, tenantId, warehouse.id, item.product_id, item.quantity, 'return', 'return', id, userId, `Return ${returnRecord.return_number} - stock restored`);
         }
       }
+
+      try {
+        creditNoteId = await generateCreditNoteFromReturn(db, tenantId, id, userId);
+      } catch (e) { console.error('Auto credit note from return transition error:', e); }
     }
     
-    return c.json({ success: true, data: { id, old_status: currentStatus, new_status }, message: `Return status updated to ${new_status}` });
+    return c.json({ success: true, data: { id, old_status: currentStatus, new_status, credit_note_id: creditNoteId }, message: `Return status updated to ${new_status}` });
   } catch (error) {
     console.error('Return transition error:', error);
     return c.json({ success: false, message: error.message }, 500);
@@ -14907,6 +15220,192 @@ app.post('/seed-demo-data', async (c) => {
   } catch (error) {
     console.error('Seed error at step:', currentStep, error);
     return c.json({ success: false, message: 'Failed to seed demo data', step: currentStep, error: error.message }, 500);
+  }
+});
+
+// ==================== CROSS-MODULE BUSINESS RULE ENDPOINTS ====================
+
+api.get('/customers/:id/balance', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const customer = await db.prepare('SELECT id, name, credit_balance FROM customers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
+
+    const outstandingInvoices = await db.prepare(`
+      SELECT COUNT(*) as count, COALESCE(SUM(amount_due), 0) as total_due
+      FROM invoices WHERE customer_id = ? AND tenant_id = ? AND status IN ('issued', 'partially_paid', 'overdue')
+    `).bind(id, tenantId).first();
+
+    const totalPayments = await db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE customer_id = ? AND tenant_id = ? AND status = 'completed'
+    `).bind(id, tenantId).first();
+
+    const pendingCredits = await db.prepare(`
+      SELECT COALESCE(SUM(total_amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
+    `).bind(id, tenantId).first();
+
+    return c.json({
+      success: true,
+      data: {
+        customer_id: id,
+        customer_name: customer.name,
+        credit_balance: customer.credit_balance || 0,
+        outstanding_invoices: outstandingInvoices?.count || 0,
+        total_outstanding: outstandingInvoices?.total_due || 0,
+        total_payments: totalPayments?.total || 0,
+        pending_credits: pendingCredits?.total || 0
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/customers/:id/ledger', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const { limit = 50, offset = 0 } = c.req.query();
+
+  try {
+    const ledger = await db.prepare(`
+      SELECT * FROM customer_ledger WHERE customer_id = ? AND tenant_id = ?
+      ORDER BY created_at DESC LIMIT ? OFFSET ?
+    `).bind(id, tenantId, parseInt(limit), parseInt(offset)).all();
+
+    return c.json({ success: true, data: ledger.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/credit-notes/:id/apply', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { invoice_id } = await c.req.json();
+
+  try {
+    if (!invoice_id) return c.json({ success: false, message: 'invoice_id is required' }, 400);
+    const creditAmount = await applyCreditNoteToInvoice(db, tenantId, id, invoice_id, userId);
+    if (!creditAmount) return c.json({ success: false, message: 'Could not apply credit note' }, 400);
+    return c.json({ success: true, data: { credit_amount: creditAmount }, message: 'Credit note applied to invoice' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/finance/summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+
+  try {
+    const [invoiceStats, paymentStats, creditNoteStats, orderStats, commissionStats] = await Promise.all([
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_invoices,
+          COALESCE(SUM(total_amount), 0) as total_invoiced,
+          COALESCE(SUM(amount_paid), 0) as total_collected,
+          COALESCE(SUM(amount_due), 0) as total_outstanding,
+          SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count,
+          SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue_count,
+          SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END) as partial_count
+        FROM invoices WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_payments,
+          COALESCE(SUM(amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_amount
+        FROM payments WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_credit_notes,
+          COALESCE(SUM(total_amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'issued' THEN total_amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'applied' THEN total_amount ELSE 0 END) as applied_amount
+        FROM credit_notes WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_orders,
+          COALESCE(SUM(total_amount), 0) as total_sales,
+          SUM(CASE WHEN order_status = 'completed' OR order_status = 'delivered' THEN total_amount ELSE 0 END) as completed_sales,
+          SUM(CASE WHEN order_status = 'pending' THEN total_amount ELSE 0 END) as pending_sales
+        FROM orders WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_commissions,
+          COALESCE(SUM(total_amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid_amount
+        FROM commissions WHERE tenant_id = ?
+      `).bind(tenantId).first()
+    ]);
+
+    return c.json({
+      success: true,
+      data: {
+        invoices: invoiceStats,
+        payments: paymentStats,
+        credit_notes: creditNoteStats,
+        orders: orderStats,
+        commissions: commissionStats,
+        net_revenue: (orderStats?.completed_sales || 0) - (creditNoteStats?.applied_amount || 0),
+        collection_rate: invoiceStats?.total_invoiced > 0
+          ? ((invoiceStats?.total_collected || 0) / invoiceStats.total_invoiced * 100).toFixed(1)
+          : 0
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/orders/:id/invoice', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const invoice = await db.prepare('SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
+    if (!invoice) return c.json({ success: false, message: 'No invoice found for this order' }, 404);
+    return c.json({ success: true, data: invoice });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/invoices/:id/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const payments = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: payments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/returns/:id/credit-note', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const creditNote = await db.prepare('SELECT * FROM credit_notes WHERE return_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
+    if (!creditNote) return c.json({ success: false, message: 'No credit note found for this return' }, 404);
+    return c.json({ success: true, data: creditNote });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
   }
 });
 

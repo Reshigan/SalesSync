@@ -77,7 +77,7 @@ export default function RelatedDocumentsPanel({ entityType, entityId }: RelatedD
             <div
               key={doc.id}
               onClick={() => navigate(`/${doc.related_entity_type}s/${doc.related_entity_id}`)}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-surface-secondary cursor-pointer"
+              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
             >
               <div className="flex items-center gap-3 flex-1">
                 <Link2 className="h-5 w-5 text-gray-400" />

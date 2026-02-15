@@ -401,17 +401,17 @@ export default function ProductDetailsPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Movement History</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-surface-secondary">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+                    <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {stockHistory.map((entry, index) => (
-                    <tr key={index} className="hover:bg-surface-secondary">
+                    <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {new Date(entry.date).toLocaleDateString()}
                       </td>
@@ -476,11 +476,11 @@ export default function ProductDetailsPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Pricing Analysis</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-4 bg-surface-secondary rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">List Price</span>
                 <span className="text-lg font-semibold text-gray-900">${product.unitPrice.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-center p-4 bg-surface-secondary rounded-lg">
+              <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">Cost Price</span>
                 <span className="text-lg font-semibold text-gray-900">${product.costPrice.toFixed(2)}</span>
               </div>

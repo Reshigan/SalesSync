@@ -156,7 +156,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
     <div className="space-y-6">
       {/* Add Product Section */}
       {!readonly && (
-        <div className="bg-surface-secondary border border-gray-100 rounded-lg p-4">
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
           <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add Product
@@ -219,25 +219,25 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-surface-secondary">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Unit Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Tax Rate
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Line Total
                   </th>
                   {!readonly && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   )}
@@ -245,7 +245,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {orderLines.map((line, index) => (
-                  <tr key={index} className="hover:bg-surface-secondary">
+                  <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{line.product_name}</div>
                     </td>
@@ -293,7 +293,7 @@ export const OrderProductSelector: React.FC<OrderProductSelectorProps> = ({
 
       {/* Totals Section */}
       {orderLines.length > 0 && (
-        <div className="bg-surface-secondary border border-gray-100 rounded-lg p-4">
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal:</span>

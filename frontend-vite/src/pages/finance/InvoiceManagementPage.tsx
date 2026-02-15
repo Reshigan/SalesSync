@@ -107,43 +107,43 @@ export default function InvoiceManagementPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Invoiced</p>
+              <p className="text-gray-400 text-sm">Total Invoiced</p>
               <p className="text-3xl font-bold mt-1">${stats.total.toLocaleString()}</p>
             </div>
-            <FileText className="w-12 h-12 text-blue-200" />
+            <FileText className="w-12 h-12 text-[#C0E02E]" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Paid</p>
+              <p className="text-gray-500 text-sm">Paid</p>
               <p className="text-3xl font-bold mt-1">${stats.paid.toLocaleString()}</p>
             </div>
-            <Check className="w-12 h-12 text-green-200" />
+            <Check className="w-12 h-12 text-green-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-100 text-sm">Pending</p>
+              <p className="text-gray-500 text-sm">Pending</p>
               <p className="text-3xl font-bold mt-1">${stats.pending.toLocaleString()}</p>
             </div>
-            <Clock className="w-12 h-12 text-yellow-200" />
+            <Clock className="w-12 h-12 text-yellow-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-red-500 to-red-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-100 text-sm">Overdue</p>
+              <p className="text-gray-500 text-sm">Overdue</p>
               <p className="text-3xl font-bold mt-1">${stats.overdue.toLocaleString()}</p>
             </div>
-            <X className="w-12 h-12 text-red-200" />
+            <X className="w-12 h-12 text-red-500" />
           </div>
         </div>
       </div>
@@ -180,20 +180,20 @@ export default function InvoiceManagementPage() {
       <div className="card">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Due Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredInvoices.map((invoice) => (
-                <tr key={invoice.id} className="hover:bg-surface-secondary">
+                <tr key={invoice.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-gray-900">{invoice.invoiceNumber}</div>
                     <div className="text-sm text-gray-500">{invoice.paymentTerms}</div>
@@ -270,7 +270,7 @@ export default function InvoiceManagementPage() {
 
                 <div>
                   <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg">
-                    <thead className="bg-surface-secondary">
+                    <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Product</th>
                         <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Qty</th>

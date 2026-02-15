@@ -364,7 +364,7 @@ export default function InventoryDashboard() {
           </div>
           <div className="space-y-3">
             {(analytics?.recent_movements || []).slice(0, 5).map((movement: any) => (
-              <div key={movement.id} className="flex items-center justify-between p-3 bg-surface-secondary rounded-lg">
+              <div key={movement.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center">
                   <div className={`w-3 h-3 rounded-full mr-3 ${
                     movement.movement_type === 'inbound' ? 'bg-green-500' : 'bg-red-500'
@@ -395,7 +395,7 @@ export default function InventoryDashboard() {
           <BarChart3 className="w-5 h-5 text-gray-400" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Stockout Rate</h4>
               <AlertTriangle className="w-4 h-4 text-red-500" />
@@ -420,7 +420,7 @@ export default function InventoryDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Fill Rate</h4>
               <CheckCircle className="w-4 h-4 text-green-500" />
@@ -443,7 +443,7 @@ export default function InventoryDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Inventory Accuracy</h4>
               <CheckCircle className="w-4 h-4 text-blue-500" />
@@ -466,7 +466,7 @@ export default function InventoryDashboard() {
             </div>
           </div>
 
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between mb-2">
               <h4 className="font-medium text-gray-900">Carrying Cost</h4>
               <DollarSign className="w-4 h-4 text-purple-500" />

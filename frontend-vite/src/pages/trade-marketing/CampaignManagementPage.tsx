@@ -83,14 +83,14 @@ export default function CampaignManagementPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campaign Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Brand</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Budget</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Campaign Name</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Duration</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Budget</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -98,7 +98,7 @@ export default function CampaignManagementPage() {
                 <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500"><Target className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No campaigns found</p></td></tr>
               ) : (
                 campaigns.map(campaign => (
-                  <tr key={campaign.id} className="hover:bg-surface-secondary">
+                  <tr key={campaign.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{campaign.campaign_name}</div><div className="text-sm text-gray-500">{campaign.description}</div></td>
                     <td className="px-6 py-4 text-sm text-gray-900">{campaign.brand_name}</td>
                     <td className="px-6 py-4"><div className="text-sm text-gray-900">{new Date(campaign.start_date).toLocaleDateString()}</div><div className="text-sm text-gray-500">to {new Date(campaign.end_date).toLocaleDateString()}</div></td>

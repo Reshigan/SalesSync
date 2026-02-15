@@ -69,7 +69,7 @@ export default function AuditTrailSearch({ entityType, entityId }: AuditTrailSea
             Found {results.length} result{results.length !== 1 ? 's' : ''}
           </p>
           {results.map((result) => (
-            <div key={result.id} className="border rounded-lg p-4 hover:bg-surface-secondary cursor-pointer">
+            <div key={result.id} className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
               <div className="flex items-start justify-between mb-2">
                 <h3 className="text-sm font-semibold text-gray-900">{result.description}</h3>
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 capitalize">

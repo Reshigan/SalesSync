@@ -123,31 +123,31 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
     <div className="space-y-4">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Product
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Code
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Quantity
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Unit Price
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Discount %
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Tax %
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Line Total
               </th>
               {!readonly && (
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               )}
@@ -155,7 +155,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items.map((item, index) => (
-              <tr key={index} className="hover:bg-surface-secondary">
+              <tr key={index} className="hover:bg-gray-50">
                 {editingIndex === index ? (
                   <>
                     <td className="px-4 py-3">
@@ -371,7 +371,7 @@ export const LineItemTable: React.FC<LineItemTableProps> = ({
               </tr>
             )}
           </tbody>
-          <tfoot className="bg-surface-secondary">
+          <tfoot className="bg-gray-50">
             <tr>
               <td colSpan={readonly ? 6 : 7} className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                 Subtotal:

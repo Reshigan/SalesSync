@@ -77,7 +77,7 @@ export default function SurveyResponseEdit() {
 
       <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="bg-white rounded-lg shadow p-6">
         <div className="space-y-6">
-          <div className="p-4 bg-surface-secondary rounded-lg">
+          <div className="p-4 bg-gray-50 rounded-lg">
             <p className="text-sm font-medium text-gray-700 mb-2">Question</p>
             <p className="text-gray-900">{response.question_text}</p>
           </div>

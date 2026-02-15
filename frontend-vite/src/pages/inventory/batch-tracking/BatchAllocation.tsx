@@ -116,20 +116,20 @@ export default function BatchAllocation() {
           <h2 className="text-lg font-semibold text-gray-900">Allocation Details</h2>
         </div>
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Ship</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Allocated Date</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Expected Ship</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {allocations?.map((allocation) => (
-              <tr key={allocation.id} className="hover:bg-surface-secondary">
+              <tr key={allocation.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {allocation.order_number}
                 </td>

@@ -75,16 +75,16 @@ export default function StockTransferPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transfer #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">To Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Transfer Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requested By</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Transfer #</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">From Warehouse</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">To Warehouse</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Transfer Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Items</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Requested By</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -92,7 +92,7 @@ export default function StockTransferPage() {
                 <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-500"><TrendingRight className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No stock transfers found</p></td></tr>
               ) : (
                 transfers.map(transfer => (
-                  <tr key={transfer.id} className="hover:bg-surface-secondary">
+                  <tr key={transfer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{transfer.transfer_number}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{transfer.from_warehouse_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{transfer.to_warehouse_name}</td>

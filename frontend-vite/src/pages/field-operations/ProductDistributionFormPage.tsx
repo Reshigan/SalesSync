@@ -369,7 +369,7 @@ export default function ProductDistributionFormPage() {
                   <p className="text-sm text-gray-600 mt-1">Commission Earned</p>
                   <p className="text-xs text-gray-500 mt-1">$5.00 × {quantity} units</p>
                 </div>
-                <div className="bg-surface-secondary rounded-lg p-4 text-left space-y-2">
+                <div className="bg-gray-50 rounded-lg p-4 text-left space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Customer:</span>
                     <span className="font-medium">{selectedCustomer?.name}</span>
@@ -435,7 +435,7 @@ export default function ProductDistributionFormPage() {
           {activeStep > 0 && (
             <button
               onClick={handleBack}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-surface-secondary"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
             >
               Back
             </button>

@@ -182,7 +182,7 @@ export default function MovementDetail() {
               <button
                 key={idx}
                 onClick={() => navigate(doc.url)}
-                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-surface-secondary w-full text-left"
+                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 w-full text-left"
               >
                 <FileText className="h-5 w-5 text-gray-400" />
                 <div>

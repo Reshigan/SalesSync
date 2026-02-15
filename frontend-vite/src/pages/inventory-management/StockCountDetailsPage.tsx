@@ -84,14 +84,14 @@ export default function StockCountDetailsPage() {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">System Qty</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Physical Qty</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">System Qty</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Physical Qty</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Variance</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

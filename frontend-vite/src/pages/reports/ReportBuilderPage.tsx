@@ -110,7 +110,7 @@ const ReportBuilderPage: React.FC = () => {
               </thead>
               <tbody>
                 {data.rows?.map((row: any[], i: number) => (
-                  <tr key={i} className="border-t hover:bg-surface-secondary">
+                  <tr key={i} className="border-t hover:bg-gray-50">
                     {row.map((cell, j) => <td key={j} className="px-4 py-3">{cell}</td>)}
                   </tr>
                 ))}

@@ -153,14 +153,14 @@ export default function VisitConfigurationPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Range</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Features</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Target</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date Range</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Features</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -174,7 +174,7 @@ export default function VisitConfigurationPage() {
                 </tr>
               ) : (
                 configurations?.map((config: VisitConfiguration) => (
-                  <tr key={config.id} className="hover:bg-surface-secondary">
+                  <tr key={config.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">{config.name}</div>
                       <div className="text-sm text-gray-500">{config.description}</div>
@@ -520,7 +520,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-surface-secondary"
+              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>

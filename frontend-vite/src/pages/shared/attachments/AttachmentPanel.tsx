@@ -63,7 +63,7 @@ export default function AttachmentPanel({ entityType, entityId }: AttachmentPane
       {attachments && attachments.length > 0 ? (
         <div className="space-y-3">
           {attachments.map((attachment) => (
-            <div key={attachment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-surface-secondary">
+            <div key={attachment.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
               <div className="flex items-center gap-3 flex-1">
                 <Paperclip className="h-5 w-5 text-gray-400" />
                 <div className="flex-1 min-w-0">

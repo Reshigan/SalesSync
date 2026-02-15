@@ -132,7 +132,7 @@ export default function PayoutAuditTrail() {
                 </div>
 
                 {entry.details && Object.keys(entry.details).length > 0 && (
-                  <div className="mt-3 p-3 bg-surface-secondary rounded">
+                  <div className="mt-3 p-3 bg-gray-50 rounded">
                     <p className="text-sm font-medium text-gray-700 mb-2">Details</p>
                     <dl className="grid grid-cols-2 gap-2">
                       {Object.entries(entry.details).map(([key, value]) => (

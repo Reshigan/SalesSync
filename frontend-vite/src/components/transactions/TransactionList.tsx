@@ -105,7 +105,7 @@ export default function TransactionList({
 
       {/* Filters Panel */}
       {showFilters && filters && (
-        <div className="bg-surface-secondary p-4 rounded-lg border border-gray-100">
+        <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
           {filters}
         </div>
       )}
@@ -115,7 +115,7 @@ export default function TransactionList({
         <DataTable
           columns={columns.map(col => ({
             ...col,
-            header: col.label
+            title: col.label
           }))}
           data={filteredData}
           loading={loading}

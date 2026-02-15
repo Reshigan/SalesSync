@@ -225,19 +225,19 @@ const AnalyticsDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">Detailed Analytics</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <a href="/analytics/orders" className="p-4 border rounded hover:bg-surface-secondary text-center">
+          <a href="/analytics/orders" className="p-4 border rounded hover:bg-gray-50 text-center">
             <div className="text-2xl mb-2">📊</div>
             <div className="font-medium">Orders</div>
           </a>
-          <a href="/analytics/customers" className="p-4 border rounded hover:bg-surface-secondary text-center">
+          <a href="/analytics/customers" className="p-4 border rounded hover:bg-gray-50 text-center">
             <div className="text-2xl mb-2">👥</div>
             <div className="font-medium">Customers</div>
           </a>
-          <a href="/analytics/field-ops" className="p-4 border rounded hover:bg-surface-secondary text-center">
+          <a href="/analytics/field-ops" className="p-4 border rounded hover:bg-gray-50 text-center">
             <div className="text-2xl mb-2">📍</div>
             <div className="font-medium">Field Ops</div>
           </a>
-          <a href="/analytics/commissions" className="p-4 border rounded hover:bg-surface-secondary text-center">
+          <a href="/analytics/commissions" className="p-4 border rounded hover:bg-gray-50 text-center">
             <div className="text-2xl mb-2">💰</div>
             <div className="font-medium">Commissions</div>
           </a>

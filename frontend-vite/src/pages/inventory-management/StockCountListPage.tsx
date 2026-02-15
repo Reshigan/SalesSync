@@ -84,16 +84,16 @@ export default function StockCountListPage() {
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-surface-secondary">
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Count #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Count Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Counter</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Items</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variances</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Count #</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Warehouse</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Count Date</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Counter</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Items</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Variances</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -101,7 +101,7 @@ export default function StockCountListPage() {
                 <tr><td colSpan={8} className="px-6 py-12 text-center text-gray-500"><Clock className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No stock counts found</p></td></tr>
               ) : (
                 counts.map(count => (
-                  <tr key={count.id} className="hover:bg-surface-secondary">
+                  <tr key={count.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{count.count_number}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{count.warehouse_name}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{new Date(count.count_date).toLocaleDateString()}</td>

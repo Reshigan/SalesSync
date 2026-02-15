@@ -13,7 +13,7 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
     <div className="card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-surface-secondary">
+          <thead className="bg-gray-50">
             <tr>
               {[1, 2, 3, 4, 5].map((i) => (
                 <th key={i} className="px-6 py-3">
