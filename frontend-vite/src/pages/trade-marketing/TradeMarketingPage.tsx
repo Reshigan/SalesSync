@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_CONFIG } from '../../config/api.config'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { TrendingUp, Target, DollarSign, Users, BarChart3, Calendar, Plus, Filter, Award, Zap, ShoppingCart, TrendingDown } from 'lucide-react'
@@ -87,7 +88,7 @@ export default function TradeMarketingPage() {
       const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
       
       // Fetch metrics
-      const metricsResponse = await fetch('/api/trade-marketing/metrics', {
+      const metricsResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/metrics`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'X-Tenant-Code': tenantCode
@@ -99,7 +100,7 @@ export default function TradeMarketingPage() {
       }
 
       // Fetch promotions
-      const promotionsResponse = await fetch('/api/trade-marketing/promotions', {
+      const promotionsResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/promotions`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'X-Tenant-Code': tenantCode
@@ -111,7 +112,7 @@ export default function TradeMarketingPage() {
       }
 
       // Fetch channel partners
-      const partnersResponse = await fetch('/api/trade-marketing/channel-partners', {
+      const partnersResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/channel-partners`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'X-Tenant-Code': tenantCode
@@ -123,7 +124,7 @@ export default function TradeMarketingPage() {
       }
 
       // Fetch competitor analysis
-      const competitorResponse = await fetch('/api/trade-marketing/competitor-analysis', {
+      const competitorResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/competitor-analysis`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'X-Tenant-Code': tenantCode
