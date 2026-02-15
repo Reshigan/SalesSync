@@ -388,6 +388,18 @@ api.get('/products/stats', async (c) => {
   } catch (e) { return c.json({ success: true, data: { total: 0, active: 0, low_stock: 0 } }); }
 });
 
+
+api.get('/products/export', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const products = await db.prepare('SELECT * FROM products WHERE tenant_id = ?').bind(tenantId).all();
+    return c.json({ success: true, data: products.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/products/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -2635,6 +2647,36 @@ api.get('/discounts', async (c) => {
 });
 
 // Get single discount
+api.get('/discounts/applicable', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { product_id, customer_id, category_id } = c.req.query();
+  
+  const now = new Date().toISOString().split('T')[0];
+  
+  let query = `
+    SELECT * FROM discounts 
+    WHERE tenant_id = ? AND is_active = 1
+    AND (start_date IS NULL OR start_date <= ?)
+    AND (end_date IS NULL OR end_date >= ?)
+    AND (
+      applicable_to = 'all'
+      ${product_id ? "OR (applicable_to = 'product' AND product_ids LIKE ?)" : ''}
+      ${customer_id ? "OR (applicable_to = 'customer' AND customer_ids LIKE ?)" : ''}
+      ${category_id ? "OR (applicable_to = 'category' AND category_ids LIKE ?)" : ''}
+    )
+    ORDER BY value DESC
+  `;
+  
+  const params = [tenantId, now, now];
+  if (product_id) params.push(`%${product_id}%`);
+  if (customer_id) params.push(`%${customer_id}%`);
+  if (category_id) params.push(`%${category_id}%`);
+  
+  const discounts = await db.prepare(query).bind(...params).all();
+  return c.json({ success: true, data: discounts.results });
+});
+
 api.get('/discounts/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -2710,35 +2752,6 @@ api.delete('/discounts/:id', async (c) => {
 });
 
 // Get applicable discounts for a product/customer
-api.get('/discounts/applicable', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { product_id, customer_id, category_id } = c.req.query();
-  
-  const now = new Date().toISOString().split('T')[0];
-  
-  let query = `
-    SELECT * FROM discounts 
-    WHERE tenant_id = ? AND is_active = 1
-    AND (start_date IS NULL OR start_date <= ?)
-    AND (end_date IS NULL OR end_date >= ?)
-    AND (
-      applicable_to = 'all'
-      ${product_id ? "OR (applicable_to = 'product' AND product_ids LIKE ?)" : ''}
-      ${customer_id ? "OR (applicable_to = 'customer' AND customer_ids LIKE ?)" : ''}
-      ${category_id ? "OR (applicable_to = 'category' AND category_ids LIKE ?)" : ''}
-    )
-    ORDER BY value DESC
-  `;
-  
-  const params = [tenantId, now, now];
-  if (product_id) params.push(`%${product_id}%`);
-  if (customer_id) params.push(`%${customer_id}%`);
-  if (category_id) params.push(`%${category_id}%`);
-  
-  const discounts = await db.prepare(query).bind(...params).all();
-  return c.json({ success: true, data: discounts.results });
-});
 
 const calculateOrderTotals = (items) => {
   const subtotal = items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0);
@@ -2823,9 +2836,9 @@ const recordStatusChange = async (db, tenantId, entityType, entityId, oldStatus,
 const createStockMovement = async (db, tenantId, warehouseId, productId, quantity, movementType, referenceType, referenceId, userId, notes = null) => {
   const id = uuidv4();
   await db.prepare(`
-    INSERT INTO stock_movements (id, tenant_id, warehouse_id, product_id, quantity, movement_type, reference_type, reference_id, created_by, notes, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, warehouseId, productId, quantity, movementType, referenceType, referenceId, userId, notes).run();
+    INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, reference_type, reference_id, created_by, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, productId, quantity, movementType, referenceType, referenceId, userId, notes).run();
   
   // Update inventory stock
   const existingStock = await db.prepare(
@@ -3888,6 +3901,93 @@ api.get('/finance/payments', async (c) => {
   } catch (e) { return c.json({ success: true, data: { payments: [], pagination: { total: 0 } } }); }
 });
 
+api.get('/finance/cash-reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const reconciliations = await db.prepare(`
+      SELECT cr.*, u.first_name || ' ' || u.last_name as agent_name
+      FROM cash_reconciliations cr
+      LEFT JOIN users u ON cr.agent_id = u.id
+      WHERE cr.tenant_id = ?
+      ORDER BY cr.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: reconciliations.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+
+api.get('/finance/summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+
+  try {
+    const [invoiceStats, paymentStats, creditNoteStats, orderStats, commissionStats] = await Promise.all([
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_invoices,
+          COALESCE(SUM(total_amount), 0) as total_invoiced,
+          COALESCE(SUM(amount_paid), 0) as total_collected,
+          COALESCE(SUM(amount_due), 0) as total_outstanding,
+          SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count,
+          SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue_count,
+          SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END) as partial_count
+        FROM invoices WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_payments,
+          COALESCE(SUM(amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_amount
+        FROM payments WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_credit_notes,
+          COALESCE(SUM(total_amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'issued' THEN total_amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'applied' THEN total_amount ELSE 0 END) as applied_amount
+        FROM credit_notes WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_orders,
+          COALESCE(SUM(total_amount), 0) as total_sales,
+          SUM(CASE WHEN order_status = 'completed' OR order_status = 'delivered' THEN total_amount ELSE 0 END) as completed_sales,
+          SUM(CASE WHEN order_status = 'pending' THEN total_amount ELSE 0 END) as pending_sales
+        FROM orders WHERE tenant_id = ?
+      `).bind(tenantId).first(),
+      db.prepare(`
+        SELECT
+          COUNT(*) as total_commissions,
+          COALESCE(SUM(total_amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid_amount
+        FROM commissions WHERE tenant_id = ?
+      `).bind(tenantId).first()
+    ]);
+
+    return c.json({
+      success: true,
+      data: {
+        invoices: invoiceStats,
+        payments: paymentStats,
+        credit_notes: creditNoteStats,
+        orders: orderStats,
+        commissions: commissionStats,
+        net_revenue: (orderStats?.completed_sales || 0) - (creditNoteStats?.applied_amount || 0),
+        collection_rate: invoiceStats?.total_invoiced > 0
+          ? ((invoiceStats?.total_collected || 0) / invoiceStats.total_invoiced * 100).toFixed(1)
+          : 0
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/finance/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -3956,7 +4056,7 @@ api.get('/dashboard/inventory-overview', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   try {
-    const total = await db.prepare('SELECT COUNT(*) as total_products, COALESCE(SUM(quantity), 0) as total_stock FROM products WHERE tenant_id = ?').bind(tenantId).first();
+    const total = await db.prepare('SELECT COUNT(*) as total_products, COALESCE(SUM(s.quantity_on_hand), 0) as total_stock FROM products p LEFT JOIN inventory_stock s ON s.product_id = p.id AND s.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).first();
     return c.json({ success: true, data: { total_products: total?.total_products || 0, total_stock: total?.total_stock || 0 } });
   } catch (e) { return c.json({ success: true, data: { total_products: 0, total_stock: 0 } }); }
 });
@@ -4107,8 +4207,8 @@ api.get('/dashboard/orders', async (c) => {
   const tenantId = c.get('tenantId');
   try {
     const total = await db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first();
-    const pending = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND status = 'pending'").bind(tenantId).first();
-    const completed = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND status = 'completed'").bind(tenantId).first();
+        const pending = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'pending'").bind(tenantId).first();
+        const completed = await db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status = 'completed'").bind(tenantId).first();
     const revenue = await db.prepare("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE tenant_id = ?").bind(tenantId).first();
     const recent = await db.prepare("SELECT o.*, c.name as customer_name FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ? ORDER BY o.created_at DESC LIMIT 10").bind(tenantId).all();
     return c.json({ success: true, data: { totalOrders: total?.count || 0, pendingOrders: pending?.count || 0, completedOrders: completed?.count || 0, totalRevenue: revenue?.total || 0, recentOrders: recent.results || [] } });
@@ -4329,24 +4429,6 @@ api.post('/sales/payments', async (c) => {
   } catch (e) { console.error('Create payment error:', e); return c.json({ success: false, error: 'Error creating payment' }, 500); }
 });
 
-api.post('/settings/initialize', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const defaults = [
-      { key: 'company_name', value: 'My Company', category: 'general' },
-      { key: 'currency', value: 'ZAR', category: 'general' },
-      { key: 'tax_rate', value: '15', category: 'finance' },
-      { key: 'invoice_prefix', value: 'INV-', category: 'finance' },
-      { key: 'order_prefix', value: 'ORD-', category: 'sales' }
-    ];
-    for (const s of defaults) {
-      await db.prepare('INSERT OR IGNORE INTO system_settings (tenant_id, key, value, category, created_at, updated_at) VALUES (?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, s.key, s.value, s.category).run();
-    }
-    return c.json({ success: true, message: 'Settings initialized' });
-  } catch (e) { return c.json({ success: true, message: 'Settings initialized' }); }
-});
-
 api.get('/team-hierarchy', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -4526,6 +4608,31 @@ api.get('/beat-routes', async (c) => {
     const routes = await db.prepare('SELECT * FROM beat_routes WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: routes.results || [] });
   } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+
+api.get('/beat-routes/plans', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const plans = await db.prepare('SELECT * FROM beat_plans WHERE tenant_id = ? ORDER BY plan_date DESC').bind(tenantId).all();
+    return c.json({ success: true, data: { plans: plans.results || [], pagination: { total: (plans.results || []).length } } });
+  } catch (error) {
+    return c.json({ success: true, data: { plans: [], pagination: { total: 0 } } });
+  }
+});
+
+
+api.get('/beat-routes/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const totalRoutes = await db.prepare("SELECT COUNT(*) as count FROM beat_routes WHERE tenant_id = ?").bind(tenantId).first();
+    const totalPlans = await db.prepare("SELECT COUNT(*) as count FROM beat_plans WHERE tenant_id = ?").bind(tenantId).first();
+    return c.json({ success: true, data: { total_routes: totalRoutes?.count || 0, total_plans: totalPlans?.count || 0, active_plans: 0, completed_plans: 0 } });
+  } catch (error) {
+    return c.json({ success: true, data: { total_routes: 0, total_plans: 0 } });
+  }
 });
 
 api.get('/beat-routes/:id', async (c) => {
@@ -8720,6 +8827,30 @@ api.get('/board-placements', async (c) => {
   }
 });
 
+
+api.get('/board-placements/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'planned' THEN 1 ELSE 0 END) as planned,
+        SUM(CASE WHEN status = 'installed' THEN 1 ELSE 0 END) as installed,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_verification,
+        SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+        SUM(CASE WHEN status = 'removed' THEN 1 ELSE 0 END) as removed
+      FROM board_placements WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/board-placements/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -8941,29 +9072,6 @@ api.post('/board-placements/:id/photos', async (c) => {
   }
 });
 
-api.get('/board-placements/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  
-  try {
-    const stats = await db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'planned' THEN 1 ELSE 0 END) as planned,
-        SUM(CASE WHEN status = 'installed' THEN 1 ELSE 0 END) as installed,
-        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_verification,
-        SUM(CASE WHEN status = 'verified' THEN 1 ELSE 0 END) as verified,
-        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
-        SUM(CASE WHEN status = 'removed' THEN 1 ELSE 0 END) as removed
-      FROM board_placements WHERE tenant_id = ?
-    `).bind(tenantId).first();
-    
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 // ==================== SURVEYS ====================
 
 api.get('/surveys', async (c) => {
@@ -8985,6 +9093,18 @@ api.get('/surveys', async (c) => {
     return c.json({ success: true, data: results || [] });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/surveys/responses', authMiddleware, async (c) => {
+  try {
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    let responses = [];
+    try { const r = await db.prepare('SELECT * FROM survey_responses WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); responses = r.results || []; } catch(e) {}
+    return c.json({ success: true, data: { responses } });
+  } catch (error) {
+    return c.json({ success: true, data: { responses: [] } });
   }
 });
 
@@ -9287,6 +9407,50 @@ api.get('/store-audits', async (c) => {
   }
 });
 
+
+api.get('/store-audits/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total_audits,
+        AVG(compliance_score) as avg_compliance_score,
+        SUM(oos_count) as total_oos,
+        SUM(total_facings) as total_facings,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_approval,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved
+      FROM store_audits WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+
+api.get('/store-audits/compliance-trends', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { days = 30 } = c.req.query();
+  
+  try {
+    const { results } = await db.prepare(`
+      SELECT DATE(created_at) as date, AVG(compliance_score) as avg_score, COUNT(*) as audit_count
+      FROM store_audits 
+      WHERE tenant_id = ? AND created_at >= datetime('now', '-' || ? || ' days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).bind(tenantId, parseInt(days)).all();
+    
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/store-audits/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -9490,48 +9654,6 @@ api.post('/store-audits/:id/photos', async (c) => {
   }
 });
 
-api.get('/store-audits/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  
-  try {
-    const stats = await db.prepare(`
-      SELECT 
-        COUNT(*) as total_audits,
-        AVG(compliance_score) as avg_compliance_score,
-        SUM(oos_count) as total_oos,
-        SUM(total_facings) as total_facings,
-        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_approval,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved
-      FROM store_audits WHERE tenant_id = ?
-    `).bind(tenantId).first();
-    
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/store-audits/compliance-trends', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { days = 30 } = c.req.query();
-  
-  try {
-    const { results } = await db.prepare(`
-      SELECT DATE(created_at) as date, AVG(compliance_score) as avg_score, COUNT(*) as audit_count
-      FROM store_audits 
-      WHERE tenant_id = ? AND created_at >= datetime('now', '-' || ? || ' days')
-      GROUP BY DATE(created_at)
-      ORDER BY date ASC
-    `).bind(tenantId, parseInt(days)).all();
-    
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 // ==================== ATTACHMENTS (GENERIC) ====================
 
 api.get('/attachments', async (c) => {
@@ -9679,6 +9801,18 @@ api.delete('/brands/:id', async (c) => {
 });
 
 // ==================== WAREHOUSES (FULL CRUD + INVENTORY) ====================
+
+
+api.get('/warehouses/transfers', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const transfers = await db.prepare('SELECT * FROM inventory_transfers WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: { transfers: transfers.results || [], pagination: { total: (transfers.results || []).length } } });
+  } catch (error) {
+    return c.json({ success: true, data: { transfers: [], pagination: { total: 0 } } });
+  }
+});
 
 api.get('/warehouses/:id', async (c) => {
   const db = c.env.DB;
@@ -10037,6 +10171,54 @@ api.delete('/route-stops/:id', async (c) => {
 
 const COMMISSION_STATUSES = ['pending', 'calculated', 'approved', 'paid', 'reversed'];
 
+
+api.get('/commissions/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'calculated' THEN 1 ELSE 0 END) as calculated,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
+        SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as pending_payout,
+        SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid
+      FROM commissions WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/commissions/payouts', authMiddleware, async (c) => {
+  try {
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    let payouts = [];
+    try { const r = await db.prepare(`SELECT * FROM commission_payouts WHERE tenant_id = ? ORDER BY created_at DESC`).bind(tenantId).all(); payouts = r.results || []; } catch(e) {}
+    return c.json({ success: true, data: payouts });
+  } catch (error) {
+    return c.json({ success: true, data: [] });
+  }
+});
+
+
+api.get('/commissions/rules', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const rules = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: rules.results || [] });
+  } catch (error) {
+    return c.json({ success: true, data: [] });
+  }
+});
+
 api.get('/commissions/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -10198,29 +10380,6 @@ api.post('/commissions/:id/reverse', async (c) => {
   }
 });
 
-api.get('/commissions/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  
-  try {
-    const stats = await db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = 'calculated' THEN 1 ELSE 0 END) as calculated,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
-        SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as pending_payout,
-        SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid
-      FROM commissions WHERE tenant_id = ?
-    `).bind(tenantId).first();
-    
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 // ==================== CASH RECONCILIATION ====================
 
 const CASH_RECON_STATUSES = ['open', 'submitted', 'approved', 'rejected', 'closed'];
@@ -10246,6 +10405,30 @@ api.get('/cash-reconciliations', async (c) => {
     
     const { results } = await db.prepare(query).bind(...params).all();
     return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+
+api.get('/cash-reconciliations/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open,
+        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_approval,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
+        SUM(actual_cash) as total_cash_collected,
+        SUM(ABS(discrepancy)) as total_discrepancies
+      FROM cash_reconciliations WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -10448,29 +10631,6 @@ api.post('/cash-reconciliations/:id/close', async (c) => {
   }
 });
 
-api.get('/cash-reconciliations/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  
-  try {
-    const stats = await db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'open' THEN 1 ELSE 0 END) as open,
-        SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending_approval,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-        SUM(actual_cash) as total_cash_collected,
-        SUM(ABS(discrepancy)) as total_discrepancies
-      FROM cash_reconciliations WHERE tenant_id = ?
-    `).bind(tenantId).first();
-    
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 // ==================== KYC CASES (FULL LIFECYCLE) ====================
 
 const KYC_STATUSES = ['pending', 'in_review', 'documents_required', 'approved', 'rejected'];
@@ -10495,6 +10655,29 @@ api.get('/kyc-cases', async (c) => {
     
     const { results } = await db.prepare(query).bind(...params).all();
     return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+
+api.get('/kyc-cases/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  
+  try {
+    const stats = await db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'in_review' THEN 1 ELSE 0 END) as in_review,
+        SUM(CASE WHEN status = 'documents_required' THEN 1 ELSE 0 END) as documents_required,
+        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+      FROM kyc_cases WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    
+    return c.json({ success: true, data: stats });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -10721,28 +10904,6 @@ api.post('/kyc-cases/:id/reject', async (c) => {
     `).bind(crypto.randomUUID(), id, userId, body.reason ?? 'KYC rejected', now).run();
     
     return c.json({ success: true, message: 'KYC case rejected' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/kyc-cases/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  
-  try {
-    const stats = await db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = 'in_review' THEN 1 ELSE 0 END) as in_review,
-        SUM(CASE WHEN status = 'documents_required' THEN 1 ELSE 0 END) as documents_required,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-        SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
-      FROM kyc_cases WHERE tenant_id = ?
-    `).bind(tenantId).first();
-    
-    return c.json({ success: true, data: stats });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -12348,22 +12509,6 @@ api.get('/van-sales/cash-reconciliation', async (c) => {
 });
 
 // Finance route aliases
-api.get('/finance/cash-reconciliation', async (c) => {
-  const db = c.env.DB;
-  const tenantId = getTenantId(c);
-  try {
-    const reconciliations = await db.prepare(`
-      SELECT cr.*, u.first_name || ' ' || u.last_name as agent_name
-      FROM cash_reconciliations cr
-      LEFT JOIN users u ON cr.agent_id = u.id
-      WHERE cr.tenant_id = ?
-      ORDER BY cr.created_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: reconciliations.results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
 
 // Payments endpoint - Create table if not exists and return data
 api.get('/payments', async (c) => {
@@ -12387,6 +12532,20 @@ api.get('/payments', async (c) => {
       ORDER BY p.created_at DESC
     `).bind(tenantId).all();
     return c.json({ success: true, data: payments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/payments/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare(`SELECT COUNT(*) as total, COALESCE(SUM(amount), 0) as total_amount,
+      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+      FROM payments WHERE tenant_id = ?`).bind(tenantId).first();
+    return c.json({ success: true, data: stats });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -13437,17 +13596,6 @@ api.post('/commission-ledgers', authMiddleware, async (c) => {
 });
 
 // --- Commissions Payouts ---
-api.get('/commissions/payouts', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    let payouts = [];
-    try { const r = await db.prepare(`SELECT * FROM commission_payouts WHERE tenant_id = ? ORDER BY created_at DESC`).bind(tenantId).all(); payouts = r.results || []; } catch(e) {}
-    return c.json({ success: true, data: payouts });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
-  }
-});
 
 api.get('/commissions/payouts/:id', authMiddleware, async (c) => {
   try {
@@ -13741,97 +13889,6 @@ api.put('/product-types/:id', authMiddleware, async (c) => {
 });
 
 // --- Orders Enhanced: Quotations ---
-api.get('/orders-enhanced/quotations', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const page = parseInt(c.req.query('page') || '1');
-    const limit = parseInt(c.req.query('limit') || '20');
-    const offset = (page - 1) * limit;
-    const result = await db.prepare('SELECT * FROM quotations WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(tenantId, limit, offset).all();
-    return c.json({ success: true, data: { quotations: result.results || [] } });
-  } catch (error) {
-    return c.json({ success: true, data: { quotations: [] } });
-  }
-});
-
-api.get('/orders-enhanced/quotations/:id', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { id } = c.req.param();
-    const quotation = await db.prepare('SELECT * FROM quotations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!quotation) return c.json({ success: false, message: 'Quotation not found' }, 404);
-    return c.json({ success: true, data: quotation });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.post('/orders-enhanced/quotations', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const data = await c.req.json();
-    const quoteNumber = `QT-${Date.now()}`;
-    await db.prepare(`INSERT INTO quotations (tenant_id, quote_number, customer_id, subtotal, tax_amount, total_amount, status, notes, valid_until, created_at) VALUES (?, ?, ?, ?, ?, ?, 'draft', ?, ?, datetime('now'))`).bind(tenantId, quoteNumber, data.customer_id, data.subtotal || 0, data.tax_amount || 0, data.total_amount || 0, data.notes || null, data.valid_until || null).run();
-    return c.json({ success: true, data: { quote_number: quoteNumber }, message: 'Quotation created' }, 201);
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.put('/orders-enhanced/quotations/:id', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { id } = c.req.param();
-    const data = await c.req.json();
-    await db.prepare('UPDATE quotations SET customer_id = COALESCE(?, customer_id), subtotal = COALESCE(?, subtotal), tax_amount = COALESCE(?, tax_amount), total_amount = COALESCE(?, total_amount), notes = COALESCE(?, notes), status = COALESCE(?, status) WHERE id = ? AND tenant_id = ?').bind(data.customer_id || null, data.subtotal || null, data.tax_amount || null, data.total_amount || null, data.notes || null, data.status || null, id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation updated' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.post('/orders-enhanced/quotations/:id/approve', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { id } = c.req.param();
-    await db.prepare(`UPDATE quotations SET status = 'approved' WHERE id = ? AND tenant_id = ?`).bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation approved' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.post('/orders-enhanced/quotations/:id/reject', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { id } = c.req.param();
-    const { reason } = await c.req.json();
-    await db.prepare(`UPDATE quotations SET status = 'rejected', notes = ? WHERE id = ? AND tenant_id = ?`).bind(reason || 'Rejected', id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation rejected' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.post('/orders-enhanced/quotations/:id/convert', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { id } = c.req.param();
-    const quotation = await db.prepare('SELECT * FROM quotations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!quotation) return c.json({ success: false, message: 'Quotation not found' }, 404);
-    await db.prepare(`UPDATE quotations SET status = 'converted' WHERE id = ? AND tenant_id = ?`).bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation converted to order' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
 
 // --- Orders Enhanced: Refunds ---
 api.get('/orders-enhanced/refunds', authMiddleware, async (c) => {
@@ -14328,17 +14385,6 @@ api.get('/users/login-history', authMiddleware, async (c) => {
 });
 
 // --- Surveys Responses (root level) ---
-api.get('/surveys/responses', authMiddleware, async (c) => {
-  try {
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    let responses = [];
-    try { const r = await db.prepare('SELECT * FROM survey_responses WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); responses = r.results || []; } catch(e) {}
-    return c.json({ success: true, data: { responses } });
-  } catch (error) {
-    return c.json({ success: true, data: { responses: [] } });
-  }
-});
 
 // --- Products Bulk ---
 api.post('/products/bulk', authMiddleware, async (c) => {
@@ -15299,75 +15345,6 @@ api.post('/credit-notes/:id/apply', async (c) => {
   }
 });
 
-api.get('/finance/summary', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-
-  try {
-    const [invoiceStats, paymentStats, creditNoteStats, orderStats, commissionStats] = await Promise.all([
-      db.prepare(`
-        SELECT
-          COUNT(*) as total_invoices,
-          COALESCE(SUM(total_amount), 0) as total_invoiced,
-          COALESCE(SUM(amount_paid), 0) as total_collected,
-          COALESCE(SUM(amount_due), 0) as total_outstanding,
-          SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid_count,
-          SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue_count,
-          SUM(CASE WHEN status = 'partially_paid' THEN 1 ELSE 0 END) as partial_count
-        FROM invoices WHERE tenant_id = ?
-      `).bind(tenantId).first(),
-      db.prepare(`
-        SELECT
-          COUNT(*) as total_payments,
-          COALESCE(SUM(amount), 0) as total_amount,
-          SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as completed_amount
-        FROM payments WHERE tenant_id = ?
-      `).bind(tenantId).first(),
-      db.prepare(`
-        SELECT
-          COUNT(*) as total_credit_notes,
-          COALESCE(SUM(total_amount), 0) as total_amount,
-          SUM(CASE WHEN status = 'issued' THEN total_amount ELSE 0 END) as pending_amount,
-          SUM(CASE WHEN status = 'applied' THEN total_amount ELSE 0 END) as applied_amount
-        FROM credit_notes WHERE tenant_id = ?
-      `).bind(tenantId).first(),
-      db.prepare(`
-        SELECT
-          COUNT(*) as total_orders,
-          COALESCE(SUM(total_amount), 0) as total_sales,
-          SUM(CASE WHEN order_status = 'completed' OR order_status = 'delivered' THEN total_amount ELSE 0 END) as completed_sales,
-          SUM(CASE WHEN order_status = 'pending' THEN total_amount ELSE 0 END) as pending_sales
-        FROM orders WHERE tenant_id = ?
-      `).bind(tenantId).first(),
-      db.prepare(`
-        SELECT
-          COUNT(*) as total_commissions,
-          COALESCE(SUM(total_amount), 0) as total_amount,
-          SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending_amount,
-          SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid_amount
-        FROM commissions WHERE tenant_id = ?
-      `).bind(tenantId).first()
-    ]);
-
-    return c.json({
-      success: true,
-      data: {
-        invoices: invoiceStats,
-        payments: paymentStats,
-        credit_notes: creditNoteStats,
-        orders: orderStats,
-        commissions: commissionStats,
-        net_revenue: (orderStats?.completed_sales || 0) - (creditNoteStats?.applied_amount || 0),
-        collection_rate: invoiceStats?.total_invoiced > 0
-          ? ((invoiceStats?.total_collected || 0) / invoiceStats.total_invoiced * 100).toFixed(1)
-          : 0
-      }
-    });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 api.get('/orders/:id/invoice', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -15424,17 +15401,6 @@ api.delete('/products/:id', async (c) => {
   }
 });
 
-api.get('/products/export', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const products = await db.prepare('SELECT * FROM products WHERE tenant_id = ?').bind(tenantId).all();
-    return c.json({ success: true, data: products.results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 api.post('/products/import', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -15465,12 +15431,17 @@ api.post('/products/:id/stock', async (c) => {
     const { quantity, type, reason } = await c.req.json();
     const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
     if (!product) return c.json({ success: false, message: 'Product not found' }, 404);
-    const currentStock = product.total_stock || 0;
+    const stockRecord = await db.prepare('SELECT id, quantity_on_hand FROM inventory_stock WHERE product_id = ? AND tenant_id = ? LIMIT 1').bind(id, tenantId).first();
+    const currentStock = stockRecord?.quantity_on_hand || 0;
     const newStock = type === 'add' ? currentStock + quantity : currentStock - quantity;
-    await db.prepare('UPDATE products SET total_stock = ? WHERE id = ? AND tenant_id = ?').bind(newStock, id, tenantId).run();
+    if (stockRecord) {
+      await db.prepare('UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = datetime("now") WHERE id = ?').bind(newStock, stockRecord.id).run();
+    } else {
+      await db.prepare('INSERT INTO inventory_stock (id, tenant_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), tenantId, id, newStock).run();
+    }
     try {
-      await db.prepare(`INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, reason, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`).bind(crypto.randomUUID(), tenantId, id, quantity, type, reason || '', ).run();
+      await db.prepare(`INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, notes, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`).bind(crypto.randomUUID(), tenantId, id, quantity, type, reason || '').run();
     } catch (e) {}
     return c.json({ success: true, data: { ...product, total_stock: newStock } });
   } catch (error) {
@@ -15496,7 +15467,6 @@ api.post('/products/:id/image', async (c) => {
   const { id } = c.req.param();
   try {
     const imageUrl = `/images/products/${id}.jpg`;
-    await db.prepare('UPDATE products SET image_url = ? WHERE id = ? AND tenant_id = ?').bind(imageUrl, id, tenantId).run();
     return c.json({ success: true, data: { image_url: imageUrl } });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -15579,19 +15549,6 @@ api.get('/brands/:id/products', async (c) => {
 });
 
 // Payments sub-routes
-api.get('/payments/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const stats = await db.prepare(`SELECT COUNT(*) as total, COALESCE(SUM(amount), 0) as total_amount,
-      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-      SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
-      FROM payments WHERE tenant_id = ?`).bind(tenantId).first();
-    return c.json({ success: true, data: stats });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
 
 api.delete('/payments/:id', async (c) => {
   const db = c.env.DB;
@@ -15709,17 +15666,6 @@ api.post('/commissions/pay', async (c) => {
     return c.json({ success: true, message: `${commission_ids.length} commissions paid` });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/commissions/rules', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const rules = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
-    return c.json({ success: true, data: rules.results || [] });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
   }
 });
 
@@ -15923,7 +15869,7 @@ api.get('/comprehensive-transactions/transactions', async (c) => {
     const lim = parseInt(limit) || 50;
     const off = parseInt(offset) || 0;
     const countResult = await db.prepare(`SELECT COUNT(*) as total FROM comprehensive_transactions t ${where}`).bind(...params).first();
-    const transactions = await db.prepare(`SELECT t.*, c.name as customer_name, u.full_name as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id ${where} ORDER BY t.transaction_date DESC LIMIT ? OFFSET ?`).bind(...params, lim, off).all();
+    const transactions = await db.prepare(`SELECT t.*, c.name as customer_name, (u.first_name || ' ' || u.last_name) as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id ${where} ORDER BY t.transaction_date DESC LIMIT ? OFFSET ?`).bind(...params, lim, off).all();
     return c.json({ success: true, data: { transactions: transactions.results || [], pagination: { total: countResult?.total || 0, limit: lim, offset: off, has_more: off + lim < (countResult?.total || 0) } } });
   } catch (error) {
     return c.json({ success: true, data: { transactions: [], pagination: { total: 0, limit: 50, offset: 0, has_more: false } } });
@@ -15962,7 +15908,7 @@ api.get('/comprehensive-transactions/transactions/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
   try {
-    const transaction = await db.prepare('SELECT t.*, c.name as customer_name, u.full_name as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id WHERE t.id = ? AND t.tenant_id = ?').bind(id, tenantId).first();
+    const transaction = await db.prepare('SELECT t.*, c.name as customer_name, (u.first_name || ' ' || u.last_name) as agent_name FROM comprehensive_transactions t LEFT JOIN customers c ON c.id = t.customer_id LEFT JOIN users u ON u.id = t.agent_id WHERE t.id = ? AND t.tenant_id = ?').bind(id, tenantId).first();
     if (!transaction) return c.json({ success: false, message: 'Transaction not found' }, 404);
     const items = await db.prepare('SELECT ti.*, p.name as product_name, p.code as product_sku FROM comprehensive_transaction_items ti LEFT JOIN products p ON p.id = ti.product_id WHERE ti.transaction_id = ?').bind(id).all();
     const payments = await db.prepare('SELECT * FROM comprehensive_transaction_payments WHERE transaction_id = ?').bind(id).all();
@@ -16165,7 +16111,7 @@ api.post('/gps-tracking/location', async (c) => {
     const id = crypto.randomUUID();
     await db.prepare('INSERT INTO gps_locations (id, tenant_id, agent_id, latitude, longitude, accuracy, altitude, heading, speed, activity_type, customer_id, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime(?))').bind(id, tenantId, data.agent_id, data.location.latitude, data.location.longitude, data.location.accuracy || null, data.location.altitude || null, data.location.heading || null, data.location.speed || null, data.activity_type || 'traveling', data.customer_id || null, new Date().toISOString()).run();
     try {
-      await db.prepare('UPDATE users SET current_latitude = ?, current_longitude = ?, last_location_update = datetime(?), current_activity = ? WHERE id = ? AND tenant_id = ?').bind(data.location.latitude, data.location.longitude, new Date().toISOString(), data.activity_type || 'traveling', data.agent_id, tenantId).run();
+      // GPS location already stored in gps_locations table above
     } catch (e) {}
     return c.json({ success: true, data: { id, recorded_at: new Date().toISOString() } });
   } catch (error) {
@@ -16236,7 +16182,7 @@ api.get('/gps-tracking/live-agents', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   try {
-    const agents = await db.prepare("SELECT u.id, u.current_latitude, u.current_longitude, u.last_location_update, u.current_activity, u.full_name as agent_name, u.phone as agent_phone, u.email as agent_email FROM users u WHERE u.tenant_id = ? AND u.current_latitude IS NOT NULL AND u.last_location_update IS NOT NULL").bind(tenantId).all();
+    const agents = await db.prepare("SELECT u.id, u.email as agent_email, u.phone as agent_phone, (u.first_name || ' ' || u.last_name) as agent_name, gl.latitude as current_latitude, gl.longitude as current_longitude, gl.recorded_at as last_location_update, gl.activity_type as current_activity FROM users u INNER JOIN (SELECT agent_id, latitude, longitude, recorded_at, activity_type, ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY recorded_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON gl.agent_id = u.id AND gl.rn = 1 WHERE u.tenant_id = ?").bind(tenantId, tenantId).all();
     return c.json({ success: true, data: { agents: agents.results || [], total_agents: (agents.results || []).length, last_updated: new Date().toISOString() } });
   } catch (error) {
     return c.json({ success: true, data: { agents: [], total_agents: 0, last_updated: new Date().toISOString() } });
@@ -16248,9 +16194,9 @@ api.get('/gps-tracking/dashboard', async (c) => {
   const tenantId = c.get('tenantId');
   try {
     const totalAgents = await db.prepare("SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND role = 'agent'").bind(tenantId).first();
-    const activeAgents = await db.prepare("SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND current_latitude IS NOT NULL").bind(tenantId).first();
+    const activeAgents = await db.prepare("SELECT COUNT(DISTINCT agent_id) as count FROM gps_locations WHERE tenant_id = ? AND date(recorded_at) = date('now')").bind(tenantId).first();
     const todayUpdates = await db.prepare("SELECT COUNT(*) as count FROM gps_locations WHERE tenant_id = ? AND date(recorded_at) = date('now')").bind(tenantId).first();
-    const recentUpdates = await db.prepare("SELECT gl.*, u.full_name as agent_name FROM gps_locations gl LEFT JOIN users u ON u.id = gl.agent_id WHERE gl.tenant_id = ? ORDER BY gl.recorded_at DESC LIMIT 10").bind(tenantId).all();
+    const recentUpdates = await db.prepare("SELECT gl.*, (u.first_name || ' ' || u.last_name) as agent_name FROM gps_locations gl LEFT JOIN users u ON u.id = gl.agent_id WHERE gl.tenant_id = ? ORDER BY gl.recorded_at DESC LIMIT 10").bind(tenantId).all();
     return c.json({ success: true, data: { trackingStats: { total_agents: totalAgents?.count || 0, active_agents: activeAgents?.count || 0, agents_at_customers: 0, agents_traveling: 0 }, locationStats: { total_updates_today: todayUpdates?.count || 0, agents_updated_today: 0, avg_accuracy: 0 }, activityBreakdown: [], recentUpdates: recentUpdates.results || [] } });
   } catch (error) {
     return c.json({ success: true, data: { trackingStats: {}, locationStats: {}, activityBreakdown: [], recentUpdates: [] } });
@@ -16265,6 +16211,30 @@ api.get('/transactions', async (c) => {
   try {
     const transactions = await db.prepare('SELECT * FROM comprehensive_transactions WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
     return c.json({ success: true, data: transactions.results || [] });
+  } catch (error) {
+    return c.json({ success: true, data: [] });
+  }
+});
+
+
+api.get('/transactions/summary', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare("SELECT COUNT(*) as total_transactions, COALESCE(SUM(total_amount), 0) as total_amount, SUM(CASE WHEN transaction_type != 'refund' AND status != 'reversed' THEN 1 ELSE 0 END) as forward_count, SUM(CASE WHEN transaction_type != 'refund' AND status != 'reversed' THEN total_amount ELSE 0 END) as forward_amount, SUM(CASE WHEN transaction_type = 'refund' OR status = 'reversed' THEN 1 ELSE 0 END) as reverse_count, SUM(CASE WHEN transaction_type = 'refund' OR status = 'reversed' THEN total_amount ELSE 0 END) as reverse_amount FROM comprehensive_transactions WHERE tenant_id = ?").bind(tenantId).first();
+    return c.json({ success: true, data: { total_transactions: stats?.total_transactions || 0, total_amount: stats?.total_amount || 0, forward_transactions: { count: stats?.forward_count || 0, amount: stats?.forward_amount || 0 }, reverse_transactions: { count: stats?.reverse_count || 0, amount: stats?.reverse_amount || 0 }, by_status: {}, by_module: {} } });
+  } catch (error) {
+    return c.json({ success: true, data: { total_transactions: 0, total_amount: 0, forward_transactions: { count: 0, amount: 0 }, reverse_transactions: { count: 0, amount: 0 }, by_status: {}, by_module: {} } });
+  }
+});
+
+
+api.get('/transactions/export', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const txns = await db.prepare('SELECT * FROM comprehensive_transactions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: txns.results || [] });
   } catch (error) {
     return c.json({ success: true, data: [] });
   }
@@ -16290,6 +16260,23 @@ api.post('/transactions', async (c) => {
     const id = crypto.randomUUID();
     await db.prepare("INSERT INTO comprehensive_transactions (id, tenant_id, transaction_number, transaction_type, customer_id, agent_id, total_amount, payment_method, payment_status, status, notes, transaction_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'draft', ?, datetime('now'), datetime('now'))").bind(id, tenantId, `TXN-${Date.now()}`, data.type || data.transaction_type || 'sale', data.customer_id || null, data.agent_id || null, data.amount || data.total_amount || 0, data.payment_method || 'cash', data.notes || '').run();
     return c.json({ success: true, data: { id } }, 201);
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+
+api.put('/transactions/batch', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { updates } = await c.req.json();
+    for (const upd of (updates || [])) {
+      if (upd.updates?.status) {
+        await db.prepare('UPDATE comprehensive_transactions SET status = ? WHERE id = ? AND tenant_id = ?').bind(upd.updates.status, upd.id, tenantId).run();
+      }
+    }
+    return c.json({ success: true, message: 'Batch update completed' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
@@ -16519,6 +16506,17 @@ api.post('/transactions/orders', async (c) => {
   }
 });
 
+
+api.get('/transactions/orders/insights', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    return c.json({ success: true, data: { insights: [] } });
+  } catch (error) {
+    return c.json({ success: true, data: { insights: [] } });
+  }
+});
+
 api.get('/transactions/orders/:orderId', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -16614,17 +16612,6 @@ api.post('/transactions/products/:productId/adjustment', async (c) => {
   }
 });
 
-api.get('/transactions/summary', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const stats = await db.prepare("SELECT COUNT(*) as total_transactions, COALESCE(SUM(total_amount), 0) as total_amount, SUM(CASE WHEN transaction_type != 'refund' AND status != 'reversed' THEN 1 ELSE 0 END) as forward_count, SUM(CASE WHEN transaction_type != 'refund' AND status != 'reversed' THEN total_amount ELSE 0 END) as forward_amount, SUM(CASE WHEN transaction_type = 'refund' OR status = 'reversed' THEN 1 ELSE 0 END) as reverse_count, SUM(CASE WHEN transaction_type = 'refund' OR status = 'reversed' THEN total_amount ELSE 0 END) as reverse_amount FROM comprehensive_transactions WHERE tenant_id = ?").bind(tenantId).first();
-    return c.json({ success: true, data: { total_transactions: stats?.total_transactions || 0, total_amount: stats?.total_amount || 0, forward_transactions: { count: stats?.forward_count || 0, amount: stats?.forward_amount || 0 }, reverse_transactions: { count: stats?.reverse_count || 0, amount: stats?.reverse_amount || 0 }, by_status: {}, by_module: {} } });
-  } catch (error) {
-    return c.json({ success: true, data: { total_transactions: 0, total_amount: 0, forward_transactions: { count: 0, amount: 0 }, reverse_transactions: { count: 0, amount: 0 }, by_status: {}, by_module: {} } });
-  }
-});
-
 api.get('/transactions/:id/audit', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -16632,17 +16619,6 @@ api.get('/transactions/:id/audit', async (c) => {
   try {
     const audit = await db.prepare("SELECT * FROM status_history WHERE entity_id = ? AND tenant_id = ? ORDER BY created_at DESC").bind(id, tenantId).all();
     return c.json({ success: true, data: audit.results || [] });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
-  }
-});
-
-api.get('/transactions/export', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const txns = await db.prepare('SELECT * FROM comprehensive_transactions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
-    return c.json({ success: true, data: txns.results || [] });
   } catch (error) {
     return c.json({ success: true, data: [] });
   }
@@ -16665,22 +16641,6 @@ api.post('/transactions/batch', async (c) => {
   }
 });
 
-api.put('/transactions/batch', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { updates } = await c.req.json();
-    for (const upd of (updates || [])) {
-      if (upd.updates?.status) {
-        await db.prepare('UPDATE comprehensive_transactions SET status = ? WHERE id = ? AND tenant_id = ?').bind(upd.updates.status, upd.id, tenantId).run();
-      }
-    }
-    return c.json({ success: true, message: 'Batch update completed' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
 api.post('/transactions/batch-reverse', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -16692,16 +16652,6 @@ api.post('/transactions/batch-reverse', async (c) => {
     return c.json({ success: true, message: 'Batch reversal completed' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/transactions/orders/insights', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    return c.json({ success: true, data: { insights: [] } });
-  } catch (error) {
-    return c.json({ success: true, data: { insights: [] } });
   }
 });
 
@@ -16891,17 +16841,6 @@ api.put('/beat-routes/:routeId/customers/reorder', async (c) => {
   }
 });
 
-api.get('/beat-routes/plans', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const plans = await db.prepare('SELECT * FROM beat_plans WHERE tenant_id = ? ORDER BY plan_date DESC').bind(tenantId).all();
-    return c.json({ success: true, data: { plans: plans.results || [], pagination: { total: (plans.results || []).length } } });
-  } catch (error) {
-    return c.json({ success: true, data: { plans: [], pagination: { total: 0 } } });
-  }
-});
-
 api.post('/beat-routes/plans', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -16955,18 +16894,6 @@ api.post('/beat-routes/plans/:id/complete', async (c) => {
     return c.json({ success: true, message: 'Plan completed' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/beat-routes/stats', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const totalRoutes = await db.prepare("SELECT COUNT(*) as count FROM beat_routes WHERE tenant_id = ?").bind(tenantId).first();
-    const totalPlans = await db.prepare("SELECT COUNT(*) as count FROM beat_plans WHERE tenant_id = ?").bind(tenantId).first();
-    return c.json({ success: true, data: { total_routes: totalRoutes?.count || 0, total_plans: totalPlans?.count || 0, active_plans: 0, completed_plans: 0 } });
-  } catch (error) {
-    return c.json({ success: true, data: { total_routes: 0, total_plans: 0 } });
   }
 });
 
@@ -17031,17 +16958,6 @@ api.get('/warehouses/stock/product/:productId', async (c) => {
   }
 });
 
-api.get('/warehouses/transfers', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const transfers = await db.prepare('SELECT * FROM inventory_transfers WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
-    return c.json({ success: true, data: { transfers: transfers.results || [], pagination: { total: (transfers.results || []).length } } });
-  } catch (error) {
-    return c.json({ success: true, data: { transfers: [], pagination: { total: 0 } } });
-  }
-});
-
 api.get('/warehouses/transfers/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -17097,7 +17013,7 @@ api.get('/warehouses/:warehouseId/stock-movements', async (c) => {
   const tenantId = c.get('tenantId');
   const { warehouseId } = c.req.param();
   try {
-    const movements = await db.prepare('SELECT * FROM stock_movements WHERE warehouse_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(warehouseId, tenantId).all();
+    const movements = await db.prepare('SELECT sm.* FROM stock_movements sm INNER JOIN inventory_stock s ON s.product_id = sm.product_id AND s.tenant_id = sm.tenant_id WHERE s.warehouse_id = ? AND sm.tenant_id = ? ORDER BY sm.created_at DESC LIMIT 100').bind(warehouseId, tenantId).all();
     return c.json({ success: true, data: { movements: movements.results || [], total: (movements.results || []).length } });
   } catch (error) {
     return c.json({ success: true, data: { movements: [], total: 0 } });
@@ -17145,7 +17061,7 @@ api.post('/reports/inventory', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   try {
-    const products = await db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(total_stock), 0) as total_stock FROM products WHERE tenant_id = ?').bind(tenantId).first();
+    const products = await db.prepare('SELECT COUNT(*) as count, COALESCE(SUM(s.quantity_on_hand), 0) as total_stock FROM products p LEFT JOIN inventory_stock s ON s.product_id = p.id AND s.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).first();
     return c.json({ success: true, data: { total_products: products?.count || 0, total_stock: products?.total_stock || 0 } });
   } catch (error) {
     return c.json({ success: true, data: {} });
