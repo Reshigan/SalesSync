@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 import { toast } from 'react-hot-toast'
 
 interface TaskFormData {
@@ -19,7 +20,7 @@ export default function VisitTaskEdit() {
   const { data: task, isLoading } = useQuery({
     queryKey: ['visit-task', visitId, taskId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/tasks/${taskId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/tasks/${taskId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

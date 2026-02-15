@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Package, Calendar, Image } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function BoardPlacementDetail() {
   const { visitId, placementId } = useParams<{ visitId: string; placementId: string }>()
@@ -9,7 +10,7 @@ export default function BoardPlacementDetail() {
   const { data: placement, isLoading } = useQuery({
     queryKey: ['board-placement', visitId, placementId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/board-placements/${placementId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/board-placements/${placementId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

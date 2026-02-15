@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, CheckCircle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function ProductDistributionDetail() {
   const { visitId, distributionId } = useParams<{ visitId: string; distributionId: string }>()
@@ -9,7 +10,7 @@ export default function ProductDistributionDetail() {
   const { data: distribution, isLoading } = useQuery({
     queryKey: ['product-distribution', visitId, distributionId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/product-distributions/${distributionId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/product-distributions/${distributionId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
