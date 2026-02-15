@@ -4175,7 +4175,8 @@ api.post('/orders-enhanced/quotations/:id/convert', async (c) => {
     const quote = await db.prepare('SELECT * FROM quotations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
     if (!quote) return c.json({ success: false, error: 'Quotation not found' }, 404);
     const orderNumber = 'ORD-' + Date.now();
-    const order = await db.prepare('INSERT INTO orders (tenant_id, order_number, customer_id, status, total_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, orderNumber, quote.customer_id, 'pending', quote.total_amount, 'Converted from ' + quote.quotation_number).run();
+    const orderId = crypto.randomUUID();
+    const order = await db.prepare('INSERT INTO orders (id, tenant_id, order_number, customer_id, status, total_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(orderId, tenantId, orderNumber, quote.customer_id, 'pending', quote.total_amount, 'Converted from ' + quote.quotation_number).run();
     await db.prepare("UPDATE quotations SET status = 'converted', updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
     return c.json({ success: true, data: { orderId: order.meta.last_row_id, orderNumber } });
   } catch (e) { return c.json({ success: false, error: 'Error converting' }, 500); }
@@ -4233,7 +4234,8 @@ api.post('/gps-location/log', async (c) => {
   try {
     const body = await c.req.json();
     const { latitude, longitude, accuracy, agent_id } = body;
-    await db.prepare('INSERT INTO gps_locations (tenant_id, agent_id, latitude, longitude, accuracy, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, agent_id || null, latitude, longitude, accuracy || null).run();
+    const locId = crypto.randomUUID();
+    await db.prepare('INSERT INTO gps_locations (id, tenant_id, agent_id, latitude, longitude, accuracy, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(locId, tenantId, agent_id || null, latitude, longitude, accuracy || null).run();
     return c.json({ success: true, message: 'Location logged' });
   } catch (e) { return c.json({ success: true, message: 'Location logged' }); }
 });
@@ -13968,7 +13970,8 @@ api.post('/tenants', authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
     const data = await c.req.json();
-    await db.prepare('INSERT INTO tenants (name, code, status, created_at) VALUES (?, ?, ?, datetime("now"))').bind(data.name, data.code || data.name.toUpperCase().replace(/\s+/g, '_'), data.status || 'active').run();
+    const tenantNewId = crypto.randomUUID();
+    await db.prepare('INSERT INTO tenants (id, name, code, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(tenantNewId, data.name, data.code || data.name.toUpperCase().replace(/\s+/g, '_'), data.status || 'active').run();
     return c.json({ success: true, message: 'Tenant created' }, 201);
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -14394,7 +14397,7 @@ api.post('/products/bulk', authMiddleware, async (c) => {
     const { products } = await c.req.json();
     let created = 0;
     for (const p of (products || [])) {
-      try { await db.prepare('INSERT INTO products (tenant_id, name, code, price, category, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, p.name, p.code || `PRD-${Date.now()}`, p.price || 0, p.category || null, p.status || 'active').run(); created++; } catch(e) {}
+      try { const pid = crypto.randomUUID(); await db.prepare('INSERT INTO products (id, tenant_id, name, code, price, category, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(pid, tenantId, p.name, p.code || `PRD-${Date.now()}`, p.price || 0, p.category || null, p.status || 'active').run(); created++; } catch(e) {}
     }
     return c.json({ success: true, data: { created }, message: `${created} products created` });
   } catch (error) {
