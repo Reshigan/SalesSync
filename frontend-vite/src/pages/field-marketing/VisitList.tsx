@@ -15,6 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config';
 
 interface Brand {
   id: string;
@@ -75,48 +76,63 @@ export default function VisitList() {
       setLoading(true);
       setError(null);
 
-      // TODO: Replace with actual API call to get surveys and tasks for selected brands
-      // const response = await fieldMarketingService.getVisitTasks(customerId, brandIds);
+      const token = localStorage.getItem('token');
+      const brandIds = brands?.map(b => b.id).join(',') || '';
+      const res = await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/visit-list?customer_id=${customerId}&brand_ids=${brandIds}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const json = await res.json();
+      const apiTasks = json.data || [];
 
-      // Generate mock tasks
       const visitTasks: VisitTask[] = [];
 
-      // Add survey tasks for each brand
-      brands?.forEach((brand) => {
+      if (apiTasks.length > 0) {
+        apiTasks.forEach((t: Record<string, unknown>) => {
+          visitTasks.push({
+            id: t.id as string || `task-${Date.now()}`,
+            type: (t.type as string || 'survey') as 'survey' | 'board' | 'product',
+            title: t.title as string || '',
+            description: t.description as string || '',
+            brand_id: t.brand_id as string,
+            brand_name: t.brand_name as string,
+            is_mandatory: Boolean(t.is_mandatory),
+            completed: Boolean(t.completed),
+            icon: (t.type as string) === 'board' ? <Camera className="w-5 h-5" /> : (t.type as string) === 'product' ? <Package className="w-5 h-5" /> : <FileText className="w-5 h-5" />,
+          });
+        });
+      } else {
+        brands?.forEach((brand) => {
+          visitTasks.push({
+            id: `survey-${brand.id}`,
+            type: 'survey',
+            title: `${brand.brand_name} Survey`,
+            description: 'Complete mandatory brand survey',
+            brand_id: brand.id,
+            brand_name: brand.brand_name,
+            is_mandatory: true,
+            completed: false,
+            icon: <FileText className="w-5 h-5" />,
+          });
+        });
         visitTasks.push({
-          id: `survey-${brand.id}`,
-          type: 'survey',
-          title: `${brand.brand_name} Survey`,
-          description: 'Complete mandatory brand survey',
-          brand_id: brand.id,
-          brand_name: brand.brand_name,
+          id: 'board-placement',
+          type: 'board',
+          title: 'Board Placement',
+          description: 'Install or photograph brand boards',
           is_mandatory: true,
           completed: false,
-          icon: <FileText className="w-5 h-5" />,
+          icon: <Camera className="w-5 h-5" />,
         });
-      });
-
-      // Add board placement task
-      visitTasks.push({
-        id: 'board-placement',
-        type: 'board',
-        title: 'Board Placement',
-        description: 'Install or photograph brand boards',
-        is_mandatory: true,
-        completed: false,
-        icon: <Camera className="w-5 h-5" />,
-      });
-
-      // Add product distribution task (optional)
-      visitTasks.push({
-        id: 'product-distribution',
-        type: 'product',
-        title: 'Product Distribution',
-        description: 'Distribute SIM cards, phones, or other products',
-        is_mandatory: false,
-        completed: false,
-        icon: <Package className="w-5 h-5" />,
-      });
+        visitTasks.push({
+          id: 'product-distribution',
+          type: 'product',
+          title: 'Product Distribution',
+          description: 'Distribute SIM cards, phones, or other products',
+          is_mandatory: false,
+          completed: false,
+          icon: <Package className="w-5 h-5" />,
+        });
+      }
 
       setTasks(visitTasks);
     } catch (err) {
@@ -130,8 +146,9 @@ export default function VisitList() {
   const handleTaskClick = (task: VisitTask) => {
     switch (task.type) {
       case 'survey':
-        // TODO: Navigate to survey
-        alert(`Survey feature - TODO: Navigate to ${task.title}`);
+        navigate(`/field-marketing/survey/${customerId}/${task.id}`, {
+          state: { customer, brands, gpsVerified, task },
+        });
         break;
       case 'board':
         navigate(`/field-marketing/board-placement/${customerId}`, {

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Filter } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { API_CONFIG } from '../../config/api.config'
 
 interface InventoryItem {
   id: string
@@ -32,51 +33,24 @@ export default function InventoryTrackingPage() {
   const fetchInventoryData = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
-      setInventory([
-        {
-          id: '1',
-          productName: 'Premium Coffee Beans',
-          sku: 'PCB-001',
-          vanId: '1',
-          vanNumber: 'VAN-001',
-          currentStock: 45,
-          maxCapacity: 100,
-          reorderLevel: 20,
-          unitPrice: 25.99,
-          totalValue: 1169.55,
-          lastRestocked: '2024-01-14T08:00:00Z',
-          status: 'in_stock'
-        },
-        {
-          id: '2',
-          productName: 'Organic Tea Selection',
-          sku: 'OTS-002',
-          vanId: '1',
-          vanNumber: 'VAN-001',
-          currentStock: 15,
-          maxCapacity: 80,
-          reorderLevel: 20,
-          unitPrice: 18.50,
-          totalValue: 277.50,
-          lastRestocked: '2024-01-12T10:30:00Z',
-          status: 'low_stock'
-        },
-        {
-          id: '3',
-          productName: 'Artisan Pastries',
-          sku: 'AP-003',
-          vanId: '2',
-          vanNumber: 'VAN-002',
-          currentStock: 0,
-          maxCapacity: 50,
-          reorderLevel: 10,
-          unitPrice: 12.75,
-          totalValue: 0,
-          lastRestocked: '2024-01-10T14:15:00Z',
-          status: 'out_of_stock'
-        }
-      ])
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/inventory/stock`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      const items = (json.data || []).map((item: Record<string, unknown>) => ({
+        id: item.id as string || '',
+        productName: item.product_name as string || item.name as string || 'Unknown',
+        sku: item.sku as string || '',
+        vanId: item.warehouse_id as string || '',
+        vanNumber: item.warehouse_name as string || '',
+        currentStock: Number(item.quantity_on_hand) || 0,
+        maxCapacity: Number(item.max_capacity) || 100,
+        reorderLevel: Number(item.reorder_level) || 10,
+        unitPrice: Number(item.unit_price) || 0,
+        totalValue: (Number(item.quantity_on_hand) || 0) * (Number(item.unit_price) || 0),
+        lastRestocked: item.updated_at as string || '',
+        status: Number(item.quantity_on_hand) === 0 ? 'out_of_stock' : Number(item.quantity_on_hand) <= Number(item.reorder_level || 10) ? 'low_stock' : 'in_stock'
+      }))
+      setInventory(items)
     } catch (error) {
       console.error('Error fetching inventory data:', error)
     } finally {

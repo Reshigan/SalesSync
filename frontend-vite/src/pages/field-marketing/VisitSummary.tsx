@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { API_CONFIG } from '../../config/api.config';
 import { CheckCircle, XCircle, Target, Package, DollarSign, Clock, MapPin, AlertCircle, ChevronDown, ChevronUp, MessageSquare, Calendar, Check } from 'lucide-react';
 
 interface VisitSummaryData {
@@ -39,57 +40,68 @@ export default function VisitSummary() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // In production, this data would come from location.state or API
-  const [visitData] = useState<VisitSummaryData>({
-    visitId: 'VST-2025-10-22-001',
-    customerId: 'CUST-001',
-    customerName: 'ABC Spaza Shop',
+  const { customerId } = useParams<{ customerId: string }>();
+  const stateData = location.state as Record<string, unknown> | undefined;
+
+  const [visitData, setVisitData] = useState<VisitSummaryData>({
+    visitId: '',
+    customerId: customerId || '',
+    customerName: (stateData?.customer as Record<string, string>)?.store_name || '',
     visitDate: new Date(),
-    duration: 28,
-    gpsVerified: true,
-    gpsDistance: 5,
+    duration: 0,
+    gpsVerified: Boolean(stateData?.gpsVerified),
+    gpsDistance: 0,
     surveys: {
-      mandatory: { completed: 2, total: 2 },
-      adhoc: { completed: 1, total: 2, skipped: 1 }
+      mandatory: { completed: 0, total: 0 },
+      adhoc: { completed: 0, total: 0, skipped: 0 }
     },
-    boards: [
-      {
-        id: 'BRD-001',
-        brandName: 'Coca-Cola',
-        boardType: 'Large Billboard',
-        coveragePercentage: 32,
-        qualityScore: 8,
-        commission: 150
-      },
-      {
-        id: 'BRD-002',
-        brandName: 'MTN',
-        boardType: 'Standard Signage',
-        coveragePercentage: 18,
-        qualityScore: 9,
-        commission: 100
-      }
-    ],
-    products: [
-      {
-        id: 'PROD-001',
-        productName: 'MTN SIM Cards',
-        quantity: 5,
-        recipientName: 'Store Inventory',
-        commission: 250
-      },
-      {
-        id: 'PROD-002',
-        productName: 'Samsung Galaxy A14',
-        quantity: 1,
-        recipientName: 'John Mthembu',
-        commission: 500
-      }
-    ],
-    totalCommission: 1000,
-    syncStatus: 'synced',
+    boards: [],
+    products: [],
+    totalCommission: 0,
+    syncStatus: 'pending',
     notes: ''
   });
+
+  useEffect(() => {
+    const fetchVisitSummary = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/visit-summary?customer_id=${customerId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+        if (json.data) {
+          const d = json.data as Record<string, unknown>;
+          setVisitData(prev => ({
+            ...prev,
+            visitId: d.visit_id as string || prev.visitId,
+            duration: Number(d.duration) || prev.duration,
+            gpsDistance: Number(d.gps_distance) || prev.gpsDistance,
+            totalCommission: Number(d.total_commission) || prev.totalCommission,
+            syncStatus: (d.sync_status as string || 'pending') as 'synced' | 'pending' | 'failed',
+            boards: Array.isArray(d.boards) ? (d.boards as Record<string, unknown>[]).map(b => ({
+              id: b.id as string || '',
+              brandName: b.brand_name as string || '',
+              boardType: b.board_type as string || '',
+              coveragePercentage: Number(b.coverage_percentage) || 0,
+              qualityScore: Number(b.quality_score) || 0,
+              commission: Number(b.commission) || 0,
+            })) : prev.boards,
+            products: Array.isArray(d.products) ? (d.products as Record<string, unknown>[]).map(p => ({
+              id: p.id as string || '',
+              productName: p.product_name as string || '',
+              quantity: Number(p.quantity) || 0,
+              recipientName: p.recipient_name as string || '',
+              commission: Number(p.commission) || 0,
+            })) : prev.products,
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching visit summary:', err);
+      }
+    };
+    fetchVisitSummary();
+  }, [customerId]);
 
   const [notes, setNotes] = useState(visitData.notes || '');
   const [flagForFollowup, setFlagForFollowup] = useState(false);
@@ -104,19 +116,21 @@ export default function VisitSummary() {
   const handleCompleteVisit = async () => {
     setIsCompleting(true);
     try {
-      // TODO: API call to complete visit
+      const token = localStorage.getItem('token');
       const payload = {
         visitId: visitData.visitId,
+        customer_id: customerId,
         notes,
         flagForFollowup,
         nextVisitDate: nextVisitDate || null,
         completedAt: new Date().toISOString()
       };
 
-      console.log('Completing visit:', payload);
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/complete-visit`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
       // Navigate to dashboard
       navigate('/field-marketing/dashboard', {

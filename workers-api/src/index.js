@@ -15585,4 +15585,315 @@ api.put('/payments/:paymentId/allocations/:allocId', async (c) => {
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
 
+
+// ========== ANALYTICS ROUTES ==========
+api.get('/analytics/field-ops', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const visits = await db.prepare('SELECT COUNT(*) as total FROM visits WHERE tenant_id = ?').bind(tenantId).first();
+    const agents = await db.prepare('SELECT COUNT(*) as total FROM field_agents WHERE tenant_id = ?').bind(tenantId).first();
+    const surveys = await db.prepare('SELECT COUNT(*) as total FROM surveys WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { total_visits: visits?.total || 0, total_agents: agents?.total || 0, total_surveys: surveys?.total || 0 } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/analytics/trends', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const sales = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as total FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
+    const orders = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
+    return c.json({ success: true, data: { sales_trends: sales.results || [], order_trends: orders.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/analytics/reports', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const topProducts = await db.prepare('SELECT p.name, SUM(oi.quantity) as total_qty, SUM(oi.total) as total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.tenant_id = ? GROUP BY oi.product_id ORDER BY total_revenue DESC LIMIT 10').bind(tenantId).all();
+    const topCustomers = await db.prepare('SELECT c.name, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ? GROUP BY o.customer_id ORDER BY total_spent DESC LIMIT 10').bind(tenantId).all();
+    return c.json({ success: true, data: { top_products: topProducts.results || [], top_customers: topCustomers.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== AUDIT ROUTES ==========
+api.get('/audit/:entityType/:entityId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const entityType = c.req.param('entityType'); const entityId = c.req.param('entityId');
+  try {
+    const trail = await db.prepare('SELECT * FROM audit_logs WHERE entity_type = ? AND entity_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(entityType, entityId, tenantId).all();
+    return c.json({ success: true, data: { auditTrail: trail.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/audit/:entityType/:entityId/entries/:entryId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const entryId = c.req.param('entryId');
+  try {
+    const entry = await db.prepare('SELECT * FROM audit_logs WHERE id = ? AND tenant_id = ?').bind(entryId, tenantId).first();
+    if (!entry) return c.json({ success: false, message: 'Entry not found' }, 404);
+    return c.json({ success: true, data: { entry } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== FIELD AGENT WORKFLOW ROUTES ==========
+api.get('/field-agent-workflow/visit-list', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const visits = await db.prepare("SELECT v.*, c.name as customer_name, c.address as customer_address, c.latitude, c.longitude FROM visits v LEFT JOIN customers c ON v.customer_id = c.id WHERE v.tenant_id = ? AND v.agent_id = ? AND v.visit_date = date('now') ORDER BY v.sequence_number ASC").bind(tenantId, userId).all();
+    return c.json({ success: true, data: visits.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/start-visit', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const { visit_id, latitude, longitude } = await c.req.json();
+    await db.prepare("UPDATE visits SET status = 'in_progress', check_in_time = datetime('now'), check_in_latitude = ?, check_in_longitude = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, visit_id, tenantId).run();
+    if (latitude && longitude) {
+      await db.prepare("INSERT INTO gps_locations (id, user_id, latitude, longitude, accuracy, tenant_id, created_at) VALUES (?, ?, ?, ?, 10, ?, datetime('now'))").bind(crypto.randomUUID(), userId, latitude, longitude, tenantId).run();
+    }
+    return c.json({ success: true, message: 'Visit started' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/complete-visit', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { visit_id, latitude, longitude, notes } = await c.req.json();
+    await db.prepare("UPDATE visits SET status = 'completed', check_out_time = datetime('now'), check_out_latitude = ?, check_out_longitude = ?, notes = COALESCE(?, notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, notes || null, visit_id, tenantId).run();
+    return c.json({ success: true, message: 'Visit completed' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/complete-visit-item', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { visit_id, item_type, item_id, result, notes } = await c.req.json();
+    const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO visit_tasks (id, visit_id, task_type, reference_id, status, result, notes, tenant_id, created_at) VALUES (?, ?, ?, ?, 'completed', ?, ?, ?, datetime('now'))").bind(id, visit_id, item_type, item_id || '', result || '', notes || '', tenantId).run();
+    return c.json({ success: true, data: { id } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/field-agent-workflow/agent-summary', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const todayVisits = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ? AND agent_id = ? AND visit_date = date('now')").bind(tenantId, userId).first();
+    const weekOrders = await db.prepare("SELECT COUNT(*) as total, SUM(total_amount) as revenue FROM orders WHERE tenant_id = ? AND created_by = ? AND created_at >= date('now', '-7 days')").bind(tenantId, userId).first();
+    return c.json({ success: true, data: { today_visits: todayVisits?.total || 0, completed_visits: todayVisits?.completed || 0, week_orders: weekOrders?.total || 0, week_revenue: weekOrders?.revenue || 0 } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== FIELD COMMISSIONS ROUTES ==========
+api.get('/field-commissions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const commissions = await db.prepare('SELECT c.*, u.first_name, u.last_name, u.email FROM commissions c LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ? ORDER BY c.created_at DESC LIMIT 100').bind(tenantId).all();
+    return c.json({ success: true, data: commissions.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/field-commissions/agent/:agentId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try {
+    const commissions = await db.prepare('SELECT * FROM commissions WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(agentId, tenantId).all();
+    const summary = await db.prepare("SELECT SUM(amount) as total_earned, SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as total_paid, SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as total_pending FROM commissions WHERE agent_id = ? AND tenant_id = ?").bind(agentId, tenantId).first();
+    return c.json({ success: true, data: { commissions: commissions.results || [], summary: summary || {} } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== GPS LOCATION ROUTES ==========
+api.get('/gps-location/customer/:customerId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const customer = await db.prepare('SELECT id, name, latitude, longitude, address FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
+    return c.json({ success: true, data: customer });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/gps-location/verify-customer', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { customer_id, latitude, longitude, max_distance } = await c.req.json();
+    const customer = await db.prepare('SELECT latitude, longitude FROM customers WHERE id = ? AND tenant_id = ?').bind(customer_id, tenantId).first();
+    if (!customer || !customer.latitude || !customer.longitude) return c.json({ success: true, data: { verified: true, distance: 0, message: 'No GPS coordinates set for customer' } });
+    const R = 6371e3;
+    const toRad = (d) => d * Math.PI / 180;
+    const dLat = toRad(latitude - customer.latitude);
+    const dLon = toRad(longitude - customer.longitude);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(customer.latitude)) * Math.cos(toRad(latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const threshold = max_distance || 200;
+    return c.json({ success: true, data: { verified: distance <= threshold, distance: Math.round(distance), threshold, message: distance <= threshold ? 'Within range' : 'Too far from customer location' } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== UPLOAD PHOTO ROUTE ==========
+api.post('/upload-photo', async (c) => {
+  const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    const entityType = formData.get('entity_type') || 'general';
+    const entityId = formData.get('entity_id') || '';
+    if (!file) return c.json({ success: false, message: 'No file provided' }, 400);
+    const key = `${tenantId}/${entityType}/${entityId}/${Date.now()}-${file.name}`;
+    await c.env.UPLOADS.put(key, file.stream(), { httpMetadata: { contentType: file.type } });
+    const db = c.env.DB; const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO attachments (id, entity_type, entity_id, file_name, file_type, file_size, file_url, uploaded_by, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, entityType, entityId, file.name, file.type, file.size, key, userId, tenantId).run();
+    return c.json({ success: true, data: { id, file_name: file.name, file_url: key } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== COMPREHENSIVE TRANSACTIONS ROUTES ==========
+api.get('/comprehensive-transactions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { type, status, customer_id } = c.req.query();
+    let sql = 'SELECT * FROM comprehensive_transactions WHERE tenant_id = ?';
+    const params = [tenantId];
+    if (type) { sql += ' AND transaction_type = ?'; params.push(type); }
+    if (status) { sql += ' AND status = ?'; params.push(status); }
+    if (customer_id) { sql += ' AND customer_id = ?'; params.push(customer_id); }
+    sql += ' ORDER BY created_at DESC LIMIT 100';
+    const txns = await db.prepare(sql).bind(...params).all();
+    return c.json({ success: true, data: txns.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/comprehensive-transactions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const data = await c.req.json();
+    const id = crypto.randomUUID();
+    const txnNumber = `TXN-${Date.now()}`;
+    await db.prepare("INSERT INTO comprehensive_transactions (id, transaction_number, transaction_type, status, customer_id, total_amount, notes, created_by, tenant_id, created_at) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, datetime('now'))").bind(id, txnNumber, data.transaction_type || 'sale', data.customer_id || null, data.total_amount || 0, data.notes || '', userId, tenantId).run();
+    if (data.items && Array.isArray(data.items)) {
+      for (const item of data.items) {
+        const itemId = crypto.randomUUID();
+        await db.prepare("INSERT INTO comprehensive_transaction_items (id, transaction_id, product_id, quantity, unit_price, total, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, (item.quantity || 1) * (item.unit_price || 0), tenantId).run();
+      }
+    }
+    return c.json({ success: true, data: { id, transaction_number: txnNumber } }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/comprehensive-transactions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const txn = await db.prepare('SELECT * FROM comprehensive_transactions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!txn) return c.json({ success: false, message: 'Transaction not found' }, 404);
+    const items = await db.prepare('SELECT ti.*, p.name as product_name FROM comprehensive_transaction_items ti LEFT JOIN products p ON ti.product_id = p.id WHERE ti.transaction_id = ? AND ti.tenant_id = ?').bind(id, tenantId).all();
+    const payments = await db.prepare('SELECT * FROM comprehensive_transaction_payments WHERE transaction_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...txn, items: items.results || [], payments: payments.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== CURRENCY SYSTEM ROUTES ==========
+api.get('/currency-system/currencies', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const currencies = await db.prepare('SELECT * FROM currencies WHERE tenant_id = ? OR is_global = 1 ORDER BY code ASC').bind(tenantId).all();
+    return c.json({ success: true, data: currencies.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/currency-system/exchange-rates', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const rates = await db.prepare('SELECT * FROM exchange_rate_history WHERE tenant_id = ? ORDER BY effective_date DESC LIMIT 100').bind(tenantId).all();
+    return c.json({ success: true, data: rates.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/currency-system/convert', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { amount, from_currency, to_currency } = await c.req.json();
+    if (!amount || !from_currency || !to_currency) return c.json({ success: false, message: 'amount, from_currency, to_currency required' }, 400);
+    if (from_currency === to_currency) return c.json({ success: true, data: { converted_amount: amount, rate: 1 } });
+    const rate = await db.prepare("SELECT rate FROM exchange_rate_history WHERE from_currency = ? AND to_currency = ? AND tenant_id = ? ORDER BY effective_date DESC LIMIT 1").bind(from_currency, to_currency, tenantId).first();
+    if (!rate) return c.json({ success: false, message: 'No exchange rate found' }, 404);
+    return c.json({ success: true, data: { converted_amount: amount * rate.rate, rate: rate.rate, from_currency, to_currency } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== GPS TRACKING ROUTES ==========
+api.get('/gps-tracking/agents', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const agents = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.role, gl.latitude, gl.longitude, gl.accuracy, gl.created_at as last_location_time FROM users u LEFT JOIN (SELECT user_id, latitude, longitude, accuracy, created_at, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON u.id = gl.user_id AND gl.rn = 1 WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'driver')").bind(tenantId, tenantId).all();
+    return c.json({ success: true, data: agents.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/gps-tracking/agent/:agentId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try {
+    const locations = await db.prepare('SELECT * FROM gps_locations WHERE user_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(agentId, tenantId).all();
+    const agent = await db.prepare('SELECT id, first_name, last_name, email, role FROM users WHERE id = ? AND tenant_id = ?').bind(agentId, tenantId).first();
+    return c.json({ success: true, data: { agent: agent || {}, locations: locations.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== VAN INVENTORY ROUTES ==========
+api.get('/van-inventory/:vanId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId');
+  try {
+    const inventory = await db.prepare('SELECT vi.*, p.name as product_name, p.sku FROM van_inventory vi LEFT JOIN products p ON vi.product_id = p.id WHERE vi.van_id = ? AND vi.tenant_id = ?').bind(vanId, tenantId).all();
+    return c.json({ success: true, data: inventory.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/van-inventory/:vanId/load', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId'); const userId = c.get('userId');
+  try {
+    const { items } = await c.req.json();
+    if (!items || !Array.isArray(items)) return c.json({ success: false, message: 'items array required' }, 400);
+    for (const item of items) {
+      const existing = await db.prepare('SELECT id, quantity FROM van_inventory WHERE van_id = ? AND product_id = ? AND tenant_id = ?').bind(vanId, item.product_id, tenantId).first();
+      if (existing) {
+        await db.prepare('UPDATE van_inventory SET quantity = quantity + ?, updated_at = datetime("now") WHERE id = ?').bind(item.quantity || 0, existing.id).run();
+      } else {
+        const id = crypto.randomUUID();
+        await db.prepare("INSERT INTO van_inventory (id, van_id, product_id, quantity, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))").bind(id, vanId, item.product_id, item.quantity || 0, tenantId).run();
+      }
+    }
+    const loadId = crypto.randomUUID();
+    await db.prepare("INSERT INTO van_loads (id, van_id, loaded_by, status, tenant_id, created_at) VALUES (?, ?, ?, 'completed', ?, datetime('now'))").bind(loadId, vanId, userId, tenantId).run();
+    return c.json({ success: true, data: { load_id: loadId }, message: 'Van loaded successfully' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== CASH RECONCILIATION SESSIONS ROUTES ==========
+api.get('/cash-reconciliation/sessions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const sessions = await db.prepare("SELECT cs.*, u.first_name || ' ' || u.last_name as agent_name FROM cash_reconciliation_sessions cs LEFT JOIN users u ON cs.agent_id = u.id WHERE cs.tenant_id = ? ORDER BY cs.created_at DESC LIMIT 100").bind(tenantId).all();
+    return c.json({ success: true, data: sessions.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/cash-reconciliation/sessions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const session = await db.prepare('SELECT * FROM cash_reconciliation_sessions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!session) return c.json({ success: false, message: 'Session not found' }, 404);
+    const collections = await db.prepare('SELECT * FROM cash_collections WHERE session_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...session, collections: collections.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== DASHBOARD RECENT ACTIVITIES ==========
+api.get('/dashboard/recent-activities', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const orders = await db.prepare("SELECT id, order_number as reference, 'order' as type, order_status as status, total_amount as amount, created_at FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
+    const payments = await db.prepare("SELECT id, reference_number as reference, 'payment' as type, status, amount, created_at FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
+    const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+    return c.json({ success: true, data: activities });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
 export default app;

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Megaphone, Users, Eye, MousePointer, TrendingUp, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { API_CONFIG } from '../../config/api.config'
 
 interface CampaignMetrics {
   totalCampaigns: number
@@ -51,69 +52,36 @@ export default function CampaignsPage() {
   const fetchCampaignsData = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with real API calls
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_CONFIG.BASE_URL}/campaigns`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await res.json()
+      const data = json.data || []
+      const active = data.filter((c: Record<string, unknown>) => c.status === 'active')
       setMetrics({
-        totalCampaigns: 24,
-        activeCampaigns: 8,
-        totalReach: 125000,
-        averageCTR: 3.2,
-        totalSpend: 85000,
-        averageROI: 4.5
+        totalCampaigns: data.length,
+        activeCampaigns: active.length,
+        totalReach: data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.reach) || 0), 0),
+        averageCTR: data.length > 0 ? data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.ctr) || 0), 0) / data.length : 0,
+        totalSpend: data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.spent) || Number(c.budget) || 0), 0),
+        averageROI: data.length > 0 ? data.reduce((s: number, c: Record<string, unknown>) => s + (Number(c.roi) || 0), 0) / data.length : 0
       })
-
-      setCampaigns([
-        {
-          id: '1',
-          name: 'Summer Product Launch',
-          type: 'multi_channel',
-          status: 'active',
-          startDate: '2024-01-01',
-          endDate: '2024-03-31',
-          budget: 25000,
-          spent: 18500,
-          reach: 45000,
-          impressions: 125000,
-          clicks: 4200,
-          conversions: 320,
-          ctr: 3.36,
-          roi: 5.2,
-          targetAudience: 'Young Professionals'
-        },
-        {
-          id: '2',
-          name: 'Brand Awareness Campaign',
-          type: 'social',
-          status: 'active',
-          startDate: '2024-01-15',
-          endDate: '2024-02-15',
-          budget: 15000,
-          spent: 12800,
-          reach: 28000,
-          impressions: 85000,
-          clicks: 2550,
-          conversions: 180,
-          ctr: 3.0,
-          roi: 3.8,
-          targetAudience: 'General Consumers'
-        },
-        {
-          id: '3',
-          name: 'Holiday Promotion',
-          type: 'email',
-          status: 'scheduled',
-          startDate: '2024-02-01',
-          endDate: '2024-02-29',
-          budget: 8000,
-          spent: 0,
-          reach: 0,
-          impressions: 0,
-          clicks: 0,
-          conversions: 0,
-          ctr: 0,
-          roi: 0,
-          targetAudience: 'Existing Customers'
-        }
-      ])
+      setCampaigns(data.map((c: Record<string, unknown>) => ({
+        id: c.id as string || '',
+        name: c.name as string || '',
+        type: (c.type as string || 'multi_channel') as Campaign['type'],
+        status: (c.status as string || 'draft') as Campaign['status'],
+        startDate: c.start_date as string || '',
+        endDate: c.end_date as string || '',
+        budget: Number(c.budget) || 0,
+        spent: Number(c.spent) || 0,
+        reach: Number(c.reach) || 0,
+        impressions: Number(c.impressions) || 0,
+        clicks: Number(c.clicks) || 0,
+        conversions: Number(c.conversions) || 0,
+        ctr: Number(c.ctr) || 0,
+        roi: Number(c.roi) || 0,
+        targetAudience: c.target_audience as string || ''
+      })))
     } catch (error) {
       console.error('Error fetching campaigns data:', error)
     } finally {
