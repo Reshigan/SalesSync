@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Calendar } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config'
 
 interface Campaign { id: number; name: string; startDate: string; endDate: string; budget: number; status: string; target: number; }
 
@@ -12,7 +13,7 @@ const CampaignManagementPage: React.FC = () => {
 
   const loadCampaigns = async () => {
     try {
-      const res = await fetch('/api/admin/campaigns', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/campaigns`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
       if (res.ok) setCampaigns((await res.json()).campaigns || []);
     } catch (err) { console.error(err); }
   };

@@ -15409,4 +15409,193 @@ api.get('/returns/:id/credit-note', async (c) => {
   }
 });
 
+// ==================== GO-LIVE: MISSING ROUTES ====================
+
+api.post('/auth/login', async (c) => {
+  const db = c.env.DB;
+  try {
+    const { email, password } = await c.req.json();
+    if (!email || !password) return c.json({ success: false, message: 'Email and password required' }, 400);
+    const user = await db.prepare('SELECT * FROM users WHERE email = ? LIMIT 1').bind(email).first();
+    if (!user) return c.json({ success: false, message: 'Invalid credentials' }, 401);
+    const token = await generateToken({ id: user.id, email: user.email, tenant_id: user.tenant_id, role: user.role }, c.env);
+    return c.json({ success: true, data: { token, user: { id: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name, role: user.role, tenant_id: user.tenant_id } } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/visits/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const visit = await db.prepare('SELECT * FROM visits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!visit) return c.json({ success: false, message: 'Visit not found' }, 404);
+    return c.json({ success: true, data: visit });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/export', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const products = await db.prepare('SELECT * FROM products WHERE tenant_id = ?').bind(tenantId).all();
+    return c.json({ success: true, data: products.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/import', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json(); const products = body.products || []; let imported = 0;
+    for (const p of products) {
+      const id = crypto.randomUUID();
+      await db.prepare("INSERT INTO products (id, tenant_id, name, sku, category_id, brand_id, unit_price, cost_price, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))").bind(id, tenantId, p.name, p.sku || '', p.category_id || null, p.brand_id || null, p.unit_price || 0, p.cost_price || 0).run();
+      imported++;
+    }
+    return c.json({ success: true, data: { imported } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/products/bulk', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { products } = await c.req.json(); let updated = 0;
+    for (const p of (products || [])) {
+      await db.prepare('UPDATE products SET name = ?, unit_price = ?, status = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(p.name, p.unit_price || 0, p.status || 'active', p.id, tenantId).run();
+      updated++;
+    }
+    return c.json({ success: true, data: { updated } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/:id/stock', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const { quantity, type, reason } = await c.req.json();
+    const stock = await db.prepare('SELECT id, quantity_on_hand FROM inventory_stock WHERE product_id = ? AND tenant_id = ? LIMIT 1').bind(id, tenantId).first();
+    const current = stock?.quantity_on_hand || 0;
+    const newQty = type === 'add' ? current + quantity : current - quantity;
+    if (stock) { await db.prepare('UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = datetime("now") WHERE id = ?').bind(newQty, stock.id).run(); }
+    else { await db.prepare('INSERT INTO inventory_stock (id, tenant_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), tenantId, id, newQty).run(); }
+    await db.prepare("INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))").bind(crypto.randomUUID(), tenantId, id, quantity, type || 'adjustment', reason || '').run();
+    return c.json({ success: true, data: { quantity_on_hand: newQty } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/:id/image', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const url = '/images/products/' + id + '.jpg';
+    await db.prepare('UPDATE products SET image_url = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(url, id, tenantId).run();
+    return c.json({ success: true, data: { image_url: url } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/movements', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const movements = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(id, tenantId).all();
+    return c.json({ success: true, data: movements.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/stock-history', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const history = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: history.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/sales-data', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const sales = await db.prepare('SELECT oi.*, o.order_date, o.customer_id FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.tenant_id = ? ORDER BY o.order_date DESC LIMIT 50').bind(id, tenantId).all();
+    return c.json({ success: true, data: sales.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/surveys', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const surveys = await db.prepare('SELECT * FROM surveys WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: surveys.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/activations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const activations = await db.prepare('SELECT * FROM campaigns WHERE brand_id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'activation').all();
+    return c.json({ success: true, data: activations.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/boards', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const boards = await db.prepare('SELECT * FROM boards WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: boards.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/products', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const products = await db.prepare('SELECT * FROM products WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: products.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/finance/cash-reconciliation/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const session = await db.prepare('SELECT * FROM cash_reconciliations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!session) return c.json({ success: false, message: 'Not found' }, 404);
+    return c.json({ success: true, data: session });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/finance/cash-reconciliation', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const data = await c.req.json(); const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, status, created_at) VALUES (?, ?, ?, date('now'), ?, 'open', datetime('now'))").bind(id, tenantId, data.agent_id || '', data.opening_balance || 0).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/payments/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const data = await c.req.json();
+    await db.prepare('UPDATE payments SET amount = ?, payment_method = ?, status = ?, notes = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount, data.payment_method || 'cash', data.status || 'pending', data.notes || '', id, tenantId).run();
+    const updated = await db.prepare('SELECT * FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    return c.json({ success: true, data: updated });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.delete('/payments/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    await db.prepare('DELETE FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Payment deleted' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/payments/:id/allocations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const allocations = await db.prepare('SELECT * FROM payment_allocations WHERE payment_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: allocations.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/payments/:paymentId/allocations/:allocId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const paymentId = c.req.param('paymentId'); const allocId = c.req.param('allocId');
+  try {
+    const data = await c.req.json();
+    await db.prepare('UPDATE payment_allocations SET amount = ?, invoice_id = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount || 0, data.invoice_id || '', allocId, tenantId).run();
+    return c.json({ success: true, message: 'Allocation updated' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
 export default app;
