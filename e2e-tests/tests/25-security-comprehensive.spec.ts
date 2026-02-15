@@ -26,7 +26,7 @@ test.describe('Security Tests - Comprehensive @comprehensive @security', () => {
 
   test('should enforce HTTPS in production', async ({ page }) => {
     const url = page.url();
-    if (url.includes('ss.gonxt.tech')) {
+    if (url.includes('ss.vantax.co.za') || url.includes('ss.gonxt.tech')) {
       expect(url).toContain('https://');
     }
   });
