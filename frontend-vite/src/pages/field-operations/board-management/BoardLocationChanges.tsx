@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, ArrowRight, Calendar } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function BoardLocationChanges() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -9,21 +10,21 @@ export default function BoardLocationChanges() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      const response = await fetch(`/api/boards/${boardId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
+        const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}`, {
+          headers: {
+            'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
+          },
+        })
+        if (!response.ok) return null
+        const result = await response.json()
+        return result.data
+      },
+    })
 
-  const { data: changes, isLoading } = useQuery({
-    queryKey: ['board-location-changes', boardId],
-    queryFn: async () => {
-      const response = await fetch(`/api/boards/${boardId}/location-history`, {
+    const { data: changes, isLoading } = useQuery({
+      queryKey: ['board-location-changes', boardId],
+      queryFn: async () => {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}/location-history`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
