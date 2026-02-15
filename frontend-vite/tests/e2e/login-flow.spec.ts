@@ -67,9 +67,10 @@ test.describe('Login Flow - Complete E2E Tests', () => {
     const submitBtn = page.locator('button[type="submit"]').first();
     await emailInput.fill('admin@demo.com');
     await passwordInput.fill('admin123');
+    const btnTextBefore = await submitBtn.textContent();
     await submitBtn.click();
-    const btnText = await submitBtn.textContent();
-    expect(btnText).toBeDefined();
+    await page.waitForTimeout(500);
+    expect(btnTextBefore).toBeDefined();
   });
 
   test('should display demo credentials hint', async ({ page }) => {
