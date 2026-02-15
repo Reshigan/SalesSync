@@ -43,9 +43,10 @@ export default function ExecutiveDashboard() {
     { name: 'Team D', target: 75000, achieved: 82000 }
   ]
 
-  const getColorClass = (color: string) => {
-    const colors = { blue: 'from-blue-500 to-blue-600', green: 'from-green-500 to-green-600', purple: 'from-purple-500 to-purple-600', orange: 'from-orange-500 to-orange-600' }
-    return colors[color as keyof typeof colors] || colors.blue
+  const getCardClass = (index: number) => {
+    return index === 0 
+      ? 'bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]'
+      : 'bg-[#F8F9FA] rounded-3xl p-6 shadow-card'
   }
 
   return (
@@ -60,25 +61,25 @@ export default function ExecutiveDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiCards.map((kpi, index) => (
-          <div key={index} className={`card p-6 bg-gradient-to-br ${getColorClass(kpi.color)} text-white`}>
+          <div key={index} className={getCardClass(index)}>
             <div className="flex items-center justify-between mb-4">
-              <kpi.icon className="w-10 h-10 opacity-80" />
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${kpi.trend === 'up' ? 'bg-white/20' : 'bg-black/20'}`}>
+              <kpi.icon className={`w-10 h-10 ${index === 0 ? 'text-[#C0E02E]' : 'text-gray-400'}`} />
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${kpi.trend === 'up' ? (index === 0 ? 'bg-white/20 text-white' : 'bg-green-100 text-green-700') : (index === 0 ? 'bg-black/20 text-white' : 'bg-red-100 text-red-700')}`}>
                 {kpi.trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {kpi.change}
               </div>
             </div>
             <div>
-              <p className="text-sm opacity-90">{kpi.title}</p>
-              <p className="text-3xl font-bold mt-1">{kpi.value}</p>
-              <p className="text-xs opacity-75 mt-2">Previous: {kpi.previous}</p>
+              <p className={`text-sm ${index === 0 ? 'text-gray-400' : 'text-gray-500'}`}>{kpi.title}</p>
+              <p className={`text-3xl font-bold mt-1 ${index === 0 ? 'text-[#C0E02E]' : 'text-gray-900'}`}>{kpi.value}</p>
+              <p className={`text-xs mt-2 ${index === 0 ? 'text-gray-500' : 'text-gray-400'}`}>Previous: {kpi.previous}</p>
             </div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Revenue vs Target</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={revenueData}>
@@ -92,7 +93,7 @@ export default function ExecutiveDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Category Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -107,7 +108,7 @@ export default function ExecutiveDashboard() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 rounded-3xl">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Products</h3>
         <div className="space-y-3">
           {topProducts.map((product, index) => (
@@ -131,7 +132,7 @@ export default function ExecutiveDashboard() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 rounded-3xl">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Team Performance</h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={teamPerformance}>

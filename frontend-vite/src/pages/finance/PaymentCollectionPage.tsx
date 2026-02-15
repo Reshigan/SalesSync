@@ -128,43 +128,43 @@ export default function PaymentCollectionPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Collected</p>
+              <p className="text-gray-400 text-sm">Total Collected</p>
               <p className="text-3xl font-bold mt-1">${stats.total.toLocaleString()}</p>
             </div>
-            <DollarSign className="w-12 h-12 text-blue-200" />
+            <DollarSign className="w-12 h-12 text-[#C0E02E]" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Completed</p>
+              <p className="text-gray-500 text-sm">Completed</p>
               <p className="text-3xl font-bold mt-1">${stats.completed.toLocaleString()}</p>
             </div>
-            <CheckCircle className="w-12 h-12 text-green-200" />
+            <CheckCircle className="w-12 h-12 text-green-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-yellow-500 to-yellow-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-yellow-100 text-sm">Pending</p>
+              <p className="text-gray-500 text-sm">Pending</p>
               <p className="text-3xl font-bold mt-1">${stats.pending.toLocaleString()}</p>
             </div>
-            <Clock className="w-12 h-12 text-yellow-200" />
+            <Clock className="w-12 h-12 text-yellow-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-red-500 to-red-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-red-100 text-sm">Failed</p>
+              <p className="text-gray-500 text-sm">Failed</p>
               <p className="text-3xl font-bold mt-1">${stats.failed.toLocaleString()}</p>
             </div>
-            <XCircle className="w-12 h-12 text-red-200" />
+            <XCircle className="w-12 h-12 text-red-500" />
           </div>
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function PaymentCollectionPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods Breakdown</h3>
           <div className="space-y-3">
             {['cash', 'card', 'bank_transfer', 'mobile', 'cheque'].map((method) => {
@@ -307,7 +307,7 @@ export default function PaymentCollectionPage() {
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {payments.slice(0, 5).map((payment) => (

@@ -161,7 +161,7 @@ export default function MyCommissions() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <Clock className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Pending</span>
@@ -172,7 +172,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <CheckCircle className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Approved</span>
@@ -183,7 +183,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <DollarSign className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Paid This Month</span>
@@ -194,7 +194,7 @@ export default function MyCommissions() {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow p-6 text-white">
+          <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
             <div className="flex items-center justify-between mb-2">
               <TrendingUp className="w-8 h-8 opacity-80" />
               <span className="text-sm font-medium opacity-90">Total Earned</span>

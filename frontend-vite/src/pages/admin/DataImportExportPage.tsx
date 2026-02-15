@@ -236,47 +236,47 @@ export default function DataImportExportPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-sm">Total Imports</p>
+              <p className="text-gray-400 text-sm">Total Imports</p>
               <p className="text-3xl font-bold mt-1">{importHistory.length}</p>
             </div>
-            <Upload className="w-12 h-12 text-blue-200" />
+            <Upload className="w-12 h-12 text-[#C0E02E]" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm">Successful</p>
+              <p className="text-gray-500 text-sm">Successful</p>
               <p className="text-3xl font-bold mt-1">
                 {importHistory.filter(h => h.status === 'success').length}
               </p>
             </div>
-            <Check className="w-12 h-12 text-green-200" />
+            <Check className="w-12 h-12 text-green-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-sm">Total Records</p>
+              <p className="text-gray-500 text-sm">Total Records</p>
               <p className="text-3xl font-bold mt-1">
                 {importHistory.reduce((sum, h) => sum + h.records, 0).toLocaleString()}
               </p>
             </div>
-            <Database className="w-12 h-12 text-purple-200" />
+            <Database className="w-12 h-12 text-purple-500" />
           </div>
         </div>
 
-        <div className="card p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-sm">Exports</p>
+              <p className="text-gray-500 text-sm">Exports</p>
               <p className="text-3xl font-bold mt-1">{exportJobs.length}</p>
             </div>
-            <Download className="w-12 h-12 text-orange-200" />
+            <Download className="w-12 h-12 text-orange-500" />
           </div>
         </div>
       </div>

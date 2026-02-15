@@ -316,7 +316,7 @@ export default function SystemSettingsPage() {
 
         {/* Content */}
         <div className="flex-1">
-          <div className="card p-6">
+          <div className="card p-6 rounded-3xl">
             {categories.map((category) => {
               if (activeTab !== category.id) return null
               

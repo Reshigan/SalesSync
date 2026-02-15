@@ -79,22 +79,22 @@ export default function AdvancedAnalyticsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+        <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="text-sm opacity-90">Avg Order Value</div>
           <div className="text-3xl font-bold mt-2">$127.50</div>
           <div className="text-xs opacity-75 mt-2">+8.5% vs last period</div>
         </div>
-        <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="text-sm opacity-90">Conversion Rate</div>
           <div className="text-3xl font-bold mt-2">3.2%</div>
           <div className="text-xs opacity-75 mt-2">+0.4% vs last period</div>
         </div>
-        <div className="card p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="text-sm opacity-90">Customer LTV</div>
           <div className="text-3xl font-bold mt-2">$1,845</div>
           <div className="text-xs opacity-75 mt-2">+12.3% vs last period</div>
         </div>
-        <div className="card p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 shadow-card">
           <div className="text-sm opacity-90">Churn Rate</div>
           <div className="text-3xl font-bold mt-2">2.1%</div>
           <div className="text-xs opacity-75 mt-2">-0.5% vs last period</div>
@@ -102,7 +102,7 @@ export default function AdvancedAnalyticsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Sales Trend Analysis</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={salesTrend}>
@@ -118,7 +118,7 @@ export default function AdvancedAnalyticsDashboard() {
           </ResponsiveContainer>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">Hourly Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={hourlyAnalysis}>
@@ -134,7 +134,7 @@ export default function AdvancedAnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 rounded-3xl">
         <h3 className="text-lg font-semibold text-gray-900 mb-6">Customer Retention Cohort Analysis</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={cohortAnalysis}>
@@ -152,7 +152,7 @@ export default function AdvancedAnalyticsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Segments</h3>
           <div className="space-y-4">
             {customerSegments.map((segment, index) => (
@@ -173,7 +173,7 @@ export default function AdvancedAnalyticsDashboard() {
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 rounded-3xl">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Geographic Performance</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={geographicData}>
@@ -189,7 +189,7 @@ export default function AdvancedAnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-6 rounded-3xl">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Performance Matrix</h3>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
