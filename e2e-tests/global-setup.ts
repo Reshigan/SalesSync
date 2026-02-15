@@ -55,8 +55,8 @@ async function globalSetup(config: FullConfig) {
     await page.waitForSelector('input[type="email"]', { timeout: 15000 });
     
     console.log('📝 Filling login credentials...');
-    await page.fill('input[type="email"]', 'admin@demo.com');
-    await page.fill('input[type="password"]', 'Admin@123');
+    await page.fill('input[type="email"]', process.env.TEST_EMAIL || 'admin@demo.com');
+    await page.fill('input[type="password"]', process.env.TEST_PASSWORD || 'admin123');
     
     console.log('🔘 Clicking login button...');
     await page.locator('button[type="submit"]').first().click();

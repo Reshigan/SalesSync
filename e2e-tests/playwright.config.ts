@@ -10,7 +10,7 @@ export default defineConfig({
   globalSetup: require.resolve('./global-setup.ts'),
   
   use: {
-    baseURL: process.env.BASE_URL || 'https://ss.gonxt.tech',
+    baseURL: process.env.BASE_URL || 'https://ss.vantax.co.za',
     storageState: '.auth/admin.json',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

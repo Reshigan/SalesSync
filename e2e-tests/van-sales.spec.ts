@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'https://ss.gonxt.tech';
-const API_URL = `${BASE_URL}/api`;
+const BASE_URL = process.env.BASE_URL || 'https://ss.vantax.co.za';
+const API_URL = process.env.API_URL || 'https://salessync-api.reshigan-085.workers.dev/api';
 
 test.describe('Van Sales Module E2E Tests', () => {
   let authToken: string;

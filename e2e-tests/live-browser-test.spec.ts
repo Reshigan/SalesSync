@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = 'https://ss.gonxt.tech';
+const BASE_URL = process.env.BASE_URL || 'https://ss.vantax.co.za';
 
 test.describe('Live Browser Testing - Production', () => {
   

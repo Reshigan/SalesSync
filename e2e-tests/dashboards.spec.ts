@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const BASE_URL = process.env.BASE_URL || 'https://ss.gonxt.tech'
+const BASE_URL = process.env.BASE_URL || 'https://ss.vantax.co.za'
 const TEST_EMAIL = 'demo@demo.com'
 const TEST_PASSWORD = 'demo123'
 
