@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, TrendingUp, AlertTriangle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function CountLineDetail() {
   const { countId, lineId } = useParams<{ countId: string; lineId: string }>()
@@ -9,7 +10,7 @@ export default function CountLineDetail() {
   const { data: count } = useQuery({
     queryKey: ['stock-count', countId],
     queryFn: async () => {
-      const response = await fetch(`/api/stock-counts/${countId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/stock-counts/${countId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function CountLineDetail() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/stock-counts/${countId}/lines/${lineId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

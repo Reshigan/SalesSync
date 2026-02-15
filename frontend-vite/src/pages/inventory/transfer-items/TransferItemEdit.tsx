@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface TransferItemFormData {
   quantity_requested: number
@@ -17,7 +18,7 @@ export default function TransferItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/transfers/${transferId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

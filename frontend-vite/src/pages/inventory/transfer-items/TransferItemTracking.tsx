@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Clock, Truck, CheckCircle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function TransferItemTracking() {
   const { transferId, itemId } = useParams<{ transferId: string; itemId: string }>()
@@ -9,7 +10,7 @@ export default function TransferItemTracking() {
   const { data: item } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/transfers/${transferId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function TransferItemTracking() {
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['transfer-item-tracking', transferId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/transfers/${transferId}/items/${itemId}/tracking`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/transfers/${transferId}/items/${itemId}/tracking`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

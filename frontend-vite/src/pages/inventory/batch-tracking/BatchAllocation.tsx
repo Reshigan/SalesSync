@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, ShoppingCart, Eye } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function BatchAllocation() {
   const { batchId } = useParams<{ batchId: string }>()
@@ -9,7 +10,7 @@ export default function BatchAllocation() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/batches/${batchId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function BatchAllocation() {
   const { data: allocations, isLoading } = useQuery({
     queryKey: ['batch-allocations', batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/batches/${batchId}/allocations`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}/allocations`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

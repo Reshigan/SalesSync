@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Calculator, DollarSign, TrendingUp } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function CalculationDetail() {
   const { calculationId } = useParams<{ calculationId: string }>()
@@ -10,7 +11,7 @@ export default function CalculationDetail() {
   const { data: calculation, isLoading } = useQuery({
     queryKey: ['commission-calculation', calculationId],
     queryFn: async () => {
-      const response = await fetch(`/api/commissions/calculations/${calculationId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/calculations/${calculationId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

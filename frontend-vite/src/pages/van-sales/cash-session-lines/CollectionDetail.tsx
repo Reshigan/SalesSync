@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, User, Clock } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function CollectionDetail() {
   const { sessionId, collectionId } = useParams<{ sessionId: string; collectionId: string }>()
@@ -10,7 +11,7 @@ export default function CollectionDetail() {
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-sessions/${sessionId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function CollectionDetail() {
   const { data: collection, isLoading } = useQuery({
     queryKey: ['collection', sessionId, collectionId],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-sessions/${sessionId}/collections/${collectionId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}/collections/${collectionId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

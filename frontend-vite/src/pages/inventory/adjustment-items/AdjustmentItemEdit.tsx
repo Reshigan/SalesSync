@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface AdjustmentItemFormData {
   quantity: number
@@ -18,7 +19,7 @@ export default function AdjustmentItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/adjustments/${adjustmentId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/adjustments/${adjustmentId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

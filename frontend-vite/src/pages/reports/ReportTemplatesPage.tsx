@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Play, Star } from 'lucide-react';
+import { API_CONFIG } from '../../config/api.config'
 
 interface Template { id: number; name: string; description: string; category: string; popular: boolean; }
 
@@ -17,7 +18,7 @@ const ReportTemplatesPage: React.FC = () => {
 
   const runTemplate = async (templateId: number) => {
     try {
-      const res = await fetch(`/api/reports/templates/${templateId}/run`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/reports/templates/${templateId}/run`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function ExceptionDetail() {
   const { calculationId, exceptionId } = useParams<{ calculationId: string; exceptionId: string }>()
@@ -10,7 +11,7 @@ export default function ExceptionDetail() {
   const { data: exception, isLoading } = useQuery({
     queryKey: ['commission-exception', calculationId, exceptionId],
     queryFn: async () => {
-      const response = await fetch(`/api/commissions/calculations/${calculationId}/exceptions/${exceptionId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/calculations/${calculationId}/exceptions/${exceptionId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
