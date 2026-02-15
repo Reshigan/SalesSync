@@ -39,7 +39,7 @@ interface CustomerFormModalProps {
   mode: 'create' | 'edit';
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://ss.gonxt.tech/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://salessync-api.reshigan-085.workers.dev/api';
 
 export default function CustomerFormModal({ open, onClose, customer, mode }: CustomerFormModalProps) {
   const queryClient = useQueryClient();
