@@ -41,8 +41,13 @@ const DEFAULT_TENANT_MAPPINGS: TenantMapping = {
       logo: '/assets/pepsi-logo.png'
     }
   },
+  'ss.vantax.co.za': {
+    code: 'DEMO',
+    name: 'SalesSync Production',
+    domain: 'ss.vantax.co.za'
+  },
   'ss.gonxt.tech': {
-    code: 'DEMO', // Default for main domain
+    code: 'DEMO',
     name: 'SalesSync Demo',
     domain: 'ss.gonxt.tech'
   },

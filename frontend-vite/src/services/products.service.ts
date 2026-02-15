@@ -208,7 +208,7 @@ class ProductsService {
 
   async bulkUpdateProducts(updates: Array<{ id: string; updates: Partial<Product> }>): Promise<Product[]> {
     try {
-      const response = await apiClient.put('/products/bulk', { updates })
+      const response = await apiClient.post('/products/bulk', { updates })
       return response.data.data
     } catch (error) {
       console.error('Failed to bulk update products:', error)
