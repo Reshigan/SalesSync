@@ -104,7 +104,7 @@ export const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onCurrencyCh
         </div>
 
         <div className="border-t pt-4">
-          <div className="bg-surface-secondary rounded-lg p-4">
+          <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-2">Preview</h4>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">

@@ -63,7 +63,7 @@ export default function ModuleSwitcher({ currentModule, onModuleChange }: Module
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
       >
         {currentModuleData && (
           <>
@@ -103,7 +103,7 @@ export default function ModuleSwitcher({ currentModule, onModuleChange }: Module
                     className={`w-full flex items-start gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                       isActive
                         ? 'bg-primary-50 text-primary-700'
-                        : 'hover:bg-surface-secondary text-gray-700'
+                        : 'hover:bg-gray-50 text-gray-700'
                     }`}
                   >
                     <Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${

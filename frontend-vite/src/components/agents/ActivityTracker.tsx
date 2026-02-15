@@ -459,7 +459,7 @@ function SurveyComponent({ onSurveyComplete }: { onSurveyComplete: (responses: a
           </label>
           <div className="flex space-x-2">
             {[1, 2, 3, 4, 5].map(rating => (
-              <button key={rating} className="p-2 border rounded hover:bg-surface-secondary">
+              <button key={rating} className="p-2 border rounded hover:bg-gray-50">
                 <Star className="h-5 w-5" />
               </button>
             ))}

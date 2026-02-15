@@ -21,7 +21,7 @@ export default function ProtectedRoute({
   // Wait for hydration to complete before making auth decisions
   if (!hydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-secondary">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
@@ -38,7 +38,7 @@ export default function ProtectedRoute({
       return <>{fallback}</>
     }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-secondary">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             Access Denied
@@ -63,7 +63,7 @@ export default function ProtectedRoute({
       return <>{fallback}</>
     }
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-secondary">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
           <h1 className="text-xl font-semibold text-gray-900 mb-2">
             Insufficient Permissions

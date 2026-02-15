@@ -103,7 +103,7 @@ export default function GPSCapture({
         </div>
 
         {location && (
-          <div className="bg-surface-secondary rounded-lg p-3 space-y-1">
+          <div className="bg-gray-50 rounded-lg p-3 space-y-1">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Latitude:</span>
               <span className="font-mono text-gray-900">{location.lat.toFixed(6)}</span>

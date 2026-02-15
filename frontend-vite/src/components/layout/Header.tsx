@@ -21,7 +21,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       {/* Mobile menu button */}
       <button
         type="button"
-        className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-surface-secondary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
+        className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
         onClick={onMenuClick}
       >
         <Menu className="h-6 w-6" />
