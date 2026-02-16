@@ -34,40 +34,6 @@ export default function TransferItemList() {
       return result.data || []
     },
   })
-
-  const oldItems = [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        quantity_requested: 100,
-        quantity_shipped: 100,
-        quantity_received: 95,
-        variance: -5,
-        status: 'received_with_variance',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        quantity_requested: 50,
-        quantity_shipped: 50,
-        quantity_received: 50,
-        variance: 0,
-        status: 'received',
-      },
-      {
-        id: '3',
-        product_name: 'Sprite 500ml',
-        product_sku: 'SP-500',
-        quantity_requested: 75,
-        quantity_shipped: 75,
-        quantity_received: null,
-        variance: 0,
-        status: 'in_transit',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading transfer items...</div>
   }

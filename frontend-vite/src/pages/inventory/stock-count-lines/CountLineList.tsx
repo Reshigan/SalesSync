@@ -34,40 +34,6 @@ export default function CountLineList() {
       return result.data || []
     },
   })
-
-  const oldLines = [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        expected_quantity: 100,
-        counted_quantity: 95,
-        variance: -5,
-        variance_percent: -5.0,
-        status: 'variance_pending',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        expected_quantity: 50,
-        counted_quantity: 50,
-        variance: 0,
-        variance_percent: 0,
-        status: 'approved',
-      },
-      {
-        id: '3',
-        product_name: 'Sprite 500ml',
-        product_sku: 'SP-500',
-        expected_quantity: 75,
-        counted_quantity: 80,
-        variance: 5,
-        variance_percent: 6.67,
-        status: 'variance_pending',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading count lines...</div>
   }

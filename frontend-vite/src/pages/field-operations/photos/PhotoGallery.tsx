@@ -34,38 +34,6 @@ export default function PhotoGallery() {
       return result.data || []
     },
   })
-
-  const oldPhotos = [
-      {
-        id: '1',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'board_placement',
-        caption: 'Promotional board at entrance',
-        taken_at: '2024-01-20T09:35:00Z',
-      },
-      {
-        id: '2',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'product_display',
-        caption: 'Product display setup',
-        taken_at: '2024-01-20T09:50:00Z',
-      },
-      {
-        id: '3',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'store_front',
-        caption: 'Store front view',
-        taken_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '4',
-        photo_url: '/placeholder-photo.jpg',
-        photo_type: 'signature',
-        caption: 'Customer signature',
-        taken_at: '2024-01-20T10:15:00Z',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading photos...</div>
   }

@@ -34,37 +34,6 @@ export default function VisitTaskList() {
       return result.data || []
     },
   })
-
-  const oldTasks = [
-      {
-        id: '1',
-        task_type: 'board_placement',
-        task_title: 'Install promotional board',
-        priority: 'high',
-        status: 'completed',
-        duration_minutes: 30,
-        completed_at: '2024-01-20T09:45:00Z',
-      },
-      {
-        id: '2',
-        task_type: 'product_distribution',
-        task_title: 'Distribute product samples',
-        priority: 'medium',
-        status: 'completed',
-        duration_minutes: 15,
-        completed_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '3',
-        task_type: 'survey',
-        task_title: 'Complete customer survey',
-        priority: 'low',
-        status: 'completed',
-        duration_minutes: 10,
-        completed_at: '2024-01-20T10:10:00Z',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading tasks...</div>
   }

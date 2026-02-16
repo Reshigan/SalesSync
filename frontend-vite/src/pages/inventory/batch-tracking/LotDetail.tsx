@@ -74,45 +74,6 @@ export default function LotDetail() {
       return result.data || []
     },
   })
-
-  const oldBatches = [
-      {
-        id: 'batch-1',
-        batch_number: 'BATCH-2024-001',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-2',
-        batch_number: 'BATCH-2024-002',
-        warehouse_name: 'Branch Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-3',
-        batch_number: 'BATCH-2024-003',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-4',
-        batch_number: 'BATCH-2024-004',
-        warehouse_name: 'Regional Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-      {
-        id: 'batch-5',
-        batch_number: 'BATCH-2024-005',
-        warehouse_name: 'Main Warehouse',
-        quantity: 1000,
-        status: 'active',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading lot details...</div>
   }

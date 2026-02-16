@@ -34,28 +34,6 @@ export default function BoardLocationChanges() {
       return result.data || []
     },
   })
-
-  const oldChanges = [
-      {
-        id: '1',
-        from_location: 'XYZ Mart - Window Display',
-        to_location: 'ABC Store - Entrance',
-        change_date: '2024-01-20T09:00:00Z',
-        reason: 'Better visibility at new location',
-        changed_by: 'John Field Agent',
-        approved_by: 'Manager',
-      },
-      {
-        id: '2',
-        from_location: 'DEF Shop - Counter',
-        to_location: 'XYZ Mart - Window Display',
-        change_date: '2023-12-15T10:00:00Z',
-        reason: 'Store renovation at previous location',
-        changed_by: 'Jane Agent',
-        approved_by: 'Manager',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading location changes...</div>
   }
