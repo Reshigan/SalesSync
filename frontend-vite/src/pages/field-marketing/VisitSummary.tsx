@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../../services/api.service';
 import { CheckCircle, XCircle, Target, Package, DollarSign, Clock, MapPin, AlertCircle, ChevronDown, ChevronUp, MessageSquare, Calendar, Check } from 'lucide-react';
 
 interface VisitSummaryData {
@@ -65,13 +65,10 @@ export default function VisitSummary() {
   useEffect(() => {
     const fetchVisitSummary = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/visit-summary?customer_id=${customerId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const json = await res.json();
-        if (json.data) {
-          const d = json.data as Record<string, unknown>;
+        const res = await apiClient.get(`/field-agent-workflow/visit-summary?customer_id=${customerId}`);
+        const json = res.data?.data || res.data;
+        if (json) {
+          const d = json as Record<string, unknown>;
           setVisitData(prev => ({
             ...prev,
             visitId: d.visit_id as string || prev.visitId,
@@ -116,7 +113,6 @@ export default function VisitSummary() {
   const handleCompleteVisit = async () => {
     setIsCompleting(true);
     try {
-      const token = localStorage.getItem('token');
       const payload = {
         visitId: visitData.visitId,
         customer_id: customerId,
@@ -126,11 +122,7 @@ export default function VisitSummary() {
         completedAt: new Date().toISOString()
       };
 
-      await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/complete-visit`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      await apiClient.post('/field-agent-workflow/complete-visit', payload);
 
       // Navigate to dashboard
       navigate('/field-marketing/dashboard', {

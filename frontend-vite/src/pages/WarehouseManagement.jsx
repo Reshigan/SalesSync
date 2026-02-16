@@ -7,7 +7,7 @@ import {
 import {
   LocalShipping, Inventory2, CheckCircle, Refresh
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function WarehouseManagement() {
   const [activeTab, setActiveTab] = useState(0);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Users, Package, DollarSign, Activity } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 const AnalyticsDashboardPage: React.FC = () => {
   const [metrics, setMetrics] = useState<any>({});
@@ -10,8 +10,8 @@ const AnalyticsDashboardPage: React.FC = () => {
 
   const loadMetrics = async () => {
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/reports/analytics`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      if (res.ok) setMetrics(await res.json());
+      const res = await apiClient.get('/reports/analytics');
+      if (res.data) setMetrics(res.data?.data || res.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart3, Download, Calendar, Filter } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 const ReportBuilderPage: React.FC = () => {
   const [config, setConfig] = useState({ type: 'sales', dateFrom: '', dateTo: '', groupBy: 'day', filters: {} });
@@ -10,25 +10,17 @@ const ReportBuilderPage: React.FC = () => {
   const generateReport = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/reports/generate`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(config)
-      });
-      if (res.ok) setData(await res.json());
+      const res = await apiClient.post('/reports/generate', config);
+      if (res.data) setData(res.data?.data || res.data);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
 
   const exportReport = async (format: string) => {
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/reports/export?format=${format}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...config, data })
-      });
-      if (res.ok) {
-        const blob = await res.blob();
+      const res = await apiClient.post(`/reports/export?format=${format}`, { ...config, data }, { responseType: 'blob' });
+      if (res.data) {
+        const blob = res.data;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

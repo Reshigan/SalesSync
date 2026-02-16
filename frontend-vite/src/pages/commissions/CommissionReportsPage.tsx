@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { commissionsService } from '../../services/commissions.service'
+import { apiClient } from '../../services/api.service'
 
 export const CommissionReportsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState({
@@ -16,18 +17,25 @@ export const CommissionReportsPage: React.FC = () => {
     }).format(amount)
   }
 
-  const mockReportData = {
-    by_agent: [],
-    by_type: [],
-    by_period: [],
+  const [reportData, setReportData] = useState({
+    by_agent: [] as any[],
+    by_type: [] as any[],
+    by_period: [] as any[],
     summary: {
       total_commissions: 0,
       total_amount: 0,
       average_commission: 0,
-      highest_earner: null,
+      highest_earner: null as string | null,
       growth_rate: 0
     }
-  }
+  })
+
+  useEffect(() => {
+    apiClient.get('/commissions/reports', { params: { start: dateRange.start, end: dateRange.end, group_by: groupBy } }).then(res => {
+      const data = res.data?.data || res.data
+      if (data && typeof data === 'object') setReportData(prev => ({ ...prev, ...data }))
+    }).catch(() => {})
+  }, [dateRange, groupBy])
 
   return (
     <div className="space-y-6">
@@ -106,7 +114,7 @@ export const CommissionReportsPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Commissions</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockReportData.summary.total_commissions}</p>
+              <p className="text-2xl font-semibold text-gray-900">{reportData.summary.total_commissions}</p>
             </div>
           </div>
         </div>
@@ -121,7 +129,7 @@ export const CommissionReportsPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockReportData.summary.total_amount)}
+                {formatCurrency(reportData.summary.total_amount)}
               </p>
             </div>
           </div>
@@ -137,7 +145,7 @@ export const CommissionReportsPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Average Commission</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockReportData.summary.average_commission)}
+                {formatCurrency(reportData.summary.average_commission)}
               </p>
             </div>
           </div>
@@ -153,7 +161,7 @@ export const CommissionReportsPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Growth Rate</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockReportData.summary.growth_rate.toFixed(1)}%
+                {reportData.summary.growth_rate.toFixed(1)}%
               </p>
             </div>
           </div>
@@ -166,7 +174,7 @@ export const CommissionReportsPage: React.FC = () => {
           Commission Breakdown by {groupBy.charAt(0).toUpperCase() + groupBy.slice(1)}
         </h2>
         
-        {groupBy === 'agent' && mockReportData.by_agent.length === 0 && (
+        {groupBy === 'agent' && reportData.by_agent.length === 0 && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -176,7 +184,7 @@ export const CommissionReportsPage: React.FC = () => {
           </div>
         )}
 
-        {groupBy === 'type' && mockReportData.by_type.length === 0 && (
+        {groupBy === 'type' && reportData.by_type.length === 0 && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -186,7 +194,7 @@ export const CommissionReportsPage: React.FC = () => {
           </div>
         )}
 
-        {groupBy === 'period' && mockReportData.by_period.length === 0 && (
+        {groupBy === 'period' && reportData.by_period.length === 0 && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />

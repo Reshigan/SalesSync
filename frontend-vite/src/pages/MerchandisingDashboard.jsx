@@ -8,7 +8,7 @@ import {
   ShoppingCart, Inventory2, Assessment, Store,
   CheckCircle, Warning, Visibility
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function MerchandisingDashboard() {
   const [tab, setTab] = useState(0);

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface Role {
   id: string
@@ -13,7 +14,14 @@ interface Role {
 export const RoleManagementPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  const mockRoles: Role[] = []
+  const [roles, setRoles] = useState<Role[]>([])
+
+  useEffect(() => {
+    apiClient.get('/roles').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setRoles(data)
+    }).catch(() => {})
+  }, [])
 
   const availablePermissions = [
     { id: 'users.view', name: 'View Users', category: 'Users' },
@@ -70,7 +78,7 @@ export const RoleManagementPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Roles</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockRoles.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{roles.length}</p>
             </div>
           </div>
         </div>
@@ -99,7 +107,7 @@ export const RoleManagementPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Assigned Users</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockRoles.reduce((sum, r) => sum + r.user_count, 0)}
+                {roles.reduce((sum, r) => sum + r.user_count, 0)}
               </p>
             </div>
           </div>
@@ -108,7 +116,7 @@ export const RoleManagementPage: React.FC = () => {
 
       {/* Roles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockRoles.length === 0 ? (
+        {roles.length === 0 ? (
           <div className="col-span-full bg-white rounded-lg shadow text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -117,7 +125,7 @@ export const RoleManagementPage: React.FC = () => {
             <p className="mt-1 text-sm text-gray-500">Get started by creating a new role.</p>
           </div>
         ) : (
-          mockRoles.map((role) => (
+          roles.map((role) => (
             <div key={role.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, TrendingUp, TrendingDown } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function VanLoadItemDetail() {
   const { loadId, itemId } = useParams<{ loadId: string; itemId: string }>()
@@ -10,28 +10,8 @@ export default function VanLoadItemDetail() {
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/van-loads/${loadId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: item, isLoading } = useQuery({
-    queryKey: ['van-load-item', loadId, itemId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/van-loads/${loadId}/items/${itemId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/van-loads/${loadId}`)
+      return res.data?.data || null
     },
   })
 

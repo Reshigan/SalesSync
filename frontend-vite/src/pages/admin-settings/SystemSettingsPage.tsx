@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
+import { toast } from 'react-hot-toast'
 
 interface SystemSettings {
   general: {
@@ -37,42 +39,29 @@ export const SystemSettingsPage: React.FC = () => {
   const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<'general' | 'email' | 'security' | 'features'>('general')
 
-  const mockSettings: SystemSettings = {
-    general: {
-      company_name: 'SalesSync',
-      timezone: 'Africa/Johannesburg',
-      currency: 'ZAR',
-      date_format: 'DD/MM/YYYY',
-      language: 'en'
-    },
-    email: {
-      smtp_host: 'smtp.example.com',
-      smtp_port: 587,
-      smtp_username: 'noreply@example.com',
-      smtp_from_email: 'noreply@example.com',
-      smtp_from_name: 'SalesSync'
-    },
-    security: {
-      session_timeout: 30,
-      password_min_length: 8,
-      password_require_uppercase: true,
-      password_require_lowercase: true,
-      password_require_numbers: true,
-      password_require_special: true,
-      two_factor_enabled: false
-    },
-    features: {
-      enable_notifications: true,
-      enable_analytics: true,
-      enable_api_access: true,
-      enable_mobile_app: true
-    }
+  const defaultSettings: SystemSettings = {
+    general: { company_name: 'SalesSync', timezone: 'Africa/Johannesburg', currency: 'ZAR', date_format: 'DD/MM/YYYY', language: 'en' },
+    email: { smtp_host: '', smtp_port: 587, smtp_username: '', smtp_from_email: '', smtp_from_name: 'SalesSync' },
+    security: { session_timeout: 30, password_min_length: 8, password_require_uppercase: true, password_require_lowercase: true, password_require_numbers: true, password_require_special: true, two_factor_enabled: false },
+    features: { enable_notifications: true, enable_analytics: true, enable_api_access: true, enable_mobile_app: true }
   }
 
-  const [settings, setSettings] = useState(mockSettings)
+  const [settings, setSettings] = useState(defaultSettings)
 
-  const handleSave = () => {
-    console.log('Saving settings:', settings)
+  useEffect(() => {
+    apiClient.get('/system/settings').then(res => {
+      const data = res.data?.data || res.data
+      if (data && typeof data === 'object') setSettings(prev => ({ ...prev, ...data }))
+    }).catch(() => {})
+  }, [])
+
+  const handleSave = async () => {
+    try {
+      await apiClient.put('/system/settings', settings)
+      toast.success('Settings saved successfully')
+    } catch {
+      toast.error('Failed to save settings')
+    }
   }
 
   const tabs = [

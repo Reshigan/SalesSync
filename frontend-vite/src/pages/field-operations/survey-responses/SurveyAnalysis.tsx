@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, Users, BarChart } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function SurveyAnalysis() {
   const { surveyId } = useParams<{ surveyId: string }>()
@@ -10,14 +10,8 @@ export default function SurveyAnalysis() {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['survey-analysis', surveyId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/surveys/${surveyId}/analysis`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/surveys/${surveyId}/analysis`)
+      return res.data?.data || null
     },
   })
 

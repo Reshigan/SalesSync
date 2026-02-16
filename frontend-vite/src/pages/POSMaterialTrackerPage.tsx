@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Package, QrCode, Search, Calendar, CheckCircle2, AlertCircle, Upload, Download } from 'lucide-react';
-import { API_CONFIG } from '../config/api.config'
+import { apiClient } from '../services/api.service'
 
 interface POSMaterial {
   id: number;
@@ -56,16 +56,9 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadMaterialLibrary = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing-new/materials/library`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMaterials(data.materials || []);
-      }
+      const response = await apiClient.get('/trade-marketing-new/materials/library');
+      const data = response.data?.data || response.data;
+      setMaterials(data?.materials || (Array.isArray(data) ? data : []));
     } catch (error) {
       console.error('Error loading material library:', error);
     }
@@ -73,16 +66,9 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const loadInstallationHistory = async () => {
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing-new/pos-materials`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setInstallations(data.installations || []);
-      }
+      const response = await apiClient.get('/trade-marketing-new/pos-materials');
+      const data = response.data?.data || response.data;
+      setInstallations(data?.installations || (Array.isArray(data) ? data : []));
     } catch (error) {
       console.error('Error loading installation history:', error);
     }
@@ -115,26 +101,43 @@ const POSMaterialTrackerPage: React.FC = () => {
   };
 
   const handlePhotoCapture = (type: 'before' | 'after') => {
-    // Simulate photo capture
-    const mockPhoto = `photo-${type}-${Date.now()}.jpg`;
-    if (type === 'before') {
-      setFormData({
-        ...formData,
-        photosBefore: [...(formData.photosBefore || []), mockPhoto]
-      });
-    } else {
-      setFormData({
-        ...formData,
-        photosAfter: [...(formData.photosAfter || []), mockPhoto]
-      });
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const photoUrl = URL.createObjectURL(file);
+        if (type === 'before') {
+          setFormData({
+            ...formData,
+            photosBefore: [...(formData.photosBefore || []), photoUrl]
+          });
+        } else {
+          setFormData({
+            ...formData,
+            photosAfter: [...(formData.photosAfter || []), photoUrl]
+          });
+        }
+      }
+    };
+    input.click();
   };
 
   const handleQRScan = () => {
-    // Simulate QR code scan
-    const qrCode = `QR-${selectedMaterial?.type?.substring(0, 3).toUpperCase()}-${Date.now()}`;
-    setFormData({ ...formData, qrCode });
-    alert(`QR Code Scanned: ${qrCode}`);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const qrCode = `QR-${selectedMaterial?.type?.substring(0, 3).toUpperCase()}-${Date.now()}`;
+        setFormData({ ...formData, qrCode });
+      }
+    };
+    input.click();
   };
 
   const handleSubmitInstallation = async () => {
@@ -158,16 +161,9 @@ const POSMaterialTrackerPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing-new/pos-materials`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(installationData)
-      });
+      const response = await apiClient.post('/trade-marketing-new/pos-materials', installationData);
 
-      if (response.ok) {
+      if (response.data) {
         alert('Installation recorded successfully!');
         await loadInstallationHistory(); // Reload list
         setShowInstallForm(false);

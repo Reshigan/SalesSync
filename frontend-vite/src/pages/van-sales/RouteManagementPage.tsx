@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { MapPin, Clock, Truck, Navigation, Plus, Edit, Trash2 } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface Route {
   id: string
@@ -41,10 +41,8 @@ export default function RouteManagementPage() {
   const fetchRoutes = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_CONFIG.BASE_URL}/beat-routes`, { headers: { 'Authorization': `Bearer ${token}` } })
-      const json = await res.json()
-      const items = (json.data || []).map((r: Record<string, unknown>) => ({
+      const res = await apiClient.get('/beat-routes')
+      const items = (res.data?.data || (Array.isArray(res.data) ? res.data : [])).map((r: Record<string, unknown>) => ({
         id: r.id as string || '',
         name: r.name as string || 'Unnamed Route',
         description: r.description as string || '',

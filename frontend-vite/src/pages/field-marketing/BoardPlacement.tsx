@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import CameraCapture from '../../components/CameraCapture';
 import AIModelStatus from '../../components/ai/AIModelStatus';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../../services/api.service';
 
 interface Brand {
   id: string;
@@ -84,28 +84,20 @@ export default function BoardPlacement() {
     setShowCamera(false);
     setCurrentBrand(null);
 
-    // Simulate coverage analysis
-    // TODO: Implement actual image analysis with TensorFlow.js or backend API
-    setTimeout(() => {
-      analyzeCoverage(newPhoto.id);
-    }, 2000);
+    analyzeCoverage(newPhoto.id);
   };
 
   const analyzeCoverage = async (photoId: string) => {
     try {
-      const token = localStorage.getItem('token');
       const photo = photos.find(p => p.id === photoId);
       if (!photo) return;
       const formData = new FormData();
       formData.append('photo', photo.file);
       formData.append('brand_id', photo.brand_id);
-      const res = await fetch(`${API_CONFIG.BASE_URL}/upload-photo`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+      const res = await apiClient.post('/upload-photo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
-      const json = await res.json();
-      const coveragePercentage = json.data?.coverage_percentage || Math.floor(Math.random() * 80) + 10;
+      const coveragePercentage = res.data?.data?.coverage_percentage || res.data?.coverage_percentage || Math.floor(Math.random() * 80) + 10;
 
       setPhotos((prev) =>
         prev.map((p) =>
@@ -142,9 +134,7 @@ export default function BoardPlacement() {
       };
 
       setPhotos((prev) => [...prev, newPhoto]);
-      setTimeout(() => {
-        analyzeCoverage(newPhoto.id);
-      }, 2000);
+      analyzeCoverage(newPhoto.id);
     };
     reader.readAsDataURL(file);
   };
@@ -163,7 +153,6 @@ export default function BoardPlacement() {
       setUploading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
       const formData = new FormData();
       photos.forEach((photo, index) => {
         formData.append(`photos[${index}]`, photo.file);
@@ -172,10 +161,8 @@ export default function BoardPlacement() {
       });
       formData.append('customer_id', customerId || '');
       formData.append('gps_verified', String(gpsVerified || false));
-      await fetch(`${API_CONFIG.BASE_URL}/field-marketing/board-placement`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
+      await apiClient.post('/field-marketing/board-placement', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       // Navigate back to visit list

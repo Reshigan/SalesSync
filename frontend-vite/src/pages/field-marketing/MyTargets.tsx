@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Target, TrendingUp, Calendar, Award, ChevronDown, ChevronUp } from 'lucide-react'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface TargetItem {
   id: string
@@ -30,12 +30,8 @@ export default function MyTargets() {
   const fetchTargets = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_CONFIG.BASE_URL}/agent-targets/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const json = await res.json()
-      setTargets(json.data || [])
+      const res = await apiClient.get('/agent-targets/my')
+      setTargets(res.data?.data || (Array.isArray(res.data) ? res.data : []))
     } catch (error) {
       console.error('Error fetching targets:', error)
     } finally {

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, Download, FileText, Table } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { auditService } from '../../../services/audit.service'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 interface ExportFormData {
   format: 'csv' | 'excel' | 'pdf' | 'json'
@@ -21,14 +21,8 @@ export default function AuditExport() {
   const { data: entity } = useQuery({
     queryKey: [entityType, entityId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/${entityType}/${entityId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/${entityType}/${entityId}`)
+      return res.data?.data || null
     },
   })
 
@@ -43,10 +37,7 @@ export default function AuditExport() {
   const format = watch('format')
 
   const exportMutation = useMutation({
-    mutationFn: async (data: ExportFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { download_url: '/exports/audit-trail-123.csv' }
-    },
+    mutationFn: (data: ExportFormData) => auditService.exportAuditTrail(entityType!, entityId!, { format: data.format, date_from: data.date_from, date_to: data.date_to }),
     onSuccess: (data) => {
       toast.success('Export generated successfully')
       window.open(data.download_url, '_blank')

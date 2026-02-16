@@ -34,16 +34,37 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
   }, [formData.actualPrice, formData.rrp]);
 
   const scanBarcode = () => {
-    // Simulate barcode scanning
-    const mockBarcode = Math.random().toString(36).substring(7).toUpperCase();
-    alert(`📱 Barcode scanned: ${mockBarcode}`);
-    setFormData({ ...formData, productId: mockBarcode });
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const barcode = file.name.replace(/\.[^/.]+$/, '').toUpperCase();
+          setFormData({ ...formData, productId: barcode });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
   };
 
   const capturePhoto = () => {
-    const photoUrl = `https://storage.example.com/sku/${Date.now()}.jpg`;
-    setFormData({ ...formData, skuPhoto: photoUrl });
-    alert('📸 SKU photo captured!');
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const photoUrl = URL.createObjectURL(file);
+        setFormData({ ...formData, skuPhoto: photoUrl });
+      }
+    };
+    input.click();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

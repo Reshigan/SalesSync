@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 import { surveysService } from '../../services/surveys.service'
 import { useParams } from 'react-router-dom'
 
@@ -20,7 +21,14 @@ export const SurveyResponsesPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockResponses: SurveyResponse[] = []
+  const [responses, setResponses] = useState<SurveyResponse[]>([])
+
+  useEffect(() => {
+    apiClient.get('/surveys/responses').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setResponses(data)
+    }).catch(() => {})
+  }, [])
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
@@ -53,7 +61,7 @@ export const SurveyResponsesPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Responses</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockResponses.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{responses.length}</p>
             </div>
           </div>
         </div>
@@ -68,8 +76,8 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Completion Time</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.length > 0
-                  ? formatDuration(Math.round(mockResponses.reduce((sum, r) => sum + r.completion_time_seconds, 0) / mockResponses.length))
+                {responses.length > 0
+                  ? formatDuration(Math.round(responses.reduce((sum, r) => sum + r.completion_time_seconds, 0) / responses.length))
                   : '0m 0s'}
               </p>
             </div>
@@ -86,8 +94,8 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Score</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.length > 0
-                  ? `${(mockResponses.reduce((sum, r) => sum + (r.score || 0), 0) / mockResponses.length).toFixed(1)}/10`
+                {responses.length > 0
+                  ? `${(responses.reduce((sum, r) => sum + (r.score || 0), 0) / responses.length).toFixed(1)}/10`
                   : '0/10'}
               </p>
             </div>
@@ -104,7 +112,7 @@ export const SurveyResponsesPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Today's Responses</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockResponses.filter(r => {
+                {responses.filter(r => {
                   const responseDate = new Date(r.submitted_date)
                   const today = new Date()
                   return responseDate.toDateString() === today.toDateString()
@@ -117,7 +125,7 @@ export const SurveyResponsesPage: React.FC = () => {
 
       {/* Responses List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        {mockResponses.length === 0 ? (
+        {responses.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -151,7 +159,7 @@ export const SurveyResponsesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {mockResponses.map((response) => (
+                {responses.map((response) => (
                   <tr key={response.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{response.respondent_name}</div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface HealthMetric {
   name: string
@@ -12,27 +13,38 @@ interface HealthMetric {
 export const SystemHealthPage: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  const mockHealthData = {
+  const defaultHealthData = {
     status: 'healthy' as const,
     uptime: 99.98,
     last_check: new Date().toISOString(),
     metrics: [
-      { name: 'CPU Usage', value: 45, unit: '%', status: 'healthy' as const, threshold: 80 },
-      { name: 'Memory Usage', value: 62, unit: '%', status: 'healthy' as const, threshold: 85 },
-      { name: 'Disk Usage', value: 38, unit: '%', status: 'healthy' as const, threshold: 90 },
-      { name: 'Database Connections', value: 12, unit: 'active', status: 'healthy' as const, threshold: 100 },
-      { name: 'API Response Time', value: 145, unit: 'ms', status: 'healthy' as const, threshold: 500 },
-      { name: 'Error Rate', value: 0.02, unit: '%', status: 'healthy' as const, threshold: 1 }
+      { name: 'CPU Usage', value: 0, unit: '%', status: 'healthy' as const, threshold: 80 },
+      { name: 'Memory Usage', value: 0, unit: '%', status: 'healthy' as const, threshold: 85 },
+      { name: 'Disk Usage', value: 0, unit: '%', status: 'healthy' as const, threshold: 90 },
+      { name: 'Database Connections', value: 0, unit: 'active', status: 'healthy' as const, threshold: 100 },
+      { name: 'API Response Time', value: 0, unit: 'ms', status: 'healthy' as const, threshold: 500 },
+      { name: 'Error Rate', value: 0, unit: '%', status: 'healthy' as const, threshold: 1 }
     ],
-    services: [
-      { name: 'API Server', status: 'running' as const, uptime: '15 days' },
-      { name: 'Database', status: 'running' as const, uptime: '15 days' },
-      { name: 'Cache Server', status: 'running' as const, uptime: '15 days' },
-      { name: 'Background Jobs', status: 'running' as const, uptime: '15 days' },
-      { name: 'Email Service', status: 'running' as const, uptime: '15 days' }
-    ],
-    recent_incidents: []
+    services: [] as { name: string; status: 'running' | 'stopped'; uptime: string }[],
+    recent_incidents: [] as any[]
   }
+
+  const [healthData, setHealthData] = useState(defaultHealthData)
+
+  const fetchHealth = () => {
+    apiClient.get('/system/health').then(res => {
+      const data = res.data?.data || res.data
+      if (data && typeof data === 'object') setHealthData(prev => ({ ...prev, ...data, last_check: new Date().toISOString() }))
+    }).catch(() => {})
+  }
+
+  useEffect(() => {
+    fetchHealth()
+    if (autoRefresh) {
+      const interval = setInterval(fetchHealth, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [autoRefresh])
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -75,7 +87,7 @@ export const SystemHealthPage: React.FC = () => {
             />
             <span className="ml-2 text-sm text-gray-700">Auto-refresh</span>
           </label>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          <button onClick={fetchHealth} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Refresh Now
           </button>
         </div>
@@ -87,17 +99,17 @@ export const SystemHealthPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-medium text-gray-900">Overall System Status</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Last checked: {new Date(mockHealthData.last_check).toLocaleString()}
+              Last checked: {new Date(healthData.last_check).toLocaleString()}
             </p>
           </div>
           <div className="text-right">
-            <span className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${getStatusBadge(mockHealthData.status)}`}>
+            <span className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-semibold ${getStatusBadge(healthData.status)}`}>
               <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              {mockHealthData.status.toUpperCase()}
+              {healthData.status.toUpperCase()}
             </span>
-            <p className="mt-2 text-sm text-gray-500">Uptime: {mockHealthData.uptime}%</p>
+            <p className="mt-2 text-sm text-gray-500">Uptime: {healthData.uptime}%</p>
           </div>
         </div>
       </div>
@@ -106,7 +118,7 @@ export const SystemHealthPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockHealthData.metrics.map((metric, index) => (
+          {healthData.metrics.map((metric, index) => (
             <div key={index} className="border border-gray-100 rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-medium text-gray-900">{metric.name}</h3>
@@ -144,7 +156,7 @@ export const SystemHealthPage: React.FC = () => {
           <h2 className="text-lg font-medium text-gray-900">Services</h2>
         </div>
         <div className="divide-y divide-gray-200">
-          {mockHealthData.services.map((service, index) => (
+          {healthData.services.map((service, index) => (
             <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
               <div className="flex items-center">
                 <div className={`h-3 w-3 rounded-full ${
@@ -171,7 +183,7 @@ export const SystemHealthPage: React.FC = () => {
       {/* Recent Incidents */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Incidents</h2>
-        {mockHealthData.recent_incidents.length === 0 ? (
+        {healthData.recent_incidents.length === 0 ? (
           <div className="text-center py-8">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -181,7 +193,7 @@ export const SystemHealthPage: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {mockHealthData.recent_incidents.map((incident: any, index: number) => (
+            {healthData.recent_incidents.map((incident: any, index: number) => (
               <div key={index} className="border border-gray-100 rounded-lg p-4">
                 <div className="flex items-start justify-between">
                   <div>

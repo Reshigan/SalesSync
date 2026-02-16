@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, Eye, TrendingUp, TrendingDown } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function StockLedgerByProduct() {
   const { productId } = useParams<{ productId: string }>()
@@ -10,64 +10,10 @@ export default function StockLedgerByProduct() {
   const { data: product } = useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/products/${productId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/products/${productId}`)
+      return res.data?.data || []
     },
   })
-
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ['stock-ledger-product', productId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/products/${productId}/stock-ledger`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldEntries = [
-      {
-        id: '1',
-        warehouse_name: 'Main Warehouse',
-        transaction_type: 'sale',
-        transaction_reference: 'ORD-2024-001',
-        quantity_before: 150,
-        quantity_change: -10,
-        quantity_after: 140,
-        transaction_date: '2024-01-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        warehouse_name: 'Main Warehouse',
-        transaction_type: 'purchase',
-        transaction_reference: 'PO-2024-001',
-        quantity_before: 100,
-        quantity_change: 50,
-        quantity_after: 150,
-        transaction_date: '2024-01-15T10:00:00Z',
-      },
-      {
-        id: '3',
-        warehouse_name: 'Branch Warehouse',
-        transaction_type: 'transfer_in',
-        transaction_reference: 'TRF-2024-001',
-        quantity_before: 20,
-        quantity_change: 30,
-        quantity_after: 50,
-        transaction_date: '2024-01-14T16:00:00Z',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading stock ledger...</div>
   }

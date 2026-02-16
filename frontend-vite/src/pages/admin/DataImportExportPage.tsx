@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Upload, Download, FileText, AlertCircle, Check, X, RefreshCw, Database, FileSpreadsheet, ChevronRight, Loader } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 interface ImportHistory {
   id: string
@@ -182,31 +183,34 @@ export default function DataImportExportPage() {
     setImporting(true)
     setImportProgress(0)
 
-    // Simulate import progress
-    const interval = setInterval(() => {
-      setImportProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval)
-          setTimeout(() => {
-            setImporting(false)
-            setUploadedFile(null)
-            alert(`Successfully imported data from ${uploadedFile.name}`)
-          }, 500)
-          return 100
-        }
-        return prev + 10
-      })
-    }, 300)
+    try {
+      const formData = new FormData()
+      formData.append('file', uploadedFile)
+      formData.append('type', selectedType)
+      setImportProgress(30)
+      await apiClient.post('/data/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      setImportProgress(100)
+      setImporting(false)
+      setUploadedFile(null)
+      alert(`Successfully imported data from ${uploadedFile.name}`)
+    } catch {
+      setImporting(false)
+      alert('Failed to import data. Please check the file format and try again.')
+    }
   }
 
   const handleExport = async (format: 'csv' | 'xlsx' | 'json') => {
     setExporting(true)
-    
-    // Simulate export
-    setTimeout(() => {
-      setExporting(false)
+    try {
+      const res = await apiClient.post('/data/export', { type: selectedType, format })
+      const downloadUrl = res.data?.data?.download_url || res.data?.download_url
+      if (downloadUrl) window.open(downloadUrl, '_blank')
       alert(`Export started! You'll be notified when the ${format.toUpperCase()} file is ready.`)
-    }, 1500)
+    } catch {
+      alert('Failed to start export. Please try again.')
+    } finally {
+      setExporting(false)
+    }
   }
 
   const downloadTemplate = (type: string) => {

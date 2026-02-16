@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Edit, MapPin, Package } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function BoardPlacementDetail() {
@@ -15,9 +15,8 @@ export default function BoardPlacementDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/field-operations/board-placements/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-      const json = await r.json()
+      const r = await apiClient.get(`/field-operations/board-placements/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setBp(d)
     } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }

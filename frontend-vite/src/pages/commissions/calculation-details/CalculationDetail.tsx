@@ -5,7 +5,7 @@ import { formatCurrency } from '../../../utils/currency'
 import { commissionsService } from '../../../services/commissions.service'
 
 export default function CalculationDetail() {
-  const { calculationId } = useParams<{ calculationId: string }>()
+  const { id: calculationId } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
   const { data: calculation, isLoading } = useQuery({

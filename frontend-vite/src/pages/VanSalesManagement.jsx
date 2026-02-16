@@ -9,7 +9,7 @@ import {
   LocalShipping, Route, Inventory, AttachMoney, 
   PlayArrow, Stop, CheckCircle, Timeline
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function VanSalesManagement() {
   const [tab, setTab] = useState(0);

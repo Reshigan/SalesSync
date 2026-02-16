@@ -196,9 +196,9 @@ export default function TaskPage() {
         after_photo_url: photoUrl,
         storefront_polygon: JSON.stringify(storefrontPolygon),
         board_polygon: JSON.stringify(boardPolygon),
-        latitude: 0, // TODO: Get from visit GPS
-        longitude: 0,
-        gps_accuracy: 0,
+        latitude: task?.gps_latitude || task?.latitude || 0,
+        longitude: task?.gps_longitude || task?.longitude || 0,
+        gps_accuracy: task?.gps_accuracy || 0,
       });
 
       await apiClient.patch(`/field-operations/tasks/${taskId}`, {

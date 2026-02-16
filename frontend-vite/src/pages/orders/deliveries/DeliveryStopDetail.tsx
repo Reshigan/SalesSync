@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Clock, Package, User } from 'lucide-react'
 import { ordersService } from '../../../services/orders.service'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function DeliveryStopDetail() {
   const { orderId, deliveryId, stopId } = useParams<{ orderId: string; deliveryId: string; stopId: string }>()
@@ -16,14 +16,8 @@ export default function DeliveryStopDetail() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['delivery-stop', orderId, deliveryId, stopId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/deliveries/${deliveryId}/stops/${stopId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/orders/${orderId}/deliveries/${deliveryId}/stops/${stopId}`)
+      return res.data?.data || null
     },
   })
 

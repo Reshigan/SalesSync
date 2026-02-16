@@ -48,10 +48,18 @@ export default function GPSVerification() {
 
   useEffect(() => {
     if (!customer) {
-      // If customer data not passed, fetch from API
-      // TODO: Fetch customer data
-      console.error('Customer data not provided');
-      navigate('/field-marketing/select-customer');
+      if (customerId) {
+        apiClient.get(`/customers/${customerId}`).then(res => {
+          const data = res.data?.data || res.data
+          if (data) {
+            navigate(`/field-marketing/gps-verification/${customerId}`, { state: { customer: data }, replace: true })
+          } else {
+            navigate('/field-marketing/select-customer')
+          }
+        }).catch(() => navigate('/field-marketing/select-customer'))
+      } else {
+        navigate('/field-marketing/select-customer')
+      }
       return;
     }
   }, [customer, navigate]);

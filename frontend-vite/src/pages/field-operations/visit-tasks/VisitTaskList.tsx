@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, CheckCircle, Clock } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function VisitTaskList() {
   const { visitId } = useParams<{ visitId: string }>()
@@ -10,61 +10,10 @@ export default function VisitTaskList() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/visits/${visitId}`)
+      return res.data?.data || []
     },
   })
-
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['visit-tasks', visitId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/tasks`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldTasks = [
-      {
-        id: '1',
-        task_type: 'board_placement',
-        task_title: 'Install promotional board',
-        priority: 'high',
-        status: 'completed',
-        duration_minutes: 30,
-        completed_at: '2024-01-20T09:45:00Z',
-      },
-      {
-        id: '2',
-        task_type: 'product_distribution',
-        task_title: 'Distribute product samples',
-        priority: 'medium',
-        status: 'completed',
-        duration_minutes: 15,
-        completed_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '3',
-        task_type: 'survey',
-        task_title: 'Complete customer survey',
-        priority: 'low',
-        status: 'completed',
-        duration_minutes: 10,
-        completed_at: '2024-01-20T10:10:00Z',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading tasks...</div>
   }

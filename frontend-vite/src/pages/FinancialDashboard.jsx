@@ -7,7 +7,7 @@ import {
 import {
   AccountBalance, TrendingUp, TrendingDown, Refresh, Payment
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function FinancialDashboard() {
   const [activeTab, setActiveTab] = useState(0);

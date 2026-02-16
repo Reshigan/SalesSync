@@ -8,7 +8,7 @@ import {
   People, TrendingUp, AttachMoney, Event,
   Phone, Email, LocationOn, Edit, Visibility
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function CRMDashboard() {
   const [tab, setTab] = useState(0);

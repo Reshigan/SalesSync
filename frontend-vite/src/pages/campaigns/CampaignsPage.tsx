@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Megaphone, Users, Eye, MousePointer, TrendingUp, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface CampaignMetrics {
   totalCampaigns: number
@@ -52,10 +52,8 @@ export default function CampaignsPage() {
   const fetchCampaignsData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_CONFIG.BASE_URL}/campaigns`, { headers: { 'Authorization': `Bearer ${token}` } })
-      const json = await res.json()
-      const data = json.data || []
+      const res = await apiClient.get('/campaigns')
+      const data = res.data?.data || (Array.isArray(res.data) ? res.data : [])
       const active = data.filter((c: Record<string, unknown>) => c.status === 'active')
       setMetrics({
         totalCampaigns: data.length,

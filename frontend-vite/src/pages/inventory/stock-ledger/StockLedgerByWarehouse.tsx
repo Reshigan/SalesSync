@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Warehouse, Eye } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function StockLedgerByWarehouse() {
   const { warehouseId } = useParams<{ warehouseId: string }>()
@@ -10,64 +10,10 @@ export default function StockLedgerByWarehouse() {
   const { data: warehouse } = useQuery({
     queryKey: ['warehouse', warehouseId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/warehouses/${warehouseId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/warehouses/${warehouseId}`)
+      return res.data?.data || []
     },
   })
-
-  const { data: entries, isLoading } = useQuery({
-    queryKey: ['stock-ledger-warehouse', warehouseId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/warehouses/${warehouseId}/stock-ledger`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldEntries = [
-      {
-        id: '1',
-        product_name: 'Coca-Cola 500ml',
-        product_sku: 'CC-500',
-        transaction_type: 'sale',
-        transaction_reference: 'ORD-2024-001',
-        quantity_change: -10,
-        quantity_after: 140,
-        transaction_date: '2024-01-20T14:30:00Z',
-      },
-      {
-        id: '2',
-        product_name: 'Pepsi 500ml',
-        product_sku: 'PP-500',
-        transaction_type: 'purchase',
-        transaction_reference: 'PO-2024-001',
-        quantity_change: 50,
-        quantity_after: 100,
-        transaction_date: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '3',
-        product_name: 'Sprite 500ml',
-        product_sku: 'SP-500',
-        transaction_type: 'adjustment',
-        transaction_reference: 'ADJ-2024-001',
-        quantity_change: -5,
-        quantity_after: 70,
-        transaction_date: '2024-01-19T16:00:00Z',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading stock ledger...</div>
   }

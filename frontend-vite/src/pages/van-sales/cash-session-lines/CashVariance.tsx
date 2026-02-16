@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, AlertTriangle, DollarSign } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 interface VarianceFormData {
   resolution_action: string
@@ -20,14 +20,8 @@ export default function CashVariance() {
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get(`/cash-sessions/${sessionId}`)
+      return res.data?.data || null
     },
   })
 

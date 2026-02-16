@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface ComplianceItem {
   id: string
@@ -15,7 +16,14 @@ interface ComplianceItem {
 export const CompliancePage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
 
-  const mockCompliance: ComplianceItem[] = []
+  const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([])
+
+  useEffect(() => {
+    apiClient.get('/kyc/compliance').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setComplianceItems(data)
+    }).catch(() => {})
+  }, [])
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -37,10 +45,10 @@ export const CompliancePage: React.FC = () => {
   }
 
   const filteredCompliance = categoryFilter === 'all'
-    ? mockCompliance
-    : mockCompliance.filter(c => c.category === categoryFilter)
+    ? complianceItems
+    : complianceItems.filter(c => c.category === categoryFilter)
 
-  const categories = Array.from(new Set(mockCompliance.map(c => c.category)))
+  const categories = Array.from(new Set(complianceItems.map(c => c.category)))
 
   return (
     <div className="space-y-6">
@@ -68,7 +76,7 @@ export const CompliancePage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Compliant</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCompliance.filter(c => c.status === 'compliant').length}
+                {complianceItems.filter(c => c.status === 'compliant').length}
               </p>
             </div>
           </div>
@@ -84,7 +92,7 @@ export const CompliancePage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Non-Compliant</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCompliance.filter(c => c.status === 'non_compliant').length}
+                {complianceItems.filter(c => c.status === 'non_compliant').length}
               </p>
             </div>
           </div>
@@ -100,7 +108,7 @@ export const CompliancePage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCompliance.filter(c => c.status === 'pending').length}
+                {complianceItems.filter(c => c.status === 'pending').length}
               </p>
             </div>
           </div>
@@ -116,8 +124,8 @@ export const CompliancePage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Compliance Rate</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCompliance.length > 0
-                  ? `${((mockCompliance.filter(c => c.status === 'compliant').length / mockCompliance.length) * 100).toFixed(1)}%`
+                {complianceItems.length > 0
+                  ? `${((complianceItems.filter(c => c.status === 'compliant').length / complianceItems.length) * 100).toFixed(1)}%`
                   : '0%'}
               </p>
             </div>
