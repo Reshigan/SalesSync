@@ -33,7 +33,7 @@ const BoardManagementPage: React.FC = () => {
   const deleteBoard = async (id: number) => {
     if (!confirm('Delete this board?')) return;
     try {
-      const res = await fetch(`/api/admin/boards/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -42,7 +42,7 @@ const BoardManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Board Management</h1>
         <button onClick={() => { setEditing(0); setForm({}); }} className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">

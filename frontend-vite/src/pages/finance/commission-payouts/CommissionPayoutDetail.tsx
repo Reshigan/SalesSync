@@ -1,73 +1,67 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import TransactionDetail from '../../../components/transactions/TransactionDetail'
-import { financeService } from '../../../services/finance.service'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft, Calendar, DollarSign, Edit, Package, User } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function CommissionPayoutDetail() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [payout, setPayout] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    loadPayout()
-  }, [id])
-
-  const loadPayout = async () => {
+  useEffect(() => { loadData() }, [id])
+  const loadData = async () => {
     setLoading(true)
     try {
-      const response = await financeService.getCommissionPayout(Number(id))
-      setPayout(response.data)
-    } catch (error) {
-      console.error('Failed to load commission payout:', error)
-    } finally {
-      setLoading(false)
-    }
+      const token = localStorage.getItem('token')
+      const r = await fetch(`${API_CONFIG.BASE_URL}/finance/commission-payouts/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await r.json()
+      const d = json.data || json
+      setPayout(d)
+    } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+  if (error) return <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div></div>
+  if (!payout) return <div className="p-6"><div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">Commission Payout not found</div></div>
 
-  if (!payout) {
-    return <div className="flex items-center justify-center h-64">Commission payout not found</div>
-  }
-
-  const fields = [
-    { label: 'Payout Number', value: payout.payout_number },
-    { label: 'Payout Date', value: formatDate(payout.payout_date) },
-    { label: 'Agent', value: payout.agent_name },
-    { label: 'Period Start', value: formatDate(payout.period_start) },
-    { label: 'Period End', value: formatDate(payout.period_end) },
-    { label: 'Total Commission', value: formatCurrency(payout.total_commission) },
-    { label: 'Deductions', value: formatCurrency(payout.deductions || 0) },
-    { label: 'Net Payout', value: formatCurrency(payout.net_payout) },
-    { label: 'Payment Method', value: payout.payment_method },
-    { label: 'Payment Reference', value: payout.payment_reference || '-' },
-    { label: 'Status', value: payout.status },
-    { label: 'Approved By', value: payout.approved_by || '-' },
-    { label: 'Approved Date', value: payout.approved_date ? formatDate(payout.approved_date) : '-' },
-    { label: 'Paid Date', value: payout.paid_date ? formatDate(payout.paid_date) : '-' },
-    { label: 'Notes', value: payout.notes },
-    { label: 'Created By', value: payout.created_by },
-    { label: 'Created At', value: formatDate(payout.created_at) }
-  ]
-
-  const statusColor = {
-    pending: 'yellow',
-    approved: 'green',
-    paid: 'blue',
-    rejected: 'red'
-  }[payout.status] as 'green' | 'yellow' | 'red' | 'gray'
+  const sc: Record<string, string> = { draft: 'bg-gray-100 text-gray-800', pending: 'bg-yellow-100 text-yellow-800', active: 'bg-green-100 text-green-800', completed: 'bg-green-100 text-green-800', approved: 'bg-green-100 text-green-800', confirmed: 'bg-blue-100 text-blue-800', processing: 'bg-indigo-100 text-indigo-800', shipped: 'bg-purple-100 text-purple-800', delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800', rejected: 'bg-red-100 text-red-800', closed: 'bg-gray-100 text-gray-800', paid: 'bg-green-100 text-green-800', partial: 'bg-orange-100 text-orange-800', overdue: 'bg-red-100 text-red-800', expired: 'bg-red-100 text-red-800', scheduled: 'bg-blue-100 text-blue-800', in_progress: 'bg-blue-100 text-blue-800', open: 'bg-blue-100 text-blue-800' }
 
   return (
-    <TransactionDetail
-      title={`Commission Payout ${payout.payout_number}`}
-      fields={fields}
-      auditTrail={payout.audit_trail || []}
-      backPath="/finance/commission-payouts"
-      status={payout.status}
-      statusColor={statusColor}
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/finance/commission-payouts')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{payout.name || payout.title || `Commission Payout #${id}`}</h1>
+            <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[payout.status] || 'bg-gray-100 text-gray-800'}`}>{(payout.status || 'N/A').replace(/_/g, ' ')}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(payout.amount || payout.total_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><User className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Agent</p><p className="text-xl font-bold">{payout.agent_name || payout.sales_rep || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Period</p><p className="text-xl font-bold">{payout.period || payout.payout_period || 'N/A'}</p></div></div></div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-lg font-semibold mb-4">Commission Payout Details</h2>
+        <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div><dt className="text-sm text-gray-500">Payout Number</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.payout_number || payout.id || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Agent</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.agent_name || payout.sales_rep || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Amount</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatCurrency(payout.amount || payout.total_amount) || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Period</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.period || payout.payout_period || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Payment Method</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.payment_method || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Reference</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.reference || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Approved By</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.approved_by || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Created At</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatDate(payout.created_at) || '-'}</dd></div>
+        </dl>
+      </div>
+
+      {payout.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{payout.notes}</p></div>}
+    </div>
   )
 }

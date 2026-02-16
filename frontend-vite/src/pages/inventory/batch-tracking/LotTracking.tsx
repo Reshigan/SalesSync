@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Factory, Truck, Warehouse, CheckCircle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function LotTracking() {
   const { lotId } = useParams<{ lotId: string }>()
@@ -9,7 +10,7 @@ export default function LotTracking() {
   const { data: lot } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      const response = await fetch(`/api/lots/${lotId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function LotTracking() {
   const { data: tracking, isLoading } = useQuery({
     queryKey: ['lot-tracking', lotId],
     queryFn: async () => {
-      const response = await fetch(`/api/lots/${lotId}/tracking`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}/tracking`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

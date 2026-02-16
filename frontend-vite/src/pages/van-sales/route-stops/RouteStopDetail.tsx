@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Clock, CheckCircle, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function RouteStopDetail() {
   const { routeId, stopId } = useParams<{ routeId: string; stopId: string }>()
@@ -10,7 +11,7 @@ export default function RouteStopDetail() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      const response = await fetch(`/api/routes/${routeId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function RouteStopDetail() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
     queryFn: async () => {
-      const response = await fetch(`/api/route-stops/${stopId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/route-stops/${stopId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

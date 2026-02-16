@@ -90,7 +90,7 @@ export default function VisitConfigurationPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await fetch(`/api/visit-configurations/${id}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visit-configurations/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,

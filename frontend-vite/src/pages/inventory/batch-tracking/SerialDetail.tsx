@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Hash, Package, MapPin, User, Clock } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function SerialDetail() {
   const { serialId } = useParams<{ serialId: string }>()
@@ -9,7 +10,7 @@ export default function SerialDetail() {
   const { data: serial, isLoading } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      const response = await fetch(`/api/serials/${serialId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/serials/${serialId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

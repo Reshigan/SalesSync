@@ -22,7 +22,7 @@ const ReportBuilderPage: React.FC = () => {
 
   const exportReport = async (format: string) => {
     try {
-      const res = await fetch(`/api/reports/export?format=${format}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/reports/export?format=${format}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...config, data })
@@ -39,7 +39,7 @@ const ReportBuilderPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-8 h-8 text-blue-600" /> Report Builder</h1>
 
       <div className="bg-white p-6 rounded-lg shadow-lg mb-6">

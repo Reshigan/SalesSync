@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface PayoutLineFormData {
   payment_method: string
@@ -18,7 +19,7 @@ export default function PayoutLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      const response = await fetch(`/api/commissions/payouts/${payoutId}/lines/${lineId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

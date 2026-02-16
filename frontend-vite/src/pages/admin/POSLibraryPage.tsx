@@ -33,7 +33,7 @@ const POSLibraryPage: React.FC = () => {
   const deleteMaterial = async (id: number) => {
     if (!confirm('Delete material?')) return;
     try {
-      const res = await fetch(`/api/admin/pos-library/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/pos-library/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -42,7 +42,7 @@ const POSLibraryPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2"><Package className="w-8 h-8 text-indigo-600" /> POS Material Library</h1>
         <button onClick={() => { setEditing(0); setForm({}); }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2">

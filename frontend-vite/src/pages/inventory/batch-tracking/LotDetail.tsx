@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, Factory, Calendar, CheckCircle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function LotDetail() {
   const { lotId } = useParams<{ lotId: string }>()
@@ -9,7 +10,7 @@ export default function LotDetail() {
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      const response = await fetch(`/api/lots/${lotId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -63,7 +64,7 @@ export default function LotDetail() {
   const { data: batches } = useQuery({
     queryKey: ['lot-batches', lotId],
     queryFn: async () => {
-      const response = await fetch(`/api/lots/${lotId}/batches`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}/batches`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

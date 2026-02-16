@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, AlertTriangle, Calendar, Package } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function BatchExpiry() {
   const { batchId } = useParams<{ batchId: string }>()
@@ -9,7 +10,7 @@ export default function BatchExpiry() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/batches/${batchId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function BatchExpiry() {
   const { data: expiryInfo, isLoading } = useQuery({
     queryKey: ['batch-expiry', batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/batches/${batchId}/expiry`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}/expiry`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

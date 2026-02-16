@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Calculator, Calendar, Eye } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function CalculationLog() {
   const { agentId } = useParams<{ agentId: string }>()
@@ -10,7 +11,7 @@ export default function CalculationLog() {
   const { data: agent } = useQuery({
     queryKey: ['agent', agentId],
     queryFn: async () => {
-      const response = await fetch(`/api/agents/${agentId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/agents/${agentId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function CalculationLog() {
   const { data: calculations, isLoading } = useQuery({
     queryKey: ['commission-calculations', agentId],
     queryFn: async () => {
-      const response = await fetch(`/api/commissions/calculations?agent_id=${agentId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/calculations?agent_id=${agentId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

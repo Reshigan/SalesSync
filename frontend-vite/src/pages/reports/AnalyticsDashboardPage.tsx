@@ -33,7 +33,7 @@ const AnalyticsDashboardPage: React.FC = () => {
   if (loading) return <div className="p-6 text-center">Loading analytics...</div>;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-2"><Activity className="w-8 h-8 text-blue-600" /> Analytics Dashboard</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">

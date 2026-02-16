@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, CheckCircle, Clock } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function VisitTaskList() {
   const { visitId } = useParams<{ visitId: string }>()
@@ -9,7 +10,7 @@ export default function VisitTaskList() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -23,7 +24,7 @@ export default function VisitTaskList() {
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['visit-tasks', visitId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/tasks`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/tasks`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
