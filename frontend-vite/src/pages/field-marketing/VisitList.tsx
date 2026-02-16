@@ -76,7 +76,6 @@ export default function VisitList() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem('token');
       const brandIds = brands?.map(b => b.id).join(',') || '';
       const res = await apiClient.get(`/field-agent-workflow/visit-list?customer_id=${customerId}&brand_ids=${brandIds}`);
       const apiTasks = res.data?.data || (Array.isArray(res.data) ? res.data : []);

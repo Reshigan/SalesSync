@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, Target, MapPin, Users, Trophy, TrendingUp, Filter, ChevronDown, ChevronRight } from 'lucide-react'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface AgentReport {
   agent_id: string
@@ -58,9 +58,6 @@ export default function TargetReportingPage() {
   const [filterType, setFilterType] = useState<string>('all')
   const [filterPeriod, setFilterPeriod] = useState<string>('all')
 
-  const token = localStorage.getItem('token')
-  const headers = { 'Authorization': `Bearer ${token}` }
-
   useEffect(() => { fetchData() }, [filterType, filterPeriod])
 
   const fetchData = async () => {
@@ -72,16 +69,15 @@ export default function TargetReportingPage() {
       const qs = params.toString() ? `?${params.toString()}` : ''
 
       const [agentRes, regionRes, lbRes, treeRes] = await Promise.all([
-        fetch(`${API_CONFIG.BASE_URL}/agent-targets/report/by-agent${qs}`, { headers }),
-        fetch(`${API_CONFIG.BASE_URL}/agent-targets/report/by-region${qs}`, { headers }),
-        fetch(`${API_CONFIG.BASE_URL}/agent-targets/report/leaderboard${qs}`, { headers }),
-        fetch(`${API_CONFIG.BASE_URL}/regions/tree`, { headers })
+        apiClient.get(`/agent-targets/report/by-agent${qs}`),
+        apiClient.get(`/agent-targets/report/by-region${qs}`),
+        apiClient.get(`/agent-targets/report/leaderboard${qs}`),
+        apiClient.get(`/regions/tree`)
       ])
-      const [agentJson, regionJson, lbJson, treeJson] = await Promise.all([agentRes.json(), regionRes.json(), lbRes.json(), treeRes.json()])
-      setAgentReport(agentJson.data || [])
-      setRegionReport(regionJson.data || [])
-      setLeaderboard(lbJson.data || [])
-      setRegionTree(treeJson.data || [])
+      setAgentReport(agentRes.data?.data || [])
+      setRegionReport(regionRes.data?.data || [])
+      setLeaderboard(lbRes.data?.data || [])
+      setRegionTree(treeRes.data?.data || [])
     } catch (error) {
       console.error('Error fetching reports:', error)
     } finally {

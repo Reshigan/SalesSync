@@ -25,15 +25,6 @@ export default function VisitTaskEdit() {
     },
   })
 
-  const oldTask = {
-      id: taskId,
-      visit_id: visitId,
-      task_title: 'Install promotional board',
-      description: 'Install new Coca-Cola promotional board at store entrance',
-      priority: 'high',
-      notes: 'Board installed successfully, customer satisfied',
-    }
-
   const { register, handleSubmit, formState: { errors } } = useForm<TaskFormData>({
     values: task,
   })

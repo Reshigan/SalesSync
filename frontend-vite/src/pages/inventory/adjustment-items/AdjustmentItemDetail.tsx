@@ -16,23 +16,6 @@ export default function AdjustmentItemDetail() {
     },
   })
 
-  const oldItem = {
-      id: itemId,
-      adjustment_id: adjustmentId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      adjustment_type: 'decrease',
-      quantity: -10,
-      unit_cost: 15.00,
-      total_value: -150.00,
-      reason: 'damaged',
-      justification: 'Found 10 damaged units during quality inspection',
-      location: 'Aisle 3, Shelf B',
-      created_by: 'John Manager',
-      created_at: '2024-01-20T14:30:00Z',
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading adjustment item...</div>
   }

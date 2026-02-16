@@ -22,14 +22,6 @@ export default function SurveyResponseEdit() {
     },
   })
 
-  const oldResponse = {
-      id: responseId,
-      survey_id: surveyId,
-      question_text: 'How satisfied are you with our product quality?',
-      question_type: 'rating',
-      answer: '5',
-    }
-
   const { register, handleSubmit, formState: { errors } } = useForm<ResponseFormData>({
     values: response,
   })

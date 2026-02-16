@@ -16,26 +16,6 @@ export default function DepositDetail() {
     },
   })
 
-  const oldDeposit = {
-      id: depositId,
-      session_id: sessionId,
-      deposit_number: 'DEP-2024-001',
-      deposit_amount: 2450.00,
-      deposit_date: '2024-01-20T18:00:00Z',
-      bank_name: 'First National Bank',
-      account_number: '****1234',
-      deposit_slip_number: 'SLIP-2024-001',
-      deposited_by: 'John Van Sales',
-      verified_by: 'Jane Manager',
-      verified_at: '2024-01-20T18:30:00Z',
-      status: 'verified',
-      breakdown: {
-        cash: 2000.00,
-        checks: 450.00,
-        cards: 0.00,
-      },
-      notes: 'End of day deposit',
-    }),
   })
 
   if (isLoading) {
