@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, DollarSign, Edit, Package } from 'lucide-react'
 import { API_CONFIG } from '../../../config/api.config'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
-export default function CashReconciliationDetail() {
+export default function VanCashReconciliationDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [recon, setRecon] = useState<any>(null)
@@ -16,7 +16,7 @@ export default function CashReconciliationDetail() {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/finance/cash-reconciliation/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await fetch(`${API_CONFIG.BASE_URL}/van-sales/cash-reconciliation/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
       const json = await r.json()
       const d = json.data || json
       setRecon(d)
@@ -33,7 +33,7 @@ export default function CashReconciliationDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/finance/cash-reconciliation')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
+          <button onClick={() => navigate('/van-sales/cash-reconciliation')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{recon.name || recon.title || `Cash Reconciliation #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[recon.status] || 'bg-gray-100 text-gray-800'}`}>{(recon.status || 'N/A').replace(/_/g, ' ')}</span>
@@ -44,17 +44,16 @@ export default function CashReconciliationDetail() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Expected</p><p className="text-xl font-bold">{formatCurrency(recon.expected_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Actual</p><p className="text-xl font-bold">{formatCurrency(recon.actual_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Variance</p><p className="text-xl font-bold">{formatCurrency((recon.actual_amount||0)-(recon.expected_amount||0))}</p></div></div></div>
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Variance</p><p className="text-xl font-bold">{formatCurrency(recon.variance || 0)}</p></div></div></div>
         <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(recon.reconciliation_date || recon.date) || 'N/A'}</p></div></div></div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold mb-4">Cash Reconciliation Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div><dt className="text-sm text-gray-500">Reconciliation ID</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{recon.reconciliation_number || recon.id || '-'}</dd></div>
-          <div><dt className="text-sm text-gray-500">Date</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatDate(recon.reconciliation_date || recon.date) || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Session ID</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{recon.session_id || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Date</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatDate(recon.reconciliation_date) || '-'}</dd></div>
           <div><dt className="text-sm text-gray-500">Cash Handler</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{recon.cash_handler || recon.agent_name || '-'}</dd></div>
-          <div><dt className="text-sm text-gray-500">Session</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{recon.session_id || '-'}</dd></div>
           <div><dt className="text-sm text-gray-500">Expected</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatCurrency(recon.expected_amount) || '-'}</dd></div>
           <div><dt className="text-sm text-gray-500">Actual</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatCurrency(recon.actual_amount) || '-'}</dd></div>
           <div><dt className="text-sm text-gray-500">Variance</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatCurrency(recon.variance) || '-'}</dd></div>

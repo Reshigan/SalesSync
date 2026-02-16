@@ -1,133 +1,66 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Edit, DollarSign, TrendingUp, Calendar } from 'lucide-react'
-import { formatCurrency } from '../../utils/currency'
+import { ArrowLeft, Calendar, DollarSign, Edit, Package, User } from 'lucide-react'
+import { API_CONFIG } from '../../config/api.config'
+import { formatCurrency, formatDate } from '../../utils/format'
 
 export default function CommissionDetail() {
-  const { id } = useParams<{ id: string }>()
+  const { id } = useParams()
   const navigate = useNavigate()
+  const [comm, setComm] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  const { data: commission, isLoading } = useQuery({
-    queryKey: ['commission', id],
-    queryFn: async () => {
-      return {
-        id,
-        agent_name: 'John Doe',
-        period: 'January 2024',
-        base_amount: 5000,
-        bonus_amount: 1500,
-        total_amount: 6500,
-        status: 'approved',
-        sales_target: 50000,
-        sales_achieved: 62000,
-        achievement_rate: 124,
-        payment_date: '2024-02-05',
-        notes: 'Exceeded target by 24%'
-      }
-    },
-  })
-
-  if (isLoading) {
-    return <div className="p-6">Loading commission details...</div>
+  useEffect(() => { loadData() }, [id])
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const r = await fetch(`${API_CONFIG.BASE_URL}/commissions/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const json = await r.json()
+      const d = json.data || json
+      setComm(d)
+    } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }
   }
 
-  if (!commission) {
-    return <div className="p-6">Commission not found</div>
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>
+  if (error) return <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">{error}</div></div>
+  if (!comm) return <div className="p-6"><div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700">Commission not found</div></div>
+
+  const sc: Record<string, string> = { draft: 'bg-gray-100 text-gray-800', pending: 'bg-yellow-100 text-yellow-800', active: 'bg-green-100 text-green-800', completed: 'bg-green-100 text-green-800', approved: 'bg-green-100 text-green-800', confirmed: 'bg-blue-100 text-blue-800', processing: 'bg-indigo-100 text-indigo-800', shipped: 'bg-purple-100 text-purple-800', delivered: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800', rejected: 'bg-red-100 text-red-800', closed: 'bg-gray-100 text-gray-800', paid: 'bg-green-100 text-green-800', partial: 'bg-orange-100 text-orange-800', overdue: 'bg-red-100 text-red-800', expired: 'bg-red-100 text-red-800', scheduled: 'bg-blue-100 text-blue-800', in_progress: 'bg-blue-100 text-blue-800', open: 'bg-blue-100 text-blue-800' }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate('/commissions')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to Commissions
-        </button>
-        <div className="flex justify-between items-start">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate('/commissions')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{commission.agent_name}</h1>
-            <p className="text-gray-600">{commission.period}</p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate(`/commissions/${id}/edit`)}
-              className="btn-secondary flex items-center gap-2"
-            >
-              <Edit className="h-5 w-5" />
-              Edit
-            </button>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              commission.status === 'approved' ? 'bg-green-100 text-green-800' : 
-              commission.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-              'bg-blue-100 text-blue-800'
-            }`}>
-              {commission.status}
-            </span>
+            <h1 className="text-2xl font-bold text-gray-900">{comm.name || comm.title || `Commission #${id}`}</h1>
+            <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[comm.status] || 'bg-gray-100 text-gray-800'}`}>{(comm.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <h3 className="font-semibold text-gray-900">Total Commission</h3>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{formatCurrency(commission.total_amount)}</p>
-          <p className="text-sm text-gray-600 mt-1">
-            Base: {formatCurrency(commission.base_amount)} + Bonus: {formatCurrency(commission.bonus_amount)}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-gray-900">Achievement Rate</h3>
-          </div>
-          <p className="text-3xl font-bold text-gray-900">{commission.achievement_rate}%</p>
-          <p className="text-sm text-gray-600 mt-1">
-            {formatCurrency(commission.sales_achieved)} / {formatCurrency(commission.sales_target)}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Calendar className="h-5 w-5 text-purple-600" />
-            <h3 className="font-semibold text-gray-900">Payment Date</h3>
-          </div>
-          <p className="text-xl font-bold text-gray-900">
-            {new Date(commission.payment_date).toLocaleDateString()}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(comm.amount || comm.commission_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><User className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Agent</p><p className="text-xl font-bold">{comm.agent_name || comm.sales_rep || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(comm.commission_date || comm.date) || 'N/A'}</p></div></div></div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Commission Details</h2>
-        <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Agent</dt>
-            <dd className="mt-1 text-sm text-gray-900">{commission.agent_name}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Period</dt>
-            <dd className="mt-1 text-sm text-gray-900">{commission.period}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Sales Target</dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatCurrency(commission.sales_target)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm font-medium text-gray-500">Sales Achieved</dt>
-            <dd className="mt-1 text-sm text-gray-900">{formatCurrency(commission.sales_achieved)}</dd>
-          </div>
-          <div className="md:col-span-2">
-            <dt className="text-sm font-medium text-gray-500">Notes</dt>
-            <dd className="mt-1 text-sm text-gray-900">{commission.notes || '-'}</dd>
-          </div>
+        <h2 className="text-lg font-semibold mb-4">Commission Details</h2>
+        <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div><dt className="text-sm text-gray-500">Commission ID</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{comm.id || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Agent</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{comm.agent_name || comm.sales_rep || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Amount</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatCurrency(comm.amount || comm.commission_amount) || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Type</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{comm.commission_type || comm.type || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Order</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{comm.order_number || comm.order_id || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Period</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{comm.period || '-'}</dd></div>
+          <div><dt className="text-sm text-gray-500">Created At</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{formatDate(comm.created_at) || '-'}</dd></div>
         </dl>
       </div>
+
+      {comm.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{comm.notes}</p></div>}
     </div>
   )
 }
