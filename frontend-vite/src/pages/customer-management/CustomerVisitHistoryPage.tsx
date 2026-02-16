@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 import { customersService } from '../../services/customers.service'
 
 interface Visit {
@@ -25,7 +26,14 @@ export const CustomerVisitHistoryPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockVisits: Visit[] = []
+  const [visits, setVisits] = useState<Visit[]>([])
+
+  useEffect(() => {
+    apiClient.get('/customer-visits').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setVisits(data)
+    }).catch(() => {})
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -53,7 +61,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
     return badges[outcome as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredVisits = mockVisits.filter(v => {
+  const filteredVisits = visits.filter(v => {
     if (typeFilter !== 'all' && v.visit_type !== typeFilter) return false
     if (outcomeFilter !== 'all' && v.outcome !== outcomeFilter) return false
     return true
@@ -84,7 +92,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Visits</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockVisits.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{visits.length}</p>
             </div>
           </div>
         </div>
@@ -99,7 +107,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Successful</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockVisits.filter(v => v.outcome === 'successful').length}
+                {visits.filter(v => v.outcome === 'successful').length}
               </p>
             </div>
           </div>
@@ -115,8 +123,8 @@ export const CustomerVisitHistoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Duration</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockVisits.length > 0
-                  ? Math.round(mockVisits.reduce((sum, v) => sum + v.duration_minutes, 0) / mockVisits.length)
+                {visits.length > 0
+                  ? Math.round(visits.reduce((sum, v) => sum + v.duration_minutes, 0) / visits.length)
                   : 0} min
               </p>
             </div>
@@ -133,7 +141,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Value</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockVisits.reduce((sum, v) => sum + (v.order_value || 0), 0))}
+                {formatCurrency(visits.reduce((sum, v) => sum + (v.order_value || 0), 0))}
               </p>
             </div>
           </div>

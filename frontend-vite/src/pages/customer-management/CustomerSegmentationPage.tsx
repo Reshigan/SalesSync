@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 import { customersService } from '../../services/customers.service'
 
 interface Segment {
@@ -20,7 +21,14 @@ interface Segment {
 export const CustomerSegmentationPage: React.FC = () => {
   const [selectedSegment, setSelectedSegment] = useState<Segment | null>(null)
 
-  const mockSegments: Segment[] = []
+  const [segments, setSegments] = useState<Segment[]>([])
+
+  useEffect(() => {
+    apiClient.get('/customers/segments').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setSegments(data)
+    }).catch(() => {})
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -54,7 +62,7 @@ export const CustomerSegmentationPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Segments</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockSegments.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{segments.length}</p>
             </div>
           </div>
         </div>
@@ -69,7 +77,7 @@ export const CustomerSegmentationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Segmented Customers</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockSegments.reduce((sum, s) => sum + s.customer_count, 0)}
+                {segments.reduce((sum, s) => sum + s.customer_count, 0)}
               </p>
             </div>
           </div>
@@ -85,7 +93,7 @@ export const CustomerSegmentationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Value</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockSegments.reduce((sum, s) => sum + s.total_sales, 0))}
+                {formatCurrency(segments.reduce((sum, s) => sum + s.total_sales, 0))}
               </p>
             </div>
           </div>
@@ -101,8 +109,8 @@ export const CustomerSegmentationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Order Value</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockSegments.length > 0
-                  ? formatCurrency(mockSegments.reduce((sum, s) => sum + s.avg_order_value, 0) / mockSegments.length)
+                {segments.length > 0
+                  ? formatCurrency(segments.reduce((sum, s) => sum + s.avg_order_value, 0) / segments.length)
                   : formatCurrency(0)}
               </p>
             </div>
@@ -112,7 +120,7 @@ export const CustomerSegmentationPage: React.FC = () => {
 
       {/* Segments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockSegments.length === 0 ? (
+        {segments.length === 0 ? (
           <div className="col-span-full bg-white rounded-lg shadow text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -124,7 +132,7 @@ export const CustomerSegmentationPage: React.FC = () => {
             </button>
           </div>
         ) : (
-          mockSegments.map((segment) => (
+          segments.map((segment) => (
             <div
               key={segment.id}
               className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"

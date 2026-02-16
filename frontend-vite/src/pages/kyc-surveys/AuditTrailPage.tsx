@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 
 interface AuditLog {
   id: string
@@ -26,7 +27,14 @@ export const AuditTrailPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockLogs: AuditLog[] = []
+  const [logs, setLogs] = useState<AuditLog[]>([])
+
+  useEffect(() => {
+    apiClient.get('/audit-trail').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setLogs(data)
+    }).catch(() => {})
+  }, [])
 
   const getActionBadge = (action: string) => {
     const badges = {
@@ -49,14 +57,14 @@ export const AuditTrailPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredLogs = mockLogs.filter(log => {
+  const filteredLogs = logs.filter(log => {
     if (actionFilter !== 'all' && log.action.toLowerCase() !== actionFilter) return false
     if (entityFilter !== 'all' && log.entity_type !== entityFilter) return false
     return true
   })
 
-  const actions = Array.from(new Set(mockLogs.map(l => l.action.toLowerCase())))
-  const entityTypes = Array.from(new Set(mockLogs.map(l => l.entity_type)))
+  const actions = Array.from(new Set(logs.map(l => l.action.toLowerCase())))
+  const entityTypes = Array.from(new Set(logs.map(l => l.entity_type)))
 
   return (
     <div className="space-y-6">
@@ -83,7 +91,7 @@ export const AuditTrailPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Events</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockLogs.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{logs.length}</p>
             </div>
           </div>
         </div>
@@ -98,7 +106,7 @@ export const AuditTrailPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Successful</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockLogs.filter(l => l.status === 'success').length}
+                {logs.filter(l => l.status === 'success').length}
               </p>
             </div>
           </div>
@@ -114,7 +122,7 @@ export const AuditTrailPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Failed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockLogs.filter(l => l.status === 'failed').length}
+                {logs.filter(l => l.status === 'failed').length}
               </p>
             </div>
           </div>
@@ -130,7 +138,7 @@ export const AuditTrailPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Unique Users</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {new Set(mockLogs.map(l => l.user_name)).size}
+                {new Set(logs.map(l => l.user_name)).size}
               </p>
             </div>
           </div>

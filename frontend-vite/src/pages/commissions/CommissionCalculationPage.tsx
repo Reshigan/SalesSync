@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 import { commissionsService } from '../../services/commissions.service'
 
 interface CommissionCalculation {
@@ -24,7 +25,14 @@ export const CommissionCalculationPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockCalculations: CommissionCalculation[] = []
+  const [calculations, setCalculations] = useState<CommissionCalculation[]>([])
+
+  useEffect(() => {
+    apiClient.get('/commissions/calculations').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setCalculations(data)
+    }).catch(() => {})
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -42,7 +50,7 @@ export const CommissionCalculationPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredCalculations = mockCalculations.filter(calc => {
+  const filteredCalculations = calculations.filter(calc => {
     if (statusFilter !== 'all' && calc.status !== statusFilter) return false
     if (searchTerm && !calc.agent_name.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
@@ -73,7 +81,7 @@ export const CommissionCalculationPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Calculations</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockCalculations.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{calculations.length}</p>
             </div>
           </div>
         </div>
@@ -88,7 +96,7 @@ export const CommissionCalculationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockCalculations.reduce((sum, c) => sum + c.total_commission, 0))}
+                {formatCurrency(calculations.reduce((sum, c) => sum + c.total_commission, 0))}
               </p>
             </div>
           </div>
@@ -104,7 +112,7 @@ export const CommissionCalculationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">With Bonus</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCalculations.filter(c => c.bonus_applied).length}
+                {calculations.filter(c => c.bonus_applied).length}
               </p>
             </div>
           </div>
@@ -120,8 +128,8 @@ export const CommissionCalculationPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Rate</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockCalculations.length > 0
-                  ? `${(mockCalculations.reduce((sum, c) => sum + c.commission_rate, 0) / mockCalculations.length).toFixed(1)}%`
+                {calculations.length > 0
+                  ? `${(calculations.reduce((sum, c) => sum + c.commission_rate, 0) / calculations.length).toFixed(1)}%`
                   : '0%'}
               </p>
             </div>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../../services/products.service'
+import { apiClient } from '../../services/api.service'
 
 interface ProductPricing {
   product_id: string
@@ -22,7 +23,14 @@ export const ProductPricingPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockPricing: ProductPricing[] = []
+  const [pricing, setPricing] = useState<ProductPricing[]>([])
+
+  useEffect(() => {
+    apiClient.get('/products/pricing').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setPricing(data)
+    }).catch(() => {})
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -38,11 +46,11 @@ export const ProductPricingPage: React.FC = () => {
   }
 
   const filteredPricing = searchTerm
-    ? mockPricing.filter(p => 
+    ? pricing.filter(p => 
         p.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : mockPricing
+    : pricing
 
   return (
     <div className="space-y-6">
@@ -70,8 +78,8 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Selling Price</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.length > 0
-                  ? formatCurrency(mockPricing.reduce((sum, p) => sum + p.selling_price, 0) / mockPricing.length)
+                {pricing.length > 0
+                  ? formatCurrency(pricing.reduce((sum, p) => sum + p.selling_price, 0) / pricing.length)
                   : formatCurrency(0)}
               </p>
             </div>
@@ -88,8 +96,8 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Avg Margin</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.length > 0
-                  ? `${(mockPricing.reduce((sum, p) => sum + p.margin_percentage, 0) / mockPricing.length).toFixed(1)}%`
+                {pricing.length > 0
+                  ? `${(pricing.reduce((sum, p) => sum + p.margin_percentage, 0) / pricing.length).toFixed(1)}%`
                   : '0%'}
               </p>
             </div>
@@ -106,7 +114,7 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Products on Discount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.filter(p => p.discount_percentage && p.discount_percentage > 0).length}
+                {pricing.filter(p => p.discount_percentage && p.discount_percentage > 0).length}
               </p>
             </div>
           </div>
@@ -122,7 +130,7 @@ export const ProductPricingPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Low Margin Products</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPricing.filter(p => p.margin_percentage < 15).length}
+                {pricing.filter(p => p.margin_percentage < 15).length}
               </p>
             </div>
           </div>
