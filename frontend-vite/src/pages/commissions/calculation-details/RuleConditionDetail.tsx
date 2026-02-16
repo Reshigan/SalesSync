@@ -10,7 +10,7 @@ export default function RuleConditionDetail() {
   const { data: condition, isLoading } = useQuery({
     queryKey: ['commission-rule-condition', ruleId, conditionId],
     queryFn: async () => {
-      const res = await apiClient.get('/commissions/rules/${ruleId}/conditions/${conditionId}')
+      const res = await apiClient.get(`/commissions/rules/${ruleId}/conditions/${conditionId}`)
       return res.data?.data || null
     },
   })

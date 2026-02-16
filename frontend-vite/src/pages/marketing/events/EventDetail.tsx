@@ -15,8 +15,8 @@ export default function EventDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/marketing/events/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/marketing/events/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setRecord(d)
     } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }

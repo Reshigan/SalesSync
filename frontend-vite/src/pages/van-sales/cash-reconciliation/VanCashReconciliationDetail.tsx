@@ -15,8 +15,8 @@ export default function VanCashReconciliationDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/van-sales/cash-reconciliation/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/van-sales/cash-reconciliation/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setRecon(d)
     } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }

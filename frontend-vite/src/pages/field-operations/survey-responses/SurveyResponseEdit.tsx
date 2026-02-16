@@ -17,7 +17,7 @@ export default function SurveyResponseEdit() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['survey-response', surveyId, responseId],
     queryFn: async () => {
-      const res = await apiClient.get('/survey-responses/${responseId}')
+      const res = await apiClient.get(`/survey-responses/${responseId}`)
       return res.data?.data || null
     },
   })

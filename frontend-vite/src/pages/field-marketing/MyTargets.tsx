@@ -31,8 +31,7 @@ export default function MyTargets() {
     try {
       setLoading(true)
       const res = await apiClient.get('/agent-targets/my')
-      const json = await res.json()
-      setTargets(json.data || [])
+      setTargets(res.data?.data || (Array.isArray(res.data) ? res.data : []))
     } catch (error) {
       console.error('Error fetching targets:', error)
     } finally {

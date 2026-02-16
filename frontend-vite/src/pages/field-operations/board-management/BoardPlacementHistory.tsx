@@ -10,7 +10,7 @@ export default function BoardPlacementHistory() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      const res = await apiClient.get('/boards/${boardId}')
+      const res = await apiClient.get(`/boards/${boardId}`)
       return res.data?.data || []
     },
   })

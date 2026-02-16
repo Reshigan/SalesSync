@@ -12,7 +12,7 @@ export default function PayoutLineList() {
   const { data: payout } = useQuery({
     queryKey: ['payout', payoutId],
     queryFn: async () => {
-      const res = await apiClient.get('/commissions/payouts/${payoutId}')
+      const res = await apiClient.get(`/commissions/payouts/${payoutId}`)
       return res.data?.data || null
     },
   })

@@ -10,7 +10,7 @@ export default function SurveyAnalysis() {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['survey-analysis', surveyId],
     queryFn: async () => {
-      const res = await apiClient.get('/surveys/${surveyId}/analysis')
+      const res = await apiClient.get(`/surveys/${surveyId}/analysis`)
       return res.data?.data || null
     },
   })

@@ -11,7 +11,7 @@ export default function RouteStopDetail() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      const res = await apiClient.get('/routes/${routeId}')
+      const res = await apiClient.get(`/routes/${routeId}`)
       return res.data?.data || null
     },
   })

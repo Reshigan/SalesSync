@@ -19,7 +19,7 @@ export default function PayoutLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      const res = await apiClient.get('/commissions/payouts/${payoutId}/lines/${lineId}')
+      const res = await apiClient.get(`/commissions/payouts/${payoutId}/lines/${lineId}`)
       return res.data?.data || null
     },
   })

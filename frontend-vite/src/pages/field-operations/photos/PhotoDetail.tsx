@@ -10,7 +10,7 @@ export default function PhotoDetail() {
   const { data: photo, isLoading } = useQuery({
     queryKey: ['photo', visitId, photoId],
     queryFn: async () => {
-      const res = await apiClient.get('/visits/${visitId}/photos/${photoId}')
+      const res = await apiClient.get(`/visits/${visitId}/photos/${photoId}`)
       return res.data?.data || null
     },
   })

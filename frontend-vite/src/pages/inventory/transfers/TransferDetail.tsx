@@ -16,8 +16,8 @@ export default function TransferDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/inventory/transfers/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/inventory/transfers/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setXfer(d)
       setItems(d.items || d.line_items || d.order_items || [])

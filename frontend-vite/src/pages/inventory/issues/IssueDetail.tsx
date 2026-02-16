@@ -16,8 +16,8 @@ export default function IssueDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/inventory/issues/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/inventory/issues/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setIssue(d)
       setItems(d.items || d.line_items || d.order_items || [])

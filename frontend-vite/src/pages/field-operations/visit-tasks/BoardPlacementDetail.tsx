@@ -10,7 +10,7 @@ export default function BoardPlacementDetail() {
   const { data: placement, isLoading } = useQuery({
     queryKey: ['board-placement', visitId, placementId],
     queryFn: async () => {
-      const res = await apiClient.get('/visits/${visitId}/board-placements/${placementId}')
+      const res = await apiClient.get(`/visits/${visitId}/board-placements/${placementId}`)
       return res.data?.data || null
     },
   })

@@ -16,8 +16,8 @@ export default function VanSalesReturnDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/van-sales/returns/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/van-sales/returns/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setRet(d)
       setItems(d.items || d.line_items || d.order_items || [])

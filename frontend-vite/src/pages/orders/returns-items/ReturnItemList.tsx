@@ -11,7 +11,7 @@ export default function ReturnItemList() {
   const { data: returnOrder } = useQuery({
     queryKey: ['return', returnId],
     queryFn: async () => {
-      const res = await apiClient.get('/returns/${returnId}')
+      const res = await apiClient.get(`/returns/${returnId}`)
       return res.data?.data || []
     },
   })

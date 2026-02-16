@@ -19,7 +19,7 @@ export default function RouteStopEdit() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
     queryFn: async () => {
-      const res = await apiClient.get('/route-stops/${stopId}')
+      const res = await apiClient.get(`/route-stops/${stopId}`)
       return res.data?.data || null
     },
   })

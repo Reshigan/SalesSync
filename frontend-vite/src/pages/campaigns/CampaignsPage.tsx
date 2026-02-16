@@ -53,8 +53,7 @@ export default function CampaignsPage() {
     try {
       setLoading(true)
       const res = await apiClient.get('/campaigns')
-      const json = await res.json()
-      const data = json.data || []
+      const data = res.data?.data || (Array.isArray(res.data) ? res.data : [])
       const active = data.filter((c: Record<string, unknown>) => c.status === 'active')
       setMetrics({
         totalCampaigns: data.length,

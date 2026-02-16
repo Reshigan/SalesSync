@@ -18,7 +18,7 @@ export default function CountLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      const res = await apiClient.get('/stock-counts/${countId}/lines/${lineId}')
+      const res = await apiClient.get(`/stock-counts/${countId}/lines/${lineId}`)
       return res.data?.data || null
     },
   })

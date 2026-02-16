@@ -10,7 +10,7 @@ export default function SurveyDetail() {
   const { data: survey, isLoading } = useQuery({
     queryKey: ['survey', visitId, surveyId],
     queryFn: async () => {
-      const res = await apiClient.get('/surveys/${surveyId}')
+      const res = await apiClient.get(`/surveys/${surveyId}`)
       return res.data?.data || null
     },
   })

@@ -10,7 +10,7 @@ export default function SerialDetail() {
   const { data: serial, isLoading } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      const res = await apiClient.get('/serials/${serialId}')
+      const res = await apiClient.get(`/serials/${serialId}`)
       return res.data?.data || null
     },
   })

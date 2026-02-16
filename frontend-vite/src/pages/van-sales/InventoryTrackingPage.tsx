@@ -34,8 +34,7 @@ export default function InventoryTrackingPage() {
     try {
       setLoading(true)
       const res = await apiClient.get('/inventory/stock')
-      const json = await res.json()
-      const items = (json.data || []).map((item: Record<string, unknown>) => ({
+      const items = (res.data?.data || (Array.isArray(res.data) ? res.data : [])).map((item: Record<string, unknown>) => ({
         id: item.id as string || '',
         productName: item.product_name as string || item.name as string || 'Unknown',
         sku: item.sku as string || '',
