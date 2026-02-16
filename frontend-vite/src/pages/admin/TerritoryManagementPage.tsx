@@ -42,7 +42,7 @@ const TerritoryManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2"><MapPin className="w-8 h-8 text-red-600" /> Territory Management</h1>
         <button onClick={() => { setEditing(0); setForm({}); }} className="px-4 py-2 bg-red-600 text-white rounded-lg flex items-center gap-2">

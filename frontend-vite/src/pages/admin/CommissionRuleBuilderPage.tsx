@@ -40,7 +40,7 @@ const CommissionRuleBuilderPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="mb-6">
         <h1 className="text-3xl font-bold flex items-center gap-2"><Calculator className="w-8 h-8 text-green-600" /> Commission Rule Builder</h1>
         <p className="text-gray-600 mt-2">Define commission rates based on board types and quantities</p>
