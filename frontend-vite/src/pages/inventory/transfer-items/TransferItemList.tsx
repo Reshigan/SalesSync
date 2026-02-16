@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, AlertTriangle } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function TransferItemList() {
   const { transferId } = useParams<{ transferId: string }>()
@@ -10,28 +10,8 @@ export default function TransferItemList() {
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/transfers/${transferId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: items, isLoading } = useQuery({
-    queryKey: ['transfer-items', transferId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/transfers/${transferId}/items`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
+      const res = await apiClient.get('/transfers/${transferId}')
+      return res.data?.data || []
     },
   })
   if (isLoading) {

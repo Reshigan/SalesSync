@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-import { API_CONFIG } from '../config/api.config'
+import { apiClient } from 'services/api.service'
   Camera, MapPin, Users, DollarSign, Calendar, Clock, Target, 
   TrendingUp, MessageSquare, Star, Gift, Plus, X, Upload
 } from 'lucide-react';

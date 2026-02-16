@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Shield, CheckCircle, AlertTriangle } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function PhotoEvidence() {
   const { visitId } = useParams<{ visitId: string }>()
@@ -10,28 +10,8 @@ export default function PhotoEvidence() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: evidence, isLoading } = useQuery({
-    queryKey: ['visit-photo-evidence', visitId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/photos/evidence`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/visits/${visitId}')
+      return res.data?.data || null
     },
   })
 

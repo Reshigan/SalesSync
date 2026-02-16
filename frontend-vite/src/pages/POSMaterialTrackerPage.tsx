@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Package, QrCode, Search, Calendar, CheckCircle2, AlertCircle, Upload, Download } from 'lucide-react';
-import { API_CONFIG } from '../config/api.config'
+import { apiClient } from 'services/api.service'
 
 interface POSMaterial {
   id: number;

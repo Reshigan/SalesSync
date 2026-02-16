@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Camera, Store, User, Phone, Mail, MapPinned, Building2, Users, Clock, CreditCard, ChevronRight, Save, AlertCircle } from 'lucide-react';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import CameraCapture from '../../components/CameraCapture';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../services/api.service';
 
 interface CustomerData {
   storeName: string;

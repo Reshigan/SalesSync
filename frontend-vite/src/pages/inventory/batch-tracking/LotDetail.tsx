@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, Factory, Calendar, CheckCircle } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function LotDetail() {
   const { lotId } = useParams<{ lotId: string }>()
@@ -10,68 +10,8 @@ export default function LotDetail() {
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const oldLot = {
-      id: lotId,
-      lot_number: 'LOT-2024-A-001',
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      manufacture_date: '2024-01-01',
-      manufacture_location: 'Factory A - Line 3',
-      supplier: 'Coca-Cola Bottling Co.',
-      supplier_lot_number: 'SUP-LOT-2024-001',
-      total_quantity: 5000,
-      batches_count: 5,
-      quality_status: 'passed',
-      quality_certificate: 'QC-2024-001.pdf',
-      quality_checked_by: 'Jane QC Manager',
-      quality_checked_at: '2024-01-02T10:00:00Z',
-      certifications: ['ISO 9001', 'HACCP', 'FDA Approved'],
-      test_results: [
-        {
-          test_name: 'pH Level',
-          result: '2.5',
-          standard: '2.4-2.6',
-          status: 'passed',
-        },
-        {
-          test_name: 'Sugar Content',
-          result: '10.8g/100ml',
-          standard: '10.6-11.0g/100ml',
-          status: 'passed',
-        },
-        {
-          test_name: 'Carbonation',
-          result: '3.8 volumes',
-          standard: '3.7-4.0 volumes',
-          status: 'passed',
-        },
-      ],
-      notes: 'Standard production lot, all quality checks passed',
-    }
-
-  const { data: batches } = useQuery({
-    queryKey: ['lot-batches', lotId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/lots/${lotId}/batches`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
+      const res = await apiClient.get('/lots/${lotId}')
+      return res.data?.data || []
     },
   })
   if (isLoading) {

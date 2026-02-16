@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, ShoppingCart, Eye } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function BatchAllocation() {
   const { batchId } = useParams<{ batchId: string }>()
@@ -10,28 +10,8 @@ export default function BatchAllocation() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: allocations, isLoading } = useQuery({
-    queryKey: ['batch-allocations', batchId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}/allocations`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
+      const res = await apiClient.get('/batches/${batchId}')
+      return res.data?.data || []
     },
   })
   if (isLoading) {

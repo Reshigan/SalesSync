@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Target, TrendingUp, Calendar, Award, ChevronDown, ChevronUp } from 'lucide-react'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../services/api.service'
 
 interface TargetItem {
   id: string

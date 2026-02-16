@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import CameraCapture from '../../components/CameraCapture';
 import AIModelStatus from '../../components/ai/AIModelStatus';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../services/api.service';
 
 interface Brand {
   id: string;

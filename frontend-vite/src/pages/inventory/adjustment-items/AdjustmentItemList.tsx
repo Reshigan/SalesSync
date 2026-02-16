@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, TrendingUp, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function AdjustmentItemList() {
   const { adjustmentId } = useParams<{ adjustmentId: string }>()
@@ -11,28 +11,8 @@ export default function AdjustmentItemList() {
   const { data: adjustment } = useQuery({
     queryKey: ['adjustment', adjustmentId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/adjustments/${adjustmentId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: items, isLoading } = useQuery({
-    queryKey: ['adjustment-items', adjustmentId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/adjustments/${adjustmentId}/items`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
+      const res = await apiClient.get('/adjustments/${adjustmentId}')
+      return res.data?.data || []
     },
   })
   if (isLoading) {

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Filter } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../services/api.service'
 
 interface InventoryItem {
   id: string

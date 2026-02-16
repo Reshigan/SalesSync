@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, DollarSign, Edit, Package } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function CashReconciliationDetail() {

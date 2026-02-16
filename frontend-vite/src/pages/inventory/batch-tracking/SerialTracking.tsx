@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Package, Truck, User } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function SerialTracking() {
   const { serialId } = useParams<{ serialId: string }>()
@@ -10,28 +10,8 @@ export default function SerialTracking() {
   const { data: serial } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/serials/${serialId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: tracking, isLoading } = useQuery({
-    queryKey: ['serial-tracking', serialId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/serials/${serialId}/tracking`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
+      const res = await apiClient.get('/serials/${serialId}')
+      return res.data?.data || []
     },
   })
   if (isLoading) {

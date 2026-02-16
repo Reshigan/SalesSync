@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Play, Star } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../services/api.service'
 
 interface Template { id: number; name: string; description: string; category: string; popular: boolean; }
 

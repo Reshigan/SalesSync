@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Users, Package, DollarSign, Activity } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../services/api.service'
 
 const AnalyticsDashboardPage: React.FC = () => {
   const [metrics, setMetrics] = useState<any>({});

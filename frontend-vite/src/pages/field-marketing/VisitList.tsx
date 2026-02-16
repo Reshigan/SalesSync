@@ -15,7 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../services/api.service';
 
 interface Brand {
   id: string;

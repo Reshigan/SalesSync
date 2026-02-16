@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart3, Download, Calendar, Filter } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../services/api.service'
 
 const ReportBuilderPage: React.FC = () => {
   const [config, setConfig] = useState({ type: 'sales', dateFrom: '', dateTo: '', groupBy: 'day', filters: {} });

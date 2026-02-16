@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, Clock, User, FileText } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 export default function VisitTaskDetail() {
   const { visitId, taskId } = useParams<{ visitId: string; taskId: string }>()
@@ -10,28 +10,8 @@ export default function VisitTaskDetail() {
   const { data: visit } = useQuery({
     queryKey: ['visit', visitId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: task, isLoading } = useQuery({
-    queryKey: ['visit-task', visitId, taskId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/tasks/${taskId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/visits/${visitId}')
+      return res.data?.data || null
     },
   })
 
