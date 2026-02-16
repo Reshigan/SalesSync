@@ -33,7 +33,7 @@ const BoardManagementPage: React.FC = () => {
   const deleteBoard = async (id: number) => {
     if (!confirm('Delete this board?')) return;
     try {
-      const res = await fetch(`/api/admin/boards/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

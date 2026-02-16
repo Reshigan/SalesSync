@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface StopFormData {
   planned_arrival: string
@@ -18,7 +19,7 @@ export default function RouteStopEdit() {
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
     queryFn: async () => {
-      const response = await fetch(`/api/route-stops/${stopId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/route-stops/${stopId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

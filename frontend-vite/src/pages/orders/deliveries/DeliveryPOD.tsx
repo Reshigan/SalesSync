@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, FileText, Download, Image as ImageIcon } from 'lucide-react'
 import { ordersService } from '../../../services/orders.service'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function DeliveryPOD() {
   const { orderId, deliveryId } = useParams<{ orderId: string; deliveryId: string }>()
@@ -15,7 +16,7 @@ export default function DeliveryPOD() {
   const { data: pod, isLoading } = useQuery({
     queryKey: ['delivery-pod', orderId, deliveryId],
     queryFn: async () => {
-      const response = await fetch(`/api/orders/${orderId}/deliveries/${deliveryId}/pod`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/orders/${orderId}/deliveries/${deliveryId}/pod`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

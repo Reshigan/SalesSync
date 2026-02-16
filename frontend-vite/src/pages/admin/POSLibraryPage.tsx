@@ -33,7 +33,7 @@ const POSLibraryPage: React.FC = () => {
   const deleteMaterial = async (id: number) => {
     if (!confirm('Delete material?')) return;
     try {
-      const res = await fetch(`/api/admin/pos-library/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/pos-library/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

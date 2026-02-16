@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface CountLineFormData {
   counted_quantity: number
@@ -17,7 +18,7 @@ export default function CountLineEdit() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
     queryFn: async () => {
-      const response = await fetch(`/api/stock-counts/${countId}/lines/${lineId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/stock-counts/${countId}/lines/${lineId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

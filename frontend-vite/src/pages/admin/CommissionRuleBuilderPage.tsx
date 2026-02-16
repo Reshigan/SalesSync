@@ -31,7 +31,7 @@ const CommissionRuleBuilderPage: React.FC = () => {
   const deleteRule = async (id: number) => {
     if (!confirm('Delete rule?')) return;
     try {
-      const res = await fetch(`/api/admin/commission-rules/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/commission-rules/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

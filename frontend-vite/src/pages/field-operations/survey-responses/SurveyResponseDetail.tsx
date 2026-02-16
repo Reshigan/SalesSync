@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, FileText, CheckCircle } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function SurveyResponseDetail() {
   const { surveyId, responseId } = useParams<{ surveyId: string; responseId: string }>()
@@ -9,7 +10,7 @@ export default function SurveyResponseDetail() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['survey-response', surveyId, responseId],
     queryFn: async () => {
-      const response = await fetch(`/api/survey-responses/${responseId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/survey-responses/${responseId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

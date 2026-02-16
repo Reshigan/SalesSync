@@ -33,7 +33,7 @@ const TerritoryManagementPage: React.FC = () => {
   const deleteTerritory = async (id: number) => {
     if (!confirm('Delete territory?')) return;
     try {
-      const res = await fetch(`/api/admin/territories/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/territories/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

@@ -33,7 +33,7 @@ const CampaignManagementPage: React.FC = () => {
   const deleteCampaign = async (id: number) => {
     if (!confirm('Delete campaign?')) return;
     try {
-      const res = await fetch(`/api/admin/campaigns/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/campaigns/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });

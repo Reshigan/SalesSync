@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, AlertTriangle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface VarianceFormData {
   resolution_action: string
@@ -18,7 +19,7 @@ export default function VanLoadVariance() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/van-loads/${loadId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/van-loads/${loadId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
