@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { commissionsService } from '../../services/commissions.service'
 
 interface CommissionFormData {
   agent_id: string
@@ -26,10 +27,7 @@ export default function CommissionCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: CommissionFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-commission-id' }
-    },
+    mutationFn: (data: CommissionFormData) => commissionsService.createCommission(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['commissions'] })
       toast.success('Commission created successfully')

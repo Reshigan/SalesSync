@@ -31,10 +31,7 @@ export default function DepositEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: DepositFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: DepositFormData) => cashReconciliationService.updateBankDeposit(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deposit', id] })
       toast.success('Deposit updated successfully')

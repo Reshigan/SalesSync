@@ -154,6 +154,16 @@ class FinanceService {
     }
   }
 
+  async updatePayment(id: string, updates: Partial<Payment>): Promise<Payment> {
+    try {
+      const response = await apiClient.put(`${this.paymentsUrl}/${id}`, updates)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update payment:', error)
+      throw error
+    }
+  }
+
   async getPaymentStats(): Promise<any> {
     try {
       const response = await apiClient.get(`${this.paymentsUrl}/stats`)

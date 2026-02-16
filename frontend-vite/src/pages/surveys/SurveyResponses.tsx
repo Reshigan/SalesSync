@@ -9,9 +9,7 @@ export default function SurveyResponses() {
 
   const { data: survey } = useQuery({
     queryKey: ['survey', id],
-    queryFn: async () => {
-      return { id, title: 'Customer Satisfaction Survey' }
-    },
+    queryFn: () => surveysService.getSurvey(id!),
   })
 
   const { data: responses, isLoading } = useQuery({

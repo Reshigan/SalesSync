@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Plus } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { reportsService } from '../../services/reports.service'
 
 interface ReportFormData {
   name: string
@@ -25,11 +26,7 @@ export default function ReportCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: ReportFormData) => {
-      // Mock API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: Date.now().toString() }
-    },
+    mutationFn: (data: ReportFormData) => reportsService.createReport(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['reports'] })
       toast.success('Report created successfully')

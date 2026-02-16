@@ -28,10 +28,7 @@ export default function InvoiceEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: InvoiceFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: InvoiceFormData) => financeService.updateInvoice(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', id] })
       toast.success('Invoice updated successfully')

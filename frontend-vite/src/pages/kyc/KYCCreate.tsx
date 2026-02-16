@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { customersService } from '../../services/customers.service'
 
 interface KYCFormData {
   customer_id: string
@@ -29,10 +30,7 @@ export default function KYCCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: KYCFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-kyc-id' }
-    },
+    mutationFn: (data: KYCFormData) => customersService.createCustomer(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['kyc'] })
       toast.success('KYC created successfully')
