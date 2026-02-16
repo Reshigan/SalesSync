@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, DollarSign, TrendingUp, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { commissionsService } from '../../services/commissions.service'
 
 export default function CommissionDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,22 +10,7 @@ export default function CommissionDetail() {
 
   const { data: commission, isLoading } = useQuery({
     queryKey: ['commission', id],
-    queryFn: async () => {
-      return {
-        id,
-        agent_name: 'John Doe',
-        period: 'January 2024',
-        base_amount: 5000,
-        bonus_amount: 1500,
-        total_amount: 6500,
-        status: 'approved',
-        sales_target: 50000,
-        sales_achieved: 62000,
-        achievement_rate: 124,
-        payment_date: '2024-02-05',
-        notes: 'Exceeded target by 24%'
-      }
-    },
+    queryFn: () => commissionsService.getCommission(id!),
   })
 
   if (isLoading) {

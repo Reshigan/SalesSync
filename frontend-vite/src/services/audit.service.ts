@@ -32,6 +32,16 @@ class AuditService {
     }
   }
 
+  async exportAuditTrail(entityType: string, entityId: string, params: { format: string; date_from?: string; date_to?: string }): Promise<{ download_url: string }> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/${entityType}/${entityId}/export`, params)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to export audit trail:', error)
+      throw error
+    }
+  }
+
   async getAuditEntry(entityType: string, entityId: string, entryId: string): Promise<AuditEntry | null> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}/entries/${entryId}`)

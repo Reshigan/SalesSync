@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { commissionsService } from '../../services/commissions.service'
 
 interface RuleFormData {
   name: string
@@ -28,10 +29,7 @@ export default function RuleCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: RuleFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-rule-id' }
-    },
+    mutationFn: (data: RuleFormData) => commissionsService.createRule(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['commission-rules'] })
       toast.success('Rule created successfully')

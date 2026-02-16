@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../services/finance.service'
 
 interface InvoiceFormData {
   customer_id: string
@@ -24,10 +25,7 @@ export default function InvoiceCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: InvoiceFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-invoice-id' }
-    },
+    mutationFn: (data: InvoiceFormData) => financeService.createInvoice(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['invoices'] })
       toast.success('Invoice created successfully')

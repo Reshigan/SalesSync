@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { commissionsService } from '../../services/commissions.service'
 
 interface CommissionFormData {
   base_amount: number
@@ -19,16 +20,7 @@ export default function CommissionEdit() {
 
   const { data: commission, isLoading } = useQuery({
     queryKey: ['commission', id],
-    queryFn: async () => {
-      return {
-        id,
-        base_amount: 5000,
-        bonus_amount: 1500,
-        status: 'approved',
-        payment_date: '2024-02-05',
-        notes: 'Exceeded target by 24%'
-      }
-    },
+    queryFn: () => commissionsService.getCommission(id!),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<CommissionFormData>({
@@ -36,10 +28,7 @@ export default function CommissionEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: CommissionFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: CommissionFormData) => commissionsService.updateCommission(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['commission', id] })
       toast.success('Commission updated successfully')

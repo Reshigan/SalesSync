@@ -26,10 +26,7 @@ export default function SessionEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: SessionFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: SessionFormData) => cashReconciliationService.updateSession(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cash-session', id] })
       toast.success('Session updated successfully')

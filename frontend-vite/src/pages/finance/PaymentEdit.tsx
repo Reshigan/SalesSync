@@ -29,10 +29,7 @@ export default function PaymentEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: PaymentFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: PaymentFormData) => financeService.updatePayment(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payment', id] })
       toast.success('Payment updated successfully')

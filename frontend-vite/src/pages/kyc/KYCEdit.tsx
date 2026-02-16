@@ -33,10 +33,7 @@ export default function KYCEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: KYCFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: KYCFormData) => customersService.updateCustomer(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kyc', id] })
       toast.success('KYC updated successfully')
