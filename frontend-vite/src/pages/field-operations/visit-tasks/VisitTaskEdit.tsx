@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface TaskFormData {
   task_title: string
@@ -19,7 +20,7 @@ export default function VisitTaskEdit() {
   const { data: task, isLoading } = useQuery({
     queryKey: ['visit-task', visitId, taskId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/tasks/${taskId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/tasks/${taskId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

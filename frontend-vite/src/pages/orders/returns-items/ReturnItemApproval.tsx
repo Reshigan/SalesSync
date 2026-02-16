@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 interface ApprovalFormData {
   decision: 'approved' | 'rejected'
@@ -19,7 +20,7 @@ export default function ReturnItemApproval() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/returns/${returnId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/returns/${returnId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

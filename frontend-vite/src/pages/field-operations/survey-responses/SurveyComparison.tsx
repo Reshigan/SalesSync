@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function SurveyComparison() {
   const { surveyId } = useParams<{ surveyId: string }>()
@@ -9,7 +10,7 @@ export default function SurveyComparison() {
   const { data: comparison, isLoading } = useQuery({
     queryKey: ['survey-comparison', surveyId],
     queryFn: async () => {
-      const response = await fetch(`/api/surveys/${surveyId}/comparison`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/surveys/${surveyId}/comparison`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

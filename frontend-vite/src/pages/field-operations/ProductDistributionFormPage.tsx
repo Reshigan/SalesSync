@@ -428,7 +428,7 @@ export default function ProductDistributionFormPage() {
 
   return (
     <div className="p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="w-full max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Product Distribution Form</h1>
         {renderStepContent()}
         <div className="mt-6 flex gap-4">

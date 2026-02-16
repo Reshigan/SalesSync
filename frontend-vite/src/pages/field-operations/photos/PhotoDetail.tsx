@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Image, MapPin, Calendar, User } from 'lucide-react'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function PhotoDetail() {
   const { visitId, photoId } = useParams<{ visitId: string; photoId: string }>()
@@ -9,7 +10,7 @@ export default function PhotoDetail() {
   const { data: photo, isLoading } = useQuery({
     queryKey: ['photo', visitId, photoId],
     queryFn: async () => {
-      const response = await fetch(`/api/visits/${visitId}/photos/${photoId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/visits/${visitId}/photos/${photoId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

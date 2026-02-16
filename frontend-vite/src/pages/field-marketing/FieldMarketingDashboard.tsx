@@ -28,7 +28,7 @@ export default function FieldMarketingDashboard() {
     <div className="min-h-screen bg-gray-50">
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full">
           <div className="flex space-x-8">
             {tabs.map((tab) => {
               const Icon = tab.icon
@@ -52,7 +52,7 @@ export default function FieldMarketingDashboard() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'boards' && <BoardManagement />}
         {activeTab === 'products' && <ProductsTab />}

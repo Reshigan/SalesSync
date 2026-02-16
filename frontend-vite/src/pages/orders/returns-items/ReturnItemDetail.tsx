@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, DollarSign, AlertCircle } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function ReturnItemDetail() {
   const { returnId, itemId } = useParams<{ returnId: string; itemId: string }>()
@@ -10,7 +11,7 @@ export default function ReturnItemDetail() {
   const { data: returnOrder } = useQuery({
     queryKey: ['return', returnId],
     queryFn: async () => {
-      const response = await fetch(`/api/returns/${returnId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/returns/${returnId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function ReturnItemDetail() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
     queryFn: async () => {
-      const response = await fetch(`/api/returns/${returnId}/items/${itemId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/returns/${returnId}/items/${itemId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

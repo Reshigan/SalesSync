@@ -69,7 +69,7 @@ export const CloseCashSessionPage: React.FC = () => {
   const variancePercentage = expectedCash > 0 ? (calculatedVariance / expectedCash) * 100 : 0
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="w-full max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Close Cash Session</h1>
         <p className="mt-1 text-sm text-gray-500">

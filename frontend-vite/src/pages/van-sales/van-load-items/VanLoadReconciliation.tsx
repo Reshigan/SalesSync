@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, AlertTriangle, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function VanLoadReconciliation() {
   const { loadId } = useParams<{ loadId: string }>()
@@ -10,7 +11,7 @@ export default function VanLoadReconciliation() {
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
     queryFn: async () => {
-      const response = await fetch(`/api/van-loads/${loadId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/van-loads/${loadId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function VanLoadReconciliation() {
   const { data: reconciliation, isLoading } = useQuery({
     queryKey: ['van-load-reconciliation', loadId],
     queryFn: async () => {
-      const response = await fetch(`/api/van-loads/${loadId}/reconciliation`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/van-loads/${loadId}/reconciliation`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

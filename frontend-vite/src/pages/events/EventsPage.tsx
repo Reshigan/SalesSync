@@ -72,7 +72,7 @@ export default function EventsPage() {
       if (filter.start_date) queryParams.append('start_date', filter.start_date)
       if (filter.end_date) queryParams.append('end_date', filter.end_date)
 
-      const response = await fetch(`/api/events?${queryParams.toString()}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/events?${queryParams.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

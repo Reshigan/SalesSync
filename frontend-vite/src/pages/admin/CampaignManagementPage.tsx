@@ -33,7 +33,7 @@ const CampaignManagementPage: React.FC = () => {
   const deleteCampaign = async (id: number) => {
     if (!confirm('Delete campaign?')) return;
     try {
-      const res = await fetch(`/api/admin/campaigns/${id}`, {
+      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/campaigns/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
@@ -47,7 +47,7 @@ const CampaignManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Campaign Management</h1>
         <button onClick={() => { setEditing(0); setForm({ status: 'planned' }); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center gap-2">

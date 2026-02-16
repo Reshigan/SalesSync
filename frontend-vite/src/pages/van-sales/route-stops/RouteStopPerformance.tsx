@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, Clock, DollarSign, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function RouteStopPerformance() {
   const { routeId } = useParams<{ routeId: string }>()
@@ -10,7 +11,7 @@ export default function RouteStopPerformance() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      const response = await fetch(`/api/routes/${routeId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function RouteStopPerformance() {
   const { data: performance, isLoading } = useQuery({
     queryKey: ['route-performance', routeId],
     queryFn: async () => {
-      const response = await fetch(`/api/routes/${routeId}/performance`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}/performance`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, Building, Clock, FileText } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
+import { API_CONFIG } from '../../../config/api.config'
 
 export default function DepositDetail() {
   const { sessionId, depositId } = useParams<{ sessionId: string; depositId: string }>()
@@ -10,7 +11,7 @@ export default function DepositDetail() {
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-sessions/${sessionId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
@@ -24,7 +25,7 @@ export default function DepositDetail() {
   const { data: deposit, isLoading } = useQuery({
     queryKey: ['deposit', sessionId, depositId],
     queryFn: async () => {
-      const response = await fetch(`/api/cash-sessions/${sessionId}/deposits/${depositId}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}/deposits/${depositId}`, {
         headers: {
           'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
         },
