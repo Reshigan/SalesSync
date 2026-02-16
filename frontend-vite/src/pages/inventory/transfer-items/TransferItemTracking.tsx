@@ -10,7 +10,7 @@ export default function TransferItemTracking() {
   const { data: item } = useQuery({
     queryKey: ['transfer-item', transferId, itemId],
     queryFn: async () => {
-      const res = await apiClient.get('/transfers/${transferId}/items/${itemId}')
+      const res = await apiClient.get(`/transfers/${transferId}/items/${itemId}`)
       return res.data?.data || null
     },
   })

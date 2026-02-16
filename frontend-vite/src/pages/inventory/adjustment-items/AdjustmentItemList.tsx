@@ -11,7 +11,7 @@ export default function AdjustmentItemList() {
   const { data: adjustment } = useQuery({
     queryKey: ['adjustment', adjustmentId],
     queryFn: async () => {
-      const res = await apiClient.get('/adjustments/${adjustmentId}')
+      const res = await apiClient.get(`/adjustments/${adjustmentId}`)
       return res.data?.data || []
     },
   })

@@ -20,7 +20,7 @@ export default function VisitTaskEdit() {
   const { data: task, isLoading } = useQuery({
     queryKey: ['visit-task', visitId, taskId],
     queryFn: async () => {
-      const res = await apiClient.get('/visits/${visitId}/tasks/${taskId}')
+      const res = await apiClient.get(`/visits/${visitId}/tasks/${taskId}`)
       return res.data?.data || null
     },
   })

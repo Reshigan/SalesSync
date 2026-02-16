@@ -10,7 +10,7 @@ export default function TransferItemDetail() {
   const { data: transfer } = useQuery({
     queryKey: ['transfer', transferId],
     queryFn: async () => {
-      const res = await apiClient.get('/transfers/${transferId}')
+      const res = await apiClient.get(`/transfers/${transferId}`)
       return res.data?.data || null
     },
   })

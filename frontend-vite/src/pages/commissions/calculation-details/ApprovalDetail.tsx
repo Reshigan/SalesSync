@@ -11,7 +11,7 @@ export default function ApprovalDetail() {
   const { data: approval, isLoading } = useQuery({
     queryKey: ['commission-approval', calculationId],
     queryFn: async () => {
-      const res = await apiClient.get('/commissions/calculations/${calculationId}/approval')
+      const res = await apiClient.get(`/commissions/calculations/${calculationId}/approval`)
       return res.data?.data || null
     },
   })

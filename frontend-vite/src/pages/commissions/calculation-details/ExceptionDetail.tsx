@@ -11,7 +11,7 @@ export default function ExceptionDetail() {
   const { data: exception, isLoading } = useQuery({
     queryKey: ['commission-exception', calculationId, exceptionId],
     queryFn: async () => {
-      const res = await apiClient.get('/commissions/calculations/${calculationId}/exceptions/${exceptionId}')
+      const res = await apiClient.get(`/commissions/calculations/${calculationId}/exceptions/${exceptionId}`)
       return res.data?.data || null
     },
   })

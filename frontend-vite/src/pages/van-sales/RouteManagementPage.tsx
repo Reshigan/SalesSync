@@ -42,8 +42,7 @@ export default function RouteManagementPage() {
     try {
       setLoading(true)
       const res = await apiClient.get('/beat-routes')
-      const json = await res.json()
-      const items = (json.data || []).map((r: Record<string, unknown>) => ({
+      const items = (res.data?.data || (Array.isArray(res.data) ? res.data : [])).map((r: Record<string, unknown>) => ({
         id: r.id as string || '',
         name: r.name as string || 'Unnamed Route',
         description: r.description as string || '',

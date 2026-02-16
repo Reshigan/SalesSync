@@ -10,7 +10,7 @@ export default function MovementDetail() {
   const { data: movement, isLoading } = useQuery({
     queryKey: ['stock-movement', movementId],
     queryFn: async () => {
-      const res = await apiClient.get('/stock-movements/${movementId}')
+      const res = await apiClient.get(`/stock-movements/${movementId}`)
       return res.data?.data || null
     },
   })

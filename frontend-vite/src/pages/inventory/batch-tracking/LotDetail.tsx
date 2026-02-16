@@ -10,7 +10,7 @@ export default function LotDetail() {
   const { data: lot, isLoading } = useQuery({
     queryKey: ['lot', lotId],
     queryFn: async () => {
-      const res = await apiClient.get('/lots/${lotId}')
+      const res = await apiClient.get(`/lots/${lotId}`)
       return res.data?.data || []
     },
   })

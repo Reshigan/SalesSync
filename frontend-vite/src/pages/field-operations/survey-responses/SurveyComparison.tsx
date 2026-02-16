@@ -10,7 +10,7 @@ export default function SurveyComparison() {
   const { data: comparison, isLoading } = useQuery({
     queryKey: ['survey-comparison', surveyId],
     queryFn: async () => {
-      const res = await apiClient.get('/surveys/${surveyId}/comparison')
+      const res = await apiClient.get(`/surveys/${surveyId}/comparison`)
       return res.data?.data || null
     },
   })

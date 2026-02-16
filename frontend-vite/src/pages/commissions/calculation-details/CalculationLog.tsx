@@ -11,7 +11,7 @@ export default function CalculationLog() {
   const { data: agent } = useQuery({
     queryKey: ['agent', agentId],
     queryFn: async () => {
-      const res = await apiClient.get('/agents/${agentId}')
+      const res = await apiClient.get(`/agents/${agentId}`)
       return res.data?.data || []
     },
   })

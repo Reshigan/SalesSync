@@ -15,8 +15,8 @@ export default function CommissionDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/commissions/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/commissions/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setComm(d)
     } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }

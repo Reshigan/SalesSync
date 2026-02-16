@@ -10,7 +10,7 @@ export default function StockLedgerByProduct() {
   const { data: product } = useQuery({
     queryKey: ['product', productId],
     queryFn: async () => {
-      const res = await apiClient.get('/products/${productId}')
+      const res = await apiClient.get(`/products/${productId}`)
       return res.data?.data || []
     },
   })

@@ -10,7 +10,7 @@ export default function AdjustmentJustification() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      const res = await apiClient.get('/adjustments/${adjustmentId}/items/${itemId}/justification')
+      const res = await apiClient.get(`/adjustments/${adjustmentId}/items/${itemId}/justification`)
       return res.data?.data || null
     },
   })

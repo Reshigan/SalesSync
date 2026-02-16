@@ -16,8 +16,8 @@ export default function ProductDistributionDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/field-operations/product-distributions/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/field-operations/product-distributions/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setDist(d)
       setItems(d.items || d.line_items || d.order_items || [])

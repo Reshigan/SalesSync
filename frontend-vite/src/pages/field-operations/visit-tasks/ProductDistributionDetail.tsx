@@ -10,7 +10,7 @@ export default function ProductDistributionDetail() {
   const { data: distribution, isLoading } = useQuery({
     queryKey: ['product-distribution', visitId, distributionId],
     queryFn: async () => {
-      const res = await apiClient.get('/visits/${visitId}/product-distributions/${distributionId}')
+      const res = await apiClient.get(`/visits/${visitId}/product-distributions/${distributionId}`)
       return res.data?.data || null
     },
   })

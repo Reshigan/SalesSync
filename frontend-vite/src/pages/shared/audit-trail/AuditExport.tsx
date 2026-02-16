@@ -21,7 +21,7 @@ export default function AuditExport() {
   const { data: entity } = useQuery({
     queryKey: [entityType, entityId],
     queryFn: async () => {
-      const res = await apiClient.get('/${entityType}/${entityId}')
+      const res = await apiClient.get(`/${entityType}/${entityId}`)
       return res.data?.data || null
     },
   })

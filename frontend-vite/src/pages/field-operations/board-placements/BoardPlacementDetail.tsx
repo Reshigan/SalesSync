@@ -15,8 +15,8 @@ export default function BoardPlacementDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/field-operations/board-placements/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/field-operations/board-placements/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setBp(d)
     } catch (e: any) { setError(e.message || 'Failed to load') } finally { setLoading(false) }

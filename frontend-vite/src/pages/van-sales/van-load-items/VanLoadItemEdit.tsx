@@ -18,7 +18,7 @@ export default function VanLoadItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['van-load-item', loadId, itemId],
     queryFn: async () => {
-      const res = await apiClient.get('/van-loads/${loadId}/items/${itemId}')
+      const res = await apiClient.get(`/van-loads/${loadId}/items/${itemId}`)
       return res.data?.data || null
     },
   })

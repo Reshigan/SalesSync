@@ -11,7 +11,7 @@ export default function CollectionDetail() {
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const res = await apiClient.get('/cash-sessions/${sessionId}')
+      const res = await apiClient.get(`/cash-sessions/${sessionId}`)
       return res.data?.data || null
     },
   })

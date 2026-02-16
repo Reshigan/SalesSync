@@ -11,7 +11,7 @@ export default function VanLoadItemList() {
   const { data: load } = useQuery({
     queryKey: ['van-load', loadId],
     queryFn: async () => {
-      const res = await apiClient.get('/van-loads/${loadId}')
+      const res = await apiClient.get(`/van-loads/${loadId}`)
       return res.data?.data || null
     },
   })

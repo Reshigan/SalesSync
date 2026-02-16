@@ -16,8 +16,8 @@ export default function StockCountDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const r = await apiClient.get('/inventory/stock-counts/${id}')
-      const json = await r.json()
+      const r = await apiClient.get(`/inventory/stock-counts/${id}`)
+      const json = r.data?.data || r.data
       const d = json.data || json
       setSc_data(d)
       setItems(d.items || d.line_items || d.order_items || [])

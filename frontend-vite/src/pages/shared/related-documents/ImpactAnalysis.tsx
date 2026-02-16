@@ -12,7 +12,7 @@ export default function ImpactAnalysis({ entityType, entityId, action }: ImpactA
   const { data: impact, isLoading } = useQuery({
     queryKey: ['impact-analysis', entityType, entityId, action],
     queryFn: async () => {
-      const res = await apiClient.get('/${entityType}/${entityId}/impact-analysis?action=${action}')
+      const res = await apiClient.get(`/${entityType}/${entityId}/impact-analysis?action=${action}`)
       return res.data?.data || null
     },
   })

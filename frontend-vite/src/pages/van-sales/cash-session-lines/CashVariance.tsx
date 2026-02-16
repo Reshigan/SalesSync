@@ -20,7 +20,7 @@ export default function CashVariance() {
   const { data: session, isLoading } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const res = await apiClient.get('/cash-sessions/${sessionId}')
+      const res = await apiClient.get(`/cash-sessions/${sessionId}`)
       return res.data?.data || null
     },
   })

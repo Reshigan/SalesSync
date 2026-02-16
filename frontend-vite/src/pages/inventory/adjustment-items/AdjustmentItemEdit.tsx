@@ -19,7 +19,7 @@ export default function AdjustmentItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['adjustment-item', adjustmentId, itemId],
     queryFn: async () => {
-      const res = await apiClient.get('/adjustments/${adjustmentId}/items/${itemId}')
+      const res = await apiClient.get(`/adjustments/${adjustmentId}/items/${itemId}`)
       return res.data?.data || null
     },
   })

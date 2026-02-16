@@ -10,7 +10,7 @@ export default function CountLineDetail() {
   const { data: count } = useQuery({
     queryKey: ['stock-count', countId],
     queryFn: async () => {
-      const res = await apiClient.get('/stock-counts/${countId}')
+      const res = await apiClient.get(`/stock-counts/${countId}`)
       return res.data?.data || null
     },
   })

@@ -16,7 +16,7 @@ export default function DeliveryPOD() {
   const { data: pod, isLoading } = useQuery({
     queryKey: ['delivery-pod', orderId, deliveryId],
     queryFn: async () => {
-      const res = await apiClient.get('/orders/${orderId}/deliveries/${deliveryId}/pod')
+      const res = await apiClient.get(`/orders/${orderId}/deliveries/${deliveryId}/pod`)
       return res.data?.data || null
     },
   })

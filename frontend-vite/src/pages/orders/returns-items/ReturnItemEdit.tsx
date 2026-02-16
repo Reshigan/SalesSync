@@ -20,7 +20,7 @@ export default function ReturnItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
     queryFn: async () => {
-      const res = await apiClient.get('/returns/${returnId}/items/${itemId}')
+      const res = await apiClient.get(`/returns/${returnId}/items/${itemId}`)
       return res.data?.data || null
     },
   })
