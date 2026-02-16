@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface Board { id: number; name: string; type: string; width: number; height: number; commissionRate: number; installCost: number; }
 
@@ -13,31 +13,28 @@ const BoardManagementPage: React.FC = () => {
 
   const loadBoards = async () => {
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      if (res.ok) setBoards((await res.json()).boards || []);
+      const res = await apiClient.get('/admin/boards');
+      const data = res.data?.data || res.data;
+      setBoards(data?.boards || (Array.isArray(data) ? data : []));
     } catch (err) { console.error(err); }
   };
 
   const saveBoard = async () => {
     try {
-      const url = editing ? `/api/admin/boards/${editing}` : '/api/admin/boards';
-      const res = await fetch(url, {
-        method: editing ? 'PUT' : 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) { loadBoards(); setEditing(null); setForm({}); }
+      if (editing) {
+        await apiClient.put(`/admin/boards/${editing}`, form);
+      } else {
+        await apiClient.post('/admin/boards', form);
+      }
+      loadBoards(); setEditing(null); setForm({});
     } catch (err) { console.error(err); }
   };
 
   const deleteBoard = async (id: number) => {
     if (!confirm('Delete this board?')) return;
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/boards/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) loadBoards();
+      await apiClient.delete(`/admin/boards/${id}`);
+      loadBoards();
     } catch (err) { console.error(err); }
   };
 

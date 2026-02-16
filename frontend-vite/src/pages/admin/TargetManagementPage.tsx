@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Target, Plus, Edit, Trash2, Users, Filter, Search, X } from 'lucide-react'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface Agent {
   id: string
@@ -71,23 +71,19 @@ export default function TargetManagementPage() {
   const [filterType, setFilterType] = useState<string>('all')
   const [filterPeriod, setFilterPeriod] = useState<string>('all')
 
-  const token = localStorage.getItem('token')
-  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-
   useEffect(() => { fetchAll() }, [])
 
   const fetchAll = async () => {
     try {
       setLoading(true)
-      const [targetsRes, agentsRes, regionsRes] = await Promise.all([
-        fetch(`${API_CONFIG.BASE_URL}/agent-targets`, { headers }),
-        fetch(`${API_CONFIG.BASE_URL}/org-hierarchy`, { headers }),
-        fetch(`${API_CONFIG.BASE_URL}/regions`, { headers })
+      const [targetsRes, agentsRes, regionsRes] = await Promise.allSettled([
+        apiClient.get('/agent-targets'),
+        apiClient.get('/org-hierarchy'),
+        apiClient.get('/regions')
       ])
-      const [targetsJson, agentsJson, regionsJson] = await Promise.all([targetsRes.json(), agentsRes.json(), regionsRes.json()])
-      setTargets(targetsJson.data || [])
-      setAgents(agentsJson.data || [])
-      setRegions(regionsJson.data || [])
+      if (targetsRes.status === 'fulfilled') setTargets(targetsRes.value.data?.data || [])
+      if (agentsRes.status === 'fulfilled') setAgents(agentsRes.value.data?.data || [])
+      if (regionsRes.status === 'fulfilled') setRegions(regionsRes.value.data?.data || [])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -100,13 +96,9 @@ export default function TargetManagementPage() {
     try {
       setSaving(true)
       if (editId) {
-        await fetch(`${API_CONFIG.BASE_URL}/agent-targets/${editId}`, {
-          method: 'PUT', headers, body: JSON.stringify({ target_value: form.target_value, region_id: form.region_id || null, notes: form.notes })
-        })
+        await apiClient.put(`/agent-targets/${editId}`, { target_value: form.target_value, region_id: form.region_id || null, notes: form.notes })
       } else {
-        await fetch(`${API_CONFIG.BASE_URL}/agent-targets`, {
-          method: 'POST', headers, body: JSON.stringify(form)
-        })
+        await apiClient.post('/agent-targets', form)
       }
       setShowForm(false)
       setEditId(null)
@@ -138,7 +130,7 @@ export default function TargetManagementPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this target? Progress data will also be removed.')) return
     try {
-      await fetch(`${API_CONFIG.BASE_URL}/agent-targets/${id}`, { method: 'DELETE', headers })
+      await apiClient.delete(`/agent-targets/${id}`)
       await fetchAll()
     } catch (error) {
       console.error('Error deleting target:', error)

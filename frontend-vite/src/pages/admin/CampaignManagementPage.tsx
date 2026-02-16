@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Calendar } from 'lucide-react';
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface Campaign { id: number; name: string; startDate: string; endDate: string; budget: number; status: string; target: number; }
 
@@ -13,31 +13,28 @@ const CampaignManagementPage: React.FC = () => {
 
   const loadCampaigns = async () => {
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/campaigns`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
-      if (res.ok) setCampaigns((await res.json()).campaigns || []);
+      const res = await apiClient.get('/admin/campaigns');
+      const data = res.data?.data || res.data;
+      setCampaigns(data?.campaigns || (Array.isArray(data) ? data : []));
     } catch (err) { console.error(err); }
   };
 
   const saveCampaign = async () => {
     try {
-      const url = editing ? `/api/admin/campaigns/${editing}` : '/api/admin/campaigns';
-      const res = await fetch(url, {
-        method: editing ? 'PUT' : 'POST',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) { loadCampaigns(); setEditing(null); setForm({ status: 'planned' }); }
+      if (editing) {
+        await apiClient.put(`/admin/campaigns/${editing}`, form);
+      } else {
+        await apiClient.post('/admin/campaigns', form);
+      }
+      loadCampaigns(); setEditing(null); setForm({ status: 'planned' });
     } catch (err) { console.error(err); }
   };
 
   const deleteCampaign = async (id: number) => {
     if (!confirm('Delete campaign?')) return;
     try {
-      const res = await fetch(`${API_CONFIG.BASE_URL}/admin/campaigns/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) loadCampaigns();
+      await apiClient.delete(`/admin/campaigns/${id}`);
+      loadCampaigns();
     } catch (err) { console.error(err); }
   };
 
