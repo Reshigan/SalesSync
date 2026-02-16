@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Download, FileText, Table } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { auditService } from '../../../services/audit.service'
 
 interface AuditTrailExportProps {
   entityType: string
@@ -13,7 +14,10 @@ export default function AuditTrailExport({ entityType, entityId }: AuditTrailExp
   const handleExport = async (format: 'csv' | 'pdf' | 'json') => {
     setIsExporting(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await auditService.exportAuditTrail(entityType, entityId, { format })
+      if (result.download_url) {
+        window.open(result.download_url, '_blank')
+      }
       toast.success(`Audit trail exported as ${format.toUpperCase()}`)
     } catch (error) {
       toast.error('Failed to export audit trail')

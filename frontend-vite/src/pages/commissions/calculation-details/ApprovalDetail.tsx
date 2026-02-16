@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, User, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function ApprovalDetail() {
   const { calculationId } = useParams<{ calculationId: string }>()
@@ -11,14 +11,8 @@ export default function ApprovalDetail() {
   const { data: approval, isLoading } = useQuery({
     queryKey: ['commission-approval', calculationId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/calculations/${calculationId}/approval`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/commissions/calculations/${calculationId}/approval')
+      return res.data?.data || null
     },
   })
 

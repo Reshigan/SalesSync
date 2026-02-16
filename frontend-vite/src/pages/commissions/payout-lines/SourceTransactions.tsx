@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Receipt, Eye } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function SourceTransactions() {
   const { payoutId, lineId } = useParams<{ payoutId: string; lineId: string }>()
@@ -11,79 +11,10 @@ export default function SourceTransactions() {
   const { data: line } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/commissions/payouts/${payoutId}/lines/${lineId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: transactions, isLoading } = useQuery({
-    queryKey: ['payout-line-transactions', payoutId, lineId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}/transactions`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldTransactions = [
-      {
-        id: '1',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-001',
-        transaction_date: '2024-01-05',
-        transaction_amount: 10000.00,
-        commission_rate: 5,
-        commission_amount: 500.00,
-      },
-      {
-        id: '2',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-015',
-        transaction_date: '2024-01-12',
-        transaction_amount: 15000.00,
-        commission_rate: 5,
-        commission_amount: 750.00,
-      },
-      {
-        id: '3',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-028',
-        transaction_date: '2024-01-20',
-        transaction_amount: 12000.00,
-        commission_rate: 5,
-        commission_amount: 600.00,
-      },
-      {
-        id: '4',
-        transaction_type: 'order',
-        transaction_number: 'ORD-2024-035',
-        transaction_date: '2024-01-28',
-        transaction_amount: 13000.00,
-        commission_rate: 5,
-        commission_amount: 650.00,
-      },
-      {
-        id: '5',
-        transaction_type: 'bonus',
-        transaction_number: 'BONUS-2024-001',
-        transaction_date: '2024-01-31',
-        transaction_amount: 0,
-        commission_rate: 0,
-        commission_amount: 200.00,
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading source transactions...</div>
   }

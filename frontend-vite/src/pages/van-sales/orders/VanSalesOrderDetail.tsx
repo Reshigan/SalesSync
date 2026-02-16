@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, DollarSign, Edit, Package, Truck, User } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function VanSalesOrderDetail() {
@@ -16,8 +16,7 @@ export default function VanSalesOrderDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/van-sales/orders/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await apiClient.get('/van-sales/orders/${id}')
       const json = await r.json()
       const d = json.data || json
       setOrder(d)

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 interface ReturnItemFormData {
   quantity_returned: number
@@ -20,14 +20,8 @@ export default function ReturnItemEdit() {
   const { data: item, isLoading } = useQuery({
     queryKey: ['return-item', returnId, itemId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/returns/${returnId}/items/${itemId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/returns/${returnId}/items/${itemId}')
+      return res.data?.data || null
     },
   })
 

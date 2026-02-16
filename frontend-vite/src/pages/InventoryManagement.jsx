@@ -9,7 +9,7 @@ import {
   Inventory, Warehouse, SwapHoriz, TrendingUp, Warning, Add,
   Refresh, FileDownload, QrCode, LocalShipping
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function InventoryManagement() {
   const [activeTab, setActiveTab] = useState(0);

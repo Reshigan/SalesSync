@@ -4,7 +4,7 @@ import {
   TrendingUp, Package, Users, Truck, DollarSign, 
   FileSpreadsheet, Building2, ClipboardList, RefreshCw
 } from 'lucide-react';
-import { apiService } from '../../services/api.service';
+import { apiClient } from '../../services/api.service';
 
 interface Report {
   id: string;
@@ -59,9 +59,10 @@ const ReportsHub: React.FC = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await apiService.get('/reports');
-      if (response.data?.success) {
-        setReports(response.data.data);
+      const response = await apiClient.get('/reports');
+      const d = response.data?.data || response.data;
+      if (d) {
+        setReports(Array.isArray(d) ? d : []);
       }
     } catch (error) {
       console.error('Failed to fetch reports:', error);
@@ -84,21 +85,16 @@ const ReportsHub: React.FC = () => {
       const url = `/reports/${selectedReport.id}?${params.toString()}`;
       
       if (format === 'json') {
-        const response = await apiService.get(url);
-        if (response.data?.success) {
-          setReportData(response.data.data);
+        const response = await apiClient.get(url);
+        const rd = response.data?.data || response.data;
+        if (rd) {
+          setReportData(rd);
         }
       } else {
-        const token = localStorage.getItem('token');
-        const baseUrl = import.meta.env.VITE_API_URL || 'https://salessync-api.reshigan-085.workers.dev/api';
-        const fullUrl = `${baseUrl}${url}`;
+        const response = await apiClient.get(url, { responseType: 'blob' });
         
-        const response = await fetch(fullUrl, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
+        if (response.data) {
+          const blob = response.data;
           const downloadUrl = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = downloadUrl;

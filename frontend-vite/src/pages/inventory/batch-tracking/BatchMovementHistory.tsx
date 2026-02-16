@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, TrendingDown, Clock } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function BatchMovementHistory() {
   const { batchId } = useParams<{ batchId: string }>()
@@ -10,82 +10,10 @@ export default function BatchMovementHistory() {
   const { data: batch } = useQuery({
     queryKey: ['batch', batchId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/batches/${batchId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: movements, isLoading } = useQuery({
-    queryKey: ['batch-movements', batchId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/batches/${batchId}/movements`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldMovements = [
-      {
-        id: '1',
-        movement_type: 'sale',
-        reference: 'ORD-2024-001',
-        quantity_before: 850,
-        quantity_change: -100,
-        quantity_after: 750,
-        location: 'Main Warehouse',
-        performed_by: 'John Picker',
-        timestamp: '2024-01-20T14:30:00Z',
-        notes: 'Order fulfillment',
-      },
-      {
-        id: '2',
-        movement_type: 'allocation',
-        reference: 'ORD-2024-002',
-        quantity_before: 850,
-        quantity_change: 0,
-        quantity_after: 850,
-        location: 'Main Warehouse',
-        performed_by: 'System',
-        timestamp: '2024-01-19T10:00:00Z',
-        notes: 'Allocated 100 units for pending order',
-      },
-      {
-        id: '3',
-        movement_type: 'transfer_out',
-        reference: 'TRF-2024-001',
-        quantity_before: 900,
-        quantity_change: -50,
-        quantity_after: 850,
-        location: 'Main Warehouse',
-        performed_by: 'Jane Shipper',
-        timestamp: '2024-01-15T08:00:00Z',
-        notes: 'Transfer to Branch Warehouse',
-      },
-      {
-        id: '4',
-        movement_type: 'receipt',
-        reference: 'PO-2024-001',
-        quantity_before: 0,
-        quantity_change: 1000,
-        quantity_after: 1000,
-        location: 'Main Warehouse',
-        performed_by: 'Mike Receiver',
-        timestamp: '2024-01-02T09:00:00Z',
-        notes: 'Initial receipt from supplier',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading movement history...</div>
   }

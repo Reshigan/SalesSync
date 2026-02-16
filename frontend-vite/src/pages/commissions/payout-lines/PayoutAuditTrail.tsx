@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Clock, User } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function PayoutAuditTrail() {
   const { payoutId, lineId } = useParams<{ payoutId: string; lineId: string }>()
@@ -10,77 +10,10 @@ export default function PayoutAuditTrail() {
   const { data: line } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/commissions/payouts/${payoutId}/lines/${lineId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: auditTrail, isLoading } = useQuery({
-    queryKey: ['payout-line-audit', payoutId, lineId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}/audit`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldAuditTrail = [
-      {
-        id: '1',
-        action: 'payout_completed',
-        description: 'Payout marked as completed',
-        performed_by: 'Finance Manager',
-        performed_at: '2024-02-05T10:30:00Z',
-        details: {
-          payment_reference: 'PAY-2024-001',
-          amount: 2700.00,
-        },
-      },
-      {
-        id: '2',
-        action: 'payment_processed',
-        description: 'Payment processed via bank transfer',
-        performed_by: 'Finance Manager',
-        performed_at: '2024-02-05T10:00:00Z',
-        details: {
-          payment_method: 'bank_transfer',
-          payment_reference: 'PAY-2024-001',
-        },
-      },
-      {
-        id: '3',
-        action: 'payout_approved',
-        description: 'Payout approved for processing',
-        performed_by: 'Manager',
-        performed_at: '2024-02-01T10:00:00Z',
-        details: {
-          approval_notes: 'Commission calculation verified',
-        },
-      },
-      {
-        id: '4',
-        action: 'payout_created',
-        description: 'Payout line created',
-        performed_by: 'System',
-        performed_at: '2024-02-01T09:00:00Z',
-        details: {
-          calculation_id: 'calc-1',
-          commission_amount: 2700.00,
-        },
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading audit trail...</div>
   }

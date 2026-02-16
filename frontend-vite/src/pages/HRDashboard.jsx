@@ -8,7 +8,7 @@ import {
   People, AccountBalance, CalendarToday, TrendingUp,
   Visibility, Edit
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function HRDashboard() {
   const [tab, setTab] = useState(0);

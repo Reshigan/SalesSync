@@ -319,6 +319,16 @@ class FinanceService {
     }
   }
 
+  async createPaymentAllocation(paymentId: string, data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`/payments/${paymentId}/allocations`, data)
+      return response.data.data?.allocation || response.data.data
+    } catch (error) {
+      console.error('Failed to create payment allocation:', error)
+      throw error
+    }
+  }
+
   async updatePaymentAllocation(paymentId: string, allocationId: string, updates: any): Promise<any> {
     try {
       const response = await apiClient.put(`/payments/${paymentId}/allocations/${allocationId}`, updates)

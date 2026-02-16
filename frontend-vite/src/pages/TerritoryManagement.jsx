@@ -7,7 +7,7 @@ import {
 import {
   Map, People, LocationOn, TrendingUp
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function TerritoryManagement() {
   const [tab, setTab] = useState(0);

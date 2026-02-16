@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Wrench, Calendar, CheckCircle } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function BoardMaintenanceLog() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -10,74 +10,10 @@ export default function BoardMaintenanceLog() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/boards/${boardId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: logs, isLoading } = useQuery({
-    queryKey: ['board-maintenance-log', boardId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}/maintenance`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldLogs = [
-      {
-        id: '1',
-        maintenance_type: 'cleaning',
-        maintenance_date: '2024-02-01T10:00:00Z',
-        performed_by: 'John Field Agent',
-        duration_minutes: 30,
-        status: 'completed',
-        notes: 'Board cleaned, all surfaces wiped down',
-        photos_taken: 2,
-      },
-      {
-        id: '2',
-        maintenance_type: 'repair',
-        maintenance_date: '2024-01-28T14:00:00Z',
-        performed_by: 'Jane Agent',
-        duration_minutes: 45,
-        status: 'completed',
-        notes: 'Replaced damaged corner bracket',
-        photos_taken: 3,
-      },
-      {
-        id: '3',
-        maintenance_type: 'inspection',
-        maintenance_date: '2024-01-25T10:00:00Z',
-        performed_by: 'Jane Manager',
-        duration_minutes: 15,
-        status: 'completed',
-        notes: 'Routine inspection - no issues found',
-        photos_taken: 1,
-      },
-      {
-        id: '4',
-        maintenance_type: 'replacement',
-        maintenance_date: '2024-01-20T09:00:00Z',
-        performed_by: 'John Field Agent',
-        duration_minutes: 60,
-        status: 'completed',
-        notes: 'Replaced worn promotional material',
-        photos_taken: 4,
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading maintenance log...</div>
   }

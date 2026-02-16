@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, MapPin, User, Clock, FileText } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function MovementDetail() {
   const { movementId } = useParams<{ movementId: string }>()
@@ -10,14 +10,8 @@ export default function MovementDetail() {
   const { data: movement, isLoading } = useQuery({
     queryKey: ['stock-movement', movementId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/stock-movements/${movementId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/stock-movements/${movementId}')
+      return res.data?.data || null
     },
   })
 

@@ -8,7 +8,7 @@ import {
   Assignment, BarChart, People, TrendingUp,
   Visibility, Edit, Add
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function DataCollectionDashboard() {
   const [tab, setTab] = useState(0);

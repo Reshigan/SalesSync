@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Filter } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface InventoryItem {
   id: string
@@ -33,8 +33,7 @@ export default function InventoryTrackingPage() {
   const fetchInventoryData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_CONFIG.BASE_URL}/inventory/stock`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const res = await apiClient.get('/inventory/stock')
       const json = await res.json()
       const items = (json.data || []).map((item: Record<string, unknown>) => ({
         id: item.id as string || '',

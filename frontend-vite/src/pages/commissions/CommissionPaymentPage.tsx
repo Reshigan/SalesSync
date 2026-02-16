@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '../../services/api.service'
 import { commissionsService } from '../../services/commissions.service'
 
 interface CommissionPayment {
@@ -21,7 +22,14 @@ export const CommissionPaymentPage: React.FC = () => {
   const [page, setPage] = useState(1)
   const limit = 20
 
-  const mockPayments: CommissionPayment[] = []
+  const [payments, setPayments] = useState<CommissionPayment[]>([])
+
+  useEffect(() => {
+    apiClient.get('/commissions/payments').then(res => {
+      const data = res.data?.data || res.data
+      if (Array.isArray(data)) setPayments(data)
+    }).catch(() => {})
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-ZA', {
@@ -40,7 +48,7 @@ export const CommissionPaymentPage: React.FC = () => {
     return badges[status as keyof typeof badges] || 'bg-gray-100 text-gray-800'
   }
 
-  const filteredPayments = mockPayments.filter(payment => {
+  const filteredPayments = payments.filter(payment => {
     if (statusFilter !== 'all' && payment.status !== statusFilter) return false
     if (searchTerm && !payment.agent_name.toLowerCase().includes(searchTerm.toLowerCase())) return false
     return true
@@ -71,7 +79,7 @@ export const CommissionPaymentPage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Payments</p>
-              <p className="text-2xl font-semibold text-gray-900">{mockPayments.length}</p>
+              <p className="text-2xl font-semibold text-gray-900">{payments.length}</p>
             </div>
           </div>
         </div>
@@ -86,7 +94,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Completed</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPayments.filter(p => p.status === 'completed').length}
+                {payments.filter(p => p.status === 'completed').length}
               </p>
             </div>
           </div>
@@ -102,7 +110,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Pending</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {mockPayments.filter(p => p.status === 'pending' || p.status === 'processing').length}
+                {payments.filter(p => p.status === 'pending' || p.status === 'processing').length}
               </p>
             </div>
           </div>
@@ -118,7 +126,7 @@ export const CommissionPaymentPage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Total Amount</p>
               <p className="text-2xl font-semibold text-gray-900">
-                {formatCurrency(mockPayments.reduce((sum, p) => sum + p.amount, 0))}
+                {formatCurrency(payments.reduce((sum, p) => sum + p.amount, 0))}
               </p>
             </div>
           </div>

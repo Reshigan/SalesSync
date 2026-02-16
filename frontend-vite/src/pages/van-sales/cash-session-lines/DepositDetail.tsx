@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, Building, Clock, FileText } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function DepositDetail() {
   const { sessionId, depositId } = useParams<{ sessionId: string; depositId: string }>()
@@ -11,28 +11,8 @@ export default function DepositDetail() {
   const { data: session } = useQuery({
     queryKey: ['cash-session', sessionId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: deposit, isLoading } = useQuery({
-    queryKey: ['deposit', sessionId, depositId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/cash-sessions/${sessionId}/deposits/${depositId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/cash-sessions/${sessionId}')
+      return res.data?.data || null
     },
   })
 

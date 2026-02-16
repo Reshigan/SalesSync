@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Clock, CheckCircle, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function RouteStopDetail() {
   const { routeId, stopId } = useParams<{ routeId: string; stopId: string }>()
@@ -11,28 +11,8 @@ export default function RouteStopDetail() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: stop, isLoading } = useQuery({
-    queryKey: ['route-stop', routeId, stopId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/route-stops/${stopId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/routes/${routeId}')
+      return res.data?.data || null
     },
   })
 

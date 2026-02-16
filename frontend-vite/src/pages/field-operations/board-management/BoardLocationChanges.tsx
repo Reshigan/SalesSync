@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, ArrowRight, Calendar } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function BoardLocationChanges() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -10,52 +10,10 @@ export default function BoardLocationChanges() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/boards/${boardId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: changes, isLoading } = useQuery({
-    queryKey: ['board-location-changes', boardId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}/location-history`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldChanges = [
-      {
-        id: '1',
-        from_location: 'XYZ Mart - Window Display',
-        to_location: 'ABC Store - Entrance',
-        change_date: '2024-01-20T09:00:00Z',
-        reason: 'Better visibility at new location',
-        changed_by: 'John Field Agent',
-        approved_by: 'Manager',
-      },
-      {
-        id: '2',
-        from_location: 'DEF Shop - Counter',
-        to_location: 'XYZ Mart - Window Display',
-        change_date: '2023-12-15T10:00:00Z',
-        reason: 'Store renovation at previous location',
-        changed_by: 'Jane Agent',
-        approved_by: 'Manager',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading location changes...</div>
   }

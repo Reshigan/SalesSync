@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, Calendar } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function PayoutLineDetail() {
   const { payoutId, lineId } = useParams<{ payoutId: string; lineId: string }>()
@@ -11,14 +11,8 @@ export default function PayoutLineDetail() {
   const { data: line, isLoading } = useQuery({
     queryKey: ['payout-line', payoutId, lineId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/commissions/payouts/${payoutId}/lines/${lineId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/commissions/payouts/${payoutId}/lines/${lineId}')
+      return res.data?.data || null
     },
   })
 

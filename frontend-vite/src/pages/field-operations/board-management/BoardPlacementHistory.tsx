@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Calendar, Eye } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function BoardPlacementHistory() {
   const { boardId } = useParams<{ boardId: string }>()
@@ -10,61 +10,10 @@ export default function BoardPlacementHistory() {
   const { data: board } = useQuery({
     queryKey: ['board', boardId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/boards/${boardId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: placements, isLoading } = useQuery({
-    queryKey: ['board-placement-history', boardId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/boards/${boardId}/placements`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldPlacements = [
-      {
-        id: '1',
-        location: 'ABC Store - Entrance',
-        installed_at: '2024-01-20T09:30:00Z',
-        removed_at: null,
-        status: 'active',
-        condition: 'excellent',
-        installed_by: 'John Field Agent',
-      },
-      {
-        id: '2',
-        location: 'XYZ Mart - Window Display',
-        installed_at: '2023-12-15T10:00:00Z',
-        removed_at: '2024-01-15T14:00:00Z',
-        status: 'removed',
-        condition: 'good',
-        installed_by: 'Jane Agent',
-      },
-      {
-        id: '3',
-        location: 'DEF Shop - Counter',
-        installed_at: '2023-11-01T11:00:00Z',
-        removed_at: '2023-12-10T15:00:00Z',
-        status: 'removed',
-        condition: 'fair',
-        installed_by: 'John Field Agent',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading placement history...</div>
   }

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { TrendingUp, Target, DollarSign, Users, BarChart3, Calendar, Plus, Filter, Award, Zap, ShoppingCart, TrendingDown } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
-import { API_CONFIG } from '../../config/api.config'
+import { apiClient } from '../../services/api.service'
 
 interface TradeMarketingMetrics {
   totalSpend: number
@@ -84,80 +84,29 @@ export default function TradeMarketingPage() {
   const fetchTradeMarketingData = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('token')
-      const tenantCode = localStorage.getItem('tenantCode') || 'DEMO'
       
-      // Fetch metrics
-      const metricsResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/metrics`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const metricsData = await metricsResponse.json()
-      if (metricsData.success) {
-        setMetrics(metricsData.data)
-      }
+      const [metricsRes, promotionsRes, partnersRes, competitorRes] = await Promise.allSettled([
+        apiClient.get('/trade-marketing/metrics'),
+        apiClient.get('/trade-marketing/promotions'),
+        apiClient.get('/trade-marketing/channel-partners'),
+        apiClient.get('/trade-marketing/competitor-analysis')
+      ])
 
-      // Fetch promotions
-      const promotionsResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/promotions`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const promotionsData = await promotionsResponse.json()
-      if (promotionsData.success) {
-        setPromotions(promotionsData.data)
+      if (metricsRes.status === 'fulfilled') {
+        const data = metricsRes.value.data?.data || metricsRes.value.data
+        if (data) setMetrics(prev => ({ ...prev, ...data }))
       }
-
-      // Fetch channel partners
-      const partnersResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/channel-partners`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const partnersData = await partnersResponse.json()
-      if (partnersData.success) {
-        setChannelPartners(partnersData.data)
+      if (promotionsRes.status === 'fulfilled') {
+        const data = promotionsRes.value.data?.data || promotionsRes.value.data
+        if (Array.isArray(data)) setPromotions(data)
       }
-
-      // Fetch competitor analysis
-      const competitorResponse = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing/competitor-analysis`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'X-Tenant-Code': tenantCode
-        }
-      })
-      const competitorData = await competitorResponse.json()
-      if (competitorData.success) {
-        setCompetitorData(competitorData.data)
-      } else {
-        // Fallback to mock data if API returns nothing
-        setCompetitorData([
-          {
-            competitor: 'Competitor A',
-            marketShare: 28.5,
-            priceIndex: 102.3,
-            promotionalActivity: 85.2,
-            trend: 'up'
-          },
-          {
-            competitor: 'Competitor B',
-            marketShare: 22.1,
-            priceIndex: 98.7,
-            promotionalActivity: 72.4,
-            trend: 'down'
-          },
-          {
-            competitor: 'Competitor C',
-            marketShare: 18.9,
-            priceIndex: 105.1,
-            promotionalActivity: 91.8,
-            trend: 'stable'
-          }
-        ])
+      if (partnersRes.status === 'fulfilled') {
+        const data = partnersRes.value.data?.data || partnersRes.value.data
+        if (Array.isArray(data)) setChannelPartners(data)
+      }
+      if (competitorRes.status === 'fulfilled') {
+        const data = competitorRes.value.data?.data || competitorRes.value.data
+        if (Array.isArray(data)) setCompetitorData(data)
       }
     } catch (error) {
       console.error('Error fetching trade marketing data:', error)

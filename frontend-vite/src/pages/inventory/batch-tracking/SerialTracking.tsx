@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MapPin, Package, Truck, User } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function SerialTracking() {
   const { serialId } = useParams<{ serialId: string }>()
@@ -10,79 +10,10 @@ export default function SerialTracking() {
   const { data: serial } = useQuery({
     queryKey: ['serial', serialId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/serials/${serialId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/serials/${serialId}')
+      return res.data?.data || []
     },
   })
-
-  const { data: tracking, isLoading } = useQuery({
-    queryKey: ['serial-tracking', serialId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/serials/${serialId}/tracking`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return []
-      const result = await response.json()
-      return result.data || []
-    },
-  })
-
-  const oldTracking = [
-      {
-        id: '1',
-        event_type: 'delivered',
-        location: 'Customer - ABC Store',
-        description: 'Delivered to customer',
-        performed_by: 'John Driver',
-        timestamp: '2024-01-22T14:00:00Z',
-        reference: 'DEL-2024-001',
-      },
-      {
-        id: '2',
-        event_type: 'shipped',
-        location: 'In Transit',
-        description: 'Shipped from warehouse',
-        performed_by: 'Jane Shipper',
-        timestamp: '2024-01-21T08:00:00Z',
-        reference: 'ORD-2024-001',
-      },
-      {
-        id: '3',
-        event_type: 'sold',
-        location: 'Main Warehouse',
-        description: 'Sold to ABC Store',
-        performed_by: 'Mike Sales',
-        timestamp: '2024-01-20T10:00:00Z',
-        reference: 'ORD-2024-001',
-      },
-      {
-        id: '4',
-        event_type: 'quality_check',
-        location: 'Main Warehouse - QC Area',
-        description: 'Quality check passed',
-        performed_by: 'Jane QC',
-        timestamp: '2024-01-16T14:00:00Z',
-        reference: 'QC-2024-001',
-      },
-      {
-        id: '5',
-        event_type: 'received',
-        location: 'Main Warehouse - Receiving',
-        description: 'Received from supplier',
-        performed_by: 'Tom Receiver',
-        timestamp: '2024-01-15T09:00:00Z',
-        reference: 'PO-2024-001',
-      },
-    ]
-
   if (isLoading) {
     return <div className="p-6">Loading tracking history...</div>
   }

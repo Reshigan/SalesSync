@@ -35,7 +35,7 @@ export default function PaymentAllocationCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (data: AllocationFormData) => financeService.updatePaymentAllocation(paymentId!, 'new', data),
+    mutationFn: (data: AllocationFormData) => financeService.createPaymentAllocation(paymentId!, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payment-allocations', paymentId] })
       queryClient.invalidateQueries({ queryKey: ['payment', paymentId] })

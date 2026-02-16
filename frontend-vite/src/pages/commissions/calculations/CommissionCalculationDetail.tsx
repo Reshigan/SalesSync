@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, DollarSign, Edit, Package, User } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function CommissionCalculationDetail() {
@@ -15,8 +15,7 @@ export default function CommissionCalculationDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/commissions/calculations/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await apiClient.get('/commissions/calculations/${id}')
       const json = await r.json()
       const d = json.data || json
       setCalc(d)

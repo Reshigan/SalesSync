@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Camera, Store, User, Phone, Mail, MapPinned, Building2, Users, Clock, CreditCard, ChevronRight, Save, AlertCircle } from 'lucide-react';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import CameraCapture from '../../components/CameraCapture';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../../services/api.service';
 
 interface CustomerData {
   storeName: string;
@@ -231,11 +231,7 @@ export default function NewCustomerRegistration() {
       // Add brand data
       formData.append('brands', JSON.stringify(selectedBrands));
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_CONFIG.BASE_URL}/customers`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await apiClient.post('/customers', {
           store_name: customerData.storeName,
           owner_name: customerData.ownerName,
           phone: customerData.phoneNumber,
@@ -252,10 +248,9 @@ export default function NewCustomerRegistration() {
           gps_longitude: customerData.longitude,
           gps_accuracy: customerData.accuracy || null,
           brands: selectedBrands
-        })
       });
-      const result = await response.json();
-      const newCustomerId = result.data?.id || 'new-customer-id';
+      const result = response.data;
+      const newCustomerId = result?.data?.id || result?.id || 'new-customer-id';
 
       navigate('/field-marketing/visit-list', { 
         state: { 

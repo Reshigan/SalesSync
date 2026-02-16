@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, Clock, DollarSign, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 
 export default function RouteStopPerformance() {
   const { routeId } = useParams<{ routeId: string }>()
@@ -11,28 +11,8 @@ export default function RouteStopPerformance() {
   const { data: route } = useQuery({
     queryKey: ['route', routeId],
     queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
-    },
-  })
-
-  const { data: performance, isLoading } = useQuery({
-    queryKey: ['route-performance', routeId],
-    queryFn: async () => {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/routes/${routeId}/performance`, {
-        headers: {
-          'X-Tenant-Code': localStorage.getItem('tenantCode') || 'DEMO',
-        },
-      })
-      if (!response.ok) return null
-      const result = await response.json()
-      return result.data
+      const res = await apiClient.get('/routes/${routeId}')
+      return res.data?.data || null
     },
   })
 

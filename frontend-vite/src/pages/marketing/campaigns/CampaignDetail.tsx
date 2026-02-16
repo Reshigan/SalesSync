@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Calendar, DollarSign, Edit, Package } from 'lucide-react'
-import { API_CONFIG } from '../../../config/api.config'
+import { apiClient } from '../../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function CampaignDetail() {
@@ -15,8 +15,7 @@ export default function CampaignDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/marketing/campaigns/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await apiClient.get('/marketing/campaigns/${id}')
       const json = await r.json()
       const d = json.data || json
       setRecord(d)
