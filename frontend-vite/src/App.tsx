@@ -68,6 +68,7 @@ import ProductDistribution from './pages/field-marketing/ProductDistribution'
 import NewCustomerRegistration from './pages/field-marketing/NewCustomerRegistration'
 import VisitSummary from './pages/field-marketing/VisitSummary'
 import MyCommissions from './pages/field-marketing/MyCommissions'
+import MyTargets from './pages/field-marketing/MyTargets'
 
 // KYC Pages
 import KYCDashboard from './pages/kyc/KYCDashboard'
@@ -264,6 +265,8 @@ import TerritoryManagementPage from './pages/admin/TerritoryManagementPage'
 import BoardManagementPage from './pages/admin/BoardManagementPage'
 import PriceListManagementPage from './pages/admin/PriceListManagementPage'
 import PriceListEditPage from './pages/admin/PriceListEditPage'
+import TargetManagementPage from './pages/admin/TargetManagementPage'
+import TargetReportingPage from './pages/admin/TargetReportingPage'
 
 import { BackupManagementPage } from './pages/admin-settings/BackupManagementPage'
 import { IntegrationsPage } from './pages/admin-settings/IntegrationsPage'
@@ -546,6 +549,7 @@ function App() {
             <Route path="field-marketing/new-customer" element={<NewCustomerRegistration />} />
             <Route path="field-marketing/visit-summary" element={<VisitSummary />} />
             <Route path="field-marketing/my-commissions" element={<MyCommissions />} />
+            <Route path="field-marketing/my-targets" element={<MyTargets />} />
 
             {/* KYC Routes */}
             <Route path="kyc" element={<KYCDashboard />} />
@@ -905,6 +909,16 @@ function App() {
             <Route path="admin/price-lists/:id" element={
               <ProtectedRoute requiredRole="admin">
                 <PriceListEditPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/targets" element={
+              <ProtectedRoute requiredRole="admin">
+                <TargetManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="admin/target-reporting" element={
+              <ProtectedRoute requiredRole="admin">
+                <TargetReportingPage />
               </ProtectedRoute>
             } />
 
