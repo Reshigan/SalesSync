@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { vanSalesService } from '../../services/vanSales.service'
 
 interface RouteFormData {
   route_name: string
@@ -23,10 +24,7 @@ export default function RouteCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: RouteFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-route-id' }
-    },
+    mutationFn: (data: RouteFormData) => vanSalesService.createRoute(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['routes'] })
       toast.success('Route created successfully')

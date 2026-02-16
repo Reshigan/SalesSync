@@ -43,10 +43,7 @@ export default function AuditExport() {
   const format = watch('format')
 
   const exportMutation = useMutation({
-    mutationFn: async (data: ExportFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { download_url: '/exports/audit-trail-123.csv' }
-    },
+    mutationFn: (data: ExportFormData) => auditService.exportAuditTrail(entityType!, entityId!, { format: data.format, date_from: data.date_from, date_to: data.date_to }),
     onSuccess: (data) => {
       toast.success('Export generated successfully')
       window.open(data.download_url, '_blank')

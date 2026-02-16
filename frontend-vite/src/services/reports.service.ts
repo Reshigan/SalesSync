@@ -81,6 +81,26 @@ class ReportsService {
     }
   }
 
+  async createReport(data: Partial<Report>): Promise<Report> {
+    try {
+      const response = await apiClient.post(this.baseUrl, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create report:', error)
+      throw error
+    }
+  }
+
+  async updateReport(id: string, updates: Partial<Report>): Promise<Report> {
+    try {
+      const response = await apiClient.put(`${this.baseUrl}/${id}`, updates)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update report:', error)
+      throw error
+    }
+  }
+
   async downloadReport(reportId: string): Promise<Blob> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${reportId}/download`, {

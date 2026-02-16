@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Upload, X, File } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { apiClient } from '../../../services/api.service'
 
 interface AttachmentUploadProps {
   entityType: string
@@ -33,7 +34,13 @@ export default function AttachmentUpload({ entityType, entityId }: AttachmentUpl
 
     setIsUploading(true)
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const formData = new FormData()
+      selectedFiles.forEach((file) => formData.append('files', file))
+      formData.append('entity_type', entityType)
+      formData.append('entity_id', entityId)
+      if (description) formData.append('description', description)
+      if (tags) formData.append('tags', tags)
+      await apiClient.post('/attachments', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
       toast.success(`${selectedFiles.length} file(s) uploaded successfully`)
       navigate(-1)
     } catch (error) {

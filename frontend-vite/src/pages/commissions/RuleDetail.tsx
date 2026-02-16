@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Edit, Percent, Target } from 'lucide-react'
+import { commissionsService } from '../../services/commissions.service'
 
 export default function RuleDetail() {
   const { id } = useParams<{ id: string }>()
@@ -9,18 +10,8 @@ export default function RuleDetail() {
   const { data: rule, isLoading } = useQuery({
     queryKey: ['commission-rule', id],
     queryFn: async () => {
-      return {
-        id,
-        name: 'Standard Sales Commission',
-        description: 'Base commission for all sales agents',
-        base_rate: 5,
-        bonus_threshold: 50000,
-        bonus_rate: 2,
-        applies_to: 'All Sales Agents',
-        status: 'active',
-        effective_from: '2024-01-01',
-        created_at: '2023-12-15'
-      }
+      const rules = await commissionsService.getRules()
+      return rules.find((r: any) => r.id === id) || null
     },
   })
 

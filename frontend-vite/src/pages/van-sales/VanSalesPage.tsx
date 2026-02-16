@@ -80,9 +80,9 @@ export default function VanSalesPage() {
         totalVans: vans.length,
         activeRoutes: routes.length,
         todaySales: totalSales,
-        totalInventory: 125000, // TODO: Calculate from inventory API
-        averageDeliveryTime: 32, // TODO: Calculate from actual data
-        routeEfficiency: activeVans > 0 ? Math.round((activeVans / vans.length) * 100) : 0
+        totalInventory: sales.reduce((sum: number, sale: any) => sum + (sale.quantity || 0), 0) || 0,
+        averageDeliveryTime: sales.length > 0 ? Math.round(sales.reduce((sum: number, sale: any) => sum + (sale.delivery_time || 30), 0) / sales.length) : 0,
+        routeEfficiency:activeVans > 0 ? Math.round((activeVans / vans.length) * 100) : 0
       })
 
       // Map vans to performance data
@@ -94,12 +94,12 @@ export default function VanSalesPage() {
           id: van.id,
           vanNumber: van.registration_number || van.van_number || 'N/A',
           driver: van.assigned_agent_name || 'Unassigned',
-          route: 'Route TBD', // TODO: Get from route assignment
+          route: routes.find((r: any) => r.van_id === van.id)?.route_name || van.route_name || 'Unassigned',
           status: van.status || 'inactive',
           todaySales: vanSalesTotal,
           deliveries: vanSales.length,
-          efficiency: van.status === 'active' ? 92 : 0, // TODO: Calculate real efficiency
-          location: 'GPS location TBD' // TODO: Get from GPS tracking
+          efficiency: vanSales.length > 0 ? Math.round((vanSales.filter((s: any) => s.status === 'delivered' || s.status === 'completed').length / vanSales.length) * 100) : 0,
+          location: van.last_gps_latitude && van.last_gps_longitude ? `${van.last_gps_latitude.toFixed(4)}, ${van.last_gps_longitude.toFixed(4)}` : 'No GPS data'
         }
       })
       

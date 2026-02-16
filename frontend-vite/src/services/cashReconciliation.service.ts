@@ -108,6 +108,26 @@ class CashReconciliationService {
     }
   }
 
+  async updateSession(id: string, data: Partial<CashSession>): Promise<CashSession> {
+    try {
+      const response = await apiClient.put(`${this.baseUrl}/sessions/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update cash session:', error)
+      throw error
+    }
+  }
+
+  async updateBankDeposit(id: string, data: Partial<BankDeposit>): Promise<BankDeposit> {
+    try {
+      const response = await apiClient.put(`${this.baseUrl}/bank-deposits/${id}`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to update bank deposit:', error)
+      throw error
+    }
+  }
+
   async getBankDeposits(filter?: any): Promise<{ data: BankDeposit[], total: number }> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/bank-deposits`, { params: filter })

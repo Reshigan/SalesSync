@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { ArrowLeft, Save } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { financeService } from '../../services/finance.service'
 
 interface PaymentFormData {
   invoice_id: string
@@ -25,10 +26,7 @@ export default function PaymentCreate() {
   })
 
   const createMutation = useMutation({
-    mutationFn: async (data: PaymentFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id: 'new-payment-id' }
-    },
+    mutationFn: (data: PaymentFormData) => financeService.createPayment(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['payments'] })
       toast.success('Payment created successfully')

@@ -29,11 +29,7 @@ export default function ReportEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: ReportFormData) => {
-      // Mock API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: ReportFormData) => reportsService.updateReport(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['report', id] })
       queryClient.invalidateQueries({ queryKey: ['reports'] })

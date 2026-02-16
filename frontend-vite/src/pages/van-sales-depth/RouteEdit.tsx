@@ -30,10 +30,7 @@ export default function RouteEdit() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: async (data: RouteFormData) => {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      return { ...data, id }
-    },
+    mutationFn: (data: RouteFormData) => vanSalesService.updateRoute(id!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['route', id] })
       toast.success('Route updated successfully')
