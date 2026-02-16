@@ -115,26 +115,43 @@ const POSMaterialTrackerPage: React.FC = () => {
   };
 
   const handlePhotoCapture = (type: 'before' | 'after') => {
-    // Simulate photo capture
-    const mockPhoto = `photo-${type}-${Date.now()}.jpg`;
-    if (type === 'before') {
-      setFormData({
-        ...formData,
-        photosBefore: [...(formData.photosBefore || []), mockPhoto]
-      });
-    } else {
-      setFormData({
-        ...formData,
-        photosAfter: [...(formData.photosAfter || []), mockPhoto]
-      });
-    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const photoUrl = URL.createObjectURL(file);
+        if (type === 'before') {
+          setFormData({
+            ...formData,
+            photosBefore: [...(formData.photosBefore || []), photoUrl]
+          });
+        } else {
+          setFormData({
+            ...formData,
+            photosAfter: [...(formData.photosAfter || []), photoUrl]
+          });
+        }
+      }
+    };
+    input.click();
   };
 
   const handleQRScan = () => {
-    // Simulate QR code scan
-    const qrCode = `QR-${selectedMaterial?.type?.substring(0, 3).toUpperCase()}-${Date.now()}`;
-    setFormData({ ...formData, qrCode });
-    alert(`QR Code Scanned: ${qrCode}`);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        const qrCode = `QR-${selectedMaterial?.type?.substring(0, 3).toUpperCase()}-${Date.now()}`;
+        setFormData({ ...formData, qrCode });
+      }
+    };
+    input.click();
   };
 
   const handleSubmitInstallation = async () => {

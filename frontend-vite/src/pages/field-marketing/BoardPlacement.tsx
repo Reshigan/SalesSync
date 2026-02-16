@@ -84,11 +84,7 @@ export default function BoardPlacement() {
     setShowCamera(false);
     setCurrentBrand(null);
 
-    // Simulate coverage analysis
-    // TODO: Implement actual image analysis with TensorFlow.js or backend API
-    setTimeout(() => {
-      analyzeCoverage(newPhoto.id);
-    }, 2000);
+    analyzeCoverage(newPhoto.id);
   };
 
   const analyzeCoverage = async (photoId: string) => {
@@ -142,9 +138,7 @@ export default function BoardPlacement() {
       };
 
       setPhotos((prev) => [...prev, newPhoto]);
-      setTimeout(() => {
-        analyzeCoverage(newPhoto.id);
-      }, 2000);
+      analyzeCoverage(newPhoto.id);
     };
     reader.readAsDataURL(file);
   };
