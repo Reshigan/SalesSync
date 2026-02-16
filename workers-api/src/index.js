@@ -1541,20 +1541,11 @@ api.get('/competitors', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   
-  // Try to get from competitors table, fallback to mock data if table doesn't exist
   try {
     const competitors = await db.prepare('SELECT * FROM competitors WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: competitors.results || [] });
   } catch (e) {
-    // Return mock data if table doesn't exist
-    return c.json({
-      success: true,
-      data: [
-        { id: '1', name: 'Competitor A', market_share: 25.5, strength: 'Brand recognition', weakness: 'Limited distribution', products: 150 },
-        { id: '2', name: 'Competitor B', market_share: 18.2, strength: 'Low prices', weakness: 'Quality issues', products: 80 },
-        { id: '3', name: 'Competitor C', market_share: 12.8, strength: 'Innovation', weakness: 'High prices', products: 45 }
-      ]
-    });
+    return c.json({ success: false, message: 'Failed to fetch competitors: ' + e.message }, 500);
   }
 });
 
@@ -1609,7 +1600,6 @@ api.get('/field-marketing/activities', async (c) => {
   const tenantId = c.get('tenantId');
   const { status, type } = c.req.query();
   
-  // Try to get from field_marketing_activities table
   try {
     let query = 'SELECT * FROM field_marketing_activities WHERE tenant_id = ?';
     const params = [tenantId];
@@ -1628,15 +1618,7 @@ api.get('/field-marketing/activities', async (c) => {
     const activities = await db.prepare(query).bind(...params).all();
     return c.json({ success: true, data: activities.results || [] });
   } catch (e) {
-    // Return mock data if table doesn't exist
-    return c.json({
-      success: true,
-      data: [
-        { id: '1', activity_type: 'board_placement', customer_name: 'Store A', location: 'Main Street', status: 'completed', photo_url: null, notes: 'Board installed successfully', created_at: new Date().toISOString() },
-        { id: '2', activity_type: 'display_setup', customer_name: 'Store B', location: 'Market Square', status: 'pending', photo_url: null, notes: 'Scheduled for tomorrow', created_at: new Date().toISOString() },
-        { id: '3', activity_type: 'sampling', customer_name: 'Store C', location: 'Shopping Mall', status: 'in_progress', photo_url: null, notes: 'Product sampling event', created_at: new Date().toISOString() }
-      ]
-    });
+    return c.json({ success: false, message: 'Failed to fetch activities: ' + e.message }, 500);
   }
 });
 

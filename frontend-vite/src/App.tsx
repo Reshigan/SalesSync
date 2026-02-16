@@ -157,6 +157,7 @@ import CommissionCreate from './pages/commissions/CommissionCreate'
 import RuleDetail from './pages/commissions/RuleDetail'
 import RuleEdit from './pages/commissions/RuleEdit'
 import RuleCreate from './pages/commissions/RuleCreate'
+import CommissionCalculationDetail from './pages/commissions/calculation-details/CalculationDetail'
 
 import SessionDetail from './pages/cash-reconciliation/SessionDetail'
 import SessionEdit from './pages/cash-reconciliation/SessionEdit'
@@ -799,6 +800,7 @@ function App() {
             <Route path="commissions/rules/create" element={<RuleCreate />} />
             <Route path="commissions/rules/:id" element={<RuleDetail />} />
             <Route path="commissions/rules/:id/edit" element={<RuleEdit />} />
+            <Route path="commissions/calculations/:id" element={<CommissionCalculationDetail />} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
