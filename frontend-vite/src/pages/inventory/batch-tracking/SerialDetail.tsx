@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Hash, Package, MapPin, User, Clock } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function SerialDetail() {
   const { serialId } = useParams<{ serialId: string }>()

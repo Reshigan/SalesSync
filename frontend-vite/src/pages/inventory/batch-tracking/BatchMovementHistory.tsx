@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, TrendingDown, Clock } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function BatchMovementHistory() {
   const { batchId } = useParams<{ batchId: string }>()

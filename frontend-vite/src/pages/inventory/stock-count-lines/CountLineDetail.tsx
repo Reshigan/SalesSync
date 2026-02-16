@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Package, TrendingUp, AlertTriangle } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function CountLineDetail() {
   const { countId, lineId } = useParams<{ countId: string; lineId: string }>()

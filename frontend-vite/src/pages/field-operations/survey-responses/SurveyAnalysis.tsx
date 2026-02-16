@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, TrendingUp, Users, BarChart } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function SurveyAnalysis() {
   const { surveyId } = useParams<{ surveyId: string }>()

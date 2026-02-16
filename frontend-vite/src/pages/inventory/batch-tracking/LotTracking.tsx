@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Factory, Truck, Warehouse, CheckCircle } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function LotTracking() {
   const { lotId } = useParams<{ lotId: string }>()

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3, Calendar, Edit, Package } from 'lucide-react'
-import { apiClient } from '../services/api.service'
+import { apiClient } from '../../services/api.service'
 import { formatCurrency, formatDate } from '../../utils/format'
 
 export default function BrandDetail() {
@@ -15,8 +15,7 @@ export default function BrandDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/brands/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await apiClient.get('/brands/${id}')
       const json = await r.json()
       const d = json.data || json
       setBrand(d)

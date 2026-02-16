@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle, AlertTriangle, Package } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function VanLoadReconciliation() {
   const { loadId } = useParams<{ loadId: string }>()

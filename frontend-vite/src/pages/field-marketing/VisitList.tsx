@@ -15,7 +15,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react';
-import { apiClient } from '../services/api.service';
+import { apiClient } from '../../services/api.service';
 
 interface Brand {
   id: string;
@@ -78,9 +78,7 @@ export default function VisitList() {
 
       const token = localStorage.getItem('token');
       const brandIds = brands?.map(b => b.id).join(',') || '';
-      const res = await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/visit-list?customer_id=${customerId}&brand_ids=${brandIds}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await apiClient.get('/field-agent-workflow/visit-list?customer_id=${customerId}&brand_ids=${brandIds}');
       const json = await res.json();
       const apiTasks = json.data || [];
 

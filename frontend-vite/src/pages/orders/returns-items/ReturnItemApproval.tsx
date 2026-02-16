@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, CheckCircle, XCircle } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { formatCurrency } from '../../../utils/currency'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 interface ApprovalFormData {
   decision: 'approved' | 'rejected'

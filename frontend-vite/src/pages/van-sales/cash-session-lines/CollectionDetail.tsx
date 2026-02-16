@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, DollarSign, User, Clock } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function CollectionDetail() {
   const { sessionId, collectionId } = useParams<{ sessionId: string; collectionId: string }>()

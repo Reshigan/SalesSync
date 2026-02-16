@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye, TrendingUp, TrendingDown } from 'lucide-react'
 import { vanSalesService } from '../../../services/vanSales.service'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function VanLoadItemList() {
   const { loadId } = useParams<{ loadId: string }>()

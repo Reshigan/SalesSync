@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, FileText, Download, Image as ImageIcon } from 'lucide-react'
 import { ordersService } from '../../../services/orders.service'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function DeliveryPOD() {
   const { orderId, deliveryId } = useParams<{ orderId: string; deliveryId: string }>()

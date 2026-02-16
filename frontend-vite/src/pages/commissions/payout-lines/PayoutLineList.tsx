@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Eye } from 'lucide-react'
 import { formatCurrency } from '../../../utils/currency'
 import { commissionsService } from '../../../services/commissions.service'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 export default function PayoutLineList() {
   const { payoutId } = useParams<{ payoutId: string }>()

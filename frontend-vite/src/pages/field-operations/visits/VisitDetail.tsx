@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Clock, Edit, MapPin, Package, User } from 'lucide-react'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
 
 export default function VisitDetail() {
@@ -15,8 +15,7 @@ export default function VisitDetail() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('token')
-      const r = await fetch(`${API_CONFIG.BASE_URL}/field-operations/visits/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      const r = await apiClient.get('/field-operations/visits/${id}')
       const json = await r.json()
       const d = json.data || json
       setVisit(d)

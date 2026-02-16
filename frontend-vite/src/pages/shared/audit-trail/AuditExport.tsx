@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, Download, FileText, Table } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { auditService } from '../../../services/audit.service'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 interface ExportFormData {
   format: 'csv' | 'excel' | 'pdf' | 'json'

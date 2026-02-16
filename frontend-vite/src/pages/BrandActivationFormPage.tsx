@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-import { apiClient } from 'services/api.service'
+import {
   Camera, MapPin, Users, DollarSign, Calendar, Clock, Target, 
   TrendingUp, MessageSquare, Star, Gift, Plus, X, Upload
 } from 'lucide-react';
+import { apiClient } from '../services/api.service';
 
 interface BrandActivation {
   id?: number;
@@ -161,16 +161,9 @@ const BrandActivationFormPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/trade-marketing-new/brand-activations`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await apiClient.post('/trade-marketing-new/brand-activations', formData);
 
-      if (response.ok) {
+      if (response.data) {
         alert('Brand Activation event created successfully!');
         // Reset form
         setFormData({
@@ -186,10 +179,6 @@ const BrandActivationFormPage: React.FC = () => {
           leadsCaptured: 0,
           engagementScore: 7
         });
-      } else {
-        const error = await response.json();
-        alert('Failed to create event: ' + (error.message || 'Unknown error'));
-      }
     } catch (error) {
       console.error('Error creating brand activation:', error);
       alert('Error creating brand activation event');

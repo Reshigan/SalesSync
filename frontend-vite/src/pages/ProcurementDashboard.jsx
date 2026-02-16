@@ -8,7 +8,7 @@ import {
   ShoppingBag, Inventory, LocalShipping, AttachMoney,
   Visibility, Add
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function ProcurementDashboard() {
   const [tab, setTab] = useState(0);

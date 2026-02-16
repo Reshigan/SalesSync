@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { apiClient } from '../services/api.service';
+import { apiClient } from '../../services/api.service';
 import { CheckCircle, XCircle, Target, Package, DollarSign, Clock, MapPin, AlertCircle, ChevronDown, ChevronUp, MessageSquare, Calendar, Check } from 'lucide-react';
 
 interface VisitSummaryData {
@@ -66,9 +66,7 @@ export default function VisitSummary() {
     const fetchVisitSummary = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${API_CONFIG.BASE_URL}/field-agent-workflow/visit-summary?customer_id=${customerId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const res = await apiClient.get('/field-agent-workflow/visit-summary?customer_id=${customerId}');
         const json = await res.json();
         if (json.data) {
           const d = json.data as Record<string, unknown>;

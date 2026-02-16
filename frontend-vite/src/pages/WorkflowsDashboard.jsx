@@ -7,7 +7,7 @@ import {
 import {
   AccountTree, PlayArrow, CheckCircle, Schedule, Add
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function WorkflowsDashboard() {
   const [tab, setTab] = useState(0);

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { ArrowLeft, AlertTriangle, DollarSign } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { formatCurrency } from '../../../utils/currency'
-import { apiClient } from '../../services/api.service'
+import { apiClient } from '../../../services/api.service'
 
 interface VarianceFormData {
   resolution_action: string

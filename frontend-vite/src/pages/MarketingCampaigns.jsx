@@ -8,7 +8,7 @@ import {
   Campaign, BarChart, TrendingUp, People,
   PlayArrow, Pause, CheckCircle, Visibility
 } from '@mui/icons-material';
-import { apiClient } from '../../services/api.service';
+import { apiClient } from '../services/api.service';
 
 export default function MarketingCampaigns() {
   const [tab, setTab] = useState(0);
