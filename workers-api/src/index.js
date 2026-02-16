@@ -16063,37 +16063,7 @@ api.delete('/org-hierarchy/:id', async (c) => {
 });
 
 // ===== AGENT TARGETS CRUD =====
-api.get('/agent-targets', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
-  try {
-    const { agent_id, target_type, target_scope, period_type, status: targetStatus, region_id } = c.req.query();
-    let query = 'SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, u.email as agent_email, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?';
-    const params = [tenantId];
-
-    if (role !== 'admin') {
-      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-      const allIds = [userId, ...subordinateIds];
-      const placeholders = allIds.map(() => '?').join(',');
-      query += ` AND at.agent_id IN (${placeholders})`;
-      params.push(...allIds);
-    }
-    if (agent_id) { query += ' AND at.agent_id = ?'; params.push(agent_id); }
-    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
-    if (target_scope) { query += ' AND at.target_scope = ?'; params.push(target_scope); }
-    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
-    if (targetStatus) { query += ' AND at.status = ?'; params.push(targetStatus); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      query += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    query += ' ORDER BY at.period_start DESC, u.first_name';
-    const targets = await db.prepare(query).bind(...params).all();
-    return c.json({ success: true, data: targets.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
+// Static routes MUST come before /:id wildcard
 api.get('/agent-targets/my', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
   try {
@@ -16136,6 +16106,99 @@ api.get('/agent-targets/summary', async (c) => {
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
 
+api.get('/agent-targets/report/by-agent', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
+  try {
+    const { period_type, target_type, region_id } = c.req.query();
+    let agentFilter = '';
+    const params = [tenantId];
+    if (role !== 'admin') {
+      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+      const allIds = [userId, ...subordinateIds];
+      const placeholders = allIds.map(() => '?').join(',');
+      agentFilter = ` AND at.agent_id IN (${placeholders})`;
+      params.push(...allIds);
+    }
+    let extraFilter = '';
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      extraFilter += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    const report = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, at.target_type, at.target_scope, at.period_type, COUNT(*) as target_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${agentFilter}${extraFilter} GROUP BY at.agent_id, at.target_type, at.target_scope, at.period_type ORDER BY achievement_pct DESC`).bind(...params).all();
+    return c.json({ success: true, data: report.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/report/by-region', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { period_type, target_type } = c.req.query();
+    let extraFilter = '';
+    const params = [tenantId];
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    const report = await db.prepare(`SELECT r.id as region_id, r.name as region_name, r.level as region_level, at.target_type, at.period_type, COUNT(DISTINCT at.agent_id) as agent_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${extraFilter} GROUP BY r.id, at.target_type, at.period_type ORDER BY r.level, r.name`).bind(...params).all();
+    return c.json({ success: true, data: report.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/report/leaderboard', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { target_type, period_type, region_id, limit: lim } = c.req.query();
+    let extraFilter = '';
+    const params = [tenantId, 'active'];
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      extraFilter += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    const limitVal = parseInt(lim) || 20;
+    params.push(limitVal);
+    const leaderboard = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, SUM(at.achieved_value) as total_achieved, SUM(at.target_value) as total_target, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ? AND at.status = ?${extraFilter} GROUP BY at.agent_id ORDER BY achievement_pct DESC LIMIT ?`).bind(...params).all();
+    return c.json({ success: true, data: leaderboard.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// List all targets (hierarchy-scoped)
+api.get('/agent-targets', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
+  try {
+    const { agent_id, target_type, target_scope, period_type, status: targetStatus, region_id } = c.req.query();
+    let query = 'SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, u.email as agent_email, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?';
+    const params = [tenantId];
+    if (role !== 'admin') {
+      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+      const allIds = [userId, ...subordinateIds];
+      const placeholders = allIds.map(() => '?').join(',');
+      query += ` AND at.agent_id IN (${placeholders})`;
+      params.push(...allIds);
+    }
+    if (agent_id) { query += ' AND at.agent_id = ?'; params.push(agent_id); }
+    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
+    if (target_scope) { query += ' AND at.target_scope = ?'; params.push(target_scope); }
+    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
+    if (targetStatus) { query += ' AND at.status = ?'; params.push(targetStatus); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      query += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    query += ' ORDER BY at.period_start DESC, u.first_name';
+    const targets = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: targets.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// Wildcard routes AFTER static routes
 api.get('/agent-targets/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
   try {
@@ -16207,68 +16270,6 @@ api.get('/agent-targets/:id/progress', async (c) => {
   try {
     const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC, created_at DESC').bind(id, tenantId).all();
     return c.json({ success: true, data: progress.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ===== TARGET REPORTING (admin/manager) =====
-api.get('/agent-targets/report/by-agent', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
-  try {
-    const { period_type, target_type, region_id } = c.req.query();
-    let agentFilter = '';
-    const params = [tenantId];
-    if (role !== 'admin') {
-      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-      const allIds = [userId, ...subordinateIds];
-      const placeholders = allIds.map(() => '?').join(',');
-      agentFilter = ` AND at.agent_id IN (${placeholders})`;
-      params.push(...allIds);
-    }
-    let extraFilter = '';
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      extraFilter += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    const report = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, at.target_type, at.target_scope, at.period_type, COUNT(*) as target_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${agentFilter}${extraFilter} GROUP BY at.agent_id, at.target_type, at.target_scope, at.period_type ORDER BY achievement_pct DESC`).bind(...params).all();
-    return c.json({ success: true, data: report.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/report/by-region', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { period_type, target_type } = c.req.query();
-    let extraFilter = '';
-    const params = [tenantId];
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    const report = await db.prepare(`SELECT r.id as region_id, r.name as region_name, r.level as region_level, at.target_type, at.period_type, COUNT(DISTINCT at.agent_id) as agent_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${extraFilter} GROUP BY r.id, at.target_type, at.period_type ORDER BY r.level, r.name`).bind(...params).all();
-    return c.json({ success: true, data: report.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/report/leaderboard', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { target_type, period_type, region_id, limit: lim } = c.req.query();
-    let extraFilter = '';
-    const params = [tenantId, 'active'];
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      extraFilter += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    const limitVal = parseInt(lim) || 20;
-    params.push(limitVal);
-    const leaderboard = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, SUM(at.achieved_value) as total_achieved, SUM(at.target_value) as total_target, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ? AND at.status = ?${extraFilter} GROUP BY at.agent_id ORDER BY achievement_pct DESC LIMIT ?`).bind(...params).all();
-    return c.json({ success: true, data: leaderboard.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
 
