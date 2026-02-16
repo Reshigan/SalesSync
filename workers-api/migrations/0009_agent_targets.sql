@@ -1,25 +1,14 @@
 -- Agent Targets System + Org Hierarchy + Region Hierarchy
 -- Supports daily/monthly targets per agent for boards and SIMs
 -- Target types: boards, sims | Target scope: customers, stores
--- Org hierarchy: Agent → Team Leader → Junior Sales Manager → Sales Manager
--- Region hierarchy: Country → Province → District → Area
+-- Org hierarchy: Agent -> Team Leader -> Junior Sales Manager -> Sales Manager
+-- Region hierarchy: Country -> Province -> District -> Area
 
--- ========== REGION HIERARCHY ==========
-CREATE TABLE IF NOT EXISTS regions (
-  id TEXT PRIMARY KEY,
-  tenant_id TEXT NOT NULL,
-  name TEXT NOT NULL,
-  code TEXT,
-  level TEXT NOT NULL CHECK(level IN ('country', 'province', 'district', 'area')),
-  parent_id TEXT,
-  manager_id TEXT,
-  status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'inactive')),
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (parent_id) REFERENCES regions(id),
-  FOREIGN KEY (manager_id) REFERENCES users(id),
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
-);
+-- ========== UPGRADE EXISTING REGIONS TABLE ==========
+ALTER TABLE regions ADD COLUMN level TEXT DEFAULT 'area';
+ALTER TABLE regions ADD COLUMN parent_id TEXT;
+ALTER TABLE regions ADD COLUMN manager_id TEXT;
+ALTER TABLE regions ADD COLUMN updated_at TEXT DEFAULT (datetime('now'));
 
 CREATE INDEX IF NOT EXISTS idx_regions_tenant ON regions(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_regions_parent ON regions(parent_id);
@@ -39,11 +28,7 @@ CREATE TABLE IF NOT EXISTS org_hierarchy (
   effective_from TEXT DEFAULT (datetime('now')),
   effective_to TEXT,
   created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (manager_id) REFERENCES users(id),
-  FOREIGN KEY (region_id) REFERENCES regions(id),
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_org_hierarchy_tenant ON org_hierarchy(tenant_id);
@@ -69,10 +54,7 @@ CREATE TABLE IF NOT EXISTS agent_targets (
   notes TEXT,
   created_by TEXT,
   created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (agent_id) REFERENCES users(id),
-  FOREIGN KEY (region_id) REFERENCES regions(id),
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_agent_targets_agent ON agent_targets(agent_id);
@@ -96,11 +78,7 @@ CREATE TABLE IF NOT EXISTS target_progress (
   customer_name TEXT,
   region_id TEXT,
   notes TEXT,
-  created_at TEXT DEFAULT (datetime('now')),
-  FOREIGN KEY (target_id) REFERENCES agent_targets(id),
-  FOREIGN KEY (agent_id) REFERENCES users(id),
-  FOREIGN KEY (region_id) REFERENCES regions(id),
-  FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_target_progress_target ON target_progress(target_id);
