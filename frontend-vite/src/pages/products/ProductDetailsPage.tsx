@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, Package, DollarSign, TrendingUp, TrendingDown, BarChart3, ShoppingCart, AlertCircle, CheckCircle, Image as ImageIcon, Save, X, Plus } from 'lucide-react'
@@ -108,7 +109,7 @@ export default function ProductDetailsPage() {
       setIsEditing(false)
     } catch (error) {
       console.error('Failed to update product:', error)
-      alert('Failed to save product changes')
+      toast.error('Failed to save product changes')
     }
   }
 

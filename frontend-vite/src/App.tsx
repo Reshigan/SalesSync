@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
 import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 // Layout Components
 import AuthLayout from './components/layout/AuthLayout'
@@ -427,6 +428,7 @@ function App() {
   }
 
   return (
+    <>
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
         <Routes>
@@ -937,6 +939,8 @@ function App() {
         </Routes>
       </div>
     </ErrorBoundary>
+    <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#fff', color: '#1f2937', borderRadius: '0.75rem', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', padding: '12px 16px', fontSize: '14px' } }} />
+    </>
   )
 }
 

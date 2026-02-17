@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
@@ -71,12 +72,12 @@ const ProductDistributionFormPage: React.FC = () => {
     e.preventDefault();
     
     if (!formData.recipientSignature || !formData.recipientPhoto || !formData.idDocumentPhoto) {
-      alert('Please capture all required photos and signature');
+      toast.error('Please capture all required photos and signature');
       return;
     }
 
     if (!currentLocation) {
-      alert('GPS location not available');
+      toast.error('GPS location not available');
       return;
     }
 
@@ -102,11 +103,11 @@ const ProductDistributionFormPage: React.FC = () => {
         distributionNotes: formData.distributionNotes
       });
 
-      alert('✅ Product distribution recorded successfully!');
+      toast.error('✅ Product distribution recorded successfully!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to record distribution:', error);
-      alert('Failed to record distribution. Please try again.');
+      toast.error('Failed to record distribution. Please try again.');
     } finally {
       setLoading(false);
     }

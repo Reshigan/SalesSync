@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Upload, Download, FileText, AlertCircle, Check, X, RefreshCw, Database, FileSpreadsheet, ChevronRight, Loader } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
@@ -132,7 +133,7 @@ export default function DataImportExportPage() {
       const fileExt = '.' + file.name.split('.').pop()?.toLowerCase()
       
       if (!validTypes.includes(fileExt)) {
-        alert('Please upload a valid CSV or Excel file')
+        toast.error('Please upload a valid CSV or Excel file')
         return
       }
       
@@ -142,7 +143,7 @@ export default function DataImportExportPage() {
 
   const handleImport = async () => {
     if (!uploadedFile) {
-      alert('Please select a file to import')
+      toast.error('Please select a file to import')
       return
     }
 
@@ -158,10 +159,10 @@ export default function DataImportExportPage() {
       setImportProgress(100)
       setImporting(false)
       setUploadedFile(null)
-      alert(`Successfully imported data from ${uploadedFile.name}`)
+      toast.error(`Successfully imported data from ${uploadedFile.name}`)
     } catch {
       setImporting(false)
-      alert('Failed to import data. Please check the file format and try again.')
+      toast.error('Failed to import data. Please check the file format and try again.')
     }
   }
 
@@ -171,9 +172,9 @@ export default function DataImportExportPage() {
       const res = await apiClient.post('/data/export', { type: selectedType, format })
       const downloadUrl = res.data?.data?.download_url || res.data?.download_url
       if (downloadUrl) window.open(downloadUrl, '_blank')
-      alert(`Export started! You'll be notified when the ${format.toUpperCase()} file is ready.`)
+      toast.error(`Export started! You'll be notified when the ${format.toUpperCase()} file is ready.`)
     } catch {
-      alert('Failed to start export. Please try again.')
+      toast.error('Failed to start export. Please try again.')
     } finally {
       setExporting(false)
     }

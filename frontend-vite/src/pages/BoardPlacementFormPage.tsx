@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
@@ -67,17 +68,17 @@ const BoardPlacementFormPage: React.FC = () => {
     e.preventDefault();
     
     if (!selectedBoard) {
-      alert('Please select a board type');
+      toast.error('Please select a board type');
       return;
     }
 
     if (!formData.placementPhoto) {
-      alert('Please capture placement photo');
+      toast.error('Please capture placement photo');
       return;
     }
 
     if (!currentLocation) {
-      alert('GPS location not available');
+      toast.error('GPS location not available');
       return;
     }
 
@@ -96,11 +97,11 @@ const BoardPlacementFormPage: React.FC = () => {
         placementNotes: formData.placementNotes
       });
 
-      alert(`✅ Board placement recorded! Commission: $${selectedBoard.commission_rate || 0}`);
+      toast.error(`✅ Board placement recorded! Commission: $${selectedBoard.commission_rate || 0}`);
       navigate(-1);
     } catch (error) {
       console.error('Failed to create board placement:', error);
-      alert('Failed to record board placement. Please try again.');
+      toast.error('Failed to record board placement. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
@@ -78,7 +79,7 @@ export default function PriceListEditPage() {
       }
     } catch (error) {
       console.error('Failed to load price list:', error)
-      alert('Failed to load price list')
+      toast.error('Failed to load price list')
     } finally {
       setLoading(false)
     }
@@ -88,7 +89,7 @@ export default function PriceListEditPage() {
     e.preventDefault()
     
     if (items.length === 0) {
-      alert('Please add at least one product to the price list')
+      toast.error('Please add at least one product to the price list')
       return
     }
 
@@ -108,11 +109,11 @@ export default function PriceListEditPage() {
         await pricingService.updatePriceListItems(priceListId, items)
       }
 
-      alert(isNew ? 'Price list created successfully' : 'Price list updated successfully')
+      toast.error(isNew ? 'Price list created successfully' : 'Price list updated successfully')
       navigate('/admin/price-lists')
     } catch (error) {
       console.error('Failed to save price list:', error)
-      alert('Failed to save price list')
+      toast.error('Failed to save price list')
     } finally {
       setSaving(false)
     }

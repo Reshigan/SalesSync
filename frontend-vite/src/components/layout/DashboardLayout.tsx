@@ -27,7 +27,7 @@ export default function DashboardLayout() {
   }, [sidebarOpen])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden max-w-[100vw]">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -56,8 +56,8 @@ export default function DashboardLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
-        <main className="flex-1 pb-8">
-          <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 pb-8 overflow-x-hidden">
+          <div className="w-full max-w-[100vw] mx-auto px-3 sm:px-4 lg:px-6 py-6">
             <Outlet />
           </div>
         </main>

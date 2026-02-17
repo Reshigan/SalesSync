@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { 
@@ -132,9 +133,9 @@ const VisitManagement: React.FC = () => {
       setShowCreateModal(false)
       resetForm()
       fetchVisits()
-      alert('Visit created successfully!')
+      toast.error('Visit created successfully!')
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error creating visit')
+      toast.error(error.response?.data?.message || 'Error creating visit')
     }
   }
 
@@ -148,9 +149,9 @@ const VisitManagement: React.FC = () => {
       setSelectedVisit(null)
       resetForm()
       fetchVisits()
-      alert('Visit updated successfully!')
+      toast.error('Visit updated successfully!')
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error updating visit')
+      toast.error(error.response?.data?.message || 'Error updating visit')
     }
   }
 
@@ -160,9 +161,9 @@ const VisitManagement: React.FC = () => {
     try {
       await apiClient.delete(`/visits/${visitId}`)
       fetchVisits()
-      alert('Visit deleted successfully!')
+      toast.error('Visit deleted successfully!')
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Error deleting visit')
+      toast.error(error.response?.data?.message || 'Error deleting visit')
     }
   }
 

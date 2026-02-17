@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import tradeMarketingService from '../services/tradeMarketing.service';
@@ -71,7 +72,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
     e.preventDefault();
     
     if (!formData.productId) {
-      alert('Please scan or enter product ID');
+      toast.error('Please scan or enter product ID');
       return;
     }
 
@@ -93,11 +94,11 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
         notes: formData.notes || undefined
       });
 
-      alert('✅ SKU availability recorded!');
+      toast.error('✅ SKU availability recorded!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to record SKU:', error);
-      alert('Failed to record SKU. Please try again.');
+      toast.error('Failed to record SKU. Please try again.');
     } finally {
       setLoading(false);
     }

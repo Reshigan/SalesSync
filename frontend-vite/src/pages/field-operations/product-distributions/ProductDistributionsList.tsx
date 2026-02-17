@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, RotateCcw } from 'lucide-react'
@@ -35,7 +36,7 @@ export default function ProductDistributionsList() {
       loadDistributions()
     } catch (error) {
       console.error('Failed to reverse product distribution:', error)
-      alert('Failed to reverse product distribution')
+      toast.error('Failed to reverse product distribution')
     }
   }
 

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '../../services/api.service'
@@ -64,7 +65,7 @@ export const CommissionApprovalPage: React.FC = () => {
       setPendingCommissions(prev => prev.filter(c => !selectedCommissions.has(c.id)))
       setSelectedCommissions(new Set())
     } catch (err) {
-      alert('Failed to approve commissions')
+      toast.error('Failed to approve commissions')
     }
   }
 
@@ -79,7 +80,7 @@ export const CommissionApprovalPage: React.FC = () => {
       setRejectionReason('')
       setShowRejectModal(false)
     } catch (err) {
-      alert('Failed to reject commissions')
+      toast.error('Failed to reject commissions')
     }
   }
 

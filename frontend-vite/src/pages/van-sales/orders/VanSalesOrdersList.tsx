@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, Edit, RotateCcw } from 'lucide-react'
@@ -127,7 +128,7 @@ export default function VanSalesOrdersList() {
       loadOrders()
     } catch (error) {
       console.error('Failed to reverse order:', error)
-      alert('Failed to reverse order')
+      toast.error('Failed to reverse order')
     }
   }
 

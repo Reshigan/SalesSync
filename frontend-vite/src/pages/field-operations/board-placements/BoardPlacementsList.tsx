@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, RotateCcw } from 'lucide-react'
@@ -35,7 +36,7 @@ export default function BoardPlacementsList() {
       loadPlacements()
     } catch (error) {
       console.error('Failed to reverse board placement:', error)
-      alert('Failed to reverse board placement')
+      toast.error('Failed to reverse board placement')
     }
   }
 

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Shield, Users, Plus, Edit, Trash2, Save, X, Check, Lock, Eye, FileEdit, Search, Filter, RefreshCw } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
@@ -139,7 +140,7 @@ export default function RolePermissionsPage() {
 
   const handleEditRole = (role: Role) => {
     if (role.isSystem) {
-      alert('System roles cannot be edited')
+      toast.error('System roles cannot be edited')
       return
     }
     setEditingRole(role)
@@ -149,7 +150,7 @@ export default function RolePermissionsPage() {
 
   const handleDeleteRole = (role: Role) => {
     if (role.isSystem) {
-      alert('System roles cannot be deleted')
+      toast.error('System roles cannot be deleted')
       return
     }
     setSelectedRole(role)
@@ -158,7 +159,7 @@ export default function RolePermissionsPage() {
 
   const handleSaveRole = async () => {
     if (!editingRole.name || !editingRole.description) {
-      alert('Please fill all required fields')
+      toast.error('Please fill all required fields')
       return
     }
 
@@ -180,7 +181,7 @@ export default function RolePermissionsPage() {
       await fetchRoles()
     } catch (error) {
       console.error('Failed to save role:', error)
-      alert('Failed to save role')
+      toast.error('Failed to save role')
     }
 
     setIsEditModalOpen(false)
@@ -195,7 +196,7 @@ export default function RolePermissionsPage() {
         await fetchRoles()
       } catch (error) {
         console.error('Failed to delete role:', error)
-        alert('Failed to delete role')
+        toast.error('Failed to delete role')
       }
     }
     setIsDeleteModalOpen(false)

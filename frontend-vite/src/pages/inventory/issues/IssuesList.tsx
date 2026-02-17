@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, RotateCcw } from 'lucide-react'
@@ -37,7 +38,7 @@ export default function IssuesList() {
       loadIssues()
     } catch (error) {
       console.error('Failed to reverse issue:', error)
-      alert('Failed to reverse issue')
+      toast.error('Failed to reverse issue')
     }
   }
 

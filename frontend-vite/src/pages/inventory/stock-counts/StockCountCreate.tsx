@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, ClipboardList, Warehouse } from 'lucide-react'
@@ -55,15 +56,15 @@ export default function StockCountCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedWarehouse) {
-      alert('Please select a warehouse')
+      toast.error('Please select a warehouse')
       return
     }
     if (!countType) {
-      alert('Please select a count type')
+      toast.error('Please select a count type')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product to count')
+      toast.error('Please add at least one product to count')
       return
     }
 
@@ -88,7 +89,7 @@ export default function StockCountCreate() {
       navigate('/inventory/stock-counts')
     } catch (error: any) {
       console.error('Failed to create stock count:', error)
-      alert(error.message || 'Failed to create stock count')
+      toast.error(error.message || 'Failed to create stock count')
     } finally {
       setSaving(false)
     }

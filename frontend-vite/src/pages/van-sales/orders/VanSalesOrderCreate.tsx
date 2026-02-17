@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, User, Truck } from 'lucide-react'
@@ -68,15 +69,15 @@ export default function VanSalesOrderCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedCustomer) {
-      alert('Please select a customer')
+      toast.error('Please select a customer')
       return
     }
     if (!selectedRoute) {
-      alert('Please select a route')
+      toast.error('Please select a route')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product')
+      toast.error('Please add at least one product')
       return
     }
 
@@ -106,7 +107,7 @@ export default function VanSalesOrderCreate() {
       navigate('/van-sales/orders')
     } catch (error: any) {
       console.error('Failed to create order:', error)
-      alert(error.message || 'Failed to create order')
+      toast.error(error.message || 'Failed to create order')
     } finally {
       setSaving(false)
     }

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, Package, Warehouse } from 'lucide-react'
@@ -56,19 +57,19 @@ export default function AdjustmentCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedWarehouse) {
-      alert('Please select a warehouse')
+      toast.error('Please select a warehouse')
       return
     }
     if (!adjustmentType) {
-      alert('Please select an adjustment type')
+      toast.error('Please select an adjustment type')
       return
     }
     if (!reason) {
-      alert('Please provide a reason')
+      toast.error('Please provide a reason')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product')
+      toast.error('Please add at least one product')
       return
     }
 
@@ -94,7 +95,7 @@ export default function AdjustmentCreate() {
       navigate('/inventory/adjustments')
     } catch (error: any) {
       console.error('Failed to create adjustment:', error)
-      alert(error.message || 'Failed to create adjustment')
+      toast.error(error.message || 'Failed to create adjustment')
     } finally {
       setSaving(false)
     }

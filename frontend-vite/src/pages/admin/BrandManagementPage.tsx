@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { brandService } from '../../services/brand.service'
@@ -38,7 +39,7 @@ export default function BrandManagementPage() {
       setBrands(response.data || [])
     } catch (error) {
       console.error('Failed to load brands:', error)
-      alert('Failed to load brands')
+      toast.error('Failed to load brands')
     } finally {
       setLoading(false)
     }
@@ -49,10 +50,10 @@ export default function BrandManagementPage() {
     try {
       if (editingBrand) {
         await brandService.updateBrand(editingBrand.id, formData)
-        alert('Brand updated successfully')
+        toast.error('Brand updated successfully')
       } else {
         await brandService.createBrand(formData)
-        alert('Brand created successfully')
+        toast.error('Brand created successfully')
       }
       setShowModal(false)
       setEditingBrand(null)
@@ -60,7 +61,7 @@ export default function BrandManagementPage() {
       loadBrands()
     } catch (error) {
       console.error('Failed to save brand:', error)
-      alert('Failed to save brand')
+      toast.error('Failed to save brand')
     }
   }
 
@@ -81,11 +82,11 @@ export default function BrandManagementPage() {
     
     try {
       await brandService.deleteBrand(id)
-      alert('Brand deleted successfully')
+      toast.error('Brand deleted successfully')
       loadBrands()
     } catch (error) {
       console.error('Failed to delete brand:', error)
-      alert('Failed to delete brand')
+      toast.error('Failed to delete brand')
     }
   }
 

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, RotateCcw, FileText } from 'lucide-react'
@@ -58,15 +59,15 @@ export default function SalesReturnCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedOrder) {
-      alert('Please select an order')
+      toast.error('Please select an order')
       return
     }
     if (!reason) {
-      alert('Please select a return reason')
+      toast.error('Please select a return reason')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product to return')
+      toast.error('Please add at least one product to return')
       return
     }
 
@@ -93,7 +94,7 @@ export default function SalesReturnCreate() {
       navigate('/sales/returns')
     } catch (error: any) {
       console.error('Failed to create return:', error)
-      alert(error.message || 'Failed to create return')
+      toast.error(error.message || 'Failed to create return')
     } finally {
       setSaving(false)
     }

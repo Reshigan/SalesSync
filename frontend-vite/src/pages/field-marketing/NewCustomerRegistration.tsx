@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Camera, Store, User, Phone, Mail, MapPinned, Building2, Users, Clock, CreditCard, ChevronRight, Save, AlertCircle } from 'lucide-react';
@@ -269,7 +270,7 @@ export default function NewCustomerRegistration() {
       });
     } catch (error) {
       console.error('Error registering customer:', error);
-      alert('Failed to register customer. Please try again.');
+      toast.error('Failed to register customer. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

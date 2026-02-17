@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -132,11 +133,11 @@ export default function VanSalesPage() {
         })
         fetchVanSalesData() // Refresh the data
       } else {
-        alert(data.message || 'Failed to create van')
+        toast.error(data.message || 'Failed to create van')
       }
     } catch (error) {
       console.error('Error creating van:', error)
-      alert('Failed to create van')
+      toast.error('Failed to create van')
     }
   }
 

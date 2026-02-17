@@ -28,26 +28,30 @@ export default function ProductCreatePage() {
       label: 'Product Code',
       type: 'text' as const,
       required: true,
-      placeholder: 'e.g., PROD001'
+      placeholder: 'e.g., PROD001',
+      step: 'Product Info'
     },
     {
       name: 'name',
       label: 'Product Name',
       type: 'text' as const,
       required: true,
-      placeholder: 'e.g., Coca Cola 500ml'
+      placeholder: 'e.g., Coca Cola 500ml',
+      step: 'Product Info'
     },
     {
       name: 'description',
       label: 'Description',
       type: 'textarea' as const,
-      placeholder: 'Product description...'
+      placeholder: 'Product description...',
+      step: 'Product Info'
     },
     {
       name: 'category_id',
       label: 'Category',
       type: 'select' as const,
       required: true,
+      step: 'Classification',
       options: categories.map((c: any) => ({
         value: c.id,
         label: c.name
@@ -58,6 +62,7 @@ export default function ProductCreatePage() {
       label: 'Brand',
       type: 'select' as const,
       required: true,
+      step: 'Classification',
       options: brands.map((b: any) => ({
         value: b.id,
         label: b.name
@@ -68,44 +73,51 @@ export default function ProductCreatePage() {
       label: 'Cost Price',
       type: 'number' as const,
       required: true,
-      placeholder: 'e.g., 10.50'
+      placeholder: 'e.g., 10.50',
+      step: 'Pricing & Stock'
     },
     {
       name: 'selling_price',
       label: 'Selling Price',
       type: 'number' as const,
       required: true,
-      placeholder: 'e.g., 15.00'
+      placeholder: 'e.g., 15.00',
+      step: 'Pricing & Stock'
     },
     {
       name: 'unit_of_measure',
       label: 'Unit of Measure',
       type: 'text' as const,
-      placeholder: 'e.g., Each, Box, Carton'
+      placeholder: 'e.g., Each, Box, Carton',
+      step: 'Pricing & Stock'
     },
     {
       name: 'min_stock_level',
       label: 'Minimum Stock Level',
       type: 'number' as const,
-      placeholder: 'e.g., 10'
+      placeholder: 'e.g., 10',
+      step: 'Pricing & Stock'
     },
     {
       name: 'max_stock_level',
       label: 'Maximum Stock Level',
       type: 'number' as const,
-      placeholder: 'e.g., 100'
+      placeholder: 'e.g., 100',
+      step: 'Pricing & Stock'
     },
     {
       name: 'tax_rate',
       label: 'Tax Rate (%)',
       type: 'number' as const,
-      placeholder: 'e.g., 15'
+      placeholder: 'e.g., 15',
+      step: 'Pricing & Stock'
     },
     {
       name: 'status',
       label: 'Status',
       type: 'select' as const,
       required: true,
+      step: 'Classification',
       options: [
         { value: 'active', label: 'Active' },
         { value: 'inactive', label: 'Inactive' }

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, FileText, User } from 'lucide-react'
@@ -69,11 +70,11 @@ export default function InvoiceCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedCustomer) {
-      alert('Please select a customer')
+      toast.error('Please select a customer')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one item')
+      toast.error('Please add at least one item')
       return
     }
 
@@ -102,7 +103,7 @@ export default function InvoiceCreate() {
       navigate('/sales/invoices')
     } catch (error: any) {
       console.error('Failed to create invoice:', error)
-      alert(error.message || 'Failed to create invoice')
+      toast.error(error.message || 'Failed to create invoice')
     } finally {
       setSaving(false)
     }

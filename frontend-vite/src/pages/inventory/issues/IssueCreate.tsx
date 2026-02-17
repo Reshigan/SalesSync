@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, PackageMinus, Warehouse } from 'lucide-react'
@@ -56,19 +57,19 @@ export default function IssueCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedWarehouse) {
-      alert('Please select a warehouse')
+      toast.error('Please select a warehouse')
       return
     }
     if (!issuedTo) {
-      alert('Please enter who this is issued to')
+      toast.error('Please enter who this is issued to')
       return
     }
     if (!issueType) {
-      alert('Please select an issue type')
+      toast.error('Please select an issue type')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product')
+      toast.error('Please add at least one product')
       return
     }
 
@@ -94,7 +95,7 @@ export default function IssueCreate() {
       navigate('/inventory/issues')
     } catch (error: any) {
       console.error('Failed to create issue:', error)
-      alert(error.message || 'Failed to create issue')
+      toast.error(error.message || 'Failed to create issue')
     } finally {
       setSaving(false)
     }

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { apiClient } from '../../services/api.service';
@@ -130,7 +131,7 @@ export default function VisitSummary() {
       });
     } catch (error) {
       console.error('Error completing visit:', error);
-      alert('Failed to complete visit. Please try again.');
+      toast.error('Failed to complete visit. Please try again.');
     } finally {
       setIsCompleting(false);
     }

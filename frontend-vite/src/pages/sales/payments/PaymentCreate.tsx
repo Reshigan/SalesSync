@@ -28,13 +28,15 @@ export default function PaymentCreate() {
       name: 'payment_date',
       label: 'Payment Date',
       type: 'date' as const,
-      required: true
+      required: true,
+      step: 'Payment'
     },
     {
       name: 'invoice_id',
       label: 'Invoice',
       type: 'select' as const,
       required: true,
+      step: 'Payment',
       options: invoices.map((i: any) => ({
         value: i.id.toString(),
         label: `${i.invoice_number} - ${i.customer_name} (Balance: R ${i.balance_due})`
@@ -45,6 +47,7 @@ export default function PaymentCreate() {
       label: 'Payment Amount (R)',
       type: 'number' as const,
       required: true,
+      step: 'Payment',
       validation: (value: number) => value <= 0 ? 'Payment amount must be greater than 0' : null
     },
     {
@@ -52,6 +55,7 @@ export default function PaymentCreate() {
       label: 'Payment Method',
       type: 'select' as const,
       required: true,
+      step: 'Details',
       options: [
         { value: 'cash', label: 'Cash' },
         { value: 'cheque', label: 'Cheque' },
@@ -64,13 +68,15 @@ export default function PaymentCreate() {
       name: 'reference_number',
       label: 'Reference Number',
       type: 'text' as const,
-      placeholder: 'Cheque number, transaction ID, etc.'
+      placeholder: 'Cheque number, transaction ID, etc.',
+      step: 'Details'
     },
     {
       name: 'notes',
       label: 'Notes',
       type: 'textarea' as const,
-      placeholder: 'Add payment notes...'
+      placeholder: 'Add payment notes...',
+      step: 'Details'
     }
   ]
 

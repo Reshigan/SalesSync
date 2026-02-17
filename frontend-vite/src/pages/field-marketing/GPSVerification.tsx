@@ -3,6 +3,7 @@
  * Verifies field agent is within 10 meters of customer location
  */
 
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
@@ -114,11 +115,11 @@ export default function GPSVerification() {
         justification: justification
       });
       
-      alert('Customer location updated successfully');
+      toast.error('Customer location updated successfully');
       window.location.reload();
     } catch (error) {
       console.error('Error updating customer location:', error);
-      alert('Failed to update customer location. Please try again.');
+      toast.error('Failed to update customer location. Please try again.');
     }
   };
 

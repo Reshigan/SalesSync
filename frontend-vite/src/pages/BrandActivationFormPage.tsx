@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import {
   Camera, MapPin, Users, DollarSign, Calendar, Clock, Target, 
@@ -156,7 +157,7 @@ const BrandActivationFormPage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!formData.eventName || !formData.location || !formData.startDate || !formData.endDate) {
-      alert('Please fill all required fields');
+      toast.error('Please fill all required fields');
       return;
     }
 
@@ -164,7 +165,7 @@ const BrandActivationFormPage: React.FC = () => {
       const response = await apiClient.post('/trade-marketing-new/brand-activations', formData);
 
       if (response.data) {
-        alert('Brand Activation event created successfully!');
+        toast.error('Brand Activation event created successfully!');
         // Reset form
         setFormData({
           eventType: 'sampling',
@@ -182,7 +183,7 @@ const BrandActivationFormPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error creating brand activation:', error);
-      alert('Error creating brand activation event');
+      toast.error('Error creating brand activation event');
     }
   };
 

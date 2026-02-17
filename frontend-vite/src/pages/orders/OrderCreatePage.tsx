@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, ShoppingCart, User, Calculator, Save, Send, Package, Percent } from 'lucide-react'
@@ -197,12 +198,12 @@ export default function OrderCreatePage() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedCustomer) {
-      alert('Please select a customer')
+      toast.error('Please select a customer')
       return
     }
 
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product')
+      toast.error('Please add at least one product')
       return
     }
 
@@ -230,7 +231,7 @@ export default function OrderCreatePage() {
       }
     } catch (error: any) {
       console.error('Failed to create order:', error)
-      alert(error.response?.data?.message || 'Failed to create order')
+      toast.error(error.response?.data?.message || 'Failed to create order')
     } finally {
       setSaving(false)
     }
