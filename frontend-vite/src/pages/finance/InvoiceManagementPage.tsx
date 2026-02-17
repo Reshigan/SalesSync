@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { FileText, Download, Send, Eye, Plus, Filter, Search, Check, X, Clock, Printer } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileText, Download, Send, Eye, Plus, Filter, Search, Check, X, Clock, Printer, RefreshCw } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 interface Invoice {
   id: string
@@ -33,41 +34,29 @@ export default function InvoiceManagementPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
 
-  const [invoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      invoiceNumber: 'INV-2024-001',
-      customerId: 'C001',
-      customerName: 'ABC Retail Store',
-      date: '2024-10-20',
-      dueDate: '2024-11-20',
-      amount: 5000.00,
-      tax: 750.00,
-      total: 5750.00,
-      status: 'sent',
-      paymentTerms: 'Net 30',
-      items: [
-        { id: '1', productName: 'Product A', description: 'Premium product', quantity: 50, price: 100, tax: 15, total: 5750 }
-      ],
-      notes: 'Thank you for your business'
-    },
-    {
-      id: '2',
-      invoiceNumber: 'INV-2024-002',
-      customerId: 'C002',
-      customerName: 'XYZ Wholesale',
-      date: '2024-10-18',
-      dueDate: '2024-10-18',
-      amount: 12000.00,
-      tax: 1800.00,
-      total: 13800.00,
-      status: 'overdue',
-      paymentTerms: 'Due on receipt',
-      items: [
-        { id: '1', productName: 'Product B', description: 'Bulk order', quantity: 200, price: 60, tax: 15, total: 13800 }
-      ]
+  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchInvoices()
+  }, [statusFilter])
+
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true)
+      const params: Record<string, string> = {}
+      if (statusFilter !== 'all') params.status = statusFilter
+      const qs = new URLSearchParams(params).toString()
+      const res = await apiClient.get(`/invoices${qs ? `?${qs}` : ''}`)
+      const data = res.data?.data || res.data
+      setInvoices(Array.isArray(data) ? data : data?.invoices || [])
+    } catch (error) {
+      console.error('Failed to fetch invoices:', error)
+      setInvoices([])
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {

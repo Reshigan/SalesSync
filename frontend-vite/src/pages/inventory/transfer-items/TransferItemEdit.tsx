@@ -23,14 +23,6 @@ export default function TransferItemEdit() {
     },
   })
 
-  const oldItem = {
-      id: itemId,
-      transfer_id: transferId,
-      product_name: 'Coca-Cola 500ml',
-      quantity_requested: 100,
-      notes: '',
-    }
-
   const { register, handleSubmit, formState: { errors } } = useForm<TransferItemFormData>({
     values: item,
   })

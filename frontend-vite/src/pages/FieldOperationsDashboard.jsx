@@ -8,7 +8,7 @@ import {
   Person, CheckCircle, Schedule, LocationOn, 
   TrendingUp, Assignment, Group
 } from '@mui/icons-material';
-import { apiClient } from '../config/api.config';
+import { apiClient } from '../services/api.service';
 
 export default function FieldOperationsDashboard() {
   const [tab, setTab] = useState(0);

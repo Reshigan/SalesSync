@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Paperclip, Download, Eye, Trash2 } from 'lucide-react'
-import { formatCurrency } from '../../../utils/currency'
+import { apiClient } from '../../../services/api.service'
 
 interface AttachmentPanelProps {
   entityType: string
@@ -10,32 +10,10 @@ interface AttachmentPanelProps {
 export default function AttachmentPanel({ entityType, entityId }: AttachmentPanelProps) {
   const { data: attachments, isLoading } = useQuery({
     queryKey: ['attachments', entityType, entityId],
-    queryFn: async () => [
-      {
-        id: '1',
-        file_name: 'invoice.pdf',
-        file_type: 'application/pdf',
-        file_size: 245000,
-        uploaded_by: 'John User',
-        uploaded_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '2',
-        file_name: 'receipt.jpg',
-        file_type: 'image/jpeg',
-        file_size: 180000,
-        uploaded_by: 'Jane User',
-        uploaded_at: '2024-01-20T11:00:00Z',
-      },
-      {
-        id: '3',
-        file_name: 'contract.docx',
-        file_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        file_size: 320000,
-        uploaded_by: 'Manager',
-        uploaded_at: '2024-01-20T12:00:00Z',
-      },
-    ],
+    queryFn: async () => {
+      const res = await apiClient.get(`/attachments?entity_type=${entityType}&entity_id=${entityId}`)
+      return res.data?.data || (Array.isArray(res.data) ? res.data : [])
+    },
   })
 
   const formatFileSize = (bytes: number) => {

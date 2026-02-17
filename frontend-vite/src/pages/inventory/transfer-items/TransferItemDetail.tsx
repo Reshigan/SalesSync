@@ -15,24 +15,6 @@ export default function TransferItemDetail() {
     },
   })
 
-  const oldItem = {
-      id: itemId,
-      transfer_id: transferId,
-      product_id: 'prod-1',
-      product_name: 'Coca-Cola 500ml',
-      product_sku: 'CC-500',
-      quantity_requested: 100,
-      quantity_shipped: 100,
-      quantity_received: 95,
-      variance: -5,
-      unit_cost: 15.00,
-      total_value: 1500.00,
-      status: 'received_with_variance',
-      shipped_at: '2024-01-20T08:00:00Z',
-      received_at: '2024-01-22T10:00:00Z',
-      variance_notes: '5 units damaged during transit',
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading transfer item...</div>
   }

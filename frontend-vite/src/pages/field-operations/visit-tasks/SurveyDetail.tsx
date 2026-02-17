@@ -15,23 +15,6 @@ export default function SurveyDetail() {
     },
   })
 
-  const oldSurvey = {
-      id: surveyId,
-      visit_id: visitId,
-      survey_title: 'Customer Satisfaction Survey',
-      survey_type: 'customer_feedback',
-      brand_name: 'Coca-Cola',
-      total_questions: 10,
-      questions_answered: 10,
-      completion_percentage: 100,
-      started_at: '2024-01-20T10:00:00Z',
-      completed_at: '2024-01-20T10:10:00Z',
-      duration_minutes: 10,
-      respondent_name: 'Store Manager',
-      respondent_role: 'Manager',
-      status: 'completed',
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading survey details...</div>
   }

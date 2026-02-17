@@ -15,24 +15,6 @@ export default function VisitTaskDetail() {
     },
   })
 
-  const oldTask = {
-      id: taskId,
-      visit_id: visitId,
-      task_type: 'board_placement',
-      task_title: 'Install promotional board',
-      description: 'Install new Coca-Cola promotional board at store entrance',
-      status: 'completed',
-      priority: 'high',
-      assigned_to: 'John Field Agent',
-      assigned_at: '2024-01-20T08:00:00Z',
-      started_at: '2024-01-20T09:15:00Z',
-      completed_at: '2024-01-20T09:45:00Z',
-      duration_minutes: 30,
-      notes: 'Board installed successfully, customer satisfied',
-      completion_photos: 2,
-      customer_signature: true,
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading task details...</div>
   }

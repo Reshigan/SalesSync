@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link2, Eye, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { apiClient } from '../../../services/api.service'
 
 interface RelatedDocumentsPanelProps {
   entityType: string
@@ -12,35 +13,10 @@ export default function RelatedDocumentsPanel({ entityType, entityId }: RelatedD
 
   const { data: relatedDocs, isLoading } = useQuery({
     queryKey: ['related-documents', entityType, entityId],
-    queryFn: async () => [
-      {
-        id: '1',
-        relationship_type: 'parent',
-        related_entity_type: 'order',
-        related_entity_id: 'order-1',
-        related_entity_number: 'ORD-2024-001',
-        related_entity_title: 'Customer Order',
-        created_at: '2024-01-20T09:00:00Z',
-      },
-      {
-        id: '2',
-        relationship_type: 'child',
-        related_entity_type: 'invoice',
-        related_entity_id: 'invoice-1',
-        related_entity_number: 'INV-2024-001',
-        related_entity_title: 'Invoice for Order',
-        created_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '3',
-        relationship_type: 'related',
-        related_entity_type: 'payment',
-        related_entity_id: 'payment-1',
-        related_entity_number: 'PAY-2024-001',
-        related_entity_title: 'Payment Received',
-        created_at: '2024-01-20T11:00:00Z',
-      },
-    ],
+    queryFn: async () => {
+      const res = await apiClient.get(`/document-relationships?entity_type=${entityType}&entity_id=${entityId}`)
+      return res.data?.data || (Array.isArray(res.data) ? res.data : [])
+    },
   })
 
   const getRelationshipBadge = (type: string) => {

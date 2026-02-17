@@ -3,7 +3,7 @@
  * Handles distribution of SIM cards, phones, and other products to individuals
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Package, Plus, Trash2, CheckCircle, ArrowRight, AlertCircle } from 'lucide-react';
 import { apiClient } from '../../services/api.service';
@@ -50,38 +50,28 @@ export default function ProductDistribution() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // Mock products
-  const products: Product[] = [
-    {
-      id: '1',
-      product_name: 'MTN SIM Card',
-      product_type: 'sim_card',
-      requires_id: true,
-      requires_serial: true,
-    },
-    {
-      id: '2',
-      product_name: 'Vodacom SIM Card',
-      product_type: 'sim_card',
-      requires_id: true,
-      requires_serial: true,
-    },
-    {
-      id: '3',
-      product_name: 'Samsung A04 Phone',
-      product_type: 'phone',
-      requires_id: true,
-      requires_serial: true,
-    },
-    {
-      id: '4',
-      product_name: 'Promotional Airtime',
-      product_type: 'other',
-      requires_id: false,
-      requires_serial: false,
-    },
-  ];
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await apiClient.get('/products?type=distributable');
+        const data = res.data?.data || res.data;
+        const items = Array.isArray(data) ? data : data?.products || [];
+        setProducts(items.map((p: any) => ({
+          id: p.id,
+          product_name: p.name || p.product_name,
+          product_type: p.product_type || 'other',
+          requires_id: p.requires_id ?? false,
+          requires_serial: p.requires_serial ?? false,
+        })));
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const [formData, setFormData] = useState({
     product_id: '',

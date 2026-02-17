@@ -15,47 +15,6 @@ export default function TransferItemTracking() {
     },
   })
 
-  const oldTracking = {
-      transfer_number: 'TRF-2024-001',
-      from_warehouse: 'Main Warehouse',
-      to_warehouse: 'Branch Warehouse',
-      current_status: 'received',
-      tracking_events: [
-        {
-          id: '1',
-          status: 'received',
-          location: 'Branch Warehouse',
-          timestamp: '2024-01-22T10:00:00Z',
-          notes: 'Received with 5 units damaged',
-          performed_by: 'Jane Receiver',
-        },
-        {
-          id: '2',
-          status: 'in_transit',
-          location: 'En route to Branch Warehouse',
-          timestamp: '2024-01-21T08:00:00Z',
-          notes: 'Departed distribution center',
-          performed_by: 'System',
-        },
-        {
-          id: '3',
-          status: 'shipped',
-          location: 'Main Warehouse',
-          timestamp: '2024-01-20T08:00:00Z',
-          notes: 'Loaded on vehicle VAN-001',
-          performed_by: 'John Shipper',
-        },
-        {
-          id: '4',
-          status: 'prepared',
-          location: 'Main Warehouse',
-          timestamp: '2024-01-19T14:00:00Z',
-          notes: 'Items picked and packed',
-          performed_by: 'Mike Picker',
-        },
-      ],
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading tracking information...</div>
   }

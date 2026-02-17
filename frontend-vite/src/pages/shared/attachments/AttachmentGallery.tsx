@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { Image, FileText, File } from 'lucide-react'
+import { apiClient } from '../../../services/api.service'
 
 interface AttachmentGalleryProps {
   entityType: string
@@ -12,40 +13,10 @@ export default function AttachmentGallery({ entityType, entityId }: AttachmentGa
 
   const { data: attachments, isLoading } = useQuery({
     queryKey: ['attachments-gallery', entityType, entityId],
-    queryFn: async () => [
-      {
-        id: '1',
-        file_name: 'product-photo-1.jpg',
-        file_type: 'image/jpeg',
-        file_url: '/placeholder-photo.jpg',
-        thumbnail_url: '/placeholder-photo.jpg',
-        uploaded_at: '2024-01-20T10:00:00Z',
-      },
-      {
-        id: '2',
-        file_name: 'product-photo-2.jpg',
-        file_type: 'image/jpeg',
-        file_url: '/placeholder-photo.jpg',
-        thumbnail_url: '/placeholder-photo.jpg',
-        uploaded_at: '2024-01-20T11:00:00Z',
-      },
-      {
-        id: '3',
-        file_name: 'invoice.pdf',
-        file_type: 'application/pdf',
-        file_url: '/placeholder-file.pdf',
-        thumbnail_url: null,
-        uploaded_at: '2024-01-20T12:00:00Z',
-      },
-      {
-        id: '4',
-        file_name: 'contract.docx',
-        file_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        file_url: '/placeholder-file.docx',
-        thumbnail_url: null,
-        uploaded_at: '2024-01-20T13:00:00Z',
-      },
-    ],
+    queryFn: async () => {
+      const res = await apiClient.get(`/attachments?entity_type=${entityType}&entity_id=${entityId}`)
+      return res.data?.data || (Array.isArray(res.data) ? res.data : [])
+    },
   })
 
   const getFileIcon = (fileType: string) => {
