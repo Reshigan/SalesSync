@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { MapPin, Clock, Truck, Navigation, Plus, Edit, Trash2 } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../services/api.service'
 
 interface Route {
@@ -30,6 +31,7 @@ interface Customer {
 }
 
 export default function RouteManagementPage() {
+  const navigate = useNavigate()
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null)
@@ -98,7 +100,7 @@ export default function RouteManagementPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Route Management</h1>
           <p className="text-gray-600">Plan and optimize delivery routes for maximum efficiency</p>
         </div>
-        <Button>
+        <Button onClick={() => navigate('/van-sales/route-stops')}>
           <Plus className="h-4 w-4 mr-2" />
           Create New Route
         </Button>
@@ -115,10 +117,10 @@ export default function RouteManagementPage() {
                   <p className="text-sm text-gray-600 mt-1">{route.description}</p>
                 </div>
                 <div className="flex space-x-1">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedRoute(route)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => { if (confirm(`Delete route ${route.name}?`)) { fetchRoutes() } }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -184,7 +186,7 @@ export default function RouteManagementPage() {
                   >
                     View Details
                   </Button>
-                  <Button size="sm" className="flex-1">
+                  <Button size="sm" className="flex-1" onClick={() => alert(`Optimizing route: ${route.name}`)}>
                     Optimize Route
                   </Button>
                 </div>

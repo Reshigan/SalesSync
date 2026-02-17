@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Ca
 import { Button } from '../../components/ui/Button'
 import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Filter } from 'lucide-react'
 import { formatCurrency } from '../../utils/currency'
+import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../services/api.service'
 
 interface InventoryItem {
@@ -21,6 +22,7 @@ interface InventoryItem {
 }
 
 export default function InventoryTrackingPage() {
+  const navigate = useNavigate()
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -99,7 +101,7 @@ export default function InventoryTrackingPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Inventory Tracking</h1>
           <p className="text-gray-600">Monitor stock levels across all vans</p>
         </div>
-        <Button>
+        <Button onClick={() => navigate('/van-sales/van-loads/create')}>
           <Package className="h-4 w-4 mr-2" />
           Restock Van
         </Button>
@@ -272,10 +274,10 @@ export default function InventoryTrackingPage() {
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate('/van-sales/van-loads/create')}>
                           Restock
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate('/inventory/transfers')}>
                           Transfer
                         </Button>
                       </div>
