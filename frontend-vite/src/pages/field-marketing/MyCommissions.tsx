@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Clock, CheckCircle, XCircle, FileText, Filter, Download, Calendar, MapPin, Camera, Package, Target } from 'lucide-react';
+import { apiClient } from '../../services/api.service';
 
 interface Commission {
   id: string;
@@ -19,63 +20,39 @@ const COMMISSION_TYPES = {
   new_customer: { label: 'New Customer', icon: CheckCircle, color: 'green' }
 };
 
-const MOCK_COMMISSIONS: Commission[] = [
-  {
-    id: 'COM-001',
-    type: 'board',
-    customerName: 'ABC Spaza Shop',
-    date: new Date('2025-10-20T14:32:00'),
-    amount: 150,
-    status: 'pending',
-    brandName: 'Coca-Cola',
-    details: 'Large Billboard - Coverage: 32%, Quality: 8/10'
-  },
-  {
-    id: 'COM-002',
-    type: 'product',
-    customerName: 'ABC Spaza Shop',
-    date: new Date('2025-10-20T15:10:00'),
-    amount: 250,
-    status: 'pending',
-    brandName: 'MTN',
-    details: 'MTN SIM Cards × 5'
-  },
-  {
-    id: 'COM-003',
-    type: 'board',
-    customerName: 'XYZ Mini Market',
-    date: new Date('2025-10-18T11:20:00'),
-    amount: 100,
-    status: 'approved',
-    brandName: 'Vodacom',
-    details: 'Standard Signage - Coverage: 25%, Quality: 9/10'
-  },
-  {
-    id: 'COM-004',
-    type: 'product',
-    customerName: 'Lucky Store',
-    date: new Date('2025-10-15T09:45:00'),
-    amount: 500,
-    status: 'paid',
-    brandName: 'Samsung',
-    details: 'Samsung Galaxy A14 × 1'
-  },
-  {
-    id: 'COM-005',
-    type: 'board',
-    customerName: 'Corner Shop',
-    date: new Date('2025-10-10T16:00:00'),
-    amount: 150,
-    status: 'rejected',
-    brandName: 'Coca-Cola',
-    details: 'Billboard - Coverage: 8%, Quality: 5/10',
-    rejectionReason: 'Coverage percentage below minimum threshold (15%). Please reposition board and resubmit.'
-  }
-];
-
 export default function MyCommissions() {
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'approved' | 'paid' | 'rejected'>('all');
-  const [commissions] = useState<Commission[]>(MOCK_COMMISSIONS);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCommissions();
+  }, [activeTab]);
+
+  const fetchCommissions = async () => {
+    try {
+      setLoading(true);
+      const params = activeTab !== 'all' ? `?status=${activeTab}` : '';
+      const res = await apiClient.get(`/commissions${params}`);
+      const raw = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.commissions || []);
+      const mapped = raw.map((c: any) => ({
+        id: c.id || c.commission_id,
+        type: c.type || c.commission_type || 'product',
+        customerName: c.customer_name || c.customerName || 'Unknown',
+        date: new Date(c.created_at || c.date || Date.now()),
+        amount: Number(c.commission_amount || c.amount || 0),
+        status: c.status || 'pending',
+        brandName: c.brand_name || c.brandName,
+        details: c.notes || c.details || '',
+        rejectionReason: c.rejection_reason || c.rejectionReason
+      }));
+      setCommissions(mapped);
+    } catch (err) {
+      console.error('Failed to fetch commissions:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
   const [selectedCommission, setSelectedCommission] = useState<Commission | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
