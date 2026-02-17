@@ -115,7 +115,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Product ID / Barcode */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Product ID / Barcode *</label>
             <div className="flex gap-2">
               <input
@@ -136,7 +136,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Availability Status */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Availability Status *</label>
             <div className="grid grid-cols-2 gap-2">
               {[
@@ -162,7 +162,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Facing Count */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Facing Count: {formData.facingCount}
             </label>
@@ -177,7 +177,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Shelf Position */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Shelf Position</label>
             <select
               value={formData.shelfPosition}
@@ -192,7 +192,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Pricing */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Pricing Information</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -231,7 +231,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Expiry Date */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-3">
               <label className="text-sm font-medium text-gray-700">Expiry Date</label>
               <label className="flex items-center">
@@ -255,7 +255,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Product Condition */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Product Condition</label>
             <div className="grid grid-cols-3 gap-2">
               {[
@@ -282,7 +282,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Photo */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">SKU Photo</label>
             {formData.skuPhoto ? (
               <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -301,7 +301,7 @@ const SKUAvailabilityCheckerPage: React.FC = () => {
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Notes</label>
             <textarea
               value={formData.notes}

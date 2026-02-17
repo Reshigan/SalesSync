@@ -18,7 +18,7 @@ export default function ProductPricing() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Product Pricing</h2>
         {currentPrice && (
-          <div className="mt-4 bg-white rounded-lg shadow p-6">
+          <div className="mt-4 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Current Price</p>
@@ -42,7 +42,7 @@ export default function ProductPricing() {
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">Pricing History</h3>
         </div>

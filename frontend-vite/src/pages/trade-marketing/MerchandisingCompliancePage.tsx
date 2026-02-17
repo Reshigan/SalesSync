@@ -30,25 +30,25 @@ export default function MerchandisingCompliancePage() {
       <div><h1 className="text-2xl font-bold text-gray-900">Merchandising Compliance</h1><p className="text-sm text-gray-600 mt-1">Monitor in-store compliance audits ({total} total)</p></div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Audits</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
             <AlertCircle className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Compliant</p><p className="text-2xl font-bold text-green-600">{audits.filter(a => a.compliance_status === 'compliant').length}</p></div>
             <CheckCircle className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Non-Compliant</p><p className="text-2xl font-bold text-red-600">{audits.filter(a => a.compliance_status === 'non_compliant').length}</p></div>
             <XCircle className="h-8 w-8 text-red-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Compliance Rate</p><p className="text-2xl font-bold text-gray-900">{audits.length > 0 ? ((audits.filter(a => a.compliance_status === 'compliant').length / audits.length) * 100).toFixed(1) : 0}%</p></div>
             <TrendingUp className="h-8 w-8 text-purple-500" />
@@ -56,8 +56,8 @@ export default function MerchandisingCompliancePage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <select value={filter.compliance_status} onChange={e => setFilter({...filter, compliance_status: e.target.value, page: 1})} className="border border-gray-300 rounded-lg px-3 py-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <select value={filter.compliance_status} onChange={e => setFilter({...filter, compliance_status: e.target.value, page: 1})} className="border border-gray-200 rounded-xl px-3 py-2">
           <option value="">All Statuses</option>
           <option value="compliant">Compliant</option>
           <option value="non_compliant">Non-Compliant</option>
@@ -65,7 +65,7 @@ export default function MerchandisingCompliancePage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -108,7 +108,7 @@ export default function MerchandisingCompliancePage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

@@ -20,9 +20,9 @@ export default function TradeMarketingAnalyticsPage() {
     <div className="p-6 space-y-6">
       <div><h1 className="text-2xl font-bold text-gray-900">Trade Marketing Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive trade marketing insights</p></div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
-        <select value={filter.period} onChange={e => setFilter({...filter, period: e.target.value})} className="border border-gray-300 rounded-lg px-3 py-2">
+        <select value={filter.period} onChange={e => setFilter({...filter, period: e.target.value})} className="border border-gray-200 rounded-xl px-3 py-2">
           <option value="week">This Week</option>
           <option value="month">This Month</option>
           <option value="quarter">This Quarter</option>
@@ -31,25 +31,25 @@ export default function TradeMarketingAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Campaigns</p><p className="text-2xl font-bold text-gray-900">{stats.total_campaigns || 0}</p></div>
             <Target className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Budget</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_budget || 0)}</p></div>
             <DollarSign className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Activations</p><p className="text-2xl font-bold text-gray-900">{stats.total_activations || 0}</p></div>
             <Calendar className="h-8 w-8 text-purple-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Reach</p><p className="text-2xl font-bold text-gray-900">{stats.total_reach || 0}</p></div>
             <Users className="h-8 w-8 text-orange-500" />
@@ -58,7 +58,7 @@ export default function TradeMarketingAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Campaign Performance</h2>
           <div className="space-y-4">
             <div>
@@ -91,7 +91,7 @@ export default function TradeMarketingAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Board Installations</h2>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -114,7 +114,7 @@ export default function TradeMarketingAnalyticsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Compliance & Quality</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 border border-gray-100 rounded-lg">
@@ -132,7 +132,7 @@ export default function TradeMarketingAnalyticsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Promoter Performance</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="p-4 border border-gray-100 rounded-lg">

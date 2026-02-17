@@ -28,6 +28,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-x-hidden max-w-[100vw]">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:top-2 focus:left-2">Skip to content</a>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -56,8 +57,8 @@ export default function DashboardLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
-        <main className="flex-1 pb-8 overflow-x-hidden">
-          <div className="w-full max-w-[100vw] mx-auto px-3 sm:px-4 lg:px-6 py-6">
+        <main id="main-content" className="flex-1 pb-8 overflow-x-hidden" role="main">
+          <div className="w-full max-w-[100vw] mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <Outlet />
           </div>
         </main>
@@ -73,7 +74,7 @@ export default function DashboardLayout() {
                 </a>
               </div>
               <div className="text-sm text-gray-500 text-center sm:text-right">
-                &copy; 2025 SalesSync by GONXT. All rights reserved.
+                &copy; {new Date().getFullYear()} SalesSync by GONXT. All rights reserved.
               </div>
             </div>
           </div>

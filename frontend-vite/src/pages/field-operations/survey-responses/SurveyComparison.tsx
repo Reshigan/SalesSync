@@ -38,7 +38,7 @@ export default function SurveyComparison() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Responses</h3>
           <div className="flex items-end gap-2 mb-2">
             <p className="text-3xl font-bold text-gray-900">{comparison.current_survey.responses}</p>
@@ -56,7 +56,7 @@ export default function SurveyComparison() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Satisfaction</h3>
           <div className="flex items-end gap-2 mb-2">
             <p className="text-3xl font-bold text-gray-900">{comparison.current_survey.satisfaction.toFixed(1)}</p>
@@ -74,7 +74,7 @@ export default function SurveyComparison() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">NPS Score</h3>
           <div className="flex items-end gap-2 mb-2">
             <p className="text-3xl font-bold text-gray-900">{comparison.current_survey.nps}</p>
@@ -93,7 +93,7 @@ export default function SurveyComparison() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Question-by-Question Comparison</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

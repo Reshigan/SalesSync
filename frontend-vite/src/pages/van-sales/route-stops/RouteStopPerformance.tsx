@@ -39,7 +39,7 @@ export default function RouteStopPerformance() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Completion Rate</h3>
@@ -50,7 +50,7 @@ export default function RouteStopPerformance() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Revenue</h3>
@@ -61,7 +61,7 @@ export default function RouteStopPerformance() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Clock className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Avg Duration</h3>
@@ -70,7 +70,7 @@ export default function RouteStopPerformance() {
           <p className="text-sm text-gray-600 mt-1">minutes per stop</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Clock className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">On-Time %</h3>
@@ -82,7 +82,7 @@ export default function RouteStopPerformance() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Stop Performance Details</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">

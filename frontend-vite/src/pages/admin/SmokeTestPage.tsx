@@ -275,19 +275,19 @@ export default function SmokeTestPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="text-2xl font-bold text-gray-900">{tests.length}</div>
           <div className="text-sm text-gray-600">Total Routes</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="text-2xl font-bold text-green-600">{successCount}</div>
           <div className="text-sm text-gray-600">Passed</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="text-2xl font-bold text-red-600">{errorCount}</div>
           <div className="text-sm text-gray-600">Failed</div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-2xl shadow-sm">
           <div className="text-2xl font-bold text-gray-400">{pendingCount}</div>
           <div className="text-sm text-gray-600">Pending</div>
         </div>
@@ -320,7 +320,7 @@ export default function SmokeTestPage() {
       </div>
 
       {/* Results Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

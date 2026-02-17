@@ -26,25 +26,25 @@ export default function FieldAgentDashboardPage() {
       <div><h1 className="text-2xl font-bold text-gray-900">Field Agent Dashboard</h1><p className="text-sm text-gray-600 mt-1">Today's visits and performance</p></div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Visits</p><p className="text-2xl font-bold text-gray-900">{visits.length}</p></div>
             <Calendar className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Pending</p><p className="text-2xl font-bold text-yellow-600">{pending.length}</p></div>
             <Clock className="h-8 w-8 text-yellow-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">In Progress</p><p className="text-2xl font-bold text-blue-600">{inProgress.length}</p></div>
             <MapPin className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Completed</p><p className="text-2xl font-bold text-green-600">{completed.length}</p></div>
             <CheckCircle className="h-8 w-8 text-green-500" />
@@ -53,7 +53,7 @@ export default function FieldAgentDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Today's Schedule</h2>
           <div className="space-y-3">
             {visits.length === 0 ? (
@@ -73,7 +73,7 @@ export default function FieldAgentDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Performance Metrics</h2>
           <div className="space-y-4">
             <div>

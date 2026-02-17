@@ -186,7 +186,7 @@ export default function PriceListEditPage() {
                 required
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -199,7 +199,7 @@ export default function PriceListEditPage() {
                 required
                 value={formData.code}
                 onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 placeholder="e.g., PL-2024-001"
               />
             </div>
@@ -212,7 +212,7 @@ export default function PriceListEditPage() {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -223,7 +223,7 @@ export default function PriceListEditPage() {
               <select
                 value={formData.customer_type}
                 onChange={(e) => setFormData({ ...formData, customer_type: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">All Types</option>
                 <option value="retail">Retail</option>
@@ -239,7 +239,7 @@ export default function PriceListEditPage() {
               <select
                 value={formData.channel}
                 onChange={(e) => setFormData({ ...formData, channel: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="">All Channels</option>
                 <option value="direct">Direct</option>
@@ -256,7 +256,7 @@ export default function PriceListEditPage() {
                 required
                 value={formData.currency}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
@@ -275,7 +275,7 @@ export default function PriceListEditPage() {
                 min="1"
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -288,7 +288,7 @@ export default function PriceListEditPage() {
                 required
                 value={formData.effective_start}
                 onChange={(e) => setFormData({ ...formData, effective_start: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -300,7 +300,7 @@ export default function PriceListEditPage() {
                 type="date"
                 value={formData.effective_end}
                 onChange={(e) => setFormData({ ...formData, effective_end: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
 
@@ -424,7 +424,7 @@ export default function PriceListEditPage() {
           <button
             type="button"
             onClick={() => navigate('/admin/price-lists')}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
           >
             Cancel
           </button>

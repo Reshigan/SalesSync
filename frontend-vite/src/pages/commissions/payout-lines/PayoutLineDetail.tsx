@@ -39,7 +39,7 @@ export default function PayoutLineDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Commission Amount</h3>
@@ -47,7 +47,7 @@ export default function PayoutLineDetail() {
           <p className="text-3xl font-bold text-gray-900">{formatCurrency(line.commission_amount)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Calendar className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Status</h3>
@@ -62,7 +62,7 @@ export default function PayoutLineDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Payout Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

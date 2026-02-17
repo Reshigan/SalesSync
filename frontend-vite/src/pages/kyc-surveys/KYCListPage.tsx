@@ -62,7 +62,7 @@ export const KYCListPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +76,7 @@ export const KYCListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
               <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@ export const KYCListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +108,7 @@ export const KYCListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-red-100 rounded-md p-3">
               <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +126,7 @@ export const KYCListPage: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <input
@@ -156,7 +156,7 @@ export const KYCListPage: React.FC = () => {
       </div>
 
       {/* KYC Records List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {records.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -256,7 +256,7 @@ export const KYCListPage: React.FC = () => {
 
       {/* Pagination */}
       {total > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-lg shadow">
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-2xl shadow-sm">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}

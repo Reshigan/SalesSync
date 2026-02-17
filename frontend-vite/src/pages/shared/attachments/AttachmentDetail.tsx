@@ -42,7 +42,7 @@ export default function AttachmentDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center mb-4">
               <Paperclip className="h-16 w-16 text-gray-400" />
             </div>
@@ -60,7 +60,7 @@ export default function AttachmentDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">File Information</h2>
             <dl className="space-y-3">
               <div>
@@ -89,14 +89,14 @@ export default function AttachmentDetail() {
           </div>
 
           {attachment.description && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Description</h2>
               <p className="text-sm text-gray-700">{attachment.description}</p>
             </div>
           )}
 
           {attachment.tags && attachment.tags.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-3">Tags</h2>
               <div className="flex flex-wrap gap-2">
                 {attachment.tags.map((tag, idx) => (

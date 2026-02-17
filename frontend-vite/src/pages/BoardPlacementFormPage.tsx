@@ -125,7 +125,7 @@ const BoardPlacementFormPage: React.FC = () => {
         <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Board Selection */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Select Board Type *
             </label>
@@ -164,7 +164,7 @@ const BoardPlacementFormPage: React.FC = () => {
           </div>
 
           {/* Photo Capture */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Placement Photo *
             </label>
@@ -205,7 +205,7 @@ const BoardPlacementFormPage: React.FC = () => {
           </div>
 
           {/* Coverage Percentage */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Storefront Coverage: {formData.coveragePercentage}%
             </label>
@@ -226,7 +226,7 @@ const BoardPlacementFormPage: React.FC = () => {
           </div>
 
           {/* Quality Score */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Installation Quality: {formData.qualityScore}/10
             </label>
@@ -246,7 +246,7 @@ const BoardPlacementFormPage: React.FC = () => {
           </div>
 
           {/* Visibility Score */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Visibility Score: {formData.visibilityScore}/10
             </label>
@@ -266,7 +266,7 @@ const BoardPlacementFormPage: React.FC = () => {
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Placement Notes (Optional)
             </label>
@@ -275,7 +275,7 @@ const BoardPlacementFormPage: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, placementNotes: e.target.value })}
               rows={4}
               placeholder="Any additional notes about the placement..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 

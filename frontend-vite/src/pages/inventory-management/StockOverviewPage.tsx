@@ -22,25 +22,25 @@ export default function StockOverviewPage() {
       <div><h1 className="text-2xl font-bold text-gray-900">Stock Overview</h1><p className="text-sm text-gray-600 mt-1">Monitor inventory levels across all warehouses</p></div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold text-gray-900">{stats.total_products || 0}</p></div>
             <Package className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Stock Value</p><p className="text-2xl font-bold text-green-600">{formatCurrency(stats.total_value || 0)}</p></div>
             <TrendingUp className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Low Stock Items</p><p className="text-2xl font-bold text-red-600">{stats.low_stock_count || 0}</p></div>
             <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Out of Stock</p><p className="text-2xl font-bold text-red-600">{stats.out_of_stock_count || 0}</p></div>
             <TrendingDown className="h-8 w-8 text-red-500" />
@@ -48,20 +48,20 @@ export default function StockOverviewPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse</label>
-            <input type="text" placeholder="Filter by warehouse" value={filter.warehouse_id} onChange={e => setFilter({...filter, warehouse_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" placeholder="Filter by warehouse" value={filter.warehouse_id} onChange={e => setFilter({...filter, warehouse_id: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-            <input type="text" placeholder="Filter by category" value={filter.category} onChange={e => setFilter({...filter, category: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" placeholder="Filter by category" value={filter.category} onChange={e => setFilter({...filter, category: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">

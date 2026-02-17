@@ -539,7 +539,7 @@ export default function PromotionsManagement() {
 
       {/* Bulk Actions */}
       {selectedPromotions.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg border p-4">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-2xl shadow-sm-lg border p-4">
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium text-gray-700">
               {selectedPromotions.length} selected

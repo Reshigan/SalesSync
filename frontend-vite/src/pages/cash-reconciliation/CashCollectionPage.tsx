@@ -73,7 +73,7 @@ export const CashCollectionPage: React.FC = () => {
       </div>
 
       {/* Summary Card */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Collected</p>
@@ -104,7 +104,7 @@ export const CashCollectionPage: React.FC = () => {
       {/* Collection Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="bg-white rounded-2xl shadow-sm-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Record Cash Collection</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -187,7 +187,7 @@ export const CashCollectionPage: React.FC = () => {
       )}
 
       {/* Collections List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {!collections || collections.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

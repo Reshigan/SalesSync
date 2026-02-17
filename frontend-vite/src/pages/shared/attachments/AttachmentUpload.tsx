@@ -57,7 +57,7 @@ export default function AttachmentUpload({ entityType, entityId }: AttachmentUpl
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload Attachments</h2>
 
       <div className="space-y-6">
@@ -79,7 +79,7 @@ export default function AttachmentUpload({ entityType, entityId }: AttachmentUpl
             />
             <label
               htmlFor="file-upload"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
+              className="inline-flex items-center px-4 py-2 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
             >
               Select Files
             </label>

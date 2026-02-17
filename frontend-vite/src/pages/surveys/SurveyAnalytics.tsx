@@ -36,7 +36,7 @@ export default function SurveyAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Responses</h3>
@@ -44,7 +44,7 @@ export default function SurveyAnalytics() {
           <p className="text-3xl font-bold text-gray-900">{analytics?.total_responses}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Completion Rate</h3>
@@ -52,7 +52,7 @@ export default function SurveyAnalytics() {
           <p className="text-3xl font-bold text-gray-900">{analytics?.completion_rate}%</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Star className="h-5 w-5 text-yellow-600" />
             <h3 className="font-semibold text-gray-900">Average Score</h3>
@@ -62,7 +62,7 @@ export default function SurveyAnalytics() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-4">
             <BarChart3 className="h-5 w-5 text-purple-600" />
             <h2 className="text-lg font-semibold text-gray-900">Score Distribution</h2>
@@ -85,7 +85,7 @@ export default function SurveyAnalytics() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Locations</h2>
           <div className="space-y-3">
             {analytics?.top_locations.map((item, idx) => (
@@ -100,7 +100,7 @@ export default function SurveyAnalytics() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 lg:col-span-2">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Response Trend</h2>
           <div className="flex items-end gap-2 h-48">
             {analytics?.response_trend.map((item) => (

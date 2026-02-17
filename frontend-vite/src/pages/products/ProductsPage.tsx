@@ -230,7 +230,7 @@ export default function ProductsPage() {
           <p className="mt-1 text-sm text-gray-600">Manage your product inventory and catalog</p>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Products</h3>
@@ -306,7 +306,7 @@ export default function ProductsPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div className="flex-1 max-w-lg">
             <div className="relative">
@@ -316,7 +316,7 @@ export default function ProductsPage() {
                 placeholder="Search products by name, code, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -333,7 +333,7 @@ export default function ProductsPage() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="name">Sort by Name</option>
               <option value="code">Sort by Code</option>
@@ -360,7 +360,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">All Categories</option>
                   {categories.map(category => (
@@ -374,7 +374,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedBrand}
                   onChange={(e) => setSelectedBrand(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">All Brands</option>
                   {brands.map(brand => (
@@ -388,7 +388,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">All Status</option>
                   <option value="active">Active</option>
@@ -402,7 +402,7 @@ export default function ProductsPage() {
                 <select
                   value={stockFilter}
                   onChange={(e) => setStockFilter(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 >
                   <option value="">All Stock Levels</option>
                   <option value="in">In Stock</option>
@@ -416,7 +416,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Products Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">

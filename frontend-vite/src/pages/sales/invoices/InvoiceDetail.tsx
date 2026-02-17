@@ -50,14 +50,14 @@ export default function InvoiceDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(invoice.total_amount || invoice.totalAmount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><CreditCard className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Amount Paid</p><p className="text-xl font-bold">{formatCurrency(invoice.amount_paid || invoice.amountPaid || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance Due</p><p className="text-xl font-bold">{formatCurrency(invoice.balance_due || invoice.balanceDue || (invoice.total_amount || 0) - (invoice.amount_paid || 0))}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Due Date</p><p className="text-xl font-bold">{formatDate(invoice.due_date || invoice.dueDate) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(invoice.total_amount || invoice.totalAmount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><CreditCard className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Amount Paid</p><p className="text-xl font-bold">{formatCurrency(invoice.amount_paid || invoice.amountPaid || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance Due</p><p className="text-xl font-bold">{formatCurrency(invoice.balance_due || invoice.balanceDue || (invoice.total_amount || 0) - (invoice.amount_paid || 0))}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Due Date</p><p className="text-xl font-bold">{formatDate(invoice.due_date || invoice.dueDate) || 'N/A'}</p></div></div></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Invoice Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Invoice Number', invoice.invoice_number], ['Invoice Date', formatDate(invoice.invoice_date)], ['Due Date', formatDate(invoice.due_date)], ['Order Number', invoice.order_number], ['Payment Terms', invoice.payment_terms], ['Reference', invoice.reference], ['Created By', invoice.created_by], ['Created At', formatDate(invoice.created_at)]].map(([label, value]) => (
@@ -65,7 +65,7 @@ export default function InvoiceDetail() {
             ))}
           </dl>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Customer', invoice.customer_name], ['Customer Code', invoice.customer_code], ['Email', invoice.customer_email], ['Phone', invoice.customer_phone], ['Address', invoice.billing_address], ['Tax ID', invoice.tax_id]].map(([label, value]) => (
@@ -75,7 +75,7 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Package className="h-5 w-5" />Line Items</h2>
         {items.length > 0 ? (
           <div className="overflow-x-auto">
@@ -88,7 +88,7 @@ export default function InvoiceDetail() {
         ) : <p className="text-gray-500 text-center py-8">No line items</p>}
       </div>
 
-      {invoice.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{invoice.notes}</p></div>}
+      {invoice.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{invoice.notes}</p></div>}
     </div>
   )
 }

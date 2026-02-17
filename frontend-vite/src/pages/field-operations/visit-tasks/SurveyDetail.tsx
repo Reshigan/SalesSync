@@ -38,7 +38,7 @@ export default function SurveyDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <FileText className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Questions</h3>
@@ -46,7 +46,7 @@ export default function SurveyDetail() {
           <p className="text-3xl font-bold text-gray-900">{survey.total_questions}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Answered</h3>
@@ -54,7 +54,7 @@ export default function SurveyDetail() {
           <p className="text-3xl font-bold text-green-600">{survey.questions_answered}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Completion</h3>
@@ -62,7 +62,7 @@ export default function SurveyDetail() {
           <p className="text-3xl font-bold text-gray-900">{survey.completion_percentage}%</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Clock className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Duration</h3>
@@ -72,7 +72,7 @@ export default function SurveyDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Survey Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -104,7 +104,7 @@ export default function SurveyDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Respondent Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -118,7 +118,7 @@ export default function SurveyDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Timing</h2>
         <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>

@@ -121,12 +121,12 @@ export default function MyCommissions() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center px-3 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
               >
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </button>
-              <button className="flex items-center px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className="flex items-center px-3 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </button>
@@ -182,7 +182,7 @@ export default function MyCommissions() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
+        <div className="bg-white rounded-2xl shadow-sm mb-6">
           <div className="border-b border-gray-100">
             <div className="flex overflow-x-auto">
               {[
@@ -271,7 +271,7 @@ export default function MyCommissions() {
         </div>
 
         {/* Payment History */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-2xl shadow-sm">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <FileText className="w-5 h-5 mr-2" />
@@ -329,7 +329,7 @@ export default function MyCommissions() {
       {/* Commission Detail Modal */}
       {selectedCommission && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-sm-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Commission Details</h2>
               <button

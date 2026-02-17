@@ -36,25 +36,25 @@ export default function StockTransferPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Transfers</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
             <TrendingRight className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Pending</p><p className="text-2xl font-bold text-yellow-600">{transfers.filter(t => t.status === 'pending').length}</p></div>
             <Clock className="h-8 w-8 text-yellow-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">In Transit</p><p className="text-2xl font-bold text-blue-600">{transfers.filter(t => t.status === 'in_transit').length}</p></div>
             <TrendingRight className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Completed</p><p className="text-2xl font-bold text-green-600">{transfers.filter(t => t.status === 'completed').length}</p></div>
             <CheckCircle className="h-8 w-8 text-green-500" />
@@ -62,8 +62,8 @@ export default function StockTransferPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-300 rounded-lg px-3 py-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-200 rounded-xl px-3 py-2">
           <option value="">All Statuses</option>
           <option value="pending">Pending</option>
           <option value="in_transit">In Transit</option>
@@ -72,7 +72,7 @@ export default function StockTransferPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -110,7 +110,7 @@ export default function StockTransferPage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

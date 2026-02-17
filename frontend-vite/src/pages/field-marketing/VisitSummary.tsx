@@ -163,7 +163,7 @@ export default function VisitSummary() {
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-2">
               <Clock className="w-5 h-5 text-gray-400" />
             </div>
@@ -171,7 +171,7 @@ export default function VisitSummary() {
             <p className="text-sm text-gray-500">Minutes</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-2">
               <MapPin className="w-5 h-5 text-green-500" />
               {visitData.gpsVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
@@ -182,7 +182,7 @@ export default function VisitSummary() {
             <p className="text-sm text-gray-500">GPS Distance</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-2">
               <Target className="w-5 h-5 text-blue-500" />
             </div>
@@ -192,7 +192,7 @@ export default function VisitSummary() {
             <p className="text-sm text-gray-500">Activities</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-2">
               <DollarSign className="w-5 h-5 text-green-500" />
             </div>
@@ -204,7 +204,7 @@ export default function VisitSummary() {
         </div>
 
         {/* Surveys Summary */}
-        <div className="bg-white rounded-lg shadow mb-4">
+        <div className="bg-white rounded-2xl shadow-sm mb-4">
           <button
             onClick={() => toggleSection('surveys')}
             className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
@@ -251,7 +251,7 @@ export default function VisitSummary() {
 
         {/* Boards Placed */}
         {visitData.boards.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-4">
+          <div className="bg-white rounded-2xl shadow-sm mb-4">
             <button
               onClick={() => toggleSection('boards')}
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
@@ -310,7 +310,7 @@ export default function VisitSummary() {
 
         {/* Products Distributed */}
         {visitData.products.length > 0 && (
-          <div className="bg-white rounded-lg shadow mb-4">
+          <div className="bg-white rounded-2xl shadow-sm mb-4">
             <button
               onClick={() => toggleSection('products')}
               className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
@@ -351,7 +351,7 @@ export default function VisitSummary() {
         )}
 
         {/* Additional Actions */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h3 className="font-semibold text-gray-900 mb-4">Additional Actions (Optional)</h3>
 
           <div className="space-y-4">
@@ -365,7 +365,7 @@ export default function VisitSummary() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                 placeholder="Add any observations, issues, or special notes about this visit..."
               />
             </div>
@@ -395,14 +395,14 @@ export default function VisitSummary() {
                 value={nextVisitDate}
                 onChange={(e) => setNextVisitDate(e.target.value)}
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
 
         {/* Total Commission Highlight */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-sm-lg p-6 mb-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm opacity-90 mb-1">Total Commissions Earned (Pending Approval)</p>

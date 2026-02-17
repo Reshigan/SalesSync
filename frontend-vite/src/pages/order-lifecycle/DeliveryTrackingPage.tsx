@@ -78,7 +78,7 @@ export const DeliveryTrackingPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-indigo-100 rounded-md p-3">
               <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -94,7 +94,7 @@ export const DeliveryTrackingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -110,7 +110,7 @@ export const DeliveryTrackingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
               <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,7 +126,7 @@ export const DeliveryTrackingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -144,7 +144,7 @@ export const DeliveryTrackingPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex flex-wrap gap-2">
           {['all', 'shipped', 'in_transit', 'out_for_delivery', 'delivered'].map((status) => (
             <button
@@ -165,7 +165,7 @@ export const DeliveryTrackingPage: React.FC = () => {
       {/* Deliveries List */}
       <div className="space-y-4">
         {deliveries.length === 0 ? (
-          <div className="bg-white rounded-lg shadow text-center py-12">
+          <div className="bg-white rounded-2xl shadow-sm text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
@@ -174,7 +174,7 @@ export const DeliveryTrackingPage: React.FC = () => {
           </div>
         ) : (
           deliveries.map((delivery) => (
-            <div key={delivery.id} className="bg-white rounded-lg shadow p-6">
+            <div key={delivery.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-4">
@@ -260,7 +260,7 @@ export const DeliveryTrackingPage: React.FC = () => {
 
       {/* Pagination */}
       {total > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-lg shadow">
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-2xl shadow-sm">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}

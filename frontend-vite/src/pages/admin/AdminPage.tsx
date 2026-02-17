@@ -168,7 +168,7 @@ export default function AdminPage() {
       </div>
 
       {/* System Health */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg shadow-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-sm-lg p-6 text-white">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold mb-2">System Status</h2>
@@ -196,7 +196,7 @@ export default function AdminPage() {
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow cursor-pointer"
              onClick={() => navigate('/admin/users')}>
           <div className="flex items-center justify-between">
             <div>
@@ -212,7 +212,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow cursor-pointer"
              onClick={() => navigate('/customers')}>
           <div className="flex items-center justify-between">
             <div>
@@ -226,7 +226,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow cursor-pointer"
              onClick={() => navigate('/orders')}>
           <div className="flex items-center justify-between">
             <div>
@@ -242,7 +242,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow cursor-pointer"
              onClick={() => navigate('/products')}>
           <div className="flex items-center justify-between">
             <div>
@@ -259,7 +259,7 @@ export default function AdminPage() {
 
       {/* Field Operations Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <MapPin className="w-5 h-5 mr-2 text-indigo-600" />
             Field Operations Today
@@ -276,7 +276,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
             Revenue Overview
@@ -301,7 +301,7 @@ export default function AdminPage() {
       {/* Quick Actions & Recent Activity */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -364,7 +364,7 @@ export default function AdminPage() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
             <Clock className="w-5 h-5 text-gray-400" />
@@ -398,7 +398,7 @@ export default function AdminPage() {
       </div>
 
       {/* System Resources */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <Server className="w-5 h-5 mr-2 text-gray-600" />
           System Resources

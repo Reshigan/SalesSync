@@ -35,7 +35,7 @@ export default function AuditEntryDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="font-semibold text-gray-900 mb-4">Change Details</h3>
           <dl className="space-y-3">
             <div>
@@ -70,7 +70,7 @@ export default function AuditEntryDetail() {
           </dl>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="font-semibold text-gray-900 mb-4">User Information</h3>
           <div className="flex items-start gap-3 mb-4">
             <User className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -90,7 +90,7 @@ export default function AuditEntryDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">System Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -113,7 +113,7 @@ export default function AuditEntryDetail() {
       </div>
 
       {entry.location && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
           <div className="flex items-start gap-3">
             <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -128,14 +128,14 @@ export default function AuditEntryDetail() {
       )}
 
       {entry.notes && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Notes</h2>
           <p className="text-sm text-gray-700">{entry.notes}</p>
         </div>
       )}
 
       {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Metadata</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(entry.metadata).map(([key, value]) => (

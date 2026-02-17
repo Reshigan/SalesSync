@@ -28,25 +28,25 @@ export default function StockCountDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Total Items</p>
           <p className="text-2xl font-bold text-gray-900">{items.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Matched</p>
           <p className="text-2xl font-bold text-green-600">{items.filter(i => i.variance === 0).length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Variances</p>
           <p className="text-2xl font-bold text-red-600">{variances.length}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Status</p>
           <p className="text-lg font-bold text-gray-900">{count.status.replace('_', ' ').toUpperCase()}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Count Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex justify-between items-center">
@@ -78,7 +78,7 @@ export default function StockCountDetailsPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Count Items</h2>
         </div>
@@ -121,7 +121,7 @@ export default function StockCountDetailsPage() {
       </div>
 
       {count.notes && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Notes</h2>
           <p className="text-sm text-gray-700">{count.notes}</p>
         </div>

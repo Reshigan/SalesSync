@@ -43,13 +43,13 @@ export default function TransferDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{(xfer.items||[]).length}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><MapPin className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">From</p><p className="text-xl font-bold">{xfer.from_warehouse || xfer.source || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><MapPin className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">To</p><p className="text-xl font-bold">{xfer.to_warehouse || xfer.destination || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(xfer.transfer_date || xfer.date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{(xfer.items||[]).length}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><MapPin className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">From</p><p className="text-xl font-bold">{xfer.from_warehouse || xfer.source || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><MapPin className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">To</p><p className="text-xl font-bold">{xfer.to_warehouse || xfer.destination || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(xfer.transfer_date || xfer.date) || 'N/A'}</p></div></div></div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Transfer Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div><dt className="text-sm text-gray-500">ID</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{xfer.id || '-'}</dd></div>
@@ -62,7 +62,7 @@ export default function TransferDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Package className="h-5 w-5" />Line Items</h2>
         {items.length > 0 ? (
           <div className="overflow-x-auto">
@@ -76,7 +76,7 @@ export default function TransferDetail() {
         ) : <p className="text-gray-500 text-center py-8">No items</p>}
       </div>
 
-      {xfer.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{xfer.notes}</p></div>}
+      {xfer.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{xfer.notes}</p></div>}
     </div>
   )
 }

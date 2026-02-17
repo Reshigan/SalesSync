@@ -23,14 +23,14 @@ export default function OrderDelivery() {
       {isLoading ? (
         <div className="p-8 text-center text-gray-500">Loading delivery information...</div>
       ) : !delivery.id ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">
           <Truck className="h-12 w-12 mx-auto mb-4 text-gray-400" />
           <p>No delivery information available for this order.</p>
         </div>
       ) : (
         <div className="space-y-6">
           {/* Delivery Status Card */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -59,7 +59,7 @@ export default function OrderDelivery() {
           </div>
 
           {/* Delivery Details */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Details</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -89,7 +89,7 @@ export default function OrderDelivery() {
 
           {/* Delivery Timeline */}
           {timeline.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Timeline</h3>
               <div className="space-y-4">
                 {timeline.map((event: any, index: number) => (

@@ -46,29 +46,29 @@ const CommissionsAnalytics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total Commissions</h3>
           <p className="text-3xl font-bold text-blue-600">{formatCurrency(data.kpis.total_commissions)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Pending</h3>
           <p className="text-3xl font-bold text-orange-600">{formatCurrency(data.kpis.pending_commissions)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Approved</h3>
           <p className="text-3xl font-bold text-purple-600">{formatCurrency(data.kpis.approved_commissions)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Paid</h3>
           <p className="text-3xl font-bold text-green-600">{formatCurrency(data.kpis.paid_commissions)}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Commission Status Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.time_series}>
@@ -84,7 +84,7 @@ const CommissionsAnalytics: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Top Earning Agents</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -111,7 +111,7 @@ const CommissionsAnalytics: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold mb-4">Commissions by Type</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {data.by_type.map((type: any, idx: number) => (

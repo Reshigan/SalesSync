@@ -258,7 +258,7 @@ export default function OrderCreatePage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save as Draft
           </button>
           <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
@@ -269,14 +269,14 @@ export default function OrderCreatePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <User className="w-5 h-5" /> Customer Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={selectedCustomer} onChange={(e) => setSelectedCustomer(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="">Select a customer</option>
                   {customers.map((customer) => (
                     <option key={customer.id} value={customer.id}>{customer.name} ({customer.code})</option>
@@ -285,11 +285,11 @@ export default function OrderCreatePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Order Date</label>
-                <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="date" value={orderDate} onChange={(e) => setOrderDate(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="cash">Cash</option>
                   <option value="credit">Credit</option>
                   <option value="mobile_money">Mobile Money</option>
@@ -298,18 +298,18 @@ export default function OrderCreatePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order notes..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Order notes..." className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <Package className="w-5 h-5" /> Order Items
               </h3>
               <div className="flex gap-2">
-                <button onClick={recalculateFromServer} disabled={calculating} className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-1">
+                <button onClick={recalculateFromServer} disabled={calculating} className="px-3 py-1.5 text-sm border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-1">
                   <Calculator className="w-4 h-4" /> {calculating ? 'Calculating...' : 'Recalculate'}
                 </button>
                 <button onClick={addLineItem} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
@@ -342,7 +342,7 @@ export default function OrderCreatePage() {
                     {lineItems.map((item, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
-                          <select value={item.product_id} onChange={(e) => updateLineItem(index, 'product_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                          <select value={item.product_id} onChange={(e) => updateLineItem(index, 'product_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm">
                             <option value="">Select product</option>
                             {products.map((product) => (
                               <option key={product.id} value={product.id}>{product.name} - R {(product.selling_price || product.price || 0).toFixed(2)}</option>
@@ -350,13 +350,13 @@ export default function OrderCreatePage() {
                           </select>
                         </td>
                         <td className="px-4 py-3">
-                          <input type="number" min="1" value={item.quantity} onChange={(e) => updateLineItem(index, 'quantity', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                          <input type="number" min="1" value={item.quantity} onChange={(e) => updateLineItem(index, 'quantity', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                         </td>
                         <td className="px-4 py-3">
-                          <input type="number" min="0" step="0.01" value={item.unit_price} onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" />
+                          <input type="number" min="0" step="0.01" value={item.unit_price} onChange={(e) => updateLineItem(index, 'unit_price', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded text-right focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm" />
                         </td>
                         <td className="px-4 py-3">
-                          <select value={item.discount_id} onChange={(e) => updateLineItem(index, 'discount_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                          <select value={item.discount_id} onChange={(e) => updateLineItem(index, 'discount_id', e.target.value)} className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm">
                             <option value="">No discount</option>
                             {discounts.map((discount) => (
                               <option key={discount.id} value={discount.id}>{discount.name} ({discount.value}%)</option>
@@ -378,7 +378,7 @@ export default function OrderCreatePage() {
         </div>
 
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Calculator className="w-5 h-5" /> Order Summary
             </h3>
@@ -425,7 +425,7 @@ export default function OrderCreatePage() {
             )}
 
             <div className="mt-6 space-y-3">
-              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">

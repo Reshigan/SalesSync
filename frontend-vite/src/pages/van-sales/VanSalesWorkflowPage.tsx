@@ -327,7 +327,7 @@ const VanSalesWorkflowPage: React.FC = () => {
               placeholder="Search customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl mb-3"
             />
             <div className="space-y-3">
               {filteredCustomers.map((customer) => (
@@ -386,7 +386,7 @@ const VanSalesWorkflowPage: React.FC = () => {
               placeholder="Search products..."
               value={productSearchTerm}
               onChange={(e) => setProductSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl mb-3"
             />
 
             {orderItems.length > 0 && (
@@ -516,7 +516,7 @@ const VanSalesWorkflowPage: React.FC = () => {
                       type="number"
                       value={cashReceived}
                       onChange={(e) => setCashReceived(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                       placeholder="0.00"
                     />
                   </div>

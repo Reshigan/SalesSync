@@ -19,7 +19,7 @@ export default function ProductSales() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Product Sales History</h2>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <ShoppingCart className="h-8 w-8 text-blue-600" />
               <div>
@@ -28,7 +28,7 @@ export default function ProductSales() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-600" />
               <div>
@@ -37,7 +37,7 @@ export default function ProductSales() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-purple-600" />
               <div>
@@ -46,7 +46,7 @@ export default function ProductSales() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <Calendar className="h-8 w-8 text-orange-600" />
               <div>
@@ -58,7 +58,7 @@ export default function ProductSales() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">Recent Sales</h3>
         </div>

@@ -37,7 +37,7 @@ export default function AuditTrailSearch({ entityType, entityId }: AuditTrailSea
   })
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Search Audit Trail</h2>
       
       <div className="relative mb-6">
@@ -47,7 +47,7 @@ export default function AuditTrailSearch({ entityType, entityId }: AuditTrailSea
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search audit trail..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
       </div>
 

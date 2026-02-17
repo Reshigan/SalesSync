@@ -281,7 +281,7 @@ const VisitManagement: React.FC = () => {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
@@ -292,7 +292,7 @@ const VisitManagement: React.FC = () => {
                 placeholder="Search visits..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -302,7 +302,7 @@ const VisitManagement: React.FC = () => {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="planned">Planned</option>
@@ -317,7 +317,7 @@ const VisitManagement: React.FC = () => {
             <select
               value={filterAgent}
               onChange={(e) => setFilterAgent(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Agents</option>
               {agents.map(agent => (
@@ -333,7 +333,7 @@ const VisitManagement: React.FC = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Types</option>
               <option value="routine">Routine</option>
@@ -349,14 +349,14 @@ const VisitManagement: React.FC = () => {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
               placeholder="From"
             />
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
               placeholder="To"
             />
           </div>
@@ -364,7 +364,7 @@ const VisitManagement: React.FC = () => {
       </div>
 
       {/* Visit List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -475,7 +475,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.agent_id}
                       onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Agent</option>
                       {agents.map(agent => (
@@ -495,7 +495,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.customer_id}
                       onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Customer</option>
                       {customers.map(customer => (
@@ -516,7 +516,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.visit_date}
                       onChange={(e) => setFormData({ ...formData, visit_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -529,7 +529,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.visit_type}
                       onChange={(e) => setFormData({ ...formData, visit_type: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="routine">Routine</option>
                       <option value="follow_up">Follow Up</option>
@@ -550,7 +550,7 @@ const VisitManagement: React.FC = () => {
                     value={formData.purpose}
                     onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     placeholder="Describe the purpose of this visit..."
                   />
                 </div>
@@ -560,7 +560,7 @@ const VisitManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowCreateModal(false); resetForm(); }}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50"
                   >
                     Cancel
                   </button>
@@ -592,7 +592,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.agent_id}
                       onChange={(e) => setFormData({ ...formData, agent_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Agent</option>
                       {agents.map(agent => (
@@ -609,7 +609,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.customer_id}
                       onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Customer</option>
                       {customers.map(customer => (
@@ -627,7 +627,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.visit_date}
                       onChange={(e) => setFormData({ ...formData, visit_date: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -637,7 +637,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.visit_type}
                       onChange={(e) => setFormData({ ...formData, visit_type: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="routine">Routine</option>
                       <option value="follow_up">Follow Up</option>
@@ -654,7 +654,7 @@ const VisitManagement: React.FC = () => {
                       required
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="planned">Planned</option>
                       <option value="in_progress">In Progress</option>
@@ -670,7 +670,7 @@ const VisitManagement: React.FC = () => {
                     value={formData.purpose}
                     onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -678,7 +678,7 @@ const VisitManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => { setShowEditModal(false); setSelectedVisit(null); resetForm(); }}
-                    className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50"
                   >
                     Cancel
                   </button>

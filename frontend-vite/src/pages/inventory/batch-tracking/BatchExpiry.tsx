@@ -75,7 +75,7 @@ export default function BatchExpiry() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Current Stock</h3>
@@ -84,7 +84,7 @@ export default function BatchExpiry() {
           <p className="text-sm text-gray-600 mt-1">units remaining</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Allocated</h3>
@@ -93,7 +93,7 @@ export default function BatchExpiry() {
           <p className="text-sm text-gray-600 mt-1">units allocated</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">At Risk Value</h3>
@@ -104,7 +104,7 @@ export default function BatchExpiry() {
       </div>
 
       {expiryInfo.recommendations && expiryInfo.recommendations.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</h2>
           <div className="space-y-4">
             {expiryInfo.recommendations.map((rec, idx) => (
@@ -120,7 +120,7 @@ export default function BatchExpiry() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Expiry Alerts History</h2>
         <div className="space-y-4">
           {expiryInfo.expiry_alerts.map((alert) => (

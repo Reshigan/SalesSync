@@ -357,7 +357,7 @@ const StockCountWorkflowPage: React.FC = () => {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-2 mb-4 border border-gray-200 rounded-xl"
             />
 
             <div className="space-y-3">

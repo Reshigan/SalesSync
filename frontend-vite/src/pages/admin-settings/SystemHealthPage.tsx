@@ -94,7 +94,7 @@ export const SystemHealthPage: React.FC = () => {
       </div>
 
       {/* Overall Status */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-medium text-gray-900">Overall System Status</h2>
@@ -115,7 +115,7 @@ export const SystemHealthPage: React.FC = () => {
       </div>
 
       {/* Performance Metrics */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Performance Metrics</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {healthData.metrics.map((metric, index) => (
@@ -151,7 +151,7 @@ export const SystemHealthPage: React.FC = () => {
       </div>
 
       {/* Services Status */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-medium text-gray-900">Services</h2>
         </div>
@@ -181,7 +181,7 @@ export const SystemHealthPage: React.FC = () => {
       </div>
 
       {/* Recent Incidents */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Recent Incidents</h2>
         {healthData.recent_incidents.length === 0 ? (
           <div className="text-center py-8">
@@ -214,7 +214,7 @@ export const SystemHealthPage: React.FC = () => {
       </div>
 
       {/* System Information */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">System Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

@@ -37,12 +37,12 @@ export default function RouteOrders() {
         <p className="text-gray-600">{route?.route_name}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <p className="text-sm text-gray-600">Total Orders Value</p>
         <p className="text-2xl font-bold text-gray-900">{formatCurrency(total)}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

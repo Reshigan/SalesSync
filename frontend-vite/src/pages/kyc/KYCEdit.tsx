@@ -61,7 +61,7 @@ export default function KYCEdit() {
         <h1 className="text-2xl font-bold text-gray-900">Edit KYC Information</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Information</h3>

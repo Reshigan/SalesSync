@@ -46,7 +46,7 @@ export default function PhotoTimeline() {
                 </div>
               </div>
 
-              <div className="flex-1 bg-white rounded-lg shadow p-6">
+              <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-start gap-4">
                   <img
                     src={photo.photo_url}

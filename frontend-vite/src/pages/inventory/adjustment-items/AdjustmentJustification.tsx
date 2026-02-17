@@ -37,7 +37,7 @@ export default function AdjustmentJustification() {
         <p className="text-gray-600">{item.product_name} ({item.product_sku})</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Adjustment Summary</h2>
         <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -61,12 +61,12 @@ export default function AdjustmentJustification() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Justification</h2>
         <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.justification}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Created By</h2>
         <div className="flex items-start gap-3">
           <User className="h-5 w-5 text-gray-400 mt-0.5" />
@@ -107,7 +107,7 @@ export default function AdjustmentJustification() {
       )}
 
       {item.supporting_documents && item.supporting_documents.length > 0 && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Supporting Documents</h2>
           <div className="space-y-3">
             {item.supporting_documents.map((doc) => (

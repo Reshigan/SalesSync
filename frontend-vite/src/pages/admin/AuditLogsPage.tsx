@@ -210,14 +210,14 @@ export default function AuditLogsPage() {
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <select
             value={filterAction}
             onChange={(e) => setFilterAction(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Actions</option>
             <option value="CREATE">Create</option>
@@ -230,7 +230,7 @@ export default function AuditLogsPage() {
           <select
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">All Entities</option>
             <option value="User">Users</option>
@@ -243,7 +243,7 @@ export default function AuditLogsPage() {
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="today">Today</option>
             <option value="7days">Last 7 Days</option>
@@ -339,16 +339,16 @@ export default function AuditLogsPage() {
             Showing {filteredLogs.length} of {logs.length} logs
           </p>
           <div className="flex gap-2">
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">
               Previous
             </button>
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
               1
             </button>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">
               2
             </button>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">
               Next
             </button>
           </div>

@@ -78,7 +78,7 @@ export const CloseCashSessionPage: React.FC = () => {
       </div>
 
       {/* Session Summary */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Session Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
@@ -112,7 +112,7 @@ export const CloseCashSessionPage: React.FC = () => {
       </div>
 
       {/* Closing Form */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Close Session</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Closing Cash */}

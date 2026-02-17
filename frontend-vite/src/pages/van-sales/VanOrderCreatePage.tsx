@@ -61,28 +61,28 @@ export default function VanOrderCreatePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
           <h2 className="text-lg font-bold text-gray-900">Order Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
-              <input type="text" required value={formData.customer_id} onChange={e => setFormData({...formData, customer_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              <input type="text" required value={formData.customer_id} onChange={e => setFormData({...formData, customer_id: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-              <input type="text" required value={formData.customer_name} onChange={e => setFormData({...formData, customer_name: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              <input type="text" required value={formData.customer_name} onChange={e => setFormData({...formData, customer_name: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Van ID</label>
-              <input type="text" required value={formData.van_id} onChange={e => setFormData({...formData, van_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              <input type="text" required value={formData.van_id} onChange={e => setFormData({...formData, van_id: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Route ID</label>
-              <input type="text" required value={formData.route_id} onChange={e => setFormData({...formData, route_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+              <input type="text" required value={formData.route_id} onChange={e => setFormData({...formData, route_id: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value as any})} className="w-full border border-gray-300 rounded-lg px-3 py-2">
+              <select value={formData.payment_method} onChange={e => setFormData({...formData, payment_method: e.target.value as any})} className="w-full border border-gray-200 rounded-xl px-3 py-2">
                 <option value="cash">Cash</option>
                 <option value="credit">Credit</option>
                 <option value="mobile_money">Mobile Money</option>
@@ -91,7 +91,7 @@ export default function VanOrderCreatePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-bold text-gray-900">Order Items</h2>
             <button type="button" onClick={addItem} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center space-x-1 text-sm">
@@ -116,7 +116,7 @@ export default function VanOrderCreatePage() {
           )}
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex justify-between items-center">
             <span className="text-lg font-bold text-gray-900">Total Amount</span>
             <span className="text-2xl font-bold text-green-600">R {totalAmount.toFixed(2)}</span>
@@ -124,7 +124,7 @@ export default function VanOrderCreatePage() {
         </div>
 
         <div className="flex justify-end space-x-3">
-          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+          <button type="button" onClick={() => window.history.back()} className="px-6 py-2 border border-gray-200 rounded-xl hover:bg-gray-50">Cancel</button>
           <button type="submit" disabled={createMutation.isPending} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
             {createMutation.isPending ? 'Creating...' : 'Create Order'}
           </button>

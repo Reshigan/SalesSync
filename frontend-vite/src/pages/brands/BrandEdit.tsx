@@ -57,7 +57,7 @@ export default function BrandEdit() {
         <h1 className="text-2xl font-bold text-gray-900">Edit Brand</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -66,7 +66,7 @@ export default function BrandEdit() {
             <input
               type="text"
               {...register('name', { required: 'Brand name is required' })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name.message as string}</p>
@@ -80,7 +80,7 @@ export default function BrandEdit() {
             <input
               type="text"
               {...register('code')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -91,7 +91,7 @@ export default function BrandEdit() {
             <textarea
               {...register('description')}
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
 
@@ -101,7 +101,7 @@ export default function BrandEdit() {
             </label>
             <select
               {...register('status')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>

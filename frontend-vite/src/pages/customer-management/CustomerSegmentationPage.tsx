@@ -53,7 +53,7 @@ export const CustomerSegmentationPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,7 +67,7 @@ export const CustomerSegmentationPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,7 +83,7 @@ export const CustomerSegmentationPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
               <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,7 +99,7 @@ export const CustomerSegmentationPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-indigo-100 rounded-md p-3">
               <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,7 +121,7 @@ export const CustomerSegmentationPage: React.FC = () => {
       {/* Segments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {segments.length === 0 ? (
-          <div className="col-span-full bg-white rounded-lg shadow text-center py-12">
+          <div className="col-span-full bg-white rounded-2xl shadow-sm text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
@@ -135,7 +135,7 @@ export const CustomerSegmentationPage: React.FC = () => {
           segments.map((segment) => (
             <div
               key={segment.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer"
+              className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => setSelectedSegment(segment)}
             >
               <div className="p-6">
@@ -170,7 +170,7 @@ export const CustomerSegmentationPage: React.FC = () => {
       {/* Segment Details Modal */}
       {selectedSegment && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+          <div className="bg-white rounded-2xl shadow-sm-xl max-w-2xl w-full p-6">
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h3 className="text-lg font-medium text-gray-900">{selectedSegment.name}</h3>

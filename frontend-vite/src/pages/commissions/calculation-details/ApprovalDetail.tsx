@@ -48,7 +48,7 @@ export default function ApprovalDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Approval Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -99,7 +99,7 @@ export default function ApprovalDetail() {
       </div>
 
       {approval.approval_notes && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Approval Notes</h2>
           <p className="text-sm text-gray-700">{approval.approval_notes}</p>
         </div>

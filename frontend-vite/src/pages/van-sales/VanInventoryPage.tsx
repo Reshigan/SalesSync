@@ -16,18 +16,18 @@ export default function VanInventoryPage() {
   return (
     <div className="p-6 space-y-6">
       <div><h1 className="text-2xl font-bold text-gray-900">Van Inventory</h1><p className="text-sm text-gray-600 mt-1">Monitor van stock levels</p></div>
-      <div className="bg-white rounded-lg shadow p-4"><label className="block text-sm font-medium text-gray-700 mb-2">Select Van</label><input type="text" placeholder="Enter Van ID" value={selectedVanId} onChange={e => setSelectedVanId(e.target.value)} className="border rounded-lg px-3 py-2 w-full max-w-md" /></div>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><label className="block text-sm font-medium text-gray-700 mb-2">Select Van</label><input type="text" placeholder="Enter Van ID" value={selectedVanId} onChange={e => setSelectedVanId(e.target.value)} className="border rounded-lg px-3 py-2 w-full max-w-md" /></div>
       
       {inventory && inventory.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold">{inventory.length}</p></div><Package className="h-8 w-8 text-blue-500" /></div></div>
-          <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Stock</p><p className="text-2xl font-bold">{inventory.reduce((s,i) => s+i.current_stock,0)}</p></div><TrendingUp className="h-8 w-8 text-green-500" /></div></div>
-          <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Sold Today</p><p className="text-2xl font-bold text-green-600">{inventory.reduce((s,i) => s+i.sold_stock,0)}</p></div><TrendingDown className="h-8 w-8 text-red-500" /></div></div>
-          <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Value</p><p className="text-2xl font-bold">{formatCurrency(inventory.reduce((s,i) => s+i.total_value,0))}</p></div><Package className="h-8 w-8 text-purple-500" /></div></div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold">{inventory.length}</p></div><Package className="h-8 w-8 text-blue-500" /></div></div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Stock</p><p className="text-2xl font-bold">{inventory.reduce((s,i) => s+i.current_stock,0)}</p></div><TrendingUp className="h-8 w-8 text-green-500" /></div></div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Sold Today</p><p className="text-2xl font-bold text-green-600">{inventory.reduce((s,i) => s+i.sold_stock,0)}</p></div><TrendingDown className="h-8 w-8 text-red-500" /></div></div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Value</p><p className="text-2xl font-bold">{formatCurrency(inventory.reduce((s,i) => s+i.total_value,0))}</p></div><Package className="h-8 w-8 text-purple-500" /></div></div>
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         {!selectedVanId ? <div className="p-12 text-center text-gray-500"><Package className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>Select a van to view inventory</p></div>
         : isLoading ? <div className="p-12 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p className="mt-4 text-gray-600">Loading...</p></div>
         : error ? <div className="p-12 text-center text-red-600"><AlertCircle className="h-12 w-12 mx-auto mb-2" /><p>Failed to load</p></div>

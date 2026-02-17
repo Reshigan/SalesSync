@@ -25,12 +25,12 @@ export default function SurveyDetail() {
         <button onClick={() => navigate(`/surveys/${id}/edit`)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Edit className="h-4 w-4" />Edit</button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><ClipboardList className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Questions</p><p className="text-xl font-bold">{questions.length}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><BarChart3 className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Responses</p><p className="text-xl font-bold">{survey.response_count || survey.total_responses || 0}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Created</p><p className="text-xl font-bold">{formatDate(survey.created_at) || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><FileText className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Type</p><p className="text-xl font-bold">{survey.survey_type || survey.type || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><ClipboardList className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Questions</p><p className="text-xl font-bold">{questions.length}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><BarChart3 className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Responses</p><p className="text-xl font-bold">{survey.response_count || survey.total_responses || 0}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Created</p><p className="text-xl font-bold">{formatDate(survey.created_at) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><FileText className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Type</p><p className="text-xl font-bold">{survey.survey_type || survey.type || 'N/A'}</p></div></div></div>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Survey Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[['Survey Name', survey.survey_name || survey.title], ['Type', survey.survey_type || survey.type], ['Scope', survey.survey_scope || survey.scope], ['Brand', survey.brand_name], ['Start Date', formatDate(survey.start_date)], ['End Date', formatDate(survey.end_date)], ['Created By', survey.created_by], ['Created At', formatDate(survey.created_at)]].map(([l, v]) => (
@@ -38,13 +38,13 @@ export default function SurveyDetail() {
           ))}
         </dl>
       </div>
-      {questions.length > 0 && <div className="bg-white rounded-lg shadow p-6">
+      {questions.length > 0 && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Questions</h2>
         <div className="space-y-3">{questions.map((q: any, i: number) => (
           <div key={q.id || i} className="p-4 bg-gray-50 rounded-lg"><div className="flex items-start gap-3"><span className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">{i + 1}</span><div><p className="font-medium text-gray-900">{q.question_text || q.question}</p><p className="text-sm text-gray-500 mt-1">Type: {q.question_type || q.type || 'text'} {q.required ? '(Required)' : ''}</p></div></div></div>
         ))}</div>
       </div>}
-      {survey.description && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Description</h2><p className="text-gray-700">{survey.description}</p></div>}
+      {survey.description && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Description</h2><p className="text-gray-700">{survey.description}</p></div>}
     </div>
   )
 }

@@ -62,7 +62,7 @@ export const SurveyListPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -76,7 +76,7 @@ export const SurveyListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,7 +92,7 @@ export const SurveyListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
               <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +108,7 @@ export const SurveyListPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-indigo-100 rounded-md p-3">
               <svg className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -128,7 +128,7 @@ export const SurveyListPage: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <input
@@ -160,7 +160,7 @@ export const SurveyListPage: React.FC = () => {
       {/* Surveys Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {surveys.length === 0 ? (
-          <div className="col-span-full bg-white rounded-lg shadow text-center py-12">
+          <div className="col-span-full bg-white rounded-2xl shadow-sm text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
@@ -169,7 +169,7 @@ export const SurveyListPage: React.FC = () => {
           </div>
         ) : (
           surveys.map((survey) => (
-            <div key={survey.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+            <div key={survey.id} className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-shadow">
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -239,7 +239,7 @@ export const SurveyListPage: React.FC = () => {
 
       {/* Pagination */}
       {total > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-lg shadow">
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-100 sm:px-6 rounded-2xl shadow-sm">
           <div className="flex-1 flex justify-between sm:hidden">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}

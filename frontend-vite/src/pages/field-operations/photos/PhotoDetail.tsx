@@ -39,7 +39,7 @@ export default function PhotoDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <img
               src={photo.photo_url}
               alt={photo.caption}
@@ -52,7 +52,7 @@ export default function PhotoDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Photo Information</h2>
             <dl className="space-y-3">
               <div>
@@ -78,7 +78,7 @@ export default function PhotoDetail() {
             </dl>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Location</h2>
             <dl className="space-y-3">
               <div>
@@ -97,7 +97,7 @@ export default function PhotoDetail() {
             </dl>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Metadata</h2>
             <dl className="space-y-3">
               <div>

@@ -40,7 +40,7 @@ export default function CountLineDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Expected</h3>
@@ -49,7 +49,7 @@ export default function CountLineDetail() {
           <p className="text-sm text-gray-600 mt-1">{line.product_sku}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Counted</h3>
@@ -60,7 +60,7 @@ export default function CountLineDetail() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className={`h-5 w-5 ${hasVariance ? 'text-red-600' : 'text-green-600'}`} />
             <h3 className="font-semibold text-gray-900">Variance</h3>
@@ -74,7 +74,7 @@ export default function CountLineDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -122,7 +122,7 @@ export default function CountLineDetail() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Count Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -151,7 +151,7 @@ export default function CountLineDetail() {
       </div>
 
       {line.notes && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Notes</h2>
           <p className="text-sm text-gray-700">{line.notes}</p>
         </div>

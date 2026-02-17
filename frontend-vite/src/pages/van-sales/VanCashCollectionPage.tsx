@@ -19,15 +19,15 @@ export default function VanCashCollectionPage() {
     <div className="p-6 space-y-6">
       <div><h1 className="text-2xl font-bold text-gray-900">Van Cash Collection</h1><p className="text-sm text-gray-600 mt-1">Track cash collections from van sales</p></div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Van ID</label>
-            <input type="text" placeholder="Enter Van ID" value={filter.van_id} onChange={e => setFilter({...filter, van_id: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" placeholder="Enter Van ID" value={filter.van_id} onChange={e => setFilter({...filter, van_id: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <input type="date" value={filter.date} onChange={e => setFilter({...filter, date: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="date" value={filter.date} onChange={e => setFilter({...filter, date: e.target.value})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
         </div>
       </div>
@@ -35,19 +35,19 @@ export default function VanCashCollectionPage() {
       {filter.van_id && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div><p className="text-sm text-gray-600">Total Collections</p><p className="text-2xl font-bold text-gray-900">{collections.length}</p></div>
                 <Calendar className="h-8 w-8 text-blue-500" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div><p className="text-sm text-gray-600">Total Cash</p><p className="text-2xl font-bold text-green-600">{formatCurrency(totalCash)}</p></div>
                 <DollarSign className="h-8 w-8 text-green-500" />
               </div>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div><p className="text-sm text-gray-600">Average Collection</p><p className="text-2xl font-bold text-gray-900">{collections.length > 0 ? formatCurrency(totalCash / collections.length) : 'R 0.00'}</p></div>
                 <TrendingUp className="h-8 w-8 text-purple-500" />
@@ -55,7 +55,7 @@ export default function VanCashCollectionPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
             {isLoading ? (
               <div className="p-12 text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div><p className="mt-4 text-gray-600">Loading...</p></div>
             ) : error ? (

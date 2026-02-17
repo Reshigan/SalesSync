@@ -112,7 +112,7 @@ function OverviewTab() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Boards</p>
@@ -122,7 +122,7 @@ function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Installations</p>
@@ -132,7 +132,7 @@ function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Distributions</p>
@@ -142,7 +142,7 @@ function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Commissions</p>
@@ -154,7 +154,7 @@ function OverviewTab() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white p-6 rounded-2xl shadow-sm">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
@@ -218,11 +218,11 @@ function ProductsTab() {
         <span className="text-sm text-gray-500">{products.length} records</span>
       </div>
       {products.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No product distributions found</div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">No product distributions found</div>
       ) : (
         <div className="space-y-3">
           {products.map((p: any, i: number) => (
-            <div key={p.id || i} className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+            <div key={p.id || i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
               <div>
                 <p className="font-medium text-gray-900">{p.product_name || p.name || 'Product'}</p>
                 <p className="text-sm text-gray-500">Qty: {p.quantity || 0} | {p.status || 'distributed'}</p>
@@ -260,11 +260,11 @@ function InstallationsTab() {
         <span className="text-sm text-gray-500">{installations.length} records</span>
       </div>
       {installations.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No board installations found</div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-500">No board installations found</div>
       ) : (
         <div className="space-y-3">
           {installations.map((inst: any, i: number) => (
-            <div key={inst.id || i} className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+            <div key={inst.id || i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center justify-between">
               <div>
                 <p className="font-medium text-gray-900">{inst.board_name || inst.location || 'Installation'}</p>
                 <p className="text-sm text-gray-500">{inst.customer_name || ''} | {inst.installed_at || inst.created_at || ''}</p>

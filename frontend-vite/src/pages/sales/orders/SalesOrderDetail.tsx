@@ -53,14 +53,14 @@ export default function SalesOrderDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(order.total_amount || order.totalAmount || order.order_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Order Date</p><p className="text-xl font-bold">{formatDate(order.order_date || order.orderDate || order.created_at)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Delivery Date</p><p className="text-xl font-bold">{formatDate(order.delivery_date || order.deliveryDate) || 'TBD'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(order.total_amount || order.totalAmount || order.order_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Order Date</p><p className="text-xl font-bold">{formatDate(order.order_date || order.orderDate || order.created_at)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Delivery Date</p><p className="text-xl font-bold">{formatDate(order.delivery_date || order.deliveryDate) || 'TBD'}</p></div></div></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Order Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[
@@ -80,7 +80,7 @@ export default function SalesOrderDetail() {
           </dl>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer Information</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[
@@ -99,7 +99,7 @@ export default function SalesOrderDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Package className="h-5 w-5" />Order Items</h2>
         {items.length > 0 ? (
           <div className="overflow-x-auto">
@@ -145,7 +145,7 @@ export default function SalesOrderDetail() {
       </div>
 
       {order.notes && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-2">Notes</h2>
           <p className="text-gray-700 whitespace-pre-wrap">{order.notes}</p>
         </div>

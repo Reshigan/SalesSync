@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Menu, Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { useAuthStore } from '../../store/auth.store'
 import MegaMenu from './MegaMenu'
@@ -11,6 +11,17 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuthStore()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setShowUserMenu(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -59,7 +70,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right side */}
         <div className="ml-4 flex items-center md:ml-6">
           {/* Notifications */}
-          <div className="relative">
+          <div className="relative" ref={notifRef}>
             <button
               type="button"
               className="relative p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
@@ -105,26 +116,23 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </div>
 
           {/* Profile dropdown */}
-          <div className="ml-3 relative">
-            <div>
-              <button
-                type="button"
-                className="flex items-center space-x-3 p-1.5 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
-                onClick={() => setShowUserMenu(!showUserMenu)}
-              >
-                <div className="h-9 w-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
-                  <span className="text-sm font-semibold text-white">
-                    {user?.first_name?.[0]}{user?.last_name?.[0]}
-                  </span>
-                </div>
-                <div className="hidden md:block text-left">
-                  <div className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</div>
-                  <div className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</div>
-                </div>
-              </button>
-            </div>
+          <div className="ml-3 relative" ref={userMenuRef}>
+            <button
+              type="button"
+              className="flex items-center space-x-3 p-1.5 rounded-xl hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+            >
+              <div className="h-9 w-9 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
+                <span className="text-sm font-semibold text-white">
+                  {user?.first_name?.[0]}{user?.last_name?.[0]}
+                </span>
+              </div>
+              <div className="hidden md:block text-left">
+                <div className="text-sm font-medium text-gray-900">{user?.first_name} {user?.last_name}</div>
+                <div className="text-xs text-gray-500 capitalize">{user?.role || 'User'}</div>
+              </div>
+            </button>
 
-            {/* User menu dropdown */}
             {showUserMenu && (
               <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-2xl shadow-dropdown bg-white border border-gray-100 focus:outline-none overflow-hidden">
                 <div className="py-1">
@@ -132,19 +140,16 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     <div className="font-medium">{user?.first_name} {user?.last_name}</div>
                     <div className="text-gray-500">{user?.email}</div>
                   </div>
-                  
                   <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     <User className="mr-3 h-4 w-4" />
                     Profile Settings
                   </button>
-                  
                   <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     <Settings className="mr-3 h-4 w-4" />
                     Preferences
                   </button>
-                  
                   <div className="border-t border-gray-100">
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >

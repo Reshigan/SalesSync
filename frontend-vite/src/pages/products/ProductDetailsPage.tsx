@@ -271,7 +271,7 @@ export default function ProductDetailsPage() {
                     type="text"
                     value={editForm.name || ''}
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   />
                 </div>
                 <div>
@@ -280,7 +280,7 @@ export default function ProductDetailsPage() {
                     value={editForm.description || ''}
                     onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -290,7 +290,7 @@ export default function ProductDetailsPage() {
                       type="text"
                       value={editForm.category || ''}
                       onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                   <div>
@@ -299,7 +299,7 @@ export default function ProductDetailsPage() {
                       type="text"
                       value={editForm.brand || ''}
                       onChange={(e) => setEditForm({ ...editForm, brand: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                 </div>

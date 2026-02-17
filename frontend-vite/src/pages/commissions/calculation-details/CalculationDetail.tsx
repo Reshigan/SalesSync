@@ -54,7 +54,7 @@ export default function CalculationDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Sales</h3>
@@ -62,7 +62,7 @@ export default function CalculationDetail() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(calculation.total_sales)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Calculator className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Base Commission</h3>
@@ -71,7 +71,7 @@ export default function CalculationDetail() {
           <p className="text-sm text-gray-600 mt-1">{calculation.commission_rate}% rate</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Bonuses</h3>
@@ -79,7 +79,7 @@ export default function CalculationDetail() {
           <p className="text-2xl font-bold text-purple-600">{formatCurrency(calculation.bonuses)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Final Commission</h3>
@@ -88,7 +88,7 @@ export default function CalculationDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Commission Breakdown</h2>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
@@ -114,7 +114,7 @@ export default function CalculationDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Calculation Summary</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -149,7 +149,7 @@ export default function CalculationDetail() {
       </div>
 
       {calculation.status === 'approved' && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Approval Information</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

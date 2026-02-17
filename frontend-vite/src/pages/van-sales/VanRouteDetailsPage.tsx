@@ -36,19 +36,19 @@ export default function VanRouteDetailsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Van ID</p>
           <p className="text-lg font-bold text-gray-900">#{route.van_id?.substring(0, 8)}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Driver ID</p>
           <p className="text-lg font-bold text-gray-900">#{route.driver_id?.substring(0, 8)}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Route Date</p>
           <p className="text-lg font-bold text-gray-900">{new Date(route.route_date).toLocaleDateString()}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Progress</p>
           <p className="text-lg font-bold text-gray-900">{route.completed_stops}/{route.planned_stops} stops</p>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -57,7 +57,7 @@ export default function VanRouteDetailsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Route Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -87,7 +87,7 @@ export default function VanRouteDetailsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Route Stops</h2>
         <div className="space-y-3">
           {Array.from({ length: route.planned_stops }).map((_, idx) => (

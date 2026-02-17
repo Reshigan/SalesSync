@@ -40,13 +40,13 @@ export default function PaymentDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(payment.amount || payment.payment_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><CreditCard className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Method</p><p className="text-xl font-bold">{payment.payment_method || payment.method || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Payment Date</p><p className="text-xl font-bold">{formatDate(payment.payment_date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(payment.amount || payment.payment_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><CreditCard className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Method</p><p className="text-xl font-bold">{payment.payment_method || payment.method || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Payment Date</p><p className="text-xl font-bold">{formatDate(payment.payment_date) || 'N/A'}</p></div></div></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Payment Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Payment Number', payment.payment_number], ['Payment Date', formatDate(payment.payment_date)], ['Amount', formatCurrency(payment.amount || payment.payment_amount)], ['Method', payment.payment_method || payment.method], ['Reference', payment.reference || payment.transaction_ref], ['Invoice Number', payment.invoice_number], ['Receipt Number', payment.receipt_number], ['Bank', payment.bank_name], ['Created By', payment.created_by], ['Created At', formatDate(payment.created_at)]].map(([label, value]) => (
@@ -54,7 +54,7 @@ export default function PaymentDetail() {
             ))}
           </dl>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Customer', payment.customer_name], ['Customer Code', payment.customer_code], ['Email', payment.customer_email], ['Phone', payment.customer_phone]].map(([label, value]) => (
@@ -63,7 +63,7 @@ export default function PaymentDetail() {
           </dl>
         </div>
       </div>
-      {payment.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{payment.notes}</p></div>}
+      {payment.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{payment.notes}</p></div>}
     </div>
   )
 }

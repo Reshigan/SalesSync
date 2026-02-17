@@ -60,7 +60,7 @@ export const IntegrationsPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
               <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -74,7 +74,7 @@ export const IntegrationsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
               <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,7 +90,7 @@ export const IntegrationsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-purple-100 rounded-md p-3">
               <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -107,7 +107,7 @@ export const IntegrationsPage: React.FC = () => {
 
       {/* Integrations by Category */}
       {categories.map((category) => (
-        <div key={category} className="bg-white rounded-lg shadow">
+        <div key={category} className="bg-white rounded-2xl shadow-sm">
           <div className="px-6 py-4 border-b border-gray-100">
             <h2 className="text-lg font-medium text-gray-900">{category}</h2>
           </div>
@@ -171,7 +171,7 @@ export const IntegrationsPage: React.FC = () => {
       ))}
 
       {/* API Keys Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">API Keys</h2>
         <p className="text-sm text-gray-500 mb-4">
           Use these API keys to integrate SalesSync with custom applications
@@ -220,7 +220,7 @@ export const IntegrationsPage: React.FC = () => {
       </div>
 
       {/* Webhooks Section */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Webhooks</h2>
         <p className="text-sm text-gray-500 mb-4">
           Configure webhooks to receive real-time notifications about events in your account

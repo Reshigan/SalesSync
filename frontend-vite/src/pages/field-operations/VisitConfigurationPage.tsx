@@ -120,7 +120,7 @@ export default function VisitConfigurationPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -299,7 +299,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
               required
               value={formData.name}
               onChange={e => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2"
             />
           </div>
 
@@ -308,7 +308,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             <textarea
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2"
               rows={2}
             />
           </div>
@@ -320,7 +320,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                 required
                 value={formData.target_type}
                 onChange={e => setFormData({ ...formData, target_type: e.target.value as any })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2"
               >
                 <option value="all">All Customers</option>
                 <option value="brand">Specific Brand</option>
@@ -335,7 +335,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                   required
                   value={formData.brand_id}
                   onChange={e => setFormData({ ...formData, brand_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2"
                 >
                   <option value="">Select Brand</option>
                   {brands.map(brand => (
@@ -352,7 +352,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                   required
                   value={formData.customer_type}
                   onChange={e => setFormData({ ...formData, customer_type: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2"
                 >
                   <option value="">Select Type</option>
                   <option value="spaza">Spaza Shop</option>
@@ -372,7 +372,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                 required
                 value={formData.valid_from}
                 onChange={e => setFormData({ ...formData, valid_from: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2"
               />
             </div>
             <div>
@@ -382,7 +382,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                 required
                 value={formData.valid_to}
                 onChange={e => setFormData({ ...formData, valid_to: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2"
               />
             </div>
           </div>
@@ -395,7 +395,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                 <select
                   value={formData.survey_id}
                   onChange={e => setFormData({ ...formData, survey_id: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2"
                 >
                   <option value="">No Survey</option>
                   {surveys.map(survey => (
@@ -436,7 +436,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
                     <select
                       value={formData.board_id}
                       onChange={e => setFormData({ ...formData, board_id: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2"
                     >
                       <option value="">Any Board</option>
                       {boards.map(board => (
@@ -483,7 +483,7 @@ function ConfigurationModal({ config, brands, surveys, boards, onClose, onSucces
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>

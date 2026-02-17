@@ -58,19 +58,19 @@ const FieldMarketingAgentPage: React.FC = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Today's Visits</div>
             <div className="text-2xl font-bold text-blue-600">{stats.todayVisits}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">This Week</div>
             <div className="text-2xl font-bold text-green-600">{stats.weekVisits}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Commission (Approved)</div>
             <div className="text-2xl font-bold text-purple-600">${commissions.totals?.approved || 0}</div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Boards Placed</div>
             <div className="text-2xl font-bold text-orange-600">{stats.boardsPlaced}</div>
           </div>
@@ -80,7 +80,7 @@ const FieldMarketingAgentPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <button
             onClick={startNewVisit}
-            className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-blue-700 transition"
           >
             <div className="text-lg font-bold mb-2">🎯 Start New Visit</div>
             <div className="text-sm opacity-90">GPS validation & customer selection</div>
@@ -88,7 +88,7 @@ const FieldMarketingAgentPage: React.FC = () => {
           
           <button
             onClick={() => navigate('/field-marketing/visits')}
-            className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition"
+            className="bg-green-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-green-700 transition"
           >
             <div className="text-lg font-bold mb-2">📋 My Visits</div>
             <div className="text-sm opacity-90">View visit history & details</div>
@@ -96,7 +96,7 @@ const FieldMarketingAgentPage: React.FC = () => {
           
           <button
             onClick={() => navigate('/field-marketing/commissions')}
-            className="bg-purple-600 text-white p-6 rounded-lg shadow-lg hover:bg-purple-700 transition"
+            className="bg-purple-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-purple-700 transition"
           >
             <div className="text-lg font-bold mb-2">💰 Commissions</div>
             <div className="text-sm opacity-90">Track your earnings</div>
@@ -104,7 +104,7 @@ const FieldMarketingAgentPage: React.FC = () => {
         </div>
 
         {/* Recent Visits */}
-        <div className="bg-white rounded-lg shadow mb-6">
+        <div className="bg-white rounded-2xl shadow-sm mb-6">
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">Recent Visits</h2>
           </div>
@@ -146,7 +146,7 @@ const FieldMarketingAgentPage: React.FC = () => {
         </div>
 
         {/* Commission Summary */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-2xl shadow-sm">
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">Commission Summary</h2>
           </div>

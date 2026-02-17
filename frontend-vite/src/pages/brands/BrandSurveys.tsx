@@ -42,7 +42,7 @@ export default function BrandSurveys() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500">Loading surveys...</div>
         ) : surveys.length === 0 ? (

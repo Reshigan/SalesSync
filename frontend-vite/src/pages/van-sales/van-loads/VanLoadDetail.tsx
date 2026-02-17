@@ -43,12 +43,12 @@ export default function VanLoadDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Vehicle</p><p className="text-xl font-bold">{vl.vehicle_name || vl.vehicle || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{(vl.items||[]).length}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(vl.load_date || vl.date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Truck className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Vehicle</p><p className="text-xl font-bold">{vl.vehicle_name || vl.vehicle || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{(vl.items||[]).length}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(vl.load_date || vl.date) || 'N/A'}</p></div></div></div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Van Load Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div><dt className="text-sm text-gray-500">Load Number</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{vl.load_number || '-'}</dd></div>
@@ -61,7 +61,7 @@ export default function VanLoadDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Package className="h-5 w-5" />Line Items</h2>
         {items.length > 0 ? (
           <div className="overflow-x-auto">
@@ -75,7 +75,7 @@ export default function VanLoadDetail() {
         ) : <p className="text-gray-500 text-center py-8">No items</p>}
       </div>
 
-      {vl.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{vl.notes}</p></div>}
+      {vl.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{vl.notes}</p></div>}
     </div>
   )
 }

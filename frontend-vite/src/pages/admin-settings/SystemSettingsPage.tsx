@@ -89,7 +89,7 @@ export const SystemSettingsPage: React.FC = () => {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         <div className="border-b border-gray-100">
           <nav className="flex -mb-px">
             {tabs.map((tab) => (

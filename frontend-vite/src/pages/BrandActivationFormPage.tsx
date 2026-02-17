@@ -212,7 +212,7 @@ const BrandActivationFormPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="w-full">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -234,7 +234,7 @@ const BrandActivationFormPage: React.FC = () => {
           {/* Main Form - Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Event Details */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Event Details</h2>
               
               <div className="space-y-4">
@@ -247,7 +247,7 @@ const BrandActivationFormPage: React.FC = () => {
                     value={formData.eventName || ''}
                     onChange={(e) => handleInputChange('eventName', e.target.value)}
                     placeholder="e.g., Summer Product Launch"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                     required
                   />
                 </div>
@@ -259,7 +259,7 @@ const BrandActivationFormPage: React.FC = () => {
                   <select
                     value={formData.eventType}
                     onChange={(e) => handleInputChange('eventType', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   >
                     <option value="sampling">Product Sampling</option>
                     <option value="demo">Product Demo</option>
@@ -278,7 +278,7 @@ const BrandActivationFormPage: React.FC = () => {
                     value={formData.location || ''}
                     onChange={(e) => handleInputChange('location', e.target.value)}
                     placeholder="Store/Venue name and address"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                     required
                   />
                 </div>
@@ -292,7 +292,7 @@ const BrandActivationFormPage: React.FC = () => {
                       type="date"
                       value={formData.startDate || ''}
                       onChange={(e) => handleInputChange('startDate', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                       required
                     />
                   </div>
@@ -304,7 +304,7 @@ const BrandActivationFormPage: React.FC = () => {
                       type="date"
                       value={formData.endDate || ''}
                       onChange={(e) => handleInputChange('endDate', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                       required
                     />
                   </div>
@@ -319,7 +319,7 @@ const BrandActivationFormPage: React.FC = () => {
                       type="time"
                       value={formData.startTime || ''}
                       onChange={(e) => handleInputChange('startTime', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                     />
                   </div>
                   <div>
@@ -330,7 +330,7 @@ const BrandActivationFormPage: React.FC = () => {
                       type="time"
                       value={formData.endTime || ''}
                       onChange={(e) => handleInputChange('endTime', e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                     />
                   </div>
                 </div>
@@ -344,7 +344,7 @@ const BrandActivationFormPage: React.FC = () => {
                     value={formData.budget || ''}
                     onChange={(e) => handleInputChange('budget', parseFloat(e.target.value))}
                     placeholder="0"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
 
@@ -355,7 +355,7 @@ const BrandActivationFormPage: React.FC = () => {
                   <select
                     value={formData.status}
                     onChange={(e) => handleInputChange('status', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   >
                     <option value="planned">Planned</option>
                     <option value="ongoing">Ongoing</option>
@@ -367,7 +367,7 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Team Members */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-pink-600" />
                 Team Members
@@ -380,7 +380,7 @@ const BrandActivationFormPage: React.FC = () => {
                   onChange={(e) => setNewTeamMember(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addTeamMember()}
                   placeholder="Enter team member name"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                 />
                 <button
                   onClick={addTeamMember}
@@ -406,7 +406,7 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Activities */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-pink-600" />
                 Event Activities
@@ -419,7 +419,7 @@ const BrandActivationFormPage: React.FC = () => {
                   onChange={(e) => setNewActivity(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addActivity()}
                   placeholder="e.g., Product demonstration"
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                 />
                 <button
                   onClick={addActivity}
@@ -445,7 +445,7 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Customer Feedback */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <MessageSquare className="w-5 h-5 text-pink-600" />
                 Customer Feedback
@@ -458,7 +458,7 @@ const BrandActivationFormPage: React.FC = () => {
                   onChange={(e) => setNewFeedback(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && addFeedback()}
                   placeholder="Enter customer feedback..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                  className="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                 />
                 <button
                   onClick={addFeedback}
@@ -484,7 +484,7 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Photo Gallery */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Camera className="w-5 h-5 text-pink-600" />
                 Event Photos
@@ -516,14 +516,14 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Notes */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Additional Notes</h2>
               <textarea
                 value={formData.notes || ''}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Any additional information about the event..."
                 rows={4}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
               />
             </div>
           </div>
@@ -531,7 +531,7 @@ const BrandActivationFormPage: React.FC = () => {
           {/* Metrics - Right Column */}
           <div className="space-y-6">
             {/* Engagement Metrics */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Engagement Metrics</h2>
               
               <div className="space-y-4">
@@ -543,7 +543,7 @@ const BrandActivationFormPage: React.FC = () => {
                     type="number"
                     value={formData.targetAttendance || ''}
                     onChange={(e) => handleInputChange('targetAttendance', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
 
@@ -555,7 +555,7 @@ const BrandActivationFormPage: React.FC = () => {
                     type="number"
                     value={formData.actualAttendance || ''}
                     onChange={(e) => handleInputChange('actualAttendance', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
 
@@ -567,7 +567,7 @@ const BrandActivationFormPage: React.FC = () => {
                     type="number"
                     value={formData.samplesDistributed || ''}
                     onChange={(e) => handleInputChange('samplesDistributed', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
 
@@ -579,7 +579,7 @@ const BrandActivationFormPage: React.FC = () => {
                     type="number"
                     value={formData.leadsCaptured || ''}
                     onChange={(e) => handleInputChange('leadsCaptured', parseInt(e.target.value))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500"
                   />
                 </div>
 
@@ -604,7 +604,7 @@ const BrandActivationFormPage: React.FC = () => {
             </div>
 
             {/* Quick Stats */}
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Quick Stats</h2>
               
               <div className="space-y-3">

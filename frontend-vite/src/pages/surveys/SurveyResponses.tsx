@@ -38,7 +38,7 @@ export default function SurveyResponses() {
         <p className="text-gray-600">{survey?.title}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-600">Total Responses</p>
@@ -55,7 +55,7 @@ export default function SurveyResponses() {
 
       <div className="space-y-4">
         {responses?.map((response) => (
-          <div key={response.id} className="bg-white rounded-lg shadow p-6">
+          <div key={response.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <User className="h-5 w-5 text-gray-400" />

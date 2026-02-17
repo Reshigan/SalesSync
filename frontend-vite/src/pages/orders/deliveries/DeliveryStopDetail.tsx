@@ -44,7 +44,7 @@ export default function DeliveryStopDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <MapPin className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Location</h3>
@@ -52,7 +52,7 @@ export default function DeliveryStopDetail() {
           <p className="text-sm text-gray-900">{stop.address}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Items Delivered</h3>
@@ -60,7 +60,7 @@ export default function DeliveryStopDetail() {
           <p className="text-3xl font-bold text-gray-900">{stop.items_delivered}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Clock className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Duration</h3>
@@ -71,7 +71,7 @@ export default function DeliveryStopDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -103,7 +103,7 @@ export default function DeliveryStopDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
         <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -132,7 +132,7 @@ export default function DeliveryStopDetail() {
       </div>
 
       {stop.signature_captured && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Proof of Delivery</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -150,14 +150,14 @@ export default function DeliveryStopDetail() {
       )}
 
       {stop.special_instructions && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Special Instructions</h2>
           <p className="text-sm text-gray-700">{stop.special_instructions}</p>
         </div>
       )}
 
       {stop.notes && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Delivery Notes</h2>
           <p className="text-sm text-gray-700">{stop.notes}</p>
         </div>

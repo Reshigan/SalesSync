@@ -332,7 +332,7 @@ export default function NewCustomerRegistration() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* GPS Capture Step */}
         {step === 'gps' && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center">
               <MapPin className="w-5 h-5 mr-2" />
               GPS Location Capture
@@ -379,7 +379,7 @@ export default function NewCustomerRegistration() {
 
                 <button
                   onClick={getCurrentPosition}
-                  className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
                 >
                   Refresh Location
                 </button>
@@ -394,7 +394,7 @@ export default function NewCustomerRegistration() {
 
         {/* Customer Details Step */}
         {step === 'details' && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-6 flex items-center">
               <Store className="w-5 h-5 mr-2" />
               Customer Details
@@ -508,7 +508,7 @@ export default function NewCustomerRegistration() {
                         type="email"
                         value={customerData.email || ''}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                         placeholder="john@example.com"
                       />
                     </div>
@@ -520,7 +520,7 @@ export default function NewCustomerRegistration() {
                       type="tel"
                       value={customerData.alternativePhone || ''}
                       onChange={(e) => handleInputChange('alternativePhone', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                       placeholder="0821234567"
                     />
                   </div>
@@ -532,7 +532,7 @@ export default function NewCustomerRegistration() {
                         type="number"
                         value={customerData.storeSize || ''}
                         onChange={(e) => handleInputChange('storeSize', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                         placeholder="50"
                       />
                     </div>
@@ -546,7 +546,7 @@ export default function NewCustomerRegistration() {
                         type="number"
                         value={customerData.numberOfEmployees || ''}
                         onChange={(e) => handleInputChange('numberOfEmployees', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                         placeholder="2"
                       />
                     </div>
@@ -558,7 +558,7 @@ export default function NewCustomerRegistration() {
                       type="text"
                       value={customerData.businessRegistration || ''}
                       onChange={(e) => handleInputChange('businessRegistration', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                       placeholder="2023/123456/07"
                     />
                   </div>
@@ -572,7 +572,7 @@ export default function NewCustomerRegistration() {
                       type="text"
                       value={customerData.openingHours || ''}
                       onChange={(e) => handleInputChange('openingHours', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                       placeholder="Mon-Sat: 8AM-6PM, Sun: 9AM-2PM"
                     />
                   </div>
@@ -585,7 +585,7 @@ export default function NewCustomerRegistration() {
                     <select
                       value={customerData.paymentTerms || ''}
                       onChange={(e) => handleInputChange('paymentTerms', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select payment terms...</option>
                       <option value="cash">Cash Only</option>
@@ -602,7 +602,7 @@ export default function NewCustomerRegistration() {
 
         {/* Photos Step */}
         {step === 'photos' && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-6 flex items-center">
               <Camera className="w-5 h-5 mr-2" />
               Photo Captures
@@ -619,7 +619,7 @@ export default function NewCustomerRegistration() {
                     <img src={storefrontPhotoPreview} alt="Storefront" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowStorefrontCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -646,7 +646,7 @@ export default function NewCustomerRegistration() {
                     <img src={interiorPhotoPreview} alt="Interior" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowInteriorCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -672,7 +672,7 @@ export default function NewCustomerRegistration() {
                     <img src={idDocumentPhotoPreview} alt="ID Document" className="w-full h-64 object-cover rounded-lg" />
                     <button
                       onClick={() => setShowIdCamera(true)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="w-full px-4 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50"
                     >
                       Retake Photo
                     </button>
@@ -694,7 +694,7 @@ export default function NewCustomerRegistration() {
 
         {/* Brands Step */}
         {step === 'brands' && (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold mb-6 flex items-center">
               <Building2 className="w-5 h-5 mr-2" />
               Brand Association
@@ -746,7 +746,7 @@ export default function NewCustomerRegistration() {
                               type="text"
                               value={brand.stockLevel || ''}
                               onChange={(e) => updateBrandDetail(brand.id, 'stockLevel', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                               placeholder="e.g., High, Medium, Low, None"
                             />
                           </div>
@@ -759,7 +759,7 @@ export default function NewCustomerRegistration() {
                               type="text"
                               value={brand.competitorPresent || ''}
                               onChange={(e) => updateBrandDetail(brand.id, 'competitorPresent', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
                               placeholder="e.g., Pepsi, Castle Lite"
                             />
                           </div>
@@ -797,7 +797,7 @@ export default function NewCustomerRegistration() {
         {/* Review Step */}
         {step === 'review' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h2 className="text-lg font-semibold mb-6">Review Registration</h2>
 
               {/* GPS */}
@@ -920,7 +920,7 @@ export default function NewCustomerRegistration() {
           <div className="mt-6 flex gap-4">
             <button
               onClick={handleBack}
-              className="flex-1 px-6 py-3 border border-gray-300 rounded-lg font-medium hover:bg-gray-50"
+              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-medium hover:bg-gray-50"
             >
               Back
             </button>
