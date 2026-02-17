@@ -142,8 +142,8 @@ export default function HRDashboard() {
                             {emp.created_at ? new Date(emp.created_at).toLocaleDateString() : 'N/A'}
                           </TableCell>
                           <TableCell>
-                            <IconButton size="small"><Visibility fontSize="small" /></IconButton>
-                            <IconButton size="small"><Edit fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`View employee ${emp.name || emp.username}`)}><Visibility fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`Edit employee ${emp.name || emp.username}`)}><Edit fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       ))}

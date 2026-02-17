@@ -438,10 +438,10 @@ export default function BoardPlacementPage() {
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button className="text-gray-600 hover:text-gray-900" onClick={() => navigate(`/field-operations/boards/${placement.id}/edit`)}>
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button className="text-red-600 hover:text-red-900" onClick={() => { if (window.confirm('Remove this placement?')) setSelectedPlacement(placement) }}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>

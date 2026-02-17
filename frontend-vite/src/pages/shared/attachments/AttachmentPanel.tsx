@@ -52,13 +52,13 @@ export default function AttachmentPanel({ entityType, entityId }: AttachmentPane
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 text-gray-400 hover:text-blue-600">
+                <button className="p-2 text-gray-400 hover:text-blue-600" onClick={() => window.open(attachment.file_url, '_blank')}>
                   <Eye className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-green-600">
+                <button className="p-2 text-gray-400 hover:text-green-600" onClick={() => window.open(attachment.file_url, '_blank')}>
                   <Download className="h-4 w-4" />
                 </button>
-                <button className="p-2 text-gray-400 hover:text-red-600">
+                <button className="p-2 text-gray-400 hover:text-red-600" onClick={() => { if (window.confirm('Delete this attachment?')) console.log('delete', attachment.id) }}>
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>

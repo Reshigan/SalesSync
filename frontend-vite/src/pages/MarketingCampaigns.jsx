@@ -166,15 +166,15 @@ export default function MarketingCampaigns() {
                             />
                           </TableCell>
                           <TableCell>
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => alert(`View campaign: ${campaign.name || campaign.id}`)}>
                               <Visibility fontSize="small" />
                             </IconButton>
                             {campaign.status === 'active' ? (
-                              <IconButton size="small" color="warning">
+                              <IconButton size="small" color="warning" onClick={() => alert(`Pause campaign: ${campaign.name || campaign.id}`)}>
                                 <Pause fontSize="small" />
                               </IconButton>
                             ) : (
-                              <IconButton size="small" color="success">
+                              <IconButton size="small" color="success" onClick={() => alert(`Start campaign: ${campaign.name || campaign.id}`)}>
                                 <PlayArrow fontSize="small" />
                               </IconButton>
                             )}

@@ -365,12 +365,14 @@ const OrderManagement = () => {
           <Button
             variant="outlined"
             startIcon={<FilterIcon />}
+            onClick={() => setSelectedTab(1)}
           >
             Filter
           </Button>
           <Button
             variant="outlined"
             startIcon={<DownloadIcon />}
+            onClick={() => window.print()}
           >
             Export
           </Button>

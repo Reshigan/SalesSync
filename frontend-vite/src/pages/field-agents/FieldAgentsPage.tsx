@@ -247,13 +247,13 @@ export default function FieldAgentsPage() {
       title: 'Actions',
       render: (value: any, row: any) => (
         <div className="flex items-center space-x-2">
-          <button className="text-blue-600 hover:text-blue-800" onClick={() => navigate(`/field-operations/agents`)}>
+          <button className="text-blue-600 hover:text-blue-800" onClick={() => navigate(`/field-operations/agents/${row.id}`)}>
             <Eye className="h-4 w-4" />
           </button>
-          <button className="text-green-600 hover:text-green-800" onClick={() => navigate(`/field-operations/agents`)}>
+          <button className="text-green-600 hover:text-green-800" onClick={() => navigate(`/field-operations/agents/${row.id}/edit`)}>
             <Edit className="h-4 w-4" />
           </button>
-          <button className="text-gray-600 hover:text-gray-800" onClick={() => navigate(`/field-operations/agents`)}>
+          <button className="text-gray-600 hover:text-gray-800" onClick={() => navigate(`/field-operations/agents/${row.id}`)}>
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
@@ -282,7 +282,7 @@ export default function FieldAgentsPage() {
             <option value="30d">Last 30 Days</option>
             <option value="90d">Last 90 Days</option>
           </select>
-          <button className="btn-primary" onClick={() => navigate('/field-operations/agents')}>
+          <button className="btn-primary" onClick={() => navigate('/field-operations/agents/create')}>
             <Users className="h-4 w-4 mr-2" />
             Add Agent
           </button>

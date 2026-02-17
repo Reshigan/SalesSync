@@ -134,7 +134,7 @@ export default function CommissionTrackingPage() {
             Manage and track agent commissions and bonuses
           </p>
         </div>
-        <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/field-operations/commission')}>
+        <button className="btn btn-primary flex items-center gap-2" onClick={() => window.print()}>
           <Download className="w-4 h-4" />
           Export Report
         </button>

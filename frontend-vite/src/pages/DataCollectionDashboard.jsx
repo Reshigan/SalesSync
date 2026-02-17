@@ -48,7 +48,7 @@ export default function DataCollectionDashboard() {
     <Box sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Data Collection Dashboard</Typography>
-        <Button variant="contained" startIcon={<Add />}>New Survey</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => alert('Create new survey')}>New Survey</Button>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -141,8 +141,8 @@ export default function DataCollectionDashboard() {
                             {survey.created_at ? new Date(survey.created_at).toLocaleDateString() : 'N/A'}
                           </TableCell>
                           <TableCell>
-                            <IconButton size="small"><Visibility fontSize="small" /></IconButton>
-                            <IconButton size="small"><Edit fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`View survey: ${survey.title || survey.id}`)}><Visibility fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`Edit survey: ${survey.title || survey.id}`)}><Edit fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       ))}

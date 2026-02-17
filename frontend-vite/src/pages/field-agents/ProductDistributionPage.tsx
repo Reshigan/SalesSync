@@ -167,7 +167,7 @@ export default function ProductDistributionPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="btn btn-secondary flex items-center gap-2" onClick={() => navigate('/field-operations/products')}>
+          <button className="btn btn-secondary flex items-center gap-2" onClick={() => window.print()}>
             <Download className="w-4 h-4" />
             Export
           </button>
@@ -349,7 +349,7 @@ export default function ProductDistributionPage() {
                   <Eye className="w-4 h-4" />
                   View Details
                 </button>
-                <button className="flex-1 btn btn-primary flex items-center justify-center gap-2" onClick={() => navigate(`/field-operations/products/${selectedDistribution?.id}`)}>
+                <button className="flex-1 btn btn-primary flex items-center justify-center gap-2" onClick={() => navigate(`/field-operations/products/${dist.id}`)}>
                   <Edit2 className="w-4 h-4" />
                   Manage
                 </button>
