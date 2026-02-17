@@ -15645,7 +15645,7 @@ api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
     const { orderId } = c.req.param();
 
     const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
-    if (!order) return c.json({ success: true, data: [] });
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
 
     const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
       messages: [

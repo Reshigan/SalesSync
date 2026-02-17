@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_CONFIG } from '../../config/api.config';
+import { apiClient } from '../../services/api.service';
 import { 
   Box, 
   Container, 
@@ -27,16 +27,11 @@ const MobileLoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/mobile-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Tenant-Code': 'DEMO'
-        },
-        body: JSON.stringify({ mobile, pin })
+      const response = await apiClient.post('/auth/mobile-login', { mobile, pin }, {
+        headers: { 'X-Tenant-Code': 'DEMO' }
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       if (data.success) {
         // Store auth token

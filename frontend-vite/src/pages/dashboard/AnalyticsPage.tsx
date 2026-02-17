@@ -258,7 +258,7 @@ export default function AnalyticsPage() {
   }
 
   const exportData = () => {
-    // Mock export functionality
+    // Export analytics data as CSV
     const csvData = 'Date,Revenue,Orders,Customers\n' + 
       (data?.revenue_trend.map(item => 
         `${item.date},${item.revenue},${item.orders},${item.customers}`
