@@ -1,11 +1,15 @@
-import { useState } from 'react'
-import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Search, Filter, Calendar, Download } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Search, Filter, Calendar, Download, RefreshCw } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 interface Payment {
   id: string
   paymentNumber: string
+  payment_number?: string
   invoiceNumber: string
+  invoice_number?: string
   customerName: string
+  customer_name?: string
   amount: number
   method: 'cash' | 'card' | 'bank_transfer' | 'cheque' | 'mobile'
   status: 'pending' | 'completed' | 'failed' | 'refunded'
@@ -19,55 +23,37 @@ export default function PaymentCollectionPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [methodFilter, setMethodFilter] = useState<string>('all')
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
+  const [payments, setPayments] = useState<Payment[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const [payments] = useState<Payment[]>([
-    {
-      id: '1',
-      paymentNumber: 'PAY-2024-001',
-      invoiceNumber: 'INV-2024-001',
-      customerName: 'ABC Retail Store',
-      amount: 5750.00,
-      method: 'bank_transfer',
-      status: 'completed',
-      date: '2024-10-22',
-      reference: 'TXN123456',
-      notes: 'Full payment received'
-    },
-    {
-      id: '2',
-      paymentNumber: 'PAY-2024-002',
-      invoiceNumber: 'INV-2024-002',
-      customerName: 'XYZ Wholesale',
-      amount: 6900.00,
-      method: 'card',
-      status: 'completed',
-      date: '2024-10-21',
-      reference: 'CARD789012'
-    },
-    {
-      id: '3',
-      paymentNumber: 'PAY-2024-003',
-      invoiceNumber: 'INV-2024-003',
-      customerName: 'SuperMart Chain',
-      amount: 2500.00,
-      method: 'cash',
-      status: 'pending',
-      date: '2024-10-23',
-      notes: 'Partial payment'
-    },
-    {
-      id: '4',
-      paymentNumber: 'PAY-2024-004',
-      invoiceNumber: 'INV-2024-004',
-      customerName: 'Corner Shop',
-      amount: 1725.00,
-      method: 'mobile',
-      status: 'failed',
-      date: '2024-10-23',
-      reference: 'MPAY345678',
-      notes: 'Insufficient funds'
+  useEffect(() => {
+    fetchPayments()
+  }, [statusFilter, methodFilter])
+
+  const fetchPayments = async () => {
+    try {
+      setLoading(true)
+      const params: Record<string, string> = {}
+      if (statusFilter !== 'all') params.status = statusFilter
+      if (methodFilter !== 'all') params.method = methodFilter
+      const qs = new URLSearchParams(params).toString()
+      const res = await apiClient.get(`/payments${qs ? `?${qs}` : ''}`)
+      const data = res.data?.data || res.data
+      const list = Array.isArray(data) ? data : data?.payments || []
+      setPayments(list.map((p: Record<string, unknown>) => ({
+        ...p,
+        paymentNumber: p.paymentNumber || p.payment_number || p.id,
+        invoiceNumber: p.invoiceNumber || p.invoice_number || '',
+        customerName: p.customerName || p.customer_name || '',
+        amount: Number(p.amount) || 0,
+      })))
+    } catch (error) {
+      console.error('Failed to fetch payments:', error)
+      setPayments([])
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
