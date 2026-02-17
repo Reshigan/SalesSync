@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Search, Filter, Calendar, Download } from 'lucide-react'
+import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Search, Filter, Calendar, Download, RefreshCw } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 
 interface Payment {
   id: string
   paymentNumber: string
+  payment_number?: string
   invoiceNumber: string
+  invoice_number?: string
   customerName: string
+  customer_name?: string
   amount: number
   method: 'cash' | 'card' | 'bank_transfer' | 'cheque' | 'mobile'
   status: 'pending' | 'completed' | 'failed' | 'refunded'
@@ -20,7 +23,6 @@ export default function PaymentCollectionPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [methodFilter, setMethodFilter] = useState<string>('all')
   const [dateRange, setDateRange] = useState({ from: '', to: '' })
-
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -37,7 +39,14 @@ export default function PaymentCollectionPage() {
       const qs = new URLSearchParams(params).toString()
       const res = await apiClient.get(`/payments${qs ? `?${qs}` : ''}`)
       const data = res.data?.data || res.data
-      setPayments(Array.isArray(data) ? data : data?.payments || [])
+      const list = Array.isArray(data) ? data : data?.payments || []
+      setPayments(list.map((p: Record<string, unknown>) => ({
+        ...p,
+        paymentNumber: p.paymentNumber || p.payment_number || p.id,
+        invoiceNumber: p.invoiceNumber || p.invoice_number || '',
+        customerName: p.customerName || p.customer_name || '',
+        amount: Number(p.amount) || 0,
+      })))
     } catch (error) {
       console.error('Failed to fetch payments:', error)
       setPayments([])

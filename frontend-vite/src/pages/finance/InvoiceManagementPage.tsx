@@ -5,15 +5,20 @@ import { apiClient } from '../../services/api.service'
 interface Invoice {
   id: string
   invoiceNumber: string
+  invoice_number?: string
   customerId: string
+  customer_id?: string
   customerName: string
+  customer_name?: string
   date: string
   dueDate: string
+  due_date?: string
   amount: number
   tax: number
   total: number
   status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
   paymentTerms: string
+  payment_terms?: string
   items: InvoiceItem[]
   notes?: string
 }
@@ -21,6 +26,7 @@ interface Invoice {
 interface InvoiceItem {
   id: string
   productName: string
+  product_name?: string
   description: string
   quantity: number
   price: number
@@ -33,7 +39,6 @@ export default function InvoiceManagementPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -49,7 +54,18 @@ export default function InvoiceManagementPage() {
       const qs = new URLSearchParams(params).toString()
       const res = await apiClient.get(`/invoices${qs ? `?${qs}` : ''}`)
       const data = res.data?.data || res.data
-      setInvoices(Array.isArray(data) ? data : data?.invoices || [])
+      const list = Array.isArray(data) ? data : data?.invoices || []
+      setInvoices(list.map((inv: Record<string, unknown>) => ({
+        ...inv,
+        invoiceNumber: inv.invoiceNumber || inv.invoice_number || inv.id,
+        customerName: inv.customerName || inv.customer_name || '',
+        dueDate: inv.dueDate || inv.due_date || '',
+        paymentTerms: inv.paymentTerms || inv.payment_terms || '',
+        items: Array.isArray(inv.items) ? inv.items : [],
+        amount: Number(inv.amount) || 0,
+        tax: Number(inv.tax) || 0,
+        total: Number(inv.total) || 0,
+      })))
     } catch (error) {
       console.error('Failed to fetch invoices:', error)
       setInvoices([])

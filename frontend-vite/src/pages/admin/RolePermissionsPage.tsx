@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Shield, Users, Plus, Edit, Trash2, Save, X, Check, Lock, Eye, FileEdit, Search, Filter } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Shield, Users, Plus, Edit, Trash2, Save, X, Check, Lock, Eye, FileEdit, Search, Filter, RefreshCw } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 interface Permission {
   id: string
@@ -86,90 +87,35 @@ const PERMISSIONS: Permission[] = [
 ]
 
 export default function RolePermissionsPage() {
-  const [roles, setRoles] = useState<Role[]>([
-    {
-      id: '1',
-      name: 'Super Admin',
-      description: 'Full system access with all permissions',
-      userCount: 2,
-      permissions: PERMISSIONS.map(p => p.id),
-      isSystem: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Admin',
-      description: 'Administrative access with most permissions',
-      userCount: 5,
-      permissions: PERMISSIONS.filter(p => !p.id.includes('admin.backup')).map(p => p.id),
-      isSystem: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '3',
-      name: 'Sales Manager',
-      description: 'Manage sales operations and field agents',
-      userCount: 8,
-      permissions: PERMISSIONS.filter(p => 
-        p.module === 'Dashboard' ||
-        p.module === 'Customers' ||
-        p.module === 'Orders' ||
-        p.module === 'Products' && p.action === 'View' ||
-        p.module === 'Field Agents' ||
-        p.module === 'Visits' ||
-        p.module === 'Commissions' ||
-        p.module === 'Reports'
-      ).map(p => p.id),
-      isSystem: false,
-      createdAt: '2024-02-01'
-    },
-    {
-      id: '4',
-      name: 'Field Agent',
-      description: 'Mobile field operations access',
-      userCount: 45,
-      permissions: [
-        'dashboard.view',
-        'customers.view',
-        'orders.view',
-        'orders.create',
-        'products.view',
-        'visits.view',
-        'visits.create',
-        'commissions.view'
-      ],
-      isSystem: false,
-      createdAt: '2024-02-01'
-    },
-    {
-      id: '5',
-      name: 'Warehouse Manager',
-      description: 'Manage inventory and stock',
-      userCount: 3,
-      permissions: PERMISSIONS.filter(p => 
-        p.module === 'Dashboard' ||
-        p.module === 'Products' ||
-        p.module === 'Inventory' ||
-        p.module === 'Orders' && (p.action === 'View' || p.action === 'Edit')
-      ).map(p => p.id),
-      isSystem: false,
-      createdAt: '2024-02-10'
-    },
-    {
-      id: '6',
-      name: 'Finance Manager',
-      description: 'Financial operations and reporting',
-      userCount: 4,
-      permissions: PERMISSIONS.filter(p => 
-        p.module === 'Dashboard' ||
-        p.module === 'Finance' ||
-        p.module === 'Orders' && p.action === 'View' ||
-        p.module === 'Reports'
-      ).map(p => p.id),
-      isSystem: false,
-      createdAt: '2024-02-15'
+  const [roles, setRoles] = useState<Role[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchRoles()
+  }, [])
+
+  const fetchRoles = async () => {
+    try {
+      setLoading(true)
+      const res = await apiClient.get('/roles')
+      const data = res.data?.data || res.data
+      const list = Array.isArray(data) ? data : data?.roles || []
+      setRoles(list.map((r: Record<string, unknown>) => ({
+        id: String(r.id || ''),
+        name: String(r.name || ''),
+        description: String(r.description || ''),
+        userCount: Number(r.user_count || r.userCount || 0),
+        permissions: Array.isArray(r.permissions) ? r.permissions as string[] : [],
+        isSystem: Boolean(r.is_system_role || r.isSystem),
+        createdAt: String(r.created_at || r.createdAt || ''),
+      })))
+    } catch (error) {
+      console.error('Failed to fetch roles:', error)
+      setRoles([])
+    } finally {
+      setLoading(false)
     }
-  ])
+  }
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -210,25 +156,31 @@ export default function RolePermissionsPage() {
     setIsDeleteModalOpen(true)
   }
 
-  const handleSaveRole = () => {
+  const handleSaveRole = async () => {
     if (!editingRole.name || !editingRole.description) {
       alert('Please fill all required fields')
       return
     }
 
-    if (selectedRole) {
-      setRoles(roles.map(r => r.id === selectedRole.id ? { ...r, ...editingRole } as Role : r))
-    } else {
-      const newRole: Role = {
-        id: Date.now().toString(),
-        name: editingRole.name!,
-        description: editingRole.description!,
-        userCount: 0,
-        permissions: editingRole.permissions || [],
-        isSystem: false,
-        createdAt: new Date().toISOString().split('T')[0]
+    try {
+      if (selectedRole) {
+        await apiClient.put(`/roles/${selectedRole.id}`, {
+          name: editingRole.name,
+          description: editingRole.description,
+          permissions: editingRole.permissions || [],
+          is_active: true,
+        })
+      } else {
+        await apiClient.post('/roles', {
+          name: editingRole.name,
+          description: editingRole.description,
+          permissions: editingRole.permissions || [],
+        })
       }
-      setRoles([...roles, newRole])
+      await fetchRoles()
+    } catch (error) {
+      console.error('Failed to save role:', error)
+      alert('Failed to save role')
     }
 
     setIsEditModalOpen(false)
@@ -236,9 +188,15 @@ export default function RolePermissionsPage() {
     setSelectedRole(null)
   }
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedRole) {
-      setRoles(roles.filter(r => r.id !== selectedRole.id))
+      try {
+        await apiClient.delete(`/roles/${selectedRole.id}`)
+        await fetchRoles()
+      } catch (error) {
+        console.error('Failed to delete role:', error)
+        alert('Failed to delete role')
+      }
     }
     setIsDeleteModalOpen(false)
     setSelectedRole(null)
