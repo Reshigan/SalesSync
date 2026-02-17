@@ -35,7 +35,7 @@ export default function VanLoadItemDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Van Load
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Van Load Item Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Load Item Detail</h1>
         <p className="text-gray-600">{load?.load_number} - {load?.agent_name}</p>
       </div>
 

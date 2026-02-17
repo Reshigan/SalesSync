@@ -71,7 +71,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Visit History</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customer Visit History</h1>
           <p className="mt-1 text-sm text-gray-500">
             Track all customer visits and interactions
           </p>
@@ -82,7 +82,7 @@ export const CustomerVisitHistoryPage: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -205,28 +205,28 @@ export const CustomerVisitHistoryPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Agent
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Duration
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Order Value
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Outcome
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -234,13 +234,13 @@ export const CustomerVisitHistoryPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredVisits.map((visit) => (
                   <tr key={visit.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{visit.customer_name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{visit.agent_name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {new Date(visit.visit_date).toLocaleDateString()}
                       </div>
@@ -248,25 +248,25 @@ export const CustomerVisitHistoryPage: React.FC = () => {
                         {new Date(visit.visit_date).toLocaleTimeString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTypeBadge(visit.visit_type)}`}>
                         {visit.visit_type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{visit.duration_minutes} min</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">
                         {visit.order_value ? formatCurrency(visit.order_value) : '-'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getOutcomeBadge(visit.outcome)}`}>
                         {visit.outcome}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <button className="text-blue-600 hover:text-blue-900">
                         View Details
                       </button>

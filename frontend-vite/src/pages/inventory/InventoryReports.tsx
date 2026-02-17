@@ -99,10 +99,10 @@ export default function InventoryReports() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Reports</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Inventory Reports</h1>
           <p className="text-gray-600">Comprehensive inventory analysis and reporting</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handlePrint}
             className="btn-outline flex items-center space-x-2"
@@ -164,7 +164,7 @@ export default function InventoryReports() {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Start Date
@@ -349,25 +349,25 @@ export default function InventoryReports() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Current Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Min/Max Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Unit Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Total Value
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
                 </tr>
@@ -375,28 +375,28 @@ export default function InventoryReports() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {(reportData?.detailed?.items || []).map((item: any) => (
                   <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{item.product_name}</div>
                         <div className="text-sm text-gray-500">{item.product_code}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {item.location_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatNumber(item.current_stock)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {item.minimum_stock} / {item.maximum_stock || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(item.unit_cost)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(item.current_stock * item.unit_cost)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         item.stock_status === 'in_stock' ? 'bg-green-100 text-green-800' :
                         item.stock_status === 'low_stock' ? 'bg-yellow-100 text-yellow-800' :
@@ -458,22 +458,22 @@ export default function InventoryReports() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Product
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Quantity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Location
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Reason
                     </th>
                   </tr>
@@ -481,29 +481,29 @@ export default function InventoryReports() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {(reportData?.movements?.recent_movements || []).map((movement: any) => (
                     <tr key={movement.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDate(movement.movement_date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{movement.product_name}</div>
                           <div className="text-sm text-gray-500">{movement.product_code}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           movement.movement_type === 'inbound' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {movement.movement_type.toUpperCase()}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {movement.movement_type === 'inbound' ? '+' : '-'}{formatNumber(movement.quantity)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {movement.location_name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {movement.reason}
                       </td>
                     </tr>
@@ -517,7 +517,7 @@ export default function InventoryReports() {
 
       {selectedReport === 'valuation' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="card">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">
@@ -563,7 +563,7 @@ export default function InventoryReports() {
 
       {selectedReport === 'performance' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             <div className="card">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">
@@ -604,19 +604,19 @@ export default function InventoryReports() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Product
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Turnover Rate
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Units Sold
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Revenue
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Avg. Stock Level
                     </th>
                   </tr>
@@ -624,22 +624,22 @@ export default function InventoryReports() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {(reportData?.performance?.top_products || []).map((product: any) => (
                     <tr key={product.product_id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{product.product_name}</div>
                           <div className="text-sm text-gray-500">{product.product_code}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {product.turnover_rate}x
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {formatNumber(product.units_sold)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {formatCurrency(product.revenue)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {formatNumber(product.avg_stock_level)}
                       </td>
                     </tr>

@@ -159,7 +159,7 @@ export default function ProductDistributionPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Distribution</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Distribution</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage van loading and product distribution to routes
           </p>
@@ -177,7 +177,7 @@ export default function ProductDistributionPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-purple-100 rounded-lg">
@@ -185,7 +185,7 @@ export default function ProductDistributionPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Distributions</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.totalDistributions}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStats.totalDistributions}</p>
             </div>
           </div>
         </div>
@@ -197,7 +197,7 @@ export default function ProductDistributionPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">In Progress</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.inProgress}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStats.inProgress}</p>
             </div>
           </div>
         </div>
@@ -209,7 +209,7 @@ export default function ProductDistributionPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.completed}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStats.completed}</p>
             </div>
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function ProductDistributionPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Scheduled</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.scheduled}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStats.scheduled}</p>
             </div>
           </div>
         </div>
@@ -363,7 +363,7 @@ export default function ProductDistributionPage() {
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{selectedDistribution.distributionNumber}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{selectedDistribution.distributionNumber}</h2>
                 <p className="text-sm text-gray-600">{selectedDistribution.routeName}</p>
               </div>
               <button

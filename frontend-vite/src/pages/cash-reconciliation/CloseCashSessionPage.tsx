@@ -71,7 +71,7 @@ export const CloseCashSessionPage: React.FC = () => {
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Close Cash Session</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Close Cash Session</h1>
         <p className="mt-1 text-sm text-gray-500">
           Review and close session for {new Date(session.session_date).toLocaleDateString()}
         </p>
@@ -80,10 +80,10 @@ export const CloseCashSessionPage: React.FC = () => {
       {/* Session Summary */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Session Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div>
             <p className="text-sm font-medium text-gray-500">Opening Float</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.opening_float)}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(session.opening_float)}</p>
           </div>
           <div>
             <p className="text-sm font-medium text-gray-500">Total Collected</p>

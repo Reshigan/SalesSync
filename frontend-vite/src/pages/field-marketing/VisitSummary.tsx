@@ -167,7 +167,7 @@ export default function VisitSummary() {
             <div className="flex items-center justify-between mb-2">
               <Clock className="w-5 h-5 text-gray-400" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{visitData.duration}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{visitData.duration}</p>
             <p className="text-sm text-gray-500">Minutes</p>
           </div>
 
@@ -176,7 +176,7 @@ export default function VisitSummary() {
               <MapPin className="w-5 h-5 text-green-500" />
               {visitData.gpsVerified && <CheckCircle className="w-4 h-4 text-green-500" />}
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
               {visitData.gpsDistance}m
             </p>
             <p className="text-sm text-gray-500">GPS Distance</p>
@@ -186,7 +186,7 @@ export default function VisitSummary() {
             <div className="flex items-center justify-between mb-2">
               <Target className="w-5 h-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
               {visitData.boards.length + visitData.products.length}
             </p>
             <p className="text-sm text-gray-500">Activities</p>

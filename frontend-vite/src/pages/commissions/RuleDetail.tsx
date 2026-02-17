@@ -35,7 +35,7 @@ export default function RuleDetail() {
         </button>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{rule.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{rule.name}</h1>
             <p className="text-gray-600">{rule.description}</p>
           </div>
           <div className="flex gap-2">

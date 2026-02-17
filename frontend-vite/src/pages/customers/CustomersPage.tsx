@@ -114,13 +114,13 @@ export default function CustomersPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customers</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage your customer database and relationships
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="card animate-pulse">
               <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
@@ -146,7 +146,7 @@ export default function CustomersPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customers</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage your customer database and relationships
           </p>
@@ -182,13 +182,13 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customers</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage your customer database and relationships ({pagination.total || 0} total)
           </p>
         </div>
         
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button 
             onClick={() => setShowImportModal(true)}
             className="btn btn-secondary"
@@ -249,7 +249,7 @@ export default function CustomersPage() {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Search
@@ -328,7 +328,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Customers Table */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden p-0">
         {customers.length === 0 ? (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -344,7 +344,7 @@ export default function CustomersPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left">
+                  <th className="px-3 py-3 sm:px-4 text-left">
                     <input
                       type="checkbox"
                       checked={selectedCustomers.length === customers.length}
@@ -352,25 +352,25 @@ export default function CustomersPage() {
                       className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Contact
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Route
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Sales
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="relative px-6 py-3">
+                  <th className="relative px-3 py-3 sm:px-4">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
@@ -378,7 +378,7 @@ export default function CustomersPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {customers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedCustomers.includes(customer.id)}
@@ -386,7 +386,7 @@ export default function CustomersPage() {
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {customer.name}
@@ -396,10 +396,10 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       {getTypeBadge(customer.type)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         {customer.phone && (
                           <div className="text-sm text-gray-900">
@@ -413,7 +413,7 @@ export default function CustomersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm text-gray-900">
                           {customer.route_name || 'No Route'}
@@ -423,7 +423,7 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {formatCurrency(customer.total_sales)}
@@ -433,10 +433,10 @@ export default function CustomersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       {getStatusBadge(customer.status)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
                         onClick={() => navigate(`/customers/${customer.id}`)}
                         className="text-indigo-600 hover:text-indigo-900 mr-3"

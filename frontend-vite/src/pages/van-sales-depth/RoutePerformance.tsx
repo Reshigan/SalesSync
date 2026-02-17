@@ -28,38 +28,38 @@ export default function RoutePerformance() {
           <ArrowLeft className="h-5 w-5" />
           Back to Route
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Route Performance</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Route Performance</h1>
         <p className="text-gray-600">{route?.route_name}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Total Sales</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(performance?.total_sales || 0)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(performance?.total_sales || 0)}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Orders</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{performance?.total_orders || 0}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{performance?.total_orders || 0}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Customers</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{performance?.total_customers || 0}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{performance?.total_customers || 0}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Avg Order</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(performance?.avg_order_value || 0)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(performance?.avg_order_value || 0)}</p>
         </div>
       </div>
 

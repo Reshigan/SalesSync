@@ -33,11 +33,11 @@ export default function SurveyComparison() {
           <ArrowLeft className="h-5 w-5" />
           Back to Analysis
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Survey Comparison</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Survey Comparison</h1>
         <p className="text-gray-600">Compare with previous survey results</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Responses</h3>
           <div className="flex items-end gap-2 mb-2">
@@ -99,23 +99,23 @@ export default function SurveyComparison() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Question</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Current</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Previous</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Change</th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase">Trend</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Question</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Current</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Previous</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Change</th>
+                <th className="px-3 py-3 sm:px-4 text-center text-xs font-bold text-gray-600 uppercase">Trend</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {comparison.question_comparison.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">
                     {item.question}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right font-medium">
                     {item.current.toFixed(1)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 text-right">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-500 text-right">
                     {item.previous.toFixed(1)}
                   </td>
                   <td className={`px-6 py-4 text-sm text-right font-medium ${
@@ -123,7 +123,7 @@ export default function SurveyComparison() {
                   }`}>
                     {item.change > 0 ? '+' : ''}{item.change.toFixed(1)}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-3 py-3 sm:px-4 text-center">
                     {item.trend === 'up' ? (
                       <TrendingUp className="h-5 w-5 text-green-600 mx-auto" />
                     ) : (

@@ -45,7 +45,7 @@ export const FinancialReportsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Financial Reports</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Financial Reports</h1>
           <p className="mt-1 text-sm text-gray-500">
             Revenue, profitability, and financial performance metrics
           </p>
@@ -60,7 +60,7 @@ export const FinancialReportsPage: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <input
@@ -105,7 +105,7 @@ export const FinancialReportsPage: React.FC = () => {
       </div>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -294,22 +294,22 @@ export const FinancialReportsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Period
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Revenue
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Cost
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Gross Profit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Margin
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Growth
                   </th>
                 </tr>
@@ -317,22 +317,22 @@ export const FinancialReportsPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {reportData.revenue_by_period.map((period: any, index: number) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{period.period}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-gray-900">{formatCurrency(period.revenue)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{formatCurrency(period.cost)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-semibold text-green-600">{formatCurrency(period.gross_profit)}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{period.margin.toFixed(1)}%</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${
                         period.growth >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>

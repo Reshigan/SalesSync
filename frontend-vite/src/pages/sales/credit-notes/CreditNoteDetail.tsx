@@ -29,7 +29,7 @@ export default function CreditNoteDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/sales/credit-notes')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
-          <div><h1 className="text-2xl font-bold text-gray-900">Credit Note {cn.credit_note_number || `#${id}`}</h1><span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[cn.status] || 'bg-gray-100 text-gray-800'}`}>{cn.status || 'N/A'}</span></div>
+          <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Credit Note {cn.credit_note_number || `#${id}`}</h1><span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[cn.status] || 'bg-gray-100 text-gray-800'}`}>{cn.status || 'N/A'}</span></div>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

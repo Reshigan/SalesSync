@@ -257,7 +257,7 @@ export default function RolePermissionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Roles & Permissions</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage user roles and access permissions
           </p>
@@ -272,7 +272,7 @@ export default function RolePermissionsPage() {
       </div>
 
       {/* Search & Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>

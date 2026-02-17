@@ -61,7 +61,7 @@ export const CashCollectionPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cash Collections</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Cash Collections</h1>
           <p className="mt-1 text-sm text-gray-500">Session ID: {sessionId}</p>
         </div>
         <button
@@ -201,19 +201,19 @@ export const CashCollectionPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Time
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Order ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Payment Method
                   </th>
                 </tr>
@@ -221,19 +221,19 @@ export const CashCollectionPage: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {collections.map((collection) => (
                   <tr key={collection.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(collection.collected_at).toLocaleTimeString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {collection.order_id}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {collection.customer_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                       {formatCurrency(collection.amount)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         collection.payment_method === 'cash'
                           ? 'bg-green-100 text-green-800'

@@ -14,7 +14,7 @@ export default function CustomerSurveys() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Customer Surveys</h2>
         <button
           onClick={() => navigate(`/surveys/create?customer_id=${id}`)}
@@ -44,19 +44,19 @@ export default function CustomerSurveys() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Survey Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Agent
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -64,16 +64,16 @@ export default function CustomerSurveys() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {surveys.map((survey: any) => (
                   <tr key={survey.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{survey.survey_title}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(survey.response_date).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {survey.agent_name || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         survey.status === 'completed' ? 'bg-green-100 text-green-800' :
                         survey.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -82,7 +82,7 @@ export default function CustomerSurveys() {
                         {survey.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => navigate(`/surveys/${survey.survey_id}/responses/${survey.id}`)}
                         className="text-primary-600 hover:text-primary-900"

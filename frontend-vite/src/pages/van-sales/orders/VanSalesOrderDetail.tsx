@@ -36,13 +36,13 @@ export default function VanSalesOrderDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/van-sales/orders')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{order.name || order.title || `Van Sales Order #${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{order.name || order.title || `Van Sales Order #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[order.status] || 'bg-gray-100 text-gray-800'}`}>{(order.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total</p><p className="text-xl font-bold">{formatCurrency(order.total_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><User className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Customer</p><p className="text-xl font-bold">{order.customer_name || 'N/A'}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(order.order_date || order.date) || 'N/A'}</p></div></div></div>

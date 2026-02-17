@@ -163,7 +163,7 @@ export default function VanSalesPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Van Sales Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Sales Management</h1>
           <p className="text-gray-600">Monitor and manage your van sales operations</p>
         </div>
         <Button onClick={() => setShowAddVanModal(true)}>
@@ -182,7 +182,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Vans</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.totalVans}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.totalVans}</p>
               </div>
             </div>
           </CardContent>
@@ -196,7 +196,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Routes</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.activeRoutes}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.activeRoutes}</p>
               </div>
             </div>
           </CardContent>
@@ -210,7 +210,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Today's Sales</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.todaySales)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(metrics.todaySales)}</p>
               </div>
             </div>
           </CardContent>
@@ -224,7 +224,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Inventory</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalInventory)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalInventory)}</p>
               </div>
             </div>
           </CardContent>
@@ -238,7 +238,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Avg Delivery Time</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.averageDeliveryTime}min</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.averageDeliveryTime}min</p>
               </div>
             </div>
           </CardContent>
@@ -252,7 +252,7 @@ export default function VanSalesPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Route Efficiency</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.routeEfficiency}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.routeEfficiency}%</p>
               </div>
             </div>
           </CardContent>
@@ -269,25 +269,25 @@ export default function VanSalesPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Van Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Today's Sales
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Deliveries
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Efficiency
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -295,31 +295,31 @@ export default function VanSalesPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {vanPerformance.map((van) => (
                   <tr key={van.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{van.vanNumber}</div>
                         <div className="text-sm text-gray-500">{van.driver}</div>
                         <div className="text-sm text-gray-500">{van.route}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(van.status)}`}>
                         {van.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(van.todaySales)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {van.deliveries}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {van.efficiency}%
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {van.location}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <Button variant="outline" size="sm">
                         View Details
                       </Button>
@@ -335,7 +335,7 @@ export default function VanSalesPage() {
       {/* Add Van Modal */}
       {showAddVanModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md mx-4">
             <h2 className="text-xl font-bold mb-4">Add New Van</h2>
             <div className="space-y-4">
               <div>

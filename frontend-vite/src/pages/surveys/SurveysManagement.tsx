@@ -336,10 +336,10 @@ export default function SurveysManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Survey Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Survey Management</h1>
           <p className="text-gray-600">Create, manage, and analyze customer surveys</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="btn-outline flex items-center space-x-2"
@@ -442,7 +442,7 @@ export default function SurveysManagement() {
       {/* Filters */}
       {showFilters && (
         <div className="card">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search
@@ -564,7 +564,7 @@ export default function SurveysManagement() {
       {showDetailsModal && selectedSurvey && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <h2 className="text-xl font-bold text-gray-900">Survey Details</h2>
               <button
                 onClick={() => setShowDetailsModal(false)}

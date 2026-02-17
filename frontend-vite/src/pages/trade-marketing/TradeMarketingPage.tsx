@@ -152,7 +152,7 @@ export default function TradeMarketingPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trade Marketing</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Trade Marketing</h1>
           <p className="text-gray-600">Manage trade promotions, retailer incentives, and market analysis</p>
         </div>
         <Button>
@@ -196,7 +196,7 @@ export default function TradeMarketingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Trade Spend</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalSpend)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalSpend)}</p>
                 <p className="text-xs text-green-600">+12.5% vs last quarter</p>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function TradeMarketingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Programs</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.activePromotions}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.activePromotions}</p>
                 <p className="text-xs text-blue-600">{metrics.channelPartners} partners</p>
               </div>
             </div>
@@ -226,7 +226,7 @@ export default function TradeMarketingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Trade ROI</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.roi}x</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.roi}x</p>
                 <p className="text-xs text-green-600">Efficiency: {metrics.tradeSpendEfficiency}%</p>
               </div>
             </div>
@@ -241,7 +241,7 @@ export default function TradeMarketingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Volume Growth</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.volumeGrowth}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.volumeGrowth}%</p>
                 <p className="text-xs text-gray-600">Price realization: {metrics.priceRealization}%</p>
               </div>
             </div>
@@ -256,7 +256,7 @@ export default function TradeMarketingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Market Share</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.marketShare}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.marketShare}%</p>
                 <p className="text-xs text-green-600">+2.1% vs competitors</p>
               </div>
             </div>
@@ -334,25 +334,25 @@ export default function TradeMarketingPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Program Details
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Type & Channel
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Budget & Spend
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Performance Impact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       ROI
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -360,7 +360,7 @@ export default function TradeMarketingPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {promotions.map((promotion) => (
                     <tr key={promotion.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{promotion.name}</div>
                           <div className="text-sm text-gray-500">
@@ -369,18 +369,18 @@ export default function TradeMarketingPage() {
                           <div className="text-xs text-gray-400 mt-1">{promotion.category}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(promotion.type)}`}>
                           {promotion.type.replace('_', ' ')}
                         </span>
                         <div className="text-xs text-gray-500 mt-1">{promotion.channel}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(promotion.status)}`}>
                           {promotion.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           {formatCurrency(promotion.spent)} / {formatCurrency(promotion.budget)}
                         </div>
@@ -400,14 +400,14 @@ export default function TradeMarketingPage() {
                           {getBudgetUtilization(promotion.spent, promotion.budget)}% utilized
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-xs text-gray-600">
                           <div>Volume: +{promotion.performance.volumeImpact}%</div>
                           <div>Revenue: +{promotion.performance.revenueImpact}%</div>
                           <div>Margin: +{promotion.performance.marginImpact}%</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
                           Expected: {promotion.expectedROI}x
                         </div>
@@ -417,7 +417,7 @@ export default function TradeMarketingPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm">
                             View Details
@@ -503,22 +503,22 @@ export default function TradeMarketingPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Competitor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Market Share
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Price Index
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Promotional Activity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Trend
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -526,10 +526,10 @@ export default function TradeMarketingPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {competitorData.map((competitor, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{competitor.competitor}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{competitor.marketShare}%</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div 
@@ -538,12 +538,12 @@ export default function TradeMarketingPage() {
                           ></div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`text-sm ${competitor.priceIndex > 100 ? 'text-red-600' : 'text-green-600'}`}>
                           {competitor.priceIndex}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{competitor.promotionalActivity}%</div>
                         <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                           <div 
@@ -552,7 +552,7 @@ export default function TradeMarketingPage() {
                           ></div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${
                           competitor.trend === 'up' ? 'text-green-600 bg-green-100' :
                           competitor.trend === 'down' ? 'text-red-600 bg-red-100' :
@@ -564,7 +564,7 @@ export default function TradeMarketingPage() {
                           {competitor.trend}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                         <Button variant="outline" size="sm">
                           View Analysis
                         </Button>

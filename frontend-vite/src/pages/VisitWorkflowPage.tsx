@@ -111,7 +111,7 @@ const VisitWorkflowPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{customer.name}</h1>
               <div className="text-sm text-gray-600">
                 Visit: {visit.visit_code} • Started: {new Date(visit.start_time).toLocaleTimeString()}
               </div>

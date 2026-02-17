@@ -30,7 +30,7 @@ export default function RelationshipDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Relationship Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Relationship Detail</h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">

@@ -34,7 +34,7 @@ export default function InvoiceStatusHistory() {
           <ArrowLeft className="h-5 w-5" />
           Back to Invoice
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Invoice Status History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Invoice Status History</h1>
         <p className="text-gray-600">
           {invoice?.invoice_number} - {invoice?.customer_name} - Current: {' '}
           <span className="font-semibold capitalize">{invoice?.current_status}</span>

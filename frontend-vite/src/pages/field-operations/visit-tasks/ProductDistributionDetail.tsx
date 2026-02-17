@@ -33,11 +33,11 @@ export default function ProductDistributionDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Visit
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Product Distribution Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Distribution Detail</h1>
         <p className="text-gray-600">{distribution.brand_name} - {distribution.distribution_type}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
@@ -52,7 +52,7 @@ export default function ProductDistributionDetail() {
             <Package className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Total Value</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">${distribution.total_value.toFixed(2)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">${distribution.total_value.toFixed(2)}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -74,25 +74,25 @@ export default function ProductDistributionDetail() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Unit Value</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Total Value</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Unit Value</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Total Value</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {distribution.products_distributed.map((product, idx) => (
                 <tr key={idx}>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">
                     {product.product_name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">
                     {product.quantity}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">
                     ${product.unit_value.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right font-medium">
                     ${product.total_value.toFixed(2)}
                   </td>
                 </tr>

@@ -44,7 +44,7 @@ const TradeMarketingAgentPage: React.FC = () => {
       <div className="w-full">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Trade Marketing Agent</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Trade Marketing Agent</h1>
           <p className="text-gray-600">In-Store Analytics • Shelf Monitoring • Brand Activations</p>
         </div>
 

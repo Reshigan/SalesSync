@@ -34,7 +34,7 @@ export default function PaymentStatusHistory() {
           <ArrowLeft className="h-5 w-5" />
           Back to Payment
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Payment Status History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payment Status History</h1>
         <p className="text-gray-600">
           {payment?.payment_number} - {payment?.customer_name} - {formatCurrency(payment?.amount || 0)} - Current: {' '}
           <span className="font-semibold capitalize">{payment?.current_status}</span>

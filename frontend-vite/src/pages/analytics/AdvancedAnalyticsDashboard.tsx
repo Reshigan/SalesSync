@@ -48,7 +48,7 @@ export default function AdvancedAnalyticsDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Advanced Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Advanced Analytics</h1>
           <p className="mt-1 text-sm text-gray-600">Deep insights and trend analysis</p>
         </div>
         <div className="flex items-center gap-3">
@@ -186,27 +186,27 @@ export default function AdvancedAnalyticsDashboard() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Units Sold</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Revenue</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Margin %</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Returns</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Return Rate</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Units Sold</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Revenue</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Margin %</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Returns</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Return Rate</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {productPerformance.map((product, index) => (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{product.product}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900">{product.unitsSold.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right font-semibold text-gray-900">${product.revenue.toLocaleString()}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap font-medium text-gray-900">{product.product}</td>
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-gray-900">{product.unitsSold.toLocaleString()}</td>
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right font-semibold text-gray-900">${product.revenue.toLocaleString()}</td>
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right">
                     <span className={`px-2 py-1 rounded text-xs font-semibold ${product.margin >= 30 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {product.margin}%
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-gray-900">{product.returns}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-gray-600">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-gray-900">{product.returns}</td>
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-gray-600">
                     {((product.returns / product.unitsSold) * 100).toFixed(2)}%
                   </td>
                 </tr>

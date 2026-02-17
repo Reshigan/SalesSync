@@ -116,7 +116,7 @@ export default function AuditLogsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Audit Logs</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Audit Logs</h1>
           <p className="mt-1 text-sm text-gray-600">
             Track all system activities and user actions
           </p>
@@ -140,7 +140,7 @@ export default function AuditLogsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -148,7 +148,7 @@ export default function AuditLogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Actions</p>
-              <p className="text-2xl font-bold text-gray-900">{logs.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{logs.length}</p>
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function AuditLogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {new Set(logs.map(l => l.user)).size}
               </p>
             </div>
@@ -174,7 +174,7 @@ export default function AuditLogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Entities</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {new Set(logs.map(l => l.entity)).size}
               </p>
             </div>
@@ -188,7 +188,7 @@ export default function AuditLogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Today</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {logs.filter(l => {
                   const logDate = new Date(l.timestamp)
                   const today = new Date()
@@ -202,7 +202,7 @@ export default function AuditLogsPage() {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -275,22 +275,22 @@ export default function AuditLogsPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Timestamp
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Action
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Entity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     IP Address
                   </th>
                 </tr>
@@ -298,30 +298,30 @@ export default function AuditLogsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         {formatTimestamp(log.timestamp)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-400" />
                         {log.user}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getActionColor(log.action)}`}>
                         {log.action}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {log.entity}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-600">
                       {log.details}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {log.ipAddress}
                     </td>
                   </tr>

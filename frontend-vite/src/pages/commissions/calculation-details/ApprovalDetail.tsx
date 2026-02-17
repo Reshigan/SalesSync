@@ -34,7 +34,7 @@ export default function ApprovalDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Calculation
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Commission Approval Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Commission Approval Detail</h1>
         <p className="text-gray-600">{approval.agent_name}</p>
       </div>
 

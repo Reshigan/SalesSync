@@ -45,7 +45,7 @@ export const CommissionDashboardPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Commission Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Commission Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">
             Overview of commission earnings and payments
           </p>
@@ -92,7 +92,7 @@ export const CommissionDashboardPage: React.FC = () => {
       </div>
 
       {/* Overview Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -220,7 +220,7 @@ export const CommissionDashboardPage: React.FC = () => {
       {/* Status Summary */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Commission Status Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
             <div className="text-3xl font-bold text-yellow-600">{commissionStats.pending_commissions}</div>
             <div className="text-sm text-gray-500 mt-1">Pending Approval</div>

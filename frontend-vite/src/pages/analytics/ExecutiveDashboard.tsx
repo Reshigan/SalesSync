@@ -58,7 +58,7 @@ export default function ExecutiveDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Executive Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Executive Dashboard</h1>
           <p className="mt-1 text-sm text-gray-600">High-level overview of business performance</p>
         </div>
         <button className="btn btn-primary">Export Report</button>

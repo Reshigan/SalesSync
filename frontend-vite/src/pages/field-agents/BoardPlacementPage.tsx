@@ -217,7 +217,7 @@ export default function BoardPlacementPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Board Placement</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Board Placement</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage advertising board placements and campaign tracking.
           </p>
@@ -247,7 +247,7 @@ export default function BoardPlacementPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Board Placement</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Board Placement</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage advertising board placements, campaigns, and performance tracking.
           </p>
@@ -273,7 +273,7 @@ export default function BoardPlacementPage() {
       </div>
 
       {/* Campaign Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         {campaigns.filter(c => c.status === 'active').map((campaign) => (
           <div key={campaign.id} className="card">
             <div className="p-6">
@@ -359,25 +359,25 @@ export default function BoardPlacementPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Board Details
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Location
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Campaign
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Agent
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Performance
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -385,7 +385,7 @@ export default function BoardPlacementPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPlacements.map((placement) => (
                 <tr key={placement.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0">
                         <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -400,19 +400,19 @@ export default function BoardPlacementPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{placement.location.address}</div>
                     <div className="text-sm text-gray-500">{placement.location.landmark}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{placement.campaign.name}</div>
                     <div className="text-sm text-gray-500">{placement.campaign.client}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{placement.agent_name}</div>
                     <div className="text-sm text-gray-500">{formatDate(placement.placement_date)}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(placement.status)}`}>
                       {placement.status}
                     </span>
@@ -424,11 +424,11 @@ export default function BoardPlacementPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">Score: {placement.metrics.visibility_score}%</div>
                     <div className="text-sm text-gray-500">{placement.metrics.estimated_impressions.toLocaleString()} impressions</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => setSelectedPlacement(placement)}

@@ -62,7 +62,7 @@ export default function CashVariance() {
           <ArrowLeft className="h-5 w-5" />
           Back to Cash Session
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Resolve Cash Variance</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Resolve Cash Variance</h1>
         <p className="text-gray-600">{session.session_number} - {session.agent_name}</p>
       </div>
 

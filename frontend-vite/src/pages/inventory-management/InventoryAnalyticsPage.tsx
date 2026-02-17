@@ -13,12 +13,12 @@ export default function InventoryAnalyticsPage() {
   const stats = analytics || {}
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-ZA', {style: 'currency', currency: 'ZAR'}).format(amount)
 
-  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
+  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
   if (error) return <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4"><p className="text-red-800">Failed to load analytics.</p></div></div>
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Inventory Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive inventory insights and trends</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Inventory Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive inventory insights and trends</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
@@ -30,16 +30,16 @@ export default function InventoryAnalyticsPage() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Stock Value</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_stock_value || 0)}</p></div>
+            <div><p className="text-sm text-gray-600">Total Stock Value</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(stats.total_stock_value || 0)}</p></div>
             <DollarSign className="h-8 w-8 text-green-500" />
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Stock Turnover</p><p className="text-2xl font-bold text-gray-900">{stats.stock_turnover_ratio || 0}x</p></div>
+            <div><p className="text-sm text-gray-600">Stock Turnover</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.stock_turnover_ratio || 0}x</p></div>
             <RefreshCw className="h-8 w-8 text-blue-500" />
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function InventoryAnalyticsPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Stock Movement Trends</h2>
           <div className="space-y-4">
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Stock In</span>
                 <span className="text-sm font-bold text-green-600">{stats.stock_in_count || 0} movements</span>
               </div>
@@ -71,7 +71,7 @@ export default function InventoryAnalyticsPage() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Stock Out</span>
                 <span className="text-sm font-bold text-red-600">{stats.stock_out_count || 0} movements</span>
               </div>
@@ -80,7 +80,7 @@ export default function InventoryAnalyticsPage() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Adjustments</span>
                 <span className="text-sm font-bold text-blue-600">{stats.adjustments_count || 0} movements</span>
               </div>

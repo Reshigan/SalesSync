@@ -50,7 +50,7 @@ export default function AuditFilter() {
           <ArrowLeft className="h-5 w-5" />
           Back to Audit Trail
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Filter Audit Trail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Filter Audit Trail</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

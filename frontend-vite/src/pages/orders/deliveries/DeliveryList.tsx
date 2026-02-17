@@ -31,42 +31,43 @@ export default function DeliveryList() {
           <ArrowLeft className="h-5 w-5" />
           Back to Order
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Deliveries</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Deliveries</h1>
         <p className="text-gray-600">{order?.order_number} - {order?.customer_name}</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Delivery #</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Driver</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Vehicle</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Scheduled</th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase">Stops</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Delivery #</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Driver</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Vehicle</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Scheduled</th>
+              <th className="px-3 py-3 sm:px-4 text-center text-xs font-bold text-gray-600 uppercase">Stops</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {deliveries?.map((delivery) => (
               <tr key={delivery.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {delivery.delivery_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {delivery.driver_name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {delivery.vehicle_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(delivery.scheduled_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-center">
                   {delivery.stops}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     delivery.status === 'delivered' 
                       ? 'bg-green-100 text-green-800' 
@@ -77,7 +78,7 @@ export default function DeliveryList() {
                     {delivery.status.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => navigate(`/orders/${orderId}/deliveries/${delivery.id}`)}
                     className="text-primary-600 hover:text-primary-900"
@@ -89,6 +90,7 @@ export default function DeliveryList() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

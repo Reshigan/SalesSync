@@ -28,11 +28,11 @@ export default function BoardMaintenanceLog() {
           <ArrowLeft className="h-5 w-5" />
           Back to Board
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Board Maintenance Log</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Board Maintenance Log</h1>
         <p className="text-gray-600">{board?.board_number} - {board?.brand_name}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Wrench className="h-5 w-5 text-blue-600" />
@@ -86,7 +86,7 @@ export default function BoardMaintenanceLog() {
               </div>
             </div>
 
-            <dl className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-3">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Date</dt>
                 <dd className="mt-1 text-sm text-gray-900 flex items-center gap-1">

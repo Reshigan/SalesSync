@@ -47,7 +47,7 @@ export default function CreateRelationship({ entityType, entityId }: CreateRelat
           <ArrowLeft className="h-5 w-5" />
           Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Create Relationship</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create Relationship</h1>
         <p className="text-gray-600">Link this {entityType} to another document</p>
       </div>
 

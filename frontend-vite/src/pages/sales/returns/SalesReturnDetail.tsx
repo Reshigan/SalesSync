@@ -30,14 +30,14 @@ export default function SalesReturnDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/sales/returns')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Return {returnData.return_number || `#${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Return {returnData.return_number || `#${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[returnData.status] || 'bg-gray-100 text-gray-800'}`}>{returnData.status || 'N/A'}</span>
           </div>
         </div>
         <button onClick={() => navigate(`/sales/returns/${id}/edit`)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Edit className="h-4 w-4" />Edit</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Return Amount</p><p className="text-xl font-bold">{formatCurrency(returnData.total_amount || returnData.return_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Return Date</p><p className="text-xl font-bold">{formatDate(returnData.return_date) || 'N/A'}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>

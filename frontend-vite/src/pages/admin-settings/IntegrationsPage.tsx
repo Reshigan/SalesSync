@@ -48,7 +48,7 @@ export const IntegrationsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Integrations</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Integrations</h1>
           <p className="mt-1 text-sm text-gray-500">
             Connect SalesSync with your favorite tools and services
           </p>

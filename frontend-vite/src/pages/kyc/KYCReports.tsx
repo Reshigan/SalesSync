@@ -99,10 +99,10 @@ export default function KYCReports() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">KYC Reports</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">KYC Reports</h1>
           <p className="text-gray-600">Comprehensive KYC compliance and performance reporting</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handlePrint}
             className="btn-outline flex items-center space-x-2"
@@ -171,7 +171,7 @@ export default function KYCReports() {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Start Date
@@ -372,25 +372,25 @@ export default function KYCReports() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Agent
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Risk Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Score
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Submitted
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Processing Time
                   </th>
                 </tr>
@@ -398,16 +398,16 @@ export default function KYCReports() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {(reportData?.detailed?.submissions || []).map((submission: any) => (
                   <tr key={submission.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{submission.customer_name}</div>
                         <div className="text-sm text-gray-500">{submission.customer_code}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {submission.agent_name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         submission.status === 'approved' ? 'bg-green-100 text-green-800' :
                         submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
@@ -417,7 +417,7 @@ export default function KYCReports() {
                         {submission.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         submission.risk_level === 'low' ? 'bg-green-100 text-green-800' :
                         submission.risk_level === 'high' ? 'bg-red-100 text-red-800' :
@@ -426,13 +426,13 @@ export default function KYCReports() {
                         {submission.risk_level?.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {submission.overall_score}/100
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(submission.submission_date)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {submission.processing_time || 0} days
                     </td>
                   </tr>
@@ -447,7 +447,7 @@ export default function KYCReports() {
         <div className="space-y-6">
           <div className="card">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Compliance Overview</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">
                   {reportData?.compliance?.compliance_rate || 0}%
@@ -496,19 +496,19 @@ export default function KYCReports() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Agent
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Submissions
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Approval Rate
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Avg. Processing Time
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                       Quality Score
                     </th>
                   </tr>
@@ -516,19 +516,19 @@ export default function KYCReports() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {(reportData?.performance?.agents || []).map((agent: any) => (
                     <tr key={agent.agent_id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {agent.agent_name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {agent.total_submissions}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {agent.approval_rate}%
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {agent.avg_processing_time} days
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {agent.quality_score}/100
                       </td>
                     </tr>

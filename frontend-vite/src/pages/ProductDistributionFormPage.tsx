@@ -120,7 +120,7 @@ const ProductDistributionFormPage: React.FC = () => {
           <button onClick={() => navigate(-1)} className="mb-4 text-blue-600 hover:text-blue-700">
             ← Back to Visit
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Product Distribution</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Distribution</h1>
           <p className="text-gray-600">{customer?.name}</p>
         </div>
 

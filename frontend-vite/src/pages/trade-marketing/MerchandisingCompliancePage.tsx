@@ -27,12 +27,12 @@ export default function MerchandisingCompliancePage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Merchandising Compliance</h1><p className="text-sm text-gray-600 mt-1">Monitor in-store compliance audits ({total} total)</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Merchandising Compliance</h1><p className="text-sm text-gray-600 mt-1">Monitor in-store compliance audits ({total} total)</p></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Audits</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
+            <div><p className="text-sm text-gray-600">Total Audits</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{total}</p></div>
             <AlertCircle className="h-8 w-8 text-blue-500" />
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function MerchandisingCompliancePage() {
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Compliance Rate</p><p className="text-2xl font-bold text-gray-900">{audits.length > 0 ? ((audits.filter(a => a.compliance_status === 'compliant').length / audits.length) * 100).toFixed(1) : 0}%</p></div>
+            <div><p className="text-sm text-gray-600">Compliance Rate</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{audits.length > 0 ? ((audits.filter(a => a.compliance_status === 'compliant').length / audits.length) * 100).toFixed(1) : 0}%</p></div>
             <TrendingUp className="h-8 w-8 text-purple-500" />
           </div>
         </div>
@@ -70,13 +70,13 @@ export default function MerchandisingCompliancePage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Store</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Audit Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Auditor</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Score</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Issues</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Store</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Audit Date</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Auditor</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Score</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Issues</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -85,11 +85,11 @@ export default function MerchandisingCompliancePage() {
               ) : (
                 audits.map(audit => (
                   <tr key={audit.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{audit.store_name}</div><div className="text-sm text-gray-500">{audit.store_location}</div></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{audit.brand_name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{new Date(audit.audit_date).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">Agent #{audit.auditor_id?.substring(0,8)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{audit.store_name}</div><div className="text-sm text-gray-500">{audit.store_location}</div></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{audit.brand_name}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(audit.audit_date).toLocaleDateString()}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">Agent #{audit.auditor_id?.substring(0,8)}</td>
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="flex items-center space-x-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[80px]">
                           <div className={`h-2 rounded-full ${audit.compliance_score >= 80 ? 'bg-green-600' : audit.compliance_score >= 60 ? 'bg-yellow-600' : 'bg-red-600'}`} style={{width: `${audit.compliance_score || 0}%`}}></div>
@@ -97,8 +97,8 @@ export default function MerchandisingCompliancePage() {
                         <span className="text-sm font-medium text-gray-900">{audit.compliance_score || 0}%</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">{getComplianceBadge(audit.compliance_status)}</td>
-                    <td className="px-6 py-4 text-sm text-red-600">{audit.issues_count || 0}</td>
+                    <td className="px-3 py-3 sm:px-4">{getComplianceBadge(audit.compliance_status)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-red-600">{audit.issues_count || 0}</td>
                   </tr>
                 ))
               )}

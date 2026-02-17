@@ -285,7 +285,7 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Analytics</h1>
           <p className="mt-1 text-sm text-gray-600">
             Comprehensive analytics and reporting dashboard.
           </p>
@@ -317,7 +317,7 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Analytics</h1>
           <p className="mt-1 text-sm text-gray-600">
             Comprehensive analytics and reporting dashboard with real-time insights.
           </p>
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.overview.total_revenue)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(data.overview.total_revenue)}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-full">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -382,7 +382,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{data.overview.total_orders.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{data.overview.total_orders.toLocaleString()}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-full">
               <ShoppingCart className="h-6 w-6 text-blue-600" />
@@ -405,7 +405,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900">{data.overview.total_customers.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{data.overview.total_customers.toLocaleString()}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-full">
               <Users className="h-6 w-6 text-purple-600" />
@@ -428,7 +428,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(data.overview.avg_order_value)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(data.overview.avg_order_value)}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-full">
               <Target className="h-6 w-6 text-orange-600" />
@@ -568,22 +568,22 @@ export default function AnalyticsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Agent
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Total Sales
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Orders
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Customers Visited
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Conversion Rate
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Commission
                 </th>
               </tr>
@@ -591,7 +591,7 @@ export default function AnalyticsPage() {
             <tbody className="bg-white divide-y divide-gray-200">
               {data.field_agent_performance.map((agent) => (
                 <tr key={agent.agent_id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
@@ -606,16 +606,16 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {formatCurrency(agent.total_sales)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {agent.orders_count}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {agent.customers_visited}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                         <div 
@@ -626,7 +626,7 @@ export default function AnalyticsPage() {
                       <span className="text-sm text-gray-900">{Number.isFinite(Number(agent.conversion_rate)) ? Number(agent.conversion_rate).toFixed(1) : '0.0'}%</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {formatCurrency(agent.commission_earned)}
                   </td>
                 </tr>
@@ -683,12 +683,12 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
         <div className="card">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{data.overview.conversion_rate}%</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{data.overview.conversion_rate}%</p>
             </div>
             <div className="p-3 bg-indigo-100 rounded-full">
               <Activity className="h-6 w-6 text-indigo-600" />
@@ -713,7 +713,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Active Products</p>
-              <p className="text-2xl font-bold text-gray-900">{data.overview.total_products}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{data.overview.total_products}</p>
             </div>
             <div className="p-3 bg-teal-100 rounded-full">
               <Package className="h-6 w-6 text-teal-600" />
@@ -738,7 +738,7 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Customer Segments</p>
-              <p className="text-2xl font-bold text-gray-900">{data.customer_segments.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{data.customer_segments.length}</p>
             </div>
             <div className="p-3 bg-pink-100 rounded-full">
               <Award className="h-6 w-6 text-pink-600" />

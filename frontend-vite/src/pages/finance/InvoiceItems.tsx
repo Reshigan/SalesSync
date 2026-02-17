@@ -34,36 +34,37 @@ export default function InvoiceItems() {
           <ArrowLeft className="h-5 w-5" />
           Back to Invoice
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Invoice Items</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Invoice Items</h1>
         <p className="text-gray-600">{invoice?.invoice_number} - {invoice?.customer_name}</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Unit Price</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Total</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Quantity</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Unit Price</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Total</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {items?.map((item) => (
               <tr key={item.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-gray-400" />
                     <span className="text-sm font-medium text-gray-900">{item.product_name}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {item.quantity}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {formatCurrency(item.unit_price)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {formatCurrency(item.total)}
                 </td>
               </tr>
@@ -71,15 +72,16 @@ export default function InvoiceItems() {
           </tbody>
           <tfoot className="bg-gray-50">
             <tr>
-              <td colSpan={3} className="px-6 py-4 text-right text-sm font-semibold text-gray-900">
+              <td colSpan={3} className="px-3 py-3 sm:px-4 text-right text-sm font-semibold text-gray-900">
                 Subtotal:
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+              <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-bold text-gray-900">
                 {formatCurrency(subtotal)}
               </td>
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
     </div>
   )

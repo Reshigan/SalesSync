@@ -36,7 +36,7 @@ export default function VanSalesReturnDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/van-sales/returns')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{ret.name || ret.title || `Van Sales Return #${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{ret.name || ret.title || `Van Sales Return #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[ret.status] || 'bg-gray-100 text-gray-800'}`}>{(ret.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>

@@ -33,7 +33,7 @@ export default function PaymentDetail() {
         </button>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{payment.payment_number}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{payment.payment_number}</h1>
             <p className="text-gray-600">Customer ID: {payment.customer_id}</p>
           </div>
           <div className="flex gap-2">
@@ -55,7 +55,7 @@ export default function PaymentDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />

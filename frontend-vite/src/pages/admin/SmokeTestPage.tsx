@@ -231,7 +231,7 @@ export default function SmokeTestPage() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">QA & Test Micro-Frontend</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">QA & Test Micro-Frontend</h1>
         <p className="text-gray-600 mt-2">
           Comprehensive testing suite for API health, routes, and console errors
         </p>
@@ -276,7 +276,7 @@ export default function SmokeTestPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-2xl font-bold text-gray-900">{tests.length}</div>
+          <div className="text-xl sm:text-2xl font-bold text-gray-900">{tests.length}</div>
           <div className="text-sm text-gray-600">Total Routes</div>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
@@ -321,22 +321,23 @@ export default function SmokeTestPage() {
 
       {/* Results Table */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Route
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Load Time
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Error
               </th>
             </tr>
@@ -344,13 +345,13 @@ export default function SmokeTestPage() {
           <tbody className="bg-white divide-y divide-gray-200">
             {tests.map((test, idx) => (
               <tr key={idx} className={test.status === 'loading' ? 'bg-blue-50' : ''}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {test.path}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {test.type}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                   {test.status === 'pending' && (
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                       Pending
@@ -372,16 +373,17 @@ export default function SmokeTestPage() {
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {test.loadTime ? `${test.loadTime}ms` : '-'}
                 </td>
-                <td className="px-6 py-4 text-sm text-red-600">
+                <td className="px-3 py-3 sm:px-4 text-sm text-red-600">
                   {test.error || '-'}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Export Results */}

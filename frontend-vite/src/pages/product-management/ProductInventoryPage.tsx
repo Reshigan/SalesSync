@@ -56,7 +56,7 @@ export const ProductInventoryPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Inventory</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Inventory</h1>
           <p className="mt-1 text-sm text-gray-500">
             Monitor stock levels and manage inventory across warehouses
           </p>
@@ -67,7 +67,7 @@ export const ProductInventoryPage: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
@@ -167,25 +167,25 @@ export const ProductInventoryPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Current Stock
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Stock Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Reorder Point
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -195,20 +195,20 @@ export const ProductInventoryPage: React.FC = () => {
                   const stockLevel = getStockLevel(item.current_stock, item.min_stock_level, item.max_stock_level)
                   return (
                     <tr key={item.product_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{item.product_name}</div>
                         <div className="text-sm text-gray-500">{item.sku}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{item.category}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">{item.current_stock}</div>
                         <div className="text-sm text-gray-500">
                           Min: {item.min_stock_level} / Max: {item.max_stock_level}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2 w-24">
                             <div
@@ -223,19 +223,19 @@ export const ProductInventoryPage: React.FC = () => {
                           <span className="text-sm text-gray-900">{stockLevel.toFixed(0)}%</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <div className={`text-sm font-medium ${
                           item.current_stock <= item.reorder_point ? 'text-red-600' : 'text-gray-900'
                         }`}>
                           {item.reorder_point}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(item.stock_status)}`}>
                           {item.stock_status.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                         <button className="text-blue-600 hover:text-blue-900 mr-4">
                           View
                         </button>

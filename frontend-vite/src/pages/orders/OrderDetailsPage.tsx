@@ -274,7 +274,7 @@ export default function OrderDetailsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{order.orderNumber}</h1>
             <p className="text-sm text-gray-600">
               Placed on {new Date(order.orderDate).toLocaleDateString()}
             </p>
@@ -300,7 +300,7 @@ export default function OrderDetailsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -308,7 +308,7 @@ export default function OrderDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Items</p>
-              <p className="text-2xl font-bold text-gray-900">{order.items.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{order.items.length}</p>
             </div>
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function OrderDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Amount</p>
-              <p className="text-2xl font-bold text-gray-900">${order.totalAmount.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${order.totalAmount.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -508,48 +508,48 @@ export default function OrderDetailsPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Unit Price</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Subtotal</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Tax</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Total</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Unit Price</th>
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Subtotal</th>
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Tax</th>
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {order.items.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.productName}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.sku}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.quantity}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900 text-right">${item.unitPrice.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900 text-right">${item.subtotal.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 text-right">${item.taxAmount.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">${item.totalAmount.toFixed(2)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{item.productName}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-600">{item.sku}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">{item.quantity}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">${item.unitPrice.toFixed(2)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">${item.subtotal.toFixed(2)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-600 text-right">${item.taxAmount.toFixed(2)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm font-semibold text-gray-900 text-right">${item.totalAmount.toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot className="bg-gray-50">
                 <tr>
-                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Subtotal:</td>
-                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.subtotal.toFixed(2)}</td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-4 text-right text-sm font-medium text-gray-600">Subtotal:</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-semibold text-gray-900">${order.subtotal.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Tax:</td>
-                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.taxAmount.toFixed(2)}</td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-4 text-right text-sm font-medium text-gray-600">Tax:</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-semibold text-gray-900">${order.taxAmount.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Shipping:</td>
-                  <td className="px-6 py-3 text-right text-sm font-semibold text-gray-900">${order.shippingCost.toFixed(2)}</td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-4 text-right text-sm font-medium text-gray-600">Shipping:</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-semibold text-gray-900">${order.shippingCost.toFixed(2)}</td>
                 </tr>
                 <tr>
-                  <td colSpan={6} className="px-6 py-3 text-right text-sm font-medium text-gray-600">Discount:</td>
-                  <td className="px-6 py-3 text-right text-sm font-semibold text-red-600">-${order.discount.toFixed(2)}</td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-4 text-right text-sm font-medium text-gray-600">Discount:</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-semibold text-red-600">-${order.discount.toFixed(2)}</td>
                 </tr>
                 <tr className="border-t-2 border-gray-300">
-                  <td colSpan={6} className="px-6 py-4 text-right text-base font-bold text-gray-900">Total Amount:</td>
-                  <td className="px-6 py-4 text-right text-xl font-bold text-green-600">${order.totalAmount.toFixed(2)}</td>
+                  <td colSpan={6} className="px-3 py-3 sm:px-4 text-right text-base font-bold text-gray-900">Total Amount:</td>
+                  <td className="px-3 py-3 sm:px-4 text-right text-xl font-bold text-green-600">${order.totalAmount.toFixed(2)}</td>
                 </tr>
               </tfoot>
             </table>

@@ -31,7 +31,7 @@ export default function SourceTransactions() {
           <ArrowLeft className="h-5 w-5" />
           Back to Payout Line
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Source Transactions</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Source Transactions</h1>
         <p className="text-gray-600">{line?.agent_name}</p>
       </div>
 
@@ -49,22 +49,23 @@ export default function SourceTransactions() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Transaction #</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Amount</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Transaction #</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Amount</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {transactions?.map((transaction) => (
               <tr key={transaction.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     transaction.transaction_type === 'order' ? 'bg-blue-100 text-blue-800' :
                     transaction.transaction_type === 'bonus' ? 'bg-green-100 text-green-800' :
@@ -73,22 +74,22 @@ export default function SourceTransactions() {
                     {transaction.transaction_type}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {transaction.transaction_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(transaction.transaction_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                   {transaction.transaction_amount > 0 ? formatCurrency(transaction.transaction_amount) : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                   {transaction.commission_rate > 0 ? `${transaction.commission_rate}%` : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
                   {formatCurrency(transaction.commission_amount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   {transaction.transaction_type === 'order' && (
                     <button
                       onClick={() => navigate(`/orders/${transaction.id}`)}
@@ -102,6 +103,7 @@ export default function SourceTransactions() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

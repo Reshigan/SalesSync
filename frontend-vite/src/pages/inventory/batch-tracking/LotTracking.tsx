@@ -28,7 +28,7 @@ export default function LotTracking() {
           <ArrowLeft className="h-5 w-5" />
           Back to Lot
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Lot Tracking History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Lot Tracking History</h1>
         <p className="text-gray-600">{lot?.lot_number} - {lot?.product_name}</p>
       </div>
 

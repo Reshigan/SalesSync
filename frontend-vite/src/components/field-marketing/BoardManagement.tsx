@@ -151,12 +151,12 @@ export default function BoardManagement() {
       </div>
 
       {/* Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Boards</p>
-              <p className="text-2xl font-bold text-gray-900">{boards.length}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{boards.length}</p>
             </div>
             <BarChart3 className="w-10 h-10 text-blue-500" />
           </div>
@@ -176,7 +176,7 @@ export default function BoardManagement() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Available</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {boards.reduce((sum, b) => sum + b.total_available, 0)}
               </p>
             </div>
@@ -383,28 +383,29 @@ export default function BoardManagement() {
 
       {/* Boards List */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Board
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Dimensions
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Commission
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Inventory
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -412,39 +413,39 @@ export default function BoardManagement() {
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={7} className="px-3 py-3 sm:px-4 text-center text-gray-500">
                   Loading boards...
                 </td>
               </tr>
             ) : filteredBoards.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={7} className="px-3 py-3 sm:px-4 text-center text-gray-500">
                   No boards found
                 </td>
               </tr>
             ) : (
               filteredBoards.map((board) => (
                 <tr key={board.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div>
                       <div className="font-medium text-gray-900">{board.board_name}</div>
                       <div className="text-sm text-gray-500">{board.board_code}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">
                     {board.dimensions ? 
                       `${board.dimensions.width} x ${board.dimensions.height} m` : 
                       'N/A'
                     }
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div className="text-sm text-gray-900">{board.material_type}</div>
                     <div className="text-xs text-gray-500">{board.installation_type}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">
                     ${board.commission_rate.toFixed(2)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div className="text-sm text-gray-900">
                       Available: {board.total_available}
                     </div>
@@ -452,7 +453,7 @@ export default function BoardManagement() {
                       Installed: {board.total_installed}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       board.status === 'active' ? 'bg-green-100 text-green-800' :
                       board.status === 'inactive' ? 'bg-yellow-100 text-yellow-800' :
@@ -461,7 +462,7 @@ export default function BoardManagement() {
                       {board.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-medium">
                     <button
                       onClick={() => {
                         setEditingBoard(board)
@@ -494,6 +495,7 @@ export default function BoardManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

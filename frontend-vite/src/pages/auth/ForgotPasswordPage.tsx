@@ -85,7 +85,7 @@ export default function ForgotPasswordPage() {
           Back to sign in
         </Link>
         
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           Forgot your password?
         </h2>
         <p className="mt-2 text-sm text-gray-600">

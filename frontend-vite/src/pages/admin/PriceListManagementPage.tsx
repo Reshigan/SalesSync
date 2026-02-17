@@ -64,9 +64,9 @@ export default function PriceListManagementPage() {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Price List Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Price List Management</h1>
           <p className="text-sm text-gray-600 mt-1">Manage pricing for different customer types, regions, and channels</p>
         </div>
         <button
@@ -101,32 +101,33 @@ export default function PriceListManagementPage() {
         </select>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+      <div className="bg-white shadow-md rounded-lg overflow-hidden max-w-full">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Name
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Customer Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Channel
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Currency
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Effective Period
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Priority
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -143,22 +144,22 @@ export default function PriceListManagementPage() {
             ) : (
               filteredPriceLists.map((priceList) => (
                 <tr key={priceList.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div className="text-sm font-medium text-gray-900">{priceList.name}</div>
                     {priceList.description && (
                       <div className="text-sm text-gray-500">{priceList.description}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {priceList.customer_type || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {priceList.channel || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {priceList.currency}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       <span>{new Date(priceList.effective_start).toLocaleDateString()}</span>
@@ -170,17 +171,17 @@ export default function PriceListManagementPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {priceList.priority}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       priceList.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {priceList.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => navigate(`/admin/price-lists/${priceList.id}`)}
                       className="text-primary-600 hover:text-primary-900 mr-4"
@@ -201,6 +202,7 @@ export default function PriceListManagementPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

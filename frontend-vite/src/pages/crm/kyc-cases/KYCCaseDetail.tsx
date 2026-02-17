@@ -28,7 +28,7 @@ export default function KYCCaseDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/crm/kyc-cases')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
-          <div><h1 className="text-2xl font-bold text-gray-900">KYC Case {kycCase.case_number || `#${id}`}</h1>
+          <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">KYC Case {kycCase.case_number || `#${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[kycCase.status] || 'bg-gray-100 text-gray-800'}`}>{kycCase.status || 'N/A'}</span></div>
         </div>
         <button onClick={() => navigate(`/crm/kyc-cases/${id}/edit`)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Edit className="h-4 w-4" />Edit</button>

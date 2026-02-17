@@ -104,7 +104,7 @@ export default function PaymentCollectionPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payment Collection</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payment Collection</h1>
           <p className="mt-1 text-sm text-gray-600">Track and manage payment transactions</p>
         </div>
         <button className="btn btn-primary flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function PaymentCollectionPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-[#1A1A1A] text-white rounded-3xl p-6 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between">
             <div>
@@ -211,49 +211,49 @@ export default function PaymentCollectionPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment #</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment #</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredPayments.map((payment) => (
                 <tr key={payment.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="font-semibold text-gray-900">{payment.paymentNumber}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer">
                       {payment.invoiceNumber}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{payment.customerName}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(payment.date).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="text-sm font-semibold text-gray-900">${payment.amount.toLocaleString()}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <div className="flex items-center gap-2 text-sm text-gray-700">
                       {getMethodIcon(payment.method)}
                       <span className="capitalize">{payment.method.replace('_', ' ')}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(payment.status)}`}>
                       {getStatusIcon(payment.status)}
                       {payment.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {payment.reference || '-'}
                   </td>
                 </tr>

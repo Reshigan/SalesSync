@@ -103,7 +103,7 @@ export default function MyTargets() {
               <Target className="w-7 h-7 text-blue-600" />
               <span className="text-xs font-medium text-gray-500">Active</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{activeTargets.length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{activeTargets.length}</p>
             <p className="text-xs text-gray-500 mt-1">targets</p>
           </div>
 
@@ -112,7 +112,7 @@ export default function MyTargets() {
               <TrendingUp className="w-7 h-7 text-green-600" />
               <span className="text-xs font-medium text-gray-500">Achieved</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{totalAchieved}/{totalTarget}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalAchieved}/{totalTarget}</p>
             <p className="text-xs text-gray-500 mt-1">{overallPct}% overall</p>
           </div>
 
@@ -121,7 +121,7 @@ export default function MyTargets() {
               <Award className="w-7 h-7 text-yellow-600" />
               <span className="text-xs font-medium text-gray-500">Completed</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{completedTargets.length}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{completedTargets.length}</p>
             <p className="text-xs text-gray-500 mt-1">targets met</p>
           </div>
 
@@ -130,7 +130,7 @@ export default function MyTargets() {
               <Calendar className="w-7 h-7 text-purple-600" />
               <span className="text-xs font-medium text-gray-500">Today</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">
               {targets.filter(t => t.status === 'active' && t.period_type === 'daily').length}
             </p>
             <p className="text-xs text-gray-500 mt-1">daily targets</p>

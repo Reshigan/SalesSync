@@ -58,7 +58,7 @@ export default function AttachmentMetadata() {
           <ArrowLeft className="h-5 w-5" />
           Back to Attachment
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Attachment Metadata</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Attachment Metadata</h1>
         <p className="text-gray-600">{attachment.file_name}</p>
       </div>
 

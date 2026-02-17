@@ -31,11 +31,11 @@ export default function SurveyAnalytics() {
           <ArrowLeft className="h-5 w-5" />
           Back to Survey
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Survey Analytics</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Survey Analytics</h1>
         <p className="text-gray-600">{survey?.title}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-5 w-5 text-blue-600" />

@@ -28,11 +28,11 @@ export default function VanOrdersListPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div><h1 className="text-2xl font-bold text-gray-900">Van Sales Orders</h1><p className="text-sm text-gray-600 mt-1">Manage orders ({total} total)</p></div>
+        <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Sales Orders</h1><p className="text-sm text-gray-600 mt-1">Manage orders ({total} total)</p></div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Create Order</span></button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Orders</p><p className="text-2xl font-bold">{total}</p></div><ShoppingCart className="h-8 w-8 text-blue-500" /></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Revenue</p><p className="text-2xl font-bold text-green-600">{formatCurrency(orders.reduce((s,o) => s+o.total_amount,0))}</p></div><DollarSign className="h-8 w-8 text-green-500" /></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Delivered</p><p className="text-2xl font-bold text-green-600">{orders.filter(o => o.delivery_status==='delivered').length}</p></div><ShoppingCart className="h-8 w-8 text-green-500" /></div></div>
@@ -42,18 +42,18 @@ export default function VanOrdersListPage() {
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order #</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Delivery</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th></tr></thead>
+            <thead className="bg-gray-50"><tr><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Order #</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Delivery</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Actions</th></tr></thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {orders.length === 0 ? <tr><td colSpan={7} className="px-6 py-12 text-center text-gray-500"><ShoppingCart className="h-12 w-12 mx-auto text-gray-400 mb-2" /><p>No orders found</p></td></tr>
               : orders.map(order => (
                 <tr key={order.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium">{order.order_number}</td>
-                  <td className="px-6 py-4 text-sm">{order.customer_name}</td>
-                  <td className="px-6 py-4 text-sm">{new Date(order.order_date).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-sm font-medium">{formatCurrency(order.total_amount)}</td>
-                  <td className="px-6 py-4">{getPaymentBadge(order.payment_status)}<div className="text-xs text-gray-500 mt-1">{order.payment_method}</div></td>
-                  <td className="px-6 py-4">{getDeliveryBadge(order.delivery_status)}</td>
-                  <td className="px-6 py-4"><button className="text-blue-600 hover:text-blue-900"><Eye className="h-4 w-4" /></button></td>
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium">{order.order_number}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm">{order.customer_name}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm">{new Date(order.order_date).toLocaleDateString()}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium">{formatCurrency(order.total_amount)}</td>
+                  <td className="px-3 py-3 sm:px-4">{getPaymentBadge(order.payment_status)}<div className="text-xs text-gray-500 mt-1">{order.payment_method}</div></td>
+                  <td className="px-3 py-3 sm:px-4">{getDeliveryBadge(order.delivery_status)}</td>
+                  <td className="px-3 py-3 sm:px-4"><button className="text-blue-600 hover:text-blue-900"><Eye className="h-4 w-4" /></button></td>
                 </tr>
               ))}
             </tbody>

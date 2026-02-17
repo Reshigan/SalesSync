@@ -23,12 +23,12 @@ export default function LiveGPSTrackingPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Live GPS Tracking</h1><p className="text-sm text-gray-600 mt-1">Real-time agent location tracking (updates every 30s)</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Live GPS Tracking</h1><p className="text-sm text-gray-600 mt-1">Real-time agent location tracking (updates every 30s)</p></div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Agents</p><p className="text-2xl font-bold text-gray-900">{agents.length}</p></div>
+            <div><p className="text-sm text-gray-600">Total Agents</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{agents.length}</p></div>
             <MapPin className="h-8 w-8 text-blue-500" />
           </div>
         </div>
@@ -47,7 +47,7 @@ export default function LiveGPSTrackingPage() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <h2 className="text-lg font-bold text-gray-900">Agent Locations</h2>
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

@@ -28,7 +28,7 @@ export default function BoardPhotoHistory() {
           <ArrowLeft className="h-5 w-5" />
           Back to Board
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Board Photo History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Board Photo History</h1>
         <p className="text-gray-600">{board?.board_number} - {board?.brand_name}</p>
       </div>
 

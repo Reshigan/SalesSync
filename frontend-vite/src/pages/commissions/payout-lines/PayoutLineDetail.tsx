@@ -34,7 +34,7 @@ export default function PayoutLineDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Payout
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Payout Line Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payout Line Detail</h1>
         <p className="text-gray-600">{line.agent_name}</p>
       </div>
 

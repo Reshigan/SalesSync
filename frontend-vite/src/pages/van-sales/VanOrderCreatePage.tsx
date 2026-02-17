@@ -57,7 +57,7 @@ export default function VanOrderCreatePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center space-x-4">
         <button onClick={() => window.history.back()} className="text-gray-600 hover:text-gray-900"><ArrowLeft className="h-6 w-6" /></button>
-        <h1 className="text-2xl font-bold text-gray-900">Create Van Sales Order</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create Van Sales Order</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

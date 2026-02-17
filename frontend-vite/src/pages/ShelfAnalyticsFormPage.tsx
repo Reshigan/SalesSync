@@ -125,7 +125,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           >
             ← Back to Visit
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Shelf Analytics</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Shelf Analytics</h1>
           <p className="text-gray-600">{store?.name}</p>
         </div>
 

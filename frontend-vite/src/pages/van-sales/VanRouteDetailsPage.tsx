@@ -29,13 +29,13 @@ export default function VanRouteDetailsPage() {
       <div className="flex items-center space-x-4">
         <button onClick={() => window.history.back()} className="text-gray-600 hover:text-gray-900"><ArrowLeft className="h-6 w-6" /></button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">{route.route_name}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{route.route_name}</h1>
           <p className="text-sm text-gray-600 mt-1">{route.start_location} → {route.end_location}</p>
         </div>
         {getStatusBadge(route.status)}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Van ID</p>
           <p className="text-lg font-bold text-gray-900">#{route.van_id?.substring(0, 8)}</p>

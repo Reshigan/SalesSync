@@ -45,7 +45,7 @@ const CampaignManagementPage: React.FC = () => {
 
   return (
     <div className="p-6 w-full">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Campaign Management</h1>
         <button onClick={() => { setEditing(0); setForm({ status: 'planned' }); }} className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center gap-2">
           <Plus className="w-4 h-4" /> New Campaign

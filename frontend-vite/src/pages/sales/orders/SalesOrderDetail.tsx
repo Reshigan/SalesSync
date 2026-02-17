@@ -40,7 +40,7 @@ export default function SalesOrderDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/sales/orders')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Order {order.order_number || order.orderNumber || `#${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Order {order.order_number || order.orderNumber || `#${id}`}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{order.status || 'N/A'}</span>
               {(order.payment_status || order.paymentStatus) && <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${paymentColors[order.payment_status || order.paymentStatus] || 'bg-gray-100 text-gray-800'}`}>{order.payment_status || order.paymentStatus}</span>}
@@ -52,7 +52,7 @@ export default function SalesOrderDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(order.total_amount || order.totalAmount || order.order_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Order Date</p><p className="text-xl font-bold">{formatDate(order.order_date || order.orderDate || order.created_at)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>

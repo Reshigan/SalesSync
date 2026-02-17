@@ -264,7 +264,7 @@ export default function FieldAgentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Field Agents Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Field Agents Dashboard</h1>
           <p className="mt-1 text-sm text-gray-600">
             Comprehensive field agent management with real-time tracking and analytics
           </p>
@@ -431,7 +431,7 @@ export default function FieldAgentsPage() {
           <h3 className="text-lg font-medium text-gray-900">Transaction-Level Analytics</h3>
           <p className="text-sm text-gray-600">Detailed breakdown of all field operations</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-purple-50 p-4 rounded-lg">
             <div className="flex items-center justify-between">
               <div>

@@ -34,7 +34,7 @@ export default function RouteStopPerformance() {
           <ArrowLeft className="h-5 w-5" />
           Back to Route
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Route Stop Performance</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Route Stop Performance</h1>
         <p className="text-gray-600">{route?.route_number} - {route?.agent_name}</p>
       </div>
 
@@ -55,7 +55,7 @@ export default function RouteStopPerformance() {
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Revenue</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(performance.total_revenue)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(performance.total_revenue)}</p>
           <p className="text-sm text-gray-600 mt-1">
             {formatCurrency(performance.total_revenue / performance.completed_stops)} avg/stop
           </p>
@@ -88,31 +88,31 @@ export default function RouteStopPerformance() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">#</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Planned</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actual</th>
-                <th className="px-6 py-3 text-center text-xs font-bold text-gray-600 uppercase">On Time</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Revenue</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Items</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">#</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Planned</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actual</th>
+                <th className="px-3 py-3 sm:px-4 text-center text-xs font-bold text-gray-600 uppercase">On Time</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Revenue</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Items</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {performance.stops_detail.map((stop) => (
                 <tr key={stop.stop_number} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {stop.stop_number}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                     {stop.customer_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500 text-right">
                     {stop.planned_duration} min
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {stop.actual_duration} min
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-center">
                     {stop.on_time ? (
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                         On Time
@@ -123,10 +123,10 @@ export default function RouteStopPerformance() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                     {formatCurrency(stop.revenue)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {stop.items_sold}
                   </td>
                 </tr>

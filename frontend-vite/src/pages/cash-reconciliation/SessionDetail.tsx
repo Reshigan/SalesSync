@@ -35,7 +35,7 @@ export default function SessionDetail() {
         </button>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{session.session_number}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{session.session_number}</h1>
             <p className="text-gray-600">{session.agent_name}</p>
           </div>
           <div className="flex gap-2">
@@ -61,7 +61,7 @@ export default function SessionDetail() {
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Opening Balance</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.opening_balance)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(session.opening_balance)}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -69,7 +69,7 @@ export default function SessionDetail() {
             <TrendingUp className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Total Collections</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.total_collections)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(session.total_collections)}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -77,7 +77,7 @@ export default function SessionDetail() {
             <DollarSign className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Closing Balance</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.closing_balance)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(session.closing_balance)}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

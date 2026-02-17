@@ -161,7 +161,7 @@ export default function AdminPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Administration Dashboard</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Administration Dashboard</h1>
         <p className="mt-1 text-sm text-gray-600">
           System overview, health monitoring, and quick actions
         </p>
@@ -195,7 +195,7 @@ export default function AdminPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-lg transition-shadow cursor-pointer"
              onClick={() => navigate('/admin/users')}>
           <div className="flex items-center justify-between">
@@ -403,26 +403,26 @@ export default function AdminPage() {
           <Server className="w-5 h-5 mr-2 text-gray-600" />
           System Resources
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center">
             <Cpu className="w-8 h-8 text-blue-600 mx-auto mb-2" />
             <p className="text-sm text-gray-600">CPU Usage</p>
-            <p className="text-2xl font-bold text-gray-900">12%</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">12%</p>
           </div>
           <div className="text-center">
             <Activity className="w-8 h-8 text-green-600 mx-auto mb-2" />
             <p className="text-sm text-gray-600">Memory</p>
-            <p className="text-2xl font-bold text-gray-900">28%</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">28%</p>
           </div>
           <div className="text-center">
             <HardDrive className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
             <p className="text-sm text-gray-600">Disk Space</p>
-            <p className="text-2xl font-bold text-gray-900">9.1%</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">9.1%</p>
           </div>
           <div className="text-center">
             <Database className="w-8 h-8 text-purple-600 mx-auto mb-2" />
             <p className="text-sm text-gray-600">Database</p>
-            <p className="text-2xl font-bold text-gray-900">{systemHealth.dbSize}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{systemHealth.dbSize}</p>
           </div>
         </div>
       </div>

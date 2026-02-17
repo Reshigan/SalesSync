@@ -24,7 +24,7 @@ export default function ProductInventory() {
               <Package className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-600">Total Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{totalStock}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStock}</p>
               </div>
             </div>
           </div>
@@ -33,7 +33,7 @@ export default function ProductInventory() {
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
               <div>
                 <p className="text-sm text-gray-600">Low Stock Locations</p>
-                <p className="text-2xl font-bold text-gray-900">{lowStockCount}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{lowStockCount}</p>
               </div>
             </div>
           </div>
@@ -42,7 +42,7 @@ export default function ProductInventory() {
               <TrendingUp className="h-8 w-8 text-green-600" />
               <div>
                 <p className="text-sm text-gray-600">Warehouses</p>
-                <p className="text-2xl font-bold text-gray-900">{inventory.length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{inventory.length}</p>
               </div>
             </div>
           </div>
@@ -62,19 +62,19 @@ export default function ProductInventory() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Warehouse
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Reorder Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Last Updated
                   </th>
                 </tr>
@@ -82,10 +82,10 @@ export default function ProductInventory() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {inventory.map((item: any) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{item.warehouse_name}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900">{item.quantity}</span>
                         {item.quantity < item.reorder_level && (
@@ -93,17 +93,17 @@ export default function ProductInventory() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {item.reorder_level || '-'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         item.quantity >= item.reorder_level ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {item.quantity >= item.reorder_level ? 'In Stock' : 'Low Stock'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                       {item.last_updated ? new Date(item.last_updated).toLocaleDateString() : '-'}
                     </td>
                   </tr>
