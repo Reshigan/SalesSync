@@ -20,9 +20,7 @@ export const formatDate = (
     locale?: string
   }
 
-  // Handle string format parameter (e.g., 'MMM dd')
   if (typeof optionsOrFormat === 'string') {
-    // Convert common format strings to options
     if (optionsOrFormat === 'MMM dd') {
       options = { format: 'short' }
     } else {
