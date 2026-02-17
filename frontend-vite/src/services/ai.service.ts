@@ -8,7 +8,7 @@ class AIService {
   private buildUrl(endpoint: string): string {
     return `${API_CONFIG.BASE_URL}${endpoint}`
   }
-  private ollamaUrl = 'http://localhost:11434'
+  private ollamaUrl = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434'
   private isOllamaAvailable = false
 
   constructor() {

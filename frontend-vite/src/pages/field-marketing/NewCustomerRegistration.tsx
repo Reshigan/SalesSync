@@ -75,12 +75,7 @@ export default function NewCustomerRegistration() {
   const [showIdCamera, setShowIdCamera] = useState(false);
 
   const [selectedBrands, setSelectedBrands] = useState<Brand[]>([]);
-  const [availableBrands] = useState([
-    { id: '1', name: 'Coca-Cola' },
-    { id: '2', name: 'MTN' },
-    { id: '3', name: 'Vodacom' },
-    { id: '4', name: 'Samsung' }
-  ]);
+  const [availableBrands, setAvailableBrands] = useState<{id: string; name: string}[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +85,19 @@ export default function NewCustomerRegistration() {
       getCurrentPosition();
     }
   }, [step]);
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await apiClient.get('/brands');
+        const raw = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        setAvailableBrands(raw.map((b: any) => ({ id: String(b.id), name: b.name })));
+      } catch {
+        setAvailableBrands([]);
+      }
+    };
+    fetchBrands();
+  }, []);
 
   useEffect(() => {
     if (position) {
