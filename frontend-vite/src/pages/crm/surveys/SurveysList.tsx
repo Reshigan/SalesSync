@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { crmService } from '../../../services/crm.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function SurveysList() {
   const navigate = useNavigate()
@@ -106,7 +107,7 @@ export default function SurveysList() {
       data={surveys}
       loading={loading}
       onRefresh={loadSurveys}
-      onExport={() => console.log('Export surveys')}
+      onExport={() => exportToCSV(surveys as Record<string, unknown>[], 'surveys')}
       createPath="/crm/surveys/create"
       createLabel="Create Survey"
     />

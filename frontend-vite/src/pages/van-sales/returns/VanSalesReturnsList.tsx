@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { vanSalesService } from '../../../services/van-sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function VanSalesReturnsList() {
   const navigate = useNavigate()
@@ -108,7 +109,7 @@ export default function VanSalesReturnsList() {
       data={returns}
       loading={loading}
       onRefresh={loadReturns}
-      onExport={() => console.log('Export returns')}
+      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'van-sales-returns')}
       createPath="/van-sales/returns/create"
       createLabel="Create Return"
     />

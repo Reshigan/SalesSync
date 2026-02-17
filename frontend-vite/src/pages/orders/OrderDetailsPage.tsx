@@ -183,7 +183,30 @@ export default function OrderDetailsPage() {
   }
 
   const handleDownload = () => {
-    console.log('Downloading invoice...')
+    if (!order) return
+    const invoiceText = [
+      `Invoice: ${order.orderNumber}`,
+      `Date: ${new Date(order.orderDate).toLocaleDateString()}`,
+      `Customer: ${order.customerName}`,
+      `Email: ${order.customerEmail}`,
+      `Phone: ${order.customerPhone}`,
+      '',
+      'Items:',
+      ...order.items.map(item => `  ${item.productName} (${item.sku}) x${item.quantity} @ $${item.unitPrice} = $${item.totalAmount}`),
+      '',
+      `Subtotal: $${order.subtotal}`,
+      `Tax: $${order.taxAmount}`,
+      `Shipping: $${order.shippingCost}`,
+      `Discount: -$${order.discount}`,
+      `Total: $${order.totalAmount}`,
+    ].join('\n')
+    const blob = new Blob([invoiceText], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `invoice-${order.orderNumber}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const updateOrderStatus = async (newStatus: string) => {

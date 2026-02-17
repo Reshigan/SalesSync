@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { salesService } from '../../../services/sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function SalesReturnsList() {
   const navigate = useNavigate()
@@ -109,7 +110,7 @@ export default function SalesReturnsList() {
       data={returns}
       loading={loading}
       onRefresh={loadReturns}
-      onExport={() => console.log('Export returns')}
+      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'sales-returns')}
       createPath="/sales/returns/create"
       createLabel="Create Return"
     />

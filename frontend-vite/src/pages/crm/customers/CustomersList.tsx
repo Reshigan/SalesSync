@@ -4,6 +4,7 @@ import { Eye, Edit } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { crmService } from '../../../services/crm.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function CustomersList() {
   const navigate = useNavigate()
@@ -113,7 +114,7 @@ export default function CustomersList() {
       data={customers}
       loading={loading}
       onRefresh={loadCustomers}
-      onExport={() => console.log('Export customers')}
+      onExport={() => exportToCSV(customers as Record<string, unknown>[], 'customers')}
       createPath="/crm/customers/create"
       createLabel="Create Customer"
     />

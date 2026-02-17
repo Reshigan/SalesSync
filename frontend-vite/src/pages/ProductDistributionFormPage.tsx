@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
+import { apiClient } from '../services/api.service';
 
 const ProductDistributionFormPage: React.FC = () => {
   const location = useLocation();
@@ -22,6 +23,10 @@ const ProductDistributionFormPage: React.FC = () => {
     distributionNotes: ''
   });
   const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+  const recipientPhotoRef = useRef<HTMLInputElement>(null);
+  const idPhotoRef = useRef<HTMLInputElement>(null);
+  const signatureRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!visit || !customer) {
@@ -44,23 +49,23 @@ const ProductDistributionFormPage: React.FC = () => {
     }
   };
 
-  const captureRecipientPhoto = () => {
-    const photoUrl = `https://storage.example.com/recipients/${Date.now()}.jpg`;
-    setFormData({ ...formData, recipientPhoto: photoUrl });
-    alert('📸 Recipient photo captured!');
+  const handleFileUpload = async (file: File, field: string) => {
+    const preview = URL.createObjectURL(file);
+    setPreviews(p => ({ ...p, [field]: preview }));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', field);
+      const res = await apiClient.post('/uploads', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData(prev => ({ ...prev, [field]: res.data.data?.url || preview }));
+    } catch {
+      setFormData(prev => ({ ...prev, [field]: preview }));
+    }
   };
 
-  const captureIdPhoto = () => {
-    const photoUrl = `https://storage.example.com/ids/${Date.now()}.jpg`;
-    setFormData({ ...formData, idDocumentPhoto: photoUrl });
-    alert('📸 ID document photo captured!');
-  };
-
-  const captureSignature = () => {
-    const signatureUrl = `https://storage.example.com/signatures/${Date.now()}.jpg`;
-    setFormData({ ...formData, recipientSignature: signatureUrl });
-    alert('✍️ Signature captured!');
-  };
+  const captureRecipientPhoto = () => recipientPhotoRef.current?.click();
+  const captureIdPhoto = () => idPhotoRef.current?.click();
+  const captureSignature = () => signatureRef.current?.click();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +123,9 @@ const ProductDistributionFormPage: React.FC = () => {
           <p className="text-gray-600">{customer?.name}</p>
         </div>
 
+        <input ref={recipientPhotoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'recipientPhoto'); }} />
+        <input ref={idPhotoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'idDocumentPhoto'); }} />
+        <input ref={signatureRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'recipientSignature'); }} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Product Type */}
           <div className="bg-white rounded-lg shadow p-6">

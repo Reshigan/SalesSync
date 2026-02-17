@@ -4,6 +4,7 @@ import { Eye, RotateCcw } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { fieldOperationsService } from '../../../services/field-operations.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function BoardPlacementsList() {
   const navigate = useNavigate()
@@ -129,7 +130,7 @@ export default function BoardPlacementsList() {
       data={placements}
       loading={loading}
       onRefresh={loadPlacements}
-      onExport={() => console.log('Export board placements')}
+      onExport={() => exportToCSV(placements as Record<string, unknown>[], 'board-placements')}
       createPath="/field-operations/board-placements/create"
       createLabel="Create Placement"
     />

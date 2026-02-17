@@ -4,6 +4,7 @@ import { Eye, Edit } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { marketingService } from '../../../services/marketing.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function EventsList() {
   const navigate = useNavigate()
@@ -119,7 +120,7 @@ export default function EventsList() {
       data={events}
       loading={loading}
       onRefresh={loadEvents}
-      onExport={() => console.log('Export events')}
+      onExport={() => exportToCSV(events as Record<string, unknown>[], 'events')}
       createPath="/marketing/events/create"
       createLabel="Create Event"
     />

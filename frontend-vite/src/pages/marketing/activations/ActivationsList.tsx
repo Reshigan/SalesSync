@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { marketingService } from '../../../services/marketing.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function ActivationsList() {
   const navigate = useNavigate()
@@ -106,7 +107,7 @@ export default function ActivationsList() {
       data={activations}
       loading={loading}
       onRefresh={loadActivations}
-      onExport={() => console.log('Export activations')}
+      onExport={() => exportToCSV(activations as Record<string, unknown>[], 'activations')}
       createPath="/marketing/activations/create"
       createLabel="Create Activation"
     />

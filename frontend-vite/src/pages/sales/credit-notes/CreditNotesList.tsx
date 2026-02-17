@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { salesService } from '../../../services/sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function CreditNotesList() {
   const navigate = useNavigate()
@@ -108,7 +109,7 @@ export default function CreditNotesList() {
       data={creditNotes}
       loading={loading}
       onRefresh={loadCreditNotes}
-      onExport={() => console.log('Export credit notes')}
+      onExport={() => exportToCSV(creditNotes as Record<string, unknown>[], 'credit-notes')}
       createPath="/sales/credit-notes/create"
       createLabel="Create Credit Note"
     />
