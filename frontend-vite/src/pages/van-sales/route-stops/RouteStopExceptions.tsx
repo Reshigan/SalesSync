@@ -25,8 +25,6 @@ export default function RouteStopExceptions() {
     enabled: !!routeId,
   })
 
-  })
-
   if (isLoading) {
     return <div className="p-6">Loading exceptions...</div>
   }

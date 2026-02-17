@@ -195,23 +195,85 @@ function OverviewTab() {
 }
 
 function ProductsTab() {
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await apiClient.get('/product-distributions')
+        setProducts(res.data.data || [])
+      } catch { setProducts([]) }
+      finally { setLoading(false) }
+    }
+    fetchProducts()
+  }, [])
+
+  if (loading) return <div className="p-6"><LoadingSpinner /></div>
+
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Management</h2>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Product management interface coming soon...</p>
+    <div className="p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Product Distributions</h2>
+        <span className="text-sm text-gray-500">{products.length} records</span>
       </div>
+      {products.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No product distributions found</div>
+      ) : (
+        <div className="space-y-3">
+          {products.map((p: any, i: number) => (
+            <div key={p.id || i} className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-900">{p.product_name || p.name || 'Product'}</p>
+                <p className="text-sm text-gray-500">Qty: {p.quantity || 0} | {p.status || 'distributed'}</p>
+              </div>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${p.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{p.status || 'active'}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 function InstallationsTab() {
+  const [installations, setInstallations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchInstallations = async () => {
+      try {
+        const res = await apiClient.get('/board-installations')
+        setInstallations(res.data.data || [])
+      } catch { setInstallations([]) }
+      finally { setLoading(false) }
+    }
+    fetchInstallations()
+  }, [])
+
+  if (loading) return <div className="p-6"><LoadingSpinner /></div>
+
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Board Installations</h2>
-      <div className="bg-white rounded-lg shadow p-6">
-        <p className="text-gray-600">Installation tracking interface coming soon...</p>
+    <div className="p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Board Installations</h2>
+        <span className="text-sm text-gray-500">{installations.length} records</span>
       </div>
+      {installations.length === 0 ? (
+        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">No board installations found</div>
+      ) : (
+        <div className="space-y-3">
+          {installations.map((inst: any, i: number) => (
+            <div key={inst.id || i} className="bg-white rounded-lg shadow p-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-900">{inst.board_name || inst.location || 'Installation'}</p>
+                <p className="text-sm text-gray-500">{inst.customer_name || ''} | {inst.installed_at || inst.created_at || ''}</p>
+              </div>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${inst.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{inst.status || 'installed'}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

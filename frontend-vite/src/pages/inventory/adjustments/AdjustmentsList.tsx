@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { inventoryService } from '../../../services/inventory.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function AdjustmentsList() {
   const navigate = useNavigate()
@@ -112,7 +113,7 @@ export default function AdjustmentsList() {
       data={adjustments}
       loading={loading}
       onRefresh={loadAdjustments}
-      onExport={() => console.log('Export adjustments')}
+      onExport={() => exportToCSV(adjustments as Record<string, unknown>[], 'adjustments')}
       createPath="/inventory/adjustments/create"
       createLabel="Create Adjustment"
     />

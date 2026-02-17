@@ -4,6 +4,7 @@ import { Eye, CheckCircle } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { inventoryService } from '../../../services/inventory.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function StockCountsList() {
   const navigate = useNavigate()
@@ -143,7 +144,7 @@ export default function StockCountsList() {
       data={stockCounts}
       loading={loading}
       onRefresh={loadStockCounts}
-      onExport={() => console.log('Export stock counts')}
+      onExport={() => exportToCSV(stockCounts as Record<string, unknown>[], 'stockcounts')}
       createPath="/inventory/stock-counts/create"
       createLabel="Create Stock Count"
     />

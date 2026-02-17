@@ -4,6 +4,7 @@ import { Eye, Edit } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { fieldOperationsService } from '../../../services/field-operations.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function VisitsList() {
   const navigate = useNavigate()
@@ -119,7 +120,7 @@ export default function VisitsList() {
       data={visits}
       loading={loading}
       onRefresh={loadVisits}
-      onExport={() => console.log('Export visits')}
+      onExport={() => exportToCSV(visits as Record<string, unknown>[], 'visits')}
       createPath="/field-operations/visits/create"
       createLabel="Create Visit"
     />

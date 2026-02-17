@@ -90,41 +90,20 @@ export default function AdminPage() {
         todayVisits
       })
 
-      // Mock recent activity (in production, this would come from audit logs)
-      setRecentActivity([
-        {
-          id: '1',
-          type: 'user',
-          description: 'New user registered',
-          user: 'Admin',
-          timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-          status: 'success'
-        },
-        {
-          id: '2',
-          type: 'order',
-          description: 'New order created',
-          user: 'Agent 1',
-          timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-          status: 'success'
-        },
-        {
-          id: '3',
-          type: 'product',
-          description: 'Product stock updated',
-          user: 'Manager',
-          timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-          status: 'warning'
-        },
-        {
-          id: '4',
-          type: 'customer',
-          description: 'New customer added',
-          user: 'Salesman',
-          timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
-          status: 'success'
-        }
-      ])
+      try {
+        const activityRes = await apiClient.get('/audit-logs?limit=10')
+        const logs = activityRes.data?.data || activityRes.data || []
+        setRecentActivity(Array.isArray(logs) ? logs.map((log: any, i: number) => ({
+          id: log.id || String(i),
+          type: log.entity_type || log.type || 'system',
+          description: log.action || log.description || '',
+          user: log.user_name || log.user || 'System',
+          timestamp: log.created_at || log.timestamp || new Date().toISOString(),
+          status: log.status || 'success'
+        })) : [])
+      } catch {
+        setRecentActivity([])
+      }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
     } finally {

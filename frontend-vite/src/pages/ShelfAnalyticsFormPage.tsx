@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import tradeMarketingService from '../services/tradeMarketing.service';
+import { tradeMarketingService } from '../services/tradeMarketing.service';
+import { apiClient } from '../services/api.service';
 
 const ShelfAnalyticsFormPage: React.FC = () => {
   const location = useLocation();
@@ -44,10 +45,27 @@ const ShelfAnalyticsFormPage: React.FC = () => {
     setCalculatedMetrics({ shelfShare, facingsShare });
   }, [formData.totalShelfSpace, formData.brandShelfSpace, formData.totalFacings, formData.brandFacings]);
 
+  const shelfPhotoRef = useRef<HTMLInputElement>(null);
+  const [shelfPreview, setShelfPreview] = useState<string>('');
+
   const captureShelfPhoto = () => {
-    const photoUrl = `https://storage.example.com/shelf/${Date.now()}.jpg`;
-    setFormData({ ...formData, shelfPhoto: photoUrl });
-    alert('📸 Shelf photo captured! (Simulated)');
+    shelfPhotoRef.current?.click();
+  };
+
+  const handleShelfPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setShelfPreview(preview);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', 'shelf-analytics');
+      const res = await apiClient.post('/uploads', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData({ ...formData, shelfPhoto: res.data.data?.url || preview });
+    } catch {
+      setFormData({ ...formData, shelfPhoto: preview });
+    }
   };
 
   const addCompetitor = () => {
@@ -110,6 +128,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           <p className="text-gray-600">{store?.name}</p>
         </div>
 
+        <input ref={shelfPhotoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleShelfPhotoChange} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -293,11 +312,12 @@ const ShelfAnalyticsFormPage: React.FC = () => {
             </label>
             {formData.shelfPhoto ? (
               <div>
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📸</div>
-                    <div className="text-sm text-gray-600">Photo Captured</div>
-                  </div>
+                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-3">
+                  {shelfPreview ? (
+                    <img src={shelfPreview} alt="Shelf" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full"><div className="text-4xl">📸</div></div>
+                  )}
                 </div>
                 <button
                   type="button"

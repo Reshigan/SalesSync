@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit2, Package, DollarSign, TrendingUp, TrendingDown, BarChart3, ShoppingCart, AlertCircle, CheckCircle, Image as ImageIcon, Save, X, Plus } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { productsService } from '../../services/products.service'
 
 interface Product {
   id: string
@@ -102,11 +103,12 @@ export default function ProductDetailsPage() {
 
   const handleSave = async () => {
     try {
-      console.log('Saving product:', editForm)
+      await productsService.updateProduct(id!, editForm)
       setProduct({ ...product!, ...editForm })
       setIsEditing(false)
     } catch (error) {
       console.error('Failed to update product:', error)
+      alert('Failed to save product changes')
     }
   }
 

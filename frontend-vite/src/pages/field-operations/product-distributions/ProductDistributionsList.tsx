@@ -4,6 +4,7 @@ import { Eye, RotateCcw } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { fieldOperationsService } from '../../../services/field-operations.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function ProductDistributionsList() {
   const navigate = useNavigate()
@@ -133,7 +134,7 @@ export default function ProductDistributionsList() {
       data={distributions}
       loading={loading}
       onRefresh={loadDistributions}
-      onExport={() => console.log('Export product distributions')}
+      onExport={() => exportToCSV(distributions as Record<string, unknown>[], 'productdistributions')}
       createPath="/field-operations/product-distributions/create"
       createLabel="Create Distribution"
     />

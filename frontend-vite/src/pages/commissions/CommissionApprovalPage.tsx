@@ -55,18 +55,32 @@ export const CommissionApprovalPage: React.FC = () => {
     }
   }
 
-  const handleBulkApprove = () => {
+  const handleBulkApprove = async () => {
     if (selectedCommissions.size === 0) return
-    console.log('Approving commissions:', Array.from(selectedCommissions))
-    setSelectedCommissions(new Set())
+    try {
+      await Promise.all(Array.from(selectedCommissions).map(id =>
+        apiClient.put(`/commissions/${id}`, { status: 'approved' })
+      ))
+      setPendingCommissions(prev => prev.filter(c => !selectedCommissions.has(c.id)))
+      setSelectedCommissions(new Set())
+    } catch (err) {
+      alert('Failed to approve commissions')
+    }
   }
 
-  const handleBulkReject = () => {
+  const handleBulkReject = async () => {
     if (selectedCommissions.size === 0 || !rejectionReason) return
-    console.log('Rejecting commissions:', Array.from(selectedCommissions), rejectionReason)
-    setSelectedCommissions(new Set())
-    setRejectionReason('')
-    setShowRejectModal(false)
+    try {
+      await Promise.all(Array.from(selectedCommissions).map(id =>
+        apiClient.put(`/commissions/${id}`, { status: 'rejected', rejection_reason: rejectionReason })
+      ))
+      setPendingCommissions(prev => prev.filter(c => !selectedCommissions.has(c.id)))
+      setSelectedCommissions(new Set())
+      setRejectionReason('')
+      setShowRejectModal(false)
+    } catch (err) {
+      alert('Failed to reject commissions')
+    }
   }
 
   const selectedTotal = pendingCommissions

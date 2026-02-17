@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
+import { apiClient } from '../services/api.service';
 
 const BoardPlacementFormPage: React.FC = () => {
   const location = useLocation();
@@ -17,6 +18,8 @@ const BoardPlacementFormPage: React.FC = () => {
     placementNotes: ''
   });
   const [currentLocation, setCurrentLocation] = useState<any>(null);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!visit || !customer) {
@@ -42,10 +45,22 @@ const BoardPlacementFormPage: React.FC = () => {
   };
 
   const capturePhoto = () => {
-    // Simulate photo capture - in production, this would open camera
-    const photoUrl = `https://storage.example.com/boards/${Date.now()}.jpg`;
-    setFormData({ ...formData, placementPhoto: photoUrl });
-    alert('📸 Photo captured! (Simulated)');
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoPreview(URL.createObjectURL(file));
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('type', 'board-placement');
+      const res = await apiClient.post('/uploads', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setFormData({ ...formData, placementPhoto: res.data.data?.url || URL.createObjectURL(file) });
+    } catch {
+      setFormData({ ...formData, placementPhoto: URL.createObjectURL(file) });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -106,6 +121,7 @@ const BoardPlacementFormPage: React.FC = () => {
           <p className="text-gray-600">{customer?.name}</p>
         </div>
 
+        <input ref={fileInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileChange} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Board Selection */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -153,11 +169,12 @@ const BoardPlacementFormPage: React.FC = () => {
             </label>
             {formData.placementPhoto ? (
               <div className="relative">
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center mb-3">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">📸</div>
-                    <div className="text-sm text-gray-600">Photo Captured</div>
-                  </div>
+                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-3">
+                  {photoPreview ? (
+                    <img src={photoPreview} alt="Board placement" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full"><div className="text-4xl">📸</div></div>
+                  )}
                 </div>
                 <button
                   type="button"

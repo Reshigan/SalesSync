@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { crmService } from '../../../services/crm.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function KYCCasesList() {
   const navigate = useNavigate()
@@ -120,7 +121,7 @@ export default function KYCCasesList() {
       data={kycCases}
       loading={loading}
       onRefresh={loadKYCCases}
-      onExport={() => console.log('Export KYC cases')}
+      onExport={() => exportToCSV(kycCases as Record<string, unknown>[], 'kyccases')}
       createPath="/crm/kyc-cases/create"
       createLabel="Create KYC Case"
     />

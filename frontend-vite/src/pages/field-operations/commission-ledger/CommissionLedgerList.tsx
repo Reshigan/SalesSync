@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { fieldOperationsService } from '../../../services/field-operations.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function CommissionLedgerList() {
   const navigate = useNavigate()
@@ -116,7 +117,7 @@ export default function CommissionLedgerList() {
       data={commissions}
       loading={loading}
       onRefresh={loadCommissions}
-      onExport={() => console.log('Export commissions')}
+      onExport={() => exportToCSV(commissions as Record<string, unknown>[], 'commissionledger')}
     />
   )
 }
