@@ -1,57 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts'
 import { TrendingUp, Calendar, Download, Filter, RefreshCw } from 'lucide-react'
+import { apiClient } from '../../services/api.service'
 
 export default function AdvancedAnalyticsDashboard() {
   const [dateRange, setDateRange] = useState('30days')
   const [metric, setMetric] = useState('revenue')
+  const [loading, setLoading] = useState(true)
+  const [salesTrend, setSalesTrend] = useState<any[]>([])
+  const [cohortAnalysis, setCohortAnalysis] = useState<any[]>([])
+  const [customerSegments, setCustomerSegments] = useState<any[]>([])
+  const [productPerformance, setProductPerformance] = useState<any[]>([])
+  const [hourlyAnalysis, setHourlyAnalysis] = useState<any[]>([])
+  const [geographicData, setGeographicData] = useState<any[]>([])
+  const [kpis, setKpis] = useState({ avgOrderValue: 0, conversionRate: 0, customerLtv: 0, churnRate: 0 })
 
-  const salesTrend = [
-    { date: 'Week 1', sales: 12000, orders: 145, customers: 89 },
-    { date: 'Week 2', sales: 15000, orders: 178, customers: 102 },
-    { date: 'Week 3', sales: 13500, orders: 162, customers: 95 },
-    { date: 'Week 4', sales: 18000, orders: 210, customers: 125 },
-    { date: 'Week 5', sales: 20000, orders: 235, customers: 140 },
-    { date: 'Week 6', sales: 22000, orders: 258, customers: 155 }
-  ]
+  useEffect(() => {
+    fetchAnalytics()
+  }, [dateRange])
 
-  const cohortAnalysis = [
-    { cohort: 'Jan 2024', month1: 100, month2: 85, month3: 72, month4: 65 },
-    { cohort: 'Feb 2024', month1: 100, month2: 88, month3: 75, month4: 68 },
-    { cohort: 'Mar 2024', month1: 100, month2: 90, month3: 78, month4: 70 },
-    { cohort: 'Apr 2024', month1: 100, month2: 92, month3: 80, month4: 72 }
-  ]
-
-  const customerSegments = [
-    { segment: 'VIP', count: 245, revenue: 450000, avgOrder: 1837 },
-    { segment: 'Regular', count: 892, revenue: 380000, avgOrder: 426 },
-    { segment: 'Occasional', count: 1543, revenue: 210000, avgOrder: 136 },
-    { segment: 'New', count: 1162, revenue: 85000, avgOrder: 73 }
-  ]
-
-  const productPerformance = [
-    { product: 'Product A', unitsSold: 5420, revenue: 162600, margin: 35, returns: 42 },
-    { product: 'Product B', unitsSold: 4890, revenue: 146700, margin: 32, returns: 38 },
-    { product: 'Product C', unitsSold: 4125, revenue: 123750, margin: 28, returns: 55 },
-    { product: 'Product D', unitsSold: 3675, revenue: 110250, margin: 30, returns: 29 },
-    { product: 'Product E', unitsSold: 3120, revenue: 93600, margin: 25, returns: 48 }
-  ]
-
-  const hourlyAnalysis = [
-    { hour: '6am', orders: 12, revenue: 2400 },
-    { hour: '9am', orders: 45, revenue: 9000 },
-    { hour: '12pm', orders: 78, revenue: 15600 },
-    { hour: '3pm', orders: 65, revenue: 13000 },
-    { hour: '6pm', orders: 92, revenue: 18400 },
-    { hour: '9pm', orders: 48, revenue: 9600 }
-  ]
-
-  const geographicData = [
-    { region: 'North', sales: 285000, growth: 15, customers: 542 },
-    { region: 'South', sales: 320000, growth: 22, customers: 678 },
-    { region: 'East', sales: 265000, growth: 8, customers: 489 },
-    { region: 'West', sales: 298000, growth: 18, customers: 601 }
-  ]
+  const fetchAnalytics = async () => {
+    try {
+      setLoading(true)
+      const res = await apiClient.get(`/analytics/dashboard?range=${dateRange}`)
+      const d = res.data?.data || res.data || {}
+      if (d.sales_by_period?.length) {
+        setSalesTrend(d.sales_by_period.map((p: any) => ({ date: p.period || p.date, sales: Number(p.total_amount || 0), orders: Number(p.order_count || 0), customers: Number(p.customer_count || 0) })))
+      }
+      if (d.customer_segments?.length) {
+        setCustomerSegments(d.customer_segments.map((s: any) => ({ segment: s.segment || s.name, count: Number(s.count || 0), revenue: Number(s.revenue || 0), avgOrder: Number(s.avg_order || 0) })))
+      }
+      if (d.top_products?.length) {
+        setProductPerformance(d.top_products.map((p: any) => ({ product: p.name || p.product_name, unitsSold: Number(p.units_sold || p.quantity || 0), revenue: Number(p.revenue || 0), margin: Number(p.margin || 0), returns: Number(p.returns || 0) })))
+      }
+      if (d.sales_by_region?.length) {
+        setGeographicData(d.sales_by_region.map((r: any) => ({ region: r.region || r.name, sales: Number(r.total_amount || r.sales || 0), growth: Number(r.growth || 0), customers: Number(r.customer_count || 0) })))
+      }
+      if (d.avg_order_value) setKpis(prev => ({ ...prev, avgOrderValue: Number(d.avg_order_value) }))
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">

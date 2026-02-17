@@ -1,47 +1,52 @@
+import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Package, Target, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { apiClient } from '../../services/api.service'
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
 
 export default function ExecutiveDashboard() {
-  const kpiCards = [
-    { title: 'Total Revenue', value: '$2.45M', change: '+12.5%', trend: 'up', icon: DollarSign, color: 'blue', previous: '$2.17M' },
-    { title: 'Active Customers', value: '3,842', change: '+8.2%', trend: 'up', icon: Users, color: 'green', previous: '3,551' },
-    { title: 'Orders', value: '12,547', change: '+15.3%', trend: 'up', icon: ShoppingCart, color: 'purple', previous: '10,879' },
-    { title: 'Products Sold', value: '45,328', change: '-3.1%', trend: 'down', icon: Package, color: 'orange', previous: '46,775' }
-  ]
+  const [loading, setLoading] = useState(true)
+  const [kpiCards, setKpiCards] = useState<any[]>([
+    { title: 'Total Revenue', value: '--', change: '--', trend: 'up', icon: DollarSign, color: 'blue', previous: '--' },
+    { title: 'Active Customers', value: '--', change: '--', trend: 'up', icon: Users, color: 'green', previous: '--' },
+    { title: 'Orders', value: '--', change: '--', trend: 'up', icon: ShoppingCart, color: 'purple', previous: '--' },
+    { title: 'Products Sold', value: '--', change: '--', trend: 'up', icon: Package, color: 'orange', previous: '--' }
+  ])
+  const [revenueData, setRevenueData] = useState<any[]>([])
+  const [categoryData, setCategoryData] = useState<any[]>([])
+  const [topProducts, setTopProducts] = useState<any[]>([])
+  const [teamPerformance, setTeamPerformance] = useState<any[]>([])
 
-  const revenueData = [
-    { month: 'Jan', revenue: 185000, target: 200000 },
-    { month: 'Feb', revenue: 195000, target: 210000 },
-    { month: 'Mar', revenue: 225000, target: 220000 },
-    { month: 'Apr', revenue: 215000, target: 230000 },
-    { month: 'May', revenue: 240000, target: 240000 },
-    { month: 'Jun', revenue: 265000, target: 250000 }
-  ]
+  useEffect(() => {
+    fetchDashboard()
+  }, [])
 
-  const categoryData = [
-    { name: 'Beverages', value: 35 },
-    { name: 'Snacks', value: 25 },
-    { name: 'Dairy', value: 20 },
-    { name: 'Personal Care', value: 12 },
-    { name: 'Others', value: 8 }
-  ]
-
-  const topProducts = [
-    { name: 'Product A', sales: 12500, revenue: 125000, growth: 15 },
-    { name: 'Product B', sales: 11200, revenue: 112000, growth: 12 },
-    { name: 'Product C', sales: 9800, revenue: 98000, growth: -5 },
-    { name: 'Product D', sales: 8500, revenue: 85000, growth: 8 },
-    { name: 'Product E', sales: 7200, revenue: 72000, growth: 20 }
-  ]
-
-  const teamPerformance = [
-    { name: 'Team A', target: 100000, achieved: 125000 },
-    { name: 'Team B', target: 90000, achieved: 95000 },
-    { name: 'Team C', target: 85000, achieved: 78000 },
-    { name: 'Team D', target: 75000, achieved: 82000 }
-  ]
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true)
+      const res = await apiClient.get('/analytics/dashboard')
+      const d = res.data?.data || res.data || {}
+      const fmt = (n: number) => n >= 1000000 ? `R${(n / 1000000).toFixed(2)}M` : n >= 1000 ? `R${(n / 1000).toFixed(1)}K` : `R${n}`
+      const fmtN = (n: number) => n >= 1000 ? n.toLocaleString() : String(n)
+      if (d.total_revenue !== undefined || d.total_orders !== undefined) {
+        setKpiCards([
+          { title: 'Total Revenue', value: fmt(Number(d.total_revenue || 0)), change: d.revenue_growth ? `${d.revenue_growth > 0 ? '+' : ''}${Number(d.revenue_growth).toFixed(1)}%` : '--', trend: Number(d.revenue_growth || 0) >= 0 ? 'up' : 'down', icon: DollarSign, color: 'blue', previous: fmt(Number(d.previous_revenue || 0)) },
+          { title: 'Active Customers', value: fmtN(Number(d.active_customers || d.total_customers || 0)), change: d.customer_growth ? `${d.customer_growth > 0 ? '+' : ''}${Number(d.customer_growth).toFixed(1)}%` : '--', trend: Number(d.customer_growth || 0) >= 0 ? 'up' : 'down', icon: Users, color: 'green', previous: fmtN(Number(d.previous_customers || 0)) },
+          { title: 'Orders', value: fmtN(Number(d.total_orders || 0)), change: d.orders_growth ? `${d.orders_growth > 0 ? '+' : ''}${Number(d.orders_growth).toFixed(1)}%` : '--', trend: Number(d.orders_growth || 0) >= 0 ? 'up' : 'down', icon: ShoppingCart, color: 'purple', previous: fmtN(Number(d.previous_orders || 0)) },
+          { title: 'Products Sold', value: fmtN(Number(d.total_products_sold || d.products_sold || 0)), change: d.products_growth ? `${d.products_growth > 0 ? '+' : ''}${Number(d.products_growth).toFixed(1)}%` : '--', trend: Number(d.products_growth || 0) >= 0 ? 'up' : 'down', icon: Package, color: 'orange', previous: fmtN(Number(d.previous_products || 0)) }
+        ])
+      }
+      if (d.sales_by_period?.length) setRevenueData(d.sales_by_period.map((p: any) => ({ month: p.period || p.month, revenue: Number(p.total_amount || p.revenue || 0), target: Number(p.target || 0) })))
+      if (d.categories?.length) setCategoryData(d.categories.map((c: any) => ({ name: c.name || c.category, value: Number(c.percentage || c.count || 0) })))
+      if (d.top_products?.length) setTopProducts(d.top_products.map((p: any) => ({ name: p.name || p.product_name, sales: Number(p.units_sold || p.quantity || 0), revenue: Number(p.revenue || 0), growth: Number(p.growth || 0) })))
+      if (d.team_performance?.length) setTeamPerformance(d.team_performance.map((t: any) => ({ name: t.name || t.team_name, target: Number(t.target || 0), achieved: Number(t.achieved || t.actual || 0) })))
+    } catch (err) {
+      console.error('Failed to fetch executive dashboard:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getCardClass = (index: number) => {
     return index === 0 
