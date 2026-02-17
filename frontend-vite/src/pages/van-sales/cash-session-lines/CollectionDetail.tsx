@@ -16,20 +16,6 @@ export default function CollectionDetail() {
     },
   })
 
-  const oldCollection = {
-      id: collectionId,
-      session_id: sessionId,
-      customer_id: 'cust-1',
-      customer_name: 'ABC Store',
-      invoice_number: 'INV-2024-001',
-      invoice_amount: 250.00,
-      amount_collected: 250.00,
-      payment_method: 'cash',
-      collection_time: '2024-01-20T09:35:00Z',
-      collected_by: 'John Van Sales',
-      reference_number: 'REF-001',
-      notes: 'Full payment received',
-    }),
   })
 
   if (isLoading) {

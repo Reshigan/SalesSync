@@ -25,15 +25,6 @@ export default function CashVariance() {
     },
   })
 
-  const oldSession = {
-      id: sessionId,
-      session_number: 'CASH-2024-001',
-      agent_name: 'John Van Sales',
-      expected_cash: 2450.00,
-      actual_cash: 2430.00,
-      variance: -20.00,
-      variance_percentage: -0.82,
-    }),
   })
 
   const { register, handleSubmit, formState: { errors } } = useForm<VarianceFormData>()

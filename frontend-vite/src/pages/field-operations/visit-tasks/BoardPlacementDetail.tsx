@@ -15,23 +15,6 @@ export default function BoardPlacementDetail() {
     },
   })
 
-  const oldPlacement = {
-      id: placementId,
-      visit_id: visitId,
-      board_id: 'board-1',
-      board_type: 'promotional',
-      brand_name: 'Coca-Cola',
-      location_description: 'Store entrance, right side',
-      installation_date: '2024-01-20T09:30:00Z',
-      installed_by: 'John Field Agent',
-      dimensions: '2m x 1m',
-      condition: 'excellent',
-      visibility_rating: 5,
-      photos_taken: 3,
-      customer_approval: true,
-      notes: 'Perfect location with high visibility',
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading placement details...</div>
   }

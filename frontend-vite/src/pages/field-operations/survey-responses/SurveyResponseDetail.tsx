@@ -15,17 +15,6 @@ export default function SurveyResponseDetail() {
     },
   })
 
-  const oldResponse = {
-      id: responseId,
-      survey_id: surveyId,
-      question_text: 'How satisfied are you with our product quality?',
-      question_type: 'rating',
-      answer: '5',
-      answer_text: 'Very satisfied',
-      respondent_name: 'Store Manager',
-      answered_at: '2024-01-20T10:05:00Z',
-    }
-
   if (isLoading) {
     return <div className="p-6">Loading response...</div>
   }
