@@ -1,7 +1,7 @@
-import toast from 'react-hot-toast'
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { kycService } from '../../services/kyc.service'
+import { toast } from 'react-hot-toast'
 
 export const KYCAnalyticsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState({
