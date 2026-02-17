@@ -1,24 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { ArrowLeft, Save } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Scale, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import FlowWizard, { WizardStep } from '../../components/ui/FlowWizard'
 import { commissionsService } from '../../services/commissions.service'
-
-interface RuleFormData {
-  name: string
-  description: string
-  base_rate: number
-  bonus_threshold: number
-  bonus_rate: number
-  status: string
-  effective_from: string
-}
 
 export default function RuleEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: rule, isLoading } = useQuery({
     queryKey: ['commission-rule', id],
@@ -28,162 +17,58 @@ export default function RuleEdit() {
     },
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm<RuleFormData>({
-    values: rule
-  })
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+  }
 
-  const updateMutation = useMutation({
-    mutationFn: (data: RuleFormData) => commissionsService.updateRule(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commission-rule', id] })
+  if (!rule) {
+    return <div className="p-6 text-center text-gray-500">Rule not found</div>
+  }
+
+  const steps: WizardStep[] = [
+    {
+      id: 'details',
+      title: 'Rule Details',
+      description: 'Update rule name and description',
+      fields: [
+        { name: 'name', label: 'Rule Name', type: 'text', required: true, autoFocus: true, colSpan: 2 },
+        { name: 'description', label: 'Description', type: 'textarea', colSpan: 2 },
+      ],
+    },
+    {
+      id: 'rates',
+      title: 'Rates & Schedule',
+      description: 'Update commission rates and effective date',
+      fields: [
+        { name: 'base_rate', label: 'Base Rate (%)', type: 'number', required: true, step: '0.01', min: 0 },
+        { name: 'bonus_threshold', label: 'Bonus Threshold', type: 'number', required: true, step: '0.01', min: 0 },
+        { name: 'bonus_rate', label: 'Bonus Rate (%)', type: 'number', required: true, step: '0.01', min: 0 },
+        { name: 'status', label: 'Status', type: 'select', required: true, options: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] },
+        { name: 'effective_from', label: 'Effective From', type: 'date', required: true },
+      ],
+    },
+  ]
+
+  const handleSubmit = async (data: Record<string, any>) => {
+    try {
+      await commissionsService.updateRule(id!, data)
       toast.success('Rule updated successfully')
       navigate(`/commissions/rules/${id}`)
-    },
-    onError: () => {
-      toast.error('Failed to update rule')
-    },
-  })
-
-  if (isLoading) {
-    return <div className="p-6">Loading rule...</div>
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update rule')
+    }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(`/commissions/rules/${id}`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to Rule
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Commission Rule</h1>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rule Name *
-              </label>
-              <input
-                type="text"
-                {...register('name', { required: 'Name is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-              )}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                {...register('description')}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Base Rate (%) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                {...register('base_rate', { required: 'Base rate is required', min: 0, max: 100 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              {errors.base_rate && (
-                <p className="mt-1 text-sm text-red-600">{errors.base_rate.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bonus Threshold *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                {...register('bonus_threshold', { required: 'Bonus threshold is required', min: 0 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              {errors.bonus_threshold && (
-                <p className="mt-1 text-sm text-red-600">{errors.bonus_threshold.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bonus Rate (%) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                {...register('bonus_rate', { required: 'Bonus rate is required', min: 0, max: 100 })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              {errors.bonus_rate && (
-                <p className="mt-1 text-sm text-red-600">{errors.bonus_rate.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status *
-              </label>
-              <select
-                {...register('status', { required: 'Status is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-              {errors.status && (
-                <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Effective From *
-              </label>
-              <input
-                type="date"
-                {...register('effective_from', { required: 'Effective date is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              {errors.effective_from && (
-                <p className="mt-1 text-sm text-red-600">{errors.effective_from.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/commissions/rules/${id}`)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Save className="h-5 w-5" />
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <FlowWizard
+      title="Edit Commission Rule"
+      subtitle={rule.name || `Rule #${id}`}
+      steps={steps}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate(`/commissions/rules/${id}`)}
+      submitLabel="Save Changes"
+      initialData={rule}
+      icon={<Scale className="w-5 h-5" />}
+    />
   )
 }

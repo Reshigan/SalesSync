@@ -1,243 +1,81 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { ArrowLeft, Save } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Shield, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import FlowWizard, { WizardStep } from '../../components/ui/FlowWizard'
 import { customersService } from '../../services/customers.service'
-
-interface KYCFormData {
-  business_name: string
-  registration_number: string
-  tax_number: string
-  owner_name: string
-  owner_id: string
-  phone: string
-  email: string
-  address: string
-  status: string
-  notes: string
-}
 
 export default function KYCEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: kyc, isLoading } = useQuery({
     queryKey: ['kyc', id],
     queryFn: () => customersService.getCustomer(id!),
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm<KYCFormData>({
-    values: kyc
-  })
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
+  }
 
-  const updateMutation = useMutation({
-    mutationFn: (data: KYCFormData) => customersService.updateCustomer(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kyc', id] })
+  if (!kyc) {
+    return <div className="p-6 text-center text-gray-500">KYC record not found</div>
+  }
+
+  const steps: WizardStep[] = [
+    {
+      id: 'business',
+      title: 'Business Information',
+      description: 'Update the business details',
+      fields: [
+        { name: 'business_name', label: 'Business Name', type: 'text', required: true, autoFocus: true },
+        { name: 'registration_number', label: 'Registration Number', type: 'text', required: true },
+        { name: 'tax_number', label: 'Tax Number', type: 'text', required: true },
+        { name: 'address', label: 'Address', type: 'text', required: true, colSpan: 2 },
+      ],
+    },
+    {
+      id: 'owner',
+      title: 'Owner Information',
+      description: 'Update the owner contact details',
+      fields: [
+        { name: 'owner_name', label: 'Owner Name', type: 'text', required: true },
+        { name: 'owner_id', label: 'ID Number', type: 'text', required: true },
+        { name: 'phone', label: 'Phone', type: 'tel', required: true },
+        { name: 'email', label: 'Email', type: 'email', required: true },
+      ],
+    },
+    {
+      id: 'verification',
+      title: 'Verification',
+      description: 'Update verification status',
+      fields: [
+        { name: 'status', label: 'Status', type: 'select', required: true, options: [{ value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' }, { value: 'rejected', label: 'Rejected' }] },
+        { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Enter verification notes', colSpan: 2 },
+      ],
+    },
+  ]
+
+  const handleSubmit = async (data: Record<string, any>) => {
+    try {
+      await customersService.updateCustomer(id!, data)
       toast.success('KYC updated successfully')
       navigate(`/kyc/${id}`)
-    },
-    onError: () => {
-      toast.error('Failed to update KYC')
-    },
-  })
-
-  if (isLoading) {
-    return <div className="p-6">Loading KYC...</div>
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update KYC')
+    }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(`/kyc/${id}`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to KYC
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit KYC Information</h1>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Business Name *
-                </label>
-                <input
-                  type="text"
-                  {...register('business_name', { required: 'Business name is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.business_name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.business_name.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Registration Number *
-                </label>
-                <input
-                  type="text"
-                  {...register('registration_number', { required: 'Registration number is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.registration_number && (
-                  <p className="mt-1 text-sm text-red-600">{errors.registration_number.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tax Number *
-                </label>
-                <input
-                  type="text"
-                  {...register('tax_number', { required: 'Tax number is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.tax_number && (
-                  <p className="mt-1 text-sm text-red-600">{errors.tax_number.message}</p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address *
-                </label>
-                <input
-                  type="text"
-                  {...register('address', { required: 'Address is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.address && (
-                  <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Owner Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Owner Name *
-                </label>
-                <input
-                  type="text"
-                  {...register('owner_name', { required: 'Owner name is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.owner_name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.owner_name.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ID Number *
-                </label>
-                <input
-                  type="text"
-                  {...register('owner_id', { required: 'ID number is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.owner_id && (
-                  <p className="mt-1 text-sm text-red-600">{errors.owner_id.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone *
-                </label>
-                <input
-                  type="tel"
-                  {...register('phone', { required: 'Phone is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  {...register('email', { required: 'Email is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Verification</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status *
-                </label>
-                <select
-                  {...register('status', { required: 'Status is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-                {errors.status && (
-                  <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-                )}
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  {...register('notes')}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Enter verification notes"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/kyc/${id}`)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Save className="h-5 w-5" />
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <FlowWizard
+      title="Edit KYC"
+      subtitle={kyc.business_name || `KYC #${id}`}
+      steps={steps}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate(`/kyc/${id}`)}
+      submitLabel="Save Changes"
+      initialData={kyc}
+      icon={<Shield className="w-5 h-5" />}
+    />
   )
 }
