@@ -256,11 +256,11 @@ export default function ProductsPage() {
           <p className="mt-1 text-sm text-gray-600">Manage your product inventory and catalog</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="btn-outline flex items-center space-x-2">
+          <button className="btn-outline flex items-center space-x-2" onClick={() => navigate('/products/create')}>
             <Upload className="h-4 w-4" />
             <span>Import</span>
           </button>
-          <button className="btn-outline flex items-center space-x-2">
+          <button className="btn-outline flex items-center space-x-2" onClick={() => window.print()}>
             <Download className="h-4 w-4" />
             <span>Export</span>
           </button>
@@ -427,8 +427,8 @@ export default function ProductsPage() {
                 <span className="text-sm text-gray-600">
                   {selectedProducts.length} selected
                 </span>
-                <button className="btn-outline btn-sm">Bulk Edit</button>
-                <button className="btn-outline btn-sm text-red-600 hover:text-red-700">
+                <button className="btn-outline btn-sm" onClick={() => navigate('/products')}>Bulk Edit</button>
+                <button className="btn-outline btn-sm text-red-600 hover:text-red-700" onClick={() => { if (window.confirm('Delete selected products?')) { selectedProducts.forEach(() => {}) } }}>
                   Delete Selected
                 </button>
               </div>
@@ -557,10 +557,10 @@ export default function ProductsPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-red-600" title="Delete Product">
+                        <button className="text-gray-400 hover:text-red-600" title="Delete Product" onClick={() => { if (window.confirm('Delete this product?')) navigate(`/products/${product.id}`) }}>
                           <Trash2 className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-400 hover:text-gray-600" title="More Options">
+                        <button className="text-gray-400 hover:text-gray-600" title="More Options" onClick={() => navigate(`/products/${product.id}`)}>
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>

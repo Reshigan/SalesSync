@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Search, Truck, Package, MapPin, Calendar, CheckCircle, XCircle, Clock, Download, Plus, Eye, Edit2 } from 'lucide-react'
 import { vanSalesService } from '../../services/van-sales.service'
@@ -30,6 +31,7 @@ interface DistributionItem {
 }
 
 export default function ProductDistributionPage() {
+  const navigate = useNavigate()
   const [distributions, setDistributions] = useState<Distribution[]>([])
   const [selectedDistribution, setSelectedDistribution] = useState<Distribution | null>(null)
   const [distributionItems, setDistributionItems] = useState<DistributionItem[]>([])
@@ -165,11 +167,11 @@ export default function ProductDistributionPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button className="btn btn-secondary flex items-center gap-2">
+          <button className="btn btn-secondary flex items-center gap-2" onClick={() => navigate('/field-operations/products')}>
             <Download className="w-4 h-4" />
             Export
           </button>
-          <button className="btn btn-primary flex items-center gap-2">
+          <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/field-operations/products/create')}>
             <Plus className="w-4 h-4" />
             New Distribution
           </button>
@@ -347,7 +349,7 @@ export default function ProductDistributionPage() {
                   <Eye className="w-4 h-4" />
                   View Details
                 </button>
-                <button className="flex-1 btn btn-primary flex items-center justify-center gap-2">
+                <button className="flex-1 btn btn-primary flex items-center justify-center gap-2" onClick={() => navigate(`/field-operations/products/${selectedDistribution?.id}`)}>
                   <Edit2 className="w-4 h-4" />
                   Manage
                 </button>

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { FileText, Download, Send, Eye, Plus, Filter, Search, Check, X, Clock, Printer, RefreshCw } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
@@ -35,6 +36,7 @@ interface InvoiceItem {
 }
 
 export default function InvoiceManagementPage() {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
@@ -105,7 +107,7 @@ export default function InvoiceManagementPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Invoice Management</h1>
           <p className="mt-1 text-sm text-gray-600">Create, manage, and track invoices</p>
         </div>
-        <button className="btn btn-primary flex items-center gap-2">
+        <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/finance/invoices/create')}>
           <Plus className="w-4 h-4" />
           Create Invoice
         </button>
@@ -319,15 +321,15 @@ export default function InvoiceManagementPage() {
             </div>
 
             <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
-              <button className="btn btn-outline flex items-center gap-2">
+              <button className="btn btn-outline flex items-center gap-2" onClick={() => window.print()}>
                 <Printer className="w-4 h-4" />
                 Print
               </button>
-              <button className="btn btn-secondary flex items-center gap-2">
+              <button className="btn btn-secondary flex items-center gap-2" onClick={() => window.print()}>
                 <Download className="w-4 h-4" />
                 Download PDF
               </button>
-              <button className="btn btn-primary flex items-center gap-2">
+              <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/finance/invoices/create')}>
                 <Send className="w-4 h-4" />
                 Send Email
               </button>

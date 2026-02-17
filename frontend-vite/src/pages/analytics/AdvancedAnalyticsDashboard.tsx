@@ -58,11 +58,11 @@ export default function AdvancedAnalyticsDashboard() {
             <option value="90days">Last 90 Days</option>
             <option value="year">This Year</option>
           </select>
-          <button className="btn btn-outline flex items-center gap-2">
+          <button className="btn btn-outline flex items-center gap-2" onClick={() => fetchAnalytics()}>
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
-          <button className="btn btn-primary flex items-center gap-2">
+          <button className="btn btn-primary flex items-center gap-2" onClick={() => window.print()}>
             <Download className="w-4 h-4" />
             Export
           </button>

@@ -61,7 +61,7 @@ export default function ExecutiveDashboard() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Executive Dashboard</h1>
           <p className="mt-1 text-sm text-gray-600">High-level overview of business performance</p>
         </div>
-        <button className="btn btn-primary">Export Report</button>
+        <button className="btn btn-primary" onClick={() => window.print()}>Export Report</button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
