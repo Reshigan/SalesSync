@@ -74,7 +74,7 @@ export default function LiveMappingPage() {
 
   useEffect(() => {
     loadAgentsData()
-    // Set up real-time updates (mock)
+    // Set up real-time location polling
     const interval = setInterval(() => {
       if (!refreshing) {
         updateAgentLocations()
@@ -151,7 +151,7 @@ export default function LiveMappingPage() {
   }
 
   const updateAgentLocations = async () => {
-    // Mock real-time location updates
+    // Update timestamps between API polls
     setAgents(prevAgents => 
       prevAgents.map(agent => ({
         ...agent,
