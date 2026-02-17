@@ -1,186 +1,66 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { ArrowLeft, Save } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { BarChart3, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import FlowWizard, { WizardStep } from '../../components/ui/FlowWizard'
 import { reportsService } from '../../services/reports.service'
-
-interface ReportFormData {
-  name: string
-  description: string
-  type: string
-  schedule: string
-  format: string
-  recipients: string
-}
 
 export default function ReportEdit() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['report', id],
     queryFn: () => reportsService.getReport(id!),
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ReportFormData>({
-    values: report
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (data: ReportFormData) => reportsService.updateReport(id!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['report', id] })
-      queryClient.invalidateQueries({ queryKey: ['reports'] })
-      toast.success('Report updated successfully')
-      navigate(`/reports/${id}`)
-    },
-    onError: () => {
-      toast.error('Failed to update report')
-    },
-  })
-
-  const onSubmit = (data: ReportFormData) => {
-    updateMutation.mutate(data)
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
   }
 
-  if (isLoading) {
-    return <div className="p-6">Loading report...</div>
+  const steps: WizardStep[] = [
+    {
+      id: 'basics',
+      title: 'Report Info',
+      description: 'Update report name and type',
+      fields: [
+        { name: 'name', label: 'Report Name', type: 'text', required: true, autoFocus: true },
+        { name: 'type', label: 'Report Type', type: 'select', required: true, options: [{ value: 'sales', label: 'Sales' }, { value: 'inventory', label: 'Inventory' }, { value: 'finance', label: 'Finance' }, { value: 'operations', label: 'Operations' }, { value: 'custom', label: 'Custom' }] },
+        { name: 'description', label: 'Description', type: 'textarea', colSpan: 2 },
+      ],
+    },
+    {
+      id: 'delivery',
+      title: 'Schedule & Delivery',
+      description: 'Update schedule and format',
+      fields: [
+        { name: 'schedule', label: 'Schedule', type: 'select', required: true, options: [{ value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }, { value: 'monthly', label: 'Monthly' }, { value: 'quarterly', label: 'Quarterly' }, { value: 'manual', label: 'Manual Only' }] },
+        { name: 'format', label: 'Format', type: 'select', required: true, options: [{ value: 'pdf', label: 'PDF' }, { value: 'excel', label: 'Excel' }, { value: 'csv', label: 'CSV' }, { value: 'html', label: 'HTML' }] },
+        { name: 'recipients', label: 'Recipients', type: 'text', placeholder: 'email1@example.com, email2@example.com', helpText: 'Comma-separated email addresses', colSpan: 2 },
+      ],
+    },
+  ]
+
+  const handleSubmit = async (data: Record<string, any>) => {
+    try {
+      await reportsService.updateReport(id!, data)
+      toast.success('Report updated successfully')
+      navigate(`/reports/${id}`)
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update report')
+    }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(`/reports/${id}`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to Report
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Report</h1>
-      </div>
-
-      <div className="bg-white rounded-lg shadow p-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Report Name *
-            </label>
-            <input
-              type="text"
-              {...register('name', { required: 'Report name is required' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              {...register('description')}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Report Type *
-              </label>
-              <select
-                {...register('type', { required: 'Report type is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Select type</option>
-                <option value="sales">Sales</option>
-                <option value="inventory">Inventory</option>
-                <option value="finance">Finance</option>
-                <option value="operations">Operations</option>
-                <option value="custom">Custom</option>
-              </select>
-              {errors.type && (
-                <p className="mt-1 text-sm text-red-600">{errors.type.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Schedule *
-              </label>
-              <select
-                {...register('schedule', { required: 'Schedule is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Select schedule</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="manual">Manual Only</option>
-              </select>
-              {errors.schedule && (
-                <p className="mt-1 text-sm text-red-600">{errors.schedule.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Format *
-              </label>
-              <select
-                {...register('format', { required: 'Format is required' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Select format</option>
-                <option value="pdf">PDF</option>
-                <option value="excel">Excel</option>
-                <option value="csv">CSV</option>
-                <option value="html">HTML</option>
-              </select>
-              {errors.format && (
-                <p className="mt-1 text-sm text-red-600">{errors.format.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Recipients (comma-separated emails)
-              </label>
-              <input
-                type="text"
-                {...register('recipients')}
-                placeholder="email1@example.com, email2@example.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/reports/${id}`)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Save className="h-5 w-5" />
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <FlowWizard
+      title="Edit Report"
+      subtitle={report?.name || `Report #${id}`}
+      steps={steps}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate(`/reports/${id}`)}
+      submitLabel="Save Changes"
+      initialData={report || {}}
+      icon={<BarChart3 className="w-5 h-5" />}
+    />
   )
 }

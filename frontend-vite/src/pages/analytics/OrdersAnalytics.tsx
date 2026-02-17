@@ -102,7 +102,7 @@ const OrdersAnalytics: React.FC = () => {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total Orders</h3>
           <p className="text-3xl font-bold text-blue-600">{formatNumber(data.kpis.total_orders)}</p>
           <p className={`text-sm mt-2 ${data.kpis.order_growth_pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -110,7 +110,7 @@ const OrdersAnalytics: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Gross Revenue</h3>
           <p className="text-3xl font-bold text-green-600">{formatCurrency(data.kpis.gross_revenue)}</p>
           <p className={`text-sm mt-2 ${data.kpis.revenue_growth_pct >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -118,13 +118,13 @@ const OrdersAnalytics: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Average Order Value</h3>
           <p className="text-3xl font-bold text-purple-600">{formatCurrency(data.kpis.avg_order_value)}</p>
           <p className="text-sm text-gray-600 mt-2">{formatNumber(data.kpis.total_units)} units sold</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Unique Customers</h3>
           <p className="text-3xl font-bold text-orange-600">{formatNumber(data.kpis.unique_customers)}</p>
           <p className="text-sm text-gray-600 mt-2">
@@ -136,7 +136,7 @@ const OrdersAnalytics: React.FC = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Orders Over Time</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.time_series}>
@@ -154,7 +154,7 @@ const OrdersAnalytics: React.FC = () => {
         </div>
 
         {/* Revenue Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Revenue Over Time</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.time_series}>
@@ -172,7 +172,7 @@ const OrdersAnalytics: React.FC = () => {
         </div>
 
         {/* AOV Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Average Order Value</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.time_series}>
@@ -190,7 +190,7 @@ const OrdersAnalytics: React.FC = () => {
         </div>
 
         {/* Units Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Units Sold</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.time_series}>

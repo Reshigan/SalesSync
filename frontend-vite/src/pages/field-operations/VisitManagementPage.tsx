@@ -61,7 +61,7 @@ export default function VisitManagementPage() {
       </div>
 
       {showMap && (
-        <div className="bg-white rounded-lg shadow p-4" style={{ height: '500px' }}>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4" style={{ height: '500px' }}>
           <LiveVisitMap 
             visits={visits.map(v => ({
               id: v.id,
@@ -76,9 +76,9 @@ export default function VisitManagementPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="flex flex-wrap gap-4">
-          <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-300 rounded-lg px-3 py-2">
+          <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-200 rounded-xl px-3 py-2">
             <option value="">All Statuses</option>
             <option value="planned">Planned</option>
             <option value="in_progress">In Progress</option>
@@ -88,7 +88,7 @@ export default function VisitManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -122,7 +122,7 @@ export default function VisitManagementPage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

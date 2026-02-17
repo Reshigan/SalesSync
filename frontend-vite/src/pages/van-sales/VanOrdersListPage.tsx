@@ -33,13 +33,13 @@ export default function VanOrdersListPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Orders</p><p className="text-2xl font-bold">{total}</p></div><ShoppingCart className="h-8 w-8 text-blue-500" /></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Revenue</p><p className="text-2xl font-bold text-green-600">{formatCurrency(orders.reduce((s,o) => s+o.total_amount,0))}</p></div><DollarSign className="h-8 w-8 text-green-500" /></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Delivered</p><p className="text-2xl font-bold text-green-600">{orders.filter(o => o.delivery_status==='delivered').length}</p></div><ShoppingCart className="h-8 w-8 text-green-500" /></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending</p><p className="text-2xl font-bold text-yellow-600">{orders.filter(o => o.delivery_status==='pending').length}</p></div><ShoppingCart className="h-8 w-8 text-yellow-500" /></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Orders</p><p className="text-2xl font-bold">{total}</p></div><ShoppingCart className="h-8 w-8 text-blue-500" /></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Revenue</p><p className="text-2xl font-bold text-green-600">{formatCurrency(orders.reduce((s,o) => s+o.total_amount,0))}</p></div><DollarSign className="h-8 w-8 text-green-500" /></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Delivered</p><p className="text-2xl font-bold text-green-600">{orders.filter(o => o.delivery_status==='delivered').length}</p></div><ShoppingCart className="h-8 w-8 text-green-500" /></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Pending</p><p className="text-2xl font-bold text-yellow-600">{orders.filter(o => o.delivery_status==='pending').length}</p></div><ShoppingCart className="h-8 w-8 text-yellow-500" /></div></div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order #</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Delivery</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th></tr></thead>
@@ -62,7 +62,7 @@ export default function VanOrdersListPage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

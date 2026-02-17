@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, CheckCircle } from 'lucide-react'
@@ -37,7 +38,7 @@ export default function StockCountsList() {
       loadStockCounts()
     } catch (error) {
       console.error('Failed to confirm stock count:', error)
-      alert('Failed to confirm stock count')
+      toast.error('Failed to confirm stock count')
     }
   }
 

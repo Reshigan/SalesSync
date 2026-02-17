@@ -33,7 +33,7 @@ export default function RelationshipDetail() {
         <h1 className="text-2xl font-bold text-gray-900">Relationship Detail</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-center gap-8 mb-6">
           <div className="text-center">
             <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-2">
@@ -60,7 +60,7 @@ export default function RelationshipDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Relationship Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -85,7 +85,7 @@ export default function RelationshipDetail() {
       </div>
 
       {relationship.description && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Description</h2>
           <p className="text-sm text-gray-700">{relationship.description}</p>
         </div>

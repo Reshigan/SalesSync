@@ -53,7 +53,7 @@ export default function AuditFilter() {
         <h1 className="text-2xl font-bold text-gray-900">Filter Audit Trail</h1>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">

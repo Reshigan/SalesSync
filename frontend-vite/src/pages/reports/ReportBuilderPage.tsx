@@ -34,7 +34,7 @@ const ReportBuilderPage: React.FC = () => {
     <div className="p-6 w-full">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-2"><BarChart3 className="w-8 h-8 text-blue-600" /> Report Builder</h1>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm-lg mb-6">
         <h2 className="text-xl font-semibold mb-4">Report Configuration</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <select value={config.type} onChange={e => setConfig({...config, type: e.target.value})} className="px-4 py-2 border rounded">
@@ -74,7 +74,7 @@ const ReportBuilderPage: React.FC = () => {
       </div>
 
       {data && (
-        <div className="bg-white p-6 rounded-lg shadow-lg">
+        <div className="bg-white p-6 rounded-2xl shadow-sm-lg">
           <h2 className="text-xl font-semibold mb-4">Report Results</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <div className="p-4 bg-blue-50 rounded-lg">

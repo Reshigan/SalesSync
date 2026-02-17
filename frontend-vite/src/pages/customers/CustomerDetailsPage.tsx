@@ -322,7 +322,7 @@ export default function CustomerDetailsPage() {
                       type="text"
                       value={editForm.name || ''}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                   <div>
@@ -331,7 +331,7 @@ export default function CustomerDetailsPage() {
                       type="email"
                       value={editForm.email || ''}
                       onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                   <div>
@@ -340,7 +340,7 @@ export default function CustomerDetailsPage() {
                       type="text"
                       value={editForm.phone || ''}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                   <div>
@@ -349,7 +349,7 @@ export default function CustomerDetailsPage() {
                       type="text"
                       value={editForm.address || ''}
                       onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                     />
                   </div>
                 </>

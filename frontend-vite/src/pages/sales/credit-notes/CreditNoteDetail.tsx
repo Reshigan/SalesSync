@@ -33,11 +33,11 @@ export default function CreditNoteDetail() {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(cn.total_amount || cn.amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(cn.credit_note_date || cn.date) || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><FileText className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Invoice</p><p className="text-xl font-bold">{cn.invoice_number || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(cn.total_amount || cn.amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(cn.credit_note_date || cn.date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><FileText className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Invoice</p><p className="text-xl font-bold">{cn.invoice_number || 'N/A'}</p></div></div></div>
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Credit Note Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[['Credit Note Number', cn.credit_note_number], ['Date', formatDate(cn.credit_note_date)], ['Customer', cn.customer_name], ['Invoice', cn.invoice_number], ['Return', cn.return_number], ['Reason', cn.reason], ['Created By', cn.created_by], ['Created At', formatDate(cn.created_at)]].map(([l, v]) => (
@@ -45,12 +45,12 @@ export default function CreditNoteDetail() {
           ))}
         </dl>
       </div>
-      {items.length > 0 && <div className="bg-white rounded-lg shadow p-6">
+      {items.length > 0 && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Line Items</h2>
         <table className="w-full text-sm"><thead><tr className="border-b text-left"><th className="pb-3 text-gray-500">Product</th><th className="pb-3 text-gray-500 text-right">Qty</th><th className="pb-3 text-gray-500 text-right">Unit Price</th><th className="pb-3 text-gray-500 text-right">Total</th></tr></thead>
         <tbody>{items.map((i: any, idx: number) => (<tr key={i.id || idx} className="border-b border-gray-100"><td className="py-3">{i.product_name || i.description || '-'}</td><td className="py-3 text-right">{i.quantity || 0}</td><td className="py-3 text-right">{formatCurrency(i.unit_price || 0)}</td><td className="py-3 text-right font-medium">{formatCurrency(i.total_amount || 0)}</td></tr>))}</tbody></table>
       </div>}
-      {cn.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{cn.notes}</p></div>}
+      {cn.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{cn.notes}</p></div>}
     </div>
   )
 }

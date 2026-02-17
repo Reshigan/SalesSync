@@ -463,7 +463,7 @@ const ActivationWorkflowPage: React.FC = () => {
                     value={taskNotes[task.id] || ''}
                     onChange={(e) => setTaskNotes({ ...taskNotes, [task.id]: e.target.value })}
                     rows={2}
-                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="w-full mt-2 px-3 py-2 border border-gray-200 rounded-xl text-sm"
                   />
                 </div>
               ))}
@@ -507,7 +507,7 @@ const ActivationWorkflowPage: React.FC = () => {
                         ...sampleDistributions,
                         [allocation.id]: parseInt(e.target.value) || 0
                       })}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg"
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-xl"
                       placeholder="Quantity to distribute"
                     />
                   </div>
@@ -525,19 +525,19 @@ const ActivationWorkflowPage: React.FC = () => {
                     placeholder="Recipient Name"
                     value={recipientInfo.name}
                     onChange={(e) => setRecipientInfo({ ...recipientInfo, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   />
                   <input
                     type="tel"
                     placeholder="Phone Number"
                     value={recipientInfo.phone}
                     onChange={(e) => setRecipientInfo({ ...recipientInfo, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   />
                   <select
                     value={recipientInfo.age_group}
                     onChange={(e) => setRecipientInfo({ ...recipientInfo, age_group: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   >
                     <option value="">Select Age Group</option>
                     <option value="18-25">18-25</option>
@@ -549,7 +549,7 @@ const ActivationWorkflowPage: React.FC = () => {
                   <select
                     value={recipientInfo.gender}
                     onChange={(e) => setRecipientInfo({ ...recipientInfo, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   >
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
@@ -562,7 +562,7 @@ const ActivationWorkflowPage: React.FC = () => {
                     value={recipientInfo.feedback}
                     onChange={(e) => setRecipientInfo({ ...recipientInfo, feedback: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl"
                   />
                 </div>
               </div>

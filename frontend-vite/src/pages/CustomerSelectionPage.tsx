@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
@@ -62,7 +63,7 @@ const CustomerSelectionPage: React.FC = () => {
 
   const validateCustomerGPS = async (customer: any) => {
     if (!currentLocation) {
-      alert('Your location is not available. Please enable GPS.');
+      toast.error('Your location is not available. Please enable GPS.');
       return;
     }
 
@@ -147,7 +148,7 @@ const CustomerSelectionPage: React.FC = () => {
         </div>
 
         {/* Search Box */}
-        <div className="bg-white rounded-lg shadow mb-6 p-4">
+        <div className="bg-white rounded-2xl shadow-sm mb-6 p-4">
           <div className="flex gap-2">
             <input
               type="text"
@@ -189,7 +190,7 @@ const CustomerSelectionPage: React.FC = () => {
           {customers.map((customer) => (
             <div
               key={customer.id}
-              className="bg-white rounded-lg shadow p-4 hover:shadow-md transition"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">

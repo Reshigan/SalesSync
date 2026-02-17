@@ -33,28 +33,28 @@ export default function RoutePerformance() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Total Sales</h3>
           </div>
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(performance?.total_sales || 0)}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Orders</h3>
           </div>
           <p className="text-2xl font-bold text-gray-900">{performance?.total_orders || 0}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Customers</h3>
           </div>
           <p className="text-2xl font-bold text-gray-900">{performance?.total_customers || 0}</p>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Avg Order</h3>
@@ -64,7 +64,7 @@ export default function RoutePerformance() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Sales Trend</h2>
           <div className="space-y-3">
             {performance?.sales_trend.map((item) => (
@@ -76,7 +76,7 @@ export default function RoutePerformance() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Top Products</h2>
           <div className="space-y-3">
             {performance?.top_products.map((product, idx) => (

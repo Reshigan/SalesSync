@@ -1,19 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { ArrowLeft } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ClipboardCheck, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import FlowWizard, { WizardStep } from '../../../components/ui/FlowWizard'
 import { apiClient } from '../../../services/api.service'
-
-interface CountLineFormData {
-  counted_quantity: number
-  notes: string
-}
 
 export default function CountLineEdit() {
   const { countId, lineId } = useParams<{ countId: string; lineId: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: line, isLoading } = useQuery({
     queryKey: ['count-line', countId, lineId],
@@ -23,106 +17,42 @@ export default function CountLineEdit() {
     },
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CountLineFormData>({
-    values: line,
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: CountLineFormData) => {
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['count-line', countId, lineId] })
-      queryClient.invalidateQueries({ queryKey: ['stock-count', countId] })
-      toast.success('Count line updated successfully')
-      navigate(`/inventory/stock-counts/${countId}/lines/${lineId}`)
-    },
-    onError: () => {
-      toast.error('Failed to update count line')
-    },
-  })
-
   if (isLoading) {
-    return <div className="p-6">Loading...</div>
+    return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
   }
 
-  if (!line) {
-    return <div className="p-6">Count line not found</div>
+  const steps: WizardStep[] = [
+    {
+      id: 'count',
+      title: 'Count Details',
+      description: `Expected: ${line?.expected_quantity || 0} units`,
+      fields: [
+        { name: 'counted_quantity', label: 'Counted Quantity', type: 'number', required: true, min: 0, autoFocus: true },
+        { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Any observations or issues during counting...', colSpan: 2 },
+      ],
+    },
+  ]
+
+  const handleSubmit = async (data: Record<string, any>) => {
+    try {
+      await apiClient.put(`/stock-counts/${countId}/lines/${lineId}`, data)
+      toast.success('Count line updated successfully')
+      navigate(`/inventory/stock-counts/${countId}/lines/${lineId}`)
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update count line')
+    }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(`/inventory/stock-counts/${countId}/lines/${lineId}`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to Count Line
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Count Line</h1>
-        <p className="text-gray-600">{line.product_name}</p>
-      </div>
-
-      <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="bg-white rounded-lg shadow p-6">
-        <div className="space-y-6">
-          <div className="bg-gray-50 border border-gray-100 rounded-lg p-4">
-            <dl className="grid grid-cols-2 gap-4">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Expected Quantity</dt>
-                <dd className="mt-1 text-lg font-bold text-gray-900">{line.expected_quantity}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Product</dt>
-                <dd className="mt-1 text-sm text-gray-900">{line.product_name}</dd>
-              </div>
-            </dl>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Counted Quantity *
-            </label>
-            <input
-              type="number"
-              {...register('counted_quantity', { required: 'Counted quantity is required', min: 0 })}
-              className="input"
-            />
-            {errors.counted_quantity && (
-              <p className="mt-1 text-sm text-red-600">{errors.counted_quantity.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
-            </label>
-            <textarea
-              {...register('notes')}
-              rows={3}
-              className="input"
-              placeholder="Any observations or issues during counting..."
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary"
-            >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/inventory/stock-counts/${countId}/lines/${lineId}`)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+    <FlowWizard
+      title="Edit Count Line"
+      subtitle={line?.product_name || `Line #${lineId}`}
+      steps={steps}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate(`/inventory/stock-counts/${countId}/lines/${lineId}`)}
+      submitLabel="Save Changes"
+      initialData={line || {}}
+      icon={<ClipboardCheck className="w-5 h-5" />}
+    />
   )
 }

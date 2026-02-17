@@ -3,6 +3,7 @@
  * Handles board installation with photo capture and coverage analysis
  */
 
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
@@ -145,7 +146,7 @@ export default function BoardPlacement() {
 
   const handleSubmit = async () => {
     if (photos.length === 0) {
-      alert('Please capture at least one board photo');
+      toast.error('Please capture at least one board photo');
       return;
     }
 

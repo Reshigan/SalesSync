@@ -36,14 +36,14 @@ export default function CustomerDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Credit Limit</p><p className="text-xl font-bold">{formatCurrency(customer.credit_limit || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance</p><p className="text-xl font-bold">{formatCurrency(customer.current_balance || customer.balance || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><ShoppingCart className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Total Orders</p><p className="text-xl font-bold">{customer.total_orders || 0}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Total Revenue</p><p className="text-xl font-bold">{formatCurrency(customer.total_revenue || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Credit Limit</p><p className="text-xl font-bold">{formatCurrency(customer.credit_limit || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance</p><p className="text-xl font-bold">{formatCurrency(customer.current_balance || customer.balance || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><ShoppingCart className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Total Orders</p><p className="text-xl font-bold">{customer.total_orders || 0}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Total Revenue</p><p className="text-xl font-bold">{formatCurrency(customer.total_revenue || 0)}</p></div></div></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer Information</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Customer Code', customer.customer_code || customer.code], ['Name', customer.customer_name || customer.name], ['Type', customer.customer_type || customer.type], ['Contact Person', customer.contact_person], ['Email', customer.email], ['Phone', customer.phone], ['Mobile', customer.mobile], ['Tax ID', customer.tax_id || customer.vat_number]].map(([l, v]) => (
@@ -51,7 +51,7 @@ export default function CustomerDetail() {
             ))}
           </dl>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><MapPin className="h-5 w-5" />Address & Location</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Address', customer.address], ['City', customer.city], ['Region', customer.region], ['Territory', customer.territory], ['Province', customer.province || customer.state], ['Postal Code', customer.postal_code || customer.zip], ['Country', customer.country], ['GPS', customer.latitude && customer.longitude ? `${customer.latitude}, ${customer.longitude}` : null]].map(([l, v]) => (
@@ -61,7 +61,7 @@ export default function CustomerDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Additional Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[['Payment Terms', customer.payment_terms], ['Price List', customer.price_list], ['Sales Rep', customer.sales_rep || customer.agent_name], ['Last Order', formatDate(customer.last_order_date)], ['Created By', customer.created_by], ['Created At', formatDate(customer.created_at)], ['Updated At', formatDate(customer.updated_at)]].map(([l, v]) => (
@@ -69,7 +69,7 @@ export default function CustomerDetail() {
           ))}
         </dl>
       </div>
-      {customer.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{customer.notes}</p></div>}
+      {customer.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{customer.notes}</p></div>}
     </div>
   )
 }

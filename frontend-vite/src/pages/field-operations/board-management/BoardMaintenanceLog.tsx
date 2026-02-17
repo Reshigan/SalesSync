@@ -33,7 +33,7 @@ export default function BoardMaintenanceLog() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Wrench className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Maintenance</h3>
@@ -42,7 +42,7 @@ export default function BoardMaintenanceLog() {
           <p className="text-sm text-gray-600 mt-1">activities</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Completed</h3>
@@ -52,7 +52,7 @@ export default function BoardMaintenanceLog() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Calendar className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Last Maintenance</h3>
@@ -67,7 +67,7 @@ export default function BoardMaintenanceLog() {
 
       <div className="space-y-4">
         {logs?.map((log) => (
-          <div key={log.id} className="bg-white rounded-lg shadow p-6">
+          <div key={log.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-3">
                 <Wrench className="h-6 w-6 text-blue-600 mt-0.5" />

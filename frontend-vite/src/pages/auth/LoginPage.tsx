@@ -78,7 +78,7 @@ export default function LoginPage() {
                 },
               })}
               type="email"
-              className="w-full pl-10 pr-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="w-full pl-10 pr-4 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               placeholder="you@company.com"
               autoComplete="email"
             />
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 },
               })}
               type={showPassword ? 'text' : 'password'}
-              className="w-full pl-10 pr-12 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+              className="w-full pl-10 pr-12 py-3.5 bg-slate-900/50 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
               placeholder="••••••••"
               autoComplete="current-password"
             />

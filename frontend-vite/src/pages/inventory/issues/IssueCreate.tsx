@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, PackageMinus, Warehouse } from 'lucide-react'
@@ -56,19 +57,19 @@ export default function IssueCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedWarehouse) {
-      alert('Please select a warehouse')
+      toast.error('Please select a warehouse')
       return
     }
     if (!issuedTo) {
-      alert('Please enter who this is issued to')
+      toast.error('Please enter who this is issued to')
       return
     }
     if (!issueType) {
-      alert('Please select an issue type')
+      toast.error('Please select an issue type')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product')
+      toast.error('Please add at least one product')
       return
     }
 
@@ -94,7 +95,7 @@ export default function IssueCreate() {
       navigate('/inventory/issues')
     } catch (error: any) {
       console.error('Failed to create issue:', error)
-      alert(error.message || 'Failed to create issue')
+      toast.error(error.message || 'Failed to create issue')
     } finally {
       setSaving(false)
     }
@@ -121,7 +122,7 @@ export default function IssueCreate() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save as Draft
           </button>
           <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
@@ -132,14 +133,14 @@ export default function IssueCreate() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <PackageMinus className="w-5 h-5" /> Issue Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-                <select value={selectedWarehouse} onChange={(e) => setSelectedWarehouse(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={selectedWarehouse} onChange={(e) => setSelectedWarehouse(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="">Select a warehouse</option>
                   {warehouses.map((warehouse) => (
                     <option key={warehouse.id} value={warehouse.id}>{warehouse.name}</option>
@@ -148,15 +149,15 @@ export default function IssueCreate() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
-                <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="date" value={issueDate} onChange={(e) => setIssueDate(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Issued To *</label>
-                <input type="text" value={issuedTo} onChange={(e) => setIssuedTo(e.target.value)} placeholder="Department, Van, or Person..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="text" value={issuedTo} onChange={(e) => setIssuedTo(e.target.value)} placeholder="Department, Van, or Person..." className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Issue Type *</label>
-                <select value={issueType} onChange={(e) => setIssueType(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={issueType} onChange={(e) => setIssueType(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="">Select type</option>
                   <option value="van_load">Van Load</option>
                   <option value="department">Department</option>
@@ -166,7 +167,7 @@ export default function IssueCreate() {
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Issue notes..." rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Issue notes..." rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
             </div>
           </div>
@@ -184,8 +185,8 @@ export default function IssueCreate() {
         <div className="lg:col-span-1">
           <div className="sticky top-6 space-y-6">
             <TotalsSummary totals={totals} />
-            <div className="bg-white rounded-lg shadow p-6 space-y-3">
-              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">

@@ -41,7 +41,7 @@ export default function OrderPayments() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500">Loading payments...</div>
         ) : payments.length === 0 ? (

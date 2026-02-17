@@ -42,7 +42,7 @@ export default function DocumentFlowVisualization({ entityType, entityId }: Docu
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Document Flow Visualization</h2>
 
       <div className="relative">

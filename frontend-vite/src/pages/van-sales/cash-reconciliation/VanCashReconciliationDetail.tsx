@@ -41,13 +41,13 @@ export default function VanCashReconciliationDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Expected</p><p className="text-xl font-bold">{formatCurrency(recon.expected_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Actual</p><p className="text-xl font-bold">{formatCurrency(recon.actual_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Variance</p><p className="text-xl font-bold">{formatCurrency(recon.variance || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(recon.reconciliation_date || recon.date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Expected</p><p className="text-xl font-bold">{formatCurrency(recon.expected_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Actual</p><p className="text-xl font-bold">{formatCurrency(recon.actual_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Variance</p><p className="text-xl font-bold">{formatCurrency(recon.variance || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Date</p><p className="text-xl font-bold">{formatDate(recon.reconciliation_date || recon.date) || 'N/A'}</p></div></div></div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Cash Reconciliation Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div><dt className="text-sm text-gray-500">Session ID</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{recon.session_id || '-'}</dd></div>
@@ -60,7 +60,7 @@ export default function VanCashReconciliationDetail() {
         </dl>
       </div>
 
-      {recon.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{recon.notes}</p></div>}
+      {recon.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{recon.notes}</p></div>}
     </div>
   )
 }

@@ -26,19 +26,19 @@ export default function LiveGPSTrackingPage() {
       <div><h1 className="text-2xl font-bold text-gray-900">Live GPS Tracking</h1><p className="text-sm text-gray-600 mt-1">Real-time agent location tracking (updates every 30s)</p></div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Agents</p><p className="text-2xl font-bold text-gray-900">{agents.length}</p></div>
             <MapPin className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Active</p><p className="text-2xl font-bold text-green-600">{activeAgents.length}</p></div>
             <Activity className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Idle</p><p className="text-2xl font-bold text-yellow-600">{idleAgents.length}</p></div>
             <Clock className="h-8 w-8 text-yellow-500" />
@@ -46,7 +46,7 @@ export default function LiveGPSTrackingPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold text-gray-900">Agent Locations</h2>
           <div className="flex items-center space-x-2 text-sm text-gray-600">

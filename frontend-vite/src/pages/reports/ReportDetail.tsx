@@ -57,7 +57,7 @@ export default function ReportDetail() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Report Information</h2>
             <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -91,7 +91,7 @@ export default function ReportDetail() {
             </dl>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Report Preview</h2>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -102,7 +102,7 @@ export default function ReportDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Recipients</h3>
             <div className="space-y-2">
               {report.recipients.map((email, index) => (
@@ -117,7 +117,7 @@ export default function ReportDetail() {
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Run History</h3>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (

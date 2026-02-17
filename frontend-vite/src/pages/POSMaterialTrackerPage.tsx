@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { Camera, MapPin, Package, QrCode, Search, Calendar, CheckCircle2, AlertCircle, Upload, Download } from 'lucide-react';
 import { apiClient } from '../services/api.service'
@@ -142,7 +143,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
   const handleSubmitInstallation = async () => {
     if (!selectedMaterial || !formData.location) {
-      alert('Please fill all required fields');
+      toast.error('Please fill all required fields');
       return;
     }
 
@@ -164,7 +165,7 @@ const POSMaterialTrackerPage: React.FC = () => {
       const response = await apiClient.post('/trade-marketing-new/pos-materials', installationData);
 
       if (response.data) {
-        alert('Installation recorded successfully!');
+        toast.error('Installation recorded successfully!');
         await loadInstallationHistory(); // Reload list
         setShowInstallForm(false);
         setSelectedMaterial(null);
@@ -177,11 +178,11 @@ const POSMaterialTrackerPage: React.FC = () => {
           verificationStatus: 'pending'
         });
       } else {
-        alert('Failed to record installation');
+        toast.error('Failed to record installation');
       }
     } catch (error) {
       console.error('Error submitting installation:', error);
-      alert('Error recording installation');
+      toast.error('Error recording installation');
     }
   };
 
@@ -215,7 +216,7 @@ const POSMaterialTrackerPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="w-full">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -242,7 +243,7 @@ const POSMaterialTrackerPage: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
+        <div className="bg-white rounded-2xl shadow-sm-sm mb-6">
           <div className="border-b border-gray-100">
             <nav className="flex">
               {[
@@ -273,7 +274,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
         {/* Material Library Tab */}
         {activeTab === 'library' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm-sm p-6">
             {/* Search */}
             <div className="mb-6">
               <div className="relative">
@@ -283,7 +284,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                   placeholder="Search materials by name, type, or brand..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -333,7 +334,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
         {/* Installation Form Tab */}
         {activeTab === 'installation' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm-sm p-6">
             {!selectedMaterial ? (
               <div className="text-center py-12">
                 <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -360,7 +361,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                       placeholder="e.g., Store entrance - right side"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500"
                       required
                     />
                   </div>
@@ -373,7 +374,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                     <select
                       value={formData.condition}
                       onChange={(e) => setFormData({ ...formData, condition: e.target.value as any })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="excellent">Excellent</option>
                       <option value="good">Good</option>
@@ -394,7 +395,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                         value={formData.qrCode || ''}
                         readOnly
                         placeholder="Scan QR code..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                        className="flex-1 px-4 py-2 border border-gray-200 rounded-xl bg-gray-50"
                       />
                       <button
                         onClick={handleQRScan}
@@ -462,7 +463,7 @@ const POSMaterialTrackerPage: React.FC = () => {
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Any additional notes about the installation..."
                       rows={4}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
 
@@ -492,7 +493,7 @@ const POSMaterialTrackerPage: React.FC = () => {
 
         {/* Installation History Tab */}
         {activeTab === 'history' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm-sm p-6">
             <div className="space-y-4">
               {installations.map(installation => (
                 <div key={installation.id} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">

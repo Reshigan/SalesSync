@@ -32,7 +32,7 @@ export default function LotTracking() {
         <p className="text-gray-600">{lot?.lot_number} - {lot?.product_name}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-6">Production & Distribution Timeline</h2>
         <div className="flow-root">
           <ul className="-mb-8">

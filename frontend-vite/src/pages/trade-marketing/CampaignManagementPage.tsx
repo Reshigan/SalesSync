@@ -43,25 +43,25 @@ export default function CampaignManagementPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Campaigns</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
             <Target className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Active</p><p className="text-2xl font-bold text-green-600">{campaigns.filter(c => c.status === 'active').length}</p></div>
             <TrendingUp className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Budget</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(campaigns.reduce((sum, c) => sum + (c.budget || 0), 0))}</p></div>
             <TrendingUp className="h-8 w-8 text-purple-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Completed</p><p className="text-2xl font-bold text-blue-600">{campaigns.filter(c => c.status === 'completed').length}</p></div>
             <Calendar className="h-8 w-8 text-blue-500" />
@@ -69,8 +69,8 @@ export default function CampaignManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-300 rounded-lg px-3 py-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <select value={filter.status} onChange={e => setFilter({...filter, status: e.target.value, page: 1})} className="border border-gray-200 rounded-xl px-3 py-2">
           <option value="">All Statuses</option>
           <option value="draft">Draft</option>
           <option value="active">Active</option>
@@ -80,7 +80,7 @@ export default function CampaignManagementPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -114,7 +114,7 @@ export default function CampaignManagementPage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

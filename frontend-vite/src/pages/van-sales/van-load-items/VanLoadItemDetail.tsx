@@ -40,7 +40,7 @@ export default function VanLoadItemDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Loaded</h3>
@@ -49,7 +49,7 @@ export default function VanLoadItemDetail() {
           <p className="text-sm text-gray-600 mt-1">units</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingDown className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Sold</h3>
@@ -58,7 +58,7 @@ export default function VanLoadItemDetail() {
           <p className="text-sm text-gray-600 mt-1">{sellThrough}% sell-through</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Returned</h3>
@@ -67,7 +67,7 @@ export default function VanLoadItemDetail() {
           <p className="text-sm text-gray-600 mt-1">units</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Remaining</h3>
@@ -77,7 +77,7 @@ export default function VanLoadItemDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -106,7 +106,7 @@ export default function VanLoadItemDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Summary</h2>
         <dl className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>

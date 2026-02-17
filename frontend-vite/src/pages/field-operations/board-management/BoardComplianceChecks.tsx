@@ -37,7 +37,7 @@ export default function BoardComplianceChecks() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Compliance Rate</h3>
@@ -46,7 +46,7 @@ export default function BoardComplianceChecks() {
           <p className="text-sm text-gray-600 mt-1">{passedChecks}/{totalChecks} checks passed</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Checks</h3>
@@ -54,7 +54,7 @@ export default function BoardComplianceChecks() {
           <p className="text-3xl font-bold text-gray-900">{totalChecks}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="h-5 w-5 text-yellow-600" />
             <h3 className="font-semibold text-gray-900">Issues Found</h3>
@@ -67,7 +67,7 @@ export default function BoardComplianceChecks() {
 
       <div className="space-y-4">
         {checks?.map((check) => (
-          <div key={check.id} className="bg-white rounded-lg shadow p-6">
+          <div key={check.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-3">
                 {check.status === 'passed' ? (

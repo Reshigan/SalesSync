@@ -44,7 +44,7 @@ export default function RouteStopExceptions() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <AlertTriangle className="h-5 w-5 text-red-600" />
             <h3 className="font-semibold text-gray-900">Total Exceptions</h3>
@@ -52,7 +52,7 @@ export default function RouteStopExceptions() {
           <p className="text-3xl font-bold text-gray-900">{exceptions?.length || 0}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <XCircle className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">High Severity</h3>
@@ -62,7 +62,7 @@ export default function RouteStopExceptions() {
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Clock className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Resolved</h3>
@@ -77,7 +77,7 @@ export default function RouteStopExceptions() {
         {exceptions?.map((exception) => (
           <div
             key={exception.id}
-            className={`bg-white rounded-lg shadow p-6 border-l-4 ${
+            className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-6 border-l-4 ${
               exception.severity === 'high' ? 'border-red-500' :
               exception.severity === 'medium' ? 'border-yellow-500' :
               'border-blue-500'

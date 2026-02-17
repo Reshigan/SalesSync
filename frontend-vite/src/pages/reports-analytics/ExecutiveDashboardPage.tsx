@@ -85,7 +85,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
 
       {/* Key Performance Indicators */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Revenue</p>
@@ -109,7 +109,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Orders</p>
@@ -133,7 +133,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Active Customers</p>
@@ -157,7 +157,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Profit Margin</p>
@@ -208,7 +208,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
       {/* Performance Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Products */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Top Products</h2>
           {reportData.top_products.length === 0 ? (
             <div className="text-center py-8">
@@ -237,7 +237,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
         </div>
 
         {/* Top Agents */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-medium text-gray-900 mb-4">Top Performing Agents</h2>
           {reportData.top_agents.length === 0 ? (
             <div className="text-center py-8">
@@ -267,7 +267,7 @@ export const ExecutiveDashboardPage: React.FC = () => {
       </div>
 
       {/* Regional Performance */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Regional Performance</h2>
         {reportData.regional_performance.length === 0 ? (
           <div className="text-center py-12">

@@ -46,19 +46,19 @@ const FieldOpsAnalytics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Board Placements</h3>
           <p className="text-3xl font-bold text-blue-600">{formatNumber(data.kpis.total_board_placements)}</p>
           <p className="text-sm text-gray-600 mt-2">{data.kpis.gps_compliance_rate}% GPS compliant</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Product Distributions</h3>
           <p className="text-3xl font-bold text-green-600">{formatNumber(data.kpis.total_product_distributions)}</p>
           <p className="text-sm text-gray-600 mt-2">{data.kpis.photo_attachment_rate}% with photos</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Avg Coverage</h3>
           <p className="text-3xl font-bold text-purple-600">{data.kpis.avg_coverage_percentage.toFixed(1)}%</p>
           <p className="text-sm text-gray-600 mt-2">{data.kpis.avg_agents_per_day.toFixed(1)} agents/day</p>
@@ -66,7 +66,7 @@ const FieldOpsAnalytics: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Activity Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.time_series}>
@@ -81,7 +81,7 @@ const FieldOpsAnalytics: React.FC = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Top Performing Agents</h3>
           <div className="overflow-x-auto">
             <table className="min-w-full">

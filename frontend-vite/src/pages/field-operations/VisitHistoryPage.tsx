@@ -20,24 +20,24 @@ export default function VisitHistoryPage() {
     <div className="p-6 space-y-6">
       <div><h1 className="text-2xl font-bold text-gray-900">Visit History</h1><p className="text-sm text-gray-600 mt-1">View past visit records ({total} total)</p></div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Agent ID</label>
-            <input type="text" placeholder="Filter by agent" value={filter.agent_id} onChange={e => setFilter({...filter, agent_id: e.target.value, page: 1})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="text" placeholder="Filter by agent" value={filter.agent_id} onChange={e => setFilter({...filter, agent_id: e.target.value, page: 1})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-            <input type="date" value={filter.start_date} onChange={e => setFilter({...filter, start_date: e.target.value, page: 1})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="date" value={filter.start_date} onChange={e => setFilter({...filter, start_date: e.target.value, page: 1})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-            <input type="date" value={filter.end_date} onChange={e => setFilter({...filter, end_date: e.target.value, page: 1})} className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+            <input type="date" value={filter.end_date} onChange={e => setFilter({...filter, end_date: e.target.value, page: 1})} className="w-full border border-gray-200 rounded-xl px-3 py-2" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -74,7 +74,7 @@ export default function VisitHistoryPage() {
       </div>
 
       {total > filter.limit && (
-        <div className="flex justify-between items-center bg-white rounded-lg shadow p-4">
+        <div className="flex justify-between items-center bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="text-sm text-gray-700">Showing {(filter.page-1)*filter.limit+1} to {Math.min(filter.page*filter.limit,total)} of {total}</div>
           <div className="flex space-x-2">
             <button onClick={() => setFilter({...filter, page: filter.page-1})} disabled={filter.page<=1} className="px-4 py-2 border rounded-lg disabled:opacity-50">Previous</button>

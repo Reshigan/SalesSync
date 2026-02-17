@@ -44,7 +44,7 @@ export default function PayoutAuditTrail() {
                 </div>
               </div>
 
-              <div className="flex-1 bg-white rounded-lg shadow p-6">
+              <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{entry.description}</h3>

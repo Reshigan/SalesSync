@@ -19,7 +19,7 @@ export default function ProductInventory() {
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Product Inventory</h2>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <Package className="h-8 w-8 text-blue-600" />
               <div>
@@ -28,7 +28,7 @@ export default function ProductInventory() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
               <div>
@@ -37,7 +37,7 @@ export default function ProductInventory() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center gap-3">
               <TrendingUp className="h-8 w-8 text-green-600" />
               <div>
@@ -49,7 +49,7 @@ export default function ProductInventory() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500">Loading inventory...</div>
         ) : inventory.length === 0 ? (

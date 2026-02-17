@@ -36,7 +36,7 @@ export default function SurveyResponseDetail() {
         <h1 className="text-2xl font-bold text-gray-900">Survey Response Detail</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-start gap-3 mb-4">
           <FileText className="h-6 w-6 text-blue-600 mt-1" />
           <div className="flex-1">
@@ -70,7 +70,7 @@ export default function SurveyResponseDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Response Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

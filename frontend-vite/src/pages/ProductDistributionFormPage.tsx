@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
@@ -71,12 +72,12 @@ const ProductDistributionFormPage: React.FC = () => {
     e.preventDefault();
     
     if (!formData.recipientSignature || !formData.recipientPhoto || !formData.idDocumentPhoto) {
-      alert('Please capture all required photos and signature');
+      toast.error('Please capture all required photos and signature');
       return;
     }
 
     if (!currentLocation) {
-      alert('GPS location not available');
+      toast.error('GPS location not available');
       return;
     }
 
@@ -102,11 +103,11 @@ const ProductDistributionFormPage: React.FC = () => {
         distributionNotes: formData.distributionNotes
       });
 
-      alert('✅ Product distribution recorded successfully!');
+      toast.error('✅ Product distribution recorded successfully!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to record distribution:', error);
-      alert('Failed to record distribution. Please try again.');
+      toast.error('Failed to record distribution. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -128,12 +129,12 @@ const ProductDistributionFormPage: React.FC = () => {
         <input ref={signatureRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f, 'recipientSignature'); }} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Product Type */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Product Type *</label>
             <select
               value={formData.productType}
               onChange={(e) => setFormData({ ...formData, productType: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="sim_card">SIM Card</option>
               <option value="smartphone">Smartphone</option>
@@ -145,32 +146,32 @@ const ProductDistributionFormPage: React.FC = () => {
           </div>
 
           {/* Serial Number */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Serial Number / IMEI *</label>
             <input
               type="text"
               value={formData.productSerialNumber}
               onChange={(e) => setFormData({ ...formData, productSerialNumber: e.target.value })}
               placeholder="Enter serial number or scan barcode"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           {/* Quantity */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Quantity</label>
             <input
               type="number"
               min="1"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Recipient Details */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Recipient Information</h3>
             <div className="space-y-4">
               <div>
@@ -179,7 +180,7 @@ const ProductDistributionFormPage: React.FC = () => {
                   type="text"
                   value={formData.recipientName}
                   onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                   required
                 />
               </div>
@@ -190,7 +191,7 @@ const ProductDistributionFormPage: React.FC = () => {
                   value={formData.recipientIdNumber}
                   onChange={(e) => setFormData({ ...formData, recipientIdNumber: e.target.value })}
                   placeholder="National ID or Passport"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                   required
                 />
               </div>
@@ -200,7 +201,7 @@ const ProductDistributionFormPage: React.FC = () => {
                   type="tel"
                   value={formData.recipientPhone}
                   onChange={(e) => setFormData({ ...formData, recipientPhone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                   required
                 />
               </div>
@@ -210,7 +211,7 @@ const ProductDistributionFormPage: React.FC = () => {
                   value={formData.recipientAddress}
                   onChange={(e) => setFormData({ ...formData, recipientAddress: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                   required
                 />
               </div>
@@ -218,7 +219,7 @@ const ProductDistributionFormPage: React.FC = () => {
           </div>
 
           {/* Photo Captures */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Verification Photos *</h3>
             <div className="space-y-4">
               <div>
@@ -266,7 +267,7 @@ const ProductDistributionFormPage: React.FC = () => {
           </div>
 
           {/* Signature */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Recipient Signature *</label>
             {formData.recipientSignature ? (
               <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -291,14 +292,14 @@ const ProductDistributionFormPage: React.FC = () => {
           </div>
 
           {/* Notes */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">Distribution Notes</label>
             <textarea
               value={formData.distributionNotes}
               onChange={(e) => setFormData({ ...formData, distributionNotes: e.target.value })}
               rows={3}
               placeholder="Any additional notes..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl"
             />
           </div>
 

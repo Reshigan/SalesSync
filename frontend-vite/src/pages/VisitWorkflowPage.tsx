@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import fieldMarketingService from '../services/fieldMarketing.service';
@@ -40,7 +41,7 @@ const VisitWorkflowPage: React.FC = () => {
       loadBoards();
     } catch (error) {
       console.error('Failed to create visit:', error);
-      alert('Failed to create visit. Please try again.');
+      toast.error('Failed to create visit. Please try again.');
       navigate(-1);
     } finally {
       setLoading(false);
@@ -82,11 +83,11 @@ const VisitWorkflowPage: React.FC = () => {
         visitNotes: visitNotes || undefined
       });
       
-      alert('Visit completed successfully!');
+      toast.error('Visit completed successfully!');
       navigate('/field-marketing');
     } catch (error) {
       console.error('Failed to complete visit:', error);
-      alert('Failed to complete visit. Please try again.');
+      toast.error('Failed to complete visit. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -107,7 +108,7 @@ const VisitWorkflowPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="w-full max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
@@ -142,7 +143,7 @@ const VisitWorkflowPage: React.FC = () => {
         <div className="space-y-3 mb-6">
           <button
             onClick={addBoardPlacement}
-            className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left"
+            className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition text-left"
           >
             <div className="flex items-center">
               <div className="text-4xl mr-4">📋</div>
@@ -158,7 +159,7 @@ const VisitWorkflowPage: React.FC = () => {
 
           <button
             onClick={addProductDistribution}
-            className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left"
+            className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition text-left"
           >
             <div className="flex items-center">
               <div className="text-4xl mr-4">📦</div>
@@ -174,7 +175,7 @@ const VisitWorkflowPage: React.FC = () => {
 
           <button
             onClick={() => navigate('/field-marketing/surveys', { state: { visit, customer } })}
-            className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left"
+            className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition text-left"
           >
             <div className="flex items-center">
               <div className="text-4xl mr-4">📝</div>
@@ -190,7 +191,7 @@ const VisitWorkflowPage: React.FC = () => {
         </div>
 
         {/* Complete Visit Button */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <button
             onClick={completeVisit}
             disabled={loading}

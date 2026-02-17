@@ -20,9 +20,9 @@ export default function InventoryAnalyticsPage() {
     <div className="p-6 space-y-6">
       <div><h1 className="text-2xl font-bold text-gray-900">Inventory Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive inventory insights and trends</p></div>
 
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
-        <select value={filter.period} onChange={e => setFilter({...filter, period: e.target.value})} className="border border-gray-300 rounded-lg px-3 py-2">
+        <select value={filter.period} onChange={e => setFilter({...filter, period: e.target.value})} className="border border-gray-200 rounded-xl px-3 py-2">
           <option value="week">This Week</option>
           <option value="month">This Month</option>
           <option value="quarter">This Quarter</option>
@@ -31,25 +31,25 @@ export default function InventoryAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Total Stock Value</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_stock_value || 0)}</p></div>
             <DollarSign className="h-8 w-8 text-green-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Stock Turnover</p><p className="text-2xl font-bold text-gray-900">{stats.stock_turnover_ratio || 0}x</p></div>
             <RefreshCw className="h-8 w-8 text-blue-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Low Stock Items</p><p className="text-2xl font-bold text-red-600">{stats.low_stock_items || 0}</p></div>
             <AlertCircle className="h-8 w-8 text-red-500" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div><p className="text-sm text-gray-600">Out of Stock</p><p className="text-2xl font-bold text-red-600">{stats.out_of_stock_items || 0}</p></div>
             <Package className="h-8 w-8 text-red-500" />
@@ -58,7 +58,7 @@ export default function InventoryAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Stock Movement Trends</h2>
           <div className="space-y-4">
             <div>
@@ -91,7 +91,7 @@ export default function InventoryAnalyticsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Warehouse Performance</h2>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -114,7 +114,7 @@ export default function InventoryAnalyticsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Top Products by Value</h2>
         <div className="space-y-3">
           {(stats.top_products || []).map((product: any, idx: number) => (
@@ -135,7 +135,7 @@ export default function InventoryAnalyticsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Stock Health Indicators</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 border border-gray-100 rounded-lg">

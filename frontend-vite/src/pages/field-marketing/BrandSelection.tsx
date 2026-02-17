@@ -3,6 +3,7 @@
  * Allows field agent to select brands for the visit
  */
 
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Check, ArrowRight, Package, AlertCircle } from 'lucide-react';
@@ -84,7 +85,7 @@ export default function BrandSelection() {
 
   const handleContinue = () => {
     if (selectedBrands.size === 0) {
-      alert('Please select at least one brand');
+      toast.error('Please select at least one brand');
       return;
     }
 

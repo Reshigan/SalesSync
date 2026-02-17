@@ -39,7 +39,7 @@ export default function DeliveryStops() {
 
       <div className="space-y-4">
         {stops?.map((stop, idx) => (
-          <div key={stop.id} className="bg-white rounded-lg shadow p-6">
+          <div key={stop.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-4">
                 <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${

@@ -199,7 +199,7 @@ const ReportsHub: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-lg p-4 sticky top-4">
+          <div className="bg-white rounded-2xl shadow-sm-lg p-4 sticky top-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <ClipboardList className="w-5 h-5" />
               Available Reports
@@ -256,7 +256,7 @@ const ReportsHub: React.FC = () => {
         <div className="lg:col-span-3">
           {selectedReport ? (
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-lg p-6">
+              <div className="bg-white rounded-2xl shadow-sm-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-xl font-semibold">{selectedReport.name}</h2>
@@ -277,7 +277,7 @@ const ReportsHub: React.FC = () => {
                       type="date"
                       value={filters.start_date}
                       onChange={(e) => setFilters({ ...filters, start_date: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -289,7 +289,7 @@ const ReportsHub: React.FC = () => {
                       type="date"
                       value={filters.end_date}
                       onChange={(e) => setFilters({ ...filters, end_date: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
                   <div>
@@ -300,7 +300,7 @@ const ReportsHub: React.FC = () => {
                     <select
                       value={filters.status}
                       onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     >
                       <option value="">All Statuses</option>
                       <option value="active">Active</option>
@@ -347,7 +347,7 @@ const ReportsHub: React.FC = () => {
               </div>
 
               {reportData && (
-                <div className="bg-white rounded-lg shadow-lg p-6">
+                <div className="bg-white rounded-2xl shadow-sm-lg p-6">
                   <h3 className="text-lg font-semibold mb-4">Report Results</h3>
                   {renderSummaryCards()}
                   {renderDataTable()}
@@ -355,7 +355,7 @@ const ReportsHub: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div className="bg-white rounded-2xl shadow-sm-lg p-12 text-center">
               <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-700 mb-2">Select a Report</h3>
               <p className="text-gray-500">Choose a report from the list on the left to get started</p>

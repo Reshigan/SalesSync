@@ -41,12 +41,12 @@ export default function CommissionPayoutDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(payout.amount || payout.total_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><User className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Agent</p><p className="text-xl font-bold">{payout.agent_name || payout.sales_rep || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Period</p><p className="text-xl font-bold">{payout.period || payout.payout_period || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Amount</p><p className="text-xl font-bold">{formatCurrency(payout.amount || payout.total_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><User className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Agent</p><p className="text-xl font-bold">{payout.agent_name || payout.sales_rep || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Period</p><p className="text-xl font-bold">{payout.period || payout.payout_period || 'N/A'}</p></div></div></div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Commission Payout Details</h2>
         <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div><dt className="text-sm text-gray-500">Payout Number</dt><dd className="text-sm font-medium text-gray-900 mt-0.5">{payout.payout_number || payout.id || '-'}</dd></div>
@@ -60,7 +60,7 @@ export default function CommissionPayoutDetail() {
         </dl>
       </div>
 
-      {payout.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{payout.notes}</p></div>}
+      {payout.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{payout.notes}</p></div>}
     </div>
   )
 }

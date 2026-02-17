@@ -125,7 +125,7 @@ const AnalyticsDashboard: React.FC = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Orders KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total Revenue</h3>
           <p className="text-3xl font-bold text-blue-600">{formatCurrency(data.summary.orders.total_revenue)}</p>
           <p className="text-sm text-gray-600 mt-2">{formatNumber(data.summary.orders.total_orders)} orders</p>
@@ -133,7 +133,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Customers KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Customers</h3>
           <p className="text-3xl font-bold text-green-600">{formatNumber(Math.round(data.summary.customers.avg_active_customers))}</p>
           <p className="text-sm text-gray-600 mt-2">Active customers (avg)</p>
@@ -141,7 +141,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Field Operations KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Field Operations</h3>
           <p className="text-3xl font-bold text-purple-600">
             {formatNumber(data.summary.field_operations.total_board_placements + data.summary.field_operations.total_product_distributions)}
@@ -155,7 +155,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Commissions KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total Commissions</h3>
           <p className="text-3xl font-bold text-orange-600">{formatCurrency(data.summary.commissions.total_commissions)}</p>
           <p className="text-sm text-gray-600 mt-2">Pending: {formatCurrency(data.summary.commissions.pending_commissions)}</p>
@@ -163,7 +163,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Visits KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Visits</h3>
           <p className="text-3xl font-bold text-indigo-600">{formatNumber(data.summary.visits.total_visits)}</p>
           <p className="text-sm text-gray-600 mt-2">{formatNumber(data.summary.visits.completed_visits)} completed</p>
@@ -171,7 +171,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Coverage KPI */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Avg Coverage</h3>
           <p className="text-3xl font-bold text-teal-600">{data.summary.field_operations.avg_coverage.toFixed(1)}%</p>
           <p className="text-sm text-gray-600 mt-2">Board placement coverage</p>
@@ -181,7 +181,7 @@ const AnalyticsDashboard: React.FC = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Orders & Revenue Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.trends.orders}>
@@ -201,7 +201,7 @@ const AnalyticsDashboard: React.FC = () => {
         </div>
 
         {/* Commissions Trend */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h3 className="text-lg font-semibold mb-4">Commissions Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.trends.commissions}>
@@ -222,7 +222,7 @@ const AnalyticsDashboard: React.FC = () => {
       </div>
 
       {/* Module Links */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold mb-4">Detailed Analytics</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <a href="/analytics/orders" className="p-4 border rounded hover:bg-gray-50 text-center">

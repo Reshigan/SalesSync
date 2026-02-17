@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save, Send, RotateCcw, FileText } from 'lucide-react'
@@ -58,15 +59,15 @@ export default function SalesReturnCreate() {
 
   const handleSubmit = async (submit: boolean = false) => {
     if (!selectedOrder) {
-      alert('Please select an order')
+      toast.error('Please select an order')
       return
     }
     if (!reason) {
-      alert('Please select a return reason')
+      toast.error('Please select a return reason')
       return
     }
     if (lineItems.length === 0 || !lineItems.some(item => item.product_id)) {
-      alert('Please add at least one product to return')
+      toast.error('Please add at least one product to return')
       return
     }
 
@@ -93,7 +94,7 @@ export default function SalesReturnCreate() {
       navigate('/sales/returns')
     } catch (error: any) {
       console.error('Failed to create return:', error)
-      alert(error.message || 'Failed to create return')
+      toast.error(error.message || 'Failed to create return')
     } finally {
       setSaving(false)
     }
@@ -120,7 +121,7 @@ export default function SalesReturnCreate() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+          <button onClick={() => handleSubmit(false)} disabled={saving} className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save as Draft
           </button>
           <button onClick={() => handleSubmit(true)} disabled={saving} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
@@ -131,14 +132,14 @@ export default function SalesReturnCreate() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <RotateCcw className="w-5 h-5" /> Return Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Order *</label>
-                <select value={selectedOrder} onChange={(e) => setSelectedOrder(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={selectedOrder} onChange={(e) => setSelectedOrder(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="">Select an order</option>
                   {orders.map((order) => (
                     <option key={order.id} value={order.id}>{order.order_number} - {order.customer_name}</option>
@@ -147,11 +148,11 @@ export default function SalesReturnCreate() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Return Date</label>
-                <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Return Reason *</label>
-                <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                   <option value="">Select a reason</option>
                   <option value="defective">Defective Product</option>
                   <option value="wrong_item">Wrong Item</option>
@@ -163,7 +164,7 @@ export default function SalesReturnCreate() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Return notes..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Return notes..." className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
             </div>
           </div>
@@ -180,8 +181,8 @@ export default function SalesReturnCreate() {
         <div className="lg:col-span-1">
           <div className="sticky top-6 space-y-6">
             <TotalsSummary totals={totals} />
-            <div className="bg-white rounded-lg shadow p-6 space-y-3">
-              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-3">
+              <button onClick={() => handleSubmit(false)} disabled={saving} className="w-full px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save as Draft'}
               </button>
               <button onClick={() => handleSubmit(true)} disabled={saving} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">

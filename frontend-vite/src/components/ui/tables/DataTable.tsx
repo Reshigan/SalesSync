@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronUp, Search, Download, Filter } from 'lucide-react'
+import { ChevronDown, ChevronUp, Search, Download, Filter, Inbox } from 'lucide-react'
 
 interface Column {
   key: string
@@ -149,14 +149,14 @@ function DataTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+      <div className="overflow-x-auto -mx-6 px-6">
+        <table className="w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider"
                 >
                   <div className="flex items-center space-x-1">
                     <span>{column.title}</span>
@@ -199,10 +199,22 @@ function DataTable({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedData.map((row, index) => (
-              <tr key={index} className="hover:bg-gray-50">
+            {paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={columns.length} className="py-16 text-center">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center mb-3">
+                      <Inbox className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">No data found</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{searchTerm ? 'Try adjusting your search' : 'No records to display'}</p>
+                  </div>
+                </td>
+              </tr>
+            ) : paginatedData.map((row, index) => (
+              <tr key={index} className="hover:bg-gray-50 transition-colors">
                 {columns.map((column) => (
-                  <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <td key={column.key} className="px-4 py-3 text-sm text-gray-900">
                     {column.render ? column.render(row[column.key], row) : row[column.key]}
                   </td>
                 ))}

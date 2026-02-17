@@ -39,7 +39,7 @@ export default function ReturnItemDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Quantity Returned</h3>
@@ -48,7 +48,7 @@ export default function ReturnItemDetail() {
           <p className="text-sm text-gray-600 mt-1">{item.product_sku}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Refund Amount</h3>
@@ -57,7 +57,7 @@ export default function ReturnItemDetail() {
           <p className="text-sm text-gray-600 mt-1">{formatCurrency(item.unit_price)} per unit</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <AlertCircle className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Approval Status</h3>
@@ -69,7 +69,7 @@ export default function ReturnItemDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -91,7 +91,7 @@ export default function ReturnItemDetail() {
         </dl>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-2">Return Reason</h2>
         <p className="text-sm text-gray-700">{item.reason}</p>
       </div>

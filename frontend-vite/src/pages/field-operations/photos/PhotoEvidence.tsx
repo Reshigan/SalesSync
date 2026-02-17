@@ -48,7 +48,7 @@ export default function PhotoEvidence() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Photos</h3>
@@ -56,7 +56,7 @@ export default function PhotoEvidence() {
           <p className="text-3xl font-bold text-gray-900">{evidence.total_photos}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Verified</h3>
@@ -64,7 +64,7 @@ export default function PhotoEvidence() {
           <p className="text-3xl font-bold text-green-600">{evidence.verified_photos}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">GPS Verified</h3>
@@ -75,7 +75,7 @@ export default function PhotoEvidence() {
 
       <div className="space-y-4">
         {evidence.evidence_items.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow p-6">
+          <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start gap-4">
               <img
                 src={item.photo_url}

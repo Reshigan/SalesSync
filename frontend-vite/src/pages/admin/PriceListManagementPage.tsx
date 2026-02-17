@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search, DollarSign, Calendar } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
@@ -25,7 +26,7 @@ export default function PriceListManagementPage() {
       setPriceLists(data)
     } catch (error) {
       console.error('Failed to load price lists:', error)
-      alert('Failed to load price lists')
+      toast.error('Failed to load price lists')
     } finally {
       setLoading(false)
     }
@@ -36,11 +37,11 @@ export default function PriceListManagementPage() {
     
     try {
       await pricingService.deletePriceList(id)
-      alert('Price list deleted successfully')
+      toast.error('Price list deleted successfully')
       loadPriceLists()
     } catch (error) {
       console.error('Failed to delete price list:', error)
-      alert('Failed to delete price list')
+      toast.error('Failed to delete price list')
     }
   }
 
@@ -86,13 +87,13 @@ export default function PriceListManagementPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <select
           value={filterActive === undefined ? 'all' : filterActive ? 'active' : 'inactive'}
           onChange={(e) => setFilterActive(e.target.value === 'all' ? undefined : e.target.value === 'active')}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>

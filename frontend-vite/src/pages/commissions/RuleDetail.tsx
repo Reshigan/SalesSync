@@ -56,7 +56,7 @@ export default function RuleDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Percent className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Base Commission Rate</h3>
@@ -65,7 +65,7 @@ export default function RuleDetail() {
           <p className="text-sm text-gray-600 mt-1">Applied to all sales</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Target className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Bonus Rate</h3>
@@ -75,7 +75,7 @@ export default function RuleDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Rule Details</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

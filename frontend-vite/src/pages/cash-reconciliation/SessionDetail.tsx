@@ -56,7 +56,7 @@ export default function SessionDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Opening Balance</h3>
@@ -64,7 +64,7 @@ export default function SessionDetail() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.opening_balance)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Total Collections</h3>
@@ -72,7 +72,7 @@ export default function SessionDetail() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.total_collections)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Closing Balance</h3>
@@ -80,7 +80,7 @@ export default function SessionDetail() {
           <p className="text-2xl font-bold text-gray-900">{formatCurrency(session.closing_balance)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <AlertCircle className={`h-5 w-5 ${Math.abs(session.variance) > 100 ? 'text-red-600' : 'text-green-600'}`} />
             <h3 className="font-semibold text-gray-900">Variance</h3>
@@ -93,7 +93,7 @@ export default function SessionDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Session Information</h2>
           <dl className="space-y-3">
             <div>
@@ -124,7 +124,7 @@ export default function SessionDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Collections</h3>
             <button
               onClick={() => navigate(`/cash-reconciliation/sessions/${id}/collections`)}
@@ -134,7 +134,7 @@ export default function SessionDetail() {
             </button>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Deposits</h3>
             <button
               onClick={() => navigate(`/cash-reconciliation/sessions/${id}/deposits`)}

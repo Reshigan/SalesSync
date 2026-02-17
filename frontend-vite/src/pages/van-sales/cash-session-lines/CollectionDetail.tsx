@@ -47,7 +47,7 @@ export default function CollectionDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Invoice Amount</h3>
@@ -55,7 +55,7 @@ export default function CollectionDetail() {
           <p className="text-3xl font-bold text-gray-900">{formatCurrency(collection.invoice_amount)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Amount Collected</h3>
@@ -63,7 +63,7 @@ export default function CollectionDetail() {
           <p className="text-3xl font-bold text-green-600">{formatCurrency(collection.amount_collected)}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Outstanding</h3>
@@ -74,7 +74,7 @@ export default function CollectionDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Collection Information</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -111,7 +111,7 @@ export default function CollectionDetail() {
       </div>
 
       {collection.notes && (
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Notes</h2>
           <p className="text-sm text-gray-700">{collection.notes}</p>
         </div>

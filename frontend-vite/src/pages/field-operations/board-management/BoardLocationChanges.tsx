@@ -34,7 +34,7 @@ export default function BoardLocationChanges() {
 
       <div className="space-y-4">
         {changes?.map((change) => (
-          <div key={change.id} className="bg-white rounded-lg shadow p-6">
+          <div key={change.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="flex-1 flex items-center gap-3">
                 <div className="flex items-center gap-2 flex-1">

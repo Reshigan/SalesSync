@@ -48,7 +48,7 @@ const TerritoryManagementPage: React.FC = () => {
       </div>
 
       {editing !== null && (
-        <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm-lg mb-6">
           <h2 className="text-xl font-semibold mb-4">{editing ? 'Edit Territory' : 'New Territory'}</h2>
           <div className="grid grid-cols-2 gap-4">
             <input placeholder="Territory Name" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-4 py-2 border rounded" />
@@ -66,7 +66,7 @@ const TerritoryManagementPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {territories.map(t => (
-          <div key={t.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+          <div key={t.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition">
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-lg font-semibold">{t.name}</h3>

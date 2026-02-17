@@ -3,6 +3,7 @@
  * Displays tasks for the visit (surveys, board placement, product distribution)
  */
 
+import toast from 'react-hot-toast'
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {

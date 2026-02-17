@@ -49,7 +49,7 @@ const ReportTemplatesPage: React.FC = () => {
         <h2 className="text-xl font-semibold mb-4">Popular Templates</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.filter(t => t.popular).map(t => (
-            <div key={t.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+            <div key={t.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition">
               <div className="flex justify-between items-start mb-3">
                 <Star className="w-5 h-5 text-yellow-500 fill-current" />
                 <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">{t.category}</span>
@@ -68,7 +68,7 @@ const ReportTemplatesPage: React.FC = () => {
         <h2 className="text-xl font-semibold mb-4">All Templates</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {templates.filter(t => !t.popular).map(t => (
-            <div key={t.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+            <div key={t.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition">
               <div className="flex justify-between items-start mb-3">
                 <FileText className="w-5 h-5 text-gray-400" />
                 <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">{t.category}</span>

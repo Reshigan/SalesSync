@@ -34,12 +34,12 @@ export default function KYCCaseDetail() {
         <button onClick={() => navigate(`/crm/kyc-cases/${id}/edit`)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Edit className="h-4 w-4" />Edit</button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Shield className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Risk Level</p><p className="text-xl font-bold">{kycCase.risk_level || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Submitted</p><p className="text-xl font-bold">{formatDate(kycCase.submitted_date || kycCase.created_at) || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3">{kycCase.status === 'approved' ? <CheckCircle className="h-8 w-8 text-green-500" /> : <AlertTriangle className="h-8 w-8 text-yellow-500" />}<div><p className="text-sm text-gray-500">Verification</p><p className="text-xl font-bold">{kycCase.verification_status || kycCase.status || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Shield className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Risk Level</p><p className="text-xl font-bold">{kycCase.risk_level || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Submitted</p><p className="text-xl font-bold">{formatDate(kycCase.submitted_date || kycCase.created_at) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3">{kycCase.status === 'approved' ? <CheckCircle className="h-8 w-8 text-green-500" /> : <AlertTriangle className="h-8 w-8 text-yellow-500" />}<div><p className="text-sm text-gray-500">Verification</p><p className="text-xl font-bold">{kycCase.verification_status || kycCase.status || 'N/A'}</p></div></div></div>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Case Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Case Number', kycCase.case_number], ['Case Type', kycCase.case_type || kycCase.kyc_type], ['Risk Level', kycCase.risk_level], ['Submitted Date', formatDate(kycCase.submitted_date)], ['Review Date', formatDate(kycCase.review_date)], ['Expiry Date', formatDate(kycCase.expiry_date)], ['Reviewer', kycCase.reviewer || kycCase.reviewed_by], ['Created At', formatDate(kycCase.created_at)]].map(([l, v]) => (
@@ -47,7 +47,7 @@ export default function KYCCaseDetail() {
             ))}
           </dl>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Customer', kycCase.customer_name], ['Customer Code', kycCase.customer_code], ['ID Number', kycCase.id_number], ['ID Type', kycCase.id_type], ['Date of Birth', formatDate(kycCase.date_of_birth)], ['Nationality', kycCase.nationality]].map(([l, v]) => (
@@ -56,13 +56,13 @@ export default function KYCCaseDetail() {
           </dl>
         </div>
       </div>
-      {(kycCase.documents || []).length > 0 && <div className="bg-white rounded-lg shadow p-6">
+      {(kycCase.documents || []).length > 0 && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4">Documents</h2>
         <div className="space-y-2">{(kycCase.documents || []).map((doc: any, i: number) => (
           <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"><span className="text-sm font-medium">{doc.document_type || doc.name}</span><span className="text-xs text-gray-500">{doc.status || 'uploaded'}</span></div>
         ))}</div>
       </div>}
-      {kycCase.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{kycCase.notes}</p></div>}
+      {kycCase.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700">{kycCase.notes}</p></div>}
     </div>
   )
 }

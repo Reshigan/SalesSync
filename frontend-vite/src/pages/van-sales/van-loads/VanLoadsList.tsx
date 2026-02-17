@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, CheckCircle } from 'lucide-react'
@@ -37,7 +38,7 @@ export default function VanLoadsList() {
       loadVanLoads()
     } catch (error) {
       console.error('Failed to confirm van load:', error)
-      alert('Failed to confirm van load')
+      toast.error('Failed to confirm van load')
     }
   }
 

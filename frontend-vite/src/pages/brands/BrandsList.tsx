@@ -29,7 +29,7 @@ export default function BrandsList() {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         <div className="p-4 border-b border-gray-100">
           <div className="flex gap-4">
             <div className="flex-1 relative">
@@ -39,7 +39,7 @@ export default function BrandsList() {
                 placeholder="Search brands..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
             <button className="btn-secondary flex items-center gap-2">

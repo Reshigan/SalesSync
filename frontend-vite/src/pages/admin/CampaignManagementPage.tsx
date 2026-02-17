@@ -53,7 +53,7 @@ const CampaignManagementPage: React.FC = () => {
       </div>
 
       {editing !== null && (
-        <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+        <div className="bg-white p-6 rounded-2xl shadow-sm-lg mb-6">
           <h2 className="text-xl font-semibold mb-4">{editing ? 'Edit Campaign' : 'New Campaign'}</h2>
           <div className="grid grid-cols-2 gap-4">
             <input placeholder="Campaign Name" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-4 py-2 border rounded col-span-2" />
@@ -77,7 +77,7 @@ const CampaignManagementPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {campaigns.map(c => (
-          <div key={c.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
+          <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg transition">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-lg font-semibold">{c.name}</h3>
               <span className={`px-2 py-1 text-xs rounded ${getStatusColor(c.status)}`}>{c.status}</span>

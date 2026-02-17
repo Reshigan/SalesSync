@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, Search } from 'lucide-react'
 import { brandService } from '../../services/brand.service'
@@ -38,7 +39,7 @@ export default function BrandManagementPage() {
       setBrands(response.data || [])
     } catch (error) {
       console.error('Failed to load brands:', error)
-      alert('Failed to load brands')
+      toast.error('Failed to load brands')
     } finally {
       setLoading(false)
     }
@@ -49,10 +50,10 @@ export default function BrandManagementPage() {
     try {
       if (editingBrand) {
         await brandService.updateBrand(editingBrand.id, formData)
-        alert('Brand updated successfully')
+        toast.error('Brand updated successfully')
       } else {
         await brandService.createBrand(formData)
-        alert('Brand created successfully')
+        toast.error('Brand created successfully')
       }
       setShowModal(false)
       setEditingBrand(null)
@@ -60,7 +61,7 @@ export default function BrandManagementPage() {
       loadBrands()
     } catch (error) {
       console.error('Failed to save brand:', error)
-      alert('Failed to save brand')
+      toast.error('Failed to save brand')
     }
   }
 
@@ -81,11 +82,11 @@ export default function BrandManagementPage() {
     
     try {
       await brandService.deleteBrand(id)
-      alert('Brand deleted successfully')
+      toast.error('Brand deleted successfully')
       loadBrands()
     } catch (error) {
       console.error('Failed to delete brand:', error)
-      alert('Failed to delete brand')
+      toast.error('Failed to delete brand')
     }
   }
 
@@ -127,7 +128,7 @@ export default function BrandManagementPage() {
             placeholder="Search brands..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -222,7 +223,7 @@ export default function BrandManagementPage() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -234,7 +235,7 @@ export default function BrandManagementPage() {
                     required
                     value={formData.code}
                     onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -245,7 +246,7 @@ export default function BrandManagementPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <div>
@@ -256,7 +257,7 @@ export default function BrandManagementPage() {
                     type="url"
                     value={formData.logo_url}
                     onChange={(e) => setFormData({ ...formData, logo_url: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   />
                 </div>
                 <div className="flex items-center">
@@ -279,7 +280,7 @@ export default function BrandManagementPage() {
                     setShowModal(false)
                     setEditingBrand(null)
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50"
                 >
                   Cancel
                 </button>

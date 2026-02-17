@@ -72,7 +72,7 @@ export default function PayoutLineList() {
         <p className="text-gray-600">{payout?.payout_number} - {payout?.payout_date}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Payout Amount</p>
@@ -85,7 +85,7 @@ export default function PayoutLineList() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

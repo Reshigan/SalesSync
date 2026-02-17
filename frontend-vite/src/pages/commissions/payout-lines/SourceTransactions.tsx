@@ -35,7 +35,7 @@ export default function SourceTransactions() {
         <p className="text-gray-600">{line?.agent_name}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Commission from Transactions</p>
@@ -48,7 +48,7 @@ export default function SourceTransactions() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

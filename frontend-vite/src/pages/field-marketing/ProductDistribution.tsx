@@ -243,7 +243,7 @@ export default function ProductDistribution() {
                 onChange={(e) =>
                   setFormData({ ...formData, product_id: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
                 <option value="">Select product...</option>
                 {products.map((product) => (
@@ -265,7 +265,7 @@ export default function ProductDistribution() {
                 onChange={(e) =>
                   setFormData({ ...formData, recipient_name: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="Full name"
               />
             </div>
@@ -282,7 +282,7 @@ export default function ProductDistribution() {
                   onChange={(e) =>
                     setFormData({ ...formData, recipient_id_number: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="ID number"
                 />
               </div>
@@ -299,7 +299,7 @@ export default function ProductDistribution() {
                 onChange={(e) =>
                   setFormData({ ...formData, recipient_phone: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 placeholder="Phone number"
               />
             </div>
@@ -316,7 +316,7 @@ export default function ProductDistribution() {
                   onChange={(e) =>
                     setFormData({ ...formData, serial_number: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   placeholder="Serial or ICCID number"
                 />
               </div>
@@ -334,7 +334,7 @@ export default function ProductDistribution() {
                 onChange={(e) =>
                   setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
             </div>
           </div>

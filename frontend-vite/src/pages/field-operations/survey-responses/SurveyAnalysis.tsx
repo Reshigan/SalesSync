@@ -38,7 +38,7 @@ export default function SurveyAnalysis() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Responses</h3>
@@ -46,7 +46,7 @@ export default function SurveyAnalysis() {
           <p className="text-3xl font-bold text-gray-900">{analysis.total_responses}</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <BarChart className="h-5 w-5 text-green-600" />
             <h3 className="font-semibold text-gray-900">Completion</h3>
@@ -54,7 +54,7 @@ export default function SurveyAnalysis() {
           <p className="text-3xl font-bold text-green-600">{analysis.completion_rate}%</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Satisfaction</h3>
@@ -65,7 +65,7 @@ export default function SurveyAnalysis() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <TrendingUp className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">NPS Score</h3>
@@ -74,7 +74,7 @@ export default function SurveyAnalysis() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Questions Analysis</h2>
         <div className="space-y-4">
           {analysis.questions_analysis.map((question) => (

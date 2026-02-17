@@ -50,25 +50,25 @@ const TradeMarketingAgentPage: React.FC = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Today's Visits</div>
             <div className="text-2xl font-bold text-blue-600">
               {visits.filter(v => v.visit_status === 'completed').length}
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Avg Shelf Share</div>
             <div className="text-2xl font-bold text-green-600">
               {analytics.shelfSummary?.avg_shelf_share?.toFixed(1) || 0}%
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">SKUs Checked</div>
             <div className="text-2xl font-bold text-purple-600">
               {analytics.skuSummary?.total_skus_checked || 0}
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg shadow">
+          <div className="bg-white p-4 rounded-2xl shadow-sm">
             <div className="text-gray-600 text-sm">Activations</div>
             <div className="text-2xl font-bold text-orange-600">
               {analytics.activationsSummary?.total_activations || 0}
@@ -80,7 +80,7 @@ const TradeMarketingAgentPage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <button
             onClick={startNewVisit}
-            className="bg-blue-600 text-white p-6 rounded-lg shadow-lg hover:bg-blue-700 transition"
+            className="bg-blue-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-blue-700 transition"
           >
             <div className="text-lg font-bold mb-2">🏪 Start Store Visit</div>
             <div className="text-sm opacity-90">Check-in and begin audit</div>
@@ -88,7 +88,7 @@ const TradeMarketingAgentPage: React.FC = () => {
           
           <button
             onClick={() => navigate('/trade-marketing/visits')}
-            className="bg-green-600 text-white p-6 rounded-lg shadow-lg hover:bg-green-700 transition"
+            className="bg-green-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-green-700 transition"
           >
             <div className="text-lg font-bold mb-2">📊 My Visits</div>
             <div className="text-sm opacity-90">View visit history</div>
@@ -96,7 +96,7 @@ const TradeMarketingAgentPage: React.FC = () => {
           
           <button
             onClick={() => navigate('/trade-marketing/analytics')}
-            className="bg-purple-600 text-white p-6 rounded-lg shadow-lg hover:bg-purple-700 transition"
+            className="bg-purple-600 text-white p-6 rounded-2xl shadow-sm-lg hover:bg-purple-700 transition"
           >
             <div className="text-lg font-bold mb-2">📈 Analytics</div>
             <div className="text-sm opacity-90">Performance metrics</div>
@@ -105,7 +105,7 @@ const TradeMarketingAgentPage: React.FC = () => {
 
         {/* Activity Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center mb-3">
               <div className="text-3xl mr-3">📏</div>
               <div>
@@ -118,7 +118,7 @@ const TradeMarketingAgentPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center mb-3">
               <div className="text-3xl mr-3">✅</div>
               <div>
@@ -131,7 +131,7 @@ const TradeMarketingAgentPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center mb-3">
               <div className="text-3xl mr-3">🎯</div>
               <div>
@@ -144,7 +144,7 @@ const TradeMarketingAgentPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
             <div className="flex items-center mb-3">
               <div className="text-3xl mr-3">🎉</div>
               <div>
@@ -159,7 +159,7 @@ const TradeMarketingAgentPage: React.FC = () => {
         </div>
 
         {/* Recent Visits */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-2xl shadow-sm">
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">Recent Store Visits</h2>
           </div>

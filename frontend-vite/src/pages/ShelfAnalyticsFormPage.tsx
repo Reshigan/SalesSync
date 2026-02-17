@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { tradeMarketingService } from '../services/tradeMarketing.service';
@@ -83,7 +84,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
     e.preventDefault();
     
     if (!formData.shelfPhoto) {
-      alert('Please capture shelf photo');
+      toast.error('Please capture shelf photo');
       return;
     }
 
@@ -103,11 +104,11 @@ const ShelfAnalyticsFormPage: React.FC = () => {
         competitorAnalysis: formData.competitors
       });
 
-      alert('✅ Shelf analytics recorded successfully!');
+      toast.error('✅ Shelf analytics recorded successfully!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to create shelf analytics:', error);
-      alert('Failed to record shelf analytics. Please try again.');
+      toast.error('Failed to record shelf analytics. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -131,14 +132,14 @@ const ShelfAnalyticsFormPage: React.FC = () => {
         <input ref={shelfPhotoRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleShelfPhotoChange} />
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Category */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Product Category *
             </label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="beverages">Beverages</option>
               <option value="snacks">Snacks</option>
@@ -151,7 +152,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Shelf Space Measurement */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Shelf Space (meters)</h3>
             <div className="space-y-4">
               <div>
@@ -194,7 +195,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Facings Count */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h3 className="font-semibold mb-4">Facings Count</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -203,7 +204,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
                   type="number"
                   value={formData.totalFacings}
                   onChange={(e) => setFormData({ ...formData, totalFacings: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                 />
               </div>
               <div>
@@ -212,7 +213,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
                   type="number"
                   value={formData.brandFacings}
                   onChange={(e) => setFormData({ ...formData, brandFacings: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl"
                 />
               </div>
             </div>
@@ -227,7 +228,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Shelf Position */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Shelf Position *
             </label>
@@ -255,7 +256,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Planogram Compliance */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Planogram Compliance: {formData.planogramCompliance}%
             </label>
@@ -276,7 +277,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Competitor Analysis */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-3">
               <label className="block text-sm font-medium text-gray-700">
                 Competitor Brands
@@ -306,7 +307,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
           </div>
 
           {/* Shelf Photo */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Shelf Photo *
             </label>

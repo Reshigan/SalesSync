@@ -38,7 +38,7 @@ export default function InvoiceItemHistory() {
         <p className="text-gray-600">{item?.product_name}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white rounded-2xl shadow-sm">
         <div className="p-6">
           <div className="flow-root">
             <ul className="-mb-8">

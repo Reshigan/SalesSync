@@ -40,7 +40,7 @@ const CommissionRuleBuilderPage: React.FC = () => {
         <p className="text-gray-600 mt-2">Define commission rates based on board types and quantities</p>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-lg mb-6">
+      <div className="bg-white p-6 rounded-2xl shadow-sm-lg mb-6">
         <h2 className="text-xl font-semibold mb-4">Create New Rule</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <input placeholder="Rule Name" value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} className="px-4 py-2 border rounded" />
@@ -61,7 +61,7 @@ const CommissionRuleBuilderPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Active Rules</h2>
         </div>

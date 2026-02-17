@@ -34,7 +34,7 @@ export default function BoardPlacementHistory() {
 
       <div className="space-y-4">
         {placements?.map((placement) => (
-          <div key={placement.id} className="bg-white rounded-lg shadow p-6">
+          <div key={placement.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-blue-600 mt-1" />

@@ -32,7 +32,7 @@ export default function CountLineList() {
         <p className="text-gray-600">{count?.count_number} - {count?.warehouse_name}</p>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>

@@ -233,7 +233,7 @@ export default function AgentCommissionDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Earnings</p>
@@ -245,7 +245,7 @@ export default function AgentCommissionDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Pending</p>
@@ -257,7 +257,7 @@ export default function AgentCommissionDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Approved</p>
@@ -269,7 +269,7 @@ export default function AgentCommissionDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Paid</p>
@@ -283,7 +283,7 @@ export default function AgentCommissionDashboard() {
         </div>
 
         {/* Commission Table */}
-        <div className="bg-white rounded-lg shadow">
+        <div className="bg-white rounded-2xl shadow-sm">
           <div className="p-6 border-b border-gray-100">
             <h2 className="text-lg font-semibold text-gray-900">Recent Commissions</h2>
           </div>

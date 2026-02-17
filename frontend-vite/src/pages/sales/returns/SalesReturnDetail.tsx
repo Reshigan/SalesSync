@@ -38,14 +38,14 @@ export default function SalesReturnDetail() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Return Amount</p><p className="text-xl font-bold">{formatCurrency(returnData.total_amount || returnData.return_amount || 0)}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Return Date</p><p className="text-xl font-bold">{formatDate(returnData.return_date) || 'N/A'}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>
-        <div className="bg-white rounded-lg shadow p-4"><div className="flex items-center gap-3"><RotateCcw className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Reason</p><p className="text-xl font-bold text-sm">{returnData.return_reason || returnData.reason || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Return Amount</p><p className="text-xl font-bold">{formatCurrency(returnData.total_amount || returnData.return_amount || 0)}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Return Date</p><p className="text-xl font-bold">{formatDate(returnData.return_date) || 'N/A'}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Package className="h-8 w-8 text-purple-500" /><div><p className="text-sm text-gray-500">Items</p><p className="text-xl font-bold">{items.length}</p></div></div></div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><RotateCcw className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Reason</p><p className="text-xl font-bold text-sm">{returnData.return_reason || returnData.reason || 'N/A'}</p></div></div></div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><FileText className="h-5 w-5" />Return Details</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Return Number', returnData.return_number], ['Return Date', formatDate(returnData.return_date)], ['Order Number', returnData.order_number], ['Reason', returnData.return_reason || returnData.reason], ['Credit Note', returnData.credit_note_number], ['Refund Method', returnData.refund_method], ['Created By', returnData.created_by], ['Created At', formatDate(returnData.created_at)]].map(([label, value]) => (
@@ -53,7 +53,7 @@ export default function SalesReturnDetail() {
             ))}
           </dl>
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><User className="h-5 w-5" />Customer</h2>
           <dl className="grid grid-cols-2 gap-4">
             {[['Customer', returnData.customer_name], ['Customer Code', returnData.customer_code], ['Email', returnData.customer_email], ['Phone', returnData.customer_phone]].map(([label, value]) => (
@@ -63,7 +63,7 @@ export default function SalesReturnDetail() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><Package className="h-5 w-5" />Return Items</h2>
         {items.length > 0 ? (
           <div className="overflow-x-auto">
@@ -75,7 +75,7 @@ export default function SalesReturnDetail() {
           </div>
         ) : <p className="text-gray-500 text-center py-8">No return items</p>}
       </div>
-      {returnData.notes && <div className="bg-white rounded-lg shadow p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{returnData.notes}</p></div>}
+      {returnData.notes && <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"><h2 className="text-lg font-semibold mb-2">Notes</h2><p className="text-gray-700 whitespace-pre-wrap">{returnData.notes}</p></div>}
     </div>
   )
 }

@@ -17,7 +17,7 @@ const AnalyticsDashboardPage: React.FC = () => {
   };
 
   const MetricCard: React.FC<{ title: string; value: string; change: number; icon: any }> = ({ title, value, change, icon: Icon }) => (
-    <div className="bg-white p-6 rounded-lg shadow">
+    <div className="bg-white p-6 rounded-2xl shadow-sm">
       <div className="flex justify-between items-start mb-4">
         <div className="p-3 bg-blue-50 rounded-lg"><Icon className="w-6 h-6 text-blue-600" /></div>
         <div className={`flex items-center gap-1 text-sm ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -44,7 +44,7 @@ const AnalyticsDashboardPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <h2 className="text-xl font-semibold mb-4">Top Performing Agents</h2>
           <div className="space-y-3">
             {(metrics.topAgents || []).map((agent: any, i: number) => (
@@ -62,7 +62,7 @@ const AnalyticsDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-2xl shadow-sm">
           <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
           <div className="space-y-3">
             {(metrics.recentActivity || []).map((activity: any, i: number) => (
@@ -79,7 +79,7 @@ const AnalyticsDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="bg-white p-6 rounded-2xl shadow-sm">
         <h2 className="text-xl font-semibold mb-4">Sales Trend (Last 30 Days)</h2>
         <div className="h-64 flex items-end gap-2">
           {(metrics.salesTrend || []).map((day: any, i: number) => (

@@ -37,7 +37,7 @@ export default function BoardPhotoHistory() {
           <div
             key={photo.id}
             onClick={() => navigate(`/field-operations/boards/${boardId}/photos/${photo.id}`)}
-            className="bg-white rounded-lg shadow overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
           >
             <div className="aspect-video bg-gray-200 relative">
               <img
