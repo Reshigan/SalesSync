@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { HelpCircle, X, ChevronRight, BookOpen, Lightbulb, CheckCircle, Play } from 'lucide-react'
-import { getHelpContent, HelpContent, TrainingStep } from '../../config/helpContent'
+import { HelpCircle, X, ChevronRight, BookOpen, Lightbulb, CheckCircle, Play, Map } from 'lucide-react'
+import { getHelpContent, HelpContent, TrainingStep, tourSteps } from '../../config/helpContent'
 
 interface HelpPanelProps {
   isOpen: boolean
@@ -10,7 +10,7 @@ interface HelpPanelProps {
 
 export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState<'help' | 'training'>('help')
+  const [activeTab, setActiveTab] = useState<'help' | 'training' | 'tour'>('help')
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
 
   const helpContent = getHelpContent(location.pathname)
@@ -143,7 +143,7 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
   )
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-xl z-50 flex flex-col">
+    <div className="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-xl z-50 flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-blue-700">
         <div className="flex items-center text-white">
           <HelpCircle className="h-5 w-5 mr-2" />
@@ -180,11 +180,22 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
             >
               Training
             </button>
+            <button
+              onClick={() => setActiveTab('tour')}
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                activeTab === 'tour'
+                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Tour
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'help' && renderHelpTab(helpContent)}
             {activeTab === 'training' && helpContent.trainingSteps && renderTrainingTab(helpContent.trainingSteps)}
+            {activeTab === 'tour' && renderTourTab()}
           </div>
         </>
       ) : (
@@ -208,4 +219,41 @@ export default function HelpPanel({ isOpen, onClose }: HelpPanelProps) {
       </div>
     </div>
   )
+
+  function renderTourTab() {
+    return (
+      <div className="space-y-4">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Guided Tour</h3>
+          <p className="text-sm text-gray-500 mt-1">Follow these steps to learn the key parts of the interface.</p>
+        </div>
+        <div className="space-y-3">
+          {tourSteps.map((step, index) => (
+            <div
+              key={index}
+              className="p-3 rounded-xl border border-gray-100 bg-white hover:border-blue-300 transition-all cursor-pointer shadow-sm"
+              onClick={() => {
+                const el = document.querySelector(step.target)
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2')
+                  setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 3000)
+                }
+              }}
+            >
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
+                  <span className="text-xs font-bold">{index + 1}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-gray-900">{step.title}</h4>
+                  <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 }

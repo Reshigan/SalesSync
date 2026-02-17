@@ -34,6 +34,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         type="button"
         className="px-4 border-r border-gray-100 text-gray-500 hover:text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 lg:hidden transition-colors"
         onClick={onMenuClick}
+        data-tour="sidebar-toggle"
       >
         <Menu className="h-6 w-6" />
       </button>
@@ -44,7 +45,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
       </div>
 
       {/* Mega Menu - Desktop only */}
-      <MegaMenu />
+      <div data-tour="mega-menu">
+        <MegaMenu />
+      </div>
 
       <div className="flex-1 px-4 flex justify-end">
         {/* Search */}
@@ -53,7 +56,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <label htmlFor="search-field" className="sr-only">
               Search
             </label>
-            <div className="relative w-full text-gray-400 focus-within:text-gray-600">
+            <div className="relative w-full text-gray-400 focus-within:text-gray-600" data-tour="search">
               <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                 <Search className="h-5 w-5" />
               </div>
@@ -70,7 +73,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         {/* Right side */}
         <div className="ml-4 flex items-center md:ml-6">
           {/* Notifications */}
-          <div className="relative" ref={notifRef}>
+          <div className="relative" ref={notifRef} data-tour="notifications">
             <button
               type="button"
               className="relative p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
