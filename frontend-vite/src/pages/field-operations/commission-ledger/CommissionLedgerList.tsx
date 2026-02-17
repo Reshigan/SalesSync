@@ -117,7 +117,7 @@ export default function CommissionLedgerList() {
       data={commissions}
       loading={loading}
       onRefresh={loadCommissions}
-      onExport={() => exportToCSV(commissions as Record<string, unknown>[], 'commissions')}
+      onExport={() => exportToCSV(commissions as Record<string, unknown>[], 'commissionledger')}
     />
   )
 }

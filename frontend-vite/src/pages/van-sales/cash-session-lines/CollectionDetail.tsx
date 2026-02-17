@@ -16,6 +16,12 @@ export default function CollectionDetail() {
     },
   })
 
+  const { data: collection, isLoading } = useQuery({
+    queryKey: ['collection', sessionId, collectionId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/cash-sessions/${sessionId}/collections/${collectionId}`)
+      return res.data?.data || null
+    },
   })
 
   if (isLoading) {

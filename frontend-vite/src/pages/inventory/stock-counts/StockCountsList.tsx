@@ -144,7 +144,7 @@ export default function StockCountsList() {
       data={stockCounts}
       loading={loading}
       onRefresh={loadStockCounts}
-      onExport={() => exportToCSV(stockCounts as Record<string, unknown>[], 'stock-counts')}
+      onExport={() => exportToCSV(stockCounts as Record<string, unknown>[], 'stockcounts')}
       createPath="/inventory/stock-counts/create"
       createLabel="Create Stock Count"
     />

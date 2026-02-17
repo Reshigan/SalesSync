@@ -130,7 +130,7 @@ export default function BoardPlacementsList() {
       data={placements}
       loading={loading}
       onRefresh={loadPlacements}
-      onExport={() => exportToCSV(placements as Record<string, unknown>[], 'board-placements')}
+      onExport={() => exportToCSV(placements as Record<string, unknown>[], 'boardplacements')}
       createPath="/field-operations/board-placements/create"
       createLabel="Create Placement"
     />

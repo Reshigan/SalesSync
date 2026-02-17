@@ -118,7 +118,7 @@ export default function CashReconciliationList() {
       data={reconciliations}
       loading={loading}
       onRefresh={loadReconciliations}
-      onExport={() => exportToCSV(reconciliations as Record<string, unknown>[], 'cash-reconciliations')}
+      onExport={() => exportToCSV(reconciliations as Record<string, unknown>[], 'cashreconciliation')}
       createPath="/van-sales/cash-reconciliation/create"
       createLabel="Create Reconciliation"
     />

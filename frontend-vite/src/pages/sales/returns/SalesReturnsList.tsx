@@ -110,7 +110,7 @@ export default function SalesReturnsList() {
       data={returns}
       loading={loading}
       onRefresh={loadReturns}
-      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'sales-returns')}
+      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'salesreturns')}
       createPath="/sales/returns/create"
       createLabel="Create Return"
     />

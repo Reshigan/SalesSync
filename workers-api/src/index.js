@@ -301,22 +301,22 @@ api.get('/customers/stats', async (c) => {
 });
 
 api.get('/audit-trail', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/pending', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customer-visits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/credit-limits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/segments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/:id', async (c) => {
   const db = c.env.DB;
@@ -421,19 +421,19 @@ api.get('/products/export', async (c) => {
 });
 
 api.get('/inventory/stock', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/kyc/compliance', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/inventory', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/pricing', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/:id', async (c) => {
   const db = c.env.DB;
@@ -1907,8 +1907,7 @@ api.get('/users/:userId/roles', requirePermission('users:view'), async (c) => {
     `).bind(userId, tenantId).all();
     
     return c.json({ success: true, data: userRoles.results || [] });
-  } catch (e) {
-    return c.json({ success: true, data: [] });
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500);
   }
 });
 
@@ -2024,8 +2023,7 @@ api.get('/users/:userId/permissions', requirePermission('users:view'), async (c)
     `).bind(userId).all();
     
     return c.json({ success: true, data: permissions.results || [] });
-  } catch (e) {
-    return c.json({ success: true, data: [] });
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500);
   }
 });
 
@@ -3888,7 +3886,7 @@ api.get('/finance/invoices', async (c) => {
   try {
     const invoices = await db.prepare('SELECT i.*, c.name as customer_name FROM invoices i LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? ORDER BY i.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: invoices.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/finance/credit-notes', async (c) => {
@@ -3897,7 +3895,7 @@ api.get('/finance/credit-notes', async (c) => {
   try {
     const notes = await db.prepare('SELECT * FROM credit_notes WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: notes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/finance/ap-summary', async (c) => {
@@ -4087,7 +4085,7 @@ api.get('/dashboard/recent-activity', async (c) => {
     const payments = await db.prepare('SELECT id, payment_number as title, status, created_at, "payment" as type FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(limit));
     return c.json({ success: true, data: activities });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/charts', async (c) => {
@@ -4117,7 +4115,7 @@ api.get('/dashboard/top-customers', async (c) => {
   try {
     const customers = await db.prepare('SELECT c.id, c.name, COUNT(o.id) as orders, COALESCE(SUM(o.total_amount), 0) as revenue FROM customers c LEFT JOIN orders o ON c.id = o.customer_id WHERE c.tenant_id = ? GROUP BY c.id ORDER BY revenue DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     return c.json({ success: true, data: customers.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/sales-performance', async (c) => {
@@ -4126,7 +4124,7 @@ api.get('/dashboard/sales-performance', async (c) => {
   try {
     const perf = await db.prepare("SELECT date(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? GROUP BY date(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all();
     return c.json({ success: true, data: perf.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/inventory-overview', async (c) => {
@@ -4180,7 +4178,7 @@ api.get('/quotations', async (c) => {
   try {
     const quotes = await db.prepare('SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.tenant_id = ? ORDER BY q.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: quotes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/customers', async (c) => {
@@ -4237,7 +4235,7 @@ api.get('/kyc/cases', async (c) => {
   try {
     const cases = await db.prepare('SELECT * FROM kyc_cases WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: cases.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/kyc/cases/:id', async (c) => {
@@ -4273,7 +4271,7 @@ api.get('/order-lines', async (c) => {
     params.push(parseInt(limit), parseInt(offset));
     const lines = await db.prepare(query).bind(...params).all();
     return c.json({ success: true, data: lines.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/order-lines/:id', async (c) => {
@@ -4348,7 +4346,7 @@ api.post('/pricing/bulk-quote', async (c) => {
       }
     }
     return c.json({ success: true, data: results });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales-reps', async (c) => {
@@ -4359,7 +4357,7 @@ api.get('/sales-reps', async (c) => {
     if (reps.results && reps.results.length > 0) return c.json({ success: true, data: reps.results });
     const allUsers = await db.prepare("SELECT id, first_name, last_name, email, status FROM users WHERE tenant_id = ?").bind(tenantId).all();
     return c.json({ success: true, data: allUsers.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales/payments', async (c) => {
@@ -4368,7 +4366,7 @@ api.get('/sales/payments', async (c) => {
   try {
     const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: payments.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales/payments/:id', async (c) => {
@@ -4429,7 +4427,7 @@ api.get('/team-hierarchy', async (c) => {
   try {
     const hierarchy = await db.prepare('SELECT th.*, u1.first_name as leader_first_name, u1.last_name as leader_last_name, u2.first_name as agent_first_name, u2.last_name as agent_last_name FROM team_hierarchy th LEFT JOIN users u1 ON th.leader_id = u1.id LEFT JOIN users u2 ON th.agent_id = u2.id WHERE th.tenant_id = ? ORDER BY th.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: hierarchy.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/team-hierarchy/leader/:leaderId/agents', async (c) => {
@@ -4439,7 +4437,7 @@ api.get('/team-hierarchy/leader/:leaderId/agents', async (c) => {
   try {
     const agents = await db.prepare('SELECT th.*, u.first_name, u.last_name, u.email FROM team_hierarchy th JOIN users u ON th.agent_id = u.id WHERE th.leader_id = ? AND th.tenant_id = ?').bind(leaderId, tenantId).all();
     return c.json({ success: true, data: agents.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.post('/team-hierarchy', async (c) => {
@@ -4481,7 +4479,7 @@ api.get('/analytics/recent-activity', async (c) => {
     const payments = await db.prepare('SELECT id, payment_number as title, status, created_at, "payment" as type FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(limit));
     return c.json({ success: true, data: activities });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/analytics/visits', async (c) => {
@@ -4544,7 +4542,7 @@ api.get('/analytics/performance', async (c) => {
   try {
     const perf = await db.prepare("SELECT date(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? GROUP BY date(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all();
     return c.json({ success: true, data: perf.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/analytics/realtime', async (c) => {
@@ -4583,7 +4581,7 @@ api.get('/trade-marketing/boards', async (c) => {
   try {
     const boards = await db.prepare('SELECT * FROM boards WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: boards.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/planograms', async (c) => {
@@ -4592,7 +4590,7 @@ api.get('/planograms', async (c) => {
   try {
     const planograms = await db.prepare('SELECT * FROM planograms WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: planograms.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/beat-routes', async (c) => {
@@ -4601,7 +4599,7 @@ api.get('/beat-routes', async (c) => {
   try {
     const routes = await db.prepare('SELECT * FROM beat_routes WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: routes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/beat-routes/:id', async (c) => {
@@ -4621,7 +4619,7 @@ api.get('/system-settings', async (c) => {
   try {
     const settings = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ? ORDER BY key').bind(tenantId).all();
     return c.json({ success: true, data: settings.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/reports/templates', async (c) => {
@@ -4630,7 +4628,7 @@ api.get('/reports/templates', async (c) => {
   try {
     const templates = await db.prepare('SELECT * FROM report_templates WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: templates.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/notifications', async (c) => {
@@ -4640,7 +4638,7 @@ api.get('/notifications', async (c) => {
   try {
     const notifs = await db.prepare('SELECT * FROM notifications WHERE tenant_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, userId).all();
     return c.json({ success: true, data: notifs.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 // ==================== PRICING ROUTE ALIASES ====================
@@ -4650,7 +4648,7 @@ api.get('/pricing/price-lists', async (c) => {
   try {
     const priceLists = await db.prepare('SELECT * FROM price_lists WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: priceLists.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/pricing/price-lists/:id', async (c) => {
@@ -10173,19 +10171,18 @@ api.get('/commissions/payouts', authMiddleware, async (c) => {
     let payouts = [];
     try { const r = await db.prepare(`SELECT * FROM commission_payouts WHERE tenant_id = ? ORDER BY created_at DESC`).bind(tenantId).all(); payouts = r.results || []; } catch(e) {}
     return c.json({ success: true, data: payouts });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
 api.get('/commissions/calculations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/payments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/reports', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/:id', async (c) => {
   const db = c.env.DB;
@@ -13583,8 +13580,7 @@ api.get('/field-agents', authMiddleware, async (c) => {
     let agents = [];
     try { const r = await db.prepare(`SELECT u.id, u.first_name, u.last_name, u.email, u.role, u.status FROM users u WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'sales_rep')`).bind(tenantId).all(); agents = r.results || []; } catch(e) {}
     return c.json({ success: true, data: agents });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13695,8 +13691,7 @@ api.get('/inventory/multi-location', authMiddleware, async (c) => {
     let inventory = [];
     try { const r = await db.prepare(`SELECT i.*, p.name as product_name, w.name as warehouse_name FROM inventory i LEFT JOIN products p ON i.product_id = p.id LEFT JOIN warehouses w ON i.warehouse_id = w.id WHERE i.tenant_id = ? ORDER BY p.name`).bind(tenantId).all(); inventory = r.results || []; } catch(e) {}
     return c.json({ success: true, data: inventory });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13719,8 +13714,7 @@ api.get('/inventory/reorder-suggestions', authMiddleware, async (c) => {
     let suggestions = [];
     try { const r = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ? AND quantity <= reorder_level ORDER BY quantity ASC').bind(tenantId).all(); suggestions = r.results || []; } catch(e) {}
     return c.json({ success: true, data: suggestions });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13732,8 +13726,7 @@ api.get('/inventory/lots', authMiddleware, async (c) => {
     let lots = [];
     try { const r = await db.prepare(`SELECT * FROM inventory_lots WHERE tenant_id = ? AND expiry_date <= date('now', '+' || ? || ' days') ORDER BY expiry_date ASC`).bind(tenantId, expiringWithinDays).all(); lots = r.results || []; } catch(e) {}
     return c.json({ success: true, data: lots });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -14385,19 +14378,19 @@ api.post('/products/bulk', authMiddleware, async (c) => {
 
 // ============================================================================
 api.get('/admin/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM boards WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM boards WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/campaigns', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/commission-rules', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/pos-library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/territories', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM territories WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM territories WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/admin/territories', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO territories (tenant_id, name, region_id, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.region_id || null, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'Territory created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14409,25 +14402,25 @@ api.post('/data/import', authMiddleware, async (c) => {
   try { return c.json({ success: true, message: 'Import started', data: { status: 'processing' } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/events/analytics/summary', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT status, COUNT(*) as count FROM marketing_activations WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT status, COUNT(*) as count FROM marketing_activations WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/board-placement', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/board-placements', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/board-placements', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO board_placements (tenant_id, customer_id, board_id, location, photo_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.customer_id, body.board_id, body.location, body.photo_url, body.status || 'placed').run(); return c.json({ success: true, message: 'Board placement created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/field-marketing/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const brandId = c.req.query('brandId'); let query = 'SELECT * FROM boards WHERE tenant_id = ?'; const params = [tenantId]; if (brandId) { query += ' AND brand_id = ?'; params.push(brandId); } const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const brandId = c.req.query('brandId'); let query = 'SELECT * FROM boards WHERE tenant_id = ?'; const params = [tenantId]; if (brandId) { query += ' AND brand_id = ?'; params.push(brandId); } const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/commissions', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/customers/search', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR store_name LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR store_name LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/gps/validate', authMiddleware, async (c) => {
   try { const body = await c.req.json(); const isValid = body.latitude && body.longitude && Math.abs(body.latitude) <= 90 && Math.abs(body.longitude) <= 180; return c.json({ success: true, data: { valid: isValid, latitude: body.latitude, longitude: body.longitude } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14439,7 +14432,7 @@ api.post('/field-marketing/surveys/submit', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO survey_responses (tenant_id, survey_id, customer_id, agent_id, answers, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.survey_id, body.customer_id, body.agent_id, JSON.stringify(body.answers)).run(); return c.json({ success: true, message: 'Survey submitted' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/field-marketing/visits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/visits', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO visits (tenant_id, customer_id, agent_id, latitude, longitude, status, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.customer_id, body.agent_id, body.latitude, body.longitude, body.status || 'in_progress', body.notes).run(); return c.json({ success: true, message: 'Visit created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14457,7 +14450,7 @@ api.post('/reports/generate', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const allowed = ['orders','customers','products','invoices','payments','inventory','visits','agents','commissions','surveys','boards','campaigns','vans','warehouses','suppliers','purchase_orders','credit_notes','returns']; const table = allowed.includes(body.type) ? body.type : 'orders'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1000').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/samples/allocations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM product_distributions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM product_distributions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/system/backups', authMiddleware, async (c) => {
   return c.json({ success: true, data: [] });
@@ -14475,39 +14468,1278 @@ api.post('/system/integrations', authMiddleware, async (c) => {
   return c.json({ success: true, message: 'Integration saved' });
 });
 api.get('/system/settings', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.put('/system/settings', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); for (const [key, value] of Object.entries(body)) { await db.prepare('INSERT OR REPLACE INTO system_settings (tenant_id, key, value, updated_at) VALUES (?, ?, ?, datetime("now"))').bind(tenantId, key, JSON.stringify(value)).run(); } return c.json({ success: true, message: 'Settings updated' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing-new/brand-activations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM marketing_activations WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM marketing_activations WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/trade-marketing-new/brand-activations', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO marketing_activations (tenant_id, name, type, status, start_date, end_date, location, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.eventName || body.name, body.eventType || body.type, body.status || 'planned', body.startDate || body.start_date, body.endDate || body.end_date, body.location).run(); return c.json({ success: true, message: 'Brand activation created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing-new/materials/library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/trade-marketing-new/pos-materials', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/trade-marketing-new/pos-materials', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing/channel-partners', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM customers WHERE tenant_id = ? AND type = 'channel_partner'").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM customers WHERE tenant_id = ? AND type = 'channel_partner'").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/trade-marketing/competitor-analysis', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM competitors WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM competitors WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/visit-configurations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visit_configurations WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visit_configurations WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/visit-configurations', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO visit_configurations (tenant_id, name, type, config, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, JSON.stringify(body.config), body.status || 'active').run(); return c.json({ success: true, message: 'Visit configuration created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 // ============================================================================
+
+// ==================== CROSS-MODULE BUSINESS RULE ENDPOINTS ====================
+
+api.get('/customers/:id/balance', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const customer = await db.prepare('SELECT id, name, credit_balance FROM customers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
+
+    const outstandingInvoices = await db.prepare(`
+      SELECT COUNT(*) as count, COALESCE(SUM(amount_due), 0) as total_due
+      FROM invoices WHERE customer_id = ? AND tenant_id = ? AND status IN ('issued', 'partially_paid', 'overdue')
+    `).bind(id, tenantId).first();
+
+    const totalPayments = await db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE customer_id = ? AND tenant_id = ? AND status = 'completed'
+    `).bind(id, tenantId).first();
+
+    const pendingCredits = await db.prepare(`
+      SELECT COALESCE(SUM(total_amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
+    `).bind(id, tenantId).first();
+
+    return c.json({
+      success: true,
+      data: {
+        customer_id: id,
+        customer_name: customer.name,
+        credit_balance: customer.credit_balance || 0,
+        outstanding_invoices: outstandingInvoices?.count || 0,
+        total_outstanding: outstandingInvoices?.total_due || 0,
+        total_payments: totalPayments?.total || 0,
+        pending_credits: pendingCredits?.total || 0
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/customers/:id/ledger', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  const { limit = 50, offset = 0 } = c.req.query();
+
+  try {
+    const ledger = await db.prepare(`
+      SELECT * FROM customer_ledger WHERE customer_id = ? AND tenant_id = ?
+      ORDER BY created_at DESC LIMIT ? OFFSET ?
+    `).bind(id, tenantId, parseInt(limit), parseInt(offset)).all();
+
+    return c.json({ success: true, data: ledger.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/credit-notes/:id/apply', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  const { invoice_id } = await c.req.json();
+
+  try {
+    if (!invoice_id) return c.json({ success: false, message: 'invoice_id is required' }, 400);
+    const creditAmount = await applyCreditNoteToInvoice(db, tenantId, id, invoice_id, userId);
+    if (!creditAmount) return c.json({ success: false, message: 'Could not apply credit note' }, 400);
+    return c.json({ success: true, data: { credit_amount: creditAmount }, message: 'Credit note applied to invoice' });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/orders/:id/invoice', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const invoice = await db.prepare('SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
+    if (!invoice) return c.json({ success: false, message: 'No invoice found for this order' }, 404);
+    return c.json({ success: true, data: invoice });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/invoices/:id/payments', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const payments = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: payments.results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/returns/:id/credit-note', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+
+  try {
+    const creditNote = await db.prepare('SELECT * FROM credit_notes WHERE return_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
+    if (!creditNote) return c.json({ success: false, message: 'No credit note found for this return' }, 404);
+    return c.json({ success: true, data: creditNote });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== GO-LIVE: MISSING ROUTES ====================
+api.get('/visits/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const visit = await db.prepare('SELECT * FROM visits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!visit) return c.json({ success: false, message: 'Visit not found' }, 404);
+    return c.json({ success: true, data: visit });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/import', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json(); const products = body.products || []; let imported = 0;
+    for (const p of products) {
+      const id = crypto.randomUUID();
+      await db.prepare("INSERT INTO products (id, tenant_id, name, sku, category_id, brand_id, unit_price, cost_price, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))").bind(id, tenantId, p.name, p.sku || '', p.category_id || null, p.brand_id || null, p.unit_price || 0, p.cost_price || 0).run();
+      imported++;
+    }
+    return c.json({ success: true, data: { imported } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/products/bulk', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { products } = await c.req.json(); let updated = 0;
+    for (const p of (products || [])) {
+      await db.prepare('UPDATE products SET name = ?, unit_price = ?, status = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(p.name, p.unit_price || 0, p.status || 'active', p.id, tenantId).run();
+      updated++;
+    }
+    return c.json({ success: true, data: { updated } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/:id/stock', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const { quantity, type, reason } = await c.req.json();
+    const stock = await db.prepare('SELECT id, quantity_on_hand FROM inventory_stock WHERE product_id = ? AND tenant_id = ? LIMIT 1').bind(id, tenantId).first();
+    const current = stock?.quantity_on_hand || 0;
+    const newQty = type === 'add' ? current + quantity : current - quantity;
+    if (stock) { await db.prepare('UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = datetime("now") WHERE id = ?').bind(newQty, stock.id).run(); }
+    else { await db.prepare('INSERT INTO inventory_stock (id, tenant_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), tenantId, id, newQty).run(); }
+    await db.prepare("INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))").bind(crypto.randomUUID(), tenantId, id, quantity, type || 'adjustment', reason || '').run();
+    return c.json({ success: true, data: { quantity_on_hand: newQty } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/products/:id/image', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const url = '/images/products/' + id + '.jpg';
+    await db.prepare('UPDATE products SET image_url = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(url, id, tenantId).run();
+    return c.json({ success: true, data: { image_url: url } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/movements', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const movements = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(id, tenantId).all();
+    return c.json({ success: true, data: movements.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/stock-history', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const history = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: history.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/products/:id/sales-data', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const sales = await db.prepare('SELECT oi.*, o.order_date, o.customer_id FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.tenant_id = ? ORDER BY o.order_date DESC LIMIT 50').bind(id, tenantId).all();
+    return c.json({ success: true, data: sales.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/surveys', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const surveys = await db.prepare('SELECT * FROM surveys WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: surveys.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/activations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const activations = await db.prepare('SELECT * FROM campaigns WHERE brand_id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'activation').all();
+    return c.json({ success: true, data: activations.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/boards', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const boards = await db.prepare('SELECT * FROM boards WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: boards.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/brands/:id/products', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const products = await db.prepare('SELECT * FROM products WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: products.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/finance/cash-reconciliation/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const session = await db.prepare('SELECT * FROM cash_reconciliations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!session) return c.json({ success: false, message: 'Not found' }, 404);
+    return c.json({ success: true, data: session });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/finance/cash-reconciliation', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const data = await c.req.json(); const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, status, created_at) VALUES (?, ?, ?, date('now'), ?, 'open', datetime('now'))").bind(id, tenantId, data.agent_id || '', data.opening_balance || 0).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/payments/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const data = await c.req.json();
+    await db.prepare('UPDATE payments SET amount = ?, payment_method = ?, status = ?, notes = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount, data.payment_method || 'cash', data.status || 'pending', data.notes || '', id, tenantId).run();
+    const updated = await db.prepare('SELECT * FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    return c.json({ success: true, data: updated });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.delete('/payments/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    await db.prepare('DELETE FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Payment deleted' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/payments/:id/allocations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const allocations = await db.prepare('SELECT * FROM payment_allocations WHERE payment_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: allocations.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/payments/:paymentId/allocations/:allocId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const paymentId = c.req.param('paymentId'); const allocId = c.req.param('allocId');
+  try {
+    const data = await c.req.json();
+    await db.prepare('UPDATE payment_allocations SET amount = ?, invoice_id = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount || 0, data.invoice_id || '', allocId, tenantId).run();
+    return c.json({ success: true, message: 'Allocation updated' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+
+// ========== ANALYTICS ROUTES ==========
+api.get('/analytics/field-ops', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const visits = await db.prepare('SELECT COUNT(*) as total FROM visits WHERE tenant_id = ?').bind(tenantId).first();
+    const agents = await db.prepare('SELECT COUNT(*) as total FROM field_agents WHERE tenant_id = ?').bind(tenantId).first();
+    const surveys = await db.prepare('SELECT COUNT(*) as total FROM surveys WHERE tenant_id = ?').bind(tenantId).first();
+    return c.json({ success: true, data: { total_visits: visits?.total || 0, total_agents: agents?.total || 0, total_surveys: surveys?.total || 0 } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/analytics/trends', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const sales = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as total FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
+    const orders = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
+    return c.json({ success: true, data: { sales_trends: sales.results || [], order_trends: orders.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/analytics/reports', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const topProducts = await db.prepare('SELECT p.name, SUM(oi.quantity) as total_qty, SUM(oi.total) as total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.tenant_id = ? GROUP BY oi.product_id ORDER BY total_revenue DESC LIMIT 10').bind(tenantId).all();
+    const topCustomers = await db.prepare('SELECT c.name, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ? GROUP BY o.customer_id ORDER BY total_spent DESC LIMIT 10').bind(tenantId).all();
+    return c.json({ success: true, data: { top_products: topProducts.results || [], top_customers: topCustomers.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== AUDIT ROUTES ==========
+api.get('/audit/:entityType/:entityId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const entityType = c.req.param('entityType'); const entityId = c.req.param('entityId');
+  try {
+    const trail = await db.prepare('SELECT * FROM audit_logs WHERE entity_type = ? AND entity_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(entityType, entityId, tenantId).all();
+    return c.json({ success: true, data: { auditTrail: trail.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/audit/:entityType/:entityId/entries/:entryId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  const entryId = c.req.param('entryId');
+  try {
+    const entry = await db.prepare('SELECT * FROM audit_logs WHERE id = ? AND tenant_id = ?').bind(entryId, tenantId).first();
+    if (!entry) return c.json({ success: false, message: 'Entry not found' }, 404);
+    return c.json({ success: true, data: { entry } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== FIELD AGENT WORKFLOW ROUTES ==========
+api.get('/field-agent-workflow/visit-list', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const visits = await db.prepare("SELECT v.*, c.name as customer_name, c.address as customer_address, c.latitude, c.longitude FROM visits v LEFT JOIN customers c ON v.customer_id = c.id WHERE v.tenant_id = ? AND v.agent_id = ? AND v.visit_date = date('now') ORDER BY v.created_at ASC").bind(tenantId, userId).all();
+    return c.json({ success: true, data: visits.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/start-visit', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const { visit_id, latitude, longitude } = await c.req.json();
+    await db.prepare("UPDATE visits SET status = 'in_progress', check_in_time = datetime('now'), check_in_latitude = ?, check_in_longitude = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, visit_id, tenantId).run();
+    if (latitude && longitude) {
+      await db.prepare("INSERT INTO gps_locations (id, agent_id, latitude, longitude, accuracy, tenant_id, created_at) VALUES (?, ?, ?, ?, 10, ?, datetime('now'))").bind(crypto.randomUUID(), userId, latitude, longitude, tenantId).run();
+    }
+    return c.json({ success: true, message: 'Visit started' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/complete-visit', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { visit_id, latitude, longitude, notes } = await c.req.json();
+    await db.prepare("UPDATE visits SET status = 'completed', check_out_time = datetime('now'), check_out_latitude = ?, check_out_longitude = ?, notes = COALESCE(?, notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, notes || null, visit_id, tenantId).run();
+    return c.json({ success: true, message: 'Visit completed' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/field-agent-workflow/complete-visit-item', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { visit_id, item_type, item_id, result, notes } = await c.req.json();
+    const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO visit_tasks (id, visit_id, task_type, reference_id, status, result, notes, tenant_id, created_at) VALUES (?, ?, ?, ?, 'completed', ?, ?, ?, datetime('now'))").bind(id, visit_id, item_type, item_id || '', result || '', notes || '', tenantId).run();
+    return c.json({ success: true, data: { id } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/field-agent-workflow/agent-summary', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const todayVisits = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ? AND agent_id = ? AND visit_date = date('now')").bind(tenantId, userId).first();
+    const weekOrders = await db.prepare("SELECT COUNT(*) as total, SUM(total_amount) as revenue FROM orders WHERE tenant_id = ? AND created_by = ? AND created_at >= date('now', '-7 days')").bind(tenantId, userId).first();
+    return c.json({ success: true, data: { today_visits: todayVisits?.total || 0, completed_visits: todayVisits?.completed || 0, week_orders: weekOrders?.total || 0, week_revenue: weekOrders?.revenue || 0 } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== FIELD COMMISSIONS ROUTES ==========
+api.get('/field-commissions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const commissions = await db.prepare('SELECT c.*, u.first_name, u.last_name, u.email FROM commissions c LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ? ORDER BY c.created_at DESC LIMIT 100').bind(tenantId).all();
+    return c.json({ success: true, data: commissions.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/field-commissions/agent/:agentId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try {
+    const commissions = await db.prepare('SELECT * FROM commissions WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(agentId, tenantId).all();
+    const summary = await db.prepare("SELECT SUM(amount) as total_earned, SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as total_paid, SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as total_pending FROM commissions WHERE agent_id = ? AND tenant_id = ?").bind(agentId, tenantId).first();
+    return c.json({ success: true, data: { commissions: commissions.results || [], summary: summary || {} } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== GPS LOCATION ROUTES ==========
+api.get('/gps-location/customer/:customerId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
+  try {
+    const customer = await db.prepare('SELECT id, name, latitude, longitude, address FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
+    return c.json({ success: true, data: customer });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/gps-location/verify-customer', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { customer_id, latitude, longitude, max_distance } = await c.req.json();
+    const customer = await db.prepare('SELECT latitude, longitude FROM customers WHERE id = ? AND tenant_id = ?').bind(customer_id, tenantId).first();
+    if (!customer || !customer.latitude || !customer.longitude) return c.json({ success: true, data: { verified: true, distance: 0, message: 'No GPS coordinates set for customer' } });
+    const R = 6371e3;
+    const toRad = (d) => d * Math.PI / 180;
+    const dLat = toRad(latitude - customer.latitude);
+    const dLon = toRad(longitude - customer.longitude);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(customer.latitude)) * Math.cos(toRad(latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const threshold = max_distance || 200;
+    return c.json({ success: true, data: { verified: distance <= threshold, distance: Math.round(distance), threshold, message: distance <= threshold ? 'Within range' : 'Too far from customer location' } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== UPLOAD PHOTO ROUTE ==========
+api.post('/upload-photo', async (c) => {
+  const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const formData = await c.req.formData();
+    const file = formData.get('file');
+    const entityType = formData.get('entity_type') || 'general';
+    const entityId = formData.get('entity_id') || '';
+    if (!file) return c.json({ success: false, message: 'No file provided' }, 400);
+    const key = `${tenantId}/${entityType}/${entityId}/${Date.now()}-${file.name}`;
+    await c.env.UPLOADS.put(key, file.stream(), { httpMetadata: { contentType: file.type } });
+    const db = c.env.DB; const id = crypto.randomUUID();
+    await db.prepare("INSERT INTO attachments (id, entity_type, entity_id, file_name, file_type, file_size, file_url, uploaded_by, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, entityType, entityId, file.name, file.type, file.size, key, userId, tenantId).run();
+    return c.json({ success: true, data: { id, file_name: file.name, file_url: key } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== COMPREHENSIVE TRANSACTIONS ROUTES ==========
+api.get('/comprehensive-transactions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { type, status, customer_id } = c.req.query();
+    let sql = 'SELECT * FROM comprehensive_transactions WHERE tenant_id = ?';
+    const params = [tenantId];
+    if (type) { sql += ' AND transaction_type = ?'; params.push(type); }
+    if (status) { sql += ' AND status = ?'; params.push(status); }
+    if (customer_id) { sql += ' AND customer_id = ?'; params.push(customer_id); }
+    sql += ' ORDER BY created_at DESC LIMIT 100';
+    const txns = await db.prepare(sql).bind(...params).all();
+    return c.json({ success: true, data: txns.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/comprehensive-transactions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const data = await c.req.json();
+    const id = crypto.randomUUID();
+    const txnNumber = `TXN-${Date.now()}`;
+    await db.prepare("INSERT INTO comprehensive_transactions (id, transaction_number, transaction_type, status, customer_id, total_amount, notes, created_by, tenant_id, created_at) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, datetime('now'))").bind(id, txnNumber, data.transaction_type || 'sale', data.customer_id || null, data.total_amount || 0, data.notes || '', userId, tenantId).run();
+    if (data.items && Array.isArray(data.items)) {
+      for (const item of data.items) {
+        const itemId = crypto.randomUUID();
+        await db.prepare("INSERT INTO comprehensive_transaction_items (id, transaction_id, product_id, quantity, unit_price, total, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, (item.quantity || 1) * (item.unit_price || 0), tenantId).run();
+      }
+    }
+    return c.json({ success: true, data: { id, transaction_number: txnNumber } }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/comprehensive-transactions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const txn = await db.prepare('SELECT * FROM comprehensive_transactions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!txn) return c.json({ success: false, message: 'Transaction not found' }, 404);
+    const items = await db.prepare('SELECT ti.*, p.name as product_name FROM comprehensive_transaction_items ti LEFT JOIN products p ON ti.product_id = p.id WHERE ti.transaction_id = ? AND ti.tenant_id = ?').bind(id, tenantId).all();
+    const payments = await db.prepare('SELECT * FROM comprehensive_transaction_payments WHERE transaction_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...txn, items: items.results || [], payments: payments.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== CURRENCY SYSTEM ROUTES ==========
+api.get('/currency-system/currencies', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const currencies = await db.prepare('SELECT * FROM currencies WHERE tenant_id = ? ORDER BY code ASC').bind(tenantId).all();
+    return c.json({ success: true, data: currencies.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/currency-system/exchange-rates', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const rates = await db.prepare('SELECT * FROM exchange_rate_history WHERE tenant_id = ? ORDER BY effective_date DESC LIMIT 100').bind(tenantId).all();
+    return c.json({ success: true, data: rates.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/currency-system/convert', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { amount, from_currency, to_currency } = await c.req.json();
+    if (!amount || !from_currency || !to_currency) return c.json({ success: false, message: 'amount, from_currency, to_currency required' }, 400);
+    if (from_currency === to_currency) return c.json({ success: true, data: { converted_amount: amount, rate: 1 } });
+    const rate = await db.prepare("SELECT rate FROM exchange_rate_history WHERE from_currency = ? AND to_currency = ? AND tenant_id = ? ORDER BY effective_date DESC LIMIT 1").bind(from_currency, to_currency, tenantId).first();
+    if (!rate) return c.json({ success: false, message: 'No exchange rate found' }, 404);
+    return c.json({ success: true, data: { converted_amount: amount * rate.rate, rate: rate.rate, from_currency, to_currency } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== GPS TRACKING ROUTES ==========
+api.get('/gps-tracking/agents', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const agents = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.role, gl.latitude, gl.longitude, gl.accuracy, gl.created_at as last_location_time FROM users u LEFT JOIN (SELECT agent_id, latitude, longitude, accuracy, created_at, ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY created_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON u.id = gl.agent_id AND gl.rn = 1 WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'driver')").bind(tenantId, tenantId).all();
+    return c.json({ success: true, data: agents.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/gps-tracking/agent/:agentId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
+  try {
+    const locations = await db.prepare('SELECT * FROM gps_locations WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(agentId, tenantId).all();
+    const agent = await db.prepare('SELECT id, first_name, last_name, email, role FROM users WHERE id = ? AND tenant_id = ?').bind(agentId, tenantId).first();
+    return c.json({ success: true, data: { agent: agent || {}, locations: locations.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== VAN INVENTORY ROUTES ==========
+api.get('/van-inventory/:vanId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId');
+  try {
+    const inventory = await db.prepare('SELECT vi.*, p.name as product_name, p.sku FROM van_inventory vi LEFT JOIN products p ON vi.product_id = p.id WHERE vi.van_id = ? AND vi.tenant_id = ?').bind(vanId, tenantId).all();
+    return c.json({ success: true, data: inventory.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/van-inventory/:vanId/load', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId'); const userId = c.get('userId');
+  try {
+    const { items } = await c.req.json();
+    if (!items || !Array.isArray(items)) return c.json({ success: false, message: 'items array required' }, 400);
+    for (const item of items) {
+      const existing = await db.prepare('SELECT id, quantity FROM van_inventory WHERE van_id = ? AND product_id = ? AND tenant_id = ?').bind(vanId, item.product_id, tenantId).first();
+      if (existing) {
+        await db.prepare('UPDATE van_inventory SET quantity = quantity + ?, updated_at = datetime("now") WHERE id = ?').bind(item.quantity || 0, existing.id).run();
+      } else {
+        const id = crypto.randomUUID();
+        await db.prepare("INSERT INTO van_inventory (id, van_id, product_id, quantity, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))").bind(id, vanId, item.product_id, item.quantity || 0, tenantId).run();
+      }
+    }
+    const loadId = crypto.randomUUID();
+    await db.prepare("INSERT INTO van_loads (id, van_id, loaded_by, status, tenant_id, created_at) VALUES (?, ?, ?, 'completed', ?, datetime('now'))").bind(loadId, vanId, userId, tenantId).run();
+    return c.json({ success: true, data: { load_id: loadId }, message: 'Van loaded successfully' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== CASH RECONCILIATION SESSIONS ROUTES ==========
+api.get('/cash-reconciliation/sessions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const sessions = await db.prepare("SELECT cs.*, u.first_name || ' ' || u.last_name as agent_name FROM cash_reconciliation_sessions cs LEFT JOIN users u ON cs.agent_id = u.id WHERE cs.tenant_id = ? ORDER BY cs.created_at DESC LIMIT 100").bind(tenantId).all();
+    return c.json({ success: true, data: sessions.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/cash-reconciliation/sessions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const session = await db.prepare('SELECT * FROM cash_reconciliation_sessions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!session) return c.json({ success: false, message: 'Session not found' }, 404);
+    const collections = await db.prepare('SELECT * FROM cash_collections WHERE session_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...session, collections: collections.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== DASHBOARD RECENT ACTIVITIES ==========
+api.get('/dashboard/recent-activities', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const orders = await db.prepare("SELECT id, order_number as reference, 'order' as type, order_status as status, total_amount as amount, created_at FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
+    const payments = await db.prepare("SELECT id, reference_number as reference, 'payment' as type, status, amount, created_at FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
+    const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+    return c.json({ success: true, data: activities });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ========== AGENT TARGETS SYSTEM ==========
+
+// Helper: get all subordinate user IDs for a manager (hierarchy-scoped)
+async function getSubordinateIds(db, tenantId, userId) {
+  const directReports = await db.prepare('SELECT user_id FROM org_hierarchy WHERE manager_id = ? AND tenant_id = ? AND status = ?').bind(userId, tenantId, 'active').all();
+  const ids = (directReports.results || []).map(r => r.user_id);
+  const allIds = [...ids];
+  for (const id of ids) {
+    const childIds = await getSubordinateIds(db, tenantId, id);
+    allIds.push(...childIds);
+  }
+  return allIds;
+}
+
+// Helper: get all child region IDs
+async function getChildRegionIds(db, tenantId, regionId) {
+  const children = await db.prepare('SELECT id FROM regions WHERE parent_id = ? AND tenant_id = ? AND status = ?').bind(regionId, tenantId, 'active').all();
+  const ids = (children.results || []).map(r => r.id);
+  const allIds = [...ids];
+  for (const id of ids) {
+    const grandchildren = await getChildRegionIds(db, tenantId, id);
+    allIds.push(...grandchildren);
+  }
+  return allIds;
+}
+
+// ===== REGIONS CRUD =====
+api.get('/regions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { level, parent_id } = c.req.query();
+    let query = 'SELECT r.*, m.first_name || \' \' || m.last_name as manager_name, p.name as parent_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id LEFT JOIN regions p ON r.parent_id = p.id WHERE r.tenant_id = ?';
+    const params = [tenantId];
+    if (level) { query += ' AND r.level = ?'; params.push(level); }
+    if (parent_id) { query += ' AND r.parent_id = ?'; params.push(parent_id); }
+    query += ' ORDER BY r.level, r.name';
+    const regions = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: regions.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/regions/tree', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const regions = await db.prepare('SELECT r.*, m.first_name || \' \' || m.last_name as manager_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id WHERE r.tenant_id = ? AND r.status = ? ORDER BY r.level, r.name').bind(tenantId, 'active').all();
+    const items = regions.results || [];
+    const buildTree = (parentId) => items.filter(r => r.parent_id === parentId).map(r => ({ ...r, children: buildTree(r.id) }));
+    return c.json({ success: true, data: buildTree(null) });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/regions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const region = await db.prepare('SELECT r.*, m.first_name || \' \' || m.last_name as manager_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id WHERE r.id = ? AND r.tenant_id = ?').bind(id, tenantId).first();
+    if (!region) return c.json({ success: false, message: 'Region not found' }, 404);
+    const children = await db.prepare('SELECT * FROM regions WHERE parent_id = ? AND tenant_id = ?').bind(id, tenantId).all();
+    const agents = await db.prepare('SELECT oh.*, u.first_name || \' \' || u.last_name as name, u.email FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id WHERE oh.region_id = ? AND oh.tenant_id = ? AND oh.status = ?').bind(id, tenantId, 'active').all();
+    return c.json({ success: true, data: { ...region, children: children.results || [], agents: agents.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/regions', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const body = await c.req.json();
+  try {
+    const id = crypto.randomUUID();
+    await db.prepare('INSERT INTO regions (id, tenant_id, name, code, level, parent_id, manager_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.name, body.code || null, body.level, body.parent_id || null, body.manager_id || null, 'active').run();
+    return c.json({ success: true, data: { id }, message: 'Region created' }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/regions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
+  try {
+    await db.prepare('UPDATE regions SET name = ?, code = ?, level = ?, parent_id = ?, manager_id = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.name, body.code || null, body.level, body.parent_id || null, body.manager_id || null, body.status || 'active', id, tenantId).run();
+    return c.json({ success: true, message: 'Region updated' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.delete('/regions/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const children = await db.prepare('SELECT COUNT(*) as count FROM regions WHERE parent_id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (children?.count > 0) return c.json({ success: false, message: 'Cannot delete region with child regions' }, 400);
+    await db.prepare('DELETE FROM regions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Region deleted' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// Region reporting
+api.get('/regions/:id/report', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const regionIds = [id, ...(await getChildRegionIds(db, tenantId, id))];
+    const placeholders = regionIds.map(() => '?').join(',');
+    const agentCount = await db.prepare(`SELECT COUNT(DISTINCT user_id) as count FROM org_hierarchy WHERE region_id IN (${placeholders}) AND tenant_id = ? AND status = ?`).bind(...regionIds, tenantId, 'active').first();
+    const targets = await db.prepare(`SELECT target_type, SUM(target_value) as total_target, SUM(achieved_value) as total_achieved FROM agent_targets WHERE region_id IN (${placeholders}) AND tenant_id = ? AND status = ? GROUP BY target_type`).bind(...regionIds, tenantId, 'active').all();
+    const progressToday = await db.prepare(`SELECT SUM(value) as total FROM target_progress WHERE region_id IN (${placeholders}) AND tenant_id = ? AND progress_date = date('now')`).bind(...regionIds, tenantId).first();
+    return c.json({ success: true, data: { region_id: id, agent_count: agentCount?.count || 0, targets_by_type: targets.results || [], today_progress: progressToday?.total || 0 } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ===== ORG HIERARCHY CRUD =====
+api.get('/org-hierarchy', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { role_level, manager_id, region_id } = c.req.query();
+    let query = 'SELECT oh.*, u.first_name || \' \' || u.last_name as user_name, u.email, m.first_name || \' \' || m.last_name as manager_name, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN users m ON oh.manager_id = m.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.tenant_id = ? AND oh.status = ?';
+    const params = [tenantId, 'active'];
+    if (role_level) { query += ' AND oh.role_level = ?'; params.push(role_level); }
+    if (manager_id) { query += ' AND oh.manager_id = ?'; params.push(manager_id); }
+    if (region_id) { query += ' AND oh.region_id = ?'; params.push(region_id); }
+    query += ' ORDER BY oh.role_level, u.first_name';
+    const hierarchy = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: hierarchy.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/org-hierarchy/tree', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const all = await db.prepare('SELECT oh.*, u.first_name || \' \' || u.last_name as user_name, u.email, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.tenant_id = ? AND oh.status = ? ORDER BY oh.role_level').bind(tenantId, 'active').all();
+    const items = all.results || [];
+    const buildTree = (managerId) => items.filter(i => i.manager_id === managerId).map(i => ({ ...i, subordinates: buildTree(i.user_id) }));
+    const topLevel = items.filter(i => !i.manager_id || !items.find(x => x.user_id === i.manager_id));
+    const tree = topLevel.map(i => ({ ...i, subordinates: buildTree(i.user_id) }));
+    return c.json({ success: true, data: tree });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/org-hierarchy/my-team', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+    if (subordinateIds.length === 0) return c.json({ success: true, data: [] });
+    const placeholders = subordinateIds.map(() => '?').join(',');
+    const team = await db.prepare(`SELECT oh.*, u.first_name || ' ' || u.last_name as user_name, u.email, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.user_id IN (${placeholders}) AND oh.tenant_id = ? AND oh.status = ?`).bind(...subordinateIds, tenantId, 'active').all();
+    return c.json({ success: true, data: team.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/org-hierarchy', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const body = await c.req.json();
+  try {
+    const id = crypto.randomUUID();
+    await db.prepare('INSERT INTO org_hierarchy (id, tenant_id, user_id, manager_id, role_level, region_id, department, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.user_id, body.manager_id || null, body.role_level, body.region_id || null, body.department || 'field_sales', 'active').run();
+    return c.json({ success: true, data: { id }, message: 'Hierarchy entry created' }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/org-hierarchy/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
+  try {
+    await db.prepare('UPDATE org_hierarchy SET manager_id = ?, role_level = ?, region_id = ?, department = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.manager_id || null, body.role_level, body.region_id || null, body.department || 'field_sales', body.status || 'active', id, tenantId).run();
+    return c.json({ success: true, message: 'Hierarchy entry updated' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.delete('/org-hierarchy/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    await db.prepare('DELETE FROM org_hierarchy WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Hierarchy entry deleted' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ===== AGENT TARGETS CRUD =====
+// Static routes MUST come before /:id wildcard
+api.get('/agent-targets/my', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const { period_type, target_type } = c.req.query();
+    let query = 'SELECT at.*, r.name as region_name FROM agent_targets at LEFT JOIN regions r ON at.region_id = r.id WHERE at.agent_id = ? AND at.tenant_id = ?';
+    const params = [userId, tenantId];
+    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
+    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
+    query += ' ORDER BY at.period_start DESC';
+    const targets = await db.prepare(query).bind(...params).all();
+    const targetIds = (targets.results || []).map(t => t.id);
+    let progressMap = {};
+    if (targetIds.length > 0) {
+      const placeholders = targetIds.map(() => '?').join(',');
+      const progress = await db.prepare(`SELECT target_id, progress_date, SUM(value) as daily_total FROM target_progress WHERE target_id IN (${placeholders}) AND tenant_id = ? GROUP BY target_id, progress_date ORDER BY progress_date DESC`).bind(...targetIds, tenantId).all();
+      (progress.results || []).forEach(p => {
+        if (!progressMap[p.target_id]) progressMap[p.target_id] = [];
+        progressMap[p.target_id].push(p);
+      });
+    }
+    const data = (targets.results || []).map(t => ({ ...t, progress: progressMap[t.id] || [] }));
+    return c.json({ success: true, data });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/summary', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
+  try {
+    let agentFilter = '';
+    const params = [tenantId, 'active'];
+    if (role !== 'admin') {
+      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+      const allIds = [userId, ...subordinateIds];
+      const placeholders = allIds.map(() => '?').join(',');
+      agentFilter = ` AND agent_id IN (${placeholders})`;
+      params.push(...allIds);
+    }
+    const summary = await db.prepare(`SELECT target_type, target_scope, period_type, COUNT(*) as target_count, SUM(target_value) as total_target, SUM(achieved_value) as total_achieved, ROUND(CASE WHEN SUM(target_value) > 0 THEN (CAST(SUM(achieved_value) AS REAL) / SUM(target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets WHERE tenant_id = ? AND status = ?${agentFilter} GROUP BY target_type, target_scope, period_type`).bind(...params).all();
+    return c.json({ success: true, data: summary.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/report/by-agent', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
+  try {
+    const { period_type, target_type, region_id } = c.req.query();
+    let agentFilter = '';
+    const params = [tenantId];
+    if (role !== 'admin') {
+      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+      const allIds = [userId, ...subordinateIds];
+      const placeholders = allIds.map(() => '?').join(',');
+      agentFilter = ` AND at.agent_id IN (${placeholders})`;
+      params.push(...allIds);
+    }
+    let extraFilter = '';
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      extraFilter += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    const report = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, at.target_type, at.target_scope, at.period_type, COUNT(*) as target_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${agentFilter}${extraFilter} GROUP BY at.agent_id, at.target_type, at.target_scope, at.period_type ORDER BY achievement_pct DESC`).bind(...params).all();
+    return c.json({ success: true, data: report.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/report/by-region', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { period_type, target_type } = c.req.query();
+    let extraFilter = '';
+    const params = [tenantId];
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    const report = await db.prepare(`SELECT r.id as region_id, r.name as region_name, r.level as region_level, at.target_type, at.period_type, COUNT(DISTINCT at.agent_id) as agent_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${extraFilter} GROUP BY r.id, at.target_type, at.period_type ORDER BY r.level, r.name`).bind(...params).all();
+    return c.json({ success: true, data: report.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/report/leaderboard', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { target_type, period_type, region_id, limit: lim } = c.req.query();
+    let extraFilter = '';
+    const params = [tenantId, 'active'];
+    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
+    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      extraFilter += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    const limitVal = parseInt(lim) || 20;
+    params.push(limitVal);
+    const leaderboard = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, SUM(at.achieved_value) as total_achieved, SUM(at.target_value) as total_target, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ? AND at.status = ?${extraFilter} GROUP BY at.agent_id ORDER BY achievement_pct DESC LIMIT ?`).bind(...params).all();
+    return c.json({ success: true, data: leaderboard.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// List all targets (hierarchy-scoped)
+api.get('/agent-targets', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
+  try {
+    const { agent_id, target_type, target_scope, period_type, status: targetStatus, region_id } = c.req.query();
+    let query = 'SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, u.email as agent_email, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?';
+    const params = [tenantId];
+    if (role !== 'admin') {
+      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
+      const allIds = [userId, ...subordinateIds];
+      const placeholders = allIds.map(() => '?').join(',');
+      query += ` AND at.agent_id IN (${placeholders})`;
+      params.push(...allIds);
+    }
+    if (agent_id) { query += ' AND at.agent_id = ?'; params.push(agent_id); }
+    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
+    if (target_scope) { query += ' AND at.target_scope = ?'; params.push(target_scope); }
+    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
+    if (targetStatus) { query += ' AND at.status = ?'; params.push(targetStatus); }
+    if (region_id) {
+      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
+      const rp = regionIds.map(() => '?').join(',');
+      query += ` AND at.region_id IN (${rp})`;
+      params.push(...regionIds);
+    }
+    query += ' ORDER BY at.period_start DESC, u.first_name';
+    const targets = await db.prepare(query).bind(...params).all();
+    return c.json({ success: true, data: targets.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// Wildcard routes AFTER static routes
+api.get('/agent-targets/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const target = await db.prepare('SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.id = ? AND at.tenant_id = ?').bind(id, tenantId).first();
+    if (!target) return c.json({ success: false, message: 'Target not found' }, 404);
+    const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: { ...target, progress: progress.results || [] } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/agent-targets', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const body = await c.req.json();
+  try {
+    const id = crypto.randomUUID();
+    await db.prepare('INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_scope, period_type, period_start, period_end, target_value, region_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.agent_id, body.target_type, body.target_scope, body.period_type, body.period_start, body.period_end, body.target_value, body.region_id || null, body.notes || null, userId).run();
+    return c.json({ success: true, data: { id }, message: 'Target created' }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/agent-targets/bulk', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const body = await c.req.json();
+  try {
+    const targets = body.targets || [];
+    const ids = [];
+    for (const t of targets) {
+      const id = crypto.randomUUID();
+      await db.prepare('INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_scope, period_type, period_start, period_end, target_value, region_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, t.agent_id, t.target_type, t.target_scope, t.period_type, t.period_start, t.period_end, t.target_value, t.region_id || null, t.notes || null, userId).run();
+      ids.push(id);
+    }
+    return c.json({ success: true, data: { ids, count: ids.length }, message: `${ids.length} targets created` }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.put('/agent-targets/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
+  try {
+    await db.prepare('UPDATE agent_targets SET target_value = ?, status = ?, notes = ?, region_id = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.target_value, body.status || 'active', body.notes || null, body.region_id || null, id, tenantId).run();
+    return c.json({ success: true, message: 'Target updated' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.delete('/agent-targets/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    await db.prepare('DELETE FROM target_progress WHERE target_id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('DELETE FROM agent_targets WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    return c.json({ success: true, message: 'Target deleted' });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ===== TARGET PROGRESS =====
+api.post('/agent-targets/:id/progress', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const { id } = c.req.param(); const body = await c.req.json();
+  try {
+    const target = await db.prepare('SELECT * FROM agent_targets WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!target) return c.json({ success: false, message: 'Target not found' }, 404);
+    const progressId = crypto.randomUUID();
+    const progressDate = body.progress_date || new Date().toISOString().split('T')[0];
+    await db.prepare('INSERT INTO target_progress (id, tenant_id, target_id, agent_id, progress_date, value, reference_type, reference_id, customer_id, customer_name, region_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(progressId, tenantId, id, target.agent_id, progressDate, body.value || 1, body.reference_type || null, body.reference_id || null, body.customer_id || null, body.customer_name || null, target.region_id || null, body.notes || null).run();
+    const newAchieved = (target.achieved_value || 0) + (body.value || 1);
+    const newStatus = newAchieved >= target.target_value ? 'completed' : 'active';
+    await db.prepare('UPDATE agent_targets SET achieved_value = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(newAchieved, newStatus, id, tenantId).run();
+    return c.json({ success: true, data: { id: progressId, achieved_value: newAchieved, status: newStatus }, message: 'Progress recorded' }, 201);
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/agent-targets/:id/progress', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC, created_at DESC').bind(id, tenantId).all();
+    return c.json({ success: true, data: progress.results || [] });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ==================== AI Routes (Cloudflare Workers AI) ====================
+
+api.post('/ai/chat', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const body = await c.req.json();
+    const messages = body.messages || [{ role: 'user', content: body.prompt || '' }];
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages, max_tokens: body.max_tokens || 1024 });
+    return c.json({ success: true, data: { response: result.response } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/analyze', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const body = await c.req.json();
+    const analysisType = body.type || 'general';
+    let contextData = body.data || {};
+
+    if (!body.data && analysisType !== 'general') {
+      const tableMap = { fraud_detection: 'orders', performance_insights: 'visits', customer_behavior: 'customers', order_patterns: 'orders', product_performance: 'products', inventory: 'inventory' };
+      const table = tableMap[analysisType] || 'orders';
+      const { results } = await db.prepare(`SELECT * FROM ${table} WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50`).bind(tenantId).all();
+      contextData = results || [];
+    }
+
+    const systemPrompt = `You are an AI analyst for a field force management and sales system called SalesSync. Analyze the provided data and return insights as valid JSON only, no markdown.`;
+    const typePrompts = {
+      fraud_detection: `Analyze this data for fraud indicators (location anomalies, time patterns, duplicates, suspicious behavior). Return JSON: {"risk_score": number 0-100, "fraud_indicators": string[], "recommendations": string[], "confidence": number 0-1}`,
+      performance_insights: `Analyze this performance data. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      customer_behavior: `Analyze customer behavior patterns. Return JSON: {"behavior_patterns": string[], "churn_risk": number 0-1, "value_prediction": number, "recommendations": string[]}`,
+      order_patterns: `Analyze order patterns and trends. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      product_performance: `Analyze product performance. Return JSON: {"insights": string[], "top_products": string[], "underperforming": string[], "recommendations": string[]}`,
+      inventory: `Analyze inventory levels and predict needs. Return JSON: {"insights": string[], "reorder_suggestions": [{"product": string, "quantity": number, "urgency": "low"|"medium"|"high"}], "recommendations": string[]}`,
+      general: `Provide general business insights. Return JSON: {"insights": string[], "recommendations": string[]}`
+    };
+
+    const userPrompt = `${typePrompts[analysisType] || typePrompts.general}\n\nData: ${JSON.stringify(contextData).slice(0, 4000)}`;
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 1024 });
+
+    let parsed;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [result.response], recommendations: [] };
+    } catch { parsed = { insights: [result.response], recommendations: [] }; }
+
+    return c.json({ success: true, data: parsed });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/field-agents/:agentId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { agentId } = c.req.param();
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: visits } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for field agent performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this field agent data (time range: ${timeRange}). Visits: ${JSON.stringify(visits || []).slice(0, 2000)}. Orders: ${JSON.stringify(orders || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "field_agents", "type": "trend"|"recommendation"|"anomaly", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = [{ id: '1', module: 'field_agents', type: 'trend', title: 'Analysis Complete', description: result.response, confidence: 0.8, severity: 'low', data: {}, created_at: new Date().toISOString() }]; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/customers/:customerId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for customer behavior. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "customers", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/customers/:customerId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI. Return valid JSON array of fraud detections only.' },
+        { role: 'user', content: `Check for fraud in this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "customers", "type": "pattern_anomaly"|"suspicious_behavior", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/orders/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for order patterns. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze order patterns (time range: ${timeRange}). Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "orders", "type": "trend"|"prediction", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { orderId } = c.req.param();
+
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
+    if (!order) return c.json({ success: true, data: [] });
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI for orders. Return valid JSON array only.' },
+        { role: 'user', content: `Check this order for fraud: ${JSON.stringify(order)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "orders", "type": "pattern_anomaly"|"duplicate_transaction", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 512
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/products/:productId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { productId } = c.req.param();
+
+    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
+    const { results: orderItems } = await db.prepare('SELECT * FROM order_items WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(productId, tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for product performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this product. Product: ${JSON.stringify(product || {})}. Recent order items: ${JSON.stringify(orderItems || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "products", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/comprehensive-analysis', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+
+    const { results: orders } = await db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: customers } = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: visits } = await db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: products } = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).all();
+
+    const summary = { orders: orders?.[0] || {}, customers: customers?.[0] || {}, visits: visits?.[0] || {}, products: products?.[0] || {} };
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for a comprehensive business dashboard. Return valid JSON only.' },
+        { role: 'user', content: `Provide comprehensive business analysis. Summary: ${JSON.stringify(summary)}. Return JSON: {"field_agents": {"performance_insights": [], "fraud_alerts": [], "location_anomalies": [], "commission_predictions": []}, "customers": {"behavior_insights": [], "churn_predictions": [], "value_predictions": []}, "orders": {"pattern_insights": [], "fraud_detection": [], "demand_predictions": []}, "products": {"performance_insights": [], "inventory_predictions": [], "pricing_recommendations": []}}` }
+      ],
+      max_tokens: 2048
+    });
+
+    let analysis;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch { analysis = {}; }
+
+    const defaultAnalysis = {
+      field_agents: { performance_insights: [], fraud_alerts: [], location_anomalies: [], commission_predictions: [] },
+      customers: { behavior_insights: [], churn_predictions: [], value_predictions: [] },
+      orders: { pattern_insights: [], fraud_detection: [], demand_predictions: [] },
+      products: { performance_insights: [], inventory_predictions: [], pricing_recommendations: [] }
+    };
+
+    return c.json({ success: true, data: { ...defaultAnalysis, ...analysis } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/config', authMiddleware, async (c) => {
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true } } });
+});
+
+api.put('/ai/chat/config', authMiddleware, async (c) => {
+  const body = await c.req.json();
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true }, ...body } });
+});
+
 
 app.route('/api', api);
 
@@ -15370,1244 +16602,6 @@ app.post('/seed-demo-data', async (c) => {
     console.error('Seed error at step:', currentStep, error);
     return c.json({ success: false, message: 'Failed to seed demo data', step: currentStep, error: error.message }, 500);
   }
-});
-
-// ==================== CROSS-MODULE BUSINESS RULE ENDPOINTS ====================
-
-api.get('/customers/:id/balance', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-
-  try {
-    const customer = await db.prepare('SELECT id, name, credit_balance FROM customers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
-
-    const outstandingInvoices = await db.prepare(`
-      SELECT COUNT(*) as count, COALESCE(SUM(amount_due), 0) as total_due
-      FROM invoices WHERE customer_id = ? AND tenant_id = ? AND status IN ('issued', 'partially_paid', 'overdue')
-    `).bind(id, tenantId).first();
-
-    const totalPayments = await db.prepare(`
-      SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE customer_id = ? AND tenant_id = ? AND status = 'completed'
-    `).bind(id, tenantId).first();
-
-    const pendingCredits = await db.prepare(`
-      SELECT COALESCE(SUM(total_amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
-    `).bind(id, tenantId).first();
-
-    return c.json({
-      success: true,
-      data: {
-        customer_id: id,
-        customer_name: customer.name,
-        credit_balance: customer.credit_balance || 0,
-        outstanding_invoices: outstandingInvoices?.count || 0,
-        total_outstanding: outstandingInvoices?.total_due || 0,
-        total_payments: totalPayments?.total || 0,
-        pending_credits: pendingCredits?.total || 0
-      }
-    });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/customers/:id/ledger', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-  const { limit = 50, offset = 0 } = c.req.query();
-
-  try {
-    const ledger = await db.prepare(`
-      SELECT * FROM customer_ledger WHERE customer_id = ? AND tenant_id = ?
-      ORDER BY created_at DESC LIMIT ? OFFSET ?
-    `).bind(id, tenantId, parseInt(limit), parseInt(offset)).all();
-
-    return c.json({ success: true, data: ledger.results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.post('/credit-notes/:id/apply', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const userId = c.get('userId');
-  const { id } = c.req.param();
-  const { invoice_id } = await c.req.json();
-
-  try {
-    if (!invoice_id) return c.json({ success: false, message: 'invoice_id is required' }, 400);
-    const creditAmount = await applyCreditNoteToInvoice(db, tenantId, id, invoice_id, userId);
-    if (!creditAmount) return c.json({ success: false, message: 'Could not apply credit note' }, 400);
-    return c.json({ success: true, data: { credit_amount: creditAmount }, message: 'Credit note applied to invoice' });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/orders/:id/invoice', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-
-  try {
-    const invoice = await db.prepare('SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
-    if (!invoice) return c.json({ success: false, message: 'No invoice found for this order' }, 404);
-    return c.json({ success: true, data: invoice });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/invoices/:id/payments', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-
-  try {
-    const payments = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
-    return c.json({ success: true, data: payments.results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/returns/:id/credit-note', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-
-  try {
-    const creditNote = await db.prepare('SELECT * FROM credit_notes WHERE return_id = ? AND tenant_id = ? AND status != ?').bind(id, tenantId, 'void').first();
-    if (!creditNote) return c.json({ success: false, message: 'No credit note found for this return' }, 404);
-    return c.json({ success: true, data: creditNote });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-// ==================== GO-LIVE: MISSING ROUTES ====================
-api.get('/visits/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const visit = await db.prepare('SELECT * FROM visits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!visit) return c.json({ success: false, message: 'Visit not found' }, 404);
-    return c.json({ success: true, data: visit });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/products/import', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const body = await c.req.json(); const products = body.products || []; let imported = 0;
-    for (const p of products) {
-      const id = crypto.randomUUID();
-      await db.prepare("INSERT INTO products (id, tenant_id, name, sku, category_id, brand_id, unit_price, cost_price, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', datetime('now'))").bind(id, tenantId, p.name, p.sku || '', p.category_id || null, p.brand_id || null, p.unit_price || 0, p.cost_price || 0).run();
-      imported++;
-    }
-    return c.json({ success: true, data: { imported } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/products/bulk', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { products } = await c.req.json(); let updated = 0;
-    for (const p of (products || [])) {
-      await db.prepare('UPDATE products SET name = ?, unit_price = ?, status = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(p.name, p.unit_price || 0, p.status || 'active', p.id, tenantId).run();
-      updated++;
-    }
-    return c.json({ success: true, data: { updated } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/products/:id/stock', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const { quantity, type, reason } = await c.req.json();
-    const stock = await db.prepare('SELECT id, quantity_on_hand FROM inventory_stock WHERE product_id = ? AND tenant_id = ? LIMIT 1').bind(id, tenantId).first();
-    const current = stock?.quantity_on_hand || 0;
-    const newQty = type === 'add' ? current + quantity : current - quantity;
-    if (stock) { await db.prepare('UPDATE inventory_stock SET quantity_on_hand = ?, updated_at = datetime("now") WHERE id = ?').bind(newQty, stock.id).run(); }
-    else { await db.prepare('INSERT INTO inventory_stock (id, tenant_id, product_id, quantity_on_hand, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), tenantId, id, newQty).run(); }
-    await db.prepare("INSERT INTO stock_movements (id, tenant_id, product_id, quantity, movement_type, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'))").bind(crypto.randomUUID(), tenantId, id, quantity, type || 'adjustment', reason || '').run();
-    return c.json({ success: true, data: { quantity_on_hand: newQty } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/products/:id/image', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const url = '/images/products/' + id + '.jpg';
-    await db.prepare('UPDATE products SET image_url = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(url, id, tenantId).run();
-    return c.json({ success: true, data: { image_url: url } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/products/:id/movements', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const movements = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(id, tenantId).all();
-    return c.json({ success: true, data: movements.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/products/:id/stock-history', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const history = await db.prepare('SELECT * FROM stock_movements WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all();
-    return c.json({ success: true, data: history.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/products/:id/sales-data', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const sales = await db.prepare('SELECT oi.*, o.order_date, o.customer_id FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.tenant_id = ? ORDER BY o.order_date DESC LIMIT 50').bind(id, tenantId).all();
-    return c.json({ success: true, data: sales.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/brands/:id/surveys', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const surveys = await db.prepare('SELECT * FROM surveys WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: surveys.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/brands/:id/activations', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const activations = await db.prepare('SELECT * FROM campaigns WHERE brand_id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'activation').all();
-    return c.json({ success: true, data: activations.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/brands/:id/boards', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const boards = await db.prepare('SELECT * FROM boards WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: boards.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/brands/:id/products', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const products = await db.prepare('SELECT * FROM products WHERE brand_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: products.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/finance/cash-reconciliation/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const session = await db.prepare('SELECT * FROM cash_reconciliations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!session) return c.json({ success: false, message: 'Not found' }, 404);
-    return c.json({ success: true, data: session });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/finance/cash-reconciliation', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const data = await c.req.json(); const id = crypto.randomUUID();
-    await db.prepare("INSERT INTO cash_reconciliations (id, tenant_id, agent_id, reconciliation_date, opening_balance, status, created_at) VALUES (?, ?, ?, date('now'), ?, 'open', datetime('now'))").bind(id, tenantId, data.agent_id || '', data.opening_balance || 0).run();
-    return c.json({ success: true, data: { id } }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/payments/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const data = await c.req.json();
-    await db.prepare('UPDATE payments SET amount = ?, payment_method = ?, status = ?, notes = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount, data.payment_method || 'cash', data.status || 'pending', data.notes || '', id, tenantId).run();
-    const updated = await db.prepare('SELECT * FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    return c.json({ success: true, data: updated });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.delete('/payments/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    await db.prepare('DELETE FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Payment deleted' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/payments/:id/allocations', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const allocations = await db.prepare('SELECT * FROM payment_allocations WHERE payment_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: allocations.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/payments/:paymentId/allocations/:allocId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  const paymentId = c.req.param('paymentId'); const allocId = c.req.param('allocId');
-  try {
-    const data = await c.req.json();
-    await db.prepare('UPDATE payment_allocations SET amount = ?, invoice_id = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(data.amount || 0, data.invoice_id || '', allocId, tenantId).run();
-    return c.json({ success: true, message: 'Allocation updated' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-
-// ========== ANALYTICS ROUTES ==========
-api.get('/analytics/field-ops', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const visits = await db.prepare('SELECT COUNT(*) as total FROM visits WHERE tenant_id = ?').bind(tenantId).first();
-    const agents = await db.prepare('SELECT COUNT(*) as total FROM field_agents WHERE tenant_id = ?').bind(tenantId).first();
-    const surveys = await db.prepare('SELECT COUNT(*) as total FROM surveys WHERE tenant_id = ?').bind(tenantId).first();
-    return c.json({ success: true, data: { total_visits: visits?.total || 0, total_agents: agents?.total || 0, total_surveys: surveys?.total || 0 } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/analytics/trends', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const sales = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, SUM(total_amount) as total FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
-    const orders = await db.prepare("SELECT strftime('%Y-%m', created_at) as month, COUNT(*) as count FROM orders WHERE tenant_id = ? GROUP BY month ORDER BY month DESC LIMIT 12").bind(tenantId).all();
-    return c.json({ success: true, data: { sales_trends: sales.results || [], order_trends: orders.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/analytics/reports', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const topProducts = await db.prepare('SELECT p.name, SUM(oi.quantity) as total_qty, SUM(oi.total) as total_revenue FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.tenant_id = ? GROUP BY oi.product_id ORDER BY total_revenue DESC LIMIT 10').bind(tenantId).all();
-    const topCustomers = await db.prepare('SELECT c.name, COUNT(o.id) as order_count, SUM(o.total_amount) as total_spent FROM orders o JOIN customers c ON o.customer_id = c.id WHERE o.tenant_id = ? GROUP BY o.customer_id ORDER BY total_spent DESC LIMIT 10').bind(tenantId).all();
-    return c.json({ success: true, data: { top_products: topProducts.results || [], top_customers: topCustomers.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== AUDIT ROUTES ==========
-api.get('/audit/:entityType/:entityId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  const entityType = c.req.param('entityType'); const entityId = c.req.param('entityId');
-  try {
-    const trail = await db.prepare('SELECT * FROM audit_logs WHERE entity_type = ? AND entity_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(entityType, entityId, tenantId).all();
-    return c.json({ success: true, data: { auditTrail: trail.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/audit/:entityType/:entityId/entries/:entryId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  const entryId = c.req.param('entryId');
-  try {
-    const entry = await db.prepare('SELECT * FROM audit_logs WHERE id = ? AND tenant_id = ?').bind(entryId, tenantId).first();
-    if (!entry) return c.json({ success: false, message: 'Entry not found' }, 404);
-    return c.json({ success: true, data: { entry } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== FIELD AGENT WORKFLOW ROUTES ==========
-api.get('/field-agent-workflow/visit-list', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const visits = await db.prepare("SELECT v.*, c.name as customer_name, c.address as customer_address, c.latitude, c.longitude FROM visits v LEFT JOIN customers c ON v.customer_id = c.id WHERE v.tenant_id = ? AND v.agent_id = ? AND v.visit_date = date('now') ORDER BY v.sequence_number ASC").bind(tenantId, userId).all();
-    return c.json({ success: true, data: visits.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/field-agent-workflow/start-visit', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const { visit_id, latitude, longitude } = await c.req.json();
-    await db.prepare("UPDATE visits SET status = 'in_progress', check_in_time = datetime('now'), check_in_latitude = ?, check_in_longitude = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, visit_id, tenantId).run();
-    if (latitude && longitude) {
-      await db.prepare("INSERT INTO gps_locations (id, user_id, latitude, longitude, accuracy, tenant_id, created_at) VALUES (?, ?, ?, ?, 10, ?, datetime('now'))").bind(crypto.randomUUID(), userId, latitude, longitude, tenantId).run();
-    }
-    return c.json({ success: true, message: 'Visit started' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/field-agent-workflow/complete-visit', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { visit_id, latitude, longitude, notes } = await c.req.json();
-    await db.prepare("UPDATE visits SET status = 'completed', check_out_time = datetime('now'), check_out_latitude = ?, check_out_longitude = ?, notes = COALESCE(?, notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, notes || null, visit_id, tenantId).run();
-    return c.json({ success: true, message: 'Visit completed' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/field-agent-workflow/complete-visit-item', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { visit_id, item_type, item_id, result, notes } = await c.req.json();
-    const id = crypto.randomUUID();
-    await db.prepare("INSERT INTO visit_tasks (id, visit_id, task_type, reference_id, status, result, notes, tenant_id, created_at) VALUES (?, ?, ?, ?, 'completed', ?, ?, ?, datetime('now'))").bind(id, visit_id, item_type, item_id || '', result || '', notes || '', tenantId).run();
-    return c.json({ success: true, data: { id } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/field-agent-workflow/agent-summary', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const todayVisits = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ? AND agent_id = ? AND visit_date = date('now')").bind(tenantId, userId).first();
-    const weekOrders = await db.prepare("SELECT COUNT(*) as total, SUM(total_amount) as revenue FROM orders WHERE tenant_id = ? AND created_by = ? AND created_at >= date('now', '-7 days')").bind(tenantId, userId).first();
-    return c.json({ success: true, data: { today_visits: todayVisits?.total || 0, completed_visits: todayVisits?.completed || 0, week_orders: weekOrders?.total || 0, week_revenue: weekOrders?.revenue || 0 } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== FIELD COMMISSIONS ROUTES ==========
-api.get('/field-commissions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const commissions = await db.prepare('SELECT c.*, u.first_name, u.last_name, u.email FROM commissions c LEFT JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ? ORDER BY c.created_at DESC LIMIT 100').bind(tenantId).all();
-    return c.json({ success: true, data: commissions.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/field-commissions/agent/:agentId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
-  try {
-    const commissions = await db.prepare('SELECT * FROM commissions WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(agentId, tenantId).all();
-    const summary = await db.prepare("SELECT SUM(amount) as total_earned, SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as total_paid, SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as total_pending FROM commissions WHERE agent_id = ? AND tenant_id = ?").bind(agentId, tenantId).first();
-    return c.json({ success: true, data: { commissions: commissions.results || [], summary: summary || {} } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== GPS LOCATION ROUTES ==========
-api.get('/gps-location/customer/:customerId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const customerId = c.req.param('customerId');
-  try {
-    const customer = await db.prepare('SELECT id, name, latitude, longitude, address FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
-    if (!customer) return c.json({ success: false, message: 'Customer not found' }, 404);
-    return c.json({ success: true, data: customer });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/gps-location/verify-customer', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { customer_id, latitude, longitude, max_distance } = await c.req.json();
-    const customer = await db.prepare('SELECT latitude, longitude FROM customers WHERE id = ? AND tenant_id = ?').bind(customer_id, tenantId).first();
-    if (!customer || !customer.latitude || !customer.longitude) return c.json({ success: true, data: { verified: true, distance: 0, message: 'No GPS coordinates set for customer' } });
-    const R = 6371e3;
-    const toRad = (d) => d * Math.PI / 180;
-    const dLat = toRad(latitude - customer.latitude);
-    const dLon = toRad(longitude - customer.longitude);
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(customer.latitude)) * Math.cos(toRad(latitude)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const threshold = max_distance || 200;
-    return c.json({ success: true, data: { verified: distance <= threshold, distance: Math.round(distance), threshold, message: distance <= threshold ? 'Within range' : 'Too far from customer location' } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== UPLOAD PHOTO ROUTE ==========
-api.post('/upload-photo', async (c) => {
-  const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const formData = await c.req.formData();
-    const file = formData.get('file');
-    const entityType = formData.get('entity_type') || 'general';
-    const entityId = formData.get('entity_id') || '';
-    if (!file) return c.json({ success: false, message: 'No file provided' }, 400);
-    const key = `${tenantId}/${entityType}/${entityId}/${Date.now()}-${file.name}`;
-    await c.env.UPLOADS.put(key, file.stream(), { httpMetadata: { contentType: file.type } });
-    const db = c.env.DB; const id = crypto.randomUUID();
-    await db.prepare("INSERT INTO attachments (id, entity_type, entity_id, file_name, file_type, file_size, file_url, uploaded_by, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, entityType, entityId, file.name, file.type, file.size, key, userId, tenantId).run();
-    return c.json({ success: true, data: { id, file_name: file.name, file_url: key } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== COMPREHENSIVE TRANSACTIONS ROUTES ==========
-api.get('/comprehensive-transactions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { type, status, customer_id } = c.req.query();
-    let sql = 'SELECT * FROM comprehensive_transactions WHERE tenant_id = ?';
-    const params = [tenantId];
-    if (type) { sql += ' AND transaction_type = ?'; params.push(type); }
-    if (status) { sql += ' AND status = ?'; params.push(status); }
-    if (customer_id) { sql += ' AND customer_id = ?'; params.push(customer_id); }
-    sql += ' ORDER BY created_at DESC LIMIT 100';
-    const txns = await db.prepare(sql).bind(...params).all();
-    return c.json({ success: true, data: txns.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/comprehensive-transactions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const data = await c.req.json();
-    const id = crypto.randomUUID();
-    const txnNumber = `TXN-${Date.now()}`;
-    await db.prepare("INSERT INTO comprehensive_transactions (id, transaction_number, transaction_type, status, customer_id, total_amount, notes, created_by, tenant_id, created_at) VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, datetime('now'))").bind(id, txnNumber, data.transaction_type || 'sale', data.customer_id || null, data.total_amount || 0, data.notes || '', userId, tenantId).run();
-    if (data.items && Array.isArray(data.items)) {
-      for (const item of data.items) {
-        const itemId = crypto.randomUUID();
-        await db.prepare("INSERT INTO comprehensive_transaction_items (id, transaction_id, product_id, quantity, unit_price, total, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(itemId, id, item.product_id, item.quantity || 1, item.unit_price || 0, (item.quantity || 1) * (item.unit_price || 0), tenantId).run();
-      }
-    }
-    return c.json({ success: true, data: { id, transaction_number: txnNumber } }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/comprehensive-transactions/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const txn = await db.prepare('SELECT * FROM comprehensive_transactions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!txn) return c.json({ success: false, message: 'Transaction not found' }, 404);
-    const items = await db.prepare('SELECT ti.*, p.name as product_name FROM comprehensive_transaction_items ti LEFT JOIN products p ON ti.product_id = p.id WHERE ti.transaction_id = ? AND ti.tenant_id = ?').bind(id, tenantId).all();
-    const payments = await db.prepare('SELECT * FROM comprehensive_transaction_payments WHERE transaction_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: { ...txn, items: items.results || [], payments: payments.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== CURRENCY SYSTEM ROUTES ==========
-api.get('/currency-system/currencies', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const currencies = await db.prepare('SELECT * FROM currencies WHERE tenant_id = ? OR is_global = 1 ORDER BY code ASC').bind(tenantId).all();
-    return c.json({ success: true, data: currencies.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/currency-system/exchange-rates', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const rates = await db.prepare('SELECT * FROM exchange_rate_history WHERE tenant_id = ? ORDER BY effective_date DESC LIMIT 100').bind(tenantId).all();
-    return c.json({ success: true, data: rates.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/currency-system/convert', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { amount, from_currency, to_currency } = await c.req.json();
-    if (!amount || !from_currency || !to_currency) return c.json({ success: false, message: 'amount, from_currency, to_currency required' }, 400);
-    if (from_currency === to_currency) return c.json({ success: true, data: { converted_amount: amount, rate: 1 } });
-    const rate = await db.prepare("SELECT rate FROM exchange_rate_history WHERE from_currency = ? AND to_currency = ? AND tenant_id = ? ORDER BY effective_date DESC LIMIT 1").bind(from_currency, to_currency, tenantId).first();
-    if (!rate) return c.json({ success: false, message: 'No exchange rate found' }, 404);
-    return c.json({ success: true, data: { converted_amount: amount * rate.rate, rate: rate.rate, from_currency, to_currency } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== GPS TRACKING ROUTES ==========
-api.get('/gps-tracking/agents', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const agents = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.role, gl.latitude, gl.longitude, gl.accuracy, gl.created_at as last_location_time FROM users u LEFT JOIN (SELECT user_id, latitude, longitude, accuracy, created_at, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON u.id = gl.user_id AND gl.rn = 1 WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'driver')").bind(tenantId, tenantId).all();
-    return c.json({ success: true, data: agents.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/gps-tracking/agent/:agentId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
-  try {
-    const locations = await db.prepare('SELECT * FROM gps_locations WHERE user_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(agentId, tenantId).all();
-    const agent = await db.prepare('SELECT id, first_name, last_name, email, role FROM users WHERE id = ? AND tenant_id = ?').bind(agentId, tenantId).first();
-    return c.json({ success: true, data: { agent: agent || {}, locations: locations.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== VAN INVENTORY ROUTES ==========
-api.get('/van-inventory/:vanId', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId');
-  try {
-    const inventory = await db.prepare('SELECT vi.*, p.name as product_name, p.sku FROM van_inventory vi LEFT JOIN products p ON vi.product_id = p.id WHERE vi.van_id = ? AND vi.tenant_id = ?').bind(vanId, tenantId).all();
-    return c.json({ success: true, data: inventory.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/van-inventory/:vanId/load', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const vanId = c.req.param('vanId'); const userId = c.get('userId');
-  try {
-    const { items } = await c.req.json();
-    if (!items || !Array.isArray(items)) return c.json({ success: false, message: 'items array required' }, 400);
-    for (const item of items) {
-      const existing = await db.prepare('SELECT id, quantity FROM van_inventory WHERE van_id = ? AND product_id = ? AND tenant_id = ?').bind(vanId, item.product_id, tenantId).first();
-      if (existing) {
-        await db.prepare('UPDATE van_inventory SET quantity = quantity + ?, updated_at = datetime("now") WHERE id = ?').bind(item.quantity || 0, existing.id).run();
-      } else {
-        const id = crypto.randomUUID();
-        await db.prepare("INSERT INTO van_inventory (id, van_id, product_id, quantity, tenant_id, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))").bind(id, vanId, item.product_id, item.quantity || 0, tenantId).run();
-      }
-    }
-    const loadId = crypto.randomUUID();
-    await db.prepare("INSERT INTO van_loads (id, van_id, loaded_by, status, tenant_id, created_at) VALUES (?, ?, ?, 'completed', ?, datetime('now'))").bind(loadId, vanId, userId, tenantId).run();
-    return c.json({ success: true, data: { load_id: loadId }, message: 'Van loaded successfully' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== CASH RECONCILIATION SESSIONS ROUTES ==========
-api.get('/cash-reconciliation/sessions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const sessions = await db.prepare("SELECT cs.*, u.first_name || ' ' || u.last_name as agent_name FROM cash_reconciliation_sessions cs LEFT JOIN users u ON cs.agent_id = u.id WHERE cs.tenant_id = ? ORDER BY cs.created_at DESC LIMIT 100").bind(tenantId).all();
-    return c.json({ success: true, data: sessions.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/cash-reconciliation/sessions/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const session = await db.prepare('SELECT * FROM cash_reconciliation_sessions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!session) return c.json({ success: false, message: 'Session not found' }, 404);
-    const collections = await db.prepare('SELECT * FROM cash_collections WHERE session_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: { ...session, collections: collections.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== DASHBOARD RECENT ACTIVITIES ==========
-api.get('/dashboard/recent-activities', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const orders = await db.prepare("SELECT id, order_number as reference, 'order' as type, order_status as status, total_amount as amount, created_at FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
-    const payments = await db.prepare("SELECT id, reference_number as reference, 'payment' as type, status, amount, created_at FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
-    const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
-    return c.json({ success: true, data: activities });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ========== AGENT TARGETS SYSTEM ==========
-
-// Helper: get all subordinate user IDs for a manager (hierarchy-scoped)
-async function getSubordinateIds(db, tenantId, userId) {
-  const directReports = await db.prepare('SELECT user_id FROM org_hierarchy WHERE manager_id = ? AND tenant_id = ? AND status = ?').bind(userId, tenantId, 'active').all();
-  const ids = (directReports.results || []).map(r => r.user_id);
-  const allIds = [...ids];
-  for (const id of ids) {
-    const childIds = await getSubordinateIds(db, tenantId, id);
-    allIds.push(...childIds);
-  }
-  return allIds;
-}
-
-// Helper: get all child region IDs
-async function getChildRegionIds(db, tenantId, regionId) {
-  const children = await db.prepare('SELECT id FROM regions WHERE parent_id = ? AND tenant_id = ? AND status = ?').bind(regionId, tenantId, 'active').all();
-  const ids = (children.results || []).map(r => r.id);
-  const allIds = [...ids];
-  for (const id of ids) {
-    const grandchildren = await getChildRegionIds(db, tenantId, id);
-    allIds.push(...grandchildren);
-  }
-  return allIds;
-}
-
-// ===== REGIONS CRUD =====
-api.get('/regions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { level, parent_id } = c.req.query();
-    let query = 'SELECT r.*, m.first_name || \' \' || m.last_name as manager_name, p.name as parent_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id LEFT JOIN regions p ON r.parent_id = p.id WHERE r.tenant_id = ?';
-    const params = [tenantId];
-    if (level) { query += ' AND r.level = ?'; params.push(level); }
-    if (parent_id) { query += ' AND r.parent_id = ?'; params.push(parent_id); }
-    query += ' ORDER BY r.level, r.name';
-    const regions = await db.prepare(query).bind(...params).all();
-    return c.json({ success: true, data: regions.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/regions/tree', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const regions = await db.prepare('SELECT r.*, m.first_name || \' \' || m.last_name as manager_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id WHERE r.tenant_id = ? AND r.status = ? ORDER BY r.level, r.name').bind(tenantId, 'active').all();
-    const items = regions.results || [];
-    const buildTree = (parentId) => items.filter(r => r.parent_id === parentId).map(r => ({ ...r, children: buildTree(r.id) }));
-    return c.json({ success: true, data: buildTree(null) });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/regions/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const region = await db.prepare('SELECT r.*, m.first_name || \' \' || m.last_name as manager_name FROM regions r LEFT JOIN users m ON r.manager_id = m.id WHERE r.id = ? AND r.tenant_id = ?').bind(id, tenantId).first();
-    if (!region) return c.json({ success: false, message: 'Region not found' }, 404);
-    const children = await db.prepare('SELECT * FROM regions WHERE parent_id = ? AND tenant_id = ?').bind(id, tenantId).all();
-    const agents = await db.prepare('SELECT oh.*, u.first_name || \' \' || u.last_name as name, u.email FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id WHERE oh.region_id = ? AND oh.tenant_id = ? AND oh.status = ?').bind(id, tenantId, 'active').all();
-    return c.json({ success: true, data: { ...region, children: children.results || [], agents: agents.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/regions', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const body = await c.req.json();
-  try {
-    const id = crypto.randomUUID();
-    await db.prepare('INSERT INTO regions (id, tenant_id, name, code, level, parent_id, manager_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.name, body.code || null, body.level, body.parent_id || null, body.manager_id || null, 'active').run();
-    return c.json({ success: true, data: { id }, message: 'Region created' }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/regions/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
-  try {
-    await db.prepare('UPDATE regions SET name = ?, code = ?, level = ?, parent_id = ?, manager_id = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.name, body.code || null, body.level, body.parent_id || null, body.manager_id || null, body.status || 'active', id, tenantId).run();
-    return c.json({ success: true, message: 'Region updated' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.delete('/regions/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const children = await db.prepare('SELECT COUNT(*) as count FROM regions WHERE parent_id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (children?.count > 0) return c.json({ success: false, message: 'Cannot delete region with child regions' }, 400);
-    await db.prepare('DELETE FROM regions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Region deleted' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// Region reporting
-api.get('/regions/:id/report', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const regionIds = [id, ...(await getChildRegionIds(db, tenantId, id))];
-    const placeholders = regionIds.map(() => '?').join(',');
-    const agentCount = await db.prepare(`SELECT COUNT(DISTINCT user_id) as count FROM org_hierarchy WHERE region_id IN (${placeholders}) AND tenant_id = ? AND status = ?`).bind(...regionIds, tenantId, 'active').first();
-    const targets = await db.prepare(`SELECT target_type, SUM(target_value) as total_target, SUM(achieved_value) as total_achieved FROM agent_targets WHERE region_id IN (${placeholders}) AND tenant_id = ? AND status = ? GROUP BY target_type`).bind(...regionIds, tenantId, 'active').all();
-    const progressToday = await db.prepare(`SELECT SUM(value) as total FROM target_progress WHERE region_id IN (${placeholders}) AND tenant_id = ? AND progress_date = date('now')`).bind(...regionIds, tenantId).first();
-    return c.json({ success: true, data: { region_id: id, agent_count: agentCount?.count || 0, targets_by_type: targets.results || [], today_progress: progressToday?.total || 0 } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ===== ORG HIERARCHY CRUD =====
-api.get('/org-hierarchy', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { role_level, manager_id, region_id } = c.req.query();
-    let query = 'SELECT oh.*, u.first_name || \' \' || u.last_name as user_name, u.email, m.first_name || \' \' || m.last_name as manager_name, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN users m ON oh.manager_id = m.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.tenant_id = ? AND oh.status = ?';
-    const params = [tenantId, 'active'];
-    if (role_level) { query += ' AND oh.role_level = ?'; params.push(role_level); }
-    if (manager_id) { query += ' AND oh.manager_id = ?'; params.push(manager_id); }
-    if (region_id) { query += ' AND oh.region_id = ?'; params.push(region_id); }
-    query += ' ORDER BY oh.role_level, u.first_name';
-    const hierarchy = await db.prepare(query).bind(...params).all();
-    return c.json({ success: true, data: hierarchy.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/org-hierarchy/tree', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const all = await db.prepare('SELECT oh.*, u.first_name || \' \' || u.last_name as user_name, u.email, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.tenant_id = ? AND oh.status = ? ORDER BY oh.role_level').bind(tenantId, 'active').all();
-    const items = all.results || [];
-    const buildTree = (managerId) => items.filter(i => i.manager_id === managerId).map(i => ({ ...i, subordinates: buildTree(i.user_id) }));
-    const topLevel = items.filter(i => !i.manager_id || !items.find(x => x.user_id === i.manager_id));
-    const tree = topLevel.map(i => ({ ...i, subordinates: buildTree(i.user_id) }));
-    return c.json({ success: true, data: tree });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/org-hierarchy/my-team', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-    if (subordinateIds.length === 0) return c.json({ success: true, data: [] });
-    const placeholders = subordinateIds.map(() => '?').join(',');
-    const team = await db.prepare(`SELECT oh.*, u.first_name || ' ' || u.last_name as user_name, u.email, r.name as region_name FROM org_hierarchy oh JOIN users u ON oh.user_id = u.id LEFT JOIN regions r ON oh.region_id = r.id WHERE oh.user_id IN (${placeholders}) AND oh.tenant_id = ? AND oh.status = ?`).bind(...subordinateIds, tenantId, 'active').all();
-    return c.json({ success: true, data: team.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/org-hierarchy', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const body = await c.req.json();
-  try {
-    const id = crypto.randomUUID();
-    await db.prepare('INSERT INTO org_hierarchy (id, tenant_id, user_id, manager_id, role_level, region_id, department, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.user_id, body.manager_id || null, body.role_level, body.region_id || null, body.department || 'field_sales', 'active').run();
-    return c.json({ success: true, data: { id }, message: 'Hierarchy entry created' }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/org-hierarchy/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
-  try {
-    await db.prepare('UPDATE org_hierarchy SET manager_id = ?, role_level = ?, region_id = ?, department = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.manager_id || null, body.role_level, body.region_id || null, body.department || 'field_sales', body.status || 'active', id, tenantId).run();
-    return c.json({ success: true, message: 'Hierarchy entry updated' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.delete('/org-hierarchy/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    await db.prepare('DELETE FROM org_hierarchy WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Hierarchy entry deleted' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ===== AGENT TARGETS CRUD =====
-// Static routes MUST come before /:id wildcard
-api.get('/agent-targets/my', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
-  try {
-    const { period_type, target_type } = c.req.query();
-    let query = 'SELECT at.*, r.name as region_name FROM agent_targets at LEFT JOIN regions r ON at.region_id = r.id WHERE at.agent_id = ? AND at.tenant_id = ?';
-    const params = [userId, tenantId];
-    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
-    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
-    query += ' ORDER BY at.period_start DESC';
-    const targets = await db.prepare(query).bind(...params).all();
-    const targetIds = (targets.results || []).map(t => t.id);
-    let progressMap = {};
-    if (targetIds.length > 0) {
-      const placeholders = targetIds.map(() => '?').join(',');
-      const progress = await db.prepare(`SELECT target_id, progress_date, SUM(value) as daily_total FROM target_progress WHERE target_id IN (${placeholders}) AND tenant_id = ? GROUP BY target_id, progress_date ORDER BY progress_date DESC`).bind(...targetIds, tenantId).all();
-      (progress.results || []).forEach(p => {
-        if (!progressMap[p.target_id]) progressMap[p.target_id] = [];
-        progressMap[p.target_id].push(p);
-      });
-    }
-    const data = (targets.results || []).map(t => ({ ...t, progress: progressMap[t.id] || [] }));
-    return c.json({ success: true, data });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/summary', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
-  try {
-    let agentFilter = '';
-    const params = [tenantId, 'active'];
-    if (role !== 'admin') {
-      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-      const allIds = [userId, ...subordinateIds];
-      const placeholders = allIds.map(() => '?').join(',');
-      agentFilter = ` AND agent_id IN (${placeholders})`;
-      params.push(...allIds);
-    }
-    const summary = await db.prepare(`SELECT target_type, target_scope, period_type, COUNT(*) as target_count, SUM(target_value) as total_target, SUM(achieved_value) as total_achieved, ROUND(CASE WHEN SUM(target_value) > 0 THEN (CAST(SUM(achieved_value) AS REAL) / SUM(target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets WHERE tenant_id = ? AND status = ?${agentFilter} GROUP BY target_type, target_scope, period_type`).bind(...params).all();
-    return c.json({ success: true, data: summary.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/report/by-agent', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
-  try {
-    const { period_type, target_type, region_id } = c.req.query();
-    let agentFilter = '';
-    const params = [tenantId];
-    if (role !== 'admin') {
-      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-      const allIds = [userId, ...subordinateIds];
-      const placeholders = allIds.map(() => '?').join(',');
-      agentFilter = ` AND at.agent_id IN (${placeholders})`;
-      params.push(...allIds);
-    }
-    let extraFilter = '';
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      extraFilter += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    const report = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, at.target_type, at.target_scope, at.period_type, COUNT(*) as target_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${agentFilter}${extraFilter} GROUP BY at.agent_id, at.target_type, at.target_scope, at.period_type ORDER BY achievement_pct DESC`).bind(...params).all();
-    return c.json({ success: true, data: report.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/report/by-region', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { period_type, target_type } = c.req.query();
-    let extraFilter = '';
-    const params = [tenantId];
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    const report = await db.prepare(`SELECT r.id as region_id, r.name as region_name, r.level as region_level, at.target_type, at.period_type, COUNT(DISTINCT at.agent_id) as agent_count, SUM(at.target_value) as total_target, SUM(at.achieved_value) as total_achieved, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?${extraFilter} GROUP BY r.id, at.target_type, at.period_type ORDER BY r.level, r.name`).bind(...params).all();
-    return c.json({ success: true, data: report.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/report/leaderboard', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId');
-  try {
-    const { target_type, period_type, region_id, limit: lim } = c.req.query();
-    let extraFilter = '';
-    const params = [tenantId, 'active'];
-    if (target_type) { extraFilter += ' AND at.target_type = ?'; params.push(target_type); }
-    if (period_type) { extraFilter += ' AND at.period_type = ?'; params.push(period_type); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      extraFilter += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    const limitVal = parseInt(lim) || 20;
-    params.push(limitVal);
-    const leaderboard = await db.prepare(`SELECT at.agent_id, u.first_name || ' ' || u.last_name as agent_name, oh.role_level, r.name as region_name, SUM(at.achieved_value) as total_achieved, SUM(at.target_value) as total_target, ROUND(CASE WHEN SUM(at.target_value) > 0 THEN (CAST(SUM(at.achieved_value) AS REAL) / SUM(at.target_value)) * 100 ELSE 0 END, 1) as achievement_pct FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN org_hierarchy oh ON oh.user_id = at.agent_id AND oh.tenant_id = at.tenant_id AND oh.status = 'active' LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ? AND at.status = ?${extraFilter} GROUP BY at.agent_id ORDER BY achievement_pct DESC LIMIT ?`).bind(...params).all();
-    return c.json({ success: true, data: leaderboard.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// List all targets (hierarchy-scoped)
-api.get('/agent-targets', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const role = c.get('role');
-  try {
-    const { agent_id, target_type, target_scope, period_type, status: targetStatus, region_id } = c.req.query();
-    let query = 'SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, u.email as agent_email, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.tenant_id = ?';
-    const params = [tenantId];
-    if (role !== 'admin') {
-      const subordinateIds = await getSubordinateIds(db, tenantId, userId);
-      const allIds = [userId, ...subordinateIds];
-      const placeholders = allIds.map(() => '?').join(',');
-      query += ` AND at.agent_id IN (${placeholders})`;
-      params.push(...allIds);
-    }
-    if (agent_id) { query += ' AND at.agent_id = ?'; params.push(agent_id); }
-    if (target_type) { query += ' AND at.target_type = ?'; params.push(target_type); }
-    if (target_scope) { query += ' AND at.target_scope = ?'; params.push(target_scope); }
-    if (period_type) { query += ' AND at.period_type = ?'; params.push(period_type); }
-    if (targetStatus) { query += ' AND at.status = ?'; params.push(targetStatus); }
-    if (region_id) {
-      const regionIds = [region_id, ...(await getChildRegionIds(db, tenantId, region_id))];
-      const rp = regionIds.map(() => '?').join(',');
-      query += ` AND at.region_id IN (${rp})`;
-      params.push(...regionIds);
-    }
-    query += ' ORDER BY at.period_start DESC, u.first_name';
-    const targets = await db.prepare(query).bind(...params).all();
-    return c.json({ success: true, data: targets.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// Wildcard routes AFTER static routes
-api.get('/agent-targets/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const target = await db.prepare('SELECT at.*, u.first_name || \' \' || u.last_name as agent_name, r.name as region_name FROM agent_targets at JOIN users u ON at.agent_id = u.id LEFT JOIN regions r ON at.region_id = r.id WHERE at.id = ? AND at.tenant_id = ?').bind(id, tenantId).first();
-    if (!target) return c.json({ success: false, message: 'Target not found' }, 404);
-    const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC').bind(id, tenantId).all();
-    return c.json({ success: true, data: { ...target, progress: progress.results || [] } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/agent-targets', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const body = await c.req.json();
-  try {
-    const id = crypto.randomUUID();
-    await db.prepare('INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_scope, period_type, period_start, period_end, target_value, region_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, body.agent_id, body.target_type, body.target_scope, body.period_type, body.period_start, body.period_end, body.target_value, body.region_id || null, body.notes || null, userId).run();
-    return c.json({ success: true, data: { id }, message: 'Target created' }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/agent-targets/bulk', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const body = await c.req.json();
-  try {
-    const targets = body.targets || [];
-    const ids = [];
-    for (const t of targets) {
-      const id = crypto.randomUUID();
-      await db.prepare('INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_scope, period_type, period_start, period_end, target_value, region_id, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(id, tenantId, t.agent_id, t.target_type, t.target_scope, t.period_type, t.period_start, t.period_end, t.target_value, t.region_id || null, t.notes || null, userId).run();
-      ids.push(id);
-    }
-    return c.json({ success: true, data: { ids, count: ids.length }, message: `${ids.length} targets created` }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.put('/agent-targets/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param(); const body = await c.req.json();
-  try {
-    await db.prepare('UPDATE agent_targets SET target_value = ?, status = ?, notes = ?, region_id = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(body.target_value, body.status || 'active', body.notes || null, body.region_id || null, id, tenantId).run();
-    return c.json({ success: true, message: 'Target updated' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.delete('/agent-targets/:id', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    await db.prepare('DELETE FROM target_progress WHERE target_id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    await db.prepare('DELETE FROM agent_targets WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Target deleted' });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ===== TARGET PROGRESS =====
-api.post('/agent-targets/:id/progress', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const { id } = c.req.param(); const body = await c.req.json();
-  try {
-    const target = await db.prepare('SELECT * FROM agent_targets WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!target) return c.json({ success: false, message: 'Target not found' }, 404);
-    const progressId = crypto.randomUUID();
-    const progressDate = body.progress_date || new Date().toISOString().split('T')[0];
-    await db.prepare('INSERT INTO target_progress (id, tenant_id, target_id, agent_id, progress_date, value, reference_type, reference_id, customer_id, customer_name, region_id, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(progressId, tenantId, id, target.agent_id, progressDate, body.value || 1, body.reference_type || null, body.reference_id || null, body.customer_id || null, body.customer_name || null, target.region_id || null, body.notes || null).run();
-    const newAchieved = (target.achieved_value || 0) + (body.value || 1);
-    const newStatus = newAchieved >= target.target_value ? 'completed' : 'active';
-    await db.prepare('UPDATE agent_targets SET achieved_value = ?, status = ?, updated_at = datetime(\'now\') WHERE id = ? AND tenant_id = ?').bind(newAchieved, newStatus, id, tenantId).run();
-    return c.json({ success: true, data: { id: progressId, achieved_value: newAchieved, status: newStatus }, message: 'Progress recorded' }, 201);
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/agent-targets/:id/progress', async (c) => {
-  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
-  try {
-    const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC, created_at DESC').bind(id, tenantId).all();
-    return c.json({ success: true, data: progress.results || [] });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ==================== AI Routes (Cloudflare Workers AI) ====================
-
-api.post('/ai/chat', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const body = await c.req.json();
-    const messages = body.messages || [{ role: 'user', content: body.prompt || '' }];
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages, max_tokens: body.max_tokens || 1024 });
-    return c.json({ success: true, data: { response: result.response } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/analyze', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const body = await c.req.json();
-    const analysisType = body.type || 'general';
-    let contextData = body.data || {};
-
-    if (!body.data && analysisType !== 'general') {
-      const tableMap = { fraud_detection: 'orders', performance_insights: 'visits', customer_behavior: 'customers', order_patterns: 'orders', product_performance: 'products', inventory: 'inventory' };
-      const table = tableMap[analysisType] || 'orders';
-      const { results } = await db.prepare(`SELECT * FROM ${table} WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50`).bind(tenantId).all();
-      contextData = results || [];
-    }
-
-    const systemPrompt = `You are an AI analyst for a field force management and sales system called SalesSync. Analyze the provided data and return insights as valid JSON only, no markdown.`;
-    const typePrompts = {
-      fraud_detection: `Analyze this data for fraud indicators (location anomalies, time patterns, duplicates, suspicious behavior). Return JSON: {"risk_score": number 0-100, "fraud_indicators": string[], "recommendations": string[], "confidence": number 0-1}`,
-      performance_insights: `Analyze this performance data. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
-      customer_behavior: `Analyze customer behavior patterns. Return JSON: {"behavior_patterns": string[], "churn_risk": number 0-1, "value_prediction": number, "recommendations": string[]}`,
-      order_patterns: `Analyze order patterns and trends. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
-      product_performance: `Analyze product performance. Return JSON: {"insights": string[], "top_products": string[], "underperforming": string[], "recommendations": string[]}`,
-      inventory: `Analyze inventory levels and predict needs. Return JSON: {"insights": string[], "reorder_suggestions": [{"product": string, "quantity": number, "urgency": "low"|"medium"|"high"}], "recommendations": string[]}`,
-      general: `Provide general business insights. Return JSON: {"insights": string[], "recommendations": string[]}`
-    };
-
-    const userPrompt = `${typePrompts[analysisType] || typePrompts.general}\n\nData: ${JSON.stringify(contextData).slice(0, 4000)}`;
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 1024 });
-
-    let parsed;
-    try {
-      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
-      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [result.response], recommendations: [] };
-    } catch { parsed = { insights: [result.response], recommendations: [] }; }
-
-    return c.json({ success: true, data: parsed });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/field-agents/:agentId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { agentId } = c.req.param();
-    const timeRange = c.req.query('time_range') || '7d';
-
-    const { results: visits } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for field agent performance. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this field agent data (time range: ${timeRange}). Visits: ${JSON.stringify(visits || []).slice(0, 2000)}. Orders: ${JSON.stringify(orders || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "field_agents", "type": "trend"|"recommendation"|"anomaly", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = [{ id: '1', module: 'field_agents', type: 'trend', title: 'Analysis Complete', description: result.response, confidence: 0.8, severity: 'low', data: {}, created_at: new Date().toISOString() }]; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/customers/:customerId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { customerId } = c.req.param();
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, customerId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for customer behavior. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "customers", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/chat/customers/:customerId/fraud-check', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { customerId } = c.req.param();
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId, customerId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are a fraud detection AI. Return valid JSON array of fraud detections only.' },
-        { role: 'user', content: `Check for fraud in this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "customers", "type": "pattern_anomaly"|"suspicious_behavior", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let detections;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { detections = []; }
-
-    return c.json({ success: true, data: detections });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/orders/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const timeRange = c.req.query('time_range') || '7d';
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for order patterns. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze order patterns (time range: ${timeRange}). Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "orders", "type": "trend"|"prediction", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { orderId } = c.req.param();
-
-    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
-    if (!order) return c.json({ success: true, data: [] });
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are a fraud detection AI for orders. Return valid JSON array only.' },
-        { role: 'user', content: `Check this order for fraud: ${JSON.stringify(order)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "orders", "type": "pattern_anomaly"|"duplicate_transaction", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
-      ],
-      max_tokens: 512
-    });
-
-    let detections;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { detections = []; }
-
-    return c.json({ success: true, data: detections });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/products/:productId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { productId } = c.req.param();
-
-    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
-    const { results: orderItems } = await db.prepare('SELECT * FROM order_items WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(productId, tenantId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for product performance. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this product. Product: ${JSON.stringify(product || {})}. Recent order items: ${JSON.stringify(orderItems || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "products", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/comprehensive-analysis', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-
-    const { results: orders } = await db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: customers } = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: visits } = await db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: products } = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).all();
-
-    const summary = { orders: orders?.[0] || {}, customers: customers?.[0] || {}, visits: visits?.[0] || {}, products: products?.[0] || {} };
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for a comprehensive business dashboard. Return valid JSON only.' },
-        { role: 'user', content: `Provide comprehensive business analysis. Summary: ${JSON.stringify(summary)}. Return JSON: {"field_agents": {"performance_insights": [], "fraud_alerts": [], "location_anomalies": [], "commission_predictions": []}, "customers": {"behavior_insights": [], "churn_predictions": [], "value_predictions": []}, "orders": {"pattern_insights": [], "fraud_detection": [], "demand_predictions": []}, "products": {"performance_insights": [], "inventory_predictions": [], "pricing_recommendations": []}}` }
-      ],
-      max_tokens: 2048
-    });
-
-    let analysis;
-    try {
-      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
-      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
-    } catch { analysis = {}; }
-
-    const defaultAnalysis = {
-      field_agents: { performance_insights: [], fraud_alerts: [], location_anomalies: [], commission_predictions: [] },
-      customers: { behavior_insights: [], churn_predictions: [], value_predictions: [] },
-      orders: { pattern_insights: [], fraud_detection: [], demand_predictions: [] },
-      products: { performance_insights: [], inventory_predictions: [], pricing_recommendations: [] }
-    };
-
-    return c.json({ success: true, data: { ...defaultAnalysis, ...analysis } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/config', authMiddleware, async (c) => {
-  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true } } });
-});
-
-api.put('/ai/chat/config', authMiddleware, async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true }, ...body } });
 });
 
 export default app;

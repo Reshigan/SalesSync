@@ -110,7 +110,7 @@ export default function CommissionPayoutsList() {
       data={payouts}
       loading={loading}
       onRefresh={loadPayouts}
-      onExport={() => exportToCSV(payouts as Record<string, unknown>[], 'commission-payouts')}
+      onExport={() => exportToCSV(payouts as Record<string, unknown>[], 'commissionpayouts')}
     />
   )
 }

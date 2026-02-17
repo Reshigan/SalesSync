@@ -121,7 +121,7 @@ export default function KYCCasesList() {
       data={kycCases}
       loading={loading}
       onRefresh={loadKYCCases}
-      onExport={() => exportToCSV(cases as Record<string, unknown>[], 'kyc-cases')}
+      onExport={() => exportToCSV(kycCases as Record<string, unknown>[], 'kyccases')}
       createPath="/crm/kyc-cases/create"
       createLabel="Create KYC Case"
     />

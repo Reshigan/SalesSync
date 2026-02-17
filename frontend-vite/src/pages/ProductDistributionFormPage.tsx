@@ -225,6 +225,7 @@ const ProductDistributionFormPage: React.FC = () => {
                 <label className="block text-sm text-gray-700 mb-2">Recipient Photo</label>
                 {formData.recipientPhoto ? (
                   <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    {previews.recipientPhoto && <img src={previews.recipientPhoto} alt="Recipient" className="h-12 w-12 object-cover rounded" />}
                     <span className="text-green-700">✓ Photo captured</span>
                     <button type="button" onClick={captureRecipientPhoto} className="text-sm text-blue-600">
                       Retake
@@ -245,6 +246,7 @@ const ProductDistributionFormPage: React.FC = () => {
                 <label className="block text-sm text-gray-700 mb-2">ID Document Photo</label>
                 {formData.idDocumentPhoto ? (
                   <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    {previews.idDocumentPhoto && <img src={previews.idDocumentPhoto} alt="ID" className="h-12 w-12 object-cover rounded" />}
                     <span className="text-green-700">✓ ID captured</span>
                     <button type="button" onClick={captureIdPhoto} className="text-sm text-blue-600">
                       Retake
@@ -268,6 +270,7 @@ const ProductDistributionFormPage: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-3">Recipient Signature *</label>
             {formData.recipientSignature ? (
               <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                {previews.recipientSignature && <img src={previews.recipientSignature} alt="Signature" className="h-12 w-16 object-cover rounded" />}
                 <span className="text-green-700">✓ Signature captured</span>
                 <button type="button" onClick={captureSignature} className="text-sm text-blue-600">
                   Recapture

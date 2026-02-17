@@ -109,7 +109,7 @@ export default function VanSalesReturnsList() {
       data={returns}
       loading={loading}
       onRefresh={loadReturns}
-      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'van-sales-returns')}
+      onExport={() => exportToCSV(returns as Record<string, unknown>[], 'vansalesreturns')}
       createPath="/van-sales/returns/create"
       createLabel="Create Return"
     />

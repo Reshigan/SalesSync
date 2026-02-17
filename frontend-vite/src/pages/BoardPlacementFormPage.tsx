@@ -51,16 +51,15 @@ const BoardPlacementFormPage: React.FC = () => {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const preview = URL.createObjectURL(file);
-    setPhotoPreview(preview);
+    setPhotoPreview(URL.createObjectURL(file));
     try {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('type', 'board-placement');
       const res = await apiClient.post('/uploads', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setFormData({ ...formData, placementPhoto: res.data.data?.url || preview });
+      setFormData({ ...formData, placementPhoto: res.data.data?.url || URL.createObjectURL(file) });
     } catch {
-      setFormData({ ...formData, placementPhoto: preview });
+      setFormData({ ...formData, placementPhoto: URL.createObjectURL(file) });
     }
   };
 

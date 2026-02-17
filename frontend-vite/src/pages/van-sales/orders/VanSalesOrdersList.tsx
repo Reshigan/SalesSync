@@ -138,7 +138,7 @@ export default function VanSalesOrdersList() {
       data={orders}
       loading={loading}
       onRefresh={loadOrders}
-      onExport={() => exportToCSV(orders as Record<string, unknown>[], 'van-sales-orders')}
+      onExport={() => exportToCSV(orders as Record<string, unknown>[], 'vansalesorders')}
       createPath="/van-sales/orders/create"
       createLabel="Create Order"
     />

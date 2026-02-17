@@ -109,7 +109,7 @@ export default function CreditNotesList() {
       data={creditNotes}
       loading={loading}
       onRefresh={loadCreditNotes}
-      onExport={() => exportToCSV(creditNotes as Record<string, unknown>[], 'credit-notes')}
+      onExport={() => exportToCSV(creditNotes as Record<string, unknown>[], 'creditnotes')}
       createPath="/sales/credit-notes/create"
       createLabel="Create Credit Note"
     />

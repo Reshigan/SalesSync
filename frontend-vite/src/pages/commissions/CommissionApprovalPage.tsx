@@ -63,7 +63,7 @@ export const CommissionApprovalPage: React.FC = () => {
       ))
       setPendingCommissions(prev => prev.filter(c => !selectedCommissions.has(c.id)))
       setSelectedCommissions(new Set())
-    } catch {
+    } catch (err) {
       alert('Failed to approve commissions')
     }
   }
@@ -78,7 +78,7 @@ export const CommissionApprovalPage: React.FC = () => {
       setSelectedCommissions(new Set())
       setRejectionReason('')
       setShowRejectModal(false)
-    } catch {
+    } catch (err) {
       alert('Failed to reject commissions')
     }
   }

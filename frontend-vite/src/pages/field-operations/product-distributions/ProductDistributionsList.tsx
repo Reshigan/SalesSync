@@ -134,7 +134,7 @@ export default function ProductDistributionsList() {
       data={distributions}
       loading={loading}
       onRefresh={loadDistributions}
-      onExport={() => exportToCSV(distributions as Record<string, unknown>[], 'product-distributions')}
+      onExport={() => exportToCSV(distributions as Record<string, unknown>[], 'productdistributions')}
       createPath="/field-operations/product-distributions/create"
       createLabel="Create Distribution"
     />

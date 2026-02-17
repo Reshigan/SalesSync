@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import tradeMarketingService from '../services/tradeMarketing.service';
+import { tradeMarketingService } from '../services/tradeMarketing.service';
 import { apiClient } from '../services/api.service';
 
 const ShelfAnalyticsFormPage: React.FC = () => {
