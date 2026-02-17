@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Play, Star } from 'lucide-react';
 import { apiClient } from '../../services/api.service'
 
 interface Template { id: number; name: string; description: string; category: string; popular: boolean; }
 
 const ReportTemplatesPage: React.FC = () => {
-  const [templates] = useState<Template[]>([
-    { id: 1, name: 'Daily Sales Summary', description: 'Total sales, orders, and revenue by day', category: 'Sales', popular: true },
-    { id: 2, name: 'Agent Performance', description: 'Visits, placements, and commissions by agent', category: 'Performance', popular: true },
-    { id: 3, name: 'Commission Payout Report', description: 'Detailed commission breakdown for payroll', category: 'Finance', popular: true },
-    { id: 4, name: 'Board Placement Tracking', description: 'All board placements with GPS and photos', category: 'Field Marketing', popular: false },
-    { id: 5, name: 'Shelf Analytics Report', description: 'Brand share and SKU availability metrics', category: 'Trade Marketing', popular: false },
-    { id: 6, name: 'Customer Visit History', description: 'Complete visit logs with timestamps', category: 'Operations', popular: false },
-    { id: 7, name: 'Inventory Stock Report', description: 'Current stock levels and reorder points', category: 'Inventory', popular: false },
-    { id: 8, name: 'Territory Coverage Map', description: 'Geographic coverage and agent assignments', category: 'Territory', popular: false },
-  ]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  const fetchTemplates = async () => {
+    try {
+      const res = await apiClient.get('/reports/templates');
+      const raw = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.templates || []);
+      setTemplates(raw.map((t: any) => ({
+        id: Number(t.id || t.template_id),
+        name: t.name || t.report_name || 'Untitled',
+        description: t.description || '',
+        category: t.category || t.report_type || 'General',
+        popular: Boolean(t.popular || t.is_popular)
+      })));
+    } catch (err) {
+      console.error('Failed to fetch report templates:', err);
+    }
+  };
 
   const runTemplate = async (templateId: number) => {
     try {
