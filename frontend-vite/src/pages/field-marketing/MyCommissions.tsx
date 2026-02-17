@@ -126,7 +126,7 @@ export default function MyCommissions() {
                 <Filter className="w-4 h-4 mr-2" />
                 Filters
               </button>
-              <button className="flex items-center px-3 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50">
+              <button className="flex items-center px-3 py-2 text-sm border border-gray-200 rounded-xl hover:bg-gray-50" onClick={() => window.print()}>
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </button>
@@ -393,18 +393,18 @@ export default function MyCommissions() {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center">
+                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center" onClick={() => window.open(`https://maps.google.com/?q=${selectedCommission?.location?.lat || 0},${selectedCommission?.location?.lng || 0}`, '_blank')}>
                   <MapPin className="w-4 h-4 mr-2" />
                   View on Map
                 </button>
-                <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center justify-center">
+                <button className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center justify-center" onClick={() => alert('No photos available for this commission')}>
                   <Camera className="w-4 h-4 mr-2" />
                   View Photos
                 </button>
               </div>
 
               {selectedCommission.status === 'rejected' && (
-                <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+                <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700" onClick={() => window.open('mailto:manager@company.com?subject=Commission Dispute', '_self')}>
                   Contact Manager
                 </button>
               )}

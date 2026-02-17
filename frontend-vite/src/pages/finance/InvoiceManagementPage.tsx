@@ -232,13 +232,13 @@ export default function InvoiceManagementPage() {
                     >
                       <Eye className="w-4 h-4" />
                     </button>
-                    <button className="text-gray-600 hover:text-gray-900">
+                    <button className="text-gray-600 hover:text-gray-900" onClick={() => window.print()}>
                       <Printer className="w-4 h-4" />
                     </button>
-                    <button className="text-green-600 hover:text-green-900">
+                    <button className="text-green-600 hover:text-green-900" onClick={() => window.print()}>
                       <Download className="w-4 h-4" />
                     </button>
-                    <button className="text-purple-600 hover:text-purple-900">
+                    <button className="text-purple-600 hover:text-purple-900" onClick={() => navigate(`/finance/invoices/${invoice.id}`)}>
                       <Send className="w-4 h-4" />
                     </button>
                   </td>
@@ -329,7 +329,7 @@ export default function InvoiceManagementPage() {
                 <Download className="w-4 h-4" />
                 Download PDF
               </button>
-              <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/finance/invoices/create')}>
+              <button className="btn btn-primary flex items-center gap-2" onClick={() => window.open(`mailto:?subject=Invoice ${selectedInvoice.invoiceNumber}&body=Please find attached invoice ${selectedInvoice.invoiceNumber}`, '_self')}>
                 <Send className="w-4 h-4" />
                 Send Email
               </button>

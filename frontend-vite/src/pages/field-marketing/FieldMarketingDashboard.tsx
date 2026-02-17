@@ -53,7 +53,7 @@ export default function FieldMarketingDashboard() {
 
       {/* Content */}
       <div className="w-full">
-        {activeTab === 'overview' && <OverviewTab />}
+        {activeTab === 'overview' && <OverviewTab setActiveTab={setActiveTab} />}
         {activeTab === 'boards' && <BoardManagement />}
         {activeTab === 'products' && <ProductsTab />}
         {activeTab === 'commissions' && <CommissionDashboard />}
@@ -63,7 +63,7 @@ export default function FieldMarketingDashboard() {
   )
 }
 
-function OverviewTab() {
+function OverviewTab({ setActiveTab }: { setActiveTab: (tab: TabType) => void }) {
   const [stats, setStats] = useState({
     activeBoards: 0,
     installations: 0,
@@ -157,7 +157,7 @@ function OverviewTab() {
       <div className="bg-white p-6 rounded-2xl shadow-sm">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+          <button onClick={() => setActiveTab('boards')} className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
             <Package className="w-6 h-6 text-blue-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Create New Board</p>
@@ -165,7 +165,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+          <button onClick={() => setActiveTab('installations')} className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
             <MapPin className="w-6 h-6 text-green-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">View Installations</p>
@@ -173,7 +173,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+          <button onClick={() => setActiveTab('products')} className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
             <BarChart3 className="w-6 h-6 text-purple-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Product Distributions</p>
@@ -181,7 +181,7 @@ function OverviewTab() {
             </div>
           </button>
 
-          <button className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors">
+          <button onClick={() => setActiveTab('commissions')} className="flex items-center gap-3 p-4 border-2 border-gray-100 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-colors">
             <DollarSign className="w-6 h-6 text-yellow-600" />
             <div className="text-left">
               <p className="font-medium text-gray-900">Review Commissions</p>
