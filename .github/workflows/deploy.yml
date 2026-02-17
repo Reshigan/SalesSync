@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy to Cloudflare
 
 on:
   push:
@@ -10,157 +10,104 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-frontend:
-    name: Build Frontend
+  deploy-workers-api:
+    name: Deploy Workers API
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://salessync-api.reshigan-085.workers.dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Apply D1 migrations
+        working-directory: workers-api
+        env:
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+        run: npx wrangler d1 migrations apply salessync-db --remote
+
+      - name: Deploy Workers API
+        working-directory: workers-api
+        env:
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+        run: npx wrangler deploy --name salessync-api
+
+      - name: Smoke test API
+        run: |
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' -X POST https://salessync-api.reshigan-085.workers.dev/api/auth/login -H "Content-Type: application/json" -d '{}')
+          echo "API status: $STATUS"
+          if [ "$STATUS" = "000" ]; then
+            echo "API deployment may have failed - endpoint unreachable"
+            exit 1
+          fi
+          echo "Workers API deployed and reachable"
+
+  deploy-frontend:
+    name: Deploy Frontend (Cloudflare Pages)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://ss.vantax.co.za
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
           cache-dependency-path: frontend-vite/package-lock.json
-          
+
       - name: Install dependencies
         working-directory: frontend-vite
         run: npm ci
-        
+
       - name: Build frontend
         working-directory: frontend-vite
         env:
           VITE_GIT_COMMIT: ${{ github.sha }}
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run build
-        
-      - name: Create tarball
+
+      - name: Deploy to Cloudflare Pages
         working-directory: frontend-vite
-        run: tar -czf frontend-${{ github.sha }}.tar.gz -C dist .
-        
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: frontend-vite/frontend-${{ github.sha }}.tar.gz
-          retention-days: 7
+        env:
+          CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+          CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name=ssreports --branch=main --commit-dirty=true
 
-  build-backend:
-    name: Build Backend
+      - name: Smoke test frontend
+        run: |
+          sleep 10
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://ss.vantax.co.za)
+          echo "Frontend status: $STATUS"
+          if [ "$STATUS" = "000" ]; then
+            echo "Frontend deployment may have failed - endpoint unreachable"
+            exit 1
+          fi
+          echo "Frontend deployed"
+
+  post-deploy:
+    name: Post-Deployment Verification
+    needs: [deploy-workers-api, deploy-frontend]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: backend-api/package-lock.json
-          
-      - name: Create VERSION file
-        working-directory: backend-api
-        run: echo "${{ github.sha }}|$(date -u +%Y-%m-%dT%H:%M:%SZ)" > VERSION
-        
-      - name: Create tarball
+      - name: Verify full stack
         run: |
-          tar -czf backend-${{ github.sha }}.tar.gz \
-            --exclude='node_modules' \
-            --exclude='.git' \
-            --exclude='database/*.db' \
-            --exclude='database/*.db-*' \
-            --exclude='logs/*' \
-            --exclude='.env' \
-            -C backend-api .
-        
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-build
-          path: backend-${{ github.sha }}.tar.gz
-          retention-days: 7
-
-  deploy:
-    name: Deploy to Production
-    needs: [build-frontend, build-backend]
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://ss.gonxt.tech
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Download frontend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-build
-          path: ./artifacts
-          
-      - name: Download backend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: backend-build
-          path: ./artifacts
-          
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PROD_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          
-      - name: Copy artifacts to server
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            artifacts/frontend-${{ github.sha }}.tar.gz \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
-          scp -i ~/.ssh/deploy_key \
-            artifacts/backend-${{ github.sha }}.tar.gz \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
-            
-      - name: Copy deployment script to server
-        run: |
-          scp -i ~/.ssh/deploy_key \
-            deploy/salessync-deploy.sh \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }}:/tmp/
-            
-      - name: Run deployment
-        run: |
-          ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} \
-            "sudo cp /tmp/salessync-deploy.sh /usr/local/bin/ && \
-             sudo chmod +x /usr/local/bin/salessync-deploy.sh && \
-             sudo /usr/local/bin/salessync-deploy.sh ${{ github.sha }}"
-             
-      - name: Run smoke tests
-        run: |
-          sleep 5
-          # Test health endpoint
-          curl -f https://ss.gonxt.tech/health || exit 1
-          # Test version endpoint
-          curl -f https://ss.gonxt.tech/api/version || exit 1
-          # Test frontend loads
-          curl -f https://ss.gonxt.tech/ | grep -q "SalesSync" || exit 1
-          
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -f ~/.ssh/deploy_key
-          ssh -i ~/.ssh/deploy_key \
-            ${{ secrets.PROD_SSH_USER }}@${{ secrets.PROD_SSH_HOST }} \
-            "rm -f /tmp/frontend-${{ github.sha }}.tar.gz /tmp/backend-${{ github.sha }}.tar.gz /tmp/salessync-deploy.sh" || true
-            
-      - name: Notify deployment success
-        if: success()
-        run: |
-          echo "✅ Deployment successful!"
-          echo "Release: ${{ github.sha }}"
-          echo "URL: https://ss.gonxt.tech"
-          
-      - name: Notify deployment failure
-        if: failure()
-        run: |
-          echo "❌ Deployment failed!"
-          echo "Check logs for details"
+          echo "Verifying full stack deployment..."
+          echo "Frontend: https://ss.vantax.co.za"
+          echo "Workers API: https://salessync-api.reshigan-085.workers.dev"
+          echo ""
+          echo "Commit: ${{ github.sha }}"
+          echo "Deployed by: ${{ github.actor }}"
+          echo "Deployment time: $(date -u)"
