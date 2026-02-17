@@ -89,6 +89,7 @@ export default function DashboardLayout() {
         onClick={() => setHelpPanelOpen(true)}
         className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all hover:scale-105"
         title="Help & Training"
+        data-tour="help-button"
       >
         <HelpCircle className="h-6 w-6" />
       </button>
