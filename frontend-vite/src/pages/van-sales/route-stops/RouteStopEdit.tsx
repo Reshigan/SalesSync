@@ -1,20 +1,13 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { ArrowLeft } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { MapPin, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import FlowWizard, { WizardStep } from '../../../components/ui/FlowWizard'
 import { apiClient } from '../../../services/api.service'
-
-interface StopFormData {
-  planned_arrival: string
-  planned_departure: string
-  notes: string
-}
 
 export default function RouteStopEdit() {
   const { routeId, stopId } = useParams<{ routeId: string; stopId: string }>()
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
 
   const { data: stop, isLoading } = useQuery({
     queryKey: ['route-stop', routeId, stopId],
@@ -24,107 +17,43 @@ export default function RouteStopEdit() {
     },
   })
 
-  const { register, handleSubmit, formState: { errors } } = useForm<StopFormData>({
-    values: stop,
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: StopFormData) => {
-      return data
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['route-stop', routeId, stopId] })
-      queryClient.invalidateQueries({ queryKey: ['route', routeId] })
-      toast.success('Stop updated successfully')
-      navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)
-    },
-    onError: () => {
-      toast.error('Failed to update stop')
-    },
-  })
-
   if (isLoading) {
-    return <div className="p-6">Loading...</div>
+    return <div className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div>
   }
 
-  if (!stop) {
-    return <div className="p-6">Stop not found</div>
+  const steps: WizardStep[] = [
+    {
+      id: 'schedule',
+      title: 'Stop Schedule',
+      description: 'Update arrival and departure times',
+      fields: [
+        { name: 'planned_arrival', label: 'Planned Arrival Time', type: 'date', required: true, autoFocus: true },
+        { name: 'planned_departure', label: 'Planned Departure Time', type: 'date', required: true },
+        { name: 'notes', label: 'Notes', type: 'textarea', placeholder: 'Any special instructions or notes...', colSpan: 2 },
+      ],
+    },
+  ]
+
+  const handleSubmit = async (data: Record<string, any>) => {
+    try {
+      await apiClient.put(`/route-stops/${stopId}`, data)
+      toast.success('Stop updated successfully')
+      navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to update stop')
+    }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <button
-          onClick={() => navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          Back to Stop
-        </button>
-        <h1 className="text-2xl font-bold text-gray-900">Edit Route Stop</h1>
-        <p className="text-gray-600">{stop.customer_name}</p>
-      </div>
-
-      <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Planned Arrival Time *
-            </label>
-            <input
-              type="datetime-local"
-              {...register('planned_arrival', { required: 'Planned arrival is required' })}
-              className="input"
-            />
-            {errors.planned_arrival && (
-              <p className="mt-1 text-sm text-red-600">{errors.planned_arrival.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Planned Departure Time *
-            </label>
-            <input
-              type="datetime-local"
-              {...register('planned_departure', { required: 'Planned departure is required' })}
-              className="input"
-            />
-            {errors.planned_departure && (
-              <p className="mt-1 text-sm text-red-600">{errors.planned_departure.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Notes
-            </label>
-            <textarea
-              {...register('notes')}
-              rows={3}
-              className="input"
-              placeholder="Any special instructions or notes..."
-            />
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary"
-            >
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)}
-              className="btn-secondary"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </form>
-    </div>
+    <FlowWizard
+      title="Edit Route Stop"
+      subtitle={stop?.customer_name || `Stop #${stopId}`}
+      steps={steps}
+      onSubmit={handleSubmit}
+      onCancel={() => navigate(`/van-sales/routes/${routeId}/stops/${stopId}`)}
+      submitLabel="Save Changes"
+      initialData={stop || {}}
+      icon={<MapPin className="w-5 h-5" />}
+    />
   )
 }
