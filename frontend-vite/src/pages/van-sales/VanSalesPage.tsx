@@ -320,7 +320,7 @@ export default function VanSalesPage() {
                       {van.location}
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/van-sales/orders?van=${van.id}`)}>
                         View Details
                       </Button>
                     </td>

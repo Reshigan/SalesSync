@@ -1,9 +1,11 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vanSalesService } from '../../services/vanSales.service'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Edit, Trash2, MapPin, TrendingUp, Calendar, Truck } from 'lucide-react'
 
 export default function VanRoutesListPage() {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState({ page: 1, limit: 20, status: '' })
   const queryClient = useQueryClient()
 
@@ -37,7 +39,7 @@ export default function VanRoutesListPage() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Routes</h1><p className="text-sm text-gray-600 mt-1">Manage van routes ({total} total)</p></div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Create Route</span></button>
+        <button onClick={() => navigate('/van-sales/route-stops')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Create Route</span></button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -71,7 +73,7 @@ export default function VanRoutesListPage() {
                     <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(route.route_date).toLocaleDateString()}</td>
                     <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-900">{route.completed_stops}/{route.planned_stops}</div><div className="w-full bg-gray-200 rounded-full h-2 mt-1"><div className="bg-blue-600 h-2 rounded-full" style={{width: `${(route.completed_stops/route.planned_stops)*100}%`}}></div></div></td>
                     <td className="px-3 py-3 sm:px-4">{getStatusBadge(route.status)}</td>
-                    <td className="px-3 py-3 sm:px-4"><div className="flex space-x-2"><button className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(route.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
+                    <td className="px-3 py-3 sm:px-4"><div className="flex space-x-2"><button onClick={() => navigate(`/van-sales/routes/${route.id}`)} className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(route.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
                   </tr>
                 ))
               )}
