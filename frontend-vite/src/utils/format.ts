@@ -5,22 +5,22 @@ export const formatCurrency = formatCurrencyUtil
 
 // Date formatting utilities
 export const formatDate = (
-  date: string | Date, 
+  date: string | Date | null | undefined, 
   optionsOrFormat?: {
     format?: 'short' | 'medium' | 'long' | 'full'
     includeTime?: boolean
     locale?: string
   } | string
 ): string => {
+  if (!date) return ''
+
   let options: {
     format?: 'short' | 'medium' | 'long' | 'full'
     includeTime?: boolean
     locale?: string
   }
 
-  // Handle string format parameter (e.g., 'MMM dd')
   if (typeof optionsOrFormat === 'string') {
-    // Convert common format strings to options
     if (optionsOrFormat === 'MMM dd') {
       options = { format: 'short' }
     } else {
@@ -35,7 +35,7 @@ export const formatDate = (
   const dateObj = typeof date === 'string' ? new Date(date) : date
   
   if (isNaN(dateObj.getTime())) {
-    return 'Invalid Date'
+    return ''
   }
 
   // Handle specific format strings
@@ -81,8 +81,10 @@ export const formatDateTime = (date: string | Date): string => {
 }
 
 // Format relative time (e.g., "2 hours ago")
-export const formatRelativeTime = (date: string | Date): string => {
+export const formatRelativeTime = (date: string | Date | null | undefined): string => {
+  if (!date) return ''
   const dateObj = typeof date === 'string' ? new Date(date) : date
+  if (isNaN(dateObj.getTime())) return ''
   const now = new Date()
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000)
   
