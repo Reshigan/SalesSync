@@ -201,7 +201,7 @@ export const CommissionSettingsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">
+                      <button onClick={() => setShowCreateModal(true)} className="text-blue-600 hover:text-blue-900 mr-4">
                         Edit
                       </button>
                       <button

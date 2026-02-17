@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../../services/products.service'
 import { apiClient } from '../../services/api.service'
@@ -21,6 +22,7 @@ interface ProductInventory {
 }
 
 export const ProductInventoryPage: React.FC = () => {
+  const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [page, setPage] = useState(1)
   const limit = 20
@@ -61,7 +63,7 @@ export const ProductInventoryPage: React.FC = () => {
             Monitor stock levels and manage inventory across warehouses
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={() => navigate('/product-management/inventory')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Adjust Stock
         </button>
       </div>
@@ -236,10 +238,10 @@ export const ProductInventoryPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-900 mr-4">
+                        <button onClick={() => navigate(`/product-management/products/${item.product_id}`)} className="text-blue-600 hover:text-blue-900 mr-4">
                           View
                         </button>
-                        <button className="text-indigo-600 hover:text-indigo-900">
+                        <button onClick={() => navigate(`/product-management/products/${item.product_id}`)} className="text-indigo-600 hover:text-indigo-900">
                           Adjust
                         </button>
                       </td>

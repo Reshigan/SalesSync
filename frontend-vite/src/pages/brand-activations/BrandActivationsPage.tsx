@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { 
@@ -35,6 +36,7 @@ interface BrandActivation {
 }
 
 export default function BrandActivationsPage() {
+  const navigate = useNavigate()
   const [activations, setActivations] = useState<BrandActivation[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -57,7 +59,7 @@ export default function BrandActivationsPage() {
             In-store demos, sampling, and customer engagement activities
           </p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => navigate('/marketing/activations/create')}>
           <Plus className="w-4 h-4" />
           Schedule Activation
         </Button>

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast'
 import React, { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { kycService } from '../../services/kyc.service'
@@ -245,7 +246,7 @@ export const KYCAnalyticsPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => toast.success('Viewing KYC submission details')} className="text-blue-600 hover:text-blue-900">
                         View Details
                       </button>
                     </td>

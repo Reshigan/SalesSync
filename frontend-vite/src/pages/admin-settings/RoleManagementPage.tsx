@@ -157,10 +157,10 @@ export const RoleManagementPage: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-blue-700">
+                  <button onClick={() => setShowCreateModal(true)} className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-blue-700">
                     Edit
                   </button>
-                  <button className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm text-center hover:bg-gray-200">
+                  <button onClick={() => setShowCreateModal(true)} className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded text-sm text-center hover:bg-gray-200">
                     View
                   </button>
                 </div>

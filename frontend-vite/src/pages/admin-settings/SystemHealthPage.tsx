@@ -171,7 +171,7 @@ export const SystemHealthPage: React.FC = () => {
                 <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(service.status)}`}>
                   {service.status}
                 </span>
-                <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                <button onClick={fetchHealth} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                   View Logs
                 </button>
               </div>

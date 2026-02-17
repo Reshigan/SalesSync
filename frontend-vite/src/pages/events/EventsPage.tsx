@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Calendar, Users, MapPin, DollarSign, TrendingUp, Clock, Plus, Filter } from 'lucide-react'
@@ -37,6 +38,7 @@ interface EventMetrics {
 }
 
 export default function EventsPage() {
+  const navigate = useNavigate()
   const [events, setEvents] = useState<Event[]>([])
   const [metrics, setMetrics] = useState<EventMetrics>({
     total_events: 0,
@@ -148,11 +150,11 @@ export default function EventsPage() {
           <p className="text-gray-600">Manage product launches, trade shows, training sessions, and campaigns</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setFilter({ status: '', type: '', start_date: '', end_date: '' })}>
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Button>
+          <Button onClick={() => navigate('/marketing/events/create')}>
             <Plus className="h-4 w-4 mr-2" />
             Create Event
           </Button>
@@ -329,10 +331,10 @@ export default function EventsPage() {
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/events/${event.id}`)}>
                           View Details
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/events/${event.id}/edit`)}>
                           Edit
                         </Button>
                       </div>
