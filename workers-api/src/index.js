@@ -14509,6 +14509,272 @@ api.post('/visit-configurations', authMiddleware, async (c) => {
 });
 // ============================================================================
 
+// ==================== AI Routes (Cloudflare Workers AI) ====================
+
+api.post('/ai/chat', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const body = await c.req.json();
+    const messages = body.messages || [{ role: 'user', content: body.prompt || '' }];
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages, max_tokens: body.max_tokens || 1024 });
+    return c.json({ success: true, data: { response: result.response } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/analyze', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const body = await c.req.json();
+    const analysisType = body.type || 'general';
+    let contextData = body.data || {};
+
+    if (!body.data && analysisType !== 'general') {
+      const tableMap = { fraud_detection: 'orders', performance_insights: 'visits', customer_behavior: 'customers', order_patterns: 'orders', product_performance: 'products', inventory: 'inventory' };
+      const table = tableMap[analysisType] || 'orders';
+      const { results } = await db.prepare(`SELECT * FROM ${table} WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50`).bind(tenantId).all();
+      contextData = results || [];
+    }
+
+    const systemPrompt = `You are an AI analyst for a field force management and sales system called SalesSync. Analyze the provided data and return insights as valid JSON only, no markdown.`;
+    const typePrompts = {
+      fraud_detection: `Analyze this data for fraud indicators (location anomalies, time patterns, duplicates, suspicious behavior). Return JSON: {"risk_score": number 0-100, "fraud_indicators": string[], "recommendations": string[], "confidence": number 0-1}`,
+      performance_insights: `Analyze this performance data. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      customer_behavior: `Analyze customer behavior patterns. Return JSON: {"behavior_patterns": string[], "churn_risk": number 0-1, "value_prediction": number, "recommendations": string[]}`,
+      order_patterns: `Analyze order patterns and trends. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      product_performance: `Analyze product performance. Return JSON: {"insights": string[], "top_products": string[], "underperforming": string[], "recommendations": string[]}`,
+      inventory: `Analyze inventory levels and predict needs. Return JSON: {"insights": string[], "reorder_suggestions": [{"product": string, "quantity": number, "urgency": "low"|"medium"|"high"}], "recommendations": string[]}`,
+      general: `Provide general business insights. Return JSON: {"insights": string[], "recommendations": string[]}`
+    };
+
+    const userPrompt = `${typePrompts[analysisType] || typePrompts.general}\n\nData: ${JSON.stringify(contextData).slice(0, 4000)}`;
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 1024 });
+
+    let parsed;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [result.response], recommendations: [] };
+    } catch { parsed = { insights: [result.response], recommendations: [] }; }
+
+    return c.json({ success: true, data: parsed });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/field-agents/:agentId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { agentId } = c.req.param();
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: visits } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for field agent performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this field agent data (time range: ${timeRange}). Visits: ${JSON.stringify(visits || []).slice(0, 2000)}. Orders: ${JSON.stringify(orders || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "field_agents", "type": "trend"|"recommendation"|"anomaly", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = [{ id: '1', module: 'field_agents', type: 'trend', title: 'Analysis Complete', description: result.response, confidence: 0.8, severity: 'low', data: {}, created_at: new Date().toISOString() }]; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/customers/:customerId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for customer behavior. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "customers", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/customers/:customerId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI. Return valid JSON array of fraud detections only.' },
+        { role: 'user', content: `Check for fraud in this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "customers", "type": "pattern_anomaly"|"suspicious_behavior", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/orders/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for order patterns. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze order patterns (time range: ${timeRange}). Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "orders", "type": "trend"|"prediction", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { orderId } = c.req.param();
+
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
+    if (!order) return c.json({ success: true, data: [] });
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI for orders. Return valid JSON array only.' },
+        { role: 'user', content: `Check this order for fraud: ${JSON.stringify(order)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "orders", "type": "pattern_anomaly"|"duplicate_transaction", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 512
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/products/:productId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { productId } = c.req.param();
+
+    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
+    const { results: orderItems } = await db.prepare('SELECT * FROM order_items WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(productId, tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for product performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this product. Product: ${JSON.stringify(product || {})}. Recent order items: ${JSON.stringify(orderItems || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "products", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/comprehensive-analysis', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+
+    const { results: orders } = await db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: customers } = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: visits } = await db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: products } = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).all();
+
+    const summary = { orders: orders?.[0] || {}, customers: customers?.[0] || {}, visits: visits?.[0] || {}, products: products?.[0] || {} };
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for a comprehensive business dashboard. Return valid JSON only.' },
+        { role: 'user', content: `Provide comprehensive business analysis. Summary: ${JSON.stringify(summary)}. Return JSON: {"field_agents": {"performance_insights": [], "fraud_alerts": [], "location_anomalies": [], "commission_predictions": []}, "customers": {"behavior_insights": [], "churn_predictions": [], "value_predictions": []}, "orders": {"pattern_insights": [], "fraud_detection": [], "demand_predictions": []}, "products": {"performance_insights": [], "inventory_predictions": [], "pricing_recommendations": []}}` }
+      ],
+      max_tokens: 2048
+    });
+
+    let analysis;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch { analysis = {}; }
+
+    const defaultAnalysis = {
+      field_agents: { performance_insights: [], fraud_alerts: [], location_anomalies: [], commission_predictions: [] },
+      customers: { behavior_insights: [], churn_predictions: [], value_predictions: [] },
+      orders: { pattern_insights: [], fraud_detection: [], demand_predictions: [] },
+      products: { performance_insights: [], inventory_predictions: [], pricing_recommendations: [] }
+    };
+
+    return c.json({ success: true, data: { ...defaultAnalysis, ...analysis } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/config', authMiddleware, async (c) => {
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true } } });
+});
+
+api.put('/ai/chat/config', authMiddleware, async (c) => {
+  const body = await c.req.json();
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true }, ...body } });
+});
+
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
@@ -16343,271 +16609,6 @@ api.get('/agent-targets/:id/progress', async (c) => {
     const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC, created_at DESC').bind(id, tenantId).all();
     return c.json({ success: true, data: progress.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-// ==================== AI Routes (Cloudflare Workers AI) ====================
-
-api.post('/ai/chat', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const body = await c.req.json();
-    const messages = body.messages || [{ role: 'user', content: body.prompt || '' }];
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages, max_tokens: body.max_tokens || 1024 });
-    return c.json({ success: true, data: { response: result.response } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/analyze', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const body = await c.req.json();
-    const analysisType = body.type || 'general';
-    let contextData = body.data || {};
-
-    if (!body.data && analysisType !== 'general') {
-      const tableMap = { fraud_detection: 'orders', performance_insights: 'visits', customer_behavior: 'customers', order_patterns: 'orders', product_performance: 'products', inventory: 'inventory' };
-      const table = tableMap[analysisType] || 'orders';
-      const { results } = await db.prepare(`SELECT * FROM ${table} WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50`).bind(tenantId).all();
-      contextData = results || [];
-    }
-
-    const systemPrompt = `You are an AI analyst for a field force management and sales system called SalesSync. Analyze the provided data and return insights as valid JSON only, no markdown.`;
-    const typePrompts = {
-      fraud_detection: `Analyze this data for fraud indicators (location anomalies, time patterns, duplicates, suspicious behavior). Return JSON: {"risk_score": number 0-100, "fraud_indicators": string[], "recommendations": string[], "confidence": number 0-1}`,
-      performance_insights: `Analyze this performance data. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
-      customer_behavior: `Analyze customer behavior patterns. Return JSON: {"behavior_patterns": string[], "churn_risk": number 0-1, "value_prediction": number, "recommendations": string[]}`,
-      order_patterns: `Analyze order patterns and trends. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
-      product_performance: `Analyze product performance. Return JSON: {"insights": string[], "top_products": string[], "underperforming": string[], "recommendations": string[]}`,
-      inventory: `Analyze inventory levels and predict needs. Return JSON: {"insights": string[], "reorder_suggestions": [{"product": string, "quantity": number, "urgency": "low"|"medium"|"high"}], "recommendations": string[]}`,
-      general: `Provide general business insights. Return JSON: {"insights": string[], "recommendations": string[]}`
-    };
-
-    const userPrompt = `${typePrompts[analysisType] || typePrompts.general}\n\nData: ${JSON.stringify(contextData).slice(0, 4000)}`;
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 1024 });
-
-    let parsed;
-    try {
-      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
-      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [result.response], recommendations: [] };
-    } catch { parsed = { insights: [result.response], recommendations: [] }; }
-
-    return c.json({ success: true, data: parsed });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/field-agents/:agentId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { agentId } = c.req.param();
-    const timeRange = c.req.query('time_range') || '7d';
-
-    const { results: visits } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for field agent performance. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this field agent data (time range: ${timeRange}). Visits: ${JSON.stringify(visits || []).slice(0, 2000)}. Orders: ${JSON.stringify(orders || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "field_agents", "type": "trend"|"recommendation"|"anomaly", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = [{ id: '1', module: 'field_agents', type: 'trend', title: 'Analysis Complete', description: result.response, confidence: 0.8, severity: 'low', data: {}, created_at: new Date().toISOString() }]; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/customers/:customerId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { customerId } = c.req.param();
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, customerId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for customer behavior. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "customers", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/chat/customers/:customerId/fraud-check', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { customerId } = c.req.param();
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId, customerId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are a fraud detection AI. Return valid JSON array of fraud detections only.' },
-        { role: 'user', content: `Check for fraud in this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "customers", "type": "pattern_anomaly"|"suspicious_behavior", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let detections;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { detections = []; }
-
-    return c.json({ success: true, data: detections });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/orders/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const timeRange = c.req.query('time_range') || '7d';
-
-    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for order patterns. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze order patterns (time range: ${timeRange}). Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "orders", "type": "trend"|"prediction", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { orderId } = c.req.param();
-
-    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
-    if (!order) return c.json({ success: true, data: [] });
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are a fraud detection AI for orders. Return valid JSON array only.' },
-        { role: 'user', content: `Check this order for fraud: ${JSON.stringify(order)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "orders", "type": "pattern_anomaly"|"duplicate_transaction", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
-      ],
-      max_tokens: 512
-    });
-
-    let detections;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { detections = []; }
-
-    return c.json({ success: true, data: detections });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/products/:productId/insights', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-    const { productId } = c.req.param();
-
-    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
-    const { results: orderItems } = await db.prepare('SELECT * FROM order_items WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(productId, tenantId).all();
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for product performance. Return valid JSON array of insights only.' },
-        { role: 'user', content: `Analyze this product. Product: ${JSON.stringify(product || {})}. Recent order items: ${JSON.stringify(orderItems || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "products", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
-      ],
-      max_tokens: 1024
-    });
-
-    let insights;
-    try {
-      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
-      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
-    } catch { insights = []; }
-
-    return c.json({ success: true, data: insights });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/comprehensive-analysis', authMiddleware, async (c) => {
-  try {
-    const ai = c.env.AI;
-    const db = c.env.DB;
-    const tenantId = getTenantId(c);
-
-    const { results: orders } = await db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: customers } = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: visits } = await db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).all();
-    const { results: products } = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).all();
-
-    const summary = { orders: orders?.[0] || {}, customers: customers?.[0] || {}, visits: visits?.[0] || {}, products: products?.[0] || {} };
-
-    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [
-        { role: 'system', content: 'You are an AI analyst for a comprehensive business dashboard. Return valid JSON only.' },
-        { role: 'user', content: `Provide comprehensive business analysis. Summary: ${JSON.stringify(summary)}. Return JSON: {"field_agents": {"performance_insights": [], "fraud_alerts": [], "location_anomalies": [], "commission_predictions": []}, "customers": {"behavior_insights": [], "churn_predictions": [], "value_predictions": []}, "orders": {"pattern_insights": [], "fraud_detection": [], "demand_predictions": []}, "products": {"performance_insights": [], "inventory_predictions": [], "pricing_recommendations": []}}` }
-      ],
-      max_tokens: 2048
-    });
-
-    let analysis;
-    try {
-      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
-      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
-    } catch { analysis = {}; }
-
-    const defaultAnalysis = {
-      field_agents: { performance_insights: [], fraud_alerts: [], location_anomalies: [], commission_predictions: [] },
-      customers: { behavior_insights: [], churn_predictions: [], value_predictions: [] },
-      orders: { pattern_insights: [], fraud_detection: [], demand_predictions: [] },
-      products: { performance_insights: [], inventory_predictions: [], pricing_recommendations: [] }
-    };
-
-    return c.json({ success: true, data: { ...defaultAnalysis, ...analysis } });
-  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
-});
-
-api.get('/ai/chat/config', authMiddleware, async (c) => {
-  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true } } });
-});
-
-api.put('/ai/chat/config', authMiddleware, async (c) => {
-  const body = await c.req.json();
-  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true }, ...body } });
 });
 
 export default app;
