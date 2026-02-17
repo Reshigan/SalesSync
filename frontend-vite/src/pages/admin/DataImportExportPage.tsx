@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Upload, Download, FileText, AlertCircle, Check, X, RefreshCw, Database, FileSpreadsheet, ChevronRight, Loader } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
 
@@ -83,79 +83,45 @@ export default function DataImportExportPage() {
   const [exporting, setExporting] = useState(false)
   const [importProgress, setImportProgress] = useState(0)
 
-  const [importHistory] = useState<ImportHistory[]>([
-    {
-      id: '1',
-      type: 'customers',
-      fileName: 'customers_2024_01.csv',
-      records: 250,
-      status: 'success',
-      errors: 0,
-      date: '2024-10-20 14:30',
-      user: 'Admin User'
-    },
-    {
-      id: '2',
-      type: 'products',
-      fileName: 'products_catalog.xlsx',
-      records: 450,
-      status: 'partial',
-      errors: 12,
-      date: '2024-10-19 10:15',
-      user: 'Admin User'
-    },
-    {
-      id: '3',
-      type: 'orders',
-      fileName: 'orders_q3_2024.csv',
-      records: 1250,
-      status: 'success',
-      errors: 0,
-      date: '2024-10-15 09:00',
-      user: 'System Admin'
-    },
-    {
-      id: '4',
-      type: 'agents',
-      fileName: 'field_agents.csv',
-      records: 45,
-      status: 'failed',
-      errors: 45,
-      date: '2024-10-10 16:45',
-      user: 'Admin User'
-    }
-  ])
+  const [importHistory, setImportHistory] = useState<ImportHistory[]>([])
+  const [exportJobs, setExportJobs] = useState<ExportJob[]>([])
 
-  const [exportJobs] = useState<ExportJob[]>([
-    {
-      id: '1',
-      type: 'customers',
-      format: 'xlsx',
-      status: 'completed',
-      progress: 100,
-      fileSize: '2.5 MB',
-      downloadUrl: '/exports/customers_2024.xlsx',
-      createdAt: '2024-10-22 10:30'
-    },
-    {
-      id: '2',
-      type: 'orders',
-      format: 'csv',
-      status: 'processing',
-      progress: 67,
-      createdAt: '2024-10-22 14:15'
-    },
-    {
-      id: '3',
-      type: 'products',
-      format: 'json',
-      status: 'completed',
-      progress: 100,
-      fileSize: '3.8 MB',
-      downloadUrl: '/exports/products_catalog.json',
-      createdAt: '2024-10-21 16:00'
+  useEffect(() => {
+    fetchHistory()
+  }, [])
+
+  const fetchHistory = async () => {
+    try {
+      const [importRes, exportRes] = await Promise.all([
+        apiClient.get('/data/imports').catch(() => ({ data: { data: [] } })),
+        apiClient.get('/data/exports').catch(() => ({ data: { data: [] } }))
+      ])
+      const imports = Array.isArray(importRes.data) ? importRes.data : (importRes.data?.data || [])
+      setImportHistory(imports.map((i: any) => ({
+        id: i.id || String(i.import_id),
+        type: i.type || i.data_type || 'customers',
+        fileName: i.file_name || i.fileName || 'unknown',
+        records: Number(i.records || i.record_count || 0),
+        status: i.status || 'success',
+        errors: Number(i.errors || i.error_count || 0),
+        date: i.created_at || i.date || '',
+        user: i.user_name || i.user || 'System'
+      })))
+      const exports = Array.isArray(exportRes.data) ? exportRes.data : (exportRes.data?.data || [])
+      setExportJobs(exports.map((e: any) => ({
+        id: e.id || String(e.export_id),
+        type: e.type || e.data_type || 'customers',
+        format: e.format || 'csv',
+        status: e.status || 'pending',
+        progress: Number(e.progress || (e.status === 'completed' ? 100 : 0)),
+        fileSize: e.file_size || e.fileSize,
+        downloadUrl: e.download_url || e.downloadUrl,
+        createdAt: e.created_at || e.createdAt || ''
+      })))
+    } catch (err) {
+      console.error('Failed to fetch import/export history:', err)
     }
-  ])
+  }
 
   const selectedDataType = DATA_TYPES.find(t => t.id === selectedType)
 

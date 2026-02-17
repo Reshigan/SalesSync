@@ -15,5 +15,8 @@ database_id = "462033c0-2856-44cd-b559-3e781f24b9af"
 binding = "UPLOADS"
 bucket_name = "salessync-uploads"
 
+[ai]
+binding = "AI"
+
 [placement]
 mode = "smart"

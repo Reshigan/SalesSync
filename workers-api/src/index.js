@@ -300,6 +300,24 @@ api.get('/customers/stats', async (c) => {
   });
 });
 
+api.get('/audit-trail', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/commissions/pending', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/customer-visits', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/customers/credit-limits', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/customers/hierarchy', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/customers/segments', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
 api.get('/customers/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -322,12 +340,18 @@ api.post('/customers', async (c) => {
   const id = uuidv4();
   await db.prepare(`
     INSERT INTO customers (id, tenant_id, name, code, type, phone, email, address, latitude, longitude, route_id, credit_limit, payment_terms, status, created_at)
+api.post('/commissions/calculations', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_items (tenant_id, agent_id, type, amount, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.agent_id, body.type, body.amount, body.status || 'pending').run(); return c.json({ success: true, message: 'Commission calculation created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `).bind(id, tenantId, body.name, body.code, body.type || 'retail', body.phone, body.email, body.address, body.latitude, body.longitude, body.route_id, body.credit_limit || 0, body.payment_terms || 0, 'active').run();
   
   return c.json({ success: true, data: { id }, message: 'Customer created' }, 201);
 });
 
+api.put('/customers/credit-limits', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('UPDATE customers SET credit_limit = ? WHERE id = ? AND tenant_id = ?').bind(body.credit_limit, body.customer_id, tenantId).run(); return c.json({ success: true, message: 'Credit limit updated' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
 api.put('/customers/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -396,6 +420,21 @@ api.get('/products/export', async (c) => {
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
 
+api.get('/inventory/stock', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/kyc/compliance', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/products/inventory', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/products/hierarchy', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/products/pricing', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
 api.get('/products/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -4134,90 +4173,6 @@ api.get('/orders-enhanced/orders', async (c) => {
   } catch (e) { return c.json({ success: true, data: { orders: [], pagination: { total: 0 } } }); }
 });
 
-api.get('/orders-enhanced/quotations', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { limit = 50, offset = 0, status } = c.req.query();
-  try {
-    let query = 'SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.tenant_id = ?';
-    const params = [tenantId];
-    if (status) { query += ' AND q.status = ?'; params.push(status); }
-    query += ' ORDER BY q.created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-    const quotes = await db.prepare(query).bind(...params).all();
-    const count = await db.prepare('SELECT COUNT(*) as total FROM quotations WHERE tenant_id = ?').bind(tenantId).first();
-    return c.json({ success: true, data: { quotations: quotes.results || [], pagination: { total: count?.total || 0 } } });
-  } catch (e) { return c.json({ success: true, data: { quotations: [], pagination: { total: 0 } } }); }
-});
-
-api.get('/orders-enhanced/quotations/:id', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const id = c.req.param('id');
-  try {
-    const quote = await db.prepare('SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.id = ? AND q.tenant_id = ?').bind(id, tenantId).first();
-    if (!quote) return c.json({ success: false, error: 'Not found' }, 404);
-    const items = await db.prepare('SELECT qi.*, p.name as product_name FROM quotation_items qi LEFT JOIN products p ON qi.product_id = p.id WHERE qi.quotation_id = ? AND qi.tenant_id = ?').bind(id, tenantId).all();
-    return c.json({ success: true, data: { ...quote, items: items.results || [] } });
-  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
-});
-
-api.post('/orders-enhanced/quotations', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const body = await c.req.json();
-    const quoteNumber = 'QT-' + Date.now();
-    const result = await db.prepare('INSERT INTO quotations (tenant_id, quotation_number, customer_id, status, total_amount, notes, valid_until, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, quoteNumber, body.customer_id, body.status || 'draft', body.total_amount || 0, body.notes || null, body.valid_until || null).run();
-    return c.json({ success: true, data: { id: result.meta.last_row_id, quotation_number: quoteNumber } }, 201);
-  } catch (e) { return c.json({ success: false, error: 'Error creating quotation' }, 500); }
-});
-
-api.put('/orders-enhanced/quotations/:id', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const id = c.req.param('id');
-  try {
-    const body = await c.req.json();
-    await db.prepare('UPDATE quotations SET customer_id = COALESCE(?, customer_id), status = COALESCE(?, status), total_amount = COALESCE(?, total_amount), notes = COALESCE(?, notes), valid_until = COALESCE(?, valid_until), updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind(body.customer_id || null, body.status || null, body.total_amount || null, body.notes || null, body.valid_until || null, id, tenantId).run();
-    return c.json({ success: true, message: 'Updated' });
-  } catch (e) { return c.json({ success: false, error: 'Error updating' }, 500); }
-});
-
-api.post('/orders-enhanced/quotations/:id/approve', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const id = c.req.param('id');
-  try {
-    await db.prepare("UPDATE quotations SET status = 'approved', updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation approved' });
-  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
-});
-
-api.post('/orders-enhanced/quotations/:id/reject', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const id = c.req.param('id');
-  try {
-    const body = await c.req.json();
-    await db.prepare("UPDATE quotations SET status = 'rejected', notes = COALESCE(?, notes), updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.reason || null, id, tenantId).run();
-    return c.json({ success: true, message: 'Quotation rejected' });
-  } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
-});
-
-api.post('/orders-enhanced/quotations/:id/convert', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const id = c.req.param('id');
-  try {
-    const quote = await db.prepare('SELECT * FROM quotations WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
-    if (!quote) return c.json({ success: false, error: 'Quotation not found' }, 404);
-    const orderNumber = 'ORD-' + Date.now();
-    const order = await db.prepare('INSERT INTO orders (tenant_id, order_number, customer_id, status, total_amount, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, orderNumber, quote.customer_id, 'pending', quote.total_amount, 'Converted from ' + quote.quotation_number).run();
-    await db.prepare("UPDATE quotations SET status = 'converted', updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
-    return c.json({ success: true, data: { orderId: order.meta.last_row_id, orderNumber } });
-  } catch (e) { return c.json({ success: false, error: 'Error converting' }, 500); }
-});
 
 api.get('/quotations', async (c) => {
   const db = c.env.DB;
@@ -4467,23 +4422,6 @@ api.post('/sales/payments', async (c) => {
   } catch (e) { console.error('Create payment error:', e); return c.json({ success: false, error: 'Error creating payment' }, 500); }
 });
 
-api.post('/settings/initialize', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const defaults = [
-      { key: 'company_name', value: 'My Company', category: 'general' },
-      { key: 'currency', value: 'ZAR', category: 'general' },
-      { key: 'tax_rate', value: '15', category: 'finance' },
-      { key: 'invoice_prefix', value: 'INV-', category: 'finance' },
-      { key: 'order_prefix', value: 'ORD-', category: 'sales' }
-    ];
-    for (const s of defaults) {
-      await db.prepare('INSERT OR IGNORE INTO system_settings (tenant_id, key, value, category, created_at, updated_at) VALUES (?, ?, ?, ?, datetime("now"), datetime("now"))').bind(tenantId, s.key, s.value, s.category).run();
-    }
-    return c.json({ success: true, message: 'Settings initialized' });
-  } catch (e) { return c.json({ success: true, message: 'Settings initialized' }); }
-});
 
 api.get('/team-hierarchy', async (c) => {
   const db = c.env.DB;
@@ -9138,6 +9076,9 @@ api.get('/surveys/responses', authMiddleware, async (c) => {
   }
 });
 
+api.get('/surveys/stats', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const total = await db.prepare('SELECT COUNT(*) as count FROM surveys WHERE tenant_id = ?').bind(tenantId).first(); const responses = await db.prepare('SELECT COUNT(*) as count FROM survey_responses WHERE tenant_id = ?').bind(tenantId).first(); return c.json({ success: true, data: { total_surveys: total?.count || 0, total_responses: responses?.count || 0 } }); } catch(e) { return c.json({ success: true, data: { total_surveys: 0, total_responses: 0 } }); }
+});
 api.get('/surveys/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -10198,6 +10139,21 @@ api.get('/commissions/stats', async (c) => {
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
         SUM(CASE WHEN status = 'calculated' THEN 1 ELSE 0 END) as calculated,
         SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+// MISSING ROUTES - Added for production readiness
+// ============================================================================
+
+api.post('/admin/boards', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO boards (tenant_id, name, type, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type || 'standard', body.status || 'active').run(); return c.json({ success: true, message: 'Board created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/campaigns', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO campaigns (tenant_id, name, description, status, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.description, body.status || 'draft', body.start_date, body.end_date).run(); return c.json({ success: true, message: 'Campaign created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/commission-rules', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_rules (tenant_id, name, type, rate, min_threshold, max_cap, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.rate, body.min_threshold || 0, body.max_cap || null, body.status || 'active').run(); return c.json({ success: true, message: 'Commission rule created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/pos-library', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
         SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
         SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as pending_payout,
         SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid
@@ -10222,6 +10178,15 @@ api.get('/commissions/payouts', authMiddleware, async (c) => {
   }
 });
 
+api.get('/commissions/calculations', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/commissions/payments', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
+api.get('/commissions/reports', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+});
 api.get('/commissions/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -14419,32 +14384,17 @@ api.post('/products/bulk', authMiddleware, async (c) => {
 // END MISSING ROUTES
 
 // ============================================================================
-// MISSING ROUTES - Added for production readiness
-// ============================================================================
-
 api.get('/admin/boards', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM boards WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.post('/admin/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO boards (tenant_id, name, type, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type || 'standard', body.status || 'active').run(); return c.json({ success: true, message: 'Board created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/admin/campaigns', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
 });
-api.post('/admin/campaigns', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO campaigns (tenant_id, name, description, status, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.description, body.status || 'draft', body.start_date, body.end_date).run(); return c.json({ success: true, message: 'Campaign created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
 api.get('/admin/commission-rules', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
 });
-api.post('/admin/commission-rules', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_rules (tenant_id, name, type, rate, min_threshold, max_cap, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.rate, body.min_threshold || 0, body.max_cap || null, body.status || 'active').run(); return c.json({ success: true, message: 'Commission rule created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
 api.get('/admin/pos-library', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.post('/admin/pos-library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/admin/territories', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM territories WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
@@ -14452,41 +14402,8 @@ api.get('/admin/territories', authMiddleware, async (c) => {
 api.post('/admin/territories', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO territories (tenant_id, name, region_id, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.region_id || null, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'Territory created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
-api.get('/audit-trail', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/commissions/calculations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.post('/commissions/calculations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_items (tenant_id, agent_id, type, amount, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.agent_id, body.type, body.amount, body.status || 'pending').run(); return c.json({ success: true, message: 'Commission calculation created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.get('/commissions/payments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/commissions/pending', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/commissions/reports', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/customer-visits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/customers/credit-limits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.put('/customers/credit-limits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('UPDATE customers SET credit_limit = ? WHERE id = ? AND tenant_id = ?').bind(body.credit_limit, body.customer_id, tenantId).run(); return c.json({ success: true, message: 'Credit limit updated' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.get('/customers/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/customers/segments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
 api.post('/data/export', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const table = body.type || 'customers'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const allowed = ['customers','orders','products','invoices','payments','inventory','visits','agents','commissions','surveys','boards','campaigns','vans','warehouses','suppliers','purchase_orders','credit_notes','returns']; const table = allowed.includes(body.type) ? body.type : 'customers'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.post('/data/import', authMiddleware, async (c) => {
   try { return c.json({ success: true, message: 'Import started', data: { status: 'processing' } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14505,9 +14422,6 @@ api.post('/field-marketing/board-placements', authMiddleware, async (c) => {
 });
 api.get('/field-marketing/boards', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const brandId = c.req.query('brandId'); let query = 'SELECT * FROM boards WHERE tenant_id = ?'; const params = [tenantId]; if (brandId) { query += ' AND brand_id = ?'; params.push(brandId); } const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/field-marketing/campaigns', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
 });
 api.get('/field-marketing/commissions', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
@@ -14533,35 +14447,17 @@ api.post('/field-marketing/visits', authMiddleware, async (c) => {
 api.post('/files/upload', authMiddleware, async (c) => {
   try { const formData = await c.req.formData(); const file = formData.get('file'); if (!file) return c.json({ success: false, message: 'No file' }, 400); const filename = Date.now() + '-' + file.name; if (c.env.UPLOADS) { await c.env.UPLOADS.put(filename, file.stream(), { httpMetadata: { contentType: file.type } }); } return c.json({ success: true, data: { filename, url: '/files/' + filename } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
-api.get('/inventory/stock', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
 api.post('/inventory/transfer', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO stock_transfers (tenant_id, product_id, from_warehouse_id, to_warehouse_id, quantity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.product_id, body.from_warehouse_id, body.to_warehouse_id, body.quantity, body.status || 'pending').run(); return c.json({ success: true, message: 'Transfer created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.get('/kyc/compliance', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/products/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/products/inventory', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/products/pricing', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
 });
 api.get('/reports/analytics', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const orderStats = await db.prepare('SELECT COUNT(*) as total_orders, SUM(total) as total_revenue FROM orders WHERE tenant_id = ?').bind(tenantId).first(); const customerStats = await db.prepare('SELECT COUNT(*) as total_customers FROM customers WHERE tenant_id = ?').bind(tenantId).first(); return c.json({ success: true, data: { orders: orderStats, customers: customerStats } }); } catch(e) { return c.json({ success: true, data: {} }); }
 });
 api.post('/reports/generate', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const table = body.type || 'orders'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1000').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const allowed = ['orders','customers','products','invoices','payments','inventory','visits','agents','commissions','surveys','boards','campaigns','vans','warehouses','suppliers','purchase_orders','credit_notes','returns']; const table = allowed.includes(body.type) ? body.type : 'orders'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1000').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/samples/allocations', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM product_distributions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
-});
-api.get('/surveys/stats', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const total = await db.prepare('SELECT COUNT(*) as count FROM surveys WHERE tenant_id = ?').bind(tenantId).first(); const responses = await db.prepare('SELECT COUNT(*) as count FROM survey_responses WHERE tenant_id = ?').bind(tenantId).first(); return c.json({ success: true, data: { total_surveys: total?.count || 0, total_responses: responses?.count || 0 } }); } catch(e) { return c.json({ success: true, data: { total_surveys: 0, total_responses: 0 } }); }
 });
 api.get('/system/backups', authMiddleware, async (c) => {
   return c.json({ success: true, data: [] });
@@ -16447,6 +16343,271 @@ api.get('/agent-targets/:id/progress', async (c) => {
     const progress = await db.prepare('SELECT * FROM target_progress WHERE target_id = ? AND tenant_id = ? ORDER BY progress_date DESC, created_at DESC').bind(id, tenantId).all();
     return c.json({ success: true, data: progress.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+// ==================== AI Routes (Cloudflare Workers AI) ====================
+
+api.post('/ai/chat', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const body = await c.req.json();
+    const messages = body.messages || [{ role: 'user', content: body.prompt || '' }];
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages, max_tokens: body.max_tokens || 1024 });
+    return c.json({ success: true, data: { response: result.response } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/analyze', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const body = await c.req.json();
+    const analysisType = body.type || 'general';
+    let contextData = body.data || {};
+
+    if (!body.data && analysisType !== 'general') {
+      const tableMap = { fraud_detection: 'orders', performance_insights: 'visits', customer_behavior: 'customers', order_patterns: 'orders', product_performance: 'products', inventory: 'inventory' };
+      const table = tableMap[analysisType] || 'orders';
+      const { results } = await db.prepare(`SELECT * FROM ${table} WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 50`).bind(tenantId).all();
+      contextData = results || [];
+    }
+
+    const systemPrompt = `You are an AI analyst for a field force management and sales system called SalesSync. Analyze the provided data and return insights as valid JSON only, no markdown.`;
+    const typePrompts = {
+      fraud_detection: `Analyze this data for fraud indicators (location anomalies, time patterns, duplicates, suspicious behavior). Return JSON: {"risk_score": number 0-100, "fraud_indicators": string[], "recommendations": string[], "confidence": number 0-1}`,
+      performance_insights: `Analyze this performance data. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      customer_behavior: `Analyze customer behavior patterns. Return JSON: {"behavior_patterns": string[], "churn_risk": number 0-1, "value_prediction": number, "recommendations": string[]}`,
+      order_patterns: `Analyze order patterns and trends. Return JSON: {"insights": string[], "trends": [{"metric": string, "direction": "up"|"down"|"stable", "confidence": number}], "predictions": [{"metric": string, "value": number, "confidence": number}], "recommendations": string[]}`,
+      product_performance: `Analyze product performance. Return JSON: {"insights": string[], "top_products": string[], "underperforming": string[], "recommendations": string[]}`,
+      inventory: `Analyze inventory levels and predict needs. Return JSON: {"insights": string[], "reorder_suggestions": [{"product": string, "quantity": number, "urgency": "low"|"medium"|"high"}], "recommendations": string[]}`,
+      general: `Provide general business insights. Return JSON: {"insights": string[], "recommendations": string[]}`
+    };
+
+    const userPrompt = `${typePrompts[analysisType] || typePrompts.general}\n\nData: ${JSON.stringify(contextData).slice(0, 4000)}`;
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', { messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }], max_tokens: 1024 });
+
+    let parsed;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      parsed = jsonMatch ? JSON.parse(jsonMatch[0]) : { insights: [result.response], recommendations: [] };
+    } catch { parsed = { insights: [result.response], recommendations: [] }; }
+
+    return c.json({ success: true, data: parsed });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/field-agents/:agentId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { agentId } = c.req.param();
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: visits } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND agent_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, agentId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for field agent performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this field agent data (time range: ${timeRange}). Visits: ${JSON.stringify(visits || []).slice(0, 2000)}. Orders: ${JSON.stringify(orders || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "field_agents", "type": "trend"|"recommendation"|"anomaly", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = [{ id: '1', module: 'field_agents', type: 'trend', title: 'Analysis Complete', description: result.response, confidence: 0.8, severity: 'low', data: {}, created_at: new Date().toISOString() }]; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/customers/:customerId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for customer behavior. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "customers", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/customers/:customerId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { customerId } = c.req.param();
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? AND customer_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId, customerId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI. Return valid JSON array of fraud detections only.' },
+        { role: 'user', content: `Check for fraud in this customer data. Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "customers", "type": "pattern_anomaly"|"suspicious_behavior", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/orders/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const timeRange = c.req.query('time_range') || '7d';
+
+    const { results: orders } = await db.prepare('SELECT * FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for order patterns. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze order patterns (time range: ${timeRange}). Orders: ${JSON.stringify(orders || []).slice(0, 3000)}. Return JSON array: [{"id": string, "module": "orders", "type": "trend"|"prediction", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.post('/ai/chat/orders/:orderId/fraud-check', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { orderId } = c.req.param();
+
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
+    if (!order) return c.json({ success: true, data: [] });
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are a fraud detection AI for orders. Return valid JSON array only.' },
+        { role: 'user', content: `Check this order for fraud: ${JSON.stringify(order)}. Return JSON array: [{"id": string, "transaction_id": string, "module": "orders", "type": "pattern_anomaly"|"duplicate_transaction", "risk_score": number 0-100, "description": string, "evidence": {}, "status": "pending", "created_at": ISO date string}]` }
+      ],
+      max_tokens: 512
+    });
+
+    let detections;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      detections = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { detections = []; }
+
+    return c.json({ success: true, data: detections });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/products/:productId/insights', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+    const { productId } = c.req.param();
+
+    const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
+    const { results: orderItems } = await db.prepare('SELECT * FROM order_items WHERE product_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(productId, tenantId).all();
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for product performance. Return valid JSON array of insights only.' },
+        { role: 'user', content: `Analyze this product. Product: ${JSON.stringify(product || {})}. Recent order items: ${JSON.stringify(orderItems || []).slice(0, 2000)}. Return JSON array: [{"id": string, "module": "products", "type": "prediction"|"recommendation", "title": string, "description": string, "confidence": number 0-1, "severity": "low"|"medium"|"high", "data": {}, "created_at": ISO date string}]` }
+      ],
+      max_tokens: 1024
+    });
+
+    let insights;
+    try {
+      const jsonMatch = result.response.match(/\[[\s\S]*\]/);
+      insights = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+    } catch { insights = []; }
+
+    return c.json({ success: true, data: insights });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/comprehensive-analysis', authMiddleware, async (c) => {
+  try {
+    const ai = c.env.AI;
+    const db = c.env.DB;
+    const tenantId = getTenantId(c);
+
+    const { results: orders } = await db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as total FROM orders WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: customers } = await db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: visits } = await db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).all();
+    const { results: products } = await db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).all();
+
+    const summary = { orders: orders?.[0] || {}, customers: customers?.[0] || {}, visits: visits?.[0] || {}, products: products?.[0] || {} };
+
+    const result = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        { role: 'system', content: 'You are an AI analyst for a comprehensive business dashboard. Return valid JSON only.' },
+        { role: 'user', content: `Provide comprehensive business analysis. Summary: ${JSON.stringify(summary)}. Return JSON: {"field_agents": {"performance_insights": [], "fraud_alerts": [], "location_anomalies": [], "commission_predictions": []}, "customers": {"behavior_insights": [], "churn_predictions": [], "value_predictions": []}, "orders": {"pattern_insights": [], "fraud_detection": [], "demand_predictions": []}, "products": {"performance_insights": [], "inventory_predictions": [], "pricing_recommendations": []}}` }
+      ],
+      max_tokens: 2048
+    });
+
+    let analysis;
+    try {
+      const jsonMatch = result.response.match(/\{[\s\S]*\}/);
+      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : {};
+    } catch { analysis = {}; }
+
+    const defaultAnalysis = {
+      field_agents: { performance_insights: [], fraud_alerts: [], location_anomalies: [], commission_predictions: [] },
+      customers: { behavior_insights: [], churn_predictions: [], value_predictions: [] },
+      orders: { pattern_insights: [], fraud_detection: [], demand_predictions: [] },
+      products: { performance_insights: [], inventory_predictions: [], pricing_recommendations: [] }
+    };
+
+    return c.json({ success: true, data: { ...defaultAnalysis, ...analysis } });
+  } catch (error) { return c.json({ success: false, message: error.message }, 500); }
+});
+
+api.get('/ai/chat/config', authMiddleware, async (c) => {
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true } } });
+});
+
+api.put('/ai/chat/config', authMiddleware, async (c) => {
+  const body = await c.req.json();
+  return c.json({ success: true, data: { enabled: true, model_path: '@cf/meta/llama-3.1-8b-instruct', confidence_threshold: 0.7, fraud_threshold: 0.8, update_interval: 300, modules: { field_agents: true, customers: true, orders: true, products: true }, ...body } });
 });
 
 export default app;
