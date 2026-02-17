@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useState, useEffect } from 'react'
 import { Upload, Download, FileText, AlertCircle, Check, X, RefreshCw, Database, FileSpreadsheet, ChevronRight, Loader } from 'lucide-react'
@@ -77,6 +78,7 @@ const DATA_TYPES = [
 ]
 
 export default function DataImportExportPage() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'import' | 'export'>('import')
   const [selectedType, setSelectedType] = useState<string>('customers')
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -454,7 +456,7 @@ export default function DataImportExportPage() {
                         </div>
                       </div>
 
-                      <button className="btn btn-outline btn-sm">
+                      <button className="btn btn-outline btn-sm" onClick={() => navigate(`/admin/import-export`)}>
                         View Details
                       </button>
                     </div>
@@ -544,7 +546,7 @@ export default function DataImportExportPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">Export Jobs</h3>
-                <button className="btn btn-outline btn-sm flex items-center gap-2">
+                <button className="btn btn-outline btn-sm flex items-center gap-2" onClick={() => fetchHistory()}>
                   <RefreshCw className="w-4 h-4" />
                   Refresh
                 </button>
@@ -608,7 +610,7 @@ export default function DataImportExportPage() {
                       </div>
 
                       {job.status === 'completed' && job.downloadUrl && (
-                        <button className="btn btn-primary flex items-center gap-2">
+                        <button className="btn btn-primary flex items-center gap-2" onClick={() => window.open(job.downloadUrl, '_blank')}>
                           <Download className="w-4 h-4" />
                           Download
                         </button>

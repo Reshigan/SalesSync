@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Search, Filter, DollarSign, TrendingUp, Users, Calendar, Download, Eye, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { fieldMarketingService } from '../../services/field-marketing.service'
@@ -17,6 +18,7 @@ interface Commission {
 }
 
 export default function CommissionTrackingPage() {
+  const navigate = useNavigate()
   const [commissions, setCommissions] = useState<Commission[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -132,7 +134,7 @@ export default function CommissionTrackingPage() {
             Manage and track agent commissions and bonuses
           </p>
         </div>
-        <button className="btn btn-primary flex items-center gap-2">
+        <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/field-operations/commission')}>
           <Download className="w-4 h-4" />
           Export Report
         </button>
@@ -338,7 +340,7 @@ export default function CommissionTrackingPage() {
                             Pay Out
                           </button>
                         )}
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button className="text-gray-600 hover:text-gray-900" onClick={() => navigate(`/field-operations/commission/${comm.id}`)}>
                           <Eye className="w-4 h-4" />
                         </button>
                       </div>

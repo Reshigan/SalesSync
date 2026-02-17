@@ -33,7 +33,7 @@ export default function AttachmentPanel({ entityType, entityId }: AttachmentPane
           <Paperclip className="h-5 w-5" />
           Attachments ({attachments?.length || 0})
         </h2>
-        <button className="btn-primary text-sm">
+        <button className="btn-primary text-sm" onClick={() => { const input = document.createElement('input'); input.type = 'file'; input.click() }}>
           Upload File
         </button>
       </div>

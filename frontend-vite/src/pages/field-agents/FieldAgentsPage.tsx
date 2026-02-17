@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { 
   Users, 
@@ -22,6 +23,7 @@ import { commissionsService } from '../../services/commissions.service'
 import { formatCurrency } from '../../utils/currency'
 
 export default function FieldAgentsPage() {
+  const navigate = useNavigate()
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d')
   const [selectedAgent, setSelectedAgent] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
@@ -245,13 +247,13 @@ export default function FieldAgentsPage() {
       title: 'Actions',
       render: (value: any, row: any) => (
         <div className="flex items-center space-x-2">
-          <button className="text-blue-600 hover:text-blue-800">
+          <button className="text-blue-600 hover:text-blue-800" onClick={() => navigate(`/field-operations/agents`)}>
             <Eye className="h-4 w-4" />
           </button>
-          <button className="text-green-600 hover:text-green-800">
+          <button className="text-green-600 hover:text-green-800" onClick={() => navigate(`/field-operations/agents`)}>
             <Edit className="h-4 w-4" />
           </button>
-          <button className="text-gray-600 hover:text-gray-800">
+          <button className="text-gray-600 hover:text-gray-800" onClick={() => navigate(`/field-operations/agents`)}>
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
@@ -280,7 +282,7 @@ export default function FieldAgentsPage() {
             <option value="30d">Last 30 Days</option>
             <option value="90d">Last 90 Days</option>
           </select>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => navigate('/field-operations/agents')}>
             <Users className="h-4 w-4 mr-2" />
             Add Agent
           </button>

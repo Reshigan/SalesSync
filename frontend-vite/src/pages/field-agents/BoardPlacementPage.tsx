@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import {
   XCircle,
@@ -64,6 +65,7 @@ interface Campaign {
 }
 
 export default function BoardPlacementPage() {
+  const navigate = useNavigate()
   const [placements, setPlacements] = useState<BoardPlacement[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [selectedPlacement, setSelectedPlacement] = useState<BoardPlacement | null>(null)
@@ -556,7 +558,7 @@ export default function BoardPlacementPage() {
                 >
                   Close
                 </button>
-                <button className="btn-primary">
+                <button className="btn-primary" onClick={() => navigate(`/field-operations/boards/${selectedPlacement?.id}`)}>
                   Edit Placement
                 </button>
               </div>

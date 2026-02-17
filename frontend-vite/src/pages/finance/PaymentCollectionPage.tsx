@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { DollarSign, CreditCard, Clock, CheckCircle, XCircle, Search, Filter, Calendar, Download, RefreshCw } from 'lucide-react'
 import { apiClient } from '../../services/api.service'
@@ -19,6 +20,7 @@ interface Payment {
 }
 
 export default function PaymentCollectionPage() {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [methodFilter, setMethodFilter] = useState<string>('all')
@@ -107,7 +109,7 @@ export default function PaymentCollectionPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payment Collection</h1>
           <p className="mt-1 text-sm text-gray-600">Track and manage payment transactions</p>
         </div>
-        <button className="btn btn-primary flex items-center gap-2">
+        <button className="btn btn-primary flex items-center gap-2" onClick={() => navigate('/finance/payments/create')}>
           <DollarSign className="w-4 h-4" />
           Record Payment
         </button>
@@ -199,7 +201,7 @@ export default function PaymentCollectionPage() {
             </select>
           </div>
 
-          <button className="btn btn-outline flex items-center justify-center gap-2">
+          <button className="btn btn-outline flex items-center justify-center gap-2" onClick={() => window.print()}>
             <Download className="w-4 h-4" />
             Export
           </button>

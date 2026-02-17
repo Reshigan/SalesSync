@@ -43,11 +43,11 @@ export default function ReportDetail() {
               <Edit className="h-5 w-5" />
               Edit
             </button>
-            <button className="btn-primary flex items-center gap-2">
+            <button className="btn-primary flex items-center gap-2" onClick={() => window.print()}>
               <Download className="h-5 w-5" />
               Download
             </button>
-            <button className="btn-secondary flex items-center gap-2">
+            <button className="btn-secondary flex items-center gap-2" onClick={() => navigator.clipboard.writeText(window.location.href)}>
               <Share2 className="h-5 w-5" />
               Share
             </button>
@@ -96,7 +96,7 @@ export default function ReportDetail() {
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-400" />
               <p className="text-gray-600">Report preview will be displayed here</p>
-              <button className="mt-4 btn-primary">Generate Preview</button>
+              <button className="mt-4 btn-primary" onClick={() => navigate(`/reports/${id}`)}>Generate Preview</button>
             </div>
           </div>
         </div>

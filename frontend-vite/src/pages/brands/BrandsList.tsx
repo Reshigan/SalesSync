@@ -42,7 +42,7 @@ export default function BrandsList() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
             </div>
-            <button className="btn-secondary flex items-center gap-2">
+            <button className="btn-secondary flex items-center gap-2" onClick={() => window.print()}>
               <Filter className="h-5 w-5" />
               Filter
             </button>

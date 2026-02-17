@@ -597,7 +597,7 @@ export default function OrderDetailsPage() {
                   <p className="text-sm text-gray-600">Generated on {new Date(order.orderDate).toLocaleDateString()}</p>
                 </div>
               </div>
-              <button className="btn btn-secondary flex items-center gap-2">
+              <button className="btn btn-secondary flex items-center gap-2" onClick={() => handleDownload()}>
                 <Download className="w-4 h-4" /> Download
               </button>
             </div>
@@ -609,7 +609,7 @@ export default function OrderDetailsPage() {
                   <p className="text-sm text-gray-600">Ready for download</p>
                 </div>
               </div>
-              <button className="btn btn-secondary flex items-center gap-2">
+              <button className="btn btn-secondary flex items-center gap-2" onClick={() => handleDownload()}>
                 <Download className="w-4 h-4" /> Download
               </button>
             </div>

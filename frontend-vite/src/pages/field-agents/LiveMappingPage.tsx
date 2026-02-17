@@ -381,10 +381,10 @@ export default function LiveMappingPage() {
                     </div>
                     
                     <div className="flex space-x-2">
-                      <button className="btn-outline p-2">
+                      <button className="btn-outline p-2" onClick={() => window.open(`tel:${selectedAgent.phone}`, '_self')}>
                         <Phone className="h-4 w-4" />
                       </button>
-                      <button className="btn-outline p-2">
+                      <button className="btn-outline p-2" onClick={() => window.open(`sms:${selectedAgent.phone}`, '_self')}>
                         <MessageSquare className="h-4 w-4" />
                       </button>
                     </div>

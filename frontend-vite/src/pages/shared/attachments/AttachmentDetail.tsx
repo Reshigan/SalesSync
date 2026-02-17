@@ -51,7 +51,7 @@ export default function AttachmentDetail() {
                 <p className="text-sm font-medium text-gray-500">File Name</p>
                 <p className="text-lg font-semibold text-gray-900">{attachment.file_name}</p>
               </div>
-              <button className="btn-primary flex items-center gap-2">
+              <button className="btn-primary flex items-center gap-2" onClick={() => window.open(attachment.file_url, '_blank')}>
                 <Download className="h-4 w-4" />
                 Download
               </button>

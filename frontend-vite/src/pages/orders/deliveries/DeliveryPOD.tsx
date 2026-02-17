@@ -44,7 +44,7 @@ export default function DeliveryPOD() {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Proof of Delivery</h1>
             <p className="text-gray-600">{delivery?.delivery_number} - {delivery?.customer_name}</p>
           </div>
-          <button className="btn-secondary flex items-center gap-2">
+          <button className="btn-secondary flex items-center gap-2" onClick={() => window.print()}>
             <Download className="h-4 w-4" />
             Download PDF
           </button>

@@ -372,7 +372,7 @@ export default function ProductDetailsPage() {
               <div className="text-center">
                 <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600">No images available</p>
-                <button className="btn btn-secondary mt-4 flex items-center gap-2 mx-auto">
+                <button className="btn btn-secondary mt-4 flex items-center gap-2 mx-auto" onClick={() => document.createElement('input').click()}>
                   <Plus className="w-4 h-4" /> Upload Image
                 </button>
               </div>
