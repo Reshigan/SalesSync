@@ -144,10 +144,10 @@ export default function EventsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Events Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Events Management</h1>
           <p className="text-gray-600">Manage product launches, trade shows, training sessions, and campaigns</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <Button variant="outline">
             <Filter className="h-4 w-4 mr-2" />
             Filter
@@ -169,7 +169,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.total_events}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.total_events}</p>
               </div>
             </div>
           </CardContent>
@@ -183,7 +183,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Events</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.active_events}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.active_events}</p>
               </div>
             </div>
           </CardContent>
@@ -197,7 +197,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Participants</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.total_participants}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.total_participants}</p>
               </div>
             </div>
           </CardContent>
@@ -211,7 +211,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Attendance Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.attendance_rate}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.attendance_rate}%</p>
               </div>
             </div>
           </CardContent>
@@ -225,7 +225,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Budget</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.total_budget)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(metrics.total_budget)}</p>
               </div>
             </div>
           </CardContent>
@@ -239,7 +239,7 @@ export default function EventsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.completed_events}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.completed_events}</p>
               </div>
             </div>
           </CardContent>
@@ -256,25 +256,25 @@ export default function EventsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Event Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Date & Location
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Participants
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Budget
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -282,24 +282,24 @@ export default function EventsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {events.map((event) => (
                   <tr key={event.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{event.title}</div>
                         <div className="text-sm text-gray-500">{event.description}</div>
                         <div className="text-xs text-gray-400 mt-1">Organizer: {event.organizer_name}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(event.type)}`}>
                         {event.type.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.status)}`}>
                         {event.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         <div className="flex items-center">
                           <Calendar className="h-4 w-4 mr-1 text-gray-400" />
@@ -311,7 +311,7 @@ export default function EventsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {event.actual_attendees || event.participant_count} / {event.expected_attendees}
                       </div>
@@ -324,10 +324,10 @@ export default function EventsPage() {
                         ></div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(event.budget)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
                           View Details

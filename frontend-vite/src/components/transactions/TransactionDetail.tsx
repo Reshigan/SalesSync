@@ -58,7 +58,7 @@ export default function TransactionDetail({
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
             {status && (
               <span className={`inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${statusColors[statusColor]}`}>
                 {status}

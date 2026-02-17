@@ -136,7 +136,7 @@ export const CustomerHierarchyPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Hierarchy</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customer Hierarchy</h1>
           <p className="mt-1 text-sm text-gray-500">
             Navigate through regions, areas, routes, and customers
           </p>
@@ -152,7 +152,7 @@ export const CustomerHierarchyPage: React.FC = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -220,7 +220,7 @@ export const CustomerHierarchyPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Hierarchy Tree */}
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm">
           <div className="px-6 py-4 border-b border-gray-100">

@@ -212,7 +212,7 @@ export default function CustomerDetailsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{customer.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{customer.name}</h1>
             <p className="text-sm text-gray-600">Customer Code: {customer.customerCode}</p>
           </div>
           <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(customer.status)}`}>
@@ -238,7 +238,7 @@ export default function CustomerDetailsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -246,7 +246,7 @@ export default function CustomerDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{customer.totalOrders}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{customer.totalOrders}</p>
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function CustomerDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${customer.totalRevenue.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${customer.totalRevenue.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -270,7 +270,7 @@ export default function CustomerDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Current Balance</p>
-              <p className="text-2xl font-bold text-gray-900">${customer.currentBalance.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${customer.currentBalance.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -282,7 +282,7 @@ export default function CustomerDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Credit Limit</p>
-              <p className="text-2xl font-bold text-gray-900">${customer.creditLimit.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${customer.creditLimit.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -424,25 +424,25 @@ export default function CustomerDetailsPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order #</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Order #</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {orders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => navigate(`/orders/${order.id}`)}>
-                    <td className="px-6 py-4 text-sm font-medium text-blue-600">{order.orderNumber}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">${order.totalAmount.toLocaleString()}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4 text-sm font-medium text-blue-600">{order.orderNumber}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(order.orderDate).toLocaleDateString()}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">${order.totalAmount.toLocaleString()}</td>
+                    <td className="px-3 py-3 sm:px-4">
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getOrderStatusColor(order.status)}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{order.paymentStatus}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{order.paymentStatus}</td>
                   </tr>
                 ))}
               </tbody>
@@ -458,21 +458,21 @@ export default function CustomerDetailsPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment #</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment #</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Method</th>
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {payments.map((payment) => (
                   <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{payment.paymentNumber}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 text-sm text-green-600 font-medium">${payment.amount.toLocaleString()}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{payment.method.replace('_', ' ')}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{payment.paymentNumber}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-green-600 font-medium">${payment.amount.toLocaleString()}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{payment.method.replace('_', ' ')}</td>
+                    <td className="px-3 py-3 sm:px-4">
                       <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                         {payment.status}
                       </span>

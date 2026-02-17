@@ -15,11 +15,11 @@ export default function VanInventoryPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Van Inventory</h1><p className="text-sm text-gray-600 mt-1">Monitor van stock levels</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Inventory</h1><p className="text-sm text-gray-600 mt-1">Monitor van stock levels</p></div>
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><label className="block text-sm font-medium text-gray-700 mb-2">Select Van</label><input type="text" placeholder="Enter Van ID" value={selectedVanId} onChange={e => setSelectedVanId(e.target.value)} className="border rounded-lg px-3 py-2 w-full max-w-md" /></div>
       
       {inventory && inventory.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold">{inventory.length}</p></div><Package className="h-8 w-8 text-blue-500" /></div></div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Total Stock</p><p className="text-2xl font-bold">{inventory.reduce((s,i) => s+i.current_stock,0)}</p></div><TrendingUp className="h-8 w-8 text-green-500" /></div></div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center justify-between"><div><p className="text-sm text-gray-600">Sold Today</p><p className="text-2xl font-bold text-green-600">{inventory.reduce((s,i) => s+i.sold_stock,0)}</p></div><TrendingDown className="h-8 w-8 text-red-500" /></div></div>
@@ -35,17 +35,17 @@ export default function VanInventoryPage() {
         : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50"><tr><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Current</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Loaded</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Sold</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Returned</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Value</th><th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Updated</th></tr></thead>
+              <thead className="bg-gray-50"><tr><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Current</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Loaded</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Sold</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Returned</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Value</th><th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Updated</th></tr></thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {inventory?.map(item => (
                   <tr key={item.product_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.product_code}</div></td>
-                    <td className="px-6 py-4"><span className={`text-sm font-medium ${item.current_stock<10?'text-red-600':'text-gray-900'}`}>{item.current_stock}</span></td>
-                    <td className="px-6 py-4 text-sm">{item.loaded_stock}</td>
-                    <td className="px-6 py-4 text-sm text-green-600">{item.sold_stock}</td>
-                    <td className="px-6 py-4 text-sm text-yellow-600">{item.returned_stock}</td>
-                    <td className="px-6 py-4 text-sm">{formatCurrency(item.total_value)}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{new Date(item.last_updated).toLocaleString()}</td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.product_code}</div></td>
+                    <td className="px-3 py-3 sm:px-4"><span className={`text-sm font-medium ${item.current_stock<10?'text-red-600':'text-gray-900'}`}>{item.current_stock}</span></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm">{item.loaded_stock}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-green-600">{item.sold_stock}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-yellow-600">{item.returned_stock}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm">{formatCurrency(item.total_value)}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-500">{new Date(item.last_updated).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>

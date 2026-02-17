@@ -161,7 +161,7 @@ export default function ProductDetailsPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{product.name}</h1>
             <p className="text-sm text-gray-600">SKU: {product.sku} | Category: {product.category}</p>
           </div>
           <span className={`px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(product.status)}`}>
@@ -187,7 +187,7 @@ export default function ProductDetailsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className={`p-3 bg-${stockStatus.color}-100 rounded-lg`}>
@@ -195,7 +195,7 @@ export default function ProductDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Stock Level</p>
-              <p className="text-2xl font-bold text-gray-900">{product.stockQuantity}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{product.stockQuantity}</p>
               <p className={`text-xs text-${stockStatus.color}-600`}>{stockStatus.status}</p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function ProductDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Sales</p>
-              <p className="text-2xl font-bold text-gray-900">{product.totalSales.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{product.totalSales.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ export default function ProductDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${product.totalRevenue.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${product.totalRevenue.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@ export default function ProductDetailsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Profit Margin</p>
-              <p className="text-2xl font-bold text-gray-900">{profitMargin}%</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{profitMargin}%</p>
             </div>
           </div>
         </div>
@@ -383,7 +383,7 @@ export default function ProductDetailsPage() {
 
       {activeTab === 'stock' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div className="card">
               <h4 className="text-sm font-medium text-gray-600 mb-2">Current Stock</h4>
               <p className="text-3xl font-bold text-gray-900">{product.stockQuantity}</p>
@@ -406,31 +406,31 @@ export default function ProductDetailsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
-                    <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+                    <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                    <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {stockHistory.map((entry, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">
                         {new Date(entry.date).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3 sm:px-4">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                           entry.type === 'in' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {entry.type === 'in' ? 'Stock In' : 'Stock Out'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-right">
+                      <td className="px-3 py-3 sm:px-4 text-sm text-right">
                         <span className={entry.type === 'in' ? 'text-green-600' : 'text-red-600'}>
                           {entry.type === 'in' ? '+' : '-'}{entry.quantity}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{entry.reference}</td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{entry.reference}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -35,14 +35,14 @@ export default function PromoterManagementPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div><h1 className="text-2xl font-bold text-gray-900">Promoter Management</h1><p className="text-sm text-gray-600 mt-1">Manage brand promoters ({total} total)</p></div>
+        <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Promoter Management</h1><p className="text-sm text-gray-600 mt-1">Manage brand promoters ({total} total)</p></div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Add Promoter</span></button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Promoters</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
+            <div><p className="text-sm text-gray-600">Total Promoters</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{total}</p></div>
             <Users className="h-8 w-8 text-blue-500" />
           </div>
         </div>
@@ -74,13 +74,13 @@ export default function PromoterManagementPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Join Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Brand</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Location</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Contact</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Join Date</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -89,13 +89,13 @@ export default function PromoterManagementPage() {
               ) : (
                 promoters.map(promoter => (
                   <tr key={promoter.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{promoter.first_name} {promoter.last_name}</div><div className="text-sm text-gray-500">ID: {promoter.id?.substring(0,8)}</div></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{promoter.brand_name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{promoter.assigned_location}</td>
-                    <td className="px-6 py-4"><div className="text-sm text-gray-900">{promoter.phone}</div><div className="text-sm text-gray-500">{promoter.email}</div></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{promoter.join_date ? new Date(promoter.join_date).toLocaleDateString() : '-'}</td>
-                    <td className="px-6 py-4">{getStatusBadge(promoter.status)}</td>
-                    <td className="px-6 py-4"><div className="flex space-x-2"><button className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(promoter.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{promoter.first_name} {promoter.last_name}</div><div className="text-sm text-gray-500">ID: {promoter.id?.substring(0,8)}</div></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{promoter.brand_name}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{promoter.assigned_location}</td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-900">{promoter.phone}</div><div className="text-sm text-gray-500">{promoter.email}</div></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{promoter.join_date ? new Date(promoter.join_date).toLocaleDateString() : '-'}</td>
+                    <td className="px-3 py-3 sm:px-4">{getStatusBadge(promoter.status)}</td>
+                    <td className="px-3 py-3 sm:px-4"><div className="flex space-x-2"><button className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(promoter.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
                   </tr>
                 ))
               )}

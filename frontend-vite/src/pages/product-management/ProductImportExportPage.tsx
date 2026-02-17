@@ -49,7 +49,7 @@ export const ProductImportExportPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Product Import/Export</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Product Import/Export</h1>
         <p className="mt-1 text-sm text-gray-500">
           Import products from files or export product data
         </p>

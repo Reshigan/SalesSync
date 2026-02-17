@@ -113,7 +113,7 @@ const CustomerSelectionPage: React.FC = () => {
           >
             ← Back
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Select Customer</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Select Customer</h1>
           <p className="text-gray-600">GPS validation required within 10 meters</p>
         </div>
 

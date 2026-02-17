@@ -34,7 +34,7 @@ export default function ExceptionDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Calculation
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Commission Exception Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Commission Exception Detail</h1>
       </div>
 
       <div className={`border rounded-lg p-6 mb-6 ${

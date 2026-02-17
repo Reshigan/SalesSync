@@ -103,7 +103,7 @@ export default function VisitConfigurationPage() {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Visit Configurations</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Visit Configurations</h1>
           <p className="text-sm text-gray-600 mt-1">
             Configure visits by brand, customer type, with surveys and board placements
           </p>
@@ -125,12 +125,12 @@ export default function VisitConfigurationPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Target</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date Range</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Features</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Name</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Target</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date Range</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Features</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -145,14 +145,14 @@ export default function VisitConfigurationPage() {
               ) : (
                 configurations?.map((config: VisitConfiguration) => (
                   <tr key={config.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="text-sm font-medium text-gray-900">{config.name}</div>
                       <div className="text-sm text-gray-500">{config.description}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">
                       {getTargetTypeLabel(config)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="text-sm text-gray-900">
                         {new Date(config.valid_from).toLocaleDateString()}
                       </div>
@@ -160,7 +160,7 @@ export default function VisitConfigurationPage() {
                         to {new Date(config.valid_to).toLocaleDateString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="flex flex-wrap gap-2">
                         {config.survey_id && (
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
@@ -182,8 +182,8 @@ export default function VisitConfigurationPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">{getStatusBadge(config.is_active)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4">{getStatusBadge(config.is_active)}</td>
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => {

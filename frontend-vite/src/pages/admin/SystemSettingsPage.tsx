@@ -241,7 +241,7 @@ export default function SystemSettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">System Settings</h1>
           <p className="mt-1 text-sm text-gray-600">
             Configure system-wide settings and preferences
           </p>

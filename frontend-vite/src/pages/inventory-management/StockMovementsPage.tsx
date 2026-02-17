@@ -37,7 +37,7 @@ export default function StockMovementsPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Stock Movements</h1><p className="text-sm text-gray-600 mt-1">Track all inventory movements ({total} total)</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Stock Movements</h1><p className="text-sm text-gray-600 mt-1">Track all inventory movements ({total} total)</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -67,13 +67,13 @@ export default function StockMovementsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date/Time</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Quantity</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">User</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date/Time</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Warehouse</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Quantity</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Reference</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">User</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -82,13 +82,13 @@ export default function StockMovementsPage() {
               ) : (
                 movements.map(movement => (
                   <tr key={movement.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4"><div className="text-sm text-gray-900">{new Date(movement.movement_date).toLocaleDateString()}</div><div className="text-sm text-gray-500">{new Date(movement.movement_date).toLocaleTimeString()}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{movement.product_name}</div><div className="text-sm text-gray-500">{movement.sku}</div></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{movement.warehouse_name}</td>
-                    <td className="px-6 py-4"><div className="flex items-center space-x-2">{getMovementIcon(movement.movement_type)}{getMovementBadge(movement.movement_type)}</div></td>
-                    <td className="px-6 py-4"><span className={`text-sm font-medium ${movement.movement_type === 'in' ? 'text-green-600' : movement.movement_type === 'out' ? 'text-red-600' : 'text-gray-900'}`}>{movement.movement_type === 'in' ? '+' : movement.movement_type === 'out' ? '-' : ''}{movement.quantity}</span></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{movement.reference_number || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{movement.user_name || '-'}</td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-900">{new Date(movement.movement_date).toLocaleDateString()}</div><div className="text-sm text-gray-500">{new Date(movement.movement_date).toLocaleTimeString()}</div></td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{movement.product_name}</div><div className="text-sm text-gray-500">{movement.sku}</div></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{movement.warehouse_name}</td>
+                    <td className="px-3 py-3 sm:px-4"><div className="flex items-center space-x-2">{getMovementIcon(movement.movement_type)}{getMovementBadge(movement.movement_type)}</div></td>
+                    <td className="px-3 py-3 sm:px-4"><span className={`text-sm font-medium ${movement.movement_type === 'in' ? 'text-green-600' : movement.movement_type === 'out' ? 'text-red-600' : 'text-gray-900'}`}>{movement.movement_type === 'in' ? '+' : movement.movement_type === 'out' ? '-' : ''}{movement.quantity}</span></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{movement.reference_number || '-'}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{movement.user_name || '-'}</td>
                   </tr>
                 ))
               )}

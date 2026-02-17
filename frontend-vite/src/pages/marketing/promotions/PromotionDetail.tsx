@@ -34,13 +34,13 @@ export default function PromotionDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/marketing/promotions')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{record.name || record.title || `Promotion #${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{record.name || record.title || `Promotion #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[record.status] || 'bg-gray-100 text-gray-800'}`}>{(record.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Start Date</p><p className="text-xl font-bold">{formatDate(record.start_date) || 'TBD'}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><Calendar className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">End Date</p><p className="text-xl font-bold">{formatDate(record.end_date) || 'TBD'}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Budget</p><p className="text-xl font-bold">{formatCurrency(record.budget || 0)}</p></div></div></div>

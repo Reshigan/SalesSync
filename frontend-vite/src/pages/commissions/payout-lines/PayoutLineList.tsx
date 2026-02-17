@@ -68,7 +68,7 @@ export default function PayoutLineList() {
           <ArrowLeft className="h-5 w-5" />
           Back to Payout
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Payout Lines</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payout Lines</h1>
         <p className="text-gray-600">{payout?.payout_number} - {payout?.payout_date}</p>
       </div>
 
@@ -86,33 +86,34 @@ export default function PayoutLineList() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Agent</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Period</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment Method</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Agent</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Period</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Amount</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment Method</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {lines?.map((line) => (
               <tr key={line.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {line.agent_name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {line.period}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right font-bold">
                   {formatCurrency(line.commission_amount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 capitalize">
                   {line.payment_method.replace('_', ' ')}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     line.status === 'paid' ? 'bg-green-100 text-green-800' :
                     line.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -121,7 +122,7 @@ export default function PayoutLineList() {
                     {line.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => navigate(`/commissions/payouts/${payoutId}/lines/${line.id}`)}
                     className="text-primary-600 hover:text-primary-900"
@@ -133,6 +134,7 @@ export default function PayoutLineList() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

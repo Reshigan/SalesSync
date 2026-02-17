@@ -33,7 +33,7 @@ export default function SurveyDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Visit
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Survey Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Survey Detail</h1>
         <p className="text-gray-600">{survey.survey_title}</p>
       </div>
 

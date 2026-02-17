@@ -60,7 +60,7 @@ export default function CountLineApproval() {
           <ArrowLeft className="h-5 w-5" />
           Back to Count Line
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Approve/Reject Count Line</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Approve/Reject Count Line</h1>
         <p className="text-gray-600">{line.product_name}</p>
       </div>
 

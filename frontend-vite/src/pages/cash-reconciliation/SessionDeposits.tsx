@@ -32,7 +32,7 @@ export default function SessionDeposits() {
           <ArrowLeft className="h-5 w-5" />
           Back to Session
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Session Deposits</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Session Deposits</h1>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
@@ -40,46 +40,47 @@ export default function SessionDeposits() {
           <DollarSign className="h-6 w-6 text-purple-600" />
           <div>
             <p className="text-sm text-gray-600">Total Deposits</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(total)}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(total)}</p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Deposit #</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Bank</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Deposit #</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Bank</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {deposits?.map((deposit) => (
               <tr key={deposit.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {deposit.deposit_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {formatCurrency(deposit.amount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {deposit.bank_name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(deposit.deposit_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     deposit.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                   }`}>
                     {deposit.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <button
                     onClick={() => navigate(`/cash-reconciliation/deposits/${deposit.id}`)}
                     className="text-primary-600 hover:text-primary-900 flex items-center gap-1"
@@ -92,6 +93,7 @@ export default function SessionDeposits() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

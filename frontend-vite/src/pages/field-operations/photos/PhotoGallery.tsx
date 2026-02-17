@@ -28,7 +28,7 @@ export default function PhotoGallery() {
           <ArrowLeft className="h-5 w-5" />
           Back to Visit
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Photo Gallery</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Photo Gallery</h1>
         <p className="text-gray-600">
           {visit?.visit_number} - {visit?.customer_name}
         </p>

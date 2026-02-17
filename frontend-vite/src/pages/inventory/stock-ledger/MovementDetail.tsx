@@ -33,11 +33,11 @@ export default function MovementDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Stock Ledger
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Stock Movement Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Stock Movement Detail</h1>
         <p className="text-gray-600">{movement.movement_number}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
@@ -61,7 +61,7 @@ export default function MovementDetail() {
             <Package className="h-5 w-5 text-purple-600" />
             <h3 className="font-semibold text-gray-900">Value</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">${movement.total_value.toFixed(2)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">${movement.total_value.toFixed(2)}</p>
           <p className="text-sm text-gray-600 mt-1">@ ${movement.unit_cost.toFixed(2)}/unit</p>
         </div>
       </div>

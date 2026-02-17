@@ -15,7 +15,7 @@ export default function VanPerformancePage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Van Performance Analytics</h1><p className="text-sm text-gray-600 mt-1">Monitor van sales performance and metrics</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Performance Analytics</h1><p className="text-sm text-gray-600 mt-1">Monitor van sales performance and metrics</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -37,7 +37,7 @@ export default function VanPerformancePage() {
 
       {filter.van_id && !isLoading && !error && stats && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
                 <div><p className="text-sm text-gray-600">Total Revenue</p><p className="text-2xl font-bold text-green-600">{formatCurrency(stats.total_revenue || 0)}</p></div>
@@ -46,19 +46,19 @@ export default function VanPerformancePage() {
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-gray-600">Total Orders</p><p className="text-2xl font-bold text-gray-900">{stats.total_orders || 0}</p></div>
+                <div><p className="text-sm text-gray-600">Total Orders</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_orders || 0}</p></div>
                 <ShoppingCart className="h-8 w-8 text-blue-500" />
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-gray-600">Items Sold</p><p className="text-2xl font-bold text-gray-900">{stats.items_sold || 0}</p></div>
+                <div><p className="text-sm text-gray-600">Items Sold</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.items_sold || 0}</p></div>
                 <Package className="h-8 w-8 text-purple-500" />
               </div>
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-gray-600">Avg Order Value</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.avg_order_value || 0)}</p></div>
+                <div><p className="text-sm text-gray-600">Avg Order Value</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(stats.avg_order_value || 0)}</p></div>
                 <TrendingUp className="h-8 w-8 text-orange-500" />
               </div>
             </div>

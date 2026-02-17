@@ -18,7 +18,7 @@ export default function VisitHistoryPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Visit History</h1><p className="text-sm text-gray-600 mt-1">View past visit records ({total} total)</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Visit History</h1><p className="text-sm text-gray-600 mt-1">View past visit records ({total} total)</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -42,12 +42,12 @@ export default function VisitHistoryPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Agent</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Check In/Out</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Duration</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Notes</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Agent</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Check In/Out</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Duration</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Notes</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -58,12 +58,12 @@ export default function VisitHistoryPage() {
                   const duration = visit.check_in_time && visit.check_out_time ? Math.round((new Date(visit.check_out_time).getTime() - new Date(visit.check_in_time).getTime()) / 60000) : null
                   return (
                     <tr key={visit.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm text-gray-900">{new Date(visit.visit_date).toLocaleDateString()}</td>
-                      <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{visit.customer_name}</div></td>
-                      <td className="px-6 py-4 text-sm text-gray-900">Agent #{visit.agent_id?.substring(0,8)}</td>
-                      <td className="px-6 py-4"><div className="text-sm text-gray-900">{visit.check_in_time ? new Date(visit.check_in_time).toLocaleTimeString() : '-'}</div><div className="text-sm text-gray-500">{visit.check_out_time ? new Date(visit.check_out_time).toLocaleTimeString() : '-'}</div></td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{duration ? `${duration} min` : '-'}</td>
-                      <td className="px-6 py-4"><div className="text-sm text-gray-500 max-w-xs truncate">{visit.notes || '-'}</div></td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(visit.visit_date).toLocaleDateString()}</td>
+                      <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{visit.customer_name}</div></td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">Agent #{visit.agent_id?.substring(0,8)}</td>
+                      <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-900">{visit.check_in_time ? new Date(visit.check_in_time).toLocaleTimeString() : '-'}</div><div className="text-sm text-gray-500">{visit.check_out_time ? new Date(visit.check_out_time).toLocaleTimeString() : '-'}</div></td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{duration ? `${duration} min` : '-'}</td>
+                      <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-500 max-w-xs truncate">{visit.notes || '-'}</div></td>
                     </tr>
                   )
                 })

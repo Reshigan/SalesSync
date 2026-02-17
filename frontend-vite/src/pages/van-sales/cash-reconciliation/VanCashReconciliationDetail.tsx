@@ -34,13 +34,13 @@ export default function VanCashReconciliationDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/van-sales/cash-reconciliation')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{recon.name || recon.title || `Cash Reconciliation #${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{recon.name || recon.title || `Cash Reconciliation #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[recon.status] || 'bg-gray-100 text-gray-800'}`}>{(recon.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Expected</p><p className="text-xl font-bold">{formatCurrency(recon.expected_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Actual</p><p className="text-xl font-bold">{formatCurrency(recon.actual_amount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-red-500" /><div><p className="text-sm text-gray-500">Variance</p><p className="text-xl font-bold">{formatCurrency(recon.variance || 0)}</p></div></div></div>

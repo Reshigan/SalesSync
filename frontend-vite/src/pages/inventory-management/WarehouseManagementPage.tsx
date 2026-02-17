@@ -27,20 +27,20 @@ export default function WarehouseManagementPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div><h1 className="text-2xl font-bold text-gray-900">Warehouse Management</h1><p className="text-sm text-gray-600 mt-1">Manage warehouse locations ({total} total)</p></div>
+        <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Warehouse Management</h1><p className="text-sm text-gray-600 mt-1">Manage warehouse locations ({total} total)</p></div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"><Plus className="h-4 w-4" /><span>Add Warehouse</span></button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Warehouses</p><p className="text-2xl font-bold text-gray-900">{total}</p></div>
+            <div><p className="text-sm text-gray-600">Total Warehouses</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{total}</p></div>
             <Warehouse className="h-8 w-8 text-blue-500" />
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold text-gray-900">{warehouses.reduce((sum, w) => sum + (w.products_count || 0), 0)}</p></div>
+            <div><p className="text-sm text-gray-600">Total Products</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{warehouses.reduce((sum, w) => sum + (w.products_count || 0), 0)}</p></div>
             <Package className="h-8 w-8 text-green-500" />
           </div>
         </div>
@@ -57,13 +57,13 @@ export default function WarehouseManagementPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Warehouse Name</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Manager</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Products</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Stock Value</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Capacity</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Warehouse Name</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Location</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Manager</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Products</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Stock Value</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Capacity</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -72,12 +72,12 @@ export default function WarehouseManagementPage() {
               ) : (
                 warehouses.map(warehouse => (
                   <tr key={warehouse.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{warehouse.warehouse_name}</div><div className="text-sm text-gray-500">{warehouse.warehouse_code}</div></td>
-                    <td className="px-6 py-4"><div className="text-sm text-gray-900">{warehouse.address}</div><div className="text-sm text-gray-500">{warehouse.city}, {warehouse.country}</div></td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{warehouse.manager_name || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{warehouse.products_count || 0}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-green-600">{formatCurrency(warehouse.total_value || 0)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{warehouse.warehouse_name}</div><div className="text-sm text-gray-500">{warehouse.warehouse_code}</div></td>
+                    <td className="px-3 py-3 sm:px-4"><div className="text-sm text-gray-900">{warehouse.address}</div><div className="text-sm text-gray-500">{warehouse.city}, {warehouse.country}</div></td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{warehouse.manager_name || '-'}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{warehouse.products_count || 0}</td>
+                    <td className="px-3 py-3 sm:px-4 text-sm font-medium text-green-600">{formatCurrency(warehouse.total_value || 0)}</td>
+                    <td className="px-3 py-3 sm:px-4">
                       <div className="flex items-center space-x-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[80px]">
                           <div className="bg-blue-600 h-2 rounded-full" style={{width: `${warehouse.capacity_utilization || 0}%`}}></div>
@@ -85,7 +85,7 @@ export default function WarehouseManagementPage() {
                         <span className="text-sm text-gray-900">{warehouse.capacity_utilization || 0}%</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4"><div className="flex space-x-2"><button className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(warehouse.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
+                    <td className="px-3 py-3 sm:px-4"><div className="flex space-x-2"><button className="text-blue-600 hover:text-blue-900"><Edit className="h-4 w-4" /></button><button onClick={() => {if(confirm('Delete?')) deleteMutation.mutate(warehouse.id)}} className="text-red-600 hover:text-red-900"><Trash2 className="h-4 w-4" /></button></div></td>
                   </tr>
                 ))
               )}

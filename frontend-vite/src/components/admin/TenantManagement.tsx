@@ -138,7 +138,7 @@ const TenantManagement: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tenant Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Tenant Management</h1>
           <p className="text-gray-600">Manage multi-tenant deployments and configurations</p>
         </div>
         <Button onClick={() => setShowAddModal(true)}>

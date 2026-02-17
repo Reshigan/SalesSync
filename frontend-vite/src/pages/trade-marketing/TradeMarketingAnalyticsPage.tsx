@@ -13,12 +13,12 @@ export default function TradeMarketingAnalyticsPage() {
   const stats = analytics || {}
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-ZA', {style: 'currency', currency: 'ZAR'}).format(amount)
 
-  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
+  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
   if (error) return <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4"><p className="text-red-800">Failed to load analytics.</p></div></div>
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Trade Marketing Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive trade marketing insights</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Trade Marketing Analytics</h1><p className="text-sm text-gray-600 mt-1">Comprehensive trade marketing insights</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Period</label>
@@ -30,28 +30,28 @@ export default function TradeMarketingAnalyticsPage() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Campaigns</p><p className="text-2xl font-bold text-gray-900">{stats.total_campaigns || 0}</p></div>
+            <div><p className="text-sm text-gray-600">Total Campaigns</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_campaigns || 0}</p></div>
             <Target className="h-8 w-8 text-blue-500" />
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Budget</p><p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.total_budget || 0)}</p></div>
+            <div><p className="text-sm text-gray-600">Total Budget</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(stats.total_budget || 0)}</p></div>
             <DollarSign className="h-8 w-8 text-green-500" />
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Activations</p><p className="text-2xl font-bold text-gray-900">{stats.total_activations || 0}</p></div>
+            <div><p className="text-sm text-gray-600">Total Activations</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_activations || 0}</p></div>
             <Calendar className="h-8 w-8 text-purple-500" />
           </div>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Reach</p><p className="text-2xl font-bold text-gray-900">{stats.total_reach || 0}</p></div>
+            <div><p className="text-sm text-gray-600">Total Reach</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_reach || 0}</p></div>
             <Users className="h-8 w-8 text-orange-500" />
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function TradeMarketingAnalyticsPage() {
           <h2 className="text-lg font-bold text-gray-900 mb-4">Campaign Performance</h2>
           <div className="space-y-4">
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Budget Utilization</span>
                 <span className="text-sm font-bold text-gray-900">{stats.budget_utilization || 0}%</span>
               </div>
@@ -71,7 +71,7 @@ export default function TradeMarketingAnalyticsPage() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Campaign Success Rate</span>
                 <span className="text-sm font-bold text-gray-900">{stats.success_rate || 0}%</span>
               </div>
@@ -80,7 +80,7 @@ export default function TradeMarketingAnalyticsPage() {
               </div>
             </div>
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-1">
                 <span className="text-sm text-gray-600">Avg Engagement Rate</span>
                 <span className="text-sm font-bold text-gray-900">{stats.avg_engagement_rate || 0}%</span>
               </div>
@@ -119,7 +119,7 @@ export default function TradeMarketingAnalyticsPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Audits</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total_audits || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_audits || 0}</p>
           </div>
           <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Compliance Rate</p>
@@ -134,10 +134,10 @@ export default function TradeMarketingAnalyticsPage() {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Promoter Performance</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Total Promoters</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.total_promoters || 0}</p>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_promoters || 0}</p>
           </div>
           <div className="p-4 border border-gray-100 rounded-lg">
             <p className="text-sm text-gray-600">Active Promoters</p>

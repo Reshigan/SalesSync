@@ -96,7 +96,7 @@ export default function InventoryTrackingPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Inventory Tracking</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Inventory Tracking</h1>
           <p className="text-gray-600">Monitor stock levels across all vans</p>
         </div>
         <Button>
@@ -106,7 +106,7 @@ export default function InventoryTrackingPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -115,7 +115,7 @@ export default function InventoryTrackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Inventory Value</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
               </div>
             </div>
           </CardContent>
@@ -129,7 +129,7 @@ export default function InventoryTrackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Items In Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{inventory.filter(i => i.status === 'in_stock').length}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{inventory.filter(i => i.status === 'in_stock').length}</p>
               </div>
             </div>
           </CardContent>
@@ -143,7 +143,7 @@ export default function InventoryTrackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Low Stock Items</p>
-                <p className="text-2xl font-bold text-gray-900">{lowStockItems}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{lowStockItems}</p>
               </div>
             </div>
           </CardContent>
@@ -157,7 +157,7 @@ export default function InventoryTrackingPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{outOfStockItems}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{outOfStockItems}</p>
               </div>
             </div>
           </CardContent>
@@ -207,25 +207,25 @@ export default function InventoryTrackingPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Van
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Stock Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Unit Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Total Value
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -233,16 +233,16 @@ export default function InventoryTrackingPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredInventory.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{item.productName}</div>
                         <div className="text-sm text-gray-500">SKU: {item.sku}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {item.vanNumber}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {item.currentStock} / {item.maxCapacity}
                       </div>
@@ -259,18 +259,18 @@ export default function InventoryTrackingPage() {
                         ></div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
                         {item.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(item.unitPrice)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       {formatCurrency(item.totalValue)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
                           Restock

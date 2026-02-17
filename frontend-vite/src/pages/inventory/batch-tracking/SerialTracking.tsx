@@ -28,7 +28,7 @@ export default function SerialTracking() {
           <ArrowLeft className="h-5 w-5" />
           Back to Serial
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Serial Tracking History</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Serial Tracking History</h1>
         <p className="text-gray-600">{serial?.serial_number} - {serial?.product_name}</p>
       </div>
 

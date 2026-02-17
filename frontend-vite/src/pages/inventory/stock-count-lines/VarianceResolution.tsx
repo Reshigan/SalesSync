@@ -61,13 +61,13 @@ export default function VarianceResolution() {
           <ArrowLeft className="h-5 w-5" />
           Back to Count Line
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Resolve Variance</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Resolve Variance</h1>
         <p className="text-gray-600">{line.product_name}</p>
       </div>
 
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
         <h2 className="text-lg font-semibold text-red-900 mb-4">Variance Summary</h2>
-        <dl className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <dt className="text-sm font-medium text-red-700">Expected</dt>
             <dd className="mt-1 text-2xl font-bold text-red-900">{line.expected_quantity}</dd>

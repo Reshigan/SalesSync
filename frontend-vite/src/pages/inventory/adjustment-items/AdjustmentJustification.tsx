@@ -33,7 +33,7 @@ export default function AdjustmentJustification() {
           <ArrowLeft className="h-5 w-5" />
           Back to Item
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Adjustment Justification</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Adjustment Justification</h1>
         <p className="text-gray-600">{item.product_name} ({item.product_sku})</p>
       </div>
 

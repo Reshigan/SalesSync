@@ -517,7 +517,7 @@ export default function VanSalesWorkflowPageMobile() {
                 <div className="pt-4 border-t border-gray-100">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">{orderItems.length}</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">{orderItems.length}</p>
                       <p className="text-sm text-gray-600">Items</p>
                     </div>
                     <div className="text-center">

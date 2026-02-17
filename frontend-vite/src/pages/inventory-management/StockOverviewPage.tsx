@@ -15,16 +15,16 @@ export default function StockOverviewPage() {
   const formatCurrency = (amount: number) => new Intl.NumberFormat('en-ZA', {style: 'currency', currency: 'ZAR'}).format(amount)
 
   if (error) return <div className="p-6"><div className="bg-red-50 border border-red-200 rounded-lg p-4"><p className="text-red-800">Failed to load stock overview.</p></div></div>
-  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
+  if (isLoading) return <div className="p-6"><div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/4"></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="h-24 bg-gray-200 rounded"></div>)}</div></div></div>
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Stock Overview</h1><p className="text-sm text-gray-600 mt-1">Monitor inventory levels across all warehouses</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Stock Overview</h1><p className="text-sm text-gray-600 mt-1">Monitor inventory levels across all warehouses</p></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <div className="flex items-center justify-between">
-            <div><p className="text-sm text-gray-600">Total Products</p><p className="text-2xl font-bold text-gray-900">{stats.total_products || 0}</p></div>
+            <div><p className="text-sm text-gray-600">Total Products</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total_products || 0}</p></div>
             <Package className="h-8 w-8 text-blue-500" />
           </div>
         </div>
@@ -66,14 +66,14 @@ export default function StockOverviewPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Warehouse</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Current Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Min Level</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Unit Value</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Total Value</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Warehouse</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Current Stock</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Min Level</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Unit Value</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Total Value</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -85,14 +85,14 @@ export default function StockOverviewPage() {
                   const isOutOfStock = item.current_stock === 0
                   return (
                     <tr key={item.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.category}</div></td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{item.sku}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{item.warehouse_name}</td>
-                      <td className="px-6 py-4"><span className={`text-sm font-medium ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-yellow-600' : 'text-gray-900'}`}>{item.current_stock}</span></td>
-                      <td className="px-6 py-4 text-sm text-gray-500">{item.min_stock_level}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(item.unit_value || 0)}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">{formatCurrency((item.current_stock * (item.unit_value || 0)))}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div><div className="text-sm text-gray-500">{item.category}</div></td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{item.sku}</td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{item.warehouse_name}</td>
+                      <td className="px-3 py-3 sm:px-4"><span className={`text-sm font-medium ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-yellow-600' : 'text-gray-900'}`}>{item.current_stock}</span></td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-500">{item.min_stock_level}</td>
+                      <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{formatCurrency(item.unit_value || 0)}</td>
+                      <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{formatCurrency((item.current_stock * (item.unit_value || 0)))}</td>
+                      <td className="px-3 py-3 sm:px-4">
                         {isOutOfStock ? <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">OUT OF STOCK</span>
                         : isLowStock ? <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">LOW STOCK</span>
                         : <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">IN STOCK</span>}

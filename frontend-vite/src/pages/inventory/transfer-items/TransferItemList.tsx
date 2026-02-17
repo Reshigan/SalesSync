@@ -28,24 +28,25 @@ export default function TransferItemList() {
           <ArrowLeft className="h-5 w-5" />
           Back to Transfer
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Transfer Items</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Transfer Items</h1>
         <p className="text-gray-600">
           {transfer?.transfer_number} - {transfer?.from_warehouse} → {transfer?.to_warehouse}
         </p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Requested</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Shipped</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Received</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Variance</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Requested</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Shipped</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Received</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Variance</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -53,22 +54,22 @@ export default function TransferItemList() {
               const hasVariance = item.variance !== 0
               return (
                 <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.product_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {item.product_sku}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {item.quantity_requested}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {item.quantity_shipped}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {item.quantity_received || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-right">
                     {item.quantity_received ? (
                       <div className="flex items-center justify-end gap-1">
                         {hasVariance && <AlertTriangle className="h-4 w-4 text-yellow-600" />}
@@ -80,7 +81,7 @@ export default function TransferItemList() {
                       '-'
                     )}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       item.status === 'received' ? 'bg-green-100 text-green-800' :
                       item.status === 'received_with_variance' ? 'bg-yellow-100 text-yellow-800' :
@@ -90,7 +91,7 @@ export default function TransferItemList() {
                       {item.status.replace(/_/g, ' ')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => navigate(`/inventory/transfers/${transferId}/items/${item.id}`)}
                       className="text-primary-600 hover:text-primary-900"
@@ -103,6 +104,7 @@ export default function TransferItemList() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

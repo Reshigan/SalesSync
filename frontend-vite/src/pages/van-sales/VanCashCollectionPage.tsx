@@ -17,7 +17,7 @@ export default function VanCashCollectionPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div><h1 className="text-2xl font-bold text-gray-900">Van Cash Collection</h1><p className="text-sm text-gray-600 mt-1">Track cash collections from van sales</p></div>
+      <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">Van Cash Collection</h1><p className="text-sm text-gray-600 mt-1">Track cash collections from van sales</p></div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -37,7 +37,7 @@ export default function VanCashCollectionPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-gray-600">Total Collections</p><p className="text-2xl font-bold text-gray-900">{collections.length}</p></div>
+                <div><p className="text-sm text-gray-600">Total Collections</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{collections.length}</p></div>
                 <Calendar className="h-8 w-8 text-blue-500" />
               </div>
             </div>
@@ -49,7 +49,7 @@ export default function VanCashCollectionPage() {
             </div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
               <div className="flex items-center justify-between">
-                <div><p className="text-sm text-gray-600">Average Collection</p><p className="text-2xl font-bold text-gray-900">{collections.length > 0 ? formatCurrency(totalCash / collections.length) : 'R 0.00'}</p></div>
+                <div><p className="text-sm text-gray-600">Average Collection</p><p className="text-xl sm:text-2xl font-bold text-gray-900">{collections.length > 0 ? formatCurrency(totalCash / collections.length) : 'R 0.00'}</p></div>
                 <TrendingUp className="h-8 w-8 text-purple-500" />
               </div>
             </div>
@@ -67,21 +67,21 @@ export default function VanCashCollectionPage() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Time</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order #</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
-                      <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Payment Method</th>
+                      <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Time</th>
+                      <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Order #</th>
+                      <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+                      <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Amount</th>
+                      <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Payment Method</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {collections.map((collection, idx) => (
                       <tr key={idx} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 text-sm text-gray-900">{new Date(collection.timestamp).toLocaleTimeString()}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{collection.order_number}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{collection.customer_name}</td>
-                        <td className="px-6 py-4 text-sm font-bold text-green-600">{formatCurrency(collection.amount)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-900">{collection.payment_method}</td>
+                        <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{new Date(collection.timestamp).toLocaleTimeString()}</td>
+                        <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{collection.order_number}</td>
+                        <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{collection.customer_name}</td>
+                        <td className="px-3 py-3 sm:px-4 text-sm font-bold text-green-600">{formatCurrency(collection.amount)}</td>
+                        <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{collection.payment_method}</td>
                       </tr>
                     ))}
                   </tbody>

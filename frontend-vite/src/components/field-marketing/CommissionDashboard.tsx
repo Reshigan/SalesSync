@@ -116,7 +116,7 @@ export default function CommissionDashboard() {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -163,7 +163,7 @@ export default function CommissionDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   ${(summary.total_pending + summary.total_approved + summary.total_paid).toFixed(2)}
                 </p>
               </div>
@@ -201,25 +201,26 @@ export default function CommissionDashboard() {
 
       {/* Commissions Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Agent
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Activity Type
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Amount
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -227,31 +228,31 @@ export default function CommissionDashboard() {
           <tbody className="bg-white divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={6} className="px-3 py-3 sm:px-4 text-center text-gray-500">
                   Loading commissions...
                 </td>
               </tr>
             ) : commissions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                <td colSpan={6} className="px-3 py-3 sm:px-4 text-center text-gray-500">
                   No commissions found
                 </td>
               </tr>
             ) : (
               commissions.map((commission) => (
                 <tr key={commission.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div className="font-medium text-gray-900">
                       {commission.agent_name || 'Unknown Agent'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">
                     {getActivityTypeLabel(commission.activity_type)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-500">
                     {new Date(commission.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <div className="text-sm">
                       <div className="font-medium text-gray-900">
                         ${commission.total_amount.toFixed(2)}
@@ -263,14 +264,14 @@ export default function CommissionDashboard() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       getStatusColor(commission.status)
                     }`}>
                       {commission.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => {
@@ -307,6 +308,7 @@ export default function CommissionDashboard() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Details Modal */}
@@ -347,7 +349,7 @@ export default function CommissionDashboard() {
 
               <div>
                 <p className="text-sm text-gray-600">Total Amount</p>
-                <p className="text-2xl font-bold text-gray-900">${selectedCommission.total_amount.toFixed(2)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">${selectedCommission.total_amount.toFixed(2)}</p>
               </div>
 
               <div>

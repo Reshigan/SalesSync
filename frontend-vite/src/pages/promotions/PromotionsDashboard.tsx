@@ -87,10 +87,10 @@ export default function PromotionsDashboard() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Promotions Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Promotions Dashboard</h1>
           <p className="text-gray-600">Track promotion performance and customer engagement</p>
         </div>
-        <div className="flex space-x-3">
+        <div className="flex flex-wrap gap-3">
           <div className="flex space-x-2">
             <input
               type="date"
@@ -445,7 +445,7 @@ export default function PromotionsDashboard() {
           <h3 className="text-lg font-semibold text-gray-900">ROI Analysis</h3>
           <DollarSign className="w-5 h-5 text-gray-400" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           <div className="text-center">
             <div className="text-3xl font-bold text-green-600">
               {analytics?.roi_analysis?.total_roi || 0}%

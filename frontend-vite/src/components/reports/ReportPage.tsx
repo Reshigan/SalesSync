@@ -123,7 +123,7 @@ export default function ReportPage({
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{title}</h1>
             {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
           </div>
           <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function ReportPage({
                 sortedData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-gray-50">
                     {columns.map(column => (
-                      <td key={column.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td key={column.key} className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                         {formatValue(row[column.key], column.type)}
                       </td>
                     ))}

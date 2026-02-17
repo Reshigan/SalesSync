@@ -34,7 +34,7 @@ export default function PaymentAllocationList() {
         </button>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Payment Allocations</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Payment Allocations</h1>
             <p className="text-gray-600">{payment?.payment_number} - {payment?.customer_name}</p>
           </div>
           <button
@@ -48,30 +48,31 @@ export default function PaymentAllocationList() {
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Invoice Amount</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Allocated</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Invoice</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Invoice Amount</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Allocated</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Date</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {allocations?.map((allocation) => (
               <tr key={allocation.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {allocation.invoice_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                   {formatCurrency(allocation.invoice_amount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                   {formatCurrency(allocation.allocated_amount)}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     allocation.allocation_type === 'full' 
                       ? 'bg-green-100 text-green-800' 
@@ -80,10 +81,10 @@ export default function PaymentAllocationList() {
                     {allocation.allocation_type}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(allocation.allocation_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => navigate(`/finance/payments/${paymentId}/allocations/${allocation.id}`)}
@@ -103,6 +104,7 @@ export default function PaymentAllocationList() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

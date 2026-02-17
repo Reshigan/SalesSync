@@ -28,21 +28,22 @@ export default function CountLineList() {
           <ArrowLeft className="h-5 w-5" />
           Back to Stock Count
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Count Lines</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Count Lines</h1>
         <p className="text-gray-600">{count?.count_number} - {count?.warehouse_name}</p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Expected</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Counted</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Variance</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Expected</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Counted</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Variance</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -50,19 +51,19 @@ export default function CountLineList() {
               const hasVariance = line.variance !== 0
               return (
                 <tr key={line.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {line.product_name}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                     {line.product_sku}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {line.expected_quantity}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                     {line.counted_quantity}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-right">
                     <div className="flex items-center justify-end gap-1">
                       {hasVariance && <AlertTriangle className="h-4 w-4 text-red-600" />}
                       <span className={`font-medium ${hasVariance ? 'text-red-600' : 'text-green-600'}`}>
@@ -73,7 +74,7 @@ export default function CountLineList() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       line.status === 'approved' ? 'bg-green-100 text-green-800' :
                       line.status === 'variance_pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -82,7 +83,7 @@ export default function CountLineList() {
                       {line.status.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => navigate(`/inventory/stock-counts/${countId}/lines/${line.id}`)}
                       className="text-primary-600 hover:text-primary-900"
@@ -95,6 +96,7 @@ export default function CountLineList() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

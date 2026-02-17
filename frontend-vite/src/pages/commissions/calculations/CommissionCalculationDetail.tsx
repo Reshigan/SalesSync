@@ -34,7 +34,7 @@ export default function CommissionCalculationDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/commissions/calculations')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{calc.name || calc.title || `Commission Calculation #${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{calc.name || calc.title || `Commission Calculation #${id}`}</h1>
             <span className={`inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${sc[calc.status] || 'bg-gray-100 text-gray-800'}`}>{(calc.status || 'N/A').replace(/_/g, ' ')}</span>
           </div>
         </div>

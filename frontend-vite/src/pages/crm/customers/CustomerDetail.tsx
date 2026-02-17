@@ -28,14 +28,14 @@ export default function CustomerDetail() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/crm/customers')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
-          <div><h1 className="text-2xl font-bold text-gray-900">{customer.customer_name || customer.name || `Customer #${id}`}</h1>
+          <div><h1 className="text-xl sm:text-2xl font-bold text-gray-900">{customer.customer_name || customer.name || `Customer #${id}`}</h1>
             <div className="flex items-center gap-2 mt-1"><span className="text-sm text-gray-500">{customer.customer_code || customer.code}</span>
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[customer.status] || 'bg-gray-100 text-gray-800'}`}>{customer.status || 'N/A'}</span></div></div>
         </div>
         <button onClick={() => navigate(`/crm/customers/${id}/edit`)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Edit className="h-4 w-4" />Edit</button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Credit Limit</p><p className="text-xl font-bold">{formatCurrency(customer.credit_limit || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance</p><p className="text-xl font-bold">{formatCurrency(customer.current_balance || customer.balance || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><ShoppingCart className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Total Orders</p><p className="text-xl font-bold">{customer.total_orders || 0}</p></div></div></div>

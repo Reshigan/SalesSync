@@ -127,7 +127,7 @@ export default function CommissionTrackingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Commission Tracking</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Commission Tracking</h1>
           <p className="mt-1 text-sm text-gray-600">
             Manage and track agent commissions and bonuses
           </p>
@@ -139,7 +139,7 @@ export default function CommissionTrackingPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
         <div className="card">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-green-100 rounded-lg">
@@ -147,7 +147,7 @@ export default function CommissionTrackingPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Total Commissions</p>
-              <p className="text-2xl font-bold text-gray-900">${totalStats.totalCommissions.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${totalStats.totalCommissions.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function CommissionTrackingPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-gray-900">${totalStats.pendingAmount.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${totalStats.pendingAmount.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function CommissionTrackingPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Paid Out</p>
-              <p className="text-2xl font-bold text-gray-900">${totalStats.paidAmount.toLocaleString()}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">${totalStats.paidAmount.toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function CommissionTrackingPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Active Agents</p>
-              <p className="text-2xl font-bold text-gray-900">{totalStats.agentCount}</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalStats.agentCount}</p>
             </div>
           </div>
         </div>
@@ -250,31 +250,31 @@ export default function CommissionTrackingPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Agent
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Period
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Sales Amount
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Rate
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Commission
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Bonus
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Total Earnings
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -282,7 +282,7 @@ export default function CommissionTrackingPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredCommissions.map((comm) => (
                   <tr key={comm.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <Users className="h-5 w-5 text-blue-600" />
@@ -293,34 +293,34 @@ export default function CommissionTrackingPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         {comm.period}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                       ${comm.salesAmount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                       {comm.commissionRate}%
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 text-right">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-blue-600 text-right">
                       ${comm.commissionAmount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600 text-right">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-green-600 text-right">
                       ${comm.bonusAmount.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-bold text-gray-900 text-right">
                       ${comm.totalEarnings.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(comm.status)}`}>
                         {getStatusIcon(comm.status)}
                         {comm.status.toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                       <div className="flex gap-2">
                         {comm.status === 'pending' && (
                           <button

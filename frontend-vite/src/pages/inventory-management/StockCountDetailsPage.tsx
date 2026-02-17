@@ -22,15 +22,15 @@ export default function StockCountDetailsPage() {
       <div className="flex items-center space-x-4">
         <button onClick={() => window.history.back()} className="text-gray-600 hover:text-gray-900"><ArrowLeft className="h-6 w-6" /></button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-900">Stock Count #{count.count_number}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Stock Count #{count.count_number}</h1>
           <p className="text-sm text-gray-600 mt-1">{count.warehouse_name} - {new Date(count.count_date).toLocaleDateString()}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Total Items</p>
-          <p className="text-2xl font-bold text-gray-900">{items.length}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{items.length}</p>
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
           <p className="text-sm text-gray-600">Matched</p>
@@ -86,27 +86,27 @@ export default function StockCountDetailsPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">System Qty</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Physical Qty</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Variance</th>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">System Qty</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Physical Qty</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Variance</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {items.map((item, idx) => (
                 <tr key={idx} className={item.variance !== 0 ? 'bg-yellow-50' : ''}>
-                  <td className="px-6 py-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div></td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.sku}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{item.system_quantity}</td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.physical_quantity}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4"><div className="text-sm font-medium text-gray-900">{item.product_name}</div></td>
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{item.sku}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900">{item.system_quantity}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{item.physical_quantity}</td>
+                  <td className="px-3 py-3 sm:px-4">
                     <span className={`text-sm font-medium ${item.variance > 0 ? 'text-green-600' : item.variance < 0 ? 'text-red-600' : 'text-gray-900'}`}>
                       {item.variance > 0 ? '+' : ''}{item.variance}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-3 py-3 sm:px-4">
                     {item.variance === 0 ? (
                       <div className="flex items-center space-x-1 text-green-600"><CheckCircle className="h-4 w-4" /><span className="text-xs">Match</span></div>
                     ) : (

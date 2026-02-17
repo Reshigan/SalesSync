@@ -225,7 +225,7 @@ export default function LiveMappingPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Live Mapping</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Live Mapping</h1>
           <p className="mt-1 text-sm text-gray-600">
             Real-time field agent tracking and route management.
           </p>
@@ -255,7 +255,7 @@ export default function LiveMappingPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Live Mapping</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Live Mapping</h1>
           <p className="mt-1 text-sm text-gray-600">
             Real-time field agent tracking and route management with live location updates.
           </p>
@@ -297,7 +297,7 @@ export default function LiveMappingPage() {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Agents List */}
         <div className="lg:col-span-1">
           <div className="card">
@@ -393,7 +393,7 @@ export default function LiveMappingPage() {
                   {/* Performance Metrics */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">{selectedAgent.performance.visits_today}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-gray-900">{selectedAgent.performance.visits_today}</div>
                       <div className="text-sm text-gray-500">Visits Today</div>
                     </div>
                     <div className="text-center">

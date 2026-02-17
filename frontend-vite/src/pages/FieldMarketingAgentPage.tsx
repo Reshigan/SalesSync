@@ -52,7 +52,7 @@ const FieldMarketingAgentPage: React.FC = () => {
       <div className="w-full">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Field Marketing Agent</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Field Marketing Agent</h1>
           <p className="text-gray-600">GPS Validation • Board Placement • Product Distribution</p>
         </div>
 

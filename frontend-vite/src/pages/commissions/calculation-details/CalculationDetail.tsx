@@ -49,7 +49,7 @@ export default function CalculationDetail() {
           <ArrowLeft className="h-5 w-5" />
           Back to Calculations
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Commission Calculation Detail</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Commission Calculation Detail</h1>
         <p className="text-gray-600">{calculation.agent_name}</p>
       </div>
 
@@ -59,7 +59,7 @@ export default function CalculationDetail() {
             <DollarSign className="h-5 w-5 text-blue-600" />
             <h3 className="font-semibold text-gray-900">Total Sales</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(calculation.total_sales)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(calculation.total_sales)}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -84,7 +84,7 @@ export default function CalculationDetail() {
             <DollarSign className="h-5 w-5 text-orange-600" />
             <h3 className="font-semibold text-gray-900">Final Commission</h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(calculation.final_commission)}</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(calculation.final_commission)}</p>
         </div>
       </div>
 
@@ -94,19 +94,19 @@ export default function CalculationDetail() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Category</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Sales Amount</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
-                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
+                <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Category</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Sales Amount</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Rate</th>
+                <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Commission</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {calculation.breakdown.map((item, idx) => (
                 <tr key={idx}>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.category}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">{formatCurrency(item.amount)}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right">{item.rate}%</td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">{formatCurrency(item.commission)}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">{item.category}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">{formatCurrency(item.amount)}</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right">{item.rate}%</td>
+                  <td className="px-3 py-3 sm:px-4 text-sm text-gray-900 text-right font-medium">{formatCurrency(item.commission)}</td>
                 </tr>
               ))}
             </tbody>

@@ -55,7 +55,7 @@ export default function ResetPasswordPage() {
     return (
       <div className="space-y-6 text-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
             Invalid Reset Link
           </h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -94,7 +94,7 @@ export default function ResetPasswordPage() {
           Back to sign in
         </Link>
         
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
           Reset your password
         </h2>
         <p className="mt-2 text-sm text-gray-600">

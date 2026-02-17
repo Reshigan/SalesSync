@@ -126,7 +126,7 @@ export default function CampaignsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Campaign Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Campaign Management</h1>
           <p className="text-gray-600">Create, manage, and track marketing campaigns across all channels</p>
         </div>
         <Button>
@@ -145,7 +145,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Campaigns</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.totalCampaigns}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.totalCampaigns}</p>
               </div>
             </div>
           </CardContent>
@@ -159,7 +159,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Campaigns</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.activeCampaigns}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.activeCampaigns}</p>
               </div>
             </div>
           </CardContent>
@@ -173,7 +173,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Reach</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.totalReach.toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.totalReach.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -187,7 +187,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Average CTR</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.averageCTR}%</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.averageCTR}%</p>
               </div>
             </div>
           </CardContent>
@@ -201,7 +201,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Spend</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalSpend)}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{formatCurrency(metrics.totalSpend)}</p>
               </div>
             </div>
           </CardContent>
@@ -215,7 +215,7 @@ export default function CampaignsPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Average ROI</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.averageROI}x</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.averageROI}x</p>
               </div>
             </div>
           </CardContent>
@@ -232,25 +232,25 @@ export default function CampaignsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Campaign Details
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Budget
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Performance
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     ROI
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -258,7 +258,7 @@ export default function CampaignsPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {campaigns.map((campaign) => (
                   <tr key={campaign.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
                         <div className="text-sm text-gray-500">{campaign.targetAudience}</div>
@@ -267,17 +267,17 @@ export default function CampaignsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(campaign.type)}`}>
                         {campaign.type.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(campaign.status)}`}>
                         {campaign.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {formatCurrency(campaign.spent)} / {formatCurrency(campaign.budget)}
                       </div>
@@ -294,7 +294,7 @@ export default function CampaignsPage() {
                         ></div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         Reach: {campaign.reach.toLocaleString()}
                       </div>
@@ -302,12 +302,12 @@ export default function CampaignsPage() {
                         CTR: {campaign.ctr}% | Conv: {campaign.conversions}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${campaign.roi >= 3 ? 'text-green-600' : campaign.roi >= 2 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {campaign.roi > 0 ? `${campaign.roi}x` : 'N/A'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <Button variant="outline" size="sm">
                           View Details

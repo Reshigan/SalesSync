@@ -28,11 +28,11 @@ export default function BatchAllocation() {
           <ArrowLeft className="h-5 w-5" />
           Back to Batch
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Batch Allocations</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Batch Allocations</h1>
         <p className="text-gray-600">{batch?.batch_number} - {batch?.product_name}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center gap-3 mb-2">
             <Package className="h-5 w-5 text-blue-600" />
@@ -65,39 +65,40 @@ export default function BatchAllocation() {
         <div className="px-6 py-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900">Allocation Details</h2>
         </div>
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Order</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Allocated Date</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Expected Ship</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Order</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Customer</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Quantity</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Allocated Date</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Expected Ship</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {allocations?.map((allocation) => (
               <tr key={allocation.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {allocation.order_number}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900">
                   {allocation.customer_name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right font-medium">
                   {allocation.quantity_allocated}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(allocation.allocation_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {allocation.status === 'fulfilled' 
                     ? new Date(allocation.shipped_date).toLocaleDateString()
                     : new Date(allocation.expected_ship_date).toLocaleDateString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     allocation.status === 'fulfilled' ? 'bg-green-100 text-green-800' :
                     allocation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
@@ -106,7 +107,7 @@ export default function BatchAllocation() {
                     {allocation.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => navigate(`/orders/${allocation.id}`)}
                     className="text-primary-600 hover:text-primary-900"
@@ -118,6 +119,7 @@ export default function BatchAllocation() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

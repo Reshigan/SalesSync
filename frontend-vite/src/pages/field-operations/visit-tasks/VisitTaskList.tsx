@@ -28,35 +28,36 @@ export default function VisitTaskList() {
           <ArrowLeft className="h-5 w-5" />
           Back to Visit
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Visit Tasks</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Visit Tasks</h1>
         <p className="text-gray-600">
           {visit?.visit_number} - {visit?.customer_name}
         </p>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Title</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Priority</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Duration</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase">Completed</th>
-              <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Type</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Title</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Priority</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Duration</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+              <th className="px-3 py-3 sm:px-4 text-left text-xs font-bold text-gray-600 uppercase">Completed</th>
+              <th className="px-3 py-3 sm:px-4 text-right text-xs font-bold text-gray-600 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {tasks?.map((task) => (
               <tr key={task.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 capitalize">
                   {task.task_type.replace('_', ' ')}
                 </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                <td className="px-3 py-3 sm:px-4 text-sm font-medium text-gray-900">
                   {task.task_title}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     task.priority === 'high' ? 'bg-red-100 text-red-800' :
                     task.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
@@ -65,13 +66,13 @@ export default function VisitTaskList() {
                     {task.priority}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-900 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <Clock className="h-3 w-3 text-gray-400" />
                     {task.duration_minutes} min
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                     task.status === 'completed' ? 'bg-green-100 text-green-800' :
                     task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
@@ -80,12 +81,12 @@ export default function VisitTaskList() {
                     {task.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm text-gray-500">
                   {task.completed_at 
                     ? new Date(task.completed_at).toLocaleString()
                     : '-'}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
                     onClick={() => navigate(`/field-operations/visits/${visitId}/tasks/${task.id}`)}
                     className="text-primary-600 hover:text-primary-900"
@@ -97,6 +98,7 @@ export default function VisitTaskList() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

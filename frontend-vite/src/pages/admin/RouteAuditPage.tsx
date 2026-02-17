@@ -131,7 +131,7 @@ export default function RouteAuditPage() {
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Total Routes</div>
-          <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
+          <div className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</div>
         </div>
         <div className="bg-white p-4 rounded-lg border border-gray-100">
           <div className="text-sm text-gray-600 mb-1">Success</div>

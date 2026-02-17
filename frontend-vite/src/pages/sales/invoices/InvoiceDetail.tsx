@@ -38,7 +38,7 @@ export default function InvoiceDetail() {
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/sales/invoices')} className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft className="h-5 w-5" /></button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Invoice {invoice.invoice_number || `#${id}`}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Invoice {invoice.invoice_number || `#${id}`}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[invoice.status] || 'bg-gray-100 text-gray-800'}`}>{invoice.status || 'N/A'}</span>
             </div>
@@ -49,7 +49,7 @@ export default function InvoiceDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-green-500" /><div><p className="text-sm text-gray-500">Total Amount</p><p className="text-xl font-bold">{formatCurrency(invoice.total_amount || invoice.totalAmount || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><CreditCard className="h-8 w-8 text-blue-500" /><div><p className="text-sm text-gray-500">Amount Paid</p><p className="text-xl font-bold">{formatCurrency(invoice.amount_paid || invoice.amountPaid || 0)}</p></div></div></div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-orange-500" /><div><p className="text-sm text-gray-500">Balance Due</p><p className="text-xl font-bold">{formatCurrency(invoice.balance_due || invoice.balanceDue || (invoice.total_amount || 0) - (invoice.amount_paid || 0))}</p></div></div></div>
