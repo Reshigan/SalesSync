@@ -14848,7 +14848,7 @@ api.get('/audit/:entityType/:entityId/entries/:entryId', async (c) => {
 api.get('/field-agent-workflow/visit-list', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
   try {
-    const visits = await db.prepare("SELECT v.*, c.name as customer_name, c.address as customer_address, c.latitude, c.longitude FROM visits v LEFT JOIN customers c ON v.customer_id = c.id WHERE v.tenant_id = ? AND v.agent_id = ? AND v.visit_date = date('now') ORDER BY v.sequence_number ASC").bind(tenantId, userId).all();
+    const visits = await db.prepare("SELECT v.*, c.name as customer_name, c.address as customer_address, c.latitude, c.longitude FROM visits v LEFT JOIN customers c ON v.customer_id = c.id WHERE v.tenant_id = ? AND v.agent_id = ? AND v.visit_date = date('now') ORDER BY v.created_at ASC").bind(tenantId, userId).all();
     return c.json({ success: true, data: visits.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -14859,7 +14859,7 @@ api.post('/field-agent-workflow/start-visit', async (c) => {
     const { visit_id, latitude, longitude } = await c.req.json();
     await db.prepare("UPDATE visits SET status = 'in_progress', check_in_time = datetime('now'), check_in_latitude = ?, check_in_longitude = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(latitude || 0, longitude || 0, visit_id, tenantId).run();
     if (latitude && longitude) {
-      await db.prepare("INSERT INTO gps_locations (id, user_id, latitude, longitude, accuracy, tenant_id, created_at) VALUES (?, ?, ?, ?, 10, ?, datetime('now'))").bind(crypto.randomUUID(), userId, latitude, longitude, tenantId).run();
+      await db.prepare("INSERT INTO gps_locations (id, agent_id, latitude, longitude, accuracy, tenant_id, created_at) VALUES (?, ?, ?, ?, 10, ?, datetime('now'))").bind(crypto.randomUUID(), userId, latitude, longitude, tenantId).run();
     }
     return c.json({ success: true, message: 'Visit started' });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
@@ -15003,7 +15003,7 @@ api.get('/comprehensive-transactions/:id', async (c) => {
 api.get('/currency-system/currencies', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId');
   try {
-    const currencies = await db.prepare('SELECT * FROM currencies WHERE tenant_id = ? OR is_global = 1 ORDER BY code ASC').bind(tenantId).all();
+    const currencies = await db.prepare('SELECT * FROM currencies WHERE tenant_id = ? ORDER BY code ASC').bind(tenantId).all();
     return c.json({ success: true, data: currencies.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -15032,7 +15032,7 @@ api.post('/currency-system/convert', async (c) => {
 api.get('/gps-tracking/agents', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId');
   try {
-    const agents = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.role, gl.latitude, gl.longitude, gl.accuracy, gl.created_at as last_location_time FROM users u LEFT JOIN (SELECT user_id, latitude, longitude, accuracy, created_at, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON u.id = gl.user_id AND gl.rn = 1 WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'driver')").bind(tenantId, tenantId).all();
+    const agents = await db.prepare("SELECT u.id, u.first_name, u.last_name, u.email, u.role, gl.latitude, gl.longitude, gl.accuracy, gl.created_at as last_location_time FROM users u LEFT JOIN (SELECT agent_id, latitude, longitude, accuracy, created_at, ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY created_at DESC) as rn FROM gps_locations WHERE tenant_id = ?) gl ON u.id = gl.agent_id AND gl.rn = 1 WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'driver')").bind(tenantId, tenantId).all();
     return c.json({ success: true, data: agents.results || [] });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -15040,7 +15040,7 @@ api.get('/gps-tracking/agents', async (c) => {
 api.get('/gps-tracking/agent/:agentId', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const agentId = c.req.param('agentId');
   try {
-    const locations = await db.prepare('SELECT * FROM gps_locations WHERE user_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(agentId, tenantId).all();
+    const locations = await db.prepare('SELECT * FROM gps_locations WHERE agent_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50').bind(agentId, tenantId).all();
     const agent = await db.prepare('SELECT id, first_name, last_name, email, role FROM users WHERE id = ? AND tenant_id = ?').bind(agentId, tenantId).first();
     return c.json({ success: true, data: { agent: agent || {}, locations: locations.results || [] } });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }

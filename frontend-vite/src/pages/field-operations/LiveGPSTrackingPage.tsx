@@ -80,8 +80,8 @@ export default function LiveGPSTrackingPage() {
         <div className="flex items-start space-x-3">
           <Navigation className="h-5 w-5 text-blue-600 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-blue-900">Map View Coming Soon</p>
-            <p className="text-sm text-blue-700 mt-1">Interactive map with agent locations will be available in the next update.</p>
+            <p className="text-sm font-medium text-blue-900">GPS Data</p>
+            <p className="text-sm text-blue-700 mt-1">Agent locations are updated every 30 seconds. Click an agent above to view their route history.</p>
           </div>
         </div>
       </div>

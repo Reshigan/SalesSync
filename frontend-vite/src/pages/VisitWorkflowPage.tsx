@@ -173,8 +173,8 @@ const VisitWorkflowPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => alert('Survey feature coming soon!')}
-            className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left opacity-75"
+            onClick={() => navigate('/field-marketing/surveys', { state: { visit, customer } })}
+            className="w-full bg-white rounded-lg shadow p-6 hover:shadow-md transition text-left"
           >
             <div className="flex items-center">
               <div className="text-4xl mr-4">📝</div>
