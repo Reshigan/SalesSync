@@ -135,7 +135,7 @@ export default function MerchandisingDashboard() {
                           </TableCell>
                           <TableCell>{p.compliance || 0}%</TableCell>
                           <TableCell>
-                            <IconButton size="small"><Visibility fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`View planogram: ${p.name || p.id}`)}><Visibility fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       ))}

@@ -59,7 +59,7 @@ export default function ProcurementDashboard() {
     <Box sx={{ p: 3 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4">Procurement Dashboard</Typography>
-        <Button variant="contained" startIcon={<Add />}>New PO</Button>
+        <Button variant="contained" startIcon={<Add />} onClick={() => alert('Create new purchase order')}>New PO</Button>
       </Box>
 
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -156,7 +156,7 @@ export default function ProcurementDashboard() {
                             />
                           </TableCell>
                           <TableCell>
-                            <IconButton size="small"><Visibility fontSize="small" /></IconButton>
+                            <IconButton size="small" onClick={() => alert(`View PO: ${po.po_number || po.id}`)}><Visibility fontSize="small" /></IconButton>
                           </TableCell>
                         </TableRow>
                       ))}

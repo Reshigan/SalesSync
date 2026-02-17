@@ -300,7 +300,7 @@ export default function InventoryManagement() {
                       <TableCell align="right">{item.reorder_quantity}</TableCell>
                       <TableCell align="right">${item.estimated_cost?.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Button variant="outlined" size="small">Create PO</Button>
+                        <Button variant="outlined" size="small" onClick={() => alert(`Reorder ${item.product_name}: ${item.reorder_quantity} units`)}>Create PO</Button>
                       </TableCell>
                     </TableRow>
                   ))}

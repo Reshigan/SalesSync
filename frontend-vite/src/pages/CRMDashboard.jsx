@@ -192,10 +192,10 @@ export default function CRMDashboard() {
                               : 'Never'}
                           </TableCell>
                           <TableCell>
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => setTab(0)}>
                               <Visibility fontSize="small" />
                             </IconButton>
-                            <IconButton size="small">
+                            <IconButton size="small" onClick={() => setTab(0)}>
                               <Edit fontSize="small" />
                             </IconButton>
                           </TableCell>
