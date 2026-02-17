@@ -25,8 +25,6 @@ export default function CashVariance() {
     },
   })
 
-  })
-
   const { register, handleSubmit, formState: { errors } } = useForm<VarianceFormData>()
 
   const resolveMutation = useMutation({

@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { salesService } from '../../../services/sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function PaymentsList() {
   const navigate = useNavigate()
@@ -108,7 +109,7 @@ export default function PaymentsList() {
       data={payments}
       loading={loading}
       onRefresh={loadPayments}
-      onExport={() => console.log('Export payments')}
+      onExport={() => exportToCSV(payments as Record<string, unknown>[], 'payments')}
       createPath="/sales/payments/create"
       createLabel="Record Payment"
     />

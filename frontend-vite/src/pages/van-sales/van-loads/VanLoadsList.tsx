@@ -4,6 +4,7 @@ import { Eye, CheckCircle } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { vanSalesService } from '../../../services/van-sales.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function VanLoadsList() {
   const navigate = useNavigate()
@@ -131,7 +132,7 @@ export default function VanLoadsList() {
       data={vanLoads}
       loading={loading}
       onRefresh={loadVanLoads}
-      onExport={() => console.log('Export van loads')}
+      onExport={() => exportToCSV(vanLoads as Record<string, unknown>[], 'vanloads')}
       createPath="/van-sales/van-loads/create"
       createLabel="Create Van Load"
     />

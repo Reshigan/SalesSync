@@ -16,6 +16,12 @@ export default function DepositDetail() {
     },
   })
 
+  const { data: deposit, isLoading } = useQuery({
+    queryKey: ['deposit', sessionId, depositId],
+    queryFn: async () => {
+      const res = await apiClient.get(`/cash-sessions/${sessionId}/deposits/${depositId}`)
+      return res.data?.data || null
+    },
   })
 
   if (isLoading) {

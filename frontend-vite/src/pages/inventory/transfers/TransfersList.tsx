@@ -4,6 +4,7 @@ import { Eye, RotateCcw } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { inventoryService } from '../../../services/inventory.service'
 import { formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function TransfersList() {
   const navigate = useNavigate()
@@ -126,7 +127,7 @@ export default function TransfersList() {
       data={transfers}
       loading={loading}
       onRefresh={loadTransfers}
-      onExport={() => console.log('Export transfers')}
+      onExport={() => exportToCSV(transfers as Record<string, unknown>[], 'transfers')}
       createPath="/inventory/transfers/create"
       createLabel="Create Transfer"
     />

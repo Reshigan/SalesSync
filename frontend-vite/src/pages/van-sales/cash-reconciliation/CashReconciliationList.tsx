@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { vanSalesService } from '../../../services/van-sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function CashReconciliationList() {
   const navigate = useNavigate()
@@ -117,7 +118,7 @@ export default function CashReconciliationList() {
       data={reconciliations}
       loading={loading}
       onRefresh={loadReconciliations}
-      onExport={() => console.log('Export reconciliations')}
+      onExport={() => exportToCSV(reconciliations as Record<string, unknown>[], 'cashreconciliation')}
       createPath="/van-sales/cash-reconciliation/create"
       createLabel="Create Reconciliation"
     />

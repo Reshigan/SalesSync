@@ -80,13 +80,11 @@ const OrdersKanban: React.FC = () => {
   };
 
   const handleCardClick = (card: KanbanCard) => {
-    console.log('Card clicked:', card);
-    // Navigate to order details or open modal
+    window.location.href = `/sales/orders/${card.id}`;
   };
 
   const handleCardEdit = (card: KanbanCard) => {
-    console.log('Edit card:', card);
-    // Open edit dialog
+    window.location.href = `/sales/orders/${card.id}/edit`;
   };
 
   const handleCardDelete = async (cardId: string) => {

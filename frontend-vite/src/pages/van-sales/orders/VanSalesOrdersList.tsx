@@ -4,6 +4,7 @@ import { Eye, Edit, RotateCcw } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { vanSalesService } from '../../../services/van-sales.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function VanSalesOrdersList() {
   const navigate = useNavigate()
@@ -137,7 +138,7 @@ export default function VanSalesOrdersList() {
       data={orders}
       loading={loading}
       onRefresh={loadOrders}
-      onExport={() => console.log('Export orders')}
+      onExport={() => exportToCSV(orders as Record<string, unknown>[], 'vansalesorders')}
       createPath="/van-sales/orders/create"
       createLabel="Create Order"
     />

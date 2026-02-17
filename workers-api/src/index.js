@@ -301,22 +301,22 @@ api.get('/customers/stats', async (c) => {
 });
 
 api.get('/audit-trail', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM audit_logs WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/pending', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'pending' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customer-visits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const customerId = c.req.query('customer_id'); let query = 'SELECT * FROM visits WHERE tenant_id = ?'; const params = [tenantId]; if (customerId) { query += ' AND customer_id = ?'; params.push(customerId); } query += ' ORDER BY created_at DESC LIMIT 100'; const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/credit-limits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT id, name, credit_limit, balance FROM customers WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/segments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT segment, COUNT(*) as count FROM customers WHERE tenant_id = ? GROUP BY segment').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/customers/:id', async (c) => {
   const db = c.env.DB;
@@ -421,19 +421,19 @@ api.get('/products/export', async (c) => {
 });
 
 api.get('/inventory/stock', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/kyc/compliance', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM kyc_submissions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/inventory', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.*, i.quantity as stock_quantity, i.warehouse_id FROM products p LEFT JOIN inventory i ON p.id = i.product_id AND i.tenant_id = p.tenant_id WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/hierarchy', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM categories WHERE tenant_id = ? ORDER BY parent_id, name').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/pricing', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT p.id, p.name, p.code, p.price, p.cost_price, p.category FROM products p WHERE p.tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/products/:id', async (c) => {
   const db = c.env.DB;
@@ -1907,8 +1907,7 @@ api.get('/users/:userId/roles', requirePermission('users:view'), async (c) => {
     `).bind(userId, tenantId).all();
     
     return c.json({ success: true, data: userRoles.results || [] });
-  } catch (e) {
-    return c.json({ success: true, data: [] });
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500);
   }
 });
 
@@ -2024,8 +2023,7 @@ api.get('/users/:userId/permissions', requirePermission('users:view'), async (c)
     `).bind(userId).all();
     
     return c.json({ success: true, data: permissions.results || [] });
-  } catch (e) {
-    return c.json({ success: true, data: [] });
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500);
   }
 });
 
@@ -3888,7 +3886,7 @@ api.get('/finance/invoices', async (c) => {
   try {
     const invoices = await db.prepare('SELECT i.*, c.name as customer_name FROM invoices i LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? ORDER BY i.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: invoices.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/finance/credit-notes', async (c) => {
@@ -3897,7 +3895,7 @@ api.get('/finance/credit-notes', async (c) => {
   try {
     const notes = await db.prepare('SELECT * FROM credit_notes WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: notes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/finance/ap-summary', async (c) => {
@@ -4087,7 +4085,7 @@ api.get('/dashboard/recent-activity', async (c) => {
     const payments = await db.prepare('SELECT id, payment_number as title, status, created_at, "payment" as type FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(limit));
     return c.json({ success: true, data: activities });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/charts', async (c) => {
@@ -4117,7 +4115,7 @@ api.get('/dashboard/top-customers', async (c) => {
   try {
     const customers = await db.prepare('SELECT c.id, c.name, COUNT(o.id) as orders, COALESCE(SUM(o.total_amount), 0) as revenue FROM customers c LEFT JOIN orders o ON c.id = o.customer_id WHERE c.tenant_id = ? GROUP BY c.id ORDER BY revenue DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     return c.json({ success: true, data: customers.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/sales-performance', async (c) => {
@@ -4126,7 +4124,7 @@ api.get('/dashboard/sales-performance', async (c) => {
   try {
     const perf = await db.prepare("SELECT date(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? GROUP BY date(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all();
     return c.json({ success: true, data: perf.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/inventory-overview', async (c) => {
@@ -4180,7 +4178,7 @@ api.get('/quotations', async (c) => {
   try {
     const quotes = await db.prepare('SELECT q.*, c.name as customer_name FROM quotations q LEFT JOIN customers c ON q.customer_id = c.id WHERE q.tenant_id = ? ORDER BY q.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: quotes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/dashboard/customers', async (c) => {
@@ -4237,7 +4235,7 @@ api.get('/kyc/cases', async (c) => {
   try {
     const cases = await db.prepare('SELECT * FROM kyc_cases WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: cases.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/kyc/cases/:id', async (c) => {
@@ -4273,7 +4271,7 @@ api.get('/order-lines', async (c) => {
     params.push(parseInt(limit), parseInt(offset));
     const lines = await db.prepare(query).bind(...params).all();
     return c.json({ success: true, data: lines.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/order-lines/:id', async (c) => {
@@ -4348,7 +4346,7 @@ api.post('/pricing/bulk-quote', async (c) => {
       }
     }
     return c.json({ success: true, data: results });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales-reps', async (c) => {
@@ -4359,7 +4357,7 @@ api.get('/sales-reps', async (c) => {
     if (reps.results && reps.results.length > 0) return c.json({ success: true, data: reps.results });
     const allUsers = await db.prepare("SELECT id, first_name, last_name, email, status FROM users WHERE tenant_id = ?").bind(tenantId).all();
     return c.json({ success: true, data: allUsers.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales/payments', async (c) => {
@@ -4368,7 +4366,7 @@ api.get('/sales/payments', async (c) => {
   try {
     const payments = await db.prepare('SELECT * FROM payments WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: payments.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/sales/payments/:id', async (c) => {
@@ -4429,7 +4427,7 @@ api.get('/team-hierarchy', async (c) => {
   try {
     const hierarchy = await db.prepare('SELECT th.*, u1.first_name as leader_first_name, u1.last_name as leader_last_name, u2.first_name as agent_first_name, u2.last_name as agent_last_name FROM team_hierarchy th LEFT JOIN users u1 ON th.leader_id = u1.id LEFT JOIN users u2 ON th.agent_id = u2.id WHERE th.tenant_id = ? ORDER BY th.created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: hierarchy.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/team-hierarchy/leader/:leaderId/agents', async (c) => {
@@ -4439,7 +4437,7 @@ api.get('/team-hierarchy/leader/:leaderId/agents', async (c) => {
   try {
     const agents = await db.prepare('SELECT th.*, u.first_name, u.last_name, u.email FROM team_hierarchy th JOIN users u ON th.agent_id = u.id WHERE th.leader_id = ? AND th.tenant_id = ?').bind(leaderId, tenantId).all();
     return c.json({ success: true, data: agents.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.post('/team-hierarchy', async (c) => {
@@ -4481,7 +4479,7 @@ api.get('/analytics/recent-activity', async (c) => {
     const payments = await db.prepare('SELECT id, payment_number as title, status, created_at, "payment" as type FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?').bind(tenantId, parseInt(limit)).all();
     const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, parseInt(limit));
     return c.json({ success: true, data: activities });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/analytics/visits', async (c) => {
@@ -4544,7 +4542,7 @@ api.get('/analytics/performance', async (c) => {
   try {
     const perf = await db.prepare("SELECT date(created_at) as date, SUM(total_amount) as revenue, COUNT(*) as orders FROM orders WHERE tenant_id = ? GROUP BY date(created_at) ORDER BY date DESC LIMIT 30").bind(tenantId).all();
     return c.json({ success: true, data: perf.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/analytics/realtime', async (c) => {
@@ -4583,7 +4581,7 @@ api.get('/trade-marketing/boards', async (c) => {
   try {
     const boards = await db.prepare('SELECT * FROM boards WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: boards.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/planograms', async (c) => {
@@ -4592,7 +4590,7 @@ api.get('/planograms', async (c) => {
   try {
     const planograms = await db.prepare('SELECT * FROM planograms WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
     return c.json({ success: true, data: planograms.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/beat-routes', async (c) => {
@@ -4601,7 +4599,7 @@ api.get('/beat-routes', async (c) => {
   try {
     const routes = await db.prepare('SELECT * FROM beat_routes WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: routes.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/beat-routes/:id', async (c) => {
@@ -4621,7 +4619,7 @@ api.get('/system-settings', async (c) => {
   try {
     const settings = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ? ORDER BY key').bind(tenantId).all();
     return c.json({ success: true, data: settings.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/reports/templates', async (c) => {
@@ -4630,7 +4628,7 @@ api.get('/reports/templates', async (c) => {
   try {
     const templates = await db.prepare('SELECT * FROM report_templates WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: templates.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/notifications', async (c) => {
@@ -4640,7 +4638,7 @@ api.get('/notifications', async (c) => {
   try {
     const notifs = await db.prepare('SELECT * FROM notifications WHERE tenant_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 50').bind(tenantId, userId).all();
     return c.json({ success: true, data: notifs.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 // ==================== PRICING ROUTE ALIASES ====================
@@ -4650,7 +4648,7 @@ api.get('/pricing/price-lists', async (c) => {
   try {
     const priceLists = await db.prepare('SELECT * FROM price_lists WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
     return c.json({ success: true, data: priceLists.results || [] });
-  } catch (e) { return c.json({ success: true, data: [] }); }
+  } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 
 api.get('/pricing/price-lists/:id', async (c) => {
@@ -10173,19 +10171,18 @@ api.get('/commissions/payouts', authMiddleware, async (c) => {
     let payouts = [];
     try { const r = await db.prepare(`SELECT * FROM commission_payouts WHERE tenant_id = ? ORDER BY created_at DESC`).bind(tenantId).all(); payouts = r.results || []; } catch(e) {}
     return c.json({ success: true, data: payouts });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
 api.get('/commissions/calculations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/payments', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM commission_items WHERE tenant_id = ? AND status = 'paid' ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/reports', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/commissions/:id', async (c) => {
   const db = c.env.DB;
@@ -13583,8 +13580,7 @@ api.get('/field-agents', authMiddleware, async (c) => {
     let agents = [];
     try { const r = await db.prepare(`SELECT u.id, u.first_name, u.last_name, u.email, u.role, u.status FROM users u WHERE u.tenant_id = ? AND u.role IN ('agent', 'field_agent', 'sales_rep')`).bind(tenantId).all(); agents = r.results || []; } catch(e) {}
     return c.json({ success: true, data: agents });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13695,8 +13691,7 @@ api.get('/inventory/multi-location', authMiddleware, async (c) => {
     let inventory = [];
     try { const r = await db.prepare(`SELECT i.*, p.name as product_name, w.name as warehouse_name FROM inventory i LEFT JOIN products p ON i.product_id = p.id LEFT JOIN warehouses w ON i.warehouse_id = w.id WHERE i.tenant_id = ? ORDER BY p.name`).bind(tenantId).all(); inventory = r.results || []; } catch(e) {}
     return c.json({ success: true, data: inventory });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13719,8 +13714,7 @@ api.get('/inventory/reorder-suggestions', authMiddleware, async (c) => {
     let suggestions = [];
     try { const r = await db.prepare('SELECT * FROM inventory WHERE tenant_id = ? AND quantity <= reorder_level ORDER BY quantity ASC').bind(tenantId).all(); suggestions = r.results || []; } catch(e) {}
     return c.json({ success: true, data: suggestions });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -13732,8 +13726,7 @@ api.get('/inventory/lots', authMiddleware, async (c) => {
     let lots = [];
     try { const r = await db.prepare(`SELECT * FROM inventory_lots WHERE tenant_id = ? AND expiry_date <= date('now', '+' || ? || ' days') ORDER BY expiry_date ASC`).bind(tenantId, expiringWithinDays).all(); lots = r.results || []; } catch(e) {}
     return c.json({ success: true, data: lots });
-  } catch (error) {
-    return c.json({ success: true, data: [] });
+  } catch (error) { return c.json({ success: false, error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -14385,19 +14378,19 @@ api.post('/products/bulk', authMiddleware, async (c) => {
 
 // ============================================================================
 api.get('/admin/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM boards WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM boards WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/campaigns', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM campaigns WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/commission-rules', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/pos-library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/admin/territories', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM territories WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM territories WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/admin/territories', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO territories (tenant_id, name, region_id, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.region_id || null, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'Territory created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14409,25 +14402,25 @@ api.post('/data/import', authMiddleware, async (c) => {
   try { return c.json({ success: true, message: 'Import started', data: { status: 'processing' } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/events/analytics/summary', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT status, COUNT(*) as count FROM marketing_activations WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT status, COUNT(*) as count FROM marketing_activations WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/board-placement', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/board-placements', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM board_placements WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/board-placements', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO board_placements (tenant_id, customer_id, board_id, location, photo_url, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.customer_id, body.board_id, body.location, body.photo_url, body.status || 'placed').run(); return c.json({ success: true, message: 'Board placement created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/field-marketing/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const brandId = c.req.query('brandId'); let query = 'SELECT * FROM boards WHERE tenant_id = ?'; const params = [tenantId]; if (brandId) { query += ' AND brand_id = ?'; params.push(brandId); } const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const brandId = c.req.query('brandId'); let query = 'SELECT * FROM boards WHERE tenant_id = ?'; const params = [tenantId]; if (brandId) { query += ' AND brand_id = ?'; params.push(brandId); } const { results } = await db.prepare(query).bind(...params).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/commissions', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/customers/search', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR store_name LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR store_name LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/gps/validate', authMiddleware, async (c) => {
   try { const body = await c.req.json(); const isValid = body.latitude && body.longitude && Math.abs(body.latitude) <= 90 && Math.abs(body.longitude) <= 180; return c.json({ success: true, data: { valid: isValid, latitude: body.latitude, longitude: body.longitude } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14439,7 +14432,7 @@ api.post('/field-marketing/surveys/submit', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO survey_responses (tenant_id, survey_id, customer_id, agent_id, answers, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.survey_id, body.customer_id, body.agent_id, JSON.stringify(body.answers)).run(); return c.json({ success: true, message: 'Survey submitted' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/field-marketing/visits', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/visits', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO visits (tenant_id, customer_id, agent_id, latitude, longitude, status, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.customer_id, body.agent_id, body.latitude, body.longitude, body.status || 'in_progress', body.notes).run(); return c.json({ success: true, message: 'Visit created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14457,7 +14450,7 @@ api.post('/reports/generate', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); const allowed = ['orders','customers','products','invoices','payments','inventory','visits','agents','commissions','surveys','boards','campaigns','vans','warehouses','suppliers','purchase_orders','credit_notes','returns']; const table = allowed.includes(body.type) ? body.type : 'orders'; const { results } = await db.prepare('SELECT * FROM ' + table + ' WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 1000').bind(tenantId).all(); return c.json({ success: true, data: results, total: results.length }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/samples/allocations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM product_distributions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM product_distributions WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/system/backups', authMiddleware, async (c) => {
   return c.json({ success: true, data: [] });
@@ -14475,34 +14468,34 @@ api.post('/system/integrations', authMiddleware, async (c) => {
   return c.json({ success: true, message: 'Integration saved' });
 });
 api.get('/system/settings', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM system_settings WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.put('/system/settings', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); for (const [key, value] of Object.entries(body)) { await db.prepare('INSERT OR REPLACE INTO system_settings (tenant_id, key, value, updated_at) VALUES (?, ?, ?, datetime("now"))').bind(tenantId, key, JSON.stringify(value)).run(); } return c.json({ success: true, message: 'Settings updated' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing-new/brand-activations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM marketing_activations WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM marketing_activations WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/trade-marketing-new/brand-activations', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO marketing_activations (tenant_id, name, type, status, start_date, end_date, location, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.eventName || body.name, body.eventType || body.type, body.status || 'planned', body.startDate || body.start_date, body.endDate || body.end_date, body.location).run(); return c.json({ success: true, message: 'Brand activation created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing-new/materials/library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/trade-marketing-new/pos-materials', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM pos_materials WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/trade-marketing-new/pos-materials', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/trade-marketing/channel-partners', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM customers WHERE tenant_id = ? AND type = 'channel_partner'").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare("SELECT * FROM customers WHERE tenant_id = ? AND type = 'channel_partner'").bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/trade-marketing/competitor-analysis', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM competitors WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM competitors WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/visit-configurations', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visit_configurations WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch(e) { return c.json({ success: true, data: [] }); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM visit_configurations WHERE tenant_id = ?').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/visit-configurations', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO visit_configurations (tenant_id, name, type, config, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, JSON.stringify(body.config), body.status || 'active').run(); return c.json({ success: true, message: 'Visit configuration created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }

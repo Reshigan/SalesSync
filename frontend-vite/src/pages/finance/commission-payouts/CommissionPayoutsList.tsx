@@ -4,6 +4,7 @@ import { Eye } from 'lucide-react'
 import TransactionList from '../../../components/transactions/TransactionList'
 import { financeService } from '../../../services/finance.service'
 import { formatCurrency, formatDate } from '../../../utils/format'
+import { exportToCSV } from '../../../utils/export'
 
 export default function CommissionPayoutsList() {
   const navigate = useNavigate()
@@ -109,7 +110,7 @@ export default function CommissionPayoutsList() {
       data={payouts}
       loading={loading}
       onRefresh={loadPayouts}
-      onExport={() => console.log('Export commission payouts')}
+      onExport={() => exportToCSV(payouts as Record<string, unknown>[], 'commissionpayouts')}
     />
   )
 }

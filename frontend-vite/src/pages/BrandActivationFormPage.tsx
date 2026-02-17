@@ -179,6 +179,7 @@ const BrandActivationFormPage: React.FC = () => {
           leadsCaptured: 0,
           engagementScore: 7
         });
+      }
     } catch (error) {
       console.error('Error creating brand activation:', error);
       alert('Error creating brand activation event');
