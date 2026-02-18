@@ -358,17 +358,21 @@ api.put('/customers/credit-limits', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('UPDATE customers SET credit_limit = ? WHERE id = ? AND tenant_id = ?').bind(body.credit_limit, body.customer_id, tenantId).run(); return c.json({ success: true, message: 'Credit limit updated' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.put('/customers/:id', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  const { id } = c.req.param();
-  const body = await c.req.json();
-  
-  await db.prepare(`
-    UPDATE customers SET name = ?, code = ?, type = ?, phone = ?, email = ?, address = ?, credit_limit = ?, status = ?
-    WHERE id = ? AND tenant_id = ?
-  `).bind(body.name, body.code, body.type, body.phone, body.email, body.address, body.credit_limit, body.status, id, tenantId).run();
-  
-  return c.json({ success: true, message: 'Customer updated' });
+  try {
+    const db = c.env.DB;
+    const tenantId = c.get('tenantId');
+    const { id } = c.req.param();
+    const body = await c.req.json();
+    const existing = await db.prepare('SELECT * FROM customers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Customer not found' }, 404);
+    await db.prepare(`
+      UPDATE customers SET name = ?, code = ?, type = ?, phone = ?, email = ?, address = ?, credit_limit = ?, status = ?
+      WHERE id = ? AND tenant_id = ?
+    `).bind(body.name || existing.name, body.code || existing.code, body.type || existing.type, body.phone || existing.phone, body.email || existing.email, body.address || existing.address, body.credit_limit ?? existing.credit_limit, body.status || existing.status, id, tenantId).run();
+    return c.json({ success: true, message: 'Customer updated' });
+  } catch (e) {
+    return c.json({ success: false, message: e.message }, 500);
+  }
 });
 
 // ==================== PRODUCTS ====================
@@ -870,7 +874,7 @@ api.post('/visits', async (c) => {
   await db.prepare(`
     INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, latitude, longitude, visit_type, purpose, notes, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.agent_id || null, body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.visit_type || 'sales', body.purpose || null, body.notes ?? null, 'in_progress').run();
+  `).bind(id, tenantId, body.agent_id || 'system', body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.visit_type || 'sales', body.purpose || null, body.notes ?? null, 'in_progress').run();
   
   return c.json({ success: true, data: { id }, message: 'Visit started' }, 201);
   } catch (e) {
@@ -15881,6 +15885,25 @@ api.get('/van-sales/inventory', async (c) => {
   }
 });
 
+// GET /inventory-enhanced - Enhanced inventory overview
+api.get('/inventory-enhanced', async (c) => {
+  try {
+    const db = c.env.DB;
+    const tenantId = c.get('tenantId');
+    const inventory = await db.prepare(`
+      SELECT i.*, p.name as product_name, p.code as product_code, w.name as warehouse_name
+      FROM inventory i
+      LEFT JOIN products p ON i.product_id = p.id
+      LEFT JOIN warehouses w ON i.warehouse_id = w.id
+      WHERE i.tenant_id = ?
+      ORDER BY p.name
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: inventory.results || [] });
+  } catch (e) {
+    return c.json({ success: false, message: e.message }, 500);
+  }
+});
+
 // GET /inventory-enhanced/multi-location - Multi-location inventory
 api.get('/inventory-enhanced/multi-location', async (c) => {
   try {
@@ -16045,10 +16068,12 @@ api.put('/products/:id', async (c) => {
     const tenantId = c.get('tenantId');
     const { id } = c.req.param();
     const body = await c.req.json();
+    const existing = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Product not found' }, 404);
     await db.prepare(`
       UPDATE products SET name = ?, code = ?, sku = ?, price = ?, cost_price = ?, status = ?
       WHERE id = ? AND tenant_id = ?
-    `).bind(body.name, body.code, body.sku, body.price, body.cost_price, body.status || 'active', id, tenantId).run();
+    `).bind(body.name || existing.name, body.code || existing.code, body.sku || existing.sku, body.price ?? existing.price, body.cost_price ?? existing.cost_price, body.status || existing.status, id, tenantId).run();
     const product = await db.prepare('SELECT * FROM products WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
     return c.json({ success: true, data: product });
   } catch (e) {
