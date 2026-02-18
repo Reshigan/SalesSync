@@ -477,6 +477,25 @@ api.post('/products', async (c) => {
 });
 
 // ==================== ORDERS ====================
+api.get('/orders/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN order_status = 'confirmed' THEN 1 ELSE 0 END) as confirmed,
+        SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+        SUM(total_amount) as total_revenue
+      FROM orders WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/orders', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -639,6 +658,24 @@ api.post('/orders', async (c) => {
 });
 
 // ==================== VAN SALES ====================
+api.get('/van-sales/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(total_amount) as total_revenue,
+        SUM(amount_paid) as total_collected
+      FROM van_sales WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/van-sales', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -835,6 +872,24 @@ api.get('/vans/:vanId/inventory', async (c) => {
 });
 
 // ==================== VISITS ====================
+api.get('/visits/stats', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'planned' THEN 1 ELSE 0 END) as planned,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+        SUM(CASE WHEN visit_date = date('now') THEN 1 ELSE 0 END) as today
+      FROM visits WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/visits', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -2334,6 +2389,17 @@ const DEFAULT_SETTINGS = {
 };
 
 // Get all settings - requires settings:view permission
+api.get('/settings/categories', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const categories = ['general', 'notifications', 'integrations', 'security', 'billing', 'appearance'];
+    return c.json({ success: true, data: categories });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/settings', requirePermission('settings:view'), async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -10177,21 +10243,6 @@ api.get('/commissions/stats', async (c) => {
         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
         SUM(CASE WHEN status = 'calculated' THEN 1 ELSE 0 END) as calculated,
         SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-// MISSING ROUTES - Added for production readiness
-// ============================================================================
-
-api.post('/admin/boards', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO boards (tenant_id, name, type, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type || 'standard', body.status || 'active').run(); return c.json({ success: true, message: 'Board created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.post('/admin/campaigns', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO campaigns (tenant_id, name, description, status, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.description, body.status || 'draft', body.start_date, body.end_date).run(); return c.json({ success: true, message: 'Campaign created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.post('/admin/commission-rules', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_rules (tenant_id, name, type, rate, min_threshold, max_cap, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.rate, body.min_threshold || 0, body.max_cap || null, body.status || 'active').run(); return c.json({ success: true, message: 'Commission rule created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
-api.post('/admin/pos-library', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
-});
         SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
         SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as pending_payout,
         SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid
@@ -13399,6 +13450,28 @@ api.delete('/suppliers/:id', authMiddleware, async (c) => {
 });
 
 // --- Boards ---
+api.get('/boards/stats', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const stats = await db.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive
+      FROM boards WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    const placementStats = await db.prepare(`
+      SELECT COUNT(*) as total_placements,
+        SUM(CASE WHEN status = 'installed' THEN 1 ELSE 0 END) as installed,
+        SUM(CASE WHEN status = 'planned' THEN 1 ELSE 0 END) as planned
+      FROM board_placements WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    return c.json({ success: true, data: { boards: stats, placements: placementStats } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/boards/placements', authMiddleware, async (c) => {
   const db = c.env.DB;
   const tenantId = getTenantId(c);
@@ -16370,6 +16443,84 @@ api.post('/admin/sync-schema', async (c) => {
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
   }
+});
+
+api.get('/inventory/warehouses', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM warehouses WHERE tenant_id = ? ORDER BY name ASC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/promotions/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM promotional_campaigns WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/reports/sales', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const stats = await db.prepare(`
+      SELECT COUNT(*) as total_orders, SUM(total_amount) as total_revenue,
+        SUM(CASE WHEN order_status = 'delivered' THEN total_amount ELSE 0 END) as delivered_revenue,
+        AVG(total_amount) as avg_order_value
+      FROM orders WHERE tenant_id = ?
+    `).bind(tenantId).first();
+    return c.json({ success: true, data: stats });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/reconciliation', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM cash_reconciliations WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/admin/dashboard', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const [users, orders, products, visits] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as count FROM users WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count, SUM(total_amount) as revenue FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { users: users?.count || 0, orders: orders?.count || 0, revenue: orders?.revenue || 0, products: products?.count || 0, visits: visits?.count || 0 } });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.post('/admin/boards', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO boards (tenant_id, board_name, board_code, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name || body.board_name, body.board_code || `BRD-${Date.now()}`, body.status || 'active').run(); return c.json({ success: true, message: 'Board created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/campaigns', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO promotional_campaigns (tenant_id, name, campaign_type, status, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.campaign_type || 'general', body.status || 'planned', body.start_date, body.end_date).run(); return c.json({ success: true, message: 'Campaign created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/commission-rules', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO commission_rules (tenant_id, name, type, rate, min_threshold, max_cap, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.rate, body.min_threshold || 0, body.max_cap || null, body.status || 'active').run(); return c.json({ success: true, message: 'Commission rule created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post('/admin/pos-library', authMiddleware, async (c) => {
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
 app.route('/api', api);
