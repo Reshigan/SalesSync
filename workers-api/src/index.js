@@ -13404,10 +13404,9 @@ api.get('/boards/placements', authMiddleware, async (c) => {
   const tenantId = getTenantId(c);
   try {
     const { results } = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, b.board_name as brand_name
+      SELECT bp.*, c.name as customer_name
       FROM board_placements bp
       LEFT JOIN customers c ON bp.customer_id = c.id
-      LEFT JOIN boards b ON bp.board_id = b.id
       WHERE bp.tenant_id = ?
       ORDER BY bp.created_at DESC
     `).bind(tenantId).all();
