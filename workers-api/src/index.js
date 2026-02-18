@@ -4139,9 +4139,9 @@ api.get('/finance/summary', async (c) => {
       db.prepare(`
         SELECT
           COUNT(*) as total_commissions,
-          COALESCE(SUM(total_amount), 0) as total_amount,
-          SUM(CASE WHEN status = 'pending' THEN total_amount ELSE 0 END) as pending_amount,
-          SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as paid_amount
+          COALESCE(SUM(amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid_amount
         FROM commissions WHERE tenant_id = ?
       `).bind(tenantId).first()
     ]);
