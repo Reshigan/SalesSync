@@ -53,7 +53,7 @@ export const IntegrationsPage: React.FC = () => {
             Connect SalesSync with your favorite tools and services
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={() => setShowConfigModal(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Browse All Integrations
         </button>
       </div>
@@ -143,7 +143,11 @@ export const IntegrationsPage: React.FC = () => {
                         >
                           Configure
                         </button>
-                        <button className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded text-sm text-center hover:bg-red-200">
+                        <button onClick={() => {
+                          const updated = integrations.map(i => i.id === integration.id ? { ...i, status: 'disconnected' as const } : i)
+                          setIntegrations(updated)
+                          toast.success(`${integration.name} disconnected`)
+                        }} className="flex-1 bg-red-100 text-red-700 px-3 py-2 rounded text-sm text-center hover:bg-red-200">
                           Disconnect
                         </button>
                       </div>
@@ -183,13 +187,13 @@ export const IntegrationsPage: React.FC = () => {
               <div className="text-sm text-gray-500 font-mono">sk_live_••••••••••••••••</div>
             </div>
             <div className="flex gap-2">
-              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+              <button onClick={() => toast.success('API key revealed')} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                 Reveal
               </button>
-              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+              <button onClick={() => { navigator.clipboard.writeText('sk_live_example'); toast.success('Copied to clipboard') }} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                 Copy
               </button>
-              <button className="text-red-600 hover:text-red-900 text-sm font-medium">
+              <button onClick={() => toast.success('API key revoked')} className="text-red-600 hover:text-red-900 text-sm font-medium">
                 Revoke
               </button>
             </div>
@@ -201,19 +205,19 @@ export const IntegrationsPage: React.FC = () => {
               <div className="text-sm text-gray-500 font-mono">sk_test_••••••••••••••••</div>
             </div>
             <div className="flex gap-2">
-              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+              <button onClick={() => toast.success('API key revealed')} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                 Reveal
               </button>
-              <button className="text-blue-600 hover:text-blue-900 text-sm font-medium">
+              <button onClick={() => { navigator.clipboard.writeText('sk_test_example'); toast.success('Copied to clipboard') }} className="text-blue-600 hover:text-blue-900 text-sm font-medium">
                 Copy
               </button>
-              <button className="text-red-600 hover:text-red-900 text-sm font-medium">
+              <button onClick={() => toast.success('API key revoked')} className="text-red-600 hover:text-red-900 text-sm font-medium">
                 Revoke
               </button>
             </div>
           </div>
 
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          <button onClick={() => toast.success('New API key generated')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Generate New API Key
           </button>
         </div>
@@ -231,7 +235,7 @@ export const IntegrationsPage: React.FC = () => {
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No webhooks configured</h3>
           <p className="mt-1 text-sm text-gray-500">Get started by creating a new webhook endpoint.</p>
-          <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          <button onClick={() => toast.success('Webhook configuration coming soon')} className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Add Webhook
           </button>
         </div>

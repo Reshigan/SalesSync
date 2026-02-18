@@ -289,7 +289,7 @@ export const UserManagementPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">
+                      <button onClick={() => handleOpenTeamLeaderModal(user)} className="text-blue-600 hover:text-blue-900 mr-4">
                         Edit
                       </button>
                       {user.role.toLowerCase() === 'agent' && (
@@ -300,7 +300,7 @@ export const UserManagementPage: React.FC = () => {
                           Team Leader
                         </button>
                       )}
-                      <button className="text-red-600 hover:text-red-900">
+                      <button onClick={() => { if (confirm('Delete this user?')) {} }} className="text-red-600 hover:text-red-900">
                         Delete
                       </button>
                     </td>

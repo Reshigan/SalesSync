@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../../services/products.service'
 import { apiClient } from '../../services/api.service'
@@ -13,6 +14,7 @@ interface HierarchyNode {
 }
 
 export const ProductHierarchyPage: React.FC = () => {
+  const navigate = useNavigate()
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [selectedNode, setSelectedNode] = useState<HierarchyNode | null>(null)
 
@@ -136,10 +138,10 @@ export const ProductHierarchyPage: React.FC = () => {
           </p>
         </div>
         <div className="flex space-x-2">
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
+          <button onClick={() => window.print()} className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
             Export Hierarchy
           </button>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+          <button onClick={() => navigate('/product-management')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
             Manage Categories
           </button>
         </div>
@@ -275,7 +277,7 @@ export const ProductHierarchyPage: React.FC = () => {
                 </div>
 
                 <div className="border-t border-gray-100 pt-4">
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                  <button onClick={() => navigate('/product-management')} className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                     View Products
                   </button>
                 </div>

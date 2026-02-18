@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Megaphone, Users, Eye, MousePointer, TrendingUp, Calendar } from 'lucide-react'
@@ -33,6 +34,7 @@ interface Campaign {
 }
 
 export default function CampaignsPage() {
+  const navigate = useNavigate()
   const [metrics, setMetrics] = useState<CampaignMetrics>({
     totalCampaigns: 0,
     activeCampaigns: 0,
@@ -129,7 +131,7 @@ export default function CampaignsPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Campaign Management</h1>
           <p className="text-gray-600">Create, manage, and track marketing campaigns across all channels</p>
         </div>
-        <Button>
+        <Button onClick={() => navigate('/marketing/campaigns/create')}>
           <Megaphone className="h-4 w-4 mr-2" />
           Create Campaign
         </Button>
@@ -309,10 +311,10 @@ export default function CampaignsPage() {
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/campaigns/${campaign.id}`)}>
                           View Details
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/campaigns/${campaign.id}/edit`)}>
                           Edit
                         </Button>
                       </div>

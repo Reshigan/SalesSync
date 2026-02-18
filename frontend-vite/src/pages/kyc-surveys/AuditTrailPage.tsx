@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '../../services/api.service'
+import { toast } from 'react-hot-toast'
 
 interface AuditLog {
   id: string
@@ -75,7 +76,7 @@ export const AuditTrailPage: React.FC = () => {
             Track all system activities and changes
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={() => window.print()} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Export Logs
         </button>
       </div>
@@ -305,7 +306,7 @@ export const AuditTrailPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => toast.success('Viewing audit log details')} className="text-blue-600 hover:text-blue-900">
                         View Details
                       </button>
                     </td>

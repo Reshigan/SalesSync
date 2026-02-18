@@ -247,13 +247,13 @@ export const CommissionApprovalPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">
+                      <button onClick={() => toggleSelection(commission.id)} className="text-blue-600 hover:text-blue-900 mr-4">
                         View
                       </button>
-                      <button className="text-green-600 hover:text-green-900 mr-4">
+                      <button onClick={() => { setSelectedCommissions(new Set([commission.id])); handleBulkApprove() }} className="text-green-600 hover:text-green-900 mr-4">
                         Approve
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button onClick={() => { setSelectedCommissions(new Set([commission.id])); setShowRejectModal(true) }} className="text-red-600 hover:text-red-900">
                         Reject
                       </button>
                     </td>

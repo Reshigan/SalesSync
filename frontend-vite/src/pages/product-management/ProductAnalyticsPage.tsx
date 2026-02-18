@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../../services/products.service'
 
 export const ProductAnalyticsPage: React.FC = () => {
+  const navigate = useNavigate()
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0]
@@ -278,7 +280,7 @@ export const ProductAnalyticsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button onClick={() => navigate(`/product-management/products/${product.id}`)} className="text-blue-600 hover:text-blue-900">
                         View Details
                       </button>
                     </td>

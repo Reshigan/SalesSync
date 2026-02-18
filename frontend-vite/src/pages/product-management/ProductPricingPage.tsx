@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../../services/products.service'
 import { apiClient } from '../../services/api.service'
@@ -19,6 +20,7 @@ interface ProductPricing {
 }
 
 export const ProductPricingPage: React.FC = () => {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const limit = 20
@@ -61,7 +63,7 @@ export const ProductPricingPage: React.FC = () => {
             Manage product prices, margins, and discounts
           </p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={() => navigate('/product-management/pricing')} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
           Bulk Price Update
         </button>
       </div>
@@ -224,10 +226,10 @@ export const ProductPricingPage: React.FC = () => {
                       <div className="text-sm font-bold text-gray-900">{formatCurrency(item.final_price)}</div>
                     </td>
                     <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">
+                      <button onClick={() => navigate(`/product-management/products/${item.product_id}`)} className="text-blue-600 hover:text-blue-900 mr-4">
                         Edit
                       </button>
-                      <button className="text-indigo-600 hover:text-indigo-900">
+                      <button onClick={() => navigate(`/product-management/products/${item.product_id}`)} className="text-indigo-600 hover:text-indigo-900">
                         History
                       </button>
                     </td>

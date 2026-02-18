@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { TrendingUp, Target, DollarSign, Users, BarChart3, Calendar, Plus, Filter, Award, Zap, ShoppingCart, TrendingDown } from 'lucide-react'
@@ -58,6 +59,7 @@ interface CompetitorAnalysis {
 }
 
 export default function TradeMarketingPage() {
+  const navigate = useNavigate()
   const [metrics, setMetrics] = useState<TradeMarketingMetrics>({
     totalSpend: 0,
     activePromotions: 0,
@@ -155,7 +157,7 @@ export default function TradeMarketingPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Trade Marketing</h1>
           <p className="text-gray-600">Manage trade promotions, retailer incentives, and market analysis</p>
         </div>
-        <Button>
+        <Button onClick={() => navigate('/marketing/promotions/create')}>
           <Target className="h-4 w-4 mr-2" />
           Create Promotion
         </Button>
@@ -419,10 +421,10 @@ export default function TradeMarketingPage() {
                       </td>
                       <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/promotions/${promotion.id}`)}>
                             View Details
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/marketing/promotions/${promotion.id}`)}>
                             Edit
                           </Button>
                         </div>
@@ -481,7 +483,7 @@ export default function TradeMarketingPage() {
                       </div>
                     </div>
                     <div className="mt-4 pt-4 border-t">
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => navigate(`/trade-marketing`)}>
                         Manage Programs
                       </Button>
                     </div>
@@ -565,7 +567,7 @@ export default function TradeMarketingPage() {
                         </span>
                       </td>
                       <td className="px-3 py-3 sm:px-4 whitespace-nowrap text-sm font-medium">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => navigate('/trade-marketing')}>
                           View Analysis
                         </Button>
                       </td>
