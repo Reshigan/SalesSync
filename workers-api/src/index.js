@@ -869,14 +869,32 @@ api.post('/visits', async (c) => {
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
   const body = await c.req.json();
-  
+
+  if (!body.customer_id) {
+    return c.json({ success: false, message: 'customer_id is required' }, 400);
+  }
+
   const id = uuidv4();
-  
+  const now = new Date().toISOString();
+
   await db.prepare(`
-    INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_in_latitude, check_in_longitude, status, purpose, notes, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.agent_id || userId || 'system', body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.status || 'in_progress', body.purpose || null, body.notes ?? null).run();
-  
+    INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, latitude, longitude, check_in_latitude, check_in_longitude, status, purpose, notes, visit_type, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id, tenantId,
+    body.agent_id || userId || 'system',
+    body.customer_id,
+    body.visit_date || now.split('T')[0],
+    body.check_in_time || now,
+    body.latitude ?? null, body.longitude ?? null,
+    body.latitude ?? null, body.longitude ?? null,
+    body.status || 'in_progress',
+    body.purpose ?? null,
+    body.notes ?? null,
+    body.visit_type ?? null,
+    now
+  ).run();
+
   return c.json({ success: true, data: { id }, message: 'Visit started' }, 201);
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -6681,16 +6699,20 @@ api.get('/field-operations/visits/:id', async (c) => {
 api.post('/field-operations/visits', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
   const body = await c.req.json();
   
   try {
+    if (!body.customer_id) {
+      return c.json({ success: false, message: 'customer_id is required' }, 400);
+    }
     const id = uuidv4();
     const now = new Date().toISOString();
     
     await db.prepare(`
-      INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_type, purpose, status, visit_date, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, tenantId, body.agent_id, body.customer_id, body.visit_type || 'sales', body.purpose || '', body.status || 'planned', body.visit_date || now, body.notes || '', now, now).run();
+      INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_type, purpose, status, visit_date, notes, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.agent_id || userId || 'system', body.customer_id, body.visit_type || 'sales', body.purpose || '', body.status || 'planned', body.visit_date || now.split('T')[0], body.notes || '', now).run();
     
     const visit = await db.prepare('SELECT * FROM visits WHERE id = ?').bind(id).first();
     return c.json({ success: true, data: visit }, 201);
@@ -10206,7 +10228,7 @@ api.get('/commissions/settings', async (c) => {
   try {
     const db = c.env.DB;
     const tenantId = c.get('tenantId');
-    const settings = await db.prepare('SELECT * FROM commission_settings WHERE tenant_id = ?').bind(tenantId).all();
+    const settings = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ?').bind(tenantId).all();
     return c.json({ success: true, data: settings.results || [] });
   } catch (e) {
     return c.json({ success: true, data: [] });
@@ -14448,7 +14470,7 @@ api.get('/field-marketing/commissions', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT * FROM commission_items WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.get('/field-marketing/customers/search', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR store_name LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const q = c.req.query('q') || ''; const { results } = await db.prepare('SELECT * FROM customers WHERE tenant_id = ? AND (name LIKE ? OR code LIKE ?) LIMIT 20').bind(tenantId, '%' + q + '%', '%' + q + '%').all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
 api.post('/field-marketing/gps/validate', authMiddleware, async (c) => {
   try { const body = await c.req.json(); const isValid = body.latitude && body.longitude && Math.abs(body.latitude) <= 90 && Math.abs(body.longitude) <= 180; return c.json({ success: true, data: { valid: isValid, latitude: body.latitude, longitude: body.longitude } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
@@ -14469,7 +14491,7 @@ api.post('/files/upload', authMiddleware, async (c) => {
   try { const formData = await c.req.formData(); const file = formData.get('file'); if (!file) return c.json({ success: false, message: 'No file' }, 400); const filename = Date.now() + '-' + file.name; if (c.env.UPLOADS) { await c.env.UPLOADS.put(filename, file.stream(), { httpMetadata: { contentType: file.type } }); } return c.json({ success: true, data: { filename, url: '/files/' + filename } }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.post('/inventory/transfer', authMiddleware, async (c) => {
-  try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO stock_transfers (tenant_id, product_id, from_warehouse_id, to_warehouse_id, quantity, status, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.product_id, body.from_warehouse_id, body.to_warehouse_id, body.quantity, body.status || 'pending').run(); return c.json({ success: true, message: 'Transfer created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+  try { const db = c.env.DB; const tenantId = getTenantId(c); const userId = c.get('userId'); const body = await c.req.json(); const id = crypto.randomUUID(); await db.prepare('INSERT INTO inventory_transfers (id, tenant_id, from_warehouse_id, to_warehouse_id, status, notes, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))').bind(id, tenantId, body.from_warehouse_id, body.to_warehouse_id, body.status || 'pending', body.notes || null, userId).run(); if (body.items) { for (const item of body.items) { await db.prepare('INSERT INTO inventory_transfer_items (id, transfer_id, product_id, quantity, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), id, item.product_id, item.quantity).run(); } } else if (body.product_id) { await db.prepare('INSERT INTO inventory_transfer_items (id, transfer_id, product_id, quantity, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), id, body.product_id, body.quantity).run(); } return c.json({ success: true, data: { id }, message: 'Transfer created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
 });
 api.get('/reports/analytics', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const orderStats = await db.prepare('SELECT COUNT(*) as total_orders, SUM(total) as total_revenue FROM orders WHERE tenant_id = ?').bind(tenantId).first(); const customerStats = await db.prepare('SELECT COUNT(*) as total_customers FROM customers WHERE tenant_id = ?').bind(tenantId).first(); return c.json({ success: true, data: { orders: orderStats, customers: customerStats } }); } catch(e) { return c.json({ success: true, data: {} }); }
