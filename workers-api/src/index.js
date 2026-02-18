@@ -7640,6 +7640,17 @@ api.get('/promotions/trends', async (c) => {
   return c.json({ success: true, data: trends });
 });
 
+api.get('/promotions/campaigns', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM promotional_campaigns WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/promotions/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -10244,8 +10255,8 @@ api.get('/commissions/stats', async (c) => {
         SUM(CASE WHEN status = 'calculated' THEN 1 ELSE 0 END) as calculated,
         SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
         SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
-        SUM(CASE WHEN status = 'approved' THEN total_amount ELSE 0 END) as pending_payout,
-        SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_paid
+        SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) as pending_payout,
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as total_paid
       FROM commissions WHERE tenant_id = ?
     `).bind(tenantId).first();
     
