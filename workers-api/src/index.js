@@ -860,6 +860,7 @@ api.get('/visits', async (c) => {
 });
 
 api.post('/visits', async (c) => {
+  try {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const body = await c.req.json();
@@ -869,9 +870,12 @@ api.post('/visits', async (c) => {
   await db.prepare(`
     INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, latitude, longitude, visit_type, purpose, notes, status, created_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.agent_id, body.customer_id, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time, body.latitude, body.longitude, body.visit_type, body.purpose, body.notes ?? null, 'in_progress').run();
+  `).bind(id, tenantId, body.agent_id || null, body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.visit_type || 'sales', body.purpose || null, body.notes ?? null, 'in_progress').run();
   
   return c.json({ success: true, data: { id }, message: 'Visit started' }, 201);
+  } catch (e) {
+    return c.json({ success: false, message: e.message }, 500);
+  }
 });
 
 // ==================== RETURNS ====================
@@ -10193,6 +10197,16 @@ api.get('/commissions/payments', authMiddleware, async (c) => {
 api.get('/commissions/reports', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const { results } = await db.prepare('SELECT agent_id, SUM(amount) as total_amount, COUNT(*) as total_items, status FROM commission_items WHERE tenant_id = ? GROUP BY agent_id, status').bind(tenantId).all(); return c.json({ success: true, data: results }); } catch (e) { return c.json({ success: false, error: e.message || "Internal server error" }, 500); }
 });
+api.get('/commissions/settings', async (c) => {
+  try {
+    const db = c.env.DB;
+    const tenantId = c.get('tenantId');
+    const settings = await db.prepare('SELECT * FROM commission_settings WHERE tenant_id = ?').bind(tenantId).all();
+    return c.json({ success: true, data: settings.results || [] });
+  } catch (e) {
+    return c.json({ success: true, data: [] });
+  }
+});
 api.get('/commissions/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -15916,9 +15930,8 @@ api.get('/kyc/submissions', async (c) => {
       FROM survey_responses sr
       LEFT JOIN surveys s ON sr.survey_id = s.id
       LEFT JOIN customers c ON sr.customer_id = c.id
-      WHERE sr.tenant_id = ?
       ORDER BY sr.created_at DESC
-    `).bind(tenantId).all();
+    `).all();
     return c.json({ success: true, data: submissions.results || [] });
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -15990,9 +16003,9 @@ api.post('/targets', async (c) => {
     const id = uuidv4();
     const now = new Date().toISOString();
     await db.prepare(`
-      INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_value, current_value, period_start, period_end, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, tenantId, body.agent_id, body.target_type || 'sales', body.target_value || 0, 0, body.period_start || now, body.period_end || now, 'active', now).run();
+      INSERT INTO agent_targets (id, tenant_id, agent_id, target_type, target_scope, period_type, target_value, achieved_value, period_start, period_end, status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, tenantId, body.agent_id, body.target_type || 'boards', body.target_scope || 'customers', body.period_type || 'monthly', body.target_value || 0, 0, body.period_start || now, body.period_end || now, 'active', now).run();
     return c.json({ success: true, data: { id }, message: 'Target created' }, 201);
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -16074,15 +16087,14 @@ api.delete('/visits/:id', async (c) => {
   }
 });
 
-// GET /commissions/settings - Commission settings
-api.get('/commissions/settings', async (c) => {
+// GET /health - System health check
+api.get('/health', async (c) => {
   try {
     const db = c.env.DB;
-    const tenantId = c.get('tenantId');
-    const settings = await db.prepare('SELECT * FROM commission_settings WHERE tenant_id = ?').bind(tenantId).all();
-    return c.json({ success: true, data: settings.results || [] });
+    const result = await db.prepare('SELECT 1 as ok').first();
+    return c.json({ success: true, data: { status: 'healthy', database: result ? 'connected' : 'error', timestamp: new Date().toISOString() } });
   } catch (e) {
-    return c.json({ success: true, data: [] });
+    return c.json({ success: false, data: { status: 'unhealthy', error: e.message } }, 500);
   }
 });
 
