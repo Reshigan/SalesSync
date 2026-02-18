@@ -13399,6 +13399,24 @@ api.delete('/suppliers/:id', authMiddleware, async (c) => {
 });
 
 // --- Boards ---
+api.get('/boards/placements', authMiddleware, async (c) => {
+  const db = c.env.DB;
+  const tenantId = getTenantId(c);
+  try {
+    const { results } = await db.prepare(`
+      SELECT bp.*, c.name as customer_name, b.board_name as brand_name
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN boards b ON bp.board_id = b.id
+      WHERE bp.tenant_id = ?
+      ORDER BY bp.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 api.get('/boards', authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
@@ -16211,25 +16229,7 @@ api.get('/inventory/goods-receipts', async (c) => {
   }
 });
 
-api.get('/boards/placements', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, b.name as brand_name
-      FROM board_placements bp
-      LEFT JOIN customers c ON bp.customer_id = c.id
-      LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE bp.tenant_id = ?
-      ORDER BY bp.created_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/system-health', async (c) => {
+api.get('/system-health',async (c) => {
   const db = c.env.DB;
   try {
     const tableCount = await db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").first();
@@ -16294,9 +16294,10 @@ api.get('/deliveries', async (c) => {
   const tenantId = c.get('tenantId');
   try {
     const { results } = await db.prepare(`
-      SELECT d.*, c.name as customer_name
+      SELECT d.*, o.customer_id, c.name as customer_name
       FROM deliveries d
-      LEFT JOIN customers c ON d.customer_id = c.id
+      LEFT JOIN orders o ON d.order_id = o.id
+      LEFT JOIN customers c ON o.customer_id = c.id
       WHERE d.tenant_id = ?
       ORDER BY d.created_at DESC
     `).bind(tenantId).all();
