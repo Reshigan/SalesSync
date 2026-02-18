@@ -16146,6 +16146,232 @@ api.get('/health', async (c) => {
   }
 });
 
+// ==================== ROUTE ALIASES ====================
+api.get('/field-operations/teams', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM teams WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/field-operations/agent-locations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare(`
+      SELECT fa.id, fa.first_name, fa.last_name, fa.status,
+             al.latitude, al.longitude, al.recorded_at
+      FROM field_agents fa
+      LEFT JOIN agent_locations al ON fa.id = al.agent_id
+      WHERE fa.tenant_id = ? AND fa.status = 'active'
+      ORDER BY al.recorded_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/field-operations/gps-locations', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare(`
+      SELECT al.*, fa.first_name, fa.last_name
+      FROM agent_locations al
+      LEFT JOIN field_agents fa ON al.agent_id = fa.id
+      WHERE fa.tenant_id = ?
+      ORDER BY al.recorded_at DESC LIMIT 100
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/inventory/goods-receipts', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId') || getTenantId(c);
+  try {
+    const { results } = await db.prepare(`
+      SELECT g.*, w.name as warehouse_name, s.name as supplier_name
+      FROM goods_receipts g
+      LEFT JOIN warehouses w ON g.warehouse_id = w.id
+      LEFT JOIN suppliers s ON g.supplier_id = s.id
+      WHERE g.tenant_id = ?
+      ORDER BY g.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/boards/placements', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare(`
+      SELECT bp.*, c.name as customer_name, b.name as brand_name
+      FROM board_placements bp
+      LEFT JOIN customers c ON bp.customer_id = c.id
+      LEFT JOIN brands b ON bp.brand_id = b.id
+      WHERE bp.tenant_id = ?
+      ORDER BY bp.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/system-health', async (c) => {
+  const db = c.env.DB;
+  try {
+    const tableCount = await db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").first();
+    return c.json({
+      success: true,
+      data: {
+        status: 'healthy',
+        database: 'connected',
+        tables: tableCount?.count || 0,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/dashboard', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [customers, products, orders, visits] = await Promise.all([
+      db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
+      db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).first()
+    ]);
+    return c.json({
+      success: true,
+      data: {
+        total_customers: customers?.count || 0,
+        total_products: products?.count || 0,
+        total_orders: orders?.count || 0,
+        total_visits: visits?.count || 0
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/inventory-stock', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare(`
+      SELECT ist.*, p.name as product_name, p.sku, w.name as warehouse_name
+      FROM inventory_stock ist
+      LEFT JOIN products p ON ist.product_id = p.id
+      LEFT JOIN warehouses w ON ist.warehouse_id = w.id
+      WHERE ist.tenant_id = ?
+      ORDER BY p.name
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+api.get('/deliveries', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare(`
+      SELECT d.*, c.name as customer_name
+      FROM deliveries d
+      LEFT JOIN customers c ON d.customer_id = c.id
+      WHERE d.tenant_id = ?
+      ORDER BY d.created_at DESC
+    `).bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
+// ==================== SCHEMA SYNC ENDPOINT ====================
+api.post('/admin/sync-schema', async (c) => {
+  const db = c.env.DB;
+  try {
+    const alterStatements = [
+      "ALTER TABLE store_audits ADD COLUMN created_by TEXT",
+      "ALTER TABLE store_audits ADD COLUMN visit_id TEXT",
+      "ALTER TABLE store_audits ADD COLUMN compliance_score INTEGER",
+      "ALTER TABLE store_audits ADD COLUMN oos_count INTEGER DEFAULT 0",
+      "ALTER TABLE store_audits ADD COLUMN total_facings INTEGER DEFAULT 0",
+      "ALTER TABLE store_audits ADD COLUMN latitude REAL",
+      "ALTER TABLE store_audits ADD COLUMN longitude REAL",
+      "ALTER TABLE store_audits ADD COLUMN started_at TEXT",
+      "ALTER TABLE store_audits ADD COLUMN finished_at TEXT",
+      "ALTER TABLE store_audits ADD COLUMN approved_by TEXT",
+      "ALTER TABLE store_audits ADD COLUMN approved_at TEXT",
+      "ALTER TABLE store_audits ADD COLUMN rejection_reason TEXT",
+      "ALTER TABLE store_audits ADD COLUMN updated_at TEXT"
+    ];
+
+    const createStatements = [
+      `CREATE TABLE IF NOT EXISTS field_agents (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, user_id TEXT, employee_code TEXT, first_name TEXT, last_name TEXT, email TEXT, phone TEXT, status TEXT DEFAULT 'active', role TEXT DEFAULT 'field_agent', team_id TEXT, supervisor_id TEXT, hire_date TEXT, created_at TEXT, updated_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS field_tasks (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, title TEXT NOT NULL, description TEXT, type TEXT DEFAULT 'visit', priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'pending', assigned_to TEXT, customer_id TEXT, scheduled_date TEXT, due_date TEXT, estimated_duration INTEGER DEFAULT 60, actual_start_time TEXT, actual_end_time TEXT, completion_notes TEXT, cancellation_reason TEXT, created_by TEXT, created_at TEXT, updated_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT, supervisor_id TEXT, manager_id TEXT, region_id TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS agent_locations (id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, tenant_id TEXT, latitude REAL, longitude REAL, accuracy REAL, recorded_at TEXT, created_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS territories (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT, area_id TEXT, assigned_agent_id TEXT, description TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS store_audit_items (id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, product_id TEXT, is_listed INTEGER DEFAULT 0, is_on_shelf INTEGER DEFAULT 0, facings INTEGER DEFAULT 0, shelf_price REAL, promo_present INTEGER DEFAULT 0, out_of_stock INTEGER DEFAULT 0, competitor_price REAL, remarks TEXT, created_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS store_audit_photos (id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, photo_url TEXT NOT NULL, photo_type TEXT DEFAULT 'shelf', latitude REAL, longitude REAL, captured_at TEXT, uploaded_by TEXT, created_at TEXT)`,
+      `CREATE TABLE IF NOT EXISTS inventory_issues (id TEXT PRIMARY KEY, tenant_id TEXT, issue_number TEXT, warehouse_id TEXT, issue_date TEXT, issue_type TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS goods_receipts (id TEXT PRIMARY KEY, tenant_id TEXT, receipt_number TEXT, grn_number TEXT, supplier_id TEXT, warehouse_id TEXT, receipt_date TEXT, total_items INTEGER DEFAULT 0, total_value REAL DEFAULT 0, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS stock_counts (id TEXT PRIMARY KEY, tenant_id TEXT, count_number TEXT, warehouse_id TEXT, count_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS inventory_adjustments (id TEXT PRIMARY KEY, tenant_id TEXT, adjustment_number TEXT, warehouse_id TEXT, adjustment_date TEXT, reason TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, approved_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS inventory_transfers (id TEXT PRIMARY KEY, tenant_id TEXT, transfer_number TEXT, from_warehouse_id TEXT, to_warehouse_id TEXT, transfer_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT)`
+    ];
+
+    const results = { altered: 0, created: 0, errors: [] };
+
+    for (const stmt of alterStatements) {
+      try {
+        await db.prepare(stmt).run();
+        results.altered++;
+      } catch (e) {
+        if (!e.message.includes('duplicate column')) {
+          results.errors.push(e.message);
+        }
+      }
+    }
+
+    for (const stmt of createStatements) {
+      try {
+        await db.prepare(stmt).run();
+        results.created++;
+      } catch (e) {
+        results.errors.push(e.message);
+      }
+    }
+
+    await db.prepare("UPDATE store_audits SET created_by = agent_id WHERE created_by IS NULL AND agent_id IS NOT NULL").run();
+    await db.prepare("UPDATE store_audits SET compliance_score = score WHERE compliance_score IS NULL AND score IS NOT NULL").run();
+
+    return c.json({ success: true, message: 'Schema synced', data: results });
+  } catch (error) {
+    return c.json({ success: false, message: error.message }, 500);
+  }
+});
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
@@ -17006,234 +17232,6 @@ app.post('/seed-demo-data', async (c) => {
   } catch (error) {
     console.error('Seed error at step:', currentStep, error);
     return c.json({ success: false, message: 'Failed to seed demo data', step: currentStep, error: error.message }, 500);
-  }
-});
-
-// ==================== ROUTE ALIASES ====================
-// These aliases ensure frontend can use either path style
-
-api.get('/field-operations/teams', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare('SELECT * FROM teams WHERE tenant_id = ? ORDER BY name').bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/field-operations/agent-locations', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT fa.id, fa.first_name, fa.last_name, fa.status,
-             al.latitude, al.longitude, al.recorded_at
-      FROM field_agents fa
-      LEFT JOIN agent_locations al ON fa.id = al.agent_id
-      WHERE fa.tenant_id = ? AND fa.status = 'active'
-      ORDER BY al.recorded_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/field-operations/gps-locations', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT al.*, fa.first_name, fa.last_name
-      FROM agent_locations al
-      LEFT JOIN field_agents fa ON al.agent_id = fa.id
-      WHERE fa.tenant_id = ?
-      ORDER BY al.recorded_at DESC LIMIT 100
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/inventory/goods-receipts', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId') || getTenantId(c);
-  try {
-    const { results } = await db.prepare(`
-      SELECT g.*, w.name as warehouse_name, s.name as supplier_name
-      FROM goods_receipts g
-      LEFT JOIN warehouses w ON g.warehouse_id = w.id
-      LEFT JOIN suppliers s ON g.supplier_id = s.id
-      WHERE g.tenant_id = ?
-      ORDER BY g.created_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/boards/placements', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT bp.*, c.name as customer_name, b.name as brand_name
-      FROM board_placements bp
-      LEFT JOIN customers c ON bp.customer_id = c.id
-      LEFT JOIN brands b ON bp.brand_id = b.id
-      WHERE bp.tenant_id = ?
-      ORDER BY bp.created_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/system-health', async (c) => {
-  const db = c.env.DB;
-  try {
-    const tableCount = await db.prepare("SELECT COUNT(*) as count FROM sqlite_master WHERE type='table'").first();
-    return c.json({
-      success: true,
-      data: {
-        status: 'healthy',
-        database: 'connected',
-        tables: tableCount?.count || 0,
-        timestamp: new Date().toISOString()
-      }
-    });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/dashboard', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const [customers, products, orders, visits] = await Promise.all([
-      db.prepare('SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?').bind(tenantId).first(),
-      db.prepare('SELECT COUNT(*) as count FROM products WHERE tenant_id = ?').bind(tenantId).first(),
-      db.prepare('SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?').bind(tenantId).first(),
-      db.prepare('SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?').bind(tenantId).first()
-    ]);
-    return c.json({
-      success: true,
-      data: {
-        total_customers: customers?.count || 0,
-        total_products: products?.count || 0,
-        total_orders: orders?.count || 0,
-        total_visits: visits?.count || 0
-      }
-    });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/inventory-stock', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT ist.*, p.name as product_name, p.sku, w.name as warehouse_name
-      FROM inventory_stock ist
-      LEFT JOIN products p ON ist.product_id = p.id
-      LEFT JOIN warehouses w ON ist.warehouse_id = w.id
-      WHERE ist.tenant_id = ?
-      ORDER BY p.name
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-api.get('/deliveries', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const { results } = await db.prepare(`
-      SELECT d.*, c.name as customer_name
-      FROM deliveries d
-      LEFT JOIN customers c ON d.customer_id = c.id
-      WHERE d.tenant_id = ?
-      ORDER BY d.created_at DESC
-    `).bind(tenantId).all();
-    return c.json({ success: true, data: results || [] });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
-  }
-});
-
-// ==================== SCHEMA SYNC ENDPOINT ====================
-api.post('/admin/sync-schema', async (c) => {
-  const db = c.env.DB;
-  try {
-    const alterStatements = [
-      "ALTER TABLE store_audits ADD COLUMN created_by TEXT",
-      "ALTER TABLE store_audits ADD COLUMN visit_id TEXT",
-      "ALTER TABLE store_audits ADD COLUMN compliance_score INTEGER",
-      "ALTER TABLE store_audits ADD COLUMN oos_count INTEGER DEFAULT 0",
-      "ALTER TABLE store_audits ADD COLUMN total_facings INTEGER DEFAULT 0",
-      "ALTER TABLE store_audits ADD COLUMN latitude REAL",
-      "ALTER TABLE store_audits ADD COLUMN longitude REAL",
-      "ALTER TABLE store_audits ADD COLUMN started_at TEXT",
-      "ALTER TABLE store_audits ADD COLUMN finished_at TEXT",
-      "ALTER TABLE store_audits ADD COLUMN approved_by TEXT",
-      "ALTER TABLE store_audits ADD COLUMN approved_at TEXT",
-      "ALTER TABLE store_audits ADD COLUMN rejection_reason TEXT",
-      "ALTER TABLE store_audits ADD COLUMN updated_at TEXT"
-    ];
-
-    const createStatements = [
-      `CREATE TABLE IF NOT EXISTS field_agents (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, user_id TEXT, employee_code TEXT, first_name TEXT, last_name TEXT, email TEXT, phone TEXT, status TEXT DEFAULT 'active', role TEXT DEFAULT 'field_agent', team_id TEXT, supervisor_id TEXT, hire_date TEXT, created_at TEXT, updated_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS field_tasks (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, title TEXT NOT NULL, description TEXT, type TEXT DEFAULT 'visit', priority TEXT DEFAULT 'medium', status TEXT DEFAULT 'pending', assigned_to TEXT, customer_id TEXT, scheduled_date TEXT, due_date TEXT, estimated_duration INTEGER DEFAULT 60, actual_start_time TEXT, actual_end_time TEXT, completion_notes TEXT, cancellation_reason TEXT, created_by TEXT, created_at TEXT, updated_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS teams (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT, supervisor_id TEXT, manager_id TEXT, region_id TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS agent_locations (id TEXT PRIMARY KEY, agent_id TEXT NOT NULL, tenant_id TEXT, latitude REAL, longitude REAL, accuracy REAL, recorded_at TEXT, created_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS territories (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, name TEXT NOT NULL, code TEXT, area_id TEXT, assigned_agent_id TEXT, description TEXT, status TEXT DEFAULT 'active', created_at TEXT, updated_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS store_audit_items (id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, product_id TEXT, is_listed INTEGER DEFAULT 0, is_on_shelf INTEGER DEFAULT 0, facings INTEGER DEFAULT 0, shelf_price REAL, promo_present INTEGER DEFAULT 0, out_of_stock INTEGER DEFAULT 0, competitor_price REAL, remarks TEXT, created_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS store_audit_photos (id TEXT PRIMARY KEY, audit_id TEXT NOT NULL, photo_url TEXT NOT NULL, photo_type TEXT DEFAULT 'shelf', latitude REAL, longitude REAL, captured_at TEXT, uploaded_by TEXT, created_at TEXT)`,
-      `CREATE TABLE IF NOT EXISTS inventory_issues (id TEXT PRIMARY KEY, tenant_id TEXT, issue_number TEXT, warehouse_id TEXT, issue_date TEXT, issue_type TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS goods_receipts (id TEXT PRIMARY KEY, tenant_id TEXT, receipt_number TEXT, grn_number TEXT, supplier_id TEXT, warehouse_id TEXT, receipt_date TEXT, total_items INTEGER DEFAULT 0, total_value REAL DEFAULT 0, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS stock_counts (id TEXT PRIMARY KEY, tenant_id TEXT, count_number TEXT, warehouse_id TEXT, count_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS inventory_adjustments (id TEXT PRIMARY KEY, tenant_id TEXT, adjustment_number TEXT, warehouse_id TEXT, adjustment_date TEXT, reason TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, approved_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS inventory_transfers (id TEXT PRIMARY KEY, tenant_id TEXT, transfer_number TEXT, from_warehouse_id TEXT, to_warehouse_id TEXT, transfer_date TEXT, status TEXT DEFAULT 'pending', notes TEXT, created_by TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP, updated_at TEXT)`
-    ];
-
-    const results = { altered: 0, created: 0, errors: [] };
-
-    for (const stmt of alterStatements) {
-      try {
-        await db.prepare(stmt).run();
-        results.altered++;
-      } catch (e) {
-        if (!e.message.includes('duplicate column')) {
-          results.errors.push(e.message);
-        }
-      }
-    }
-
-    for (const stmt of createStatements) {
-      try {
-        await db.prepare(stmt).run();
-        results.created++;
-      } catch (e) {
-        results.errors.push(e.message);
-      }
-    }
-
-    await db.prepare("UPDATE store_audits SET created_by = agent_id WHERE created_by IS NULL AND agent_id IS NOT NULL").run();
-    await db.prepare("UPDATE store_audits SET compliance_score = score WHERE compliance_score IS NULL AND score IS NOT NULL").run();
-
-    return c.json({ success: true, message: 'Schema synced', data: results });
-  } catch (error) {
-    return c.json({ success: false, message: error.message }, 500);
   }
 });
 
