@@ -872,9 +872,9 @@ api.post('/visits', async (c) => {
   const id = uuidv4();
   
   await db.prepare(`
-    INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, latitude, longitude, visit_type, purpose, notes, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.agent_id || 'system', body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.visit_type || 'sales', body.purpose || null, body.notes ?? null, 'in_progress').run();
+    INSERT INTO visits (id, tenant_id, agent_id, customer_id, visit_date, check_in_time, check_in_latitude, check_in_longitude, status, purpose, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+  `).bind(id, tenantId, body.agent_id || null, body.customer_id || null, body.visit_date || new Date().toISOString().split('T')[0], body.check_in_time || new Date().toISOString(), body.latitude || null, body.longitude || null, body.status || 'in_progress', body.purpose || null, body.notes ?? null).run();
   
   return c.json({ success: true, data: { id }, message: 'Visit started' }, 201);
   } catch (e) {
