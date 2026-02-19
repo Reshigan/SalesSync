@@ -16682,7 +16682,7 @@ api.get('/orders/:id/full', async (c) => {
       db.prepare('SELECT oi.*, p.name as product_name, p.sku as product_sku FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?').bind(id).all(),
       db.prepare('SELECT * FROM deliveries WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
       db.prepare('SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
-      db.prepare('SELECT * FROM payments WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
+      db.prepare('SELECT p.* FROM payments p INNER JOIN invoices i ON p.invoice_id = i.id WHERE i.order_id = ? AND p.tenant_id = ? ORDER BY p.created_at DESC').bind(id, tenantId).all().catch(() => ({ results: [] })),
       db.prepare('SELECT * FROM returns WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
       db.prepare('SELECT * FROM order_status_history WHERE order_id = ? ORDER BY created_at DESC').bind(id).all().catch(() => ({ results: [] }))
     ]);
@@ -16967,7 +16967,7 @@ api.get('/invoices/:id/full', async (c) => {
     try { items = await db.prepare('SELECT * FROM invoice_items WHERE invoice_id = ?').bind(id).all(); } catch(e) {}
     let payments = { results: [] };
     try { payments = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(); } catch(e) {}
-    try { if (payments.results.length === 0) payments = await db.prepare('SELECT * FROM payments WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(invoice.order_id, tenantId).all(); } catch(e) {}
+    try { if (payments.results.length === 0 && invoice.order_id) { const orderInvoices = await db.prepare("SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ?").bind(invoice.order_id, tenantId).all(); for (const oi of (orderInvoices.results || [])) { const op = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ?').bind(oi.id, tenantId).all(); payments.results.push(...(op.results || [])); } } } catch(e) {}
     let creditNotes = { results: [] };
     try { creditNotes = await db.prepare("SELECT * FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued' ORDER BY created_at DESC").bind(invoice.customer_id, tenantId).all(); } catch(e) {}
     const status = invoice.status || 'draft';
