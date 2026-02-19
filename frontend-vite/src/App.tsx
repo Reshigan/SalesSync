@@ -101,6 +101,8 @@ import OrdersPage from './pages/orders/OrdersPage'
 import OrderDetailsPage from './pages/orders/OrderDetailsPage'
 import OrderEditPage from './pages/orders/OrderEditPage'
 import OrderCreatePage from './pages/orders/OrderCreatePage'
+import OrderPipelinePage from './pages/orders/OrderPipelinePage'
+import WorkflowDashboardPage from './pages/orders/WorkflowDashboardPage'
 import ProductsPage from './pages/products/ProductsPage'
 import ProductDetailsPage from './pages/products/ProductDetailsPage'
 import ProductEditPage from './pages/products/ProductEditPage'
@@ -659,6 +661,8 @@ function App() {
             <Route path="customers/:id/kyc" element={<CustomerKYC />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/dashboard" element={<OrderDashboard />} />
+            <Route path="orders/pipeline" element={<OrderPipelinePage />} />
+            <Route path="orders/workflow" element={<WorkflowDashboardPage />} />
             <Route path="orders/create" element={<OrderCreatePage />} />
             <Route path="orders/:id" element={<OrderDetailsPage />} />
             <Route path="orders/:id/edit" element={<OrderEditPage />} />
