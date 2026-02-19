@@ -1,21 +1,6 @@
 -- Migration 0013: Align production D1 schema with code expectations
--- Adds missing columns to tables where code references columns that don't exist in production
-
--- store_audits: Code expects created_by, compliance_score, oos_count, total_facings, visit_id, etc.
--- Production only has: id, tenant_id, customer_id, agent_id, audit_date, audit_type, score, max_score, status, notes, created_at
-ALTER TABLE store_audits ADD COLUMN created_by TEXT;
-ALTER TABLE store_audits ADD COLUMN visit_id TEXT;
-ALTER TABLE store_audits ADD COLUMN compliance_score INTEGER;
-ALTER TABLE store_audits ADD COLUMN oos_count INTEGER DEFAULT 0;
-ALTER TABLE store_audits ADD COLUMN total_facings INTEGER DEFAULT 0;
-ALTER TABLE store_audits ADD COLUMN latitude REAL;
-ALTER TABLE store_audits ADD COLUMN longitude REAL;
-ALTER TABLE store_audits ADD COLUMN started_at TEXT;
-ALTER TABLE store_audits ADD COLUMN finished_at TEXT;
-ALTER TABLE store_audits ADD COLUMN approved_by TEXT;
-ALTER TABLE store_audits ADD COLUMN approved_at TEXT;
-ALTER TABLE store_audits ADD COLUMN rejection_reason TEXT;
-ALTER TABLE store_audits ADD COLUMN updated_at TEXT;
+-- NOTE: ALTER TABLE ADD COLUMN statements removed - columns already exist in production
+-- Only CREATE TABLE IF NOT EXISTS statements remain (safe for re-application)
 
 -- Create field_agents table if not exists (code references extensively)
 CREATE TABLE IF NOT EXISTS field_agents (
