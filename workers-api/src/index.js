@@ -520,6 +520,90 @@ api.get('/orders', async (c) => {
   return c.json({ success: true, data: orders.results || [] });
 });
 
+// ==================== PIPELINE & WORKFLOW ROUTES (must be before :id routes) ====================
+
+// --- ORDER PIPELINE: Orders grouped by status with counts ---
+api.get('/orders/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentOrders] = await Promise.all([
+      db.prepare(`
+        SELECT order_status as status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value
+        FROM orders WHERE tenant_id = ? GROUP BY order_status
+      `).bind(tenantId).all(),
+      db.prepare(`
+        SELECT o.*, c.name as customer_name FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        WHERE o.tenant_id = ? ORDER BY o.created_at DESC LIMIT 100
+      `).bind(tenantId).all()
+    ]);
+    const stages = ['draft','submitted','approved','processing','packed','shipped','delivered','invoiced','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, orders: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, orders: [] }; }
+    });
+    (recentOrders.results || []).forEach(o => {
+      const s = o.order_status || 'draft';
+      if (pipeline[s]) pipeline[s].orders.push(o);
+      else { pipeline[s] = { count: 1, total_value: o.total_amount || 0, orders: [o] }; }
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- RETURNS PIPELINE ---
+api.get('/returns/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentReturns] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count FROM returns WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON r.customer_id = c.id WHERE r.tenant_id = ? ORDER BY r.created_at DESC LIMIT 100').bind(tenantId).all()
+    ]);
+    const stages = ['pending','approved','inspecting','accepted','rejected','credit_issued','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, returns: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) pipeline[r.status].count = r.count;
+      else pipeline[r.status] = { count: r.count, returns: [] };
+    });
+    (recentReturns.results || []).forEach(r => {
+      const s = r.status || 'pending';
+      if (pipeline[s]) pipeline[s].returns.push(r);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+
+// --- VAN SALES PIPELINE ---
+api.get('/van-sales/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentVanSales] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM van_sales WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT vs.*, v.van_number, u.first_name, u.last_name FROM van_sales vs LEFT JOIN vans v ON vs.van_id = v.id LEFT JOIN users u ON vs.salesman_id = u.id WHERE vs.tenant_id = ? ORDER BY vs.created_at DESC LIMIT 100').bind(tenantId).all()
+    ]);
+    const stages = ['draft','loaded','dispatched','in_progress','settling','settled','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, van_sales: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
+      else pipeline[r.status] = { count: r.count, total_value: r.total_value, van_sales: [] };
+    });
+    (recentVanSales.results || []).forEach(vs => {
+      const s = vs.status || 'draft';
+      if (pipeline[s]) pipeline[s].van_sales.push(vs);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+
 api.get('/orders/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -4974,6 +5058,31 @@ api.get('/invoices', async (c) => {
   
   return c.json({ success: true, data: invoices.results || [], total: countResult?.total || 0 });
 });
+
+// --- INVOICES PIPELINE ---
+api.get('/invoices/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentInvoices] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value, COALESCE(SUM(amount_due),0) as total_outstanding FROM invoices WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare("SELECT i.*, o.order_number, c.name as customer_name FROM invoices i LEFT JOIN orders o ON i.order_id = o.id LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? ORDER BY i.created_at DESC LIMIT 100").bind(tenantId).all()
+    ]);
+    const stages = ['draft','issued','sent','partially_paid','paid','overdue','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, total_outstanding: 0, invoices: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; pipeline[r.status].total_outstanding = r.total_outstanding; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, total_outstanding: r.total_outstanding, invoices: [] }; }
+    });
+    (recentInvoices.results || []).forEach(inv => {
+      const s = inv.status || 'draft';
+      if (pipeline[s]) pipeline[s].invoices.push(inv);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
 
 api.get('/invoices/:id', async (c) => {
   const db = c.env.DB;
@@ -16536,37 +16645,30 @@ api.post('/admin/pos-library', authMiddleware, async (c) => {
 
 // ==================== BUSINESS LOGIC WORKFLOW ENDPOINTS ====================
 
-// --- ORDER PIPELINE: Orders grouped by status with counts ---
-api.get('/orders/pipeline', async (c) => {
+// --- DELIVERIES PIPELINE ---
+api.get('/deliveries/pipeline', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   try {
-    const [statusCounts, recentOrders] = await Promise.all([
-      db.prepare(`
-        SELECT order_status as status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value
-        FROM orders WHERE tenant_id = ? GROUP BY order_status
-      `).bind(tenantId).all(),
-      db.prepare(`
-        SELECT o.*, c.name as customer_name FROM orders o
-        LEFT JOIN customers c ON o.customer_id = c.id
-        WHERE o.tenant_id = ? ORDER BY o.created_at DESC LIMIT 100
-      `).bind(tenantId).all()
+    const [statusCounts, recentDeliveries] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM deliveries WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT d.*, o.order_number FROM deliveries d LEFT JOIN orders o ON d.order_id = o.id WHERE d.tenant_id = ? ORDER BY d.created_at DESC LIMIT 100').bind(tenantId).all()
     ]);
-    const stages = ['draft','submitted','approved','processing','packed','shipped','delivered','invoiced','completed','cancelled'];
+    const stages = ['pending','picking','packed','dispatched','in_transit','out_for_delivery','delivered','failed','cancelled'];
     const pipeline = {};
-    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, orders: [] }; });
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, deliveries: [] }; });
     (statusCounts.results || []).forEach(r => {
       if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
-      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, orders: [] }; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, deliveries: [] }; }
     });
-    (recentOrders.results || []).forEach(o => {
-      const s = o.order_status || 'draft';
-      if (pipeline[s]) pipeline[s].orders.push(o);
-      else { pipeline[s] = { count: 1, total_value: o.total_amount || 0, orders: [o] }; }
+    (recentDeliveries.results || []).forEach(d => {
+      const s = d.status || 'pending';
+      if (pipeline[s]) pipeline[s].deliveries.push(d);
     });
     return c.json({ success: true, data: { pipeline, stages } });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
+
 
 // --- ORDER FULL DETAIL: Order + related deliveries, invoices, payments, returns, history ---
 api.get('/orders/:id/full', async (c) => {
@@ -16759,30 +16861,6 @@ api.post('/orders/:id/create-return', async (c) => {
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
-// --- DELIVERIES PIPELINE ---
-api.get('/deliveries/pipeline', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const [statusCounts, recentDeliveries] = await Promise.all([
-      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM deliveries WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
-      db.prepare('SELECT d.*, o.order_number FROM deliveries d LEFT JOIN orders o ON d.order_id = o.id WHERE d.tenant_id = ? ORDER BY d.created_at DESC LIMIT 100').bind(tenantId).all()
-    ]);
-    const stages = ['pending','picking','packed','dispatched','in_transit','out_for_delivery','delivered','failed','cancelled'];
-    const pipeline = {};
-    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, deliveries: [] }; });
-    (statusCounts.results || []).forEach(r => {
-      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
-      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, deliveries: [] }; }
-    });
-    (recentDeliveries.results || []).forEach(d => {
-      const s = d.status || 'pending';
-      if (pipeline[s]) pipeline[s].deliveries.push(d);
-    });
-    return c.json({ success: true, data: { pipeline, stages } });
-  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
-});
-
 // --- DELIVERY FULL DETAIL ---
 api.get('/deliveries/:id/full', async (c) => {
   const db = c.env.DB;
@@ -16877,30 +16955,6 @@ api.post('/deliveries/:id/create-invoice', async (c) => {
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
-// --- INVOICES PIPELINE ---
-api.get('/invoices/pipeline', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const [statusCounts, recentInvoices] = await Promise.all([
-      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value, COALESCE(SUM(amount_due),0) as total_outstanding FROM invoices WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
-      db.prepare("SELECT i.*, o.order_number, c.name as customer_name FROM invoices i LEFT JOIN orders o ON i.order_id = o.id LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? ORDER BY i.created_at DESC LIMIT 100").bind(tenantId).all()
-    ]);
-    const stages = ['draft','issued','sent','partially_paid','paid','overdue','cancelled'];
-    const pipeline = {};
-    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, total_outstanding: 0, invoices: [] }; });
-    (statusCounts.results || []).forEach(r => {
-      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; pipeline[r.status].total_outstanding = r.total_outstanding; }
-      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, total_outstanding: r.total_outstanding, invoices: [] }; }
-    });
-    (recentInvoices.results || []).forEach(inv => {
-      const s = inv.status || 'draft';
-      if (pipeline[s]) pipeline[s].invoices.push(inv);
-    });
-    return c.json({ success: true, data: { pipeline, stages } });
-  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
-});
-
 // --- INVOICE FULL DETAIL ---
 api.get('/invoices/:id/full', async (c) => {
   const db = c.env.DB;
@@ -16976,30 +17030,6 @@ api.post('/invoices/:id/record-payment', async (c) => {
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
-// --- RETURNS PIPELINE ---
-api.get('/returns/pipeline', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const [statusCounts, recentReturns] = await Promise.all([
-      db.prepare('SELECT status, COUNT(*) as count FROM returns WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
-      db.prepare('SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON r.customer_id = c.id WHERE r.tenant_id = ? ORDER BY r.created_at DESC LIMIT 100').bind(tenantId).all()
-    ]);
-    const stages = ['pending','approved','inspecting','accepted','rejected','credit_issued','completed','cancelled'];
-    const pipeline = {};
-    stages.forEach(s => { pipeline[s] = { count: 0, returns: [] }; });
-    (statusCounts.results || []).forEach(r => {
-      if (pipeline[r.status]) pipeline[r.status].count = r.count;
-      else pipeline[r.status] = { count: r.count, returns: [] };
-    });
-    (recentReturns.results || []).forEach(r => {
-      const s = r.status || 'pending';
-      if (pipeline[s]) pipeline[s].returns.push(r);
-    });
-    return c.json({ success: true, data: { pipeline, stages } });
-  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
-});
-
 // --- RETURN APPROVE ---
 api.post('/returns/:id/approve', async (c) => {
   const db = c.env.DB;
@@ -17034,30 +17064,6 @@ api.post('/returns/:id/create-credit-note', async (c) => {
     `).bind(creditNoteId, tenantId, ret.customer_id, id, creditNoteNumber, amount, 'issued', userId || 'system', now).run();
     await db.prepare('UPDATE returns SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('credit_issued', now, id, tenantId).run();
     return c.json({ success: true, data: { id: creditNoteId, credit_note_number: creditNoteNumber, amount, status: 'issued' }, message: `Credit note ${creditNoteNumber} created for ${amount}` }, 201);
-  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
-});
-
-// --- VAN SALES PIPELINE ---
-api.get('/van-sales/pipeline', async (c) => {
-  const db = c.env.DB;
-  const tenantId = c.get('tenantId');
-  try {
-    const [statusCounts, recentVanSales] = await Promise.all([
-      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM van_sales WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
-      db.prepare('SELECT vs.*, v.van_number, u.first_name, u.last_name FROM van_sales vs LEFT JOIN vans v ON vs.van_id = v.id LEFT JOIN users u ON vs.salesman_id = u.id WHERE vs.tenant_id = ? ORDER BY vs.created_at DESC LIMIT 100').bind(tenantId).all()
-    ]);
-    const stages = ['draft','loaded','dispatched','in_progress','settling','settled','completed','cancelled'];
-    const pipeline = {};
-    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, van_sales: [] }; });
-    (statusCounts.results || []).forEach(r => {
-      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
-      else pipeline[r.status] = { count: r.count, total_value: r.total_value, van_sales: [] };
-    });
-    (recentVanSales.results || []).forEach(vs => {
-      const s = vs.status || 'draft';
-      if (pipeline[s]) pipeline[s].van_sales.push(vs);
-    });
-    return c.json({ success: true, data: { pipeline, stages } });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
