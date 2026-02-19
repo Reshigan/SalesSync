@@ -17012,9 +17012,9 @@ api.post('/invoices/:id/record-payment', async (c) => {
     const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
     const now = new Date().toISOString();
     await db.prepare(`
-      INSERT INTO payments (id, tenant_id, payment_number, invoice_id, order_id, customer_id, amount, payment_method, payment_date, reference_number, status, notes, created_by, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(paymentId, tenantId, paymentNumber, id, invoice.order_id, invoice.customer_id, paymentAmount, body.payment_method || 'cash', body.payment_date || now, body.reference_number || '', 'completed', body.notes || '', userId || 'system', now).run();
+      INSERT INTO payments (id, tenant_id, payment_number, invoice_id, customer_id, amount, payment_method, payment_date, reference, status, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(paymentId, tenantId, paymentNumber, id, invoice.customer_id, paymentAmount, body.payment_method || 'cash', body.payment_date || now, body.reference || body.reference_number || '', 'completed', body.notes || '', userId || 'system', now).run();
     const newAmountPaid = (invoice.amount_paid || 0) + paymentAmount;
     const newAmountDue = (invoice.total_amount || 0) - newAmountPaid;
     const newStatus = newAmountDue <= 0.01 ? 'paid' : 'partially_paid';
