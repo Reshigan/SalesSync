@@ -4123,9 +4123,9 @@ api.get('/finance/summary', async (c) => {
       db.prepare(`
         SELECT
           COUNT(*) as total_credit_notes,
-          COALESCE(SUM(total_amount), 0) as total_amount,
-          SUM(CASE WHEN status = 'issued' THEN total_amount ELSE 0 END) as pending_amount,
-          SUM(CASE WHEN status = 'applied' THEN total_amount ELSE 0 END) as applied_amount
+          COALESCE(SUM(amount), 0) as total_amount,
+          SUM(CASE WHEN status = 'issued' THEN amount ELSE 0 END) as pending_amount,
+          SUM(CASE WHEN status = 'applied' THEN amount ELSE 0 END) as applied_amount
         FROM credit_notes WHERE tenant_id = ?
       `).bind(tenantId).first(),
       db.prepare(`
@@ -14674,7 +14674,7 @@ api.get('/customers/:id/balance', async (c) => {
     `).bind(id, tenantId).first();
 
     const pendingCredits = await db.prepare(`
-      SELECT COALESCE(SUM(total_amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
+      SELECT COALESCE(SUM(amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
     `).bind(id, tenantId).first();
 
     return c.json({
