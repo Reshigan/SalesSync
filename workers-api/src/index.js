@@ -14674,7 +14674,7 @@ api.get('/customers/:id/balance', async (c) => {
     `).bind(id, tenantId).first();
 
     const pendingCredits = await db.prepare(`
-      SELECT COALESCE(SUM(total_amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
+      SELECT COALESCE(SUM(amount), 0) as total FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued'
     `).bind(id, tenantId).first();
 
     return c.json({
