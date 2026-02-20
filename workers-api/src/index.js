@@ -469,11 +469,16 @@ api.post('/products', async (c) => {
     const tenantId = c.get('tenantId');
     const body = await c.req.json();
     
+    const catId = body.category_id || null;
+    if (catId) { const catExists = await db.prepare('SELECT id FROM categories WHERE id = ? AND tenant_id = ?').bind(catId, tenantId).first(); if (!catExists) { await db.prepare('INSERT OR IGNORE INTO categories (id, tenant_id, name, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(catId, tenantId, 'Default', 'active').run(); } }
+    const brandId = body.brand_id || null;
+    if (brandId) { const brandExists = await db.prepare('SELECT id FROM brands WHERE id = ?').bind(brandId).first(); if (!brandExists) { await db.prepare('INSERT OR IGNORE INTO brands (id, tenant_id, name, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(brandId, tenantId, 'Default', 'active').run(); } }
+
     const id = uuidv4();
     await db.prepare(`
       INSERT INTO products (id, tenant_id, name, code, sku, barcode, category_id, brand_id, unit_of_measure, price, cost_price, tax_rate, status, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.name, body.code || id.slice(0, 8), body.sku || null, body.barcode || null, body.category_id || null, body.brand_id || null, body.unit_of_measure || 'unit', body.price || 0, body.cost_price || 0, body.tax_rate || 0, 'active').run();
+    `).bind(id, tenantId, body.name, body.code || id.slice(0, 8), body.sku || null, body.barcode || null, catId, brandId, body.unit_of_measure || 'unit', body.price || 0, body.cost_price || 0, body.tax_rate || 0, 'active').run();
     
     return c.json({ success: true, data: { id }, message: 'Product created' }, 201);
   } catch (e) {
@@ -881,7 +886,7 @@ api.post('/van-sales', async (c) => {
     await db.prepare(`
       INSERT INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, payment_reference, status, notes, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.van_id, body.agent_id, customerId, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', subtotal, totalTax, totalDiscount, totalAmount, amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, 'completed', saleNotes || null).run();
+    `).bind(id, tenantId, body.van_id || null, body.agent_id || null, customerId || null, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', subtotal, totalTax, totalDiscount, totalAmount, amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, 'completed', saleNotes || null).run();
     
     // Insert sale items with calculated prices
     for (const item of calculatedItems) {
@@ -1021,6 +1026,9 @@ api.post('/visits', async (c) => {
     return c.json({ success: false, message: 'customer_id is required' }, 400);
   }
 
+  const custExists = await db.prepare('SELECT id FROM customers WHERE id = ? AND tenant_id = ?').bind(body.customer_id, tenantId).first();
+  if (!custExists) return c.json({ success: false, message: 'Customer not found' }, 400);
+
   const id = uuidv4();
   const now = new Date().toISOString();
 
@@ -1076,17 +1084,22 @@ api.post('/returns', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
   const userId = c.get('userId');
+  try {
   const body = await c.req.json();
   
+  const orderId = body.order_id || null;
+  if (orderId) { const orderExists = await db.prepare('SELECT id FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first(); if (!orderExists) return c.json({ success: false, message: 'Order not found' }, 400); }
+
   const id = uuidv4();
   const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
   
   await db.prepare(`
     INSERT INTO returns (id, tenant_id, order_id, return_number, return_date, reason, status, total_amount, notes, created_by, created_at)
     VALUES (?, ?, ?, ?, datetime('now'), ?, 'pending', ?, ?, ?, datetime('now'))
-  `).bind(id, tenantId, body.order_id, returnNumber, body.reason ?? null, body.total_amount || 0, body.notes ?? null, userId).run();
+  `).bind(id, tenantId, orderId, returnNumber, body.reason ?? null, body.total_amount || 0, body.notes ?? null, userId).run();
   
   return c.json({ success: true, data: { id, returnNumber }, message: 'Return created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
 // ==================== ORDERS-ENHANCED RETURNS (for frontend compatibility) ====================
@@ -17220,7 +17233,7 @@ api.get('/orders-enhanced/fulfillment', async (c) => { const db = c.env.DB; cons
 // Inventory aliases
 api.get('/inventory/dashboard', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const [{ results: stock = [] }, { results: adj = [] }] = await Promise.all([ db.prepare('SELECT COUNT(*) as items FROM inventory WHERE tenant_id = ?').bind(tenantId).all(), db.prepare('SELECT COUNT(*) as adjustments FROM inventory_adjustments WHERE tenant_id = ?').bind(tenantId).all() ]); return c.json({ success: true, data: { items: stock?.[0]?.items || 0, adjustments: adj?.[0]?.adjustments || 0 } }); } catch { return c.json({ success: true, data: { items: 0, adjustments: 0 } }); } });
 api.get('/inventory/movements', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const { results } = await db.prepare('SELECT * FROM inventory_movements WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch { return c.json({ success: true, data: [] }); } });
-api.post('/inventory/adjustments', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const body = await c.req.json(); await db.prepare('INSERT INTO inventory_adjustments (id, tenant_id, product_id, quantity, reason, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(crypto.randomUUID(), tenantId, body.product_id, body.quantity || 0, body.reason || null).run(); return c.json({ success: true }, 201); } catch (e) { return c.json({ success: false, error: e.message }, 500); } });
+api.post('/inventory/adjustments', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); try { const body = await c.req.json(); const id = crypto.randomUUID(); const adjNumber = 'ADJ-' + Date.now().toString(36).toUpperCase(); await db.prepare('INSERT INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, adjustment_date, adjustment_type, reason, status, created_by, created_at) VALUES (?, ?, ?, ?, date("now"), ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, adjNumber, body.warehouse_id || null, body.adjustment_type || 'correction', body.reason || null, 'draft', userId).run(); return c.json({ success: true, data: { id, adjustment_number: adjNumber } }, 201); } catch (e) { return c.json({ success: false, error: e.message }, 500); } });
 
 
 api.get('/van-sales/dashboard', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const [{ results: loads = [] }, { results: orders = [] }] = await Promise.all([ db.prepare('SELECT COUNT(*) as count FROM van_loads WHERE tenant_id = ?').bind(tenantId).all(), db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ? AND order_status IN ('pending','processing','delivered')").bind(tenantId).all() ]); return c.json({ success: true, data: { van_loads: loads?.[0]?.count || 0, active_orders: orders?.[0]?.count || 0 } }); } catch { return c.json({ success: true, data: { van_loads: 0, active_orders: 0 } }); } });
@@ -17284,7 +17297,7 @@ api.post('/quotations', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
     const quoteNumber = 'QT-' + Date.now().toString(36).toUpperCase();
-    await db.prepare('INSERT INTO quotations (id, tenant_id, quote_number, customer_id, status, subtotal, tax_amount, discount_amount, total_amount, valid_until, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, quoteNumber, body.customer_id || null, 'draft', body.subtotal || 0, body.tax_amount || 0, body.discount_amount || 0, body.total_amount || 0, body.valid_until || null, body.notes || null, userId).run();
+    await db.prepare('INSERT INTO quotations (id, tenant_id, quotation_number, customer_id, status, subtotal, tax_amount, discount_amount, total_amount, valid_until, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, quoteNumber, body.customer_id || null, 'draft', body.subtotal || 0, body.tax_amount || 0, body.discount_amount || 0, body.total_amount || 0, body.valid_until || null, body.notes || null, userId).run();
     return c.json({ success: true, data: { id, quote_number: quoteNumber }, message: 'Quotation created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17348,7 +17361,7 @@ api.post('/refunds', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
     const refundNumber = 'RF-' + Date.now().toString(36).toUpperCase();
-    await db.prepare('INSERT INTO refunds (id, tenant_id, refund_number, order_id, payment_id, amount, reason, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, refundNumber, body.order_id || null, body.payment_id || null, body.amount || 0, body.reason || null, 'pending', userId).run();
+    await db.prepare('INSERT INTO refunds (id, tenant_id, refund_number, order_id, amount, reason, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, refundNumber, body.order_id || null, body.amount || 0, body.reason || null, 'pending', userId).run();
     return c.json({ success: true, data: { id, refund_number: refundNumber }, message: 'Refund created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17381,7 +17394,7 @@ api.post('/commission-rules', async (c) => {
   try {
     const body = await c.req.json();
     const id = crypto.randomUUID();
-    await db.prepare('INSERT INTO commission_rules (id, tenant_id, name, description, rule_type, rate, threshold, min_amount, max_amount, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, body.name || 'New Rule', body.description || null, body.rule_type || 'percentage', body.rate || 0, body.threshold || 0, body.min_amount || 0, body.max_amount || null, body.status || 'active').run();
+    await db.prepare('INSERT INTO commission_rules (id, tenant_id, name, rule_type, value, conditions, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, body.name || 'New Rule', body.rule_type || 'percentage', body.rate || body.value || 0, body.conditions || null, body.status || 'active').run();
     return c.json({ success: true, data: { id }, message: 'Commission rule created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17586,7 +17599,7 @@ api.post('/cash-reconciliation', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
     const sessionNumber = 'CS-' + Date.now().toString(36).toUpperCase();
-    await db.prepare('INSERT INTO cash_reconciliation_sessions (id, tenant_id, session_number, agent_id, opening_balance, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, sessionNumber, body.agent_id || userId, body.opening_balance || 0, 'open', userId).run();
+    await db.prepare('INSERT INTO cash_reconciliation_sessions (id, tenant_id, agent_id, session_date, opening_balance, status, created_at) VALUES (?, ?, ?, date("now"), ?, ?, datetime("now"))').bind(id, tenantId, body.agent_id || userId, body.opening_balance || 0, 'open').run();
     return c.json({ success: true, data: { id, session_number: sessionNumber }, message: 'Cash session created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17595,7 +17608,7 @@ api.post('/cash-reconciliation/:id/close', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
   try {
     const body = await c.req.json().catch(() => ({}));
-    await db.prepare('UPDATE cash_reconciliation_sessions SET status = ?, closing_balance = ?, total_collected = ?, variance = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind('closed', body.closing_balance || 0, body.total_collected || 0, body.variance || 0, id, tenantId).run();
+    await db.prepare('UPDATE cash_reconciliation_sessions SET status = ?, closing_balance = ?, expected_balance = ?, variance = ?, notes = ?, updated_at = datetime("now") WHERE id = ? AND tenant_id = ?').bind('closed', body.closing_balance || 0, body.expected_balance || body.total_collected || 0, body.variance || 0, body.notes || null, id, tenantId).run();
     return c.json({ success: true, message: 'Cash session closed' });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17615,7 +17628,9 @@ api.post('/deliveries', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
     const deliveryNumber = 'DEL-' + Date.now().toString(36).toUpperCase();
-    await db.prepare('INSERT INTO deliveries (id, tenant_id, delivery_number, order_id, driver_id, delivery_date, status, delivery_address, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, deliveryNumber, body.order_id || null, body.driver_id || null, body.delivery_date || null, 'pending', body.delivery_address || null, body.notes || null, userId).run();
+    const orderId = body.order_id || null;
+    if (orderId) { const orderExists = await db.prepare('SELECT id FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first(); if (!orderExists) return c.json({ success: false, message: 'Order not found' }, 400); }
+    await db.prepare('INSERT INTO deliveries (id, tenant_id, delivery_number, order_id, driver_id, delivery_date, status, delivery_address, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, deliveryNumber, orderId, body.driver_id || null, body.delivery_date || null, 'pending', body.delivery_address || null, body.notes || null, userId).run();
     return c.json({ success: true, data: { id, delivery_number: deliveryNumber }, message: 'Delivery created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17634,7 +17649,7 @@ api.post('/field-operations/board-placements', async (c) => {
   try {
     const body = await c.req.json();
     const id = crypto.randomUUID();
-    await db.prepare('INSERT INTO board_placements (id, tenant_id, board_id, customer_id, agent_id, placement_date, status, location_description, notes, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, body.board_id || null, body.customer_id || null, body.agent_id || userId, body.placement_date || null, body.status || 'installed', body.location_description || null, body.notes || null, userId).run();
+    await db.prepare('INSERT INTO board_placements (id, tenant_id, customer_id, agent_id, placement_type, placement_date, status, location_description, notes, created_at) VALUES (?, ?, ?, ?, ?, date("now"), ?, ?, ?, datetime("now"))').bind(id, tenantId, body.customer_id || null, body.agent_id || userId, body.board_type || body.placement_type || 'signage', body.status || 'installed', body.location_description || null, body.notes || null).run();
     return c.json({ success: true, data: { id }, message: 'Board placement created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17694,6 +17709,15 @@ api.get("/reports/variance-analysis", async (c) => { const db = c.env.DB; const 
 api.get("/reports/field-operations-productivity", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const [agents, visits, tasks, completedVisits] = await Promise.all([db.prepare("SELECT COUNT(*) as count FROM field_agents WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM visits WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM field_tasks WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM visits WHERE tenant_id = ? AND status = 'completed'").bind(tenantId).first()]); return c.json({ success: true, data: { total_agents: agents?.count || 0, total_visits: visits?.count || 0, total_tasks: tasks?.count || 0, completed_visits: completedVisits?.count || 0, visit_completion_rate: visits?.count > 0 ? Math.round((completedVisits?.count || 0) / visits.count * 100) : 0 } }); } catch (e) { return c.json({ success: true, data: { total_agents: 0, total_visits: 0, total_tasks: 0, completed_visits: 0, visit_completion_rate: 0 } }); } });
 api.get("/gps-locations", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM gps_locations WHERE tenant_id = ? ORDER BY recorded_at DESC LIMIT 100").bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
 api.get("/van-sales-returns", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM van_sales_returns WHERE tenant_id = ? ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
+
+api.get("/dashboard/summary", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const [orders, customers, products, revenue] = await Promise.all([db.prepare("SELECT COUNT(*) as count FROM orders WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM customers WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM products WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COALESCE(SUM(total_amount),0) as total FROM orders WHERE tenant_id = ?").bind(tenantId).first()]); return c.json({ success: true, data: { total_orders: orders?.count || 0, total_customers: customers?.count || 0, total_products: products?.count || 0, total_revenue: revenue?.total || 0 } }); } catch (e) { return c.json({ success: true, data: { total_orders: 0, total_customers: 0, total_products: 0, total_revenue: 0 } }); } });
+api.get("/dashboard/recent-activities", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const [recentOrders, recentVisits] = await Promise.all([db.prepare("SELECT id, order_number, total_amount, order_status, created_at FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 10").bind(tenantId).all(), db.prepare("SELECT id, customer_id, visit_type, status, created_at FROM visits WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 10").bind(tenantId).all()]); return c.json({ success: true, data: { recent_orders: recentOrders.results || [], recent_visits: recentVisits.results || [] } }); } catch (e) { return c.json({ success: true, data: { recent_orders: [], recent_visits: [] } }); } });
+api.get("/competitor-analysis", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM competitor_products WHERE tenant_id = ? ORDER BY created_at DESC").bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
+api.get("/rbac/roles", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM roles WHERE tenant_id = ? OR tenant_id IS NULL ORDER BY name").bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
+api.get("/rbac/permissions", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM permissions ORDER BY resource, action").all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
+api.get("/analytics/inventory", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const [totalStock, lowStock, categories] = await Promise.all([db.prepare("SELECT COALESCE(SUM(quantity),0) as total FROM inventory WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM inventory WHERE tenant_id = ? AND quantity <= reorder_level").bind(tenantId).first(), db.prepare("SELECT c.name, COUNT(p.id) as products FROM categories c LEFT JOIN products p ON c.id = p.category_id WHERE c.tenant_id = ? GROUP BY c.id").bind(tenantId).all()]); return c.json({ success: true, data: { total_stock: totalStock?.total || 0, low_stock_items: lowStock?.count || 0, by_category: categories.results || [] } }); } catch (e) { return c.json({ success: true, data: { total_stock: 0, low_stock_items: 0, by_category: [] } }); } });
+api.post("/inventory/stock-counts", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); try { const body = await c.req.json(); const id = crypto.randomUUID(); const countNumber = "SC-" + Date.now().toString(36).toUpperCase(); await db.prepare('INSERT INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, count_type, status, created_by, created_at) VALUES (?, ?, ?, ?, date("now"), ?, ?, ?, datetime("now"))').bind(id, tenantId, countNumber, body.warehouse_id || null, body.count_type || "full", "draft", userId).run(); return c.json({ success: true, data: { id, count_number: countNumber } }, 201); } catch (e) { return c.json({ success: false, message: e.message }, 500); } });
+
 app.route('/api', api);
 
 // File upload endpoint (R2)
