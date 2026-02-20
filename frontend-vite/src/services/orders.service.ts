@@ -316,6 +316,175 @@ class OrdersService {
       throw error
     }
   }
+  async getOrderFull(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/${id}/full`)
+      return response.data.data || null
+    } catch (error) {
+      console.error('Failed to fetch full order:', error)
+      return null
+    }
+  }
+
+  async getOrderPipeline(): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/pipeline`)
+      return response.data.data || { pipeline: {}, stages: [] }
+    } catch (error) {
+      console.error('Failed to fetch order pipeline:', error)
+      return { pipeline: {}, stages: [] }
+    }
+  }
+
+  async approveOrder(id: string): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/approve`)
+    return response.data
+  }
+
+  async submitOrder(id: string): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/submit`)
+    return response.data
+  }
+
+  async cancelOrder(id: string, reason?: string): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/cancel`, { reason })
+    return response.data
+  }
+
+  async createDeliveryFromOrder(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/create-delivery`, data || {})
+    return response.data
+  }
+
+  async createInvoiceFromOrder(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/create-invoice`, data || {})
+    return response.data
+  }
+
+  async createReturnFromOrder(id: string, data: any): Promise<any> {
+    const response = await apiClient.post(`${this.baseUrl}/${id}/create-return`, data)
+    return response.data
+  }
+
+  async getDeliveryPipeline(): Promise<any> {
+    try {
+      const response = await apiClient.get('/deliveries/pipeline')
+      return response.data.data || { pipeline: {}, stages: [] }
+    } catch (error) {
+      console.error('Failed to fetch delivery pipeline:', error)
+      return { pipeline: {}, stages: [] }
+    }
+  }
+
+  async getDeliveryFull(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`/deliveries/${id}/full`)
+      return response.data.data || null
+    } catch (error) {
+      console.error('Failed to fetch delivery detail:', error)
+      return null
+    }
+  }
+
+  async dispatchDelivery(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`/deliveries/${id}/dispatch`, data || {})
+    return response.data
+  }
+
+  async completeDelivery(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`/deliveries/${id}/complete`, data || {})
+    return response.data
+  }
+
+  async createInvoiceFromDelivery(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`/deliveries/${id}/create-invoice`, data || {})
+    return response.data
+  }
+
+  async getInvoicePipeline(): Promise<any> {
+    try {
+      const response = await apiClient.get('/invoices/pipeline')
+      return response.data.data || { pipeline: {}, stages: [] }
+    } catch (error) {
+      console.error('Failed to fetch invoice pipeline:', error)
+      return { pipeline: {}, stages: [] }
+    }
+  }
+
+  async getInvoiceFull(id: string): Promise<any> {
+    try {
+      const response = await apiClient.get(`/invoices/${id}/full`)
+      return response.data.data || null
+    } catch (error) {
+      console.error('Failed to fetch invoice detail:', error)
+      return null
+    }
+  }
+
+  async sendInvoice(id: string): Promise<any> {
+    const response = await apiClient.post(`/invoices/${id}/send`)
+    return response.data
+  }
+
+  async recordPayment(invoiceId: string, data: { amount: number; payment_method: string; reference_number?: string; notes?: string }): Promise<any> {
+    const response = await apiClient.post(`/invoices/${invoiceId}/record-payment`, data)
+    return response.data
+  }
+
+  async getReturnsPipeline(): Promise<any> {
+    try {
+      const response = await apiClient.get('/returns/pipeline')
+      return response.data.data || { pipeline: {}, stages: [] }
+    } catch (error) {
+      console.error('Failed to fetch returns pipeline:', error)
+      return { pipeline: {}, stages: [] }
+    }
+  }
+
+  async approveReturn(id: string): Promise<any> {
+    const response = await apiClient.post(`/returns/${id}/approve`)
+    return response.data
+  }
+
+  async createCreditNote(returnId: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`/returns/${returnId}/create-credit-note`, data || {})
+    return response.data
+  }
+
+  async getVanSalesPipeline(): Promise<any> {
+    try {
+      const response = await apiClient.get('/van-sales/pipeline')
+      return response.data.data || { pipeline: {}, stages: [] }
+    } catch (error) {
+      console.error('Failed to fetch van sales pipeline:', error)
+      return { pipeline: {}, stages: [] }
+    }
+  }
+
+  async loadVan(id: string, data?: any): Promise<any> {
+    const response = await apiClient.post(`/van-sales/${id}/load`, data || {})
+    return response.data
+  }
+
+  async dispatchVan(id: string): Promise<any> {
+    const response = await apiClient.post(`/van-sales/${id}/dispatch`)
+    return response.data
+  }
+
+  async settleVanSale(id: string, data: any): Promise<any> {
+    const response = await apiClient.post(`/van-sales/${id}/settle`, data)
+    return response.data
+  }
+
+  async getWorkflowDashboard(): Promise<any> {
+    try {
+      const response = await apiClient.get('/workflow/dashboard')
+      return response.data.data || {}
+    } catch (error) {
+      console.error('Failed to fetch workflow dashboard:', error)
+      return {}
+    }
+  }
 }
 
 export const ordersService = new OrdersService()

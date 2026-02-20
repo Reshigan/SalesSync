@@ -520,6 +520,90 @@ api.get('/orders', async (c) => {
   return c.json({ success: true, data: orders.results || [] });
 });
 
+// ==================== PIPELINE & WORKFLOW ROUTES (must be before :id routes) ====================
+
+// --- ORDER PIPELINE: Orders grouped by status with counts ---
+api.get('/orders/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentOrders] = await Promise.all([
+      db.prepare(`
+        SELECT order_status as status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value
+        FROM orders WHERE tenant_id = ? GROUP BY order_status
+      `).bind(tenantId).all(),
+      db.prepare(`
+        SELECT o.*, c.name as customer_name FROM orders o
+        LEFT JOIN customers c ON o.customer_id = c.id
+        WHERE o.tenant_id = ? ORDER BY o.created_at DESC LIMIT 100
+      `).bind(tenantId).all()
+    ]);
+    const stages = ['draft','submitted','approved','processing','packed','shipped','delivered','invoiced','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, orders: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, orders: [] }; }
+    });
+    (recentOrders.results || []).forEach(o => {
+      const s = o.order_status || 'draft';
+      if (pipeline[s]) pipeline[s].orders.push(o);
+      else { pipeline[s] = { count: 1, total_value: o.total_amount || 0, orders: [o] }; }
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- RETURNS PIPELINE ---
+api.get('/returns/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentReturns] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count FROM returns WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT r.*, o.order_number, c.name as customer_name FROM returns r LEFT JOIN orders o ON r.order_id = o.id LEFT JOIN customers c ON r.customer_id = c.id WHERE r.tenant_id = ? ORDER BY r.created_at DESC LIMIT 100').bind(tenantId).all()
+    ]);
+    const stages = ['pending','approved','inspecting','accepted','rejected','credit_issued','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, returns: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) pipeline[r.status].count = r.count;
+      else pipeline[r.status] = { count: r.count, returns: [] };
+    });
+    (recentReturns.results || []).forEach(r => {
+      const s = r.status || 'pending';
+      if (pipeline[s]) pipeline[s].returns.push(r);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+
+// --- VAN SALES PIPELINE ---
+api.get('/van-sales/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentVanSales] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM van_sales WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT vs.*, v.van_number, u.first_name, u.last_name FROM van_sales vs LEFT JOIN vans v ON vs.van_id = v.id LEFT JOIN users u ON vs.salesman_id = u.id WHERE vs.tenant_id = ? ORDER BY vs.created_at DESC LIMIT 100').bind(tenantId).all()
+    ]);
+    const stages = ['draft','loaded','dispatched','in_progress','settling','settled','completed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, van_sales: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
+      else pipeline[r.status] = { count: r.count, total_value: r.total_value, van_sales: [] };
+    });
+    (recentVanSales.results || []).forEach(vs => {
+      const s = vs.status || 'draft';
+      if (pipeline[s]) pipeline[s].van_sales.push(vs);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+
 api.get('/orders/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
@@ -4974,6 +5058,31 @@ api.get('/invoices', async (c) => {
   
   return c.json({ success: true, data: invoices.results || [], total: countResult?.total || 0 });
 });
+
+// --- INVOICES PIPELINE ---
+api.get('/invoices/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentInvoices] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value, COALESCE(SUM(amount_due),0) as total_outstanding FROM invoices WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare("SELECT i.*, o.order_number, c.name as customer_name FROM invoices i LEFT JOIN orders o ON i.order_id = o.id LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? ORDER BY i.created_at DESC LIMIT 100").bind(tenantId).all()
+    ]);
+    const stages = ['draft','issued','sent','partially_paid','paid','overdue','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, total_outstanding: 0, invoices: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; pipeline[r.status].total_outstanding = r.total_outstanding; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, total_outstanding: r.total_outstanding, invoices: [] }; }
+    });
+    (recentInvoices.results || []).forEach(inv => {
+      const s = inv.status || 'draft';
+      if (pipeline[s]) pipeline[s].invoices.push(inv);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
 
 api.get('/invoices/:id', async (c) => {
   const db = c.env.DB;
@@ -16533,6 +16642,509 @@ api.post('/admin/commission-rules', authMiddleware, async (c) => {
 });
 api.post('/admin/pos-library', authMiddleware, async (c) => {
   try { const db = c.env.DB; const tenantId = getTenantId(c); const body = await c.req.json(); await db.prepare('INSERT INTO pos_materials (tenant_id, name, type, description, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(tenantId, body.name, body.type, body.description, body.status || 'active').run(); return c.json({ success: true, message: 'POS material created' }); } catch(e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== BUSINESS LOGIC WORKFLOW ENDPOINTS ====================
+
+// --- DELIVERIES PIPELINE ---
+api.get('/deliveries/pipeline', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [statusCounts, recentDeliveries] = await Promise.all([
+      db.prepare('SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value FROM deliveries WHERE tenant_id = ? GROUP BY status').bind(tenantId).all(),
+      db.prepare('SELECT d.*, o.order_number FROM deliveries d LEFT JOIN orders o ON d.order_id = o.id WHERE d.tenant_id = ? ORDER BY d.created_at DESC LIMIT 100').bind(tenantId).all()
+    ]);
+    const stages = ['pending','picking','packed','dispatched','in_transit','out_for_delivery','delivered','failed','cancelled'];
+    const pipeline = {};
+    stages.forEach(s => { pipeline[s] = { count: 0, total_value: 0, deliveries: [] }; });
+    (statusCounts.results || []).forEach(r => {
+      if (pipeline[r.status]) { pipeline[r.status].count = r.count; pipeline[r.status].total_value = r.total_value; }
+      else { pipeline[r.status] = { count: r.count, total_value: r.total_value, deliveries: [] }; }
+    });
+    (recentDeliveries.results || []).forEach(d => {
+      const s = d.status || 'pending';
+      if (pipeline[s]) pipeline[s].deliveries.push(d);
+    });
+    return c.json({ success: true, data: { pipeline, stages } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+
+// --- ORDER FULL DETAIL: Order + related deliveries, invoices, payments, returns, history ---
+api.get('/orders/:id/full', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT o.*, c.name as customer_name, c.email as customer_email, c.phone as customer_phone FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE o.id = ? AND o.tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    const [items, deliveries, invoices, payments, returns, history] = await Promise.all([
+      db.prepare('SELECT oi.*, p.name as product_name, p.sku as product_sku FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?').bind(id).all(),
+      db.prepare('SELECT * FROM deliveries WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
+      db.prepare('SELECT * FROM invoices WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
+      db.prepare('SELECT p.* FROM payments p INNER JOIN invoices i ON p.invoice_id = i.id WHERE i.order_id = ? AND p.tenant_id = ? ORDER BY p.created_at DESC').bind(id, tenantId).all().catch(() => ({ results: [] })),
+      db.prepare('SELECT * FROM returns WHERE order_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(),
+      db.prepare('SELECT * FROM order_status_history WHERE order_id = ? ORDER BY created_at DESC').bind(id).all().catch(() => ({ results: [] }))
+    ]);
+    const status = order.order_status || 'draft';
+    const allowedActions = [];
+    if (['draft'].includes(status)) allowedActions.push('edit', 'submit', 'cancel', 'delete');
+    if (['submitted'].includes(status)) allowedActions.push('approve', 'reject', 'cancel');
+    if (['approved'].includes(status)) allowedActions.push('create_delivery', 'cancel');
+    if (['processing','packed'].includes(status)) allowedActions.push('create_delivery');
+    if (['delivered'].includes(status)) allowedActions.push('create_invoice', 'create_return');
+    if (['invoiced'].includes(status)) allowedActions.push('record_payment', 'create_return');
+    if (['completed'].includes(status)) allowedActions.push('create_return');
+    const lifecycle = [
+      { stage: 'draft', label: 'Draft', completed: ['submitted','approved','processing','packed','shipped','delivered','invoiced','completed'].includes(status), active: status === 'draft' },
+      { stage: 'submitted', label: 'Submitted', completed: ['approved','processing','packed','shipped','delivered','invoiced','completed'].includes(status), active: status === 'submitted' },
+      { stage: 'approved', label: 'Approved', completed: ['processing','packed','shipped','delivered','invoiced','completed'].includes(status), active: status === 'approved' },
+      { stage: 'delivered', label: 'Delivered', completed: ['invoiced','completed'].includes(status), active: status === 'delivered' || status === 'shipped' || status === 'processing' || status === 'packed' },
+      { stage: 'invoiced', label: 'Invoiced', completed: ['completed'].includes(status), active: status === 'invoiced' },
+      { stage: 'completed', label: 'Completed', completed: false, active: status === 'completed' }
+    ];
+    return c.json({ success: true, data: {
+      ...order, items: items.results || [], deliveries: deliveries.results || [],
+      invoices: invoices.results || [], payments: payments.results || [],
+      returns: returns.results || [], history: history.results || [],
+      allowed_actions: allowedActions, lifecycle
+    }});
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER APPROVE ---
+api.post('/orders/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (!['submitted','draft','pending'].includes(order.order_status)) return c.json({ success: false, message: `Cannot approve order in ${order.order_status} status` }, 400);
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('approved', now, id, tenantId).run();
+    try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, order.order_status, 'approved', userId || 'system', 'Order approved', now).run(); } catch(e) {}
+    return c.json({ success: true, data: { ...order, order_status: 'approved' }, message: 'Order approved successfully' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER SUBMIT ---
+api.post('/orders/:id/submit', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (!['draft'].includes(order.order_status)) return c.json({ success: false, message: `Cannot submit order in ${order.order_status} status` }, 400);
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('submitted', now, id, tenantId).run();
+    try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, order.order_status, 'submitted', userId || 'system', 'Order submitted for approval', now).run(); } catch(e) {}
+    return c.json({ success: true, data: { ...order, order_status: 'submitted' }, message: 'Order submitted for approval' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER CANCEL ---
+api.post('/orders/:id/cancel', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (['completed','cancelled','invoiced'].includes(order.order_status)) return c.json({ success: false, message: `Cannot cancel order in ${order.order_status} status` }, 400);
+    const deliveries = await db.prepare("SELECT COUNT(*) as cnt FROM deliveries WHERE order_id = ? AND tenant_id = ? AND status NOT IN ('cancelled','failed')").bind(id, tenantId).first();
+    if (deliveries && deliveries.cnt > 0) return c.json({ success: false, message: 'Cannot cancel: order has active deliveries. Cancel deliveries first.' }, 400);
+    const now = new Date().toISOString();
+    const body = await c.req.json().catch(() => ({}));
+    await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('cancelled', now, id, tenantId).run();
+    try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, order.order_status, 'cancelled', userId || 'system', body.reason || 'Order cancelled', now).run(); } catch(e) {}
+    return c.json({ success: true, data: { ...order, order_status: 'cancelled' }, message: 'Order cancelled' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER CREATE DELIVERY ---
+api.post('/orders/:id/create-delivery', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT o.*, c.name as customer_name, c.phone as customer_phone FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE o.id = ? AND o.tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (!['approved','processing','packed','submitted','pending'].includes(order.order_status)) return c.json({ success: false, message: `Cannot create delivery for order in ${order.order_status} status` }, 400);
+    const items = await db.prepare('SELECT oi.*, p.name as product_name, p.sku FROM order_items oi LEFT JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?').bind(id).all();
+    const body = await c.req.json().catch(() => ({}));
+    const deliveryId = uuidv4();
+    const deliveryNumber = `DEL-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    await db.prepare(`
+      INSERT INTO deliveries (id, tenant_id, order_id, delivery_number, customer_id, customer_name, status, delivery_date, delivery_address, driver_name, driver_phone, vehicle_number, notes, total_items, total_amount, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(deliveryId, tenantId, id, deliveryNumber, order.customer_id, order.customer_name || '', 'pending', body.delivery_date || order.delivery_date || now, body.delivery_address || '', body.driver_name || '', body.driver_phone || '', body.vehicle_number || '', body.notes || '', (items.results || []).length, order.total_amount || 0, userId || 'system', now, now).run();
+    for (const item of (items.results || [])) {
+      try {
+        await db.prepare(`
+          INSERT INTO delivery_items (id, delivery_id, product_id, product_name, quantity, delivered_quantity, unit_price, total, status, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(uuidv4(), deliveryId, item.product_id, item.product_name || '', item.quantity, 0, item.unit_price || 0, item.line_total || item.subtotal || 0, 'pending', now).run();
+      } catch(e) {}
+    }
+    await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('processing', now, id, tenantId).run();
+    try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, order.order_status, 'processing', userId || 'system', `Delivery ${deliveryNumber} created`, now).run(); } catch(e) {}
+    return c.json({ success: true, data: { id: deliveryId, delivery_number: deliveryNumber, order_id: id, status: 'pending' }, message: `Delivery ${deliveryNumber} created from order` }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER CREATE INVOICE (direct from order) ---
+api.post('/orders/:id/create-invoice', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (['cancelled','draft'].includes(order.order_status)) return c.json({ success: false, message: `Cannot invoice order in ${order.order_status} status` }, 400);
+    const existingInvoice = await db.prepare("SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != 'cancelled'").bind(id, tenantId).first();
+    if (existingInvoice) return c.json({ success: false, message: 'An invoice already exists for this order' }, 400);
+    const body = await c.req.json().catch(() => ({}));
+    const invoiceId = uuidv4();
+    const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    const dueDate = body.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+    await db.prepare(`
+      INSERT INTO invoices (id, tenant_id, invoice_number, order_id, customer_id, invoice_date, due_date, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, status, payment_terms, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(invoiceId, tenantId, invoiceNumber, id, order.customer_id, now, dueDate, order.subtotal || 0, order.tax_amount || 0, order.discount_amount || 0, order.total_amount || 0, 0, order.total_amount || 0, 'issued', body.payment_terms || 30, body.notes || '', userId || 'system', now, now).run();
+    const items = await db.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
+    for (const item of (items.results || [])) {
+      try {
+        await db.prepare('INSERT INTO invoice_items (id, invoice_id, product_id, description, quantity, unit_price, tax_amount, line_total, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), invoiceId, item.product_id, item.product_name || '', item.quantity, item.unit_price || 0, item.tax_amount || 0, item.line_total || item.subtotal || 0, now).run();
+      } catch(e) {}
+    }
+    await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('invoiced', now, id, tenantId).run();
+    try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, order.order_status, 'invoiced', userId || 'system', `Invoice ${invoiceNumber} generated`, now).run(); } catch(e) {}
+    return c.json({ success: true, data: { id: invoiceId, invoice_number: invoiceNumber, order_id: id, status: 'issued', total_amount: order.total_amount, due_date: dueDate }, message: `Invoice ${invoiceNumber} created` }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- ORDER CREATE RETURN ---
+api.post('/orders/:id/create-return', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!order) return c.json({ success: false, message: 'Order not found' }, 404);
+    if (!['delivered','invoiced','completed'].includes(order.order_status)) return c.json({ success: false, message: `Cannot create return for order in ${order.order_status} status` }, 400);
+    const body = await c.req.json();
+    const returnId = uuidv4();
+    const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    await db.prepare(`
+      INSERT INTO returns (id, tenant_id, order_id, return_number, customer_id, reason, status, subtotal, tax_amount, total_amount, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(returnId, tenantId, id, returnNumber, order.customer_id, body.reason || '', 'pending', body.subtotal || 0, body.tax_amount || 0, body.total_amount || 0, body.notes || '', userId || 'system', now, now).run();
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        try {
+          await db.prepare('INSERT INTO return_items (id, return_id, product_id, quantity, unit_price, reason, condition, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), returnId, item.product_id, item.quantity, item.unit_price || 0, item.reason || body.reason || '', item.condition || 'good', now).run();
+        } catch(e) {}
+      }
+    }
+    return c.json({ success: true, data: { id: returnId, return_number: returnNumber, order_id: id, status: 'pending' }, message: `Return ${returnNumber} created` }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- DELIVERY FULL DETAIL ---
+api.get('/deliveries/:id/full', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const delivery = await db.prepare('SELECT d.*, o.order_number, o.customer_id, c.name as customer_name, c.phone as customer_phone FROM deliveries d LEFT JOIN orders o ON d.order_id = o.id LEFT JOIN customers c ON o.customer_id = c.id WHERE d.id = ? AND d.tenant_id = ?').bind(id, tenantId).first();
+    if (!delivery) return c.json({ success: false, message: 'Delivery not found' }, 404);
+    let items = { results: [] };
+    try { items = await db.prepare('SELECT * FROM delivery_items WHERE delivery_id = ?').bind(id).all(); } catch(e) {}
+    const status = delivery.status || 'pending';
+    const allowedActions = [];
+    if (status === 'pending') allowedActions.push('dispatch', 'cancel');
+    if (status === 'picking') allowedActions.push('pack', 'cancel');
+    if (status === 'packed') allowedActions.push('dispatch', 'cancel');
+    if (['dispatched','in_transit','out_for_delivery'].includes(status)) allowedActions.push('complete', 'fail');
+    if (status === 'delivered') allowedActions.push('create_invoice');
+    return c.json({ success: true, data: { ...delivery, items: items.results || [], allowed_actions: allowedActions } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- DELIVERY DISPATCH ---
+api.post('/deliveries/:id/dispatch', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const delivery = await db.prepare('SELECT * FROM deliveries WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!delivery) return c.json({ success: false, message: 'Delivery not found' }, 404);
+    if (!['pending','packed','picking'].includes(delivery.status)) return c.json({ success: false, message: `Cannot dispatch delivery in ${delivery.status} status` }, 400);
+    const body = await c.req.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE deliveries SET status = ?, driver_name = COALESCE(?, driver_name), driver_phone = COALESCE(?, driver_phone), vehicle_number = COALESCE(?, vehicle_number), dispatched_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('dispatched', body.driver_name || null, body.driver_phone || null, body.vehicle_number || null, now, now, id, tenantId).run();
+    return c.json({ success: true, data: { ...delivery, status: 'dispatched' }, message: 'Delivery dispatched' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- DELIVERY COMPLETE ---
+api.post('/deliveries/:id/complete', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const delivery = await db.prepare('SELECT * FROM deliveries WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!delivery) return c.json({ success: false, message: 'Delivery not found' }, 404);
+    if (!['dispatched','in_transit','out_for_delivery','pending','packed'].includes(delivery.status)) return c.json({ success: false, message: `Cannot complete delivery in ${delivery.status} status` }, 400);
+    const body = await c.req.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE deliveries SET status = ?, delivered_at = ?, signature_url = ?, notes = COALESCE(?, notes), updated_at = ? WHERE id = ? AND tenant_id = ?')
+      .bind('delivered', now, body.signature_url || null, body.notes || null, now, id, tenantId).run();
+    try { await db.prepare('UPDATE delivery_items SET status = ?, delivered_quantity = quantity WHERE delivery_id = ?').bind('delivered', id).run(); } catch(e) {}
+    if (delivery.order_id) {
+      const otherDeliveries = await db.prepare("SELECT COUNT(*) as cnt FROM deliveries WHERE order_id = ? AND tenant_id = ? AND id != ? AND status NOT IN ('delivered','cancelled','failed')").bind(delivery.order_id, tenantId, id).first();
+      if (!otherDeliveries || otherDeliveries.cnt === 0) {
+        await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('delivered', now, delivery.order_id, tenantId).run();
+        try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), delivery.order_id, 'processing', 'delivered', userId || 'system', `Delivery ${delivery.delivery_number || id} completed`, now).run(); } catch(e) {}
+      }
+    }
+    return c.json({ success: true, data: { ...delivery, status: 'delivered' }, message: 'Delivery completed' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- DELIVERY CREATE INVOICE ---
+api.post('/deliveries/:id/create-invoice', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const delivery = await db.prepare('SELECT d.*, o.customer_id, o.subtotal, o.tax_amount, o.discount_amount, o.total_amount as order_total FROM deliveries d LEFT JOIN orders o ON d.order_id = o.id WHERE d.id = ? AND d.tenant_id = ?').bind(id, tenantId).first();
+    if (!delivery) return c.json({ success: false, message: 'Delivery not found' }, 404);
+    if (delivery.status !== 'delivered') return c.json({ success: false, message: 'Can only invoice delivered deliveries' }, 400);
+    const existingInvoice = await db.prepare("SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ? AND status != 'cancelled'").bind(delivery.order_id, tenantId).first();
+    if (existingInvoice) return c.json({ success: false, message: 'An invoice already exists for this order' }, 400);
+    const body = await c.req.json().catch(() => ({}));
+    const invoiceId = uuidv4();
+    const invoiceNumber = `INV-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    const dueDate = body.due_date || new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+    const totalAmount = delivery.order_total || delivery.total_amount || 0;
+    await db.prepare(`
+      INSERT INTO invoices (id, tenant_id, invoice_number, order_id, customer_id, invoice_date, due_date, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, status, payment_terms, notes, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(invoiceId, tenantId, invoiceNumber, delivery.order_id, delivery.customer_id, now, dueDate, delivery.subtotal || 0, delivery.tax_amount || 0, delivery.discount_amount || 0, totalAmount, 0, totalAmount, 'issued', body.payment_terms || 30, body.notes || '', userId || 'system', now, now).run();
+    if (delivery.order_id) {
+      await db.prepare('UPDATE orders SET order_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('invoiced', now, delivery.order_id, tenantId).run();
+    }
+    return c.json({ success: true, data: { id: invoiceId, invoice_number: invoiceNumber, status: 'issued', total_amount: totalAmount, due_date: dueDate }, message: `Invoice ${invoiceNumber} created from delivery` }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- INVOICE FULL DETAIL ---
+api.get('/invoices/:id/full', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const invoice = await db.prepare('SELECT i.*, o.order_number, c.name as customer_name, c.email as customer_email, c.phone as customer_phone FROM invoices i LEFT JOIN orders o ON i.order_id = o.id LEFT JOIN customers c ON i.customer_id = c.id WHERE i.id = ? AND i.tenant_id = ?').bind(id, tenantId).first();
+    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+    let items = { results: [] };
+    try { items = await db.prepare('SELECT * FROM invoice_items WHERE invoice_id = ?').bind(id).all(); } catch(e) {}
+    let payments = { results: [] };
+    try { payments = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ? ORDER BY created_at DESC').bind(id, tenantId).all(); } catch(e) {}
+    try { if (payments.results.length === 0 && invoice.order_id) { const orderInvoices = await db.prepare("SELECT id FROM invoices WHERE order_id = ? AND tenant_id = ?").bind(invoice.order_id, tenantId).all(); for (const oi of (orderInvoices.results || [])) { const op = await db.prepare('SELECT * FROM payments WHERE invoice_id = ? AND tenant_id = ?').bind(oi.id, tenantId).all(); payments.results.push(...(op.results || [])); } } } catch(e) {}
+    let creditNotes = { results: [] };
+    try { creditNotes = await db.prepare("SELECT * FROM credit_notes WHERE customer_id = ? AND tenant_id = ? AND status = 'issued' ORDER BY created_at DESC").bind(invoice.customer_id, tenantId).all(); } catch(e) {}
+    const status = invoice.status || 'draft';
+    const allowedActions = [];
+    if (status === 'draft') allowedActions.push('send', 'cancel', 'edit');
+    if (['issued','sent'].includes(status)) allowedActions.push('record_payment', 'cancel', 'apply_credit');
+    if (status === 'partially_paid') allowedActions.push('record_payment', 'apply_credit');
+    if (status === 'overdue') allowedActions.push('record_payment', 'send_reminder', 'apply_credit');
+    return c.json({ success: true, data: { ...invoice, items: items.results || [], payments: payments.results || [], credit_notes: creditNotes.results || [], allowed_actions: allowedActions } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- INVOICE SEND ---
+api.post('/invoices/:id/send', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE invoices SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('sent', now, id, tenantId).run();
+    return c.json({ success: true, data: { ...invoice, status: 'sent' }, message: 'Invoice marked as sent' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- INVOICE RECORD PAYMENT ---
+api.post('/invoices/:id/record-payment', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const invoice = await db.prepare('SELECT * FROM invoices WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!invoice) return c.json({ success: false, message: 'Invoice not found' }, 404);
+    if (['paid','cancelled'].includes(invoice.status)) return c.json({ success: false, message: `Cannot record payment for ${invoice.status} invoice` }, 400);
+    const body = await c.req.json();
+    const paymentAmount = parseFloat(body.amount);
+    if (!paymentAmount || paymentAmount <= 0) return c.json({ success: false, message: 'Invalid payment amount' }, 400);
+    if (paymentAmount > (invoice.amount_due || 0)) return c.json({ success: false, message: `Payment amount (${paymentAmount}) exceeds amount due (${invoice.amount_due})` }, 400);
+    const paymentId = uuidv4();
+    const paymentNumber = `PAY-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    await db.prepare(`
+      INSERT INTO payments (id, tenant_id, payment_number, invoice_id, customer_id, amount, payment_method, payment_date, reference, status, notes, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(paymentId, tenantId, paymentNumber, id, invoice.customer_id, paymentAmount, body.payment_method || 'cash', body.payment_date || now, body.reference || body.reference_number || '', 'completed', body.notes || '', userId || 'system', now).run();
+    const newAmountPaid = (invoice.amount_paid || 0) + paymentAmount;
+    const newAmountDue = (invoice.total_amount || 0) - newAmountPaid;
+    const newStatus = newAmountDue <= 0.01 ? 'paid' : 'partially_paid';
+    await db.prepare('UPDATE invoices SET amount_paid = ?, amount_due = ?, status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind(newAmountPaid, Math.max(0, newAmountDue), newStatus, now, id, tenantId).run();
+    if (newStatus === 'paid' && invoice.order_id) {
+      await db.prepare('UPDATE orders SET order_status = ?, payment_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('completed', 'paid', now, invoice.order_id, tenantId).run();
+      try { await db.prepare('INSERT INTO order_status_history (id, order_id, old_status, new_status, changed_by, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), invoice.order_id, 'invoiced', 'completed', userId || 'system', `Payment ${paymentNumber} received - invoice fully paid`, now).run(); } catch(e) {}
+      try { await createCommissionFromSale(db, tenantId, invoice.order_id, userId); } catch(e) {}
+    } else if (invoice.order_id) {
+      await db.prepare("UPDATE orders SET payment_status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?").bind('partial', now, invoice.order_id, tenantId).run();
+    }
+    return c.json({ success: true, data: { payment_id: paymentId, payment_number: paymentNumber, amount: paymentAmount, invoice_status: newStatus, amount_paid: newAmountPaid, amount_due: Math.max(0, newAmountDue) }, message: `Payment of ${paymentAmount} recorded. Invoice ${newStatus === 'paid' ? 'fully paid' : 'partially paid'}.` });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- RETURN APPROVE ---
+api.post('/returns/:id/approve', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const ret = await db.prepare('SELECT * FROM returns WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!ret) return c.json({ success: false, message: 'Return not found' }, 404);
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE returns SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('approved', now, id, tenantId).run();
+    return c.json({ success: true, data: { ...ret, status: 'approved' }, message: 'Return approved' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- RETURN CREATE CREDIT NOTE ---
+api.post('/returns/:id/create-credit-note', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const ret = await db.prepare('SELECT * FROM returns WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!ret) return c.json({ success: false, message: 'Return not found' }, 404);
+    const body = await c.req.json().catch(() => ({}));
+    const creditNoteId = uuidv4();
+    const creditNoteNumber = `CN-${Date.now().toString(36).toUpperCase()}`;
+    const now = new Date().toISOString();
+    const amount = body.amount || ret.total_amount || 0;
+    await db.prepare(`
+      INSERT INTO credit_notes (id, tenant_id, customer_id, return_id, credit_note_number, amount, status, created_by, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(creditNoteId, tenantId, ret.customer_id, id, creditNoteNumber, amount, 'issued', userId || 'system', now).run();
+    await db.prepare('UPDATE returns SET status = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('credit_issued', now, id, tenantId).run();
+    return c.json({ success: true, data: { id: creditNoteId, credit_note_number: creditNoteNumber, amount, status: 'issued' }, message: `Credit note ${creditNoteNumber} created for ${amount}` }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- VAN SALES LOAD ---
+api.post('/van-sales/:id/load', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const vs = await db.prepare('SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!vs) return c.json({ success: false, message: 'Van sale not found' }, 404);
+    const body = await c.req.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE van_sales SET status = ?, loaded_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('loaded', now, now, id, tenantId).run();
+    if (body.items && body.items.length > 0) {
+      for (const item of body.items) {
+        try {
+          await db.prepare('INSERT INTO van_sale_items (id, van_sale_id, product_id, loaded_quantity, sold_quantity, returned_quantity, unit_price, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').bind(uuidv4(), id, item.product_id, item.quantity, 0, 0, item.unit_price || 0, now).run();
+        } catch(e) {}
+      }
+    }
+    return c.json({ success: true, data: { ...vs, status: 'loaded' }, message: 'Van loaded successfully' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- VAN SALES DISPATCH ---
+api.post('/van-sales/:id/dispatch', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const { id } = c.req.param();
+  try {
+    const vs = await db.prepare('SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!vs) return c.json({ success: false, message: 'Van sale not found' }, 404);
+    if (!['loaded','draft'].includes(vs.status)) return c.json({ success: false, message: `Cannot dispatch van sale in ${vs.status} status` }, 400);
+    const now = new Date().toISOString();
+    await db.prepare('UPDATE van_sales SET status = ?, dispatched_at = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('dispatched', now, now, id, tenantId).run();
+    return c.json({ success: true, data: { ...vs, status: 'dispatched' }, message: 'Van dispatched on route' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- VAN SALES SETTLE ---
+api.post('/van-sales/:id/settle', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  const userId = c.get('userId');
+  const { id } = c.req.param();
+  try {
+    const vs = await db.prepare('SELECT * FROM van_sales WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!vs) return c.json({ success: false, message: 'Van sale not found' }, 404);
+    const body = await c.req.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    const cashCollected = body.cash_collected || 0;
+    const cashExpected = vs.total_amount || 0;
+    const variance = cashCollected - cashExpected;
+    await db.prepare('UPDATE van_sales SET status = ?, settled_at = ?, cash_collected = ?, variance = ?, updated_at = ? WHERE id = ? AND tenant_id = ?').bind('settled', now, cashCollected, variance, now, id, tenantId).run();
+    if (vs.order_id) {
+      try { await generateInvoiceFromVanSale(db, tenantId, id, userId); } catch(e) {}
+    }
+    return c.json({ success: true, data: { status: 'settled', cash_collected: cashCollected, cash_expected: cashExpected, variance }, message: `Van sale settled. Variance: ${variance}` });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// --- WORKFLOW DASHBOARD: Summary of all pipelines ---
+api.get('/workflow/dashboard', async (c) => {
+  const db = c.env.DB;
+  const tenantId = c.get('tenantId');
+  try {
+    const [orderCounts, deliveryCounts, invoiceCounts, returnCounts, vanSaleCounts] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN order_status IN ('submitted','pending') THEN 1 ELSE 0 END) as awaiting_approval, SUM(CASE WHEN order_status = 'approved' THEN 1 ELSE 0 END) as awaiting_delivery, SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) as awaiting_invoice, SUM(CASE WHEN order_status = 'invoiced' THEN 1 ELSE 0 END) as awaiting_payment, COALESCE(SUM(total_amount),0) as total_value FROM orders WHERE tenant_id = ? AND order_status NOT IN ('cancelled','completed')").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending, SUM(CASE WHEN status IN ('dispatched','in_transit') THEN 1 ELSE 0 END) as in_transit, SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as completed FROM deliveries WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status IN ('issued','sent') THEN 1 ELSE 0 END) as outstanding, SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue, SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid, COALESCE(SUM(amount_due),0) as total_outstanding FROM invoices WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending FROM returns WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status IN ('loaded','dispatched','in_progress') THEN 1 ELSE 0 END) as active FROM van_sales WHERE tenant_id = ?").bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: {
+      orders: orderCounts || {}, deliveries: deliveryCounts || {},
+      invoices: invoiceCounts || {}, returns: returnCounts || {},
+      van_sales: vanSaleCounts || {}
+    }});
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
 app.route('/api', api);
