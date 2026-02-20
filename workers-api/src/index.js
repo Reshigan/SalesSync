@@ -470,7 +470,7 @@ api.post('/products', async (c) => {
     const body = await c.req.json();
     
     const catId = body.category_id || null;
-    if (catId) { const catExists = await db.prepare('SELECT id FROM categories WHERE id = ? AND tenant_id = ?').bind(catId, tenantId).first(); if (!catExists) { await db.prepare('INSERT OR IGNORE INTO categories (id, tenant_id, name, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(catId, tenantId, 'Default', 'active').run(); } }
+    if (catId) { const catExists = await db.prepare('SELECT id FROM categories WHERE id = ? AND tenant_id = ?').bind(catId, tenantId).first(); if (!catExists) { await db.prepare('INSERT OR IGNORE INTO categories (id, tenant_id, name, code, status, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))').bind(catId, tenantId, 'Default', catId, 'active').run(); } }
     const brandId = body.brand_id || null;
     if (brandId) { const brandExists = await db.prepare('SELECT id FROM brands WHERE id = ?').bind(brandId).first(); if (!brandExists) { await db.prepare('INSERT OR IGNORE INTO brands (id, tenant_id, name, status, created_at) VALUES (?, ?, ?, ?, datetime("now"))').bind(brandId, tenantId, 'Default', 'active').run(); } }
 
@@ -883,10 +883,11 @@ api.post('/van-sales', async (c) => {
     const promotionInfo = appliedPromotions.length > 0 ? `Applied promotions: ${appliedPromotions.map(p => p.name).join(', ')}` : '';
     const saleNotes = body.notes ? `${body.notes}${promotionInfo ? ' | ' + promotionInfo : ''}` : promotionInfo;
     
+    if (!body.van_id || !body.agent_id || !customerId) return c.json({ success: false, message: 'van_id, agent_id, and customer_id are required' }, 400);
     await db.prepare(`
       INSERT INTO van_sales (id, tenant_id, van_id, agent_id, customer_id, sale_date, sale_type, subtotal, tax_amount, discount_amount, total_amount, amount_paid, amount_due, payment_method, payment_reference, status, notes, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(id, tenantId, body.van_id || null, body.agent_id || null, customerId || null, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', subtotal, totalTax, totalDiscount, totalAmount, amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, 'completed', saleNotes || null).run();
+    `).bind(id, tenantId, body.van_id, body.agent_id, customerId, body.sale_date || new Date().toISOString().split('T')[0], body.sale_type || 'cash', subtotal, totalTax, totalDiscount, totalAmount, amountPaid, amountDue, body.payment_method || 'cash', body.payment_reference ?? null, 'completed', saleNotes || null).run();
     
     // Insert sale items with calculated prices
     for (const item of calculatedItems) {
@@ -15392,7 +15393,7 @@ api.get('/dashboard/recent-activities', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId');
   try {
     const orders = await db.prepare("SELECT id, order_number as reference, 'order' as type, order_status as status, total_amount as amount, created_at FROM orders WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
-    const payments = await db.prepare("SELECT id, reference_number as reference, 'payment' as type, status, amount, created_at FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
+    const payments = await db.prepare("SELECT id, payment_number as reference, 'payment' as type, status, amount, created_at FROM payments WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all();
     const activities = [...(orders.results || []), ...(payments.results || [])].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
     return c.json({ success: true, data: activities });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
@@ -17361,7 +17362,11 @@ api.post('/refunds', async (c) => {
     const body = await c.req.json();
     const id = crypto.randomUUID();
     const refundNumber = 'RF-' + Date.now().toString(36).toUpperCase();
-    await db.prepare('INSERT INTO refunds (id, tenant_id, refund_number, order_id, amount, reason, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, refundNumber, body.order_id || null, body.amount || 0, body.reason || null, 'pending', userId).run();
+    const orderId = body.order_id;
+    if (!orderId) return c.json({ success: false, message: 'order_id is required' }, 400);
+    const orderExists = await db.prepare('SELECT id FROM orders WHERE id = ? AND tenant_id = ?').bind(orderId, tenantId).first();
+    if (!orderExists) return c.json({ success: false, message: 'Order not found' }, 400);
+    await db.prepare('INSERT INTO refunds (id, tenant_id, refund_number, order_id, amount, reason, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))').bind(id, tenantId, refundNumber, orderId, body.amount || 0, body.reason || null, 'pending', userId).run();
     return c.json({ success: true, data: { id, refund_number: refundNumber }, message: 'Refund created' }, 201);
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
