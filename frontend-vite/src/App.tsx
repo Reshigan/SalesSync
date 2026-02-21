@@ -1,415 +1,343 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
 
-// Layout Components
 import AuthLayout from './components/layout/AuthLayout'
 import DashboardLayout from './components/layout/DashboardLayout'
 import ErrorBoundary from './components/ui/ErrorBoundary'
+import LoadingSpinner from './components/ui/LoadingSpinner'
+import ProtectedRoute from './components/auth/ProtectedRoute'
 
-// Auth Pages
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[200px]">
+    <LoadingSpinner size="lg" />
+  </div>
+)
+
 import LoginPage from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 
-// Dashboard Pages
-import DashboardPage from './pages/dashboard/DashboardPage'
-import AnalyticsPage from './pages/dashboard/AnalyticsPage'
-
-import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard'
-import OrdersAnalytics from './pages/analytics/OrdersAnalytics'
-import FieldOpsAnalytics from './pages/analytics/FieldOpsAnalytics'
-import CommissionsAnalytics from './pages/analytics/CommissionsAnalytics'
-
-// Van Sales Pages
-import VanSalesPage from './pages/van-sales/VanSalesPage'
-import VanSalesDashboard from './pages/van-sales/VanSalesDashboard'
-import VanSalesWorkflowPage from './pages/van-sales/VanSalesWorkflowPage'
-import RouteManagementPage from './pages/van-sales/RouteManagementPage'
-import InventoryTrackingPage from './pages/van-sales/InventoryTrackingPage'
-
-// Trade Marketing Pages
-import TradeMarketingPage from './pages/trade-marketing/TradeMarketingPage'
-import ActivationWorkflowPage from './pages/trade-marketing/ActivationWorkflowPage'
-import CampaignManagementPage from './pages/trade-marketing/CampaignManagementPage'
-import MerchandisingCompliancePage from './pages/trade-marketing/MerchandisingCompliancePage'
-import PromoterManagementPage from './pages/trade-marketing/PromoterManagementPage'
-import TradeMarketingAnalyticsPage from './pages/trade-marketing/TradeMarketingAnalyticsPage'
-
-// Events Pages
-import EventsPage from './pages/events/EventsPage'
-
-// Campaign Pages
-import CampaignsPage from './pages/campaigns/CampaignsPage'
-
-// Field Operations Pages
-import FieldAgentsPage from './pages/field-agents/FieldAgentsPage'
-import AgentWorkflowPage from './pages/field-agents/AgentWorkflowPage'
-import FieldOperationsDashboard from './pages/field-operations/FieldOperationsDashboard'
-import LiveMappingPage from './pages/field-agents/LiveMappingPage'
-import BoardPlacementPage from './pages/field-agents/BoardPlacementPage'
-import ProductDistributionPage from './pages/field-agents/ProductDistributionPage'
-import CommissionTrackingPage from './pages/field-agents/CommissionTrackingPage'
-import AgentCommissionDashboard from './pages/field-agents/AgentCommissionDashboard'
-
-// Field Marketing Pages
-import FieldMarketingDashboard from './pages/field-marketing/FieldMarketingDashboard'
-
-import AgentWorkflowPageMobile from './pages/field-agents/AgentWorkflowPageMobile'
-import VanSalesWorkflowPageMobile from './pages/van-sales/VanSalesWorkflowPageMobile'
-import BoardPlacementFormPage from './pages/field-operations/BoardPlacementFormPage'
-import ProductDistributionFormPage from './pages/field-operations/ProductDistributionFormPage'
-import CustomerSelection from './pages/field-marketing/CustomerSelection'
-import GPSVerification from './pages/field-marketing/GPSVerification'
-import BrandSelection from './pages/field-marketing/BrandSelection'
-import VisitList from './pages/field-marketing/VisitList'
-import BoardPlacement from './pages/field-marketing/BoardPlacement'
-import ProductDistribution from './pages/field-marketing/ProductDistribution'
-import NewCustomerRegistration from './pages/field-marketing/NewCustomerRegistration'
-import VisitSummary from './pages/field-marketing/VisitSummary'
-import MyCommissions from './pages/field-marketing/MyCommissions'
-import MyTargets from './pages/field-marketing/MyTargets'
-
-// KYC Pages
-import KYCDashboard from './pages/kyc/KYCDashboard'
-import KYCManagement from './pages/kyc/KYCManagement'
-import KYCReports from './pages/kyc/KYCReports'
-
-// Surveys Pages
-import SurveysDashboard from './pages/surveys/SurveysDashboard'
-import SurveysManagement from './pages/surveys/SurveysManagement'
-import SurveyCreate from './pages/surveys/SurveyCreate'
-import SurveyEdit from './pages/surveys/SurveyEdit'
-
-// Inventory Pages
-import InventoryDashboard from './pages/inventory/InventoryDashboard'
-import InventoryManagement from './pages/inventory/InventoryManagement'
-import InventoryReports from './pages/inventory/InventoryReports'
-import StockCountWorkflowPage from './pages/inventory/StockCountWorkflowPage'
-
-// Promotions Pages
-import PromotionsDashboard from './pages/promotions/PromotionsDashboard'
-import PromotionsManagement from './pages/promotions/PromotionsManagement'
-
-// Business Pages
-import CustomersPage from './pages/customers/CustomersPage'
-import CustomerDetailsPage from './pages/customers/CustomerDetailsPage'
-import CustomerEditPage from './pages/customers/CustomerEditPage'
-import CustomerCreatePage from './pages/customers/CustomerCreatePage'
-import OrdersPage from './pages/orders/OrdersPage'
-import OrderDetailsPage from './pages/orders/OrderDetailsPage'
-import OrderEditPage from './pages/orders/OrderEditPage'
-import OrderCreatePage from './pages/orders/OrderCreatePage'
-import OrderPipelinePage from './pages/orders/OrderPipelinePage'
-import WorkflowDashboardPage from './pages/orders/WorkflowDashboardPage'
-import ProductsPage from './pages/products/ProductsPage'
-import ProductDetailsPage from './pages/products/ProductDetailsPage'
-import ProductEditPage from './pages/products/ProductEditPage'
-import ProductCreatePage from './pages/products/ProductCreatePage'
-
-import BrandsList from './pages/brands/BrandsList'
-import BrandDetail from './pages/brands/BrandDetail'
-import BrandEdit from './pages/brands/BrandEdit'
-import BrandCreate from './pages/brands/BrandCreate'
-import BrandSurveys from './pages/brands/BrandSurveys'
-import BrandActivations from './pages/brands/BrandActivations'
-import BrandBoards from './pages/brands/BrandBoards'
-import BrandProducts from './pages/brands/BrandProducts'
-
-import CustomerOrders from './pages/customers/tabs/CustomerOrders'
-import CustomerVisits from './pages/customers/tabs/CustomerVisits'
-import CustomerPayments from './pages/customers/tabs/CustomerPayments'
-import CustomerSurveys from './pages/customers/tabs/CustomerSurveys'
-import CustomerKYC from './pages/customers/tabs/CustomerKYC'
-
-import ProductInventory from './pages/products/tabs/ProductInventory'
-import ProductPricing from './pages/products/tabs/ProductPricing'
-import ProductPromotions from './pages/products/tabs/ProductPromotions'
-import ProductSales from './pages/products/tabs/ProductSales'
-
-import OrderItems from './pages/orders/tabs/OrderItems'
-import OrderPayments from './pages/orders/tabs/OrderPayments'
-import OrderDelivery from './pages/orders/tabs/OrderDelivery'
-import OrderReturns from './pages/orders/tabs/OrderReturns'
-
-// Van Sales Detail Pages
-import VanOrderCreatePage from './pages/van-sales/VanOrderCreatePage'
-import VanRouteDetailsPage from './pages/van-sales/VanRouteDetailsPage'
-import VanSalesOrderCreate from './pages/van-sales/orders/VanSalesOrderCreate'
-import VanSalesOrderDetail from './pages/van-sales/orders/VanSalesOrderDetail'
-import VanSalesOrderEdit from './pages/van-sales/orders/VanSalesOrderEdit'
-import VanSalesReturnCreate from './pages/van-sales/returns/VanSalesReturnCreate'
-import VanSalesReturnDetail from './pages/van-sales/returns/VanSalesReturnDetail'
-import VanLoadCreate from './pages/van-sales/van-loads/VanLoadCreate'
-import VanLoadDetail from './pages/van-sales/van-loads/VanLoadDetail'
-import VanCashReconciliationCreate from './pages/van-sales/cash-reconciliation/CashReconciliationCreate'
-import VanCashReconciliationDetail from './pages/van-sales/cash-reconciliation/CashReconciliationDetail'
-
-// Van Sales Depth Pages
-import RouteDetail from './pages/van-sales-depth/RouteDetail'
-import RouteEdit from './pages/van-sales-depth/RouteEdit'
-import RouteCreate from './pages/van-sales-depth/RouteCreate'
-import RouteCustomers from './pages/van-sales-depth/RouteCustomers'
-import RouteOrders from './pages/van-sales-depth/RouteOrders'
-import RoutePerformance from './pages/van-sales-depth/RoutePerformance'
-
-import CommissionDetail from './pages/commissions/CommissionDetail'
-import CommissionEdit from './pages/commissions/CommissionEdit'
-import CommissionCreate from './pages/commissions/CommissionCreate'
-import RuleDetail from './pages/commissions/RuleDetail'
-import RuleEdit from './pages/commissions/RuleEdit'
-import RuleCreate from './pages/commissions/RuleCreate'
-import CommissionCalculationDetail from './pages/commissions/calculation-details/CalculationDetail'
-
-import SessionDetail from './pages/cash-reconciliation/SessionDetail'
-import SessionEdit from './pages/cash-reconciliation/SessionEdit'
-import DepositDetail from './pages/cash-reconciliation/DepositDetail'
-import DepositEdit from './pages/cash-reconciliation/DepositEdit'
-import SessionCollections from './pages/cash-reconciliation/SessionCollections'
-import SessionDeposits from './pages/cash-reconciliation/SessionDeposits'
-
-import KYCDetail from './pages/kyc/KYCDetail'
-import KYCEdit from './pages/kyc/KYCEdit'
-import KYCCreate from './pages/kyc/KYCCreate'
-
-import SurveyResponses from './pages/surveys/SurveyResponses'
-import SurveyAnalytics from './pages/surveys/SurveyAnalytics'
-
-import ReportDetail from './pages/reports/ReportDetail'
-import ReportEdit from './pages/reports/ReportEdit'
-import ReportCreate from './pages/reports/ReportCreate'
-
-import FinanceInvoiceDetail from './pages/finance/InvoiceDetail'
-import FinanceInvoiceEdit from './pages/finance/InvoiceEdit'
-import FinanceInvoiceCreate from './pages/finance/InvoiceCreate'
-import FinancePaymentDetail from './pages/finance/PaymentDetail'
-import FinancePaymentEdit from './pages/finance/PaymentEdit'
-import FinancePaymentCreate from './pages/finance/PaymentCreate'
-import InvoicePayments from './pages/finance/InvoicePayments'
-import InvoiceItems from './pages/finance/InvoiceItems'
-
-// Inventory Detail Pages
-import StockCountDetailsPage from './pages/inventory-management/StockCountDetailsPage'
-import AdjustmentCreate from './pages/inventory/adjustments/AdjustmentCreate'
-import AdjustmentDetail from './pages/inventory/adjustments/AdjustmentDetail'
-import IssueCreate from './pages/inventory/issues/IssueCreate'
-import IssueDetail from './pages/inventory/issues/IssueDetail'
-import ReceiptCreate from './pages/inventory/receipts/ReceiptCreate'
-import ReceiptDetail from './pages/inventory/receipts/ReceiptDetail'
-import StockCountCreate from './pages/inventory/stock-counts/StockCountCreate'
-import StockCountDetail from './pages/inventory/stock-counts/StockCountDetail'
-import TransferCreate from './pages/inventory/transfers/TransferCreate'
-import TransferDetail from './pages/inventory/transfers/TransferDetail'
-
-import CreditNoteCreate from './pages/sales/credit-notes/CreditNoteCreate'
-import CreditNoteDetail from './pages/sales/credit-notes/CreditNoteDetail'
-import InvoiceCreate from './pages/sales/invoices/InvoiceCreate'
-import InvoiceDetail from './pages/sales/invoices/InvoiceDetail'
-import SalesOrderCreate from './pages/sales/orders/SalesOrderCreate'
-import SalesOrderDetail from './pages/sales/orders/SalesOrderDetail'
-import SalesOrderEdit from './pages/sales/orders/SalesOrderEdit'
-import PaymentCreate from './pages/sales/payments/PaymentCreate'
-import PaymentDetail from './pages/sales/payments/PaymentDetail'
-import SalesReturnCreate from './pages/sales/returns/SalesReturnCreate'
-import SalesReturnDetail from './pages/sales/returns/SalesReturnDetail'
-
-import ActivationCreate from './pages/marketing/activations/ActivationCreate'
-import ActivationDetail from './pages/marketing/activations/ActivationDetail'
-import CampaignCreate from './pages/marketing/campaigns/CampaignCreate'
-import CampaignDetail from './pages/marketing/campaigns/CampaignDetail'
-import CampaignEdit from './pages/marketing/campaigns/CampaignEdit'
-import EventCreate from './pages/marketing/events/EventCreate'
-import EventDetail from './pages/marketing/events/EventDetail'
-import EventEdit from './pages/marketing/events/EventEdit'
-import PromotionCreate from './pages/marketing/promotions/PromotionCreate'
-import PromotionDetail from './pages/marketing/promotions/PromotionDetail'
-
-// Field Operations Detail Pages
-import BoardPlacementCreate from './pages/field-operations/board-placements/BoardPlacementCreate'
-import BoardPlacementDetail from './pages/field-operations/board-placements/BoardPlacementDetail'
-import CommissionLedgerDetail from './pages/field-operations/commission-ledger/CommissionLedgerDetail'
-import ProductDistributionCreate from './pages/field-operations/product-distributions/ProductDistributionCreate'
-import ProductDistributionDetail from './pages/field-operations/product-distributions/ProductDistributionDetail'
-import VisitCreate from './pages/field-operations/visits/VisitCreate'
-import VisitDetail from './pages/field-operations/visits/VisitDetail'
-import VisitEdit from './pages/field-operations/visits/VisitEdit'
-import VisitManagementPage from './pages/field-operations/VisitManagementPage'
-import VisitConfigurationPage from './pages/field-operations/VisitConfigurationPage'
-
-import CRMCustomerCreate from './pages/crm/customers/CustomerCreate'
-import CRMCustomerDetail from './pages/crm/customers/CustomerDetail'
-import CRMCustomerEdit from './pages/crm/customers/CustomerEdit'
-import KYCCaseCreate from './pages/crm/kyc-cases/KYCCaseCreate'
-import KYCCaseDetail from './pages/crm/kyc-cases/KYCCaseDetail'
-import SurveyCreate from './pages/crm/surveys/SurveyCreate'
-import SurveyDetail from './pages/crm/surveys/SurveyDetail'
-
-import CashReconciliationCreate from './pages/finance/cash-reconciliation/CashReconciliationCreate'
-import CashReconciliationDetail from './pages/finance/cash-reconciliation/CashReconciliationDetail'
-import CommissionPayoutDetail from './pages/finance/commission-payouts/CommissionPayoutDetail'
-
-// Admin Pages
-import AdminPage from './pages/admin/AdminPage'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import UserManagementPage from './pages/admin/UserManagementPage'
-import RolePermissionsPage from './pages/admin/RolePermissionsPage'
-import SystemSettingsPage from './pages/admin/SystemSettingsPage'
-import AuditLogsPage from './pages/admin/AuditLogsPage'
-import SmokeTestPage from './pages/admin/SmokeTestPage'
-import RouteAuditPage from './pages/admin/RouteAuditPage'
-import BrandManagementPage from './pages/admin/BrandManagementPage'
-import CampaignManagementPage from './pages/admin/CampaignManagementPage'
-import CommissionRuleBuilderPage from './pages/admin/CommissionRuleBuilderPage'
-import DataImportExportPage from './pages/admin/DataImportExportPage'
-import POSLibraryPage from './pages/admin/POSLibraryPage'
-import ProductTypeBuilderPage from './pages/admin/ProductTypeBuilderPage'
-import SurveyBuilderPage from './pages/admin/SurveyBuilderPage'
-import TerritoryManagementPage from './pages/admin/TerritoryManagementPage'
-import BoardManagementPage from './pages/admin/BoardManagementPage'
-import PriceListManagementPage from './pages/admin/PriceListManagementPage'
-import PriceListEditPage from './pages/admin/PriceListEditPage'
-import TargetManagementPage from './pages/admin/TargetManagementPage'
-import TargetReportingPage from './pages/admin/TargetReportingPage'
-
-import { BackupManagementPage } from './pages/admin-settings/BackupManagementPage'
-import { IntegrationsPage } from './pages/admin-settings/IntegrationsPage'
-import { SystemHealthPage } from './pages/admin-settings/SystemHealthPage'
-
-import InvoicesList from './pages/sales/invoices/InvoicesList'
-import PaymentsList from './pages/sales/payments/PaymentsList'
-import CreditNotesList from './pages/sales/credit-notes/CreditNotesList'
-import SalesReturnsList from './pages/sales/returns/SalesReturnsList'
-import SalesOrdersList from './pages/sales/orders/SalesOrdersList'
-import VanSalesOrdersList from './pages/van-sales/orders/VanSalesOrdersList'
-import VanSalesReturnsList from './pages/van-sales/returns/VanSalesReturnsList'
-import VanLoadsList from './pages/van-sales/van-loads/VanLoadsList'
-import VanCashReconciliationList from './pages/van-sales/cash-reconciliation/CashReconciliationList'
-import AdjustmentsList from './pages/inventory/adjustments/AdjustmentsList'
-import IssuesList from './pages/inventory/issues/IssuesList'
-import ReceiptsList from './pages/inventory/receipts/ReceiptsList'
-import StockCountsList from './pages/inventory/stock-counts/StockCountsList'
-import TransfersList from './pages/inventory/transfers/TransfersList'
-import CashReconciliationList from './pages/finance/cash-reconciliation/CashReconciliationList'
-import CommissionPayoutsList from './pages/finance/commission-payouts/CommissionPayoutsList'
-import FinanceDashboard from './pages/finance/FinanceDashboard'
-import InvoiceManagementPage from './pages/finance/InvoiceManagementPage'
-import PaymentCollectionPage from './pages/finance/PaymentCollectionPage'
-
-import { BankDepositPage } from './pages/cash-reconciliation/BankDepositPage'
-import { CashCollectionPage } from './pages/cash-reconciliation/CashCollectionPage'
-import { CashReportsPage } from './pages/cash-reconciliation/CashReportsPage'
-import { CashSessionDashboardPage } from './pages/cash-reconciliation/CashSessionDashboardPage'
-import { CloseCashSessionPage } from './pages/cash-reconciliation/CloseCashSessionPage'
-import { StartCashSessionPage } from './pages/cash-reconciliation/StartCashSessionPage'
-import { VarianceApprovalPage } from './pages/cash-reconciliation/VarianceApprovalPage'
-
-import { CommissionApprovalPage } from './pages/commissions/CommissionApprovalPage'
-import { CommissionCalculationPage } from './pages/commissions/CommissionCalculationPage'
-import { CommissionDashboardPage } from './pages/commissions/CommissionDashboardPage'
-import { CommissionPaymentPage } from './pages/commissions/CommissionPaymentPage'
-import { CommissionReportsPage } from './pages/commissions/CommissionReportsPage'
-import { CommissionSettingsPage } from './pages/commissions/CommissionSettingsPage'
-
-import ActivationsList from './pages/marketing/activations/ActivationsList'
-import CampaignsList from './pages/marketing/campaigns/CampaignsList'
-import EventsList from './pages/marketing/events/EventsList'
-import PromotionsList from './pages/marketing/promotions/PromotionsList'
-
-import CustomersList from './pages/crm/customers/CustomersList'
-import KYCCasesList from './pages/crm/kyc-cases/KYCCasesList'
-import SurveysList from './pages/crm/surveys/SurveysList'
-
-// Field Operations List Pages
-import BoardPlacementsList from './pages/field-operations/board-placements/BoardPlacementsList'
-import CommissionLedgerList from './pages/field-operations/commission-ledger/CommissionLedgerList'
-import ProductDistributionsList from './pages/field-operations/product-distributions/ProductDistributionsList'
-
-import { CustomerAnalyticsPage } from './pages/customer-management/CustomerAnalyticsPage'
-import { CustomerCreditManagementPage } from './pages/customer-management/CustomerCreditManagementPage'
-import { CustomerHierarchyPage } from './pages/customer-management/CustomerHierarchyPage'
-import { CustomerImportExportPage } from './pages/customer-management/CustomerImportExportPage'
-import { CustomerListPage } from './pages/customer-management/CustomerListPage'
-import { CustomerSegmentationPage } from './pages/customer-management/CustomerSegmentationPage'
-import { CustomerVisitHistoryPage } from './pages/customer-management/CustomerVisitHistoryPage'
-
-import { ProductAnalyticsPage } from './pages/product-management/ProductAnalyticsPage'
-import { ProductHierarchyPage } from './pages/product-management/ProductHierarchyPage'
-import { ProductImportExportPage } from './pages/product-management/ProductImportExportPage'
-import { ProductInventoryPage } from './pages/product-management/ProductInventoryPage'
-import { ProductListPage } from './pages/product-management/ProductListPage'
-import { ProductPricingPage } from './pages/product-management/ProductPricingPage'
-
-import { CreditNotesPage } from './pages/order-lifecycle/CreditNotesPage'
-import { DeliveryTrackingPage } from './pages/order-lifecycle/DeliveryTrackingPage'
-import { OrderFulfillmentPage } from './pages/order-lifecycle/OrderFulfillmentPage'
-import { QuotationApprovalPage } from './pages/order-lifecycle/QuotationApprovalPage'
-import { QuotationManagementPage } from './pages/order-lifecycle/QuotationManagementPage'
-import { RefundProcessingPage } from './pages/order-lifecycle/RefundProcessingPage'
-import { ReturnManagementPage } from './pages/order-lifecycle/ReturnManagementPage'
-
-// Inventory Management Pages
-import InventoryAnalyticsPage from './pages/inventory-management/InventoryAnalyticsPage'
-import StockCountListPage from './pages/inventory-management/StockCountListPage'
-import StockMovementsPage from './pages/inventory-management/StockMovementsPage'
-import StockOverviewPage from './pages/inventory-management/StockOverviewPage'
-import StockTransferPage from './pages/inventory-management/StockTransferPage'
-import WarehouseManagementPage from './pages/inventory-management/WarehouseManagementPage'
-
-import AnalyticsDashboardPage from './pages/reports/AnalyticsDashboardPage'
-import ReportBuilderPage from './pages/reports/ReportBuilderPage'
-import ReportsHub from './pages/reports/ReportsHub'
-import ReportTemplatesPage from './pages/reports/ReportTemplatesPage'
-import CommissionSummaryReport from './pages/reports/finance/CommissionSummaryReport'
-import InventorySnapshotReport from './pages/reports/inventory/InventorySnapshotReport'
-import VarianceAnalysisReport from './pages/reports/inventory/VarianceAnalysisReport'
-import FieldOperationsProductivityReport from './pages/reports/operations/FieldOperationsProductivityReport'
-import SalesExceptionsReport from './pages/reports/sales/SalesExceptionsReport'
-import SalesSummaryReport from './pages/reports/sales/SalesSummaryReport'
-
-import { CustomerAnalyticsPage as CustomerAnalyticsReportPage } from './pages/reports-analytics/CustomerAnalyticsPage'
-import { ExecutiveDashboardPage } from './pages/reports-analytics/ExecutiveDashboardPage'
-import { FinancialReportsPage } from './pages/reports-analytics/FinancialReportsPage'
-import { InventoryReportsPage } from './pages/reports-analytics/InventoryReportsPage'
-import { PerformanceAnalyticsPage } from './pages/reports-analytics/PerformanceAnalyticsPage'
-import { SalesReportsPage } from './pages/reports-analytics/SalesReportsPage'
-
-// KYC Surveys Pages
-import { AuditTrailPage } from './pages/kyc-surveys/AuditTrailPage'
-import { KYCAnalyticsPage } from './pages/kyc-surveys/KYCAnalyticsPage'
-import { KYCListPage } from './pages/kyc-surveys/KYCListPage'
-import { SurveyListPage } from './pages/kyc-surveys/SurveyListPage'
-import { SurveyResponsesPage } from './pages/kyc-surveys/SurveyResponsesPage'
-
-// Additional Dashboard Pages
-import CustomerDashboard from './pages/customers/CustomerDashboard'
-import OrderDashboard from './pages/orders/OrderDashboard'
-import AgentDashboard from './pages/agent/AgentDashboard'
-import AdvancedAnalyticsDashboard from './pages/analytics/AdvancedAnalyticsDashboard'
-import ExecutiveDashboard from './pages/analytics/ExecutiveDashboard'
-import SalesDashboard from './pages/sales/SalesDashboard'
-import BrandActivationsPage from './pages/brand-activations/BrandActivationsPage'
-import TenantManagement from './pages/superadmin/TenantManagement'
-
-// Field Operations Additional Pages
-import FieldAgentDashboardPage from './pages/field-operations/FieldAgentDashboardPage'
-import LiveGPSTrackingPage from './pages/field-operations/LiveGPSTrackingPage'
-import VisitHistoryPage from './pages/field-operations/VisitHistoryPage'
-import VisitManagementPage from './pages/field-operations/VisitManagementPage'
-
-// Van Sales Additional Pages
-import VanCashCollectionPage from './pages/van-sales/VanCashCollectionPage'
-import VanInventoryPage from './pages/van-sales/VanInventoryPage'
-import VanOrdersListPage from './pages/van-sales/VanOrdersListPage'
-import VanPerformancePage from './pages/van-sales/VanPerformancePage'
-import VanRoutesListPage from './pages/van-sales/VanRoutesListPage'
-
-import SurveyPage from './pages/field-agents/SurveyPage'
-import TaskPage from './pages/field-agents/TaskPage'
-
-// Components
-import LoadingSpinner from './components/ui/LoadingSpinner'
-import ProtectedRoute from './components/auth/ProtectedRoute'
+const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage'))
+const AnalyticsPage = lazy(() => import('./pages/dashboard/AnalyticsPage'))
+const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard'))
+const OrdersAnalytics = lazy(() => import('./pages/analytics/OrdersAnalytics'))
+const FieldOpsAnalytics = lazy(() => import('./pages/analytics/FieldOpsAnalytics'))
+const CommissionsAnalytics = lazy(() => import('./pages/analytics/CommissionsAnalytics'))
+const VanSalesPage = lazy(() => import('./pages/van-sales/VanSalesPage'))
+const VanSalesDashboard = lazy(() => import('./pages/van-sales/VanSalesDashboard'))
+const VanSalesWorkflowPage = lazy(() => import('./pages/van-sales/VanSalesWorkflowPage'))
+const RouteManagementPage = lazy(() => import('./pages/van-sales/RouteManagementPage'))
+const InventoryTrackingPage = lazy(() => import('./pages/van-sales/InventoryTrackingPage'))
+const TradeMarketingPage = lazy(() => import('./pages/trade-marketing/TradeMarketingPage'))
+const ActivationWorkflowPage = lazy(() => import('./pages/trade-marketing/ActivationWorkflowPage'))
+const CampaignManagementPage = lazy(() => import('./pages/trade-marketing/CampaignManagementPage'))
+const MerchandisingCompliancePage = lazy(() => import('./pages/trade-marketing/MerchandisingCompliancePage'))
+const PromoterManagementPage = lazy(() => import('./pages/trade-marketing/PromoterManagementPage'))
+const TradeMarketingAnalyticsPage = lazy(() => import('./pages/trade-marketing/TradeMarketingAnalyticsPage'))
+const EventsPage = lazy(() => import('./pages/events/EventsPage'))
+const CampaignsPage = lazy(() => import('./pages/campaigns/CampaignsPage'))
+const FieldAgentsPage = lazy(() => import('./pages/field-agents/FieldAgentsPage'))
+const AgentWorkflowPage = lazy(() => import('./pages/field-agents/AgentWorkflowPage'))
+const FieldOperationsDashboard = lazy(() => import('./pages/field-operations/FieldOperationsDashboard'))
+const LiveMappingPage = lazy(() => import('./pages/field-agents/LiveMappingPage'))
+const BoardPlacementPage = lazy(() => import('./pages/field-agents/BoardPlacementPage'))
+const ProductDistributionPage = lazy(() => import('./pages/field-agents/ProductDistributionPage'))
+const CommissionTrackingPage = lazy(() => import('./pages/field-agents/CommissionTrackingPage'))
+const AgentCommissionDashboard = lazy(() => import('./pages/field-agents/AgentCommissionDashboard'))
+const FieldMarketingDashboard = lazy(() => import('./pages/field-marketing/FieldMarketingDashboard'))
+const AgentWorkflowPageMobile = lazy(() => import('./pages/field-agents/AgentWorkflowPageMobile'))
+const VanSalesWorkflowPageMobile = lazy(() => import('./pages/van-sales/VanSalesWorkflowPageMobile'))
+const BoardPlacementFormPage = lazy(() => import('./pages/field-operations/BoardPlacementFormPage'))
+const ProductDistributionFormPage = lazy(() => import('./pages/field-operations/ProductDistributionFormPage'))
+const CustomerSelection = lazy(() => import('./pages/field-marketing/CustomerSelection'))
+const GPSVerification = lazy(() => import('./pages/field-marketing/GPSVerification'))
+const BrandSelection = lazy(() => import('./pages/field-marketing/BrandSelection'))
+const VisitList = lazy(() => import('./pages/field-marketing/VisitList'))
+const BoardPlacement = lazy(() => import('./pages/field-marketing/BoardPlacement'))
+const ProductDistribution = lazy(() => import('./pages/field-marketing/ProductDistribution'))
+const NewCustomerRegistration = lazy(() => import('./pages/field-marketing/NewCustomerRegistration'))
+const VisitSummary = lazy(() => import('./pages/field-marketing/VisitSummary'))
+const MyCommissions = lazy(() => import('./pages/field-marketing/MyCommissions'))
+const MyTargets = lazy(() => import('./pages/field-marketing/MyTargets'))
+const KYCDashboard = lazy(() => import('./pages/kyc/KYCDashboard'))
+const KYCManagement = lazy(() => import('./pages/kyc/KYCManagement'))
+const KYCReports = lazy(() => import('./pages/kyc/KYCReports'))
+const SurveysDashboard = lazy(() => import('./pages/surveys/SurveysDashboard'))
+const SurveysManagement = lazy(() => import('./pages/surveys/SurveysManagement'))
+const SurveyCreate = lazy(() => import('./pages/surveys/SurveyCreate'))
+const SurveyEdit = lazy(() => import('./pages/surveys/SurveyEdit'))
+const InventoryDashboard = lazy(() => import('./pages/inventory/InventoryDashboard'))
+const InventoryManagement = lazy(() => import('./pages/inventory/InventoryManagement'))
+const InventoryReports = lazy(() => import('./pages/inventory/InventoryReports'))
+const StockCountWorkflowPage = lazy(() => import('./pages/inventory/StockCountWorkflowPage'))
+const PromotionsDashboard = lazy(() => import('./pages/promotions/PromotionsDashboard'))
+const PromotionsManagement = lazy(() => import('./pages/promotions/PromotionsManagement'))
+const CustomersPage = lazy(() => import('./pages/customers/CustomersPage'))
+const CustomerDetailsPage = lazy(() => import('./pages/customers/CustomerDetailsPage'))
+const CustomerEditPage = lazy(() => import('./pages/customers/CustomerEditPage'))
+const CustomerCreatePage = lazy(() => import('./pages/customers/CustomerCreatePage'))
+const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'))
+const OrderDetailsPage = lazy(() => import('./pages/orders/OrderDetailsPage'))
+const OrderEditPage = lazy(() => import('./pages/orders/OrderEditPage'))
+const OrderCreatePage = lazy(() => import('./pages/orders/OrderCreatePage'))
+const OrderPipelinePage = lazy(() => import('./pages/orders/OrderPipelinePage'))
+const WorkflowDashboardPage = lazy(() => import('./pages/orders/WorkflowDashboardPage'))
+const ProductsPage = lazy(() => import('./pages/products/ProductsPage'))
+const ProductDetailsPage = lazy(() => import('./pages/products/ProductDetailsPage'))
+const ProductEditPage = lazy(() => import('./pages/products/ProductEditPage'))
+const ProductCreatePage = lazy(() => import('./pages/products/ProductCreatePage'))
+const BrandsList = lazy(() => import('./pages/brands/BrandsList'))
+const BrandDetail = lazy(() => import('./pages/brands/BrandDetail'))
+const BrandEdit = lazy(() => import('./pages/brands/BrandEdit'))
+const BrandCreate = lazy(() => import('./pages/brands/BrandCreate'))
+const BrandSurveys = lazy(() => import('./pages/brands/BrandSurveys'))
+const BrandActivations = lazy(() => import('./pages/brands/BrandActivations'))
+const BrandBoards = lazy(() => import('./pages/brands/BrandBoards'))
+const BrandProducts = lazy(() => import('./pages/brands/BrandProducts'))
+const CustomerOrders = lazy(() => import('./pages/customers/tabs/CustomerOrders'))
+const CustomerVisits = lazy(() => import('./pages/customers/tabs/CustomerVisits'))
+const CustomerPayments = lazy(() => import('./pages/customers/tabs/CustomerPayments'))
+const CustomerSurveys = lazy(() => import('./pages/customers/tabs/CustomerSurveys'))
+const CustomerKYC = lazy(() => import('./pages/customers/tabs/CustomerKYC'))
+const ProductInventory = lazy(() => import('./pages/products/tabs/ProductInventory'))
+const ProductPricing = lazy(() => import('./pages/products/tabs/ProductPricing'))
+const ProductPromotions = lazy(() => import('./pages/products/tabs/ProductPromotions'))
+const ProductSales = lazy(() => import('./pages/products/tabs/ProductSales'))
+const OrderItems = lazy(() => import('./pages/orders/tabs/OrderItems'))
+const OrderPayments = lazy(() => import('./pages/orders/tabs/OrderPayments'))
+const OrderDelivery = lazy(() => import('./pages/orders/tabs/OrderDelivery'))
+const OrderReturns = lazy(() => import('./pages/orders/tabs/OrderReturns'))
+const VanOrderCreatePage = lazy(() => import('./pages/van-sales/VanOrderCreatePage'))
+const VanRouteDetailsPage = lazy(() => import('./pages/van-sales/VanRouteDetailsPage'))
+const VanSalesOrderCreate = lazy(() => import('./pages/van-sales/orders/VanSalesOrderCreate'))
+const VanSalesOrderDetail = lazy(() => import('./pages/van-sales/orders/VanSalesOrderDetail'))
+const VanSalesOrderEdit = lazy(() => import('./pages/van-sales/orders/VanSalesOrderEdit'))
+const VanSalesReturnCreate = lazy(() => import('./pages/van-sales/returns/VanSalesReturnCreate'))
+const VanSalesReturnDetail = lazy(() => import('./pages/van-sales/returns/VanSalesReturnDetail'))
+const VanLoadCreate = lazy(() => import('./pages/van-sales/van-loads/VanLoadCreate'))
+const VanLoadDetail = lazy(() => import('./pages/van-sales/van-loads/VanLoadDetail'))
+const VanCashReconciliationCreate = lazy(() => import('./pages/van-sales/cash-reconciliation/CashReconciliationCreate'))
+const VanCashReconciliationDetail = lazy(() => import('./pages/van-sales/cash-reconciliation/CashReconciliationDetail'))
+const RouteDetail = lazy(() => import('./pages/van-sales-depth/RouteDetail'))
+const RouteEdit = lazy(() => import('./pages/van-sales-depth/RouteEdit'))
+const RouteCreate = lazy(() => import('./pages/van-sales-depth/RouteCreate'))
+const RouteCustomers = lazy(() => import('./pages/van-sales-depth/RouteCustomers'))
+const RouteOrders = lazy(() => import('./pages/van-sales-depth/RouteOrders'))
+const RoutePerformance = lazy(() => import('./pages/van-sales-depth/RoutePerformance'))
+const CommissionDetail = lazy(() => import('./pages/commissions/CommissionDetail'))
+const CommissionEdit = lazy(() => import('./pages/commissions/CommissionEdit'))
+const CommissionCreate = lazy(() => import('./pages/commissions/CommissionCreate'))
+const RuleDetail = lazy(() => import('./pages/commissions/RuleDetail'))
+const RuleEdit = lazy(() => import('./pages/commissions/RuleEdit'))
+const RuleCreate = lazy(() => import('./pages/commissions/RuleCreate'))
+const CommissionCalculationDetail = lazy(() => import('./pages/commissions/calculation-details/CalculationDetail'))
+const SessionDetail = lazy(() => import('./pages/cash-reconciliation/SessionDetail'))
+const SessionEdit = lazy(() => import('./pages/cash-reconciliation/SessionEdit'))
+const DepositDetail = lazy(() => import('./pages/cash-reconciliation/DepositDetail'))
+const DepositEdit = lazy(() => import('./pages/cash-reconciliation/DepositEdit'))
+const SessionCollections = lazy(() => import('./pages/cash-reconciliation/SessionCollections'))
+const SessionDeposits = lazy(() => import('./pages/cash-reconciliation/SessionDeposits'))
+const KYCDetail = lazy(() => import('./pages/kyc/KYCDetail'))
+const KYCEdit = lazy(() => import('./pages/kyc/KYCEdit'))
+const KYCCreate = lazy(() => import('./pages/kyc/KYCCreate'))
+const SurveyResponses = lazy(() => import('./pages/surveys/SurveyResponses'))
+const SurveyAnalytics = lazy(() => import('./pages/surveys/SurveyAnalytics'))
+const ReportDetail = lazy(() => import('./pages/reports/ReportDetail'))
+const ReportEdit = lazy(() => import('./pages/reports/ReportEdit'))
+const ReportCreate = lazy(() => import('./pages/reports/ReportCreate'))
+const FinanceInvoiceDetail = lazy(() => import('./pages/finance/InvoiceDetail'))
+const FinanceInvoiceEdit = lazy(() => import('./pages/finance/InvoiceEdit'))
+const FinanceInvoiceCreate = lazy(() => import('./pages/finance/InvoiceCreate'))
+const FinancePaymentDetail = lazy(() => import('./pages/finance/PaymentDetail'))
+const FinancePaymentEdit = lazy(() => import('./pages/finance/PaymentEdit'))
+const FinancePaymentCreate = lazy(() => import('./pages/finance/PaymentCreate'))
+const InvoicePayments = lazy(() => import('./pages/finance/InvoicePayments'))
+const InvoiceItems = lazy(() => import('./pages/finance/InvoiceItems'))
+const StockCountDetailsPage = lazy(() => import('./pages/inventory-management/StockCountDetailsPage'))
+const AdjustmentCreate = lazy(() => import('./pages/inventory/adjustments/AdjustmentCreate'))
+const AdjustmentDetail = lazy(() => import('./pages/inventory/adjustments/AdjustmentDetail'))
+const IssueCreate = lazy(() => import('./pages/inventory/issues/IssueCreate'))
+const IssueDetail = lazy(() => import('./pages/inventory/issues/IssueDetail'))
+const ReceiptCreate = lazy(() => import('./pages/inventory/receipts/ReceiptCreate'))
+const ReceiptDetail = lazy(() => import('./pages/inventory/receipts/ReceiptDetail'))
+const StockCountCreate = lazy(() => import('./pages/inventory/stock-counts/StockCountCreate'))
+const StockCountDetail = lazy(() => import('./pages/inventory/stock-counts/StockCountDetail'))
+const TransferCreate = lazy(() => import('./pages/inventory/transfers/TransferCreate'))
+const TransferDetail = lazy(() => import('./pages/inventory/transfers/TransferDetail'))
+const CreditNoteCreate = lazy(() => import('./pages/sales/credit-notes/CreditNoteCreate'))
+const CreditNoteDetail = lazy(() => import('./pages/sales/credit-notes/CreditNoteDetail'))
+const InvoiceCreate = lazy(() => import('./pages/sales/invoices/InvoiceCreate'))
+const InvoiceDetail = lazy(() => import('./pages/sales/invoices/InvoiceDetail'))
+const SalesOrderCreate = lazy(() => import('./pages/sales/orders/SalesOrderCreate'))
+const SalesOrderDetail = lazy(() => import('./pages/sales/orders/SalesOrderDetail'))
+const SalesOrderEdit = lazy(() => import('./pages/sales/orders/SalesOrderEdit'))
+const PaymentCreate = lazy(() => import('./pages/sales/payments/PaymentCreate'))
+const PaymentDetail = lazy(() => import('./pages/sales/payments/PaymentDetail'))
+const SalesReturnCreate = lazy(() => import('./pages/sales/returns/SalesReturnCreate'))
+const SalesReturnDetail = lazy(() => import('./pages/sales/returns/SalesReturnDetail'))
+const ActivationCreate = lazy(() => import('./pages/marketing/activations/ActivationCreate'))
+const ActivationDetail = lazy(() => import('./pages/marketing/activations/ActivationDetail'))
+const CampaignCreate = lazy(() => import('./pages/marketing/campaigns/CampaignCreate'))
+const CampaignDetail = lazy(() => import('./pages/marketing/campaigns/CampaignDetail'))
+const CampaignEdit = lazy(() => import('./pages/marketing/campaigns/CampaignEdit'))
+const EventCreate = lazy(() => import('./pages/marketing/events/EventCreate'))
+const EventDetail = lazy(() => import('./pages/marketing/events/EventDetail'))
+const EventEdit = lazy(() => import('./pages/marketing/events/EventEdit'))
+const PromotionCreate = lazy(() => import('./pages/marketing/promotions/PromotionCreate'))
+const PromotionDetail = lazy(() => import('./pages/marketing/promotions/PromotionDetail'))
+const BoardPlacementCreate = lazy(() => import('./pages/field-operations/board-placements/BoardPlacementCreate'))
+const BoardPlacementDetail = lazy(() => import('./pages/field-operations/board-placements/BoardPlacementDetail'))
+const CommissionLedgerDetail = lazy(() => import('./pages/field-operations/commission-ledger/CommissionLedgerDetail'))
+const ProductDistributionCreate = lazy(() => import('./pages/field-operations/product-distributions/ProductDistributionCreate'))
+const ProductDistributionDetail = lazy(() => import('./pages/field-operations/product-distributions/ProductDistributionDetail'))
+const VisitCreate = lazy(() => import('./pages/field-operations/visits/VisitCreate'))
+const VisitDetail = lazy(() => import('./pages/field-operations/visits/VisitDetail'))
+const VisitEdit = lazy(() => import('./pages/field-operations/visits/VisitEdit'))
+const VisitManagementPage = lazy(() => import('./pages/field-operations/VisitManagementPage'))
+const VisitConfigurationPage = lazy(() => import('./pages/field-operations/VisitConfigurationPage'))
+const CRMCustomerCreate = lazy(() => import('./pages/crm/customers/CustomerCreate'))
+const CRMCustomerDetail = lazy(() => import('./pages/crm/customers/CustomerDetail'))
+const CRMCustomerEdit = lazy(() => import('./pages/crm/customers/CustomerEdit'))
+const KYCCaseCreate = lazy(() => import('./pages/crm/kyc-cases/KYCCaseCreate'))
+const KYCCaseDetail = lazy(() => import('./pages/crm/kyc-cases/KYCCaseDetail'))
+const CRMSurveyCreate = lazy(() => import('./pages/crm/surveys/SurveyCreate'))
+const SurveyDetail = lazy(() => import('./pages/crm/surveys/SurveyDetail'))
+const CashReconciliationCreate = lazy(() => import('./pages/finance/cash-reconciliation/CashReconciliationCreate'))
+const CashReconciliationDetail = lazy(() => import('./pages/finance/cash-reconciliation/CashReconciliationDetail'))
+const CommissionPayoutDetail = lazy(() => import('./pages/finance/commission-payouts/CommissionPayoutDetail'))
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const UserManagementPage = lazy(() => import('./pages/admin/UserManagementPage'))
+const RolePermissionsPage = lazy(() => import('./pages/admin/RolePermissionsPage'))
+const SystemSettingsPage = lazy(() => import('./pages/admin/SystemSettingsPage'))
+const AuditLogsPage = lazy(() => import('./pages/admin/AuditLogsPage'))
+const SmokeTestPage = lazy(() => import('./pages/admin/SmokeTestPage'))
+const RouteAuditPage = lazy(() => import('./pages/admin/RouteAuditPage'))
+const BrandManagementPage = lazy(() => import('./pages/admin/BrandManagementPage'))
+const AdminCampaignManagementPage = lazy(() => import('./pages/admin/CampaignManagementPage'))
+const CommissionRuleBuilderPage = lazy(() => import('./pages/admin/CommissionRuleBuilderPage'))
+const DataImportExportPage = lazy(() => import('./pages/admin/DataImportExportPage'))
+const POSLibraryPage = lazy(() => import('./pages/admin/POSLibraryPage'))
+const ProductTypeBuilderPage = lazy(() => import('./pages/admin/ProductTypeBuilderPage'))
+const SurveyBuilderPage = lazy(() => import('./pages/admin/SurveyBuilderPage'))
+const TerritoryManagementPage = lazy(() => import('./pages/admin/TerritoryManagementPage'))
+const BoardManagementPage = lazy(() => import('./pages/admin/BoardManagementPage'))
+const PriceListManagementPage = lazy(() => import('./pages/admin/PriceListManagementPage'))
+const PriceListEditPage = lazy(() => import('./pages/admin/PriceListEditPage'))
+const TargetManagementPage = lazy(() => import('./pages/admin/TargetManagementPage'))
+const TargetReportingPage = lazy(() => import('./pages/admin/TargetReportingPage'))
+const BackupManagementPage = lazy(() => import('./pages/admin-settings/BackupManagementPage').then(m => ({ default: m.BackupManagementPage })))
+const IntegrationsPage = lazy(() => import('./pages/admin-settings/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })))
+const SystemHealthPage = lazy(() => import('./pages/admin-settings/SystemHealthPage').then(m => ({ default: m.SystemHealthPage })))
+const InvoicesList = lazy(() => import('./pages/sales/invoices/InvoicesList'))
+const PaymentsList = lazy(() => import('./pages/sales/payments/PaymentsList'))
+const CreditNotesList = lazy(() => import('./pages/sales/credit-notes/CreditNotesList'))
+const SalesReturnsList = lazy(() => import('./pages/sales/returns/SalesReturnsList'))
+const SalesOrdersList = lazy(() => import('./pages/sales/orders/SalesOrdersList'))
+const VanSalesOrdersList = lazy(() => import('./pages/van-sales/orders/VanSalesOrdersList'))
+const VanSalesReturnsList = lazy(() => import('./pages/van-sales/returns/VanSalesReturnsList'))
+const VanLoadsList = lazy(() => import('./pages/van-sales/van-loads/VanLoadsList'))
+const VanCashReconciliationList = lazy(() => import('./pages/van-sales/cash-reconciliation/CashReconciliationList'))
+const AdjustmentsList = lazy(() => import('./pages/inventory/adjustments/AdjustmentsList'))
+const IssuesList = lazy(() => import('./pages/inventory/issues/IssuesList'))
+const ReceiptsList = lazy(() => import('./pages/inventory/receipts/ReceiptsList'))
+const StockCountsList = lazy(() => import('./pages/inventory/stock-counts/StockCountsList'))
+const TransfersList = lazy(() => import('./pages/inventory/transfers/TransfersList'))
+const CashReconciliationList = lazy(() => import('./pages/finance/cash-reconciliation/CashReconciliationList'))
+const CommissionPayoutsList = lazy(() => import('./pages/finance/commission-payouts/CommissionPayoutsList'))
+const FinanceDashboard = lazy(() => import('./pages/finance/FinanceDashboard'))
+const InvoiceManagementPage = lazy(() => import('./pages/finance/InvoiceManagementPage'))
+const PaymentCollectionPage = lazy(() => import('./pages/finance/PaymentCollectionPage'))
+const BankDepositPage = lazy(() => import('./pages/cash-reconciliation/BankDepositPage').then(m => ({ default: m.BankDepositPage })))
+const CashCollectionPage = lazy(() => import('./pages/cash-reconciliation/CashCollectionPage').then(m => ({ default: m.CashCollectionPage })))
+const CashReportsPage = lazy(() => import('./pages/cash-reconciliation/CashReportsPage').then(m => ({ default: m.CashReportsPage })))
+const CashSessionDashboardPage = lazy(() => import('./pages/cash-reconciliation/CashSessionDashboardPage').then(m => ({ default: m.CashSessionDashboardPage })))
+const CloseCashSessionPage = lazy(() => import('./pages/cash-reconciliation/CloseCashSessionPage').then(m => ({ default: m.CloseCashSessionPage })))
+const StartCashSessionPage = lazy(() => import('./pages/cash-reconciliation/StartCashSessionPage').then(m => ({ default: m.StartCashSessionPage })))
+const VarianceApprovalPage = lazy(() => import('./pages/cash-reconciliation/VarianceApprovalPage').then(m => ({ default: m.VarianceApprovalPage })))
+const CommissionApprovalPage = lazy(() => import('./pages/commissions/CommissionApprovalPage').then(m => ({ default: m.CommissionApprovalPage })))
+const CommissionCalculationPage = lazy(() => import('./pages/commissions/CommissionCalculationPage').then(m => ({ default: m.CommissionCalculationPage })))
+const CommissionDashboardPage = lazy(() => import('./pages/commissions/CommissionDashboardPage').then(m => ({ default: m.CommissionDashboardPage })))
+const CommissionPaymentPage = lazy(() => import('./pages/commissions/CommissionPaymentPage').then(m => ({ default: m.CommissionPaymentPage })))
+const CommissionReportsPage = lazy(() => import('./pages/commissions/CommissionReportsPage').then(m => ({ default: m.CommissionReportsPage })))
+const CommissionSettingsPage = lazy(() => import('./pages/commissions/CommissionSettingsPage').then(m => ({ default: m.CommissionSettingsPage })))
+const ActivationsList = lazy(() => import('./pages/marketing/activations/ActivationsList'))
+const CampaignsList = lazy(() => import('./pages/marketing/campaigns/CampaignsList'))
+const EventsList = lazy(() => import('./pages/marketing/events/EventsList'))
+const PromotionsList = lazy(() => import('./pages/marketing/promotions/PromotionsList'))
+const CustomersList = lazy(() => import('./pages/crm/customers/CustomersList'))
+const KYCCasesList = lazy(() => import('./pages/crm/kyc-cases/KYCCasesList'))
+const SurveysList = lazy(() => import('./pages/crm/surveys/SurveysList'))
+const BoardPlacementsList = lazy(() => import('./pages/field-operations/board-placements/BoardPlacementsList'))
+const CommissionLedgerList = lazy(() => import('./pages/field-operations/commission-ledger/CommissionLedgerList'))
+const ProductDistributionsList = lazy(() => import('./pages/field-operations/product-distributions/ProductDistributionsList'))
+const CustomerAnalyticsPage = lazy(() => import('./pages/customer-management/CustomerAnalyticsPage').then(m => ({ default: m.CustomerAnalyticsPage })))
+const CustomerCreditManagementPage = lazy(() => import('./pages/customer-management/CustomerCreditManagementPage').then(m => ({ default: m.CustomerCreditManagementPage })))
+const CustomerHierarchyPage = lazy(() => import('./pages/customer-management/CustomerHierarchyPage').then(m => ({ default: m.CustomerHierarchyPage })))
+const CustomerImportExportPage = lazy(() => import('./pages/customer-management/CustomerImportExportPage').then(m => ({ default: m.CustomerImportExportPage })))
+const CustomerListPage = lazy(() => import('./pages/customer-management/CustomerListPage').then(m => ({ default: m.CustomerListPage })))
+const CustomerSegmentationPage = lazy(() => import('./pages/customer-management/CustomerSegmentationPage').then(m => ({ default: m.CustomerSegmentationPage })))
+const CustomerVisitHistoryPage = lazy(() => import('./pages/customer-management/CustomerVisitHistoryPage').then(m => ({ default: m.CustomerVisitHistoryPage })))
+const ProductAnalyticsPage = lazy(() => import('./pages/product-management/ProductAnalyticsPage').then(m => ({ default: m.ProductAnalyticsPage })))
+const ProductHierarchyPage = lazy(() => import('./pages/product-management/ProductHierarchyPage').then(m => ({ default: m.ProductHierarchyPage })))
+const ProductImportExportPage = lazy(() => import('./pages/product-management/ProductImportExportPage').then(m => ({ default: m.ProductImportExportPage })))
+const ProductInventoryPage = lazy(() => import('./pages/product-management/ProductInventoryPage').then(m => ({ default: m.ProductInventoryPage })))
+const ProductListPage = lazy(() => import('./pages/product-management/ProductListPage').then(m => ({ default: m.ProductListPage })))
+const ProductPricingPage = lazy(() => import('./pages/product-management/ProductPricingPage').then(m => ({ default: m.ProductPricingPage })))
+const CreditNotesPage = lazy(() => import('./pages/order-lifecycle/CreditNotesPage').then(m => ({ default: m.CreditNotesPage })))
+const DeliveryTrackingPage = lazy(() => import('./pages/order-lifecycle/DeliveryTrackingPage').then(m => ({ default: m.DeliveryTrackingPage })))
+const OrderFulfillmentPage = lazy(() => import('./pages/order-lifecycle/OrderFulfillmentPage').then(m => ({ default: m.OrderFulfillmentPage })))
+const QuotationApprovalPage = lazy(() => import('./pages/order-lifecycle/QuotationApprovalPage').then(m => ({ default: m.QuotationApprovalPage })))
+const QuotationManagementPage = lazy(() => import('./pages/order-lifecycle/QuotationManagementPage').then(m => ({ default: m.QuotationManagementPage })))
+const RefundProcessingPage = lazy(() => import('./pages/order-lifecycle/RefundProcessingPage').then(m => ({ default: m.RefundProcessingPage })))
+const ReturnManagementPage = lazy(() => import('./pages/order-lifecycle/ReturnManagementPage').then(m => ({ default: m.ReturnManagementPage })))
+const InventoryAnalyticsPage = lazy(() => import('./pages/inventory-management/InventoryAnalyticsPage'))
+const StockCountListPage = lazy(() => import('./pages/inventory-management/StockCountListPage'))
+const StockMovementsPage = lazy(() => import('./pages/inventory-management/StockMovementsPage'))
+const StockOverviewPage = lazy(() => import('./pages/inventory-management/StockOverviewPage'))
+const StockTransferPage = lazy(() => import('./pages/inventory-management/StockTransferPage'))
+const WarehouseManagementPage = lazy(() => import('./pages/inventory-management/WarehouseManagementPage'))
+const AnalyticsDashboardPage = lazy(() => import('./pages/reports/AnalyticsDashboardPage'))
+const ReportBuilderPage = lazy(() => import('./pages/reports/ReportBuilderPage'))
+const ReportsHub = lazy(() => import('./pages/reports/ReportsHub'))
+const ReportTemplatesPage = lazy(() => import('./pages/reports/ReportTemplatesPage'))
+const CommissionSummaryReport = lazy(() => import('./pages/reports/finance/CommissionSummaryReport'))
+const InventorySnapshotReport = lazy(() => import('./pages/reports/inventory/InventorySnapshotReport'))
+const VarianceAnalysisReport = lazy(() => import('./pages/reports/inventory/VarianceAnalysisReport'))
+const FieldOperationsProductivityReport = lazy(() => import('./pages/reports/operations/FieldOperationsProductivityReport'))
+const SalesExceptionsReport = lazy(() => import('./pages/reports/sales/SalesExceptionsReport'))
+const SalesSummaryReport = lazy(() => import('./pages/reports/sales/SalesSummaryReport'))
+const CustomerAnalyticsReportPage = lazy(() => import('./pages/reports-analytics/CustomerAnalyticsPage').then(m => ({ default: m.CustomerAnalyticsPage })))
+const ExecutiveDashboardPage = lazy(() => import('./pages/reports-analytics/ExecutiveDashboardPage').then(m => ({ default: m.ExecutiveDashboardPage })))
+const FinancialReportsPage = lazy(() => import('./pages/reports-analytics/FinancialReportsPage').then(m => ({ default: m.FinancialReportsPage })))
+const InventoryReportsPage = lazy(() => import('./pages/reports-analytics/InventoryReportsPage').then(m => ({ default: m.InventoryReportsPage })))
+const PerformanceAnalyticsPage = lazy(() => import('./pages/reports-analytics/PerformanceAnalyticsPage').then(m => ({ default: m.PerformanceAnalyticsPage })))
+const SalesReportsPage = lazy(() => import('./pages/reports-analytics/SalesReportsPage').then(m => ({ default: m.SalesReportsPage })))
+const AuditTrailPage = lazy(() => import('./pages/kyc-surveys/AuditTrailPage').then(m => ({ default: m.AuditTrailPage })))
+const KYCAnalyticsPage = lazy(() => import('./pages/kyc-surveys/KYCAnalyticsPage').then(m => ({ default: m.KYCAnalyticsPage })))
+const KYCListPage = lazy(() => import('./pages/kyc-surveys/KYCListPage').then(m => ({ default: m.KYCListPage })))
+const SurveyListPage = lazy(() => import('./pages/kyc-surveys/SurveyListPage').then(m => ({ default: m.SurveyListPage })))
+const SurveyResponsesPage = lazy(() => import('./pages/kyc-surveys/SurveyResponsesPage').then(m => ({ default: m.SurveyResponsesPage })))
+const CustomerDashboard = lazy(() => import('./pages/customers/CustomerDashboard'))
+const OrderDashboard = lazy(() => import('./pages/orders/OrderDashboard'))
+const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
+const AdvancedAnalyticsDashboard = lazy(() => import('./pages/analytics/AdvancedAnalyticsDashboard'))
+const ExecutiveDashboard = lazy(() => import('./pages/analytics/ExecutiveDashboard'))
+const SalesDashboard = lazy(() => import('./pages/sales/SalesDashboard'))
+const BrandActivationsPage = lazy(() => import('./pages/brand-activations/BrandActivationsPage'))
+const TenantManagement = lazy(() => import('./pages/superadmin/TenantManagement'))
+const FieldAgentDashboardPage = lazy(() => import('./pages/field-operations/FieldAgentDashboardPage'))
+const LiveGPSTrackingPage = lazy(() => import('./pages/field-operations/LiveGPSTrackingPage'))
+const VisitHistoryPage = lazy(() => import('./pages/field-operations/VisitHistoryPage'))
+const VanCashCollectionPage= lazy(() => import('./pages/van-sales/VanCashCollectionPage'))
+const VanInventoryPage = lazy(() => import('./pages/van-sales/VanInventoryPage'))
+const VanOrdersListPage = lazy(() => import('./pages/van-sales/VanOrdersListPage'))
+const VanPerformancePage = lazy(() => import('./pages/van-sales/VanPerformancePage'))
+const VanRoutesListPage = lazy(() => import('./pages/van-sales/VanRoutesListPage'))
+const SurveyPage = lazy(() => import('./pages/field-agents/SurveyPage'))
+const TaskPage = lazy(() => import('./pages/field-agents/TaskPage'))
 import LandingPage from './pages/marketing/LandingPage'
 
 function App() {
@@ -454,359 +382,359 @@ function App() {
             </ProtectedRoute>
           }>
             {/* Dashboard Routes */}
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
+            <Route path="analytics" element={<Suspense fallback={<PageLoader />}><AnalyticsPage /></Suspense>} />
             
             {/* Analytics Routes */}
-            <Route path="analytics-dashboard" element={<AnalyticsDashboard />} />
-            <Route path="analytics-dashboard/orders" element={<OrdersAnalytics />} />
-            <Route path="analytics-dashboard/field-ops" element={<FieldOpsAnalytics />} />
-            <Route path="analytics-dashboard/commissions" element={<CommissionsAnalytics />} />
-            <Route path="analytics-dashboard/advanced" element={<AdvancedAnalyticsDashboard />} />
-            <Route path="analytics-dashboard/executive" element={<ExecutiveDashboard />} />
+            <Route path="analytics-dashboard" element={<Suspense fallback={<PageLoader />}><AnalyticsDashboard /></Suspense>} />
+            <Route path="analytics-dashboard/orders" element={<Suspense fallback={<PageLoader />}><OrdersAnalytics /></Suspense>} />
+            <Route path="analytics-dashboard/field-ops" element={<Suspense fallback={<PageLoader />}><FieldOpsAnalytics /></Suspense>} />
+            <Route path="analytics-dashboard/commissions" element={<Suspense fallback={<PageLoader />}><CommissionsAnalytics /></Suspense>} />
+            <Route path="analytics-dashboard/advanced" element={<Suspense fallback={<PageLoader />}><AdvancedAnalyticsDashboard /></Suspense>} />
+            <Route path="analytics-dashboard/executive" element={<Suspense fallback={<PageLoader />}><ExecutiveDashboard /></Suspense>} />
             
                         {/* Reports Routes */}
-                        <Route path="reports" element={<ReportsHub />} />
-                        <Route path="reports/hub" element={<ReportsHub />} />
-                        <Route path="reports/builder" element={<ReportBuilderPage />} />
-            <Route path="reports/templates" element={<ReportTemplatesPage />} />
-            <Route path="reports/create" element={<ReportCreate />} />
-            <Route path="reports/:id" element={<ReportDetail />} />
-            <Route path="reports/:id/edit" element={<ReportEdit />} />
-            <Route path="reports/sales/summary" element={<SalesSummaryReport />} />
-            <Route path="reports/sales/exceptions" element={<SalesExceptionsReport />} />
-            <Route path="reports/finance/commission-summary" element={<CommissionSummaryReport />} />
-            <Route path="reports/inventory/snapshot" element={<InventorySnapshotReport />} />
-            <Route path="reports/inventory/variance" element={<VarianceAnalysisReport />} />
-            <Route path="reports/operations/field-ops-productivity" element={<FieldOperationsProductivityReport />} />
+                        <Route path="reports" element={<Suspense fallback={<PageLoader />}><ReportsHub /></Suspense>} />
+                        <Route path="reports/hub" element={<Suspense fallback={<PageLoader />}><ReportsHub /></Suspense>} />
+                        <Route path="reports/builder" element={<Suspense fallback={<PageLoader />}><ReportBuilderPage /></Suspense>} />
+            <Route path="reports/templates" element={<Suspense fallback={<PageLoader />}><ReportTemplatesPage /></Suspense>} />
+            <Route path="reports/create" element={<Suspense fallback={<PageLoader />}><ReportCreate /></Suspense>} />
+            <Route path="reports/:id" element={<Suspense fallback={<PageLoader />}><ReportDetail /></Suspense>} />
+            <Route path="reports/:id/edit" element={<Suspense fallback={<PageLoader />}><ReportEdit /></Suspense>} />
+            <Route path="reports/sales/summary" element={<Suspense fallback={<PageLoader />}><SalesSummaryReport /></Suspense>} />
+            <Route path="reports/sales/exceptions" element={<Suspense fallback={<PageLoader />}><SalesExceptionsReport /></Suspense>} />
+            <Route path="reports/finance/commission-summary" element={<Suspense fallback={<PageLoader />}><CommissionSummaryReport /></Suspense>} />
+            <Route path="reports/inventory/snapshot" element={<Suspense fallback={<PageLoader />}><InventorySnapshotReport /></Suspense>} />
+            <Route path="reports/inventory/variance" element={<Suspense fallback={<PageLoader />}><VarianceAnalysisReport /></Suspense>} />
+            <Route path="reports/operations/field-ops-productivity" element={<Suspense fallback={<PageLoader />}><FieldOperationsProductivityReport /></Suspense>} />
             
             {/* Reports Analytics Routes */}
-            <Route path="reports-analytics/customer" element={<CustomerAnalyticsReportPage />} />
-            <Route path="reports-analytics/executive" element={<ExecutiveDashboardPage />} />
-            <Route path="reports-analytics/financial" element={<FinancialReportsPage />} />
-            <Route path="reports-analytics/inventory" element={<InventoryReportsPage />} />
-            <Route path="reports-analytics/performance" element={<PerformanceAnalyticsPage />} />
-            <Route path="reports-analytics/sales" element={<SalesReportsPage />} />
+            <Route path="reports-analytics/customer" element={<Suspense fallback={<PageLoader />}><CustomerAnalyticsReportPage /></Suspense>} />
+            <Route path="reports-analytics/executive" element={<Suspense fallback={<PageLoader />}><ExecutiveDashboardPage /></Suspense>} />
+            <Route path="reports-analytics/financial" element={<Suspense fallback={<PageLoader />}><FinancialReportsPage /></Suspense>} />
+            <Route path="reports-analytics/inventory" element={<Suspense fallback={<PageLoader />}><InventoryReportsPage /></Suspense>} />
+            <Route path="reports-analytics/performance" element={<Suspense fallback={<PageLoader />}><PerformanceAnalyticsPage /></Suspense>} />
+            <Route path="reports-analytics/sales" element={<Suspense fallback={<PageLoader />}><SalesReportsPage /></Suspense>} />
 
             {/* Van Sales Routes */}
-            <Route path="van-sales" element={<VanSalesDashboard />} />
-            <Route path="van-sales/dashboard" element={<VanSalesDashboard />} />
-            <Route path="van-sales/workflow" element={<VanSalesWorkflowPageMobile />} />
-            <Route path="van-sales/management" element={<VanSalesPage />} />
-            <Route path="van-sales/performance" element={<VanPerformancePage />} />
-            <Route path="van-sales/cash-collection" element={<VanCashCollectionPage />} />
-            <Route path="van-sales/van-inventory" element={<VanInventoryPage />} />
-            <Route path="van-sales/routes" element={<VanRoutesListPage />} />
-            <Route path="van-sales/routes/create" element={<RouteCreate />} />
-            <Route path="van-sales/routes/:id" element={<RouteDetail />} />
-            <Route path="van-sales/routes/:id/edit" element={<RouteEdit />} />
-            <Route path="van-sales/routes/:id/customers" element={<RouteCustomers />} />
-            <Route path="van-sales/routes/:id/orders" element={<RouteOrders />} />
-            <Route path="van-sales/routes/:id/performance" element={<RoutePerformance />} />
-            <Route path="van-sales/inventory" element={<InventoryTrackingPage />} />
-            <Route path="van-sales/orders" element={<VanSalesOrdersList />} />
-            <Route path="van-sales/orders/create" element={<VanOrderCreatePage />} />
-            <Route path="van-sales/orders/new" element={<VanSalesOrderCreate />} />
-            <Route path="van-sales/orders/:id" element={<VanSalesOrderDetail />} />
-            <Route path="van-sales/orders/:id/edit" element={<VanSalesOrderEdit />} />
-            <Route path="van-sales/returns" element={<VanSalesReturnsList />} />
-            <Route path="van-sales/returns/create" element={<VanSalesReturnCreate />} />
-            <Route path="van-sales/returns/:id" element={<VanSalesReturnDetail />} />
-            <Route path="van-sales/van-loads" element={<VanLoadsList />} />
-            <Route path="van-sales/van-loads/create" element={<VanLoadCreate />} />
-            <Route path="van-sales/van-loads/:id" element={<VanLoadDetail />} />
-            <Route path="van-sales/cash-reconciliation" element={<VanCashReconciliationList />} />
-            <Route path="van-sales/cash-reconciliation/create" element={<VanCashReconciliationCreate />} />
-            <Route path="van-sales/cash-reconciliation/:id" element={<VanCashReconciliationDetail />} />
+            <Route path="van-sales" element={<Suspense fallback={<PageLoader />}><VanSalesDashboard /></Suspense>} />
+            <Route path="van-sales/dashboard" element={<Suspense fallback={<PageLoader />}><VanSalesDashboard /></Suspense>} />
+            <Route path="van-sales/workflow" element={<Suspense fallback={<PageLoader />}><VanSalesWorkflowPageMobile /></Suspense>} />
+            <Route path="van-sales/management" element={<Suspense fallback={<PageLoader />}><VanSalesPage /></Suspense>} />
+            <Route path="van-sales/performance" element={<Suspense fallback={<PageLoader />}><VanPerformancePage /></Suspense>} />
+            <Route path="van-sales/cash-collection" element={<Suspense fallback={<PageLoader />}><VanCashCollectionPage /></Suspense>} />
+            <Route path="van-sales/van-inventory" element={<Suspense fallback={<PageLoader />}><VanInventoryPage /></Suspense>} />
+            <Route path="van-sales/routes" element={<Suspense fallback={<PageLoader />}><VanRoutesListPage /></Suspense>} />
+            <Route path="van-sales/routes/create" element={<Suspense fallback={<PageLoader />}><RouteCreate /></Suspense>} />
+            <Route path="van-sales/routes/:id" element={<Suspense fallback={<PageLoader />}><RouteDetail /></Suspense>} />
+            <Route path="van-sales/routes/:id/edit" element={<Suspense fallback={<PageLoader />}><RouteEdit /></Suspense>} />
+            <Route path="van-sales/routes/:id/customers" element={<Suspense fallback={<PageLoader />}><RouteCustomers /></Suspense>} />
+            <Route path="van-sales/routes/:id/orders" element={<Suspense fallback={<PageLoader />}><RouteOrders /></Suspense>} />
+            <Route path="van-sales/routes/:id/performance" element={<Suspense fallback={<PageLoader />}><RoutePerformance /></Suspense>} />
+            <Route path="van-sales/inventory" element={<Suspense fallback={<PageLoader />}><InventoryTrackingPage /></Suspense>} />
+            <Route path="van-sales/orders" element={<Suspense fallback={<PageLoader />}><VanSalesOrdersList /></Suspense>} />
+            <Route path="van-sales/orders/create" element={<Suspense fallback={<PageLoader />}><VanOrderCreatePage /></Suspense>} />
+            <Route path="van-sales/orders/new" element={<Suspense fallback={<PageLoader />}><VanSalesOrderCreate /></Suspense>} />
+            <Route path="van-sales/orders/:id" element={<Suspense fallback={<PageLoader />}><VanSalesOrderDetail /></Suspense>} />
+            <Route path="van-sales/orders/:id/edit" element={<Suspense fallback={<PageLoader />}><VanSalesOrderEdit /></Suspense>} />
+            <Route path="van-sales/returns" element={<Suspense fallback={<PageLoader />}><VanSalesReturnsList /></Suspense>} />
+            <Route path="van-sales/returns/create" element={<Suspense fallback={<PageLoader />}><VanSalesReturnCreate /></Suspense>} />
+            <Route path="van-sales/returns/:id" element={<Suspense fallback={<PageLoader />}><VanSalesReturnDetail /></Suspense>} />
+            <Route path="van-sales/van-loads" element={<Suspense fallback={<PageLoader />}><VanLoadsList /></Suspense>} />
+            <Route path="van-sales/van-loads/create" element={<Suspense fallback={<PageLoader />}><VanLoadCreate /></Suspense>} />
+            <Route path="van-sales/van-loads/:id" element={<Suspense fallback={<PageLoader />}><VanLoadDetail /></Suspense>} />
+            <Route path="van-sales/cash-reconciliation" element={<Suspense fallback={<PageLoader />}><VanCashReconciliationList /></Suspense>} />
+            <Route path="van-sales/cash-reconciliation/create" element={<Suspense fallback={<PageLoader />}><VanCashReconciliationCreate /></Suspense>} />
+            <Route path="van-sales/cash-reconciliation/:id" element={<Suspense fallback={<PageLoader />}><VanCashReconciliationDetail /></Suspense>} />
 
             {/* Field Operations Routes */}
-            <Route path="field-operations" element={<FieldOperationsDashboard />} />
-            <Route path="field-operations/dashboard" element={<FieldOperationsDashboard />} />
-            <Route path="field-operations/agent-dashboard" element={<FieldAgentDashboardPage />} />
-            <Route path="field-operations/agents" element={<FieldAgentsPage />} />
-            <Route path="field-operations/mapping" element={<LiveMappingPage />} />
-            <Route path="field-operations/gps-tracking" element={<LiveGPSTrackingPage />} />
-            <Route path="field-operations/boards" element={<BoardPlacementsList />} />
-            <Route path="field-operations/boards/create" element={<BoardPlacementFormPage />} />
-            <Route path="field-operations/boards/:id" element={<BoardPlacementDetail />} />
-            <Route path="field-operations/products" element={<ProductDistributionsList />} />
-            <Route path="field-operations/products/create" element={<ProductDistributionFormPage />} />
-            <Route path="field-operations/products/:id" element={<ProductDistributionDetail />} />
-            <Route path="field-operations/commission" element={<CommissionLedgerList />} />
-            <Route path="field-operations/commission/:id" element={<CommissionLedgerDetail />} />
-            <Route path="field-operations/visits" element={<VisitManagementPage />} />
-            <Route path="field-operations/visits/create" element={<VisitCreate />} />
-            <Route path="field-operations/visits/:id" element={<VisitDetail />} />
-            <Route path="field-operations/visits/:id/edit" element={<VisitEdit />} />
-            <Route path="field-operations/visit-configurations" element={<VisitConfigurationPage />} />
-            <Route path="field-operations/visit-history" element={<VisitHistoryPage />} />
-            <Route path="field-operations/visit-management" element={<VisitManagementPage />} />
+            <Route path="field-operations" element={<Suspense fallback={<PageLoader />}><FieldOperationsDashboard /></Suspense>} />
+            <Route path="field-operations/dashboard" element={<Suspense fallback={<PageLoader />}><FieldOperationsDashboard /></Suspense>} />
+            <Route path="field-operations/agent-dashboard" element={<Suspense fallback={<PageLoader />}><FieldAgentDashboardPage /></Suspense>} />
+            <Route path="field-operations/agents" element={<Suspense fallback={<PageLoader />}><FieldAgentsPage /></Suspense>} />
+            <Route path="field-operations/mapping" element={<Suspense fallback={<PageLoader />}><LiveMappingPage /></Suspense>} />
+            <Route path="field-operations/gps-tracking" element={<Suspense fallback={<PageLoader />}><LiveGPSTrackingPage /></Suspense>} />
+            <Route path="field-operations/boards" element={<Suspense fallback={<PageLoader />}><BoardPlacementsList /></Suspense>} />
+            <Route path="field-operations/boards/create" element={<Suspense fallback={<PageLoader />}><BoardPlacementFormPage /></Suspense>} />
+            <Route path="field-operations/boards/:id" element={<Suspense fallback={<PageLoader />}><BoardPlacementDetail /></Suspense>} />
+            <Route path="field-operations/products" element={<Suspense fallback={<PageLoader />}><ProductDistributionsList /></Suspense>} />
+            <Route path="field-operations/products/create" element={<Suspense fallback={<PageLoader />}><ProductDistributionFormPage /></Suspense>} />
+            <Route path="field-operations/products/:id" element={<Suspense fallback={<PageLoader />}><ProductDistributionDetail /></Suspense>} />
+            <Route path="field-operations/commission" element={<Suspense fallback={<PageLoader />}><CommissionLedgerList /></Suspense>} />
+            <Route path="field-operations/commission/:id" element={<Suspense fallback={<PageLoader />}><CommissionLedgerDetail /></Suspense>} />
+            <Route path="field-operations/visits" element={<Suspense fallback={<PageLoader />}><VisitManagementPage /></Suspense>} />
+            <Route path="field-operations/visits/create" element={<Suspense fallback={<PageLoader />}><VisitCreate /></Suspense>} />
+            <Route path="field-operations/visits/:id" element={<Suspense fallback={<PageLoader />}><VisitDetail /></Suspense>} />
+            <Route path="field-operations/visits/:id/edit" element={<Suspense fallback={<PageLoader />}><VisitEdit /></Suspense>} />
+            <Route path="field-operations/visit-configurations" element={<Suspense fallback={<PageLoader />}><VisitConfigurationPage /></Suspense>} />
+            <Route path="field-operations/visit-history" element={<Suspense fallback={<PageLoader />}><VisitHistoryPage /></Suspense>} />
+            <Route path="field-operations/visit-management" element={<Suspense fallback={<PageLoader />}><VisitManagementPage /></Suspense>} />
 
             {/* Field Marketing Routes */}
-            <Route path="field-marketing" element={<FieldMarketingDashboard />} />
-            <Route path="field-marketing/dashboard" element={<FieldMarketingDashboard />} />
-            <Route path="field-marketing/customer-selection" element={<CustomerSelection />} />
-            <Route path="field-marketing/gps-verification" element={<GPSVerification />} />
-            <Route path="field-marketing/brand-selection" element={<BrandSelection />} />
-            <Route path="field-marketing/visit-list" element={<VisitList />} />
-            <Route path="field-marketing/board-placement" element={<BoardPlacement />} />
-            <Route path="field-marketing/product-distribution" element={<ProductDistribution />} />
-            <Route path="field-marketing/new-customer" element={<NewCustomerRegistration />} />
-            <Route path="field-marketing/visit-summary" element={<VisitSummary />} />
-            <Route path="field-marketing/my-commissions" element={<MyCommissions />} />
-            <Route path="field-marketing/my-targets" element={<MyTargets />} />
+            <Route path="field-marketing" element={<Suspense fallback={<PageLoader />}><FieldMarketingDashboard /></Suspense>} />
+            <Route path="field-marketing/dashboard" element={<Suspense fallback={<PageLoader />}><FieldMarketingDashboard /></Suspense>} />
+            <Route path="field-marketing/customer-selection" element={<Suspense fallback={<PageLoader />}><CustomerSelection /></Suspense>} />
+            <Route path="field-marketing/gps-verification" element={<Suspense fallback={<PageLoader />}><GPSVerification /></Suspense>} />
+            <Route path="field-marketing/brand-selection" element={<Suspense fallback={<PageLoader />}><BrandSelection /></Suspense>} />
+            <Route path="field-marketing/visit-list" element={<Suspense fallback={<PageLoader />}><VisitList /></Suspense>} />
+            <Route path="field-marketing/board-placement" element={<Suspense fallback={<PageLoader />}><BoardPlacement /></Suspense>} />
+            <Route path="field-marketing/product-distribution" element={<Suspense fallback={<PageLoader />}><ProductDistribution /></Suspense>} />
+            <Route path="field-marketing/new-customer" element={<Suspense fallback={<PageLoader />}><NewCustomerRegistration /></Suspense>} />
+            <Route path="field-marketing/visit-summary" element={<Suspense fallback={<PageLoader />}><VisitSummary /></Suspense>} />
+            <Route path="field-marketing/my-commissions" element={<Suspense fallback={<PageLoader />}><MyCommissions /></Suspense>} />
+            <Route path="field-marketing/my-targets" element={<Suspense fallback={<PageLoader />}><MyTargets /></Suspense>} />
 
             {/* KYC Routes */}
-            <Route path="kyc" element={<KYCDashboard />} />
-            <Route path="kyc/dashboard" element={<KYCDashboard />} />
-            <Route path="kyc/management" element={<KYCManagement />} />
-            <Route path="kyc/create" element={<KYCCreate />} />
-            <Route path="kyc/:id" element={<KYCDetail />} />
-            <Route path="kyc/:id/edit" element={<KYCEdit />} />
-            <Route path="kyc/reports" element={<KYCReports />} />
+            <Route path="kyc" element={<Suspense fallback={<PageLoader />}><KYCDashboard /></Suspense>} />
+            <Route path="kyc/dashboard" element={<Suspense fallback={<PageLoader />}><KYCDashboard /></Suspense>} />
+            <Route path="kyc/management" element={<Suspense fallback={<PageLoader />}><KYCManagement /></Suspense>} />
+            <Route path="kyc/create" element={<Suspense fallback={<PageLoader />}><KYCCreate /></Suspense>} />
+            <Route path="kyc/:id" element={<Suspense fallback={<PageLoader />}><KYCDetail /></Suspense>} />
+            <Route path="kyc/:id/edit" element={<Suspense fallback={<PageLoader />}><KYCEdit /></Suspense>} />
+            <Route path="kyc/reports" element={<Suspense fallback={<PageLoader />}><KYCReports /></Suspense>} />
             
             {/* KYC Surveys Routes */}
-            <Route path="kyc-surveys/list" element={<KYCListPage />} />
-            <Route path="kyc-surveys/analytics" element={<KYCAnalyticsPage />} />
-            <Route path="kyc-surveys/surveys" element={<SurveyListPage />} />
-            <Route path="kyc-surveys/responses" element={<SurveyResponsesPage />} />
-            <Route path="kyc-surveys/audit-trail" element={<AuditTrailPage />} />
+            <Route path="kyc-surveys/list" element={<Suspense fallback={<PageLoader />}><KYCListPage /></Suspense>} />
+            <Route path="kyc-surveys/analytics" element={<Suspense fallback={<PageLoader />}><KYCAnalyticsPage /></Suspense>} />
+            <Route path="kyc-surveys/surveys" element={<Suspense fallback={<PageLoader />}><SurveyListPage /></Suspense>} />
+            <Route path="kyc-surveys/responses" element={<Suspense fallback={<PageLoader />}><SurveyResponsesPage /></Suspense>} />
+            <Route path="kyc-surveys/audit-trail" element={<Suspense fallback={<PageLoader />}><AuditTrailPage /></Suspense>} />
 
             {/* Surveys Routes */}
-            <Route path="surveys" element={<SurveysDashboard />} />
-            <Route path="surveys/dashboard" element={<SurveysDashboard />} />
-            <Route path="surveys/management" element={<SurveysManagement />} />
-            <Route path="surveys/create" element={<SurveyCreate />} />
-            <Route path="surveys/:id/edit" element={<SurveyEdit />} />
-            <Route path="surveys/:id/responses" element={<SurveyResponses />} />
-            <Route path="surveys/:id/analytics" element={<SurveyAnalytics />} />
+            <Route path="surveys" element={<Suspense fallback={<PageLoader />}><SurveysDashboard /></Suspense>} />
+            <Route path="surveys/dashboard" element={<Suspense fallback={<PageLoader />}><SurveysDashboard /></Suspense>} />
+            <Route path="surveys/management" element={<Suspense fallback={<PageLoader />}><SurveysManagement /></Suspense>} />
+            <Route path="surveys/create" element={<Suspense fallback={<PageLoader />}><SurveyCreate /></Suspense>} />
+            <Route path="surveys/:id/edit" element={<Suspense fallback={<PageLoader />}><SurveyEdit /></Suspense>} />
+            <Route path="surveys/:id/responses" element={<Suspense fallback={<PageLoader />}><SurveyResponses /></Suspense>} />
+            <Route path="surveys/:id/analytics" element={<Suspense fallback={<PageLoader />}><SurveyAnalytics /></Suspense>} />
 
             {/* Inventory Routes */}
-            <Route path="inventory" element={<InventoryDashboard />} />
-            <Route path="inventory/dashboard" element={<InventoryDashboard />} />
-            <Route path="inventory/stock-count" element={<StockCountWorkflowPage />} />
-            <Route path="inventory/stock-count/:id" element={<StockCountDetailsPage />} />
-            <Route path="inventory/management" element={<InventoryManagement />} />
-            <Route path="inventory/reports" element={<InventoryReports />} />
-            <Route path="inventory/adjustments" element={<AdjustmentsList />} />
-            <Route path="inventory/adjustments/create" element={<AdjustmentCreate />} />
-            <Route path="inventory/adjustments/:id" element={<AdjustmentDetail />} />
-            <Route path="inventory/issues" element={<IssuesList />} />
-            <Route path="inventory/issues/create" element={<IssueCreate />} />
-            <Route path="inventory/issues/:id" element={<IssueDetail />} />
-            <Route path="inventory/receipts" element={<ReceiptsList />} />
-            <Route path="inventory/receipts/create" element={<ReceiptCreate />} />
-            <Route path="inventory/receipts/:id" element={<ReceiptDetail />} />
-            <Route path="inventory/stock-counts" element={<StockCountsList />} />
-            <Route path="inventory/stock-counts/create" element={<StockCountCreate />} />
-            <Route path="inventory/stock-counts/:id" element={<StockCountDetail />} />
-            <Route path="inventory/transfers" element={<TransfersList />} />
-            <Route path="inventory/transfers/create" element={<TransferCreate />} />
-            <Route path="inventory/transfers/:id" element={<TransferDetail />} />
+            <Route path="inventory" element={<Suspense fallback={<PageLoader />}><InventoryDashboard /></Suspense>} />
+            <Route path="inventory/dashboard" element={<Suspense fallback={<PageLoader />}><InventoryDashboard /></Suspense>} />
+            <Route path="inventory/stock-count" element={<Suspense fallback={<PageLoader />}><StockCountWorkflowPage /></Suspense>} />
+            <Route path="inventory/stock-count/:id" element={<Suspense fallback={<PageLoader />}><StockCountDetailsPage /></Suspense>} />
+            <Route path="inventory/management" element={<Suspense fallback={<PageLoader />}><InventoryManagement /></Suspense>} />
+            <Route path="inventory/reports" element={<Suspense fallback={<PageLoader />}><InventoryReports /></Suspense>} />
+            <Route path="inventory/adjustments" element={<Suspense fallback={<PageLoader />}><AdjustmentsList /></Suspense>} />
+            <Route path="inventory/adjustments/create" element={<Suspense fallback={<PageLoader />}><AdjustmentCreate /></Suspense>} />
+            <Route path="inventory/adjustments/:id" element={<Suspense fallback={<PageLoader />}><AdjustmentDetail /></Suspense>} />
+            <Route path="inventory/issues" element={<Suspense fallback={<PageLoader />}><IssuesList /></Suspense>} />
+            <Route path="inventory/issues/create" element={<Suspense fallback={<PageLoader />}><IssueCreate /></Suspense>} />
+            <Route path="inventory/issues/:id" element={<Suspense fallback={<PageLoader />}><IssueDetail /></Suspense>} />
+            <Route path="inventory/receipts" element={<Suspense fallback={<PageLoader />}><ReceiptsList /></Suspense>} />
+            <Route path="inventory/receipts/create" element={<Suspense fallback={<PageLoader />}><ReceiptCreate /></Suspense>} />
+            <Route path="inventory/receipts/:id" element={<Suspense fallback={<PageLoader />}><ReceiptDetail /></Suspense>} />
+            <Route path="inventory/stock-counts" element={<Suspense fallback={<PageLoader />}><StockCountsList /></Suspense>} />
+            <Route path="inventory/stock-counts/create" element={<Suspense fallback={<PageLoader />}><StockCountCreate /></Suspense>} />
+            <Route path="inventory/stock-counts/:id" element={<Suspense fallback={<PageLoader />}><StockCountDetail /></Suspense>} />
+            <Route path="inventory/transfers" element={<Suspense fallback={<PageLoader />}><TransfersList /></Suspense>} />
+            <Route path="inventory/transfers/create" element={<Suspense fallback={<PageLoader />}><TransferCreate /></Suspense>} />
+            <Route path="inventory/transfers/:id" element={<Suspense fallback={<PageLoader />}><TransferDetail /></Suspense>} />
             
             {/* Inventory Management Routes */}
-            <Route path="inventory-management/overview" element={<StockOverviewPage />} />
-            <Route path="inventory-management/analytics" element={<InventoryAnalyticsPage />} />
-            <Route path="inventory-management/movements" element={<StockMovementsPage />} />
-            <Route path="inventory-management/stock-counts" element={<StockCountListPage />} />
-            <Route path="inventory-management/transfers" element={<StockTransferPage />} />
-            <Route path="inventory-management/warehouses" element={<WarehouseManagementPage />} />
+            <Route path="inventory-management/overview" element={<Suspense fallback={<PageLoader />}><StockOverviewPage /></Suspense>} />
+            <Route path="inventory-management/analytics" element={<Suspense fallback={<PageLoader />}><InventoryAnalyticsPage /></Suspense>} />
+            <Route path="inventory-management/movements" element={<Suspense fallback={<PageLoader />}><StockMovementsPage /></Suspense>} />
+            <Route path="inventory-management/stock-counts" element={<Suspense fallback={<PageLoader />}><StockCountListPage /></Suspense>} />
+            <Route path="inventory-management/transfers" element={<Suspense fallback={<PageLoader />}><StockTransferPage /></Suspense>} />
+            <Route path="inventory-management/warehouses" element={<Suspense fallback={<PageLoader />}><WarehouseManagementPage /></Suspense>} />
 
             {/* Promotions Routes */}
-            <Route path="promotions" element={<PromotionsDashboard />} />
-            <Route path="promotions/dashboard" element={<PromotionsDashboard />} />
-            <Route path="promotions/management" element={<PromotionsManagement />} />
+            <Route path="promotions" element={<Suspense fallback={<PageLoader />}><PromotionsDashboard /></Suspense>} />
+            <Route path="promotions/dashboard" element={<Suspense fallback={<PageLoader />}><PromotionsDashboard /></Suspense>} />
+            <Route path="promotions/management" element={<Suspense fallback={<PageLoader />}><PromotionsManagement /></Suspense>} />
 
             {/* Trade Marketing Routes */}
-            <Route path="trade-marketing" element={<TradeMarketingPage />} />
-            <Route path="trade-marketing/activation" element={<ActivationWorkflowPage />} />
-            <Route path="trade-marketing/campaigns" element={<CampaignManagementPage />} />
-            <Route path="trade-marketing/merchandising" element={<MerchandisingCompliancePage />} />
-            <Route path="trade-marketing/promoters" element={<PromoterManagementPage />} />
-            <Route path="trade-marketing/analytics" element={<TradeMarketingAnalyticsPage />} />
+            <Route path="trade-marketing" element={<Suspense fallback={<PageLoader />}><TradeMarketingPage /></Suspense>} />
+            <Route path="trade-marketing/activation" element={<Suspense fallback={<PageLoader />}><ActivationWorkflowPage /></Suspense>} />
+            <Route path="trade-marketing/campaigns" element={<Suspense fallback={<PageLoader />}><CampaignManagementPage /></Suspense>} />
+            <Route path="trade-marketing/merchandising" element={<Suspense fallback={<PageLoader />}><MerchandisingCompliancePage /></Suspense>} />
+            <Route path="trade-marketing/promoters" element={<Suspense fallback={<PageLoader />}><PromoterManagementPage /></Suspense>} />
+            <Route path="trade-marketing/analytics" element={<Suspense fallback={<PageLoader />}><TradeMarketingAnalyticsPage /></Suspense>} />
 
             {/* Events Routes */}
-            <Route path="events" element={<EventsPage />} />
+            <Route path="events" element={<Suspense fallback={<PageLoader />}><EventsPage /></Suspense>} />
 
             {/* Campaign Routes */}
-            <Route path="campaigns" element={<CampaignsPage />} />
+            <Route path="campaigns" element={<Suspense fallback={<PageLoader />}><CampaignsPage /></Suspense>} />
             
             {/* Brand Activations Routes */}
-            <Route path="brand-activations" element={<BrandActivationsPage />} />
+            <Route path="brand-activations" element={<Suspense fallback={<PageLoader />}><BrandActivationsPage /></Suspense>} />
             
             {/* Superadmin Routes */}
-            <Route path="superadmin/tenants" element={<TenantManagement />} />
+            <Route path="superadmin/tenants" element={<Suspense fallback={<PageLoader />}><TenantManagement /></Suspense>} />
 
             {/* Legacy Field Agent Routes (for backward compatibility) */}
-            <Route path="field-agents" element={<FieldAgentsPage />} />
-            <Route path="field-agents/dashboard" element={<AgentDashboard />} />
-            <Route path="field-agents/workflow" element={<AgentWorkflowPageMobile />} />
-            <Route path="field-agents/mapping" element={<LiveMappingPage />} />
-            <Route path="field-agents/boards" element={<BoardPlacementPage />} />
-            <Route path="field-agents/products" element={<ProductDistributionPage />} />
-            <Route path="field-agents/commission" element={<AgentCommissionDashboard />} />
-            <Route path="field-agents/surveys" element={<SurveyPage />} />
-            <Route path="field-agents/tasks" element={<TaskPage />} />
+            <Route path="field-agents" element={<Suspense fallback={<PageLoader />}><FieldAgentsPage /></Suspense>} />
+            <Route path="field-agents/dashboard" element={<Suspense fallback={<PageLoader />}><AgentDashboard /></Suspense>} />
+            <Route path="field-agents/workflow" element={<Suspense fallback={<PageLoader />}><AgentWorkflowPageMobile /></Suspense>} />
+            <Route path="field-agents/mapping" element={<Suspense fallback={<PageLoader />}><LiveMappingPage /></Suspense>} />
+            <Route path="field-agents/boards" element={<Suspense fallback={<PageLoader />}><BoardPlacementPage /></Suspense>} />
+            <Route path="field-agents/products" element={<Suspense fallback={<PageLoader />}><ProductDistributionPage /></Suspense>} />
+            <Route path="field-agents/commission" element={<Suspense fallback={<PageLoader />}><AgentCommissionDashboard /></Suspense>} />
+            <Route path="field-agents/surveys" element={<Suspense fallback={<PageLoader />}><SurveyPage /></Suspense>} />
+            <Route path="field-agents/tasks" element={<Suspense fallback={<PageLoader />}><TaskPage /></Suspense>} />
 
             {/* Business Routes */}
-            <Route path="customers" element={<CustomersPage />} />
-            <Route path="customers/dashboard" element={<CustomerDashboard />} />
-            <Route path="customers/create" element={<CustomerCreatePage />} />
-            <Route path="customers/:id" element={<CustomerDetailsPage />} />
-            <Route path="customers/:id/edit" element={<CustomerEditPage />} />
-            <Route path="customers/:id/orders" element={<CustomerOrders />} />
-            <Route path="customers/:id/visits" element={<CustomerVisits />} />
-            <Route path="customers/:id/payments" element={<CustomerPayments />} />
-            <Route path="customers/:id/surveys" element={<CustomerSurveys />} />
-            <Route path="customers/:id/kyc" element={<CustomerKYC />} />
-            <Route path="orders" element={<OrdersPage />} />
-            <Route path="orders/dashboard" element={<OrderDashboard />} />
-            <Route path="orders/pipeline" element={<OrderPipelinePage />} />
-            <Route path="orders/workflow" element={<WorkflowDashboardPage />} />
-            <Route path="orders/create" element={<OrderCreatePage />} />
-            <Route path="orders/:id" element={<OrderDetailsPage />} />
-            <Route path="orders/:id/edit" element={<OrderEditPage />} />
-            <Route path="orders/:id/items" element={<OrderItems />} />
-            <Route path="orders/:id/payments" element={<OrderPayments />} />
-            <Route path="orders/:id/delivery" element={<OrderDelivery />} />
-            <Route path="orders/:id/returns" element={<OrderReturns />} />
-            <Route path="products" element={<ProductsPage />} />
-            <Route path="products/create" element={<ProductCreatePage />} />
-            <Route path="products/:id" element={<ProductDetailsPage />} />
-            <Route path="products/:id/edit" element={<ProductEditPage />} />
-            <Route path="products/:id/inventory" element={<ProductInventory />} />
-            <Route path="products/:id/pricing" element={<ProductPricing />} />
-            <Route path="products/:id/promotions" element={<ProductPromotions />} />
-            <Route path="products/:id/sales" element={<ProductSales />} />
-            <Route path="brands" element={<BrandsList />} />
-            <Route path="brands/create" element={<BrandCreate />} />
-            <Route path="brands/:id" element={<BrandDetail />} />
-            <Route path="brands/:id/edit" element={<BrandEdit />} />
-            <Route path="brands/:id/surveys" element={<BrandSurveys />} />
-            <Route path="brands/:id/activations" element={<BrandActivations />} />
-            <Route path="brands/:id/boards" element={<BrandBoards />} />
-            <Route path="brands/:id/products" element={<BrandProducts />} />
+            <Route path="customers" element={<Suspense fallback={<PageLoader />}><CustomersPage /></Suspense>} />
+            <Route path="customers/dashboard" element={<Suspense fallback={<PageLoader />}><CustomerDashboard /></Suspense>} />
+            <Route path="customers/create" element={<Suspense fallback={<PageLoader />}><CustomerCreatePage /></Suspense>} />
+            <Route path="customers/:id" element={<Suspense fallback={<PageLoader />}><CustomerDetailsPage /></Suspense>} />
+            <Route path="customers/:id/edit" element={<Suspense fallback={<PageLoader />}><CustomerEditPage /></Suspense>} />
+            <Route path="customers/:id/orders" element={<Suspense fallback={<PageLoader />}><CustomerOrders /></Suspense>} />
+            <Route path="customers/:id/visits" element={<Suspense fallback={<PageLoader />}><CustomerVisits /></Suspense>} />
+            <Route path="customers/:id/payments" element={<Suspense fallback={<PageLoader />}><CustomerPayments /></Suspense>} />
+            <Route path="customers/:id/surveys" element={<Suspense fallback={<PageLoader />}><CustomerSurveys /></Suspense>} />
+            <Route path="customers/:id/kyc" element={<Suspense fallback={<PageLoader />}><CustomerKYC /></Suspense>} />
+            <Route path="orders" element={<Suspense fallback={<PageLoader />}><OrdersPage /></Suspense>} />
+            <Route path="orders/dashboard" element={<Suspense fallback={<PageLoader />}><OrderDashboard /></Suspense>} />
+            <Route path="orders/pipeline" element={<Suspense fallback={<PageLoader />}><OrderPipelinePage /></Suspense>} />
+            <Route path="orders/workflow" element={<Suspense fallback={<PageLoader />}><WorkflowDashboardPage /></Suspense>} />
+            <Route path="orders/create" element={<Suspense fallback={<PageLoader />}><OrderCreatePage /></Suspense>} />
+            <Route path="orders/:id" element={<Suspense fallback={<PageLoader />}><OrderDetailsPage /></Suspense>} />
+            <Route path="orders/:id/edit" element={<Suspense fallback={<PageLoader />}><OrderEditPage /></Suspense>} />
+            <Route path="orders/:id/items" element={<Suspense fallback={<PageLoader />}><OrderItems /></Suspense>} />
+            <Route path="orders/:id/payments" element={<Suspense fallback={<PageLoader />}><OrderPayments /></Suspense>} />
+            <Route path="orders/:id/delivery" element={<Suspense fallback={<PageLoader />}><OrderDelivery /></Suspense>} />
+            <Route path="orders/:id/returns" element={<Suspense fallback={<PageLoader />}><OrderReturns /></Suspense>} />
+            <Route path="products" element={<Suspense fallback={<PageLoader />}><ProductsPage /></Suspense>} />
+            <Route path="products/create" element={<Suspense fallback={<PageLoader />}><ProductCreatePage /></Suspense>} />
+            <Route path="products/:id" element={<Suspense fallback={<PageLoader />}><ProductDetailsPage /></Suspense>} />
+            <Route path="products/:id/edit" element={<Suspense fallback={<PageLoader />}><ProductEditPage /></Suspense>} />
+            <Route path="products/:id/inventory" element={<Suspense fallback={<PageLoader />}><ProductInventory /></Suspense>} />
+            <Route path="products/:id/pricing" element={<Suspense fallback={<PageLoader />}><ProductPricing /></Suspense>} />
+            <Route path="products/:id/promotions" element={<Suspense fallback={<PageLoader />}><ProductPromotions /></Suspense>} />
+            <Route path="products/:id/sales" element={<Suspense fallback={<PageLoader />}><ProductSales /></Suspense>} />
+            <Route path="brands" element={<Suspense fallback={<PageLoader />}><BrandsList /></Suspense>} />
+            <Route path="brands/create" element={<Suspense fallback={<PageLoader />}><BrandCreate /></Suspense>} />
+            <Route path="brands/:id" element={<Suspense fallback={<PageLoader />}><BrandDetail /></Suspense>} />
+            <Route path="brands/:id/edit" element={<Suspense fallback={<PageLoader />}><BrandEdit /></Suspense>} />
+            <Route path="brands/:id/surveys" element={<Suspense fallback={<PageLoader />}><BrandSurveys /></Suspense>} />
+            <Route path="brands/:id/activations" element={<Suspense fallback={<PageLoader />}><BrandActivations /></Suspense>} />
+            <Route path="brands/:id/boards" element={<Suspense fallback={<PageLoader />}><BrandBoards /></Suspense>} />
+            <Route path="brands/:id/products" element={<Suspense fallback={<PageLoader />}><BrandProducts /></Suspense>} />
             
             {/* Customer Management Routes */}
-            <Route path="customer-management/list" element={<CustomerListPage />} />
-            <Route path="customer-management/analytics" element={<CustomerAnalyticsPage />} />
-            <Route path="customer-management/credit" element={<CustomerCreditManagementPage />} />
-            <Route path="customer-management/hierarchy" element={<CustomerHierarchyPage />} />
-            <Route path="customer-management/import-export" element={<CustomerImportExportPage />} />
-            <Route path="customer-management/segmentation" element={<CustomerSegmentationPage />} />
-            <Route path="customer-management/visit-history" element={<CustomerVisitHistoryPage />} />
+            <Route path="customer-management/list" element={<Suspense fallback={<PageLoader />}><CustomerListPage /></Suspense>} />
+            <Route path="customer-management/analytics" element={<Suspense fallback={<PageLoader />}><CustomerAnalyticsPage /></Suspense>} />
+            <Route path="customer-management/credit" element={<Suspense fallback={<PageLoader />}><CustomerCreditManagementPage /></Suspense>} />
+            <Route path="customer-management/hierarchy" element={<Suspense fallback={<PageLoader />}><CustomerHierarchyPage /></Suspense>} />
+            <Route path="customer-management/import-export" element={<Suspense fallback={<PageLoader />}><CustomerImportExportPage /></Suspense>} />
+            <Route path="customer-management/segmentation" element={<Suspense fallback={<PageLoader />}><CustomerSegmentationPage /></Suspense>} />
+            <Route path="customer-management/visit-history" element={<Suspense fallback={<PageLoader />}><CustomerVisitHistoryPage /></Suspense>} />
             
             {/* Product Management Routes */}
-            <Route path="product-management/list" element={<ProductListPage />} />
-            <Route path="product-management/analytics" element={<ProductAnalyticsPage />} />
-            <Route path="product-management/hierarchy" element={<ProductHierarchyPage />} />
-            <Route path="product-management/import-export" element={<ProductImportExportPage />} />
-            <Route path="product-management/inventory" element={<ProductInventoryPage />} />
-            <Route path="product-management/pricing" element={<ProductPricingPage />} />
+            <Route path="product-management/list" element={<Suspense fallback={<PageLoader />}><ProductListPage /></Suspense>} />
+            <Route path="product-management/analytics" element={<Suspense fallback={<PageLoader />}><ProductAnalyticsPage /></Suspense>} />
+            <Route path="product-management/hierarchy" element={<Suspense fallback={<PageLoader />}><ProductHierarchyPage /></Suspense>} />
+            <Route path="product-management/import-export" element={<Suspense fallback={<PageLoader />}><ProductImportExportPage /></Suspense>} />
+            <Route path="product-management/inventory" element={<Suspense fallback={<PageLoader />}><ProductInventoryPage /></Suspense>} />
+            <Route path="product-management/pricing" element={<Suspense fallback={<PageLoader />}><ProductPricingPage /></Suspense>} />
             
             {/* Order Lifecycle Routes */}
-            <Route path="order-lifecycle/quotations" element={<QuotationManagementPage />} />
-            <Route path="order-lifecycle/quotation-approval" element={<QuotationApprovalPage />} />
-            <Route path="order-lifecycle/fulfillment" element={<OrderFulfillmentPage />} />
-            <Route path="order-lifecycle/delivery-tracking" element={<DeliveryTrackingPage />} />
-            <Route path="order-lifecycle/returns" element={<ReturnManagementPage />} />
-            <Route path="order-lifecycle/credit-notes" element={<CreditNotesPage />} />
-            <Route path="order-lifecycle/refunds" element={<RefundProcessingPage />} />
+            <Route path="order-lifecycle/quotations" element={<Suspense fallback={<PageLoader />}><QuotationManagementPage /></Suspense>} />
+            <Route path="order-lifecycle/quotation-approval" element={<Suspense fallback={<PageLoader />}><QuotationApprovalPage /></Suspense>} />
+            <Route path="order-lifecycle/fulfillment" element={<Suspense fallback={<PageLoader />}><OrderFulfillmentPage /></Suspense>} />
+            <Route path="order-lifecycle/delivery-tracking" element={<Suspense fallback={<PageLoader />}><DeliveryTrackingPage /></Suspense>} />
+            <Route path="order-lifecycle/returns" element={<Suspense fallback={<PageLoader />}><ReturnManagementPage /></Suspense>} />
+            <Route path="order-lifecycle/credit-notes" element={<Suspense fallback={<PageLoader />}><CreditNotesPage /></Suspense>} />
+            <Route path="order-lifecycle/refunds" element={<Suspense fallback={<PageLoader />}><RefundProcessingPage /></Suspense>} />
 
             {/* Sales Routes */}
-            <Route path="sales" element={<SalesDashboard />} />
-            <Route path="sales/orders" element={<SalesOrdersList />} />
-            <Route path="sales/orders/create" element={<SalesOrderCreate />} />
-            <Route path="sales/orders/:id" element={<SalesOrderDetail />} />
-            <Route path="sales/orders/:id/edit" element={<SalesOrderEdit />} />
-            <Route path="sales/invoices" element={<InvoicesList />} />
-            <Route path="sales/invoices/create" element={<InvoiceCreate />} />
-            <Route path="sales/invoices/:id" element={<InvoiceDetail />} />
-            <Route path="sales/payments" element={<PaymentsList />} />
-            <Route path="sales/payments/create" element={<PaymentCreate />} />
-            <Route path="sales/payments/:id" element={<PaymentDetail />} />
-            <Route path="sales/credit-notes" element={<CreditNotesList />} />
-            <Route path="sales/credit-notes/create" element={<CreditNoteCreate />} />
-            <Route path="sales/credit-notes/:id" element={<CreditNoteDetail />} />
-            <Route path="sales/returns" element={<SalesReturnsList />} />
-            <Route path="sales/returns/create" element={<SalesReturnCreate />} />
-            <Route path="sales/returns/:id" element={<SalesReturnDetail />} />
+            <Route path="sales" element={<Suspense fallback={<PageLoader />}><SalesDashboard /></Suspense>} />
+            <Route path="sales/orders" element={<Suspense fallback={<PageLoader />}><SalesOrdersList /></Suspense>} />
+            <Route path="sales/orders/create" element={<Suspense fallback={<PageLoader />}><SalesOrderCreate /></Suspense>} />
+            <Route path="sales/orders/:id" element={<Suspense fallback={<PageLoader />}><SalesOrderDetail /></Suspense>} />
+            <Route path="sales/orders/:id/edit" element={<Suspense fallback={<PageLoader />}><SalesOrderEdit /></Suspense>} />
+            <Route path="sales/invoices" element={<Suspense fallback={<PageLoader />}><InvoicesList /></Suspense>} />
+            <Route path="sales/invoices/create" element={<Suspense fallback={<PageLoader />}><InvoiceCreate /></Suspense>} />
+            <Route path="sales/invoices/:id" element={<Suspense fallback={<PageLoader />}><InvoiceDetail /></Suspense>} />
+            <Route path="sales/payments" element={<Suspense fallback={<PageLoader />}><PaymentsList /></Suspense>} />
+            <Route path="sales/payments/create" element={<Suspense fallback={<PageLoader />}><PaymentCreate /></Suspense>} />
+            <Route path="sales/payments/:id" element={<Suspense fallback={<PageLoader />}><PaymentDetail /></Suspense>} />
+            <Route path="sales/credit-notes" element={<Suspense fallback={<PageLoader />}><CreditNotesList /></Suspense>} />
+            <Route path="sales/credit-notes/create" element={<Suspense fallback={<PageLoader />}><CreditNoteCreate /></Suspense>} />
+            <Route path="sales/credit-notes/:id" element={<Suspense fallback={<PageLoader />}><CreditNoteDetail /></Suspense>} />
+            <Route path="sales/returns" element={<Suspense fallback={<PageLoader />}><SalesReturnsList /></Suspense>} />
+            <Route path="sales/returns/create" element={<Suspense fallback={<PageLoader />}><SalesReturnCreate /></Suspense>} />
+            <Route path="sales/returns/:id" element={<Suspense fallback={<PageLoader />}><SalesReturnDetail /></Suspense>} />
 
             {/* Marketing Routes */}
-            <Route path="marketing/campaigns" element={<CampaignsList />} />
-            <Route path="marketing/campaigns/create" element={<CampaignCreate />} />
-            <Route path="marketing/campaigns/:id" element={<CampaignDetail />} />
-            <Route path="marketing/campaigns/:id/edit" element={<CampaignEdit />} />
-            <Route path="marketing/events" element={<EventsList />} />
-            <Route path="marketing/events/create" element={<EventCreate />} />
-            <Route path="marketing/events/:id" element={<EventDetail />} />
-            <Route path="marketing/events/:id/edit" element={<EventEdit />} />
-            <Route path="marketing/activations" element={<ActivationsList />} />
-            <Route path="marketing/activations/create" element={<ActivationCreate />} />
-            <Route path="marketing/activations/:id" element={<ActivationDetail />} />
-            <Route path="marketing/promotions" element={<PromotionsList />} />
-            <Route path="marketing/promotions/create" element={<PromotionCreate />} />
-            <Route path="marketing/promotions/:id" element={<PromotionDetail />} />
+            <Route path="marketing/campaigns" element={<Suspense fallback={<PageLoader />}><CampaignsList /></Suspense>} />
+            <Route path="marketing/campaigns/create" element={<Suspense fallback={<PageLoader />}><CampaignCreate /></Suspense>} />
+            <Route path="marketing/campaigns/:id" element={<Suspense fallback={<PageLoader />}><CampaignDetail /></Suspense>} />
+            <Route path="marketing/campaigns/:id/edit" element={<Suspense fallback={<PageLoader />}><CampaignEdit /></Suspense>} />
+            <Route path="marketing/events" element={<Suspense fallback={<PageLoader />}><EventsList /></Suspense>} />
+            <Route path="marketing/events/create" element={<Suspense fallback={<PageLoader />}><EventCreate /></Suspense>} />
+            <Route path="marketing/events/:id" element={<Suspense fallback={<PageLoader />}><EventDetail /></Suspense>} />
+            <Route path="marketing/events/:id/edit" element={<Suspense fallback={<PageLoader />}><EventEdit /></Suspense>} />
+            <Route path="marketing/activations" element={<Suspense fallback={<PageLoader />}><ActivationsList /></Suspense>} />
+            <Route path="marketing/activations/create" element={<Suspense fallback={<PageLoader />}><ActivationCreate /></Suspense>} />
+            <Route path="marketing/activations/:id" element={<Suspense fallback={<PageLoader />}><ActivationDetail /></Suspense>} />
+            <Route path="marketing/promotions" element={<Suspense fallback={<PageLoader />}><PromotionsList /></Suspense>} />
+            <Route path="marketing/promotions/create" element={<Suspense fallback={<PageLoader />}><PromotionCreate /></Suspense>} />
+            <Route path="marketing/promotions/:id" element={<Suspense fallback={<PageLoader />}><PromotionDetail /></Suspense>} />
 
             {/* CRM Routes */}
-            <Route path="crm/customers" element={<CustomersList />} />
-            <Route path="crm/customers/create" element={<CRMCustomerCreate />} />
-            <Route path="crm/customers/:id" element={<CRMCustomerDetail />} />
-            <Route path="crm/customers/:id/edit" element={<CRMCustomerEdit />} />
-            <Route path="crm/kyc-cases" element={<KYCCasesList />} />
-            <Route path="crm/kyc-cases/create" element={<KYCCaseCreate />} />
-            <Route path="crm/kyc-cases/:id" element={<KYCCaseDetail />} />
-            <Route path="crm/surveys" element={<SurveysList />} />
-            <Route path="crm/surveys/create" element={<SurveyCreate />} />
-            <Route path="crm/surveys/:id" element={<SurveyDetail />} />
+            <Route path="crm/customers" element={<Suspense fallback={<PageLoader />}><CustomersList /></Suspense>} />
+            <Route path="crm/customers/create" element={<Suspense fallback={<PageLoader />}><CRMCustomerCreate /></Suspense>} />
+            <Route path="crm/customers/:id" element={<Suspense fallback={<PageLoader />}><CRMCustomerDetail /></Suspense>} />
+            <Route path="crm/customers/:id/edit" element={<Suspense fallback={<PageLoader />}><CRMCustomerEdit /></Suspense>} />
+            <Route path="crm/kyc-cases" element={<Suspense fallback={<PageLoader />}><KYCCasesList /></Suspense>} />
+            <Route path="crm/kyc-cases/create" element={<Suspense fallback={<PageLoader />}><KYCCaseCreate /></Suspense>} />
+            <Route path="crm/kyc-cases/:id" element={<Suspense fallback={<PageLoader />}><KYCCaseDetail /></Suspense>} />
+            <Route path="crm/surveys" element={<Suspense fallback={<PageLoader />}><SurveysList /></Suspense>} />
+            <Route path="crm/surveys/create" element={<Suspense fallback={<PageLoader />}><CRMSurveyCreate /></Suspense>} />
+            <Route path="crm/surveys/:id" element={<Suspense fallback={<PageLoader />}><SurveyDetail /></Suspense>} />
 
             {/* Finance Routes */}
-            <Route path="finance" element={<FinanceDashboard />} />
-            <Route path="finance/invoices" element={<InvoiceManagementPage />} />
-            <Route path="finance/invoices/create" element={<FinanceInvoiceCreate />} />
-            <Route path="finance/invoices/:id" element={<FinanceInvoiceDetail />} />
-            <Route path="finance/invoices/:id/edit" element={<FinanceInvoiceEdit />} />
-            <Route path="finance/invoices/:id/payments" element={<InvoicePayments />} />
-            <Route path="finance/invoices/:id/items" element={<InvoiceItems />} />
-            <Route path="finance/payments" element={<PaymentCollectionPage />} />
-            <Route path="finance/payments/create" element={<FinancePaymentCreate />} />
-            <Route path="finance/payments/:id" element={<FinancePaymentDetail />} />
-            <Route path="finance/payments/:id/edit" element={<FinancePaymentEdit />} />
-            <Route path="finance/cash-reconciliation" element={<CashReconciliationList />} />
-            <Route path="finance/cash-reconciliation/create" element={<CashReconciliationCreate />} />
-            <Route path="finance/cash-reconciliation/:id" element={<CashReconciliationDetail />} />
-            <Route path="finance/commission-payouts" element={<CommissionPayoutsList />} />
-            <Route path="finance/commission-payouts/:id" element={<CommissionPayoutDetail />} />
+            <Route path="finance" element={<Suspense fallback={<PageLoader />}><FinanceDashboard /></Suspense>} />
+            <Route path="finance/invoices" element={<Suspense fallback={<PageLoader />}><InvoiceManagementPage /></Suspense>} />
+            <Route path="finance/invoices/create" element={<Suspense fallback={<PageLoader />}><FinanceInvoiceCreate /></Suspense>} />
+            <Route path="finance/invoices/:id" element={<Suspense fallback={<PageLoader />}><FinanceInvoiceDetail /></Suspense>} />
+            <Route path="finance/invoices/:id/edit" element={<Suspense fallback={<PageLoader />}><FinanceInvoiceEdit /></Suspense>} />
+            <Route path="finance/invoices/:id/payments" element={<Suspense fallback={<PageLoader />}><InvoicePayments /></Suspense>} />
+            <Route path="finance/invoices/:id/items" element={<Suspense fallback={<PageLoader />}><InvoiceItems /></Suspense>} />
+            <Route path="finance/payments" element={<Suspense fallback={<PageLoader />}><PaymentCollectionPage /></Suspense>} />
+            <Route path="finance/payments/create" element={<Suspense fallback={<PageLoader />}><FinancePaymentCreate /></Suspense>} />
+            <Route path="finance/payments/:id" element={<Suspense fallback={<PageLoader />}><FinancePaymentDetail /></Suspense>} />
+            <Route path="finance/payments/:id/edit" element={<Suspense fallback={<PageLoader />}><FinancePaymentEdit /></Suspense>} />
+            <Route path="finance/cash-reconciliation" element={<Suspense fallback={<PageLoader />}><CashReconciliationList /></Suspense>} />
+            <Route path="finance/cash-reconciliation/create" element={<Suspense fallback={<PageLoader />}><CashReconciliationCreate /></Suspense>} />
+            <Route path="finance/cash-reconciliation/:id" element={<Suspense fallback={<PageLoader />}><CashReconciliationDetail /></Suspense>} />
+            <Route path="finance/commission-payouts" element={<Suspense fallback={<PageLoader />}><CommissionPayoutsList /></Suspense>} />
+            <Route path="finance/commission-payouts/:id" element={<Suspense fallback={<PageLoader />}><CommissionPayoutDetail /></Suspense>} />
             
             {/* Cash Reconciliation Routes */}
-            <Route path="cash-reconciliation" element={<CashSessionDashboardPage />} />
-            <Route path="cash-reconciliation/start" element={<StartCashSessionPage />} />
-            <Route path="cash-reconciliation/close" element={<CloseCashSessionPage />} />
-            <Route path="cash-reconciliation/collection" element={<CashCollectionPage />} />
-            <Route path="cash-reconciliation/deposit" element={<BankDepositPage />} />
-            <Route path="cash-reconciliation/variance" element={<VarianceApprovalPage />} />
-            <Route path="cash-reconciliation/reports" element={<CashReportsPage />} />
-            <Route path="cash-reconciliation/sessions/:id" element={<SessionDetail />} />
-            <Route path="cash-reconciliation/sessions/:id/edit" element={<SessionEdit />} />
-            <Route path="cash-reconciliation/sessions/:id/collections" element={<SessionCollections />} />
-            <Route path="cash-reconciliation/sessions/:id/deposits" element={<SessionDeposits />} />
-            <Route path="cash-reconciliation/deposits/:id" element={<DepositDetail />} />
-            <Route path="cash-reconciliation/deposits/:id/edit" element={<DepositEdit />} />
+            <Route path="cash-reconciliation" element={<Suspense fallback={<PageLoader />}><CashSessionDashboardPage /></Suspense>} />
+            <Route path="cash-reconciliation/start" element={<Suspense fallback={<PageLoader />}><StartCashSessionPage /></Suspense>} />
+            <Route path="cash-reconciliation/close" element={<Suspense fallback={<PageLoader />}><CloseCashSessionPage /></Suspense>} />
+            <Route path="cash-reconciliation/collection" element={<Suspense fallback={<PageLoader />}><CashCollectionPage /></Suspense>} />
+            <Route path="cash-reconciliation/deposit" element={<Suspense fallback={<PageLoader />}><BankDepositPage /></Suspense>} />
+            <Route path="cash-reconciliation/variance" element={<Suspense fallback={<PageLoader />}><VarianceApprovalPage /></Suspense>} />
+            <Route path="cash-reconciliation/reports" element={<Suspense fallback={<PageLoader />}><CashReportsPage /></Suspense>} />
+            <Route path="cash-reconciliation/sessions/:id" element={<Suspense fallback={<PageLoader />}><SessionDetail /></Suspense>} />
+            <Route path="cash-reconciliation/sessions/:id/edit" element={<Suspense fallback={<PageLoader />}><SessionEdit /></Suspense>} />
+            <Route path="cash-reconciliation/sessions/:id/collections" element={<Suspense fallback={<PageLoader />}><SessionCollections /></Suspense>} />
+            <Route path="cash-reconciliation/sessions/:id/deposits" element={<Suspense fallback={<PageLoader />}><SessionDeposits /></Suspense>} />
+            <Route path="cash-reconciliation/deposits/:id" element={<Suspense fallback={<PageLoader />}><DepositDetail /></Suspense>} />
+            <Route path="cash-reconciliation/deposits/:id/edit" element={<Suspense fallback={<PageLoader />}><DepositEdit /></Suspense>} />
             
             {/* Commission Routes */}
-            <Route path="commissions" element={<CommissionDashboardPage />} />
-            <Route path="commissions/create" element={<CommissionCreate />} />
-            <Route path="commissions/:id" element={<CommissionDetail />} />
-            <Route path="commissions/:id/edit" element={<CommissionEdit />} />
-            <Route path="commissions/calculation" element={<CommissionCalculationPage />} />
-            <Route path="commissions/approval" element={<CommissionApprovalPage />} />
-            <Route path="commissions/payment" element={<CommissionPaymentPage />} />
-            <Route path="commissions/reports" element={<CommissionReportsPage />} />
-            <Route path="commissions/settings" element={<CommissionSettingsPage />} />
-            <Route path="commissions/rules/create" element={<RuleCreate />} />
-            <Route path="commissions/rules/:id" element={<RuleDetail />} />
-            <Route path="commissions/rules/:id/edit" element={<RuleEdit />} />
-            <Route path="commissions/calculations/:id" element={<CommissionCalculationDetail />} />
+            <Route path="commissions" element={<Suspense fallback={<PageLoader />}><CommissionDashboardPage /></Suspense>} />
+            <Route path="commissions/create" element={<Suspense fallback={<PageLoader />}><CommissionCreate /></Suspense>} />
+            <Route path="commissions/:id" element={<Suspense fallback={<PageLoader />}><CommissionDetail /></Suspense>} />
+            <Route path="commissions/:id/edit" element={<Suspense fallback={<PageLoader />}><CommissionEdit /></Suspense>} />
+            <Route path="commissions/calculation" element={<Suspense fallback={<PageLoader />}><CommissionCalculationPage /></Suspense>} />
+            <Route path="commissions/approval" element={<Suspense fallback={<PageLoader />}><CommissionApprovalPage /></Suspense>} />
+            <Route path="commissions/payment" element={<Suspense fallback={<PageLoader />}><CommissionPaymentPage /></Suspense>} />
+            <Route path="commissions/reports" element={<Suspense fallback={<PageLoader />}><CommissionReportsPage /></Suspense>} />
+            <Route path="commissions/settings" element={<Suspense fallback={<PageLoader />}><CommissionSettingsPage /></Suspense>} />
+            <Route path="commissions/rules/create" element={<Suspense fallback={<PageLoader />}><RuleCreate /></Suspense>} />
+            <Route path="commissions/rules/:id" element={<Suspense fallback={<PageLoader />}><RuleDetail /></Suspense>} />
+            <Route path="commissions/rules/:id/edit" element={<Suspense fallback={<PageLoader />}><RuleEdit /></Suspense>} />
+            <Route path="commissions/calculations/:id" element={<Suspense fallback={<PageLoader />}><CommissionCalculationDetail /></Suspense>} />
 
             {/* Admin Routes */}
             <Route path="admin" element={
@@ -844,9 +772,9 @@ function App() {
                 <BrandManagementPage />
               </ProtectedRoute>
             } />
-            <Route path="admin/campaigns" element={
-              <ProtectedRoute requiredRole="admin">
-                <CampaignManagementPage />
+                        <Route path="admin/campaigns" element={
+                          <ProtectedRoute requiredRole="admin">
+                            <AdminCampaignManagementPage />
               </ProtectedRoute>
             } />
             <Route path="admin/commissions" element={
