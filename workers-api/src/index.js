@@ -4517,6 +4517,9 @@ api.get('/finance/summary', async (c) => {
   }
 });
 
+api.get('/finance/ledger', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const { results } = await db.prepare('SELECT * FROM finance_journal_entries WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 100').bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch { return c.json({ success: true, data: [] }); } });
+api.get('/finance/aging', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const { results } = await db.prepare("SELECT i.*, c.name as customer_name FROM invoices i LEFT JOIN customers c ON i.customer_id = c.id WHERE i.tenant_id = ? AND i.status IN ('sent','overdue','partially_paid') ORDER BY i.due_date ASC").bind(tenantId).all(); const aging = { current: [], days_30: [], days_60: [], days_90: [], over_90: [] }; const now = new Date(); (results || []).forEach(inv => { const due = new Date(inv.due_date || inv.created_at); const days = Math.floor((now - due) / 86400000); if (days <= 0) aging.current.push(inv); else if (days <= 30) aging.days_30.push(inv); else if (days <= 60) aging.days_60.push(inv); else if (days <= 90) aging.days_90.push(inv); else aging.over_90.push(inv); }); return c.json({ success: true, data: aging }); } catch { return c.json({ success: true, data: { current: [], days_30: [], days_60: [], days_90: [], over_90: [] } }); } });
+
 api.get('/finance/:id', async (c) => {
   const db = c.env.DB;
   const tenantId = c.get('tenantId');
