@@ -18,6 +18,32 @@ app.use('*', cors({
   credentials: true,
 }));
 
+// ==================== RATE LIMITING ====================
+const rateLimitStore = new Map();
+const rateLimit = (options = {}) => {
+  const { limit = 100, windowMs = 60000 } = options;
+  return async (c, next) => {
+    const key = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown';
+    const now = Date.now();
+    const windowKey = `${key}:${Math.floor(now / windowMs)}`;
+    const current = rateLimitStore.get(windowKey) || { count: 0, resetAt: now + windowMs };
+    if (current.count >= limit) {
+      return c.json({ success: false, message: 'Too many requests. Please try again later.', retryAfter: Math.ceil((current.resetAt - now) / 1000) }, 429);
+    }
+    current.count++;
+    rateLimitStore.set(windowKey, current);
+    if (rateLimitStore.size > 10000) {
+      for (const [k, v] of rateLimitStore) { if (v.resetAt < now) rateLimitStore.delete(k); }
+    }
+    c.header('X-RateLimit-Limit', String(limit));
+    c.header('X-RateLimit-Remaining', String(Math.max(0, limit - current.count)));
+    c.header('X-RateLimit-Reset', String(Math.ceil(current.resetAt / 1000)));
+    await next();
+  };
+};
+app.use('/api/auth/*', rateLimit({ limit: 20, windowMs: 60000 }));
+app.use('/api/*', rateLimit({ limit: 200, windowMs: 60000 }));
+
 // Health check
 app.get('/', (c) => c.json({ status: 'ok', service: 'SalesSync API', version: '1.0.0' }));
 app.get('/health', (c) => c.json({ status: 'healthy', timestamp: new Date().toISOString() }));
@@ -2045,7 +2071,7 @@ api.delete('/roles/:id', requirePermission('roles:delete'), async (c) => {
   }
   
   // Delete role (cascades to role_permissions and user_roles)
-  await db.prepare('DELETE FROM roles WHERE id = ?').bind(id).run();
+  await db.prepare('UPDATE roles SET deleted_at = datetime("now") WHERE id = ? AND deleted_at IS NULL').bind(id).run();
   
   return c.json({ success: true, message: 'Role deleted' });
 });
@@ -2994,7 +3020,7 @@ api.delete('/discounts/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const { id } = c.req.param();
   
-  await db.prepare('DELETE FROM discounts WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+  await db.prepare('UPDATE discounts SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
   return c.json({ success: true, message: 'Discount deleted' });
 });
 
@@ -3037,6 +3063,140 @@ api.post('/pricing/calculate', async (c) => {
     return c.json({ success: false, message: error.message }, 400);
   }
 });
+
+// ==================== AUDIT LOGGING ====================
+const auditLog = async (db, tenantId, userId, action, entityType, entityId, oldValues = null, newValues = null, c = null) => {
+  try {
+    const id = uuidv4();
+    const ipAddress = c ? (c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || null) : null;
+    const userAgent = c ? (c.req.header('User-Agent') || null) : null;
+    await db.prepare(`INSERT INTO audit_logs (id, tenant_id, user_id, action, entity_type, entity_id, old_values, new_values, ip_address, user_agent, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).bind(id, tenantId, userId, action, entityType, entityId, oldValues ? JSON.stringify(oldValues) : null, newValues ? JSON.stringify(newValues) : null, ipAddress, userAgent).run();
+  } catch (e) { console.error('Audit log error:', e.message); }
+};
+
+// ==================== ACTIVITY FEED HELPER ====================
+const recordActivity = async (db, tenantId, userId, userName, action, entityType, entityId, entityName, description = null) => {
+  try {
+    const id = uuidv4();
+    await db.prepare(`INSERT INTO activity_feed (id, tenant_id, user_id, user_name, action, entity_type, entity_id, entity_name, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).bind(id, tenantId, userId, userName || 'System', action, entityType, entityId, entityName, description).run();
+  } catch (e) { console.error('Activity feed error:', e.message); }
+};
+
+// ==================== ERROR MONITORING HELPER ====================
+const logError = async (db, tenantId, userId, errorType, errorMessage, stackTrace, url, method, requestBody = null, severity = 'error') => {
+  try {
+    const id = uuidv4();
+    await db.prepare(`INSERT INTO error_logs (id, tenant_id, user_id, error_type, error_message, stack_trace, url, method, request_body, severity, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`).bind(id, tenantId || null, userId || null, errorType, errorMessage, stackTrace || null, url || null, method || null, requestBody, severity).run();
+  } catch (e) { console.error('Error log error:', e.message); }
+};
+
+// ==================== NOTIFICATION HELPER ====================
+const createNotification = async (db, tenantId, userId, type, title, message, entityType = null, entityId = null, channel = 'in_app') => {
+  try {
+    const id = uuidv4();
+    await db.prepare(`INSERT INTO notifications (id, tenant_id, user_id, type, channel, title, message, entity_type, entity_id, delivery_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'delivered', datetime('now'))`).bind(id, tenantId, userId, type, channel, title, message, entityType, entityId).run();
+    return id;
+  } catch (e) { console.error('Notification error:', e.message); return null; }
+};
+
+// ==================== WEBHOOK DISPATCH HELPER ====================
+const dispatchWebhook = async (db, tenantId, eventType, payload) => {
+  try {
+    const { results: endpoints } = await db.prepare("SELECT * FROM webhook_endpoints WHERE tenant_id = ? AND is_active = 1 AND events LIKE ?").bind(tenantId, `%${eventType}%`).all();
+    for (const endpoint of (endpoints || [])) {
+      const deliveryId = uuidv4();
+      await db.prepare(`INSERT INTO webhook_deliveries (id, tenant_id, webhook_id, event_type, payload, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))`).bind(deliveryId, tenantId, endpoint.id, eventType, JSON.stringify(payload)).run();
+      try {
+        const response = await fetch(endpoint.url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Webhook-Event': eventType, 'X-Webhook-Signature': endpoint.secret || '', 'X-Webhook-Delivery': deliveryId }, body: JSON.stringify({ event: eventType, data: payload, timestamp: new Date().toISOString() }), signal: AbortSignal.timeout(endpoint.timeout_ms || 5000) });
+        await db.prepare("UPDATE webhook_deliveries SET status = ?, response_status = ?, attempts = 1, completed_at = datetime('now') WHERE id = ?").bind(response.ok ? 'delivered' : 'failed', response.status, deliveryId).run();
+      } catch (fetchErr) {
+        await db.prepare("UPDATE webhook_deliveries SET status = 'failed', attempts = 1, completed_at = datetime('now') WHERE id = ?").bind(deliveryId).run();
+      }
+    }
+  } catch (e) { console.error('Webhook dispatch error:', e.message); }
+};
+
+// ==================== LOW STOCK ALERT HELPER ====================
+const checkLowStock = async (db, tenantId, productId, warehouseId = null) => {
+  try {
+    const product = await db.prepare('SELECT id, name, reorder_level FROM products WHERE id = ? AND tenant_id = ?').bind(productId, tenantId).first();
+    if (!product || !product.reorder_level) return;
+    let stockQuery = 'SELECT COALESCE(SUM(quantity_on_hand), 0) as total FROM inventory_stock WHERE product_id = ? AND tenant_id = ?';
+    const binds = [productId, tenantId];
+    if (warehouseId) { stockQuery += ' AND warehouse_id = ?'; binds.push(warehouseId); }
+    const stock = await db.prepare(stockQuery).bind(...binds).first();
+    const currentQty = stock?.total || 0;
+    if (currentQty <= product.reorder_level) {
+      const existing = await db.prepare("SELECT id FROM stock_alerts WHERE product_id = ? AND tenant_id = ? AND status = 'active'").bind(productId, tenantId).first();
+      if (!existing) {
+        const alertId = uuidv4();
+        await db.prepare(`INSERT INTO stock_alerts (id, tenant_id, product_id, warehouse_id, alert_type, current_quantity, threshold_quantity, status, created_at) VALUES (?, ?, ?, ?, 'low_stock', ?, ?, 'active', datetime('now'))`).bind(alertId, tenantId, productId, warehouseId, currentQty, product.reorder_level).run();
+        const { results: admins } = await db.prepare("SELECT id FROM users WHERE tenant_id = ? AND role IN ('admin', 'manager') AND is_active = 1").bind(tenantId).all();
+        for (const admin of (admins || [])) { await createNotification(db, tenantId, admin.id, 'warning', 'Low Stock Alert', `Product "${product.name}" is below reorder level (${currentQty}/${product.reorder_level})`, 'product', productId); }
+      }
+    }
+  } catch (e) { console.error('Low stock check error:', e.message); }
+};
+
+// ==================== KYC ENFORCEMENT HELPER ====================
+const checkKYCCompliance = async (db, tenantId, customerId) => {
+  try {
+    const customer = await db.prepare('SELECT id, kyc_status, order_block_reason FROM customers WHERE id = ? AND tenant_id = ?').bind(customerId, tenantId).first();
+    if (!customer) return { allowed: false, reason: 'Customer not found' };
+    const kycSetting = await db.prepare("SELECT value FROM system_settings WHERE tenant_id = ? AND key = 'enforce_kyc'").bind(tenantId).first();
+    const enforceKYC = kycSetting?.value === 'true' || kycSetting?.value === '1';
+    if (enforceKYC && customer.kyc_status !== 'verified') return { allowed: false, reason: `Customer KYC status is "${customer.kyc_status}". Verification required.` };
+    if (customer.order_block_reason) return { allowed: false, reason: customer.order_block_reason };
+    return { allowed: true };
+  } catch (e) { return { allowed: true }; }
+};
+
+// ==================== COMMISSION RULES ENGINE ====================
+const calculateCommissionFromRules = async (db, tenantId, agentId, saleAmount, productId = null, categoryId = null) => {
+  try {
+    let rules = [];
+    try {
+      const { results } = await db.prepare(`SELECT * FROM commission_rules WHERE tenant_id = ? AND is_active = 1 AND (agent_id IS NULL OR agent_id = ?) AND (product_id IS NULL OR product_id = ?) AND (product_category_id IS NULL OR product_category_id = ?) AND (effective_from IS NULL OR effective_from <= date('now')) AND (effective_to IS NULL OR effective_to >= date('now')) AND (min_amount IS NULL OR min_amount <= ?) AND (max_amount IS NULL OR max_amount >= ?) ORDER BY priority DESC LIMIT 1`).bind(tenantId, agentId, productId, categoryId, saleAmount, saleAmount).all();
+      rules = results || [];
+    } catch (e) { /* commission_rules table may not exist yet */ }
+    if (rules.length > 0) {
+      const rule = rules[0];
+      if (rule.rule_type === 'flat') return { rate: 0, amount: rule.flat_amount || 0, ruleId: rule.id, ruleName: rule.name };
+      return { rate: rule.rate / 100, amount: saleAmount * (rule.rate / 100), ruleId: rule.id, ruleName: rule.name };
+    }
+    const rateSetting = await db.prepare("SELECT value FROM system_settings WHERE tenant_id = ? AND key = 'commission_rate'").bind(tenantId).first();
+    const commissionRate = rateSetting ? parseFloat(rateSetting.value) / 100 : 0.05;
+    return { rate: commissionRate, amount: saleAmount * commissionRate, ruleId: null, ruleName: 'Default Rate' };
+  } catch (e) { return { rate: 0.05, amount: saleAmount * 0.05, ruleId: null, ruleName: 'Default Rate' }; }
+};
+
+// ==================== CASH-FINANCE LEDGER INTEGRATION ====================
+const syncCashToFinanceLedger = async (db, tenantId, cashSessionId, userId) => {
+  try {
+    const session = await db.prepare('SELECT * FROM cash_sessions WHERE id = ? AND tenant_id = ?').bind(cashSessionId, tenantId).first();
+    if (!session) return;
+    const id = uuidv4();
+    const journalNumber = `JE-CASH-${Date.now().toString(36).toUpperCase()}`;
+    await db.prepare(`INSERT INTO journal_entries (id, tenant_id, entry_number, entry_date, description, total_debit, total_credit, status, reference_type, reference_id, created_by, created_at, updated_at) VALUES (?, ?, ?, date('now'), ?, ?, ?, 'posted', 'cash_session', ?, ?, datetime('now'), datetime('now'))`).bind(id, tenantId, journalNumber, `Cash session reconciliation: ${session.session_number || cashSessionId}`, session.closing_balance || 0, session.closing_balance || 0, cashSessionId, userId).run();
+    return id;
+  } catch (e) { console.error('Cash-finance sync error:', e.message); return null; }
+};
+
+// ==================== SURVEY ANALYTICS AGGREGATION ====================
+const aggregateSurveyResults = async (db, tenantId, surveyId = null) => {
+  try {
+    let query = `SELECT survey_id, question_key, response_value, COUNT(*) as response_count, AVG(CAST(response_value AS REAL)) as avg_score FROM survey_responses WHERE tenant_id = ?`;
+    const binds = [tenantId];
+    if (surveyId) { query += ' AND survey_id = ?'; binds.push(surveyId); }
+    query += ' GROUP BY survey_id, question_key, response_value';
+    const { results } = await db.prepare(query).bind(...binds).all();
+    for (const row of (results || [])) {
+      const id = uuidv4();
+      await db.prepare(`INSERT OR REPLACE INTO survey_analytics (id, tenant_id, survey_id, question_key, response_value, response_count, avg_score, period, aggregated_at) VALUES (?, ?, ?, ?, ?, ?, ?, date('now'), datetime('now'))`).bind(id, tenantId, row.survey_id, row.question_key, row.response_value, row.response_count, row.avg_score || 0).run();
+    }
+    return results || [];
+  } catch (e) { console.error('Survey aggregation error:', e.message); return []; }
+};
 
 // ==================== ORDER LIFECYCLE STATE MACHINE ====================
 const ORDER_STATUSES = {
@@ -4050,7 +4210,7 @@ api.delete('/finance/:id', async (c) => {
   const { id } = c.req.param();
   try {
     await db.prepare('DELETE FROM invoice_items WHERE invoice_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM invoices WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE invoices SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Invoice deleted' });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -4533,7 +4693,7 @@ api.delete('/order-lines/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const id = c.req.param('id');
   try {
-    await db.prepare('DELETE FROM order_items WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE order_items SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Deleted' });
   } catch (e) { return c.json({ success: false, error: 'Error deleting' }, 500); }
 });
@@ -4677,7 +4837,7 @@ api.delete('/team-hierarchy/:id', async (c) => {
   const tenantId = c.get('tenantId');
   const id = c.req.param('id');
   try {
-    await db.prepare('DELETE FROM team_hierarchy WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE team_hierarchy SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Deleted' });
   } catch (e) { return c.json({ success: false, error: 'Error' }, 500); }
 });
@@ -4913,7 +5073,7 @@ api.delete('/pricing/price-lists/:id', async (c) => {
   const { id } = c.req.param();
   try {
     await db.prepare('DELETE FROM price_list_items WHERE price_list_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM price_lists WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE price_lists SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Price list deleted' });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -6657,7 +6817,7 @@ api.delete('/field-operations/agents/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM field_agents WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE field_agents SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Agent deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -6754,7 +6914,7 @@ api.delete('/field-operations/tasks/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM field_tasks WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE field_tasks SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Task deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -7078,7 +7238,7 @@ api.delete('/field-operations/territories/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM territories WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE territories SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Territory deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -7439,7 +7599,7 @@ api.delete('/field-operations/boards/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM board_placements WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE board_placements SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Board placement deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -7581,7 +7741,7 @@ api.delete('/campaigns/:id', async (c) => {
   
   try {
     await db.prepare('DELETE FROM campaign_items WHERE campaign_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM campaigns WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE campaigns SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Campaign deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -7874,7 +8034,7 @@ api.delete('/promotions/:id', async (c) => {
   
   try {
     await db.prepare('DELETE FROM promotion_items WHERE promotion_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM promotions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE promotions SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Promotion deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -9939,7 +10099,7 @@ api.delete('/attachments/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM attachments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE attachments SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Attachment deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -10024,7 +10184,7 @@ api.delete('/brands/:id', async (c) => {
       return c.json({ success: false, message: 'Cannot delete brand with associated products' }, 400);
     }
     
-    await db.prepare('DELETE FROM brands WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE brands SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Brand deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -10379,7 +10539,7 @@ api.delete('/route-stops/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM route_stops WHERE id = ?').bind(id).run();
+    await db.prepare('UPDATE route_stops SET deleted_at = datetime("now") WHERE id = ? AND deleted_at IS NULL').bind(id).run();
     return c.json({ success: true, message: 'Route stop deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -11381,7 +11541,7 @@ api.delete('/areas/:id', async (c) => {
       return c.json({ success: false, message: 'Cannot delete area with associated routes' }, 400);
     }
     
-    await db.prepare('DELETE FROM areas WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE areas SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Area deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13049,7 +13209,7 @@ api.delete('/tasks/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM tasks WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE tasks SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Task deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13159,7 +13319,7 @@ api.delete('/collections/:id', async (c) => {
   const { id } = c.req.param();
   
   try {
-    await db.prepare('DELETE FROM collections WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE collections SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Collection deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13514,7 +13674,7 @@ api.delete('/purchase-orders/:id', authMiddleware, async (c) => {
     const db = c.env.DB;
     const tenantId = getTenantId(c);
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM purchase_orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE purchase_orders SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Purchase order deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13602,7 +13762,7 @@ api.delete('/suppliers/:id', authMiddleware, async (c) => {
     const db = c.env.DB;
     const tenantId = getTenantId(c);
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM suppliers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE suppliers SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Supplier deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13710,7 +13870,7 @@ api.delete('/boards/:id', authMiddleware, async (c) => {
     const db = c.env.DB;
     const tenantId = getTenantId(c);
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM boards WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE boards SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Board deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -13976,7 +14136,7 @@ api.delete('/individuals/:id', authMiddleware, async (c) => {
     const db = c.env.DB;
     const tenantId = getTenantId(c);
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM individuals WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE individuals SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Individual deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -14275,7 +14435,7 @@ api.delete('/tenants/:id', authMiddleware, async (c) => {
   try {
     const db = c.env.DB;
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM tenants WHERE id = ?').bind(id).run();
+    await db.prepare('UPDATE tenants SET deleted_at = datetime("now") WHERE id = ? AND deleted_at IS NULL').bind(id).run();
     return c.json({ success: true, message: 'Tenant deleted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -14468,7 +14628,7 @@ api.delete('/visit-surveys/:id', authMiddleware, async (c) => {
     const db = c.env.DB;
     const tenantId = getTenantId(c);
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM visit_surveys WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE visit_surveys SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Survey assignment removed' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -15064,7 +15224,7 @@ api.put('/payments/:id', async (c) => {
 api.delete('/payments/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
   try {
-    await db.prepare('DELETE FROM payments WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE payments SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Payment deleted' });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -15482,7 +15642,7 @@ api.delete('/regions/:id', async (c) => {
   try {
     const children = await db.prepare('SELECT COUNT(*) as count FROM regions WHERE parent_id = ? AND tenant_id = ?').bind(id, tenantId).first();
     if (children?.count > 0) return c.json({ success: false, message: 'Cannot delete region with child regions' }, 400);
-    await db.prepare('DELETE FROM regions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE regions SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Region deleted' });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -15559,7 +15719,7 @@ api.put('/org-hierarchy/:id', async (c) => {
 api.delete('/org-hierarchy/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
   try {
-    await db.prepare('DELETE FROM org_hierarchy WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE org_hierarchy SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Hierarchy entry deleted' });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -15746,7 +15906,7 @@ api.delete('/agent-targets/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
   try {
     await db.prepare('DELETE FROM target_progress WHERE target_id = ? AND tenant_id = ?').bind(id, tenantId).run();
-    await db.prepare('DELETE FROM agent_targets WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE agent_targets SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Target deleted' });
   } catch (error) { return c.json({ success: false, message: error.message }, 500); }
 });
@@ -16070,7 +16230,7 @@ api.delete('/orders/:id', async (c) => {
     const tenantId = c.get('tenantId');
     const { id } = c.req.param();
     await db.prepare('DELETE FROM order_items WHERE order_id = ?').bind(id).run();
-    await db.prepare('DELETE FROM orders WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE orders SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Order deleted' });
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -16314,7 +16474,7 @@ api.delete('/customers/:id', async (c) => {
     const db = c.env.DB;
     const tenantId = c.get('tenantId');
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM customers WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE customers SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Customer deleted' });
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -16327,7 +16487,7 @@ api.delete('/products/:id', async (c) => {
     const db = c.env.DB;
     const tenantId = c.get('tenantId');
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM products WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE products SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Product deleted' });
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -16378,7 +16538,7 @@ api.delete('/visits/:id', async (c) => {
     const db = c.env.DB;
     const tenantId = c.get('tenantId');
     const { id } = c.req.param();
-    await db.prepare('DELETE FROM visits WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await db.prepare('UPDATE visits SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND deleted_at IS NULL').bind(id, tenantId).run();
     return c.json({ success: true, message: 'Visit deleted' });
   } catch (e) {
     return c.json({ success: false, message: e.message }, 500);
@@ -17449,7 +17609,7 @@ api.put('/events/:id', async (c) => {
 api.delete('/events/:id', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId'); const id = c.req.param('id');
   try {
-    await db.prepare('DELETE FROM campaigns WHERE id = ? AND tenant_id = ? AND type = ?').bind(id, tenantId, 'event').run();
+    await db.prepare('UPDATE campaigns SET deleted_at = datetime("now") WHERE id = ? AND tenant_id = ? AND type = ? AND deleted_at IS NULL').bind(id, tenantId, 'event').run();
     return c.json({ success: true, message: 'Event deleted' });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
@@ -17717,6 +17877,301 @@ api.get("/rbac/roles", async (c) => { const db = c.env.DB; const tenantId = c.ge
 api.get("/rbac/permissions", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const { results } = await db.prepare("SELECT * FROM permissions ORDER BY resource, action").all(); return c.json({ success: true, data: results || [] }); } catch (e) { return c.json({ success: true, data: [] }); } });
 api.get("/analytics/inventory", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); try { const [totalStock, lowStock, categories] = await Promise.all([db.prepare("SELECT COALESCE(SUM(quantity),0) as total FROM inventory WHERE tenant_id = ?").bind(tenantId).first(), db.prepare("SELECT COUNT(*) as count FROM inventory WHERE tenant_id = ? AND quantity <= reorder_level").bind(tenantId).first(), db.prepare("SELECT c.name, COUNT(p.id) as products FROM categories c LEFT JOIN products p ON c.id = p.category_id WHERE c.tenant_id = ? GROUP BY c.id").bind(tenantId).all()]); return c.json({ success: true, data: { total_stock: totalStock?.total || 0, low_stock_items: lowStock?.count || 0, by_category: categories.results || [] } }); } catch (e) { return c.json({ success: true, data: { total_stock: 0, low_stock_items: 0, by_category: [] } }); } });
 api.post("/inventory/stock-counts", async (c) => { const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); try { const body = await c.req.json(); const id = crypto.randomUUID(); const countNumber = "SC-" + Date.now().toString(36).toUpperCase(); await db.prepare('INSERT INTO stock_counts (id, tenant_id, count_number, warehouse_id, count_date, count_type, status, created_by, created_at) VALUES (?, ?, ?, ?, date("now"), ?, ?, ?, datetime("now"))').bind(id, tenantId, countNumber, body.warehouse_id || null, body.count_type || "full", "draft", userId).run(); return c.json({ success: true, data: { id, count_number: countNumber } }, 201); } catch (e) { return c.json({ success: false, message: e.message }, 500); } });
+
+// ==================== GLOBAL CROSS-MODULE SEARCH ====================
+api.get("/search", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const q = c.req.query("q") || ""; const limit = parseInt(c.req.query("limit") || "20");
+  if (!q || q.length < 2) return c.json({ success: true, data: [] });
+  const term = `%${q}%`;
+  try {
+    const [customers, products, orders, invoices, visits] = await Promise.all([
+      db.prepare("SELECT id, name, email, 'customer' as _type FROM customers WHERE tenant_id = ? AND deleted_at IS NULL AND (name LIKE ? OR email LIKE ? OR phone LIKE ?) LIMIT ?").bind(tenantId, term, term, term, limit).all(),
+      db.prepare("SELECT id, name, sku, 'product' as _type FROM products WHERE tenant_id = ? AND deleted_at IS NULL AND (name LIKE ? OR sku LIKE ?) LIMIT ?").bind(tenantId, term, term, limit).all(),
+      db.prepare("SELECT id, order_number as name, order_status as status, 'order' as _type FROM orders WHERE tenant_id = ? AND deleted_at IS NULL AND (order_number LIKE ? OR notes LIKE ?) LIMIT ?").bind(tenantId, term, term, limit).all(),
+      db.prepare("SELECT id, invoice_number as name, status, 'invoice' as _type FROM invoices WHERE tenant_id = ? AND deleted_at IS NULL AND invoice_number LIKE ? LIMIT ?").bind(tenantId, term, limit).all(),
+      db.prepare("SELECT id, visit_type as name, status, 'visit' as _type FROM visits WHERE tenant_id = ? AND deleted_at IS NULL AND (visit_type LIKE ? OR notes LIKE ?) LIMIT ?").bind(tenantId, term, term, limit).all()
+    ]);
+    const results = [...(customers.results||[]), ...(products.results||[]), ...(orders.results||[]), ...(invoices.results||[]), ...(visits.results||[])];
+    return c.json({ success: true, data: results });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+// ==================== NOTIFICATIONS ENDPOINTS ====================
+api.get("/notifications", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId");
+  const unreadOnly = c.req.query("unread") === "true";
+  try {
+    let query = "SELECT * FROM notifications WHERE tenant_id = ? AND user_id = ?";
+    const binds = [tenantId, userId];
+    if (unreadOnly) { query += " AND is_read = 0"; }
+    query += " ORDER BY created_at DESC LIMIT 50";
+    const { results } = await db.prepare(query).bind(...binds).all();
+    const unreadCount = await db.prepare("SELECT COUNT(*) as count FROM notifications WHERE tenant_id = ? AND user_id = ? AND is_read = 0").bind(tenantId, userId).first();
+    return c.json({ success: true, data: results || [], unread_count: unreadCount?.count || 0 });
+  } catch (e) { return c.json({ success: true, data: [], unread_count: 0 }); }
+});
+api.put("/notifications/:id/read", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    await db.prepare("UPDATE notifications SET is_read = 1, read_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.put("/notifications/read-all", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId");
+  try {
+    await db.prepare("UPDATE notifications SET is_read = 1, read_at = datetime('now') WHERE tenant_id = ? AND user_id = ? AND is_read = 0").bind(tenantId, userId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== WEBHOOK ENDPOINTS ====================
+api.get("/webhooks", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  try {
+    const { results } = await db.prepare("SELECT * FROM webhook_endpoints WHERE tenant_id = ? ORDER BY created_at DESC").bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.post("/webhooks", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId");
+  try {
+    const body = await c.req.json(); const id = uuidv4();
+    await db.prepare("INSERT INTO webhook_endpoints (id, tenant_id, url, secret, events, is_active, description, created_by, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?, datetime('now'))").bind(id, tenantId, body.url, body.secret || null, JSON.stringify(body.events || []), body.description || null, userId).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.delete("/webhooks/:id", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    await db.prepare("DELETE FROM webhook_endpoints WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.get("/webhooks/:id/deliveries", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    const { results } = await db.prepare("SELECT * FROM webhook_deliveries WHERE webhook_id = ? AND tenant_id = ? ORDER BY created_at DESC LIMIT 50").bind(id, tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+// ==================== AUDIT LOG ENDPOINTS ====================
+api.get("/audit-logs", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const entityType = c.req.query("entity_type"); const entityId = c.req.query("entity_id");
+  const userId = c.req.query("user_id"); const limit = parseInt(c.req.query("limit") || "50");
+  try {
+    let query = "SELECT * FROM audit_logs WHERE tenant_id = ?"; const binds = [tenantId];
+    if (entityType) { query += " AND entity_type = ?"; binds.push(entityType); }
+    if (entityId) { query += " AND entity_id = ?"; binds.push(entityId); }
+    if (userId) { query += " AND user_id = ?"; binds.push(userId); }
+    query += " ORDER BY created_at DESC LIMIT ?"; binds.push(limit);
+    const { results } = await db.prepare(query).bind(...binds).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+// ==================== ACTIVITY FEED ENDPOINTS ====================
+api.get("/activity-feed", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const limit = parseInt(c.req.query("limit") || "30");
+  try {
+    const { results } = await db.prepare("SELECT * FROM activity_feed WHERE tenant_id = ? ORDER BY created_at DESC LIMIT ?").bind(tenantId, limit).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+// ==================== STOCK ALERTS ENDPOINTS ====================
+api.get("/stock-alerts", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const status = c.req.query("status") || "active";
+  try {
+    const { results } = await db.prepare("SELECT sa.*, p.name as product_name, p.sku FROM stock_alerts sa LEFT JOIN products p ON sa.product_id = p.id WHERE sa.tenant_id = ? AND sa.status = ? ORDER BY sa.created_at DESC").bind(tenantId, status).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.put("/stock-alerts/:id/acknowledge", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); const { id } = c.req.param();
+  try {
+    await db.prepare("UPDATE stock_alerts SET status = 'acknowledged', acknowledged_by = ?, acknowledged_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(userId, id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== ERROR LOGS ENDPOINTS ====================
+api.get("/error-logs", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const resolved = c.req.query("resolved"); const limit = parseInt(c.req.query("limit") || "50");
+  try {
+    let query = "SELECT * FROM error_logs WHERE tenant_id = ?"; const binds = [tenantId];
+    if (resolved === "true") { query += " AND is_resolved = 1"; } else if (resolved === "false") { query += " AND is_resolved = 0"; }
+    query += " ORDER BY created_at DESC LIMIT ?"; binds.push(limit);
+    const { results } = await db.prepare(query).bind(...binds).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.put("/error-logs/:id/resolve", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); const { id } = c.req.param();
+  try {
+    await db.prepare("UPDATE error_logs SET is_resolved = 1, resolved_by = ?, resolved_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(userId, id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== COMMISSION RULES ENDPOINTS ====================
+api.get("/commission-rules", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  try {
+    const { results } = await db.prepare("SELECT * FROM commission_rules WHERE tenant_id = ? ORDER BY priority DESC, created_at DESC").bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.post("/commission-rules", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  try {
+    const body = await c.req.json(); const id = uuidv4();
+    await db.prepare("INSERT INTO commission_rules (id, tenant_id, name, rule_type, product_category_id, product_id, agent_id, region_id, min_amount, max_amount, rate, flat_amount, is_active, priority, effective_from, effective_to, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, tenantId, body.name, body.rule_type || 'percentage', body.product_category_id || null, body.product_id || null, body.agent_id || null, body.region_id || null, body.min_amount || 0, body.max_amount || null, body.rate || 5.0, body.flat_amount || 0, body.is_active !== false ? 1 : 0, body.priority || 0, body.effective_from || null, body.effective_to || null).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.put("/commission-rules/:id", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE commission_rules SET name = ?, rule_type = ?, rate = ?, flat_amount = ?, is_active = ?, priority = ?, effective_from = ?, effective_to = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.name, body.rule_type || 'percentage', body.rate || 5.0, body.flat_amount || 0, body.is_active !== false ? 1 : 0, body.priority || 0, body.effective_from || null, body.effective_to || null, id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.delete("/commission-rules/:id", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    await db.prepare("DELETE FROM commission_rules WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== WORKFLOW AUTOMATION ENDPOINTS ====================
+api.get("/workflow-rules", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  try {
+    const { results } = await db.prepare("SELECT * FROM workflow_rules WHERE tenant_id = ? ORDER BY priority DESC, created_at DESC").bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.post("/workflow-rules", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId");
+  try {
+    const body = await c.req.json(); const id = uuidv4();
+    await db.prepare("INSERT INTO workflow_rules (id, tenant_id, name, description, trigger_event, trigger_entity, conditions, actions, is_active, priority, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, tenantId, body.name, body.description || null, body.trigger_event, body.trigger_entity, JSON.stringify(body.conditions || {}), JSON.stringify(body.actions || []), body.is_active !== false ? 1 : 0, body.priority || 0, userId).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.put("/workflow-rules/:id", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE workflow_rules SET name = ?, description = ?, trigger_event = ?, trigger_entity = ?, conditions = ?, actions = ?, is_active = ?, priority = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.name, body.description || null, body.trigger_event, body.trigger_entity, JSON.stringify(body.conditions || {}), JSON.stringify(body.actions || []), body.is_active !== false ? 1 : 0, body.priority || 0, id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.delete("/workflow-rules/:id", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    await db.prepare("DELETE FROM workflow_rules WHERE id = ? AND tenant_id = ?").bind(id, tenantId).run();
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.get("/workflow-rules/:id/executions", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    const { results } = await db.prepare("SELECT * FROM workflow_executions WHERE rule_id = ? AND tenant_id = ? ORDER BY started_at DESC LIMIT 50").bind(id, tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+
+// ==================== DATA RETENTION / ARCHIVAL ENDPOINTS ====================
+api.get("/archived-records", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const entityType = c.req.query("entity_type");
+  try {
+    let query = "SELECT * FROM archived_records WHERE tenant_id = ?"; const binds = [tenantId];
+    if (entityType) { query += " AND entity_type = ?"; binds.push(entityType); }
+    query += " ORDER BY archived_at DESC LIMIT 50"; 
+    const { results } = await db.prepare(query).bind(...binds).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.post("/archived-records/archive", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId");
+  try {
+    const body = await c.req.json(); const id = uuidv4();
+    const retentionDays = body.retention_days || 365;
+    const retentionDate = new Date(); retentionDate.setDate(retentionDate.getDate() + retentionDays);
+    await db.prepare("INSERT INTO archived_records (id, tenant_id, entity_type, entity_id, entity_data, archived_by, retention_until, reason, archived_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))").bind(id, tenantId, body.entity_type, body.entity_id, JSON.stringify(body.entity_data || {}), userId, retentionDate.toISOString().split('T')[0], body.reason || null).run();
+    return c.json({ success: true, data: { id } }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+api.post("/archived-records/:id/restore", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const { id } = c.req.param();
+  try {
+    const record = await db.prepare("SELECT * FROM archived_records WHERE id = ? AND tenant_id = ?").bind(id, tenantId).first();
+    if (!record) return c.json({ success: false, message: "Archive not found" }, 404);
+    await db.prepare("DELETE FROM archived_records WHERE id = ?").bind(id).run();
+    return c.json({ success: true, data: JSON.parse(record.entity_data || "{}") });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== SURVEY ANALYTICS ENDPOINTS ====================
+api.get("/survey-analytics", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  const surveyId = c.req.query("survey_id");
+  try {
+    let query = "SELECT * FROM survey_analytics WHERE tenant_id = ?"; const binds = [tenantId];
+    if (surveyId) { query += " AND survey_id = ?"; binds.push(surveyId); }
+    query += " ORDER BY aggregated_at DESC";
+    const { results } = await db.prepare(query).bind(...binds).all();
+    return c.json({ success: true, data: results || [] });
+  } catch (e) { return c.json({ success: true, data: [] }); }
+});
+api.post("/survey-analytics/aggregate", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId");
+  try {
+    const body = await c.req.json();
+    const results = await aggregateSurveyResults(db, tenantId, body.survey_id || null);
+    return c.json({ success: true, data: results });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== KYC STATUS ENDPOINTS ====================
+api.put("/customers/:id/kyc-status", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); const { id } = c.req.param();
+  try {
+    const body = await c.req.json();
+    await db.prepare("UPDATE customers SET kyc_status = ?, kyc_verified_at = datetime('now'), kyc_verified_by = ?, kyc_notes = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?").bind(body.status || 'verified', userId, body.notes || null, id, tenantId).run();
+    await auditLog(db, tenantId, userId, 'kyc_update', 'customer', id, null, { status: body.status }, c);
+    return c.json({ success: true });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== CASH SESSION FINANCE SYNC ====================
+api.post("/cash-sessions/:id/sync-finance", async (c) => {
+  const db = c.env.DB; const tenantId = c.get("tenantId"); const userId = c.get("userId"); const { id } = c.req.param();
+  try {
+    const journalId = await syncCashToFinanceLedger(db, tenantId, id, userId);
+    if (journalId) {
+      await auditLog(db, tenantId, userId, 'cash_finance_sync', 'cash_session', id, null, { journal_id: journalId }, c);
+      return c.json({ success: true, data: { journal_id: journalId } });
+    }
+    return c.json({ success: false, message: "Cash session not found" }, 404);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== API VERSION ENDPOINT ====================
+api.get("/version", async (c) => {
+  return c.json({ success: true, data: { version: "1.0.0", api_version: "v1", features: ["rate_limiting", "soft_deletes", "audit_logging", "notifications", "webhooks", "workflow_automation", "commission_rules", "kyc_enforcement", "stock_alerts", "global_search", "activity_feed", "error_monitoring", "data_retention", "survey_analytics", "cash_finance_sync"] } });
+});
 
 app.route('/api', api);
 
