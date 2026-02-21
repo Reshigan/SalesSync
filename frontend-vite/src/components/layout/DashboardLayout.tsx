@@ -1,15 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Menu, X, HelpCircle } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import OfflineIndicator from '../ui/OfflineIndicator'
 import HelpPanel from '../help/HelpPanel'
+import { useSessionTimeout } from '../../hooks/useSessionTimeout'
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
+import toast from 'react-hot-toast'
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [helpPanelOpen, setHelpPanelOpen] = useState(false)
   const location = useLocation()
+
+  const handleSessionWarning = useCallback(() => {
+    toast('Your session will expire in 5 minutes due to inactivity', { icon: '\u23F0', duration: 10000 })
+  }, [])
+
+  useSessionTimeout(handleSessionWarning)
+  useKeyboardShortcuts()
 
   useEffect(() => {
     setSidebarOpen(false)
@@ -27,7 +37,7 @@ export default function DashboardLayout() {
   }, [sidebarOpen])
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden max-w-[100vw]">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden max-w-[100vw]">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:top-2 focus:left-2">Skip to content</a>
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
@@ -36,7 +46,7 @@ export default function DashboardLayout() {
             className="fixed inset-0 bg-black bg-opacity-25"
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="relative flex flex-col max-w-xs w-full bg-white h-screen overflow-y-auto">
+          <div className="relative flex flex-col max-w-xs w-full bg-white dark:bg-gray-800 h-screen overflow-y-auto">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 type="button"
@@ -57,23 +67,23 @@ export default function DashboardLayout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page content */}
-        <main id="main-content" className="flex-1 pb-8 overflow-x-hidden" role="main">
+        <main id="main-content" className="flex-1 pb-8 overflow-x-hidden dark:bg-gray-900" role="main" aria-label="Main content">
           <div className="w-full max-w-[100vw] mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <Outlet />
           </div>
         </main>
 
         {/* Footer with GONXT branding */}
-        <footer className="bg-white border-t border-gray-100 py-4">
+        <footer className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 py-4" role="contentinfo">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                 <span>A Product of</span>
                 <a href="https://www.gonxt.tech" target="_blank" rel="noopener noreferrer">
                   <img src="/gonxt-logo.svg" alt="GONXT" className="h-5" />
                 </a>
               </div>
-              <div className="text-sm text-gray-500 text-center sm:text-right">
+              <div className="text-sm text-gray-500 dark:text-gray-400 text-center sm:text-right">
                 &copy; {new Date().getFullYear()} SalesSync by GONXT. All rights reserved.
               </div>
             </div>
