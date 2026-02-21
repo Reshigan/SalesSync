@@ -29,7 +29,7 @@ app.get('/health', (c) => {
     status: 'healthy',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime ? process.uptime() : 0,
+    uptime: typeof process !== 'undefined' && process.uptime ? process.uptime() : 0,
     environment: 'production'
   });
 });
