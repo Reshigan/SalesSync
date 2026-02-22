@@ -3459,10 +3459,9 @@ const generateCreditNoteFromReturn = async (db, tenantId, returnId, userId) => {
 const createCommissionFromSale = async (db, tenantId, agentId, saleAmount, saleType, referenceId, referenceNumber) => {
   if (!agentId || !saleAmount) return null;
 
-  const rateSetting = await db.prepare("SELECT value FROM system_settings WHERE tenant_id = ? AND key = 'commission_rate'").bind(tenantId).first();
-  const commissionRate = rateSetting ? parseFloat(rateSetting.value) / 100 : 0.05;
-
-  const commissionAmount = saleAmount * commissionRate;
+  const ruleResult = await calculateCommissionFromRules(db, tenantId, agentId, saleAmount);
+  const commissionRate = ruleResult.rate;
+  const commissionAmount = ruleResult.amount;
   if (commissionAmount <= 0) return null;
 
   const id = uuidv4();
@@ -3476,7 +3475,7 @@ const createCommissionFromSale = async (db, tenantId, agentId, saleAmount, saleT
     VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, 'pending', ?, ?, ?)
   `).bind(id, tenantId, agentId, periodStart, periodEnd,
     commissionAmount, commissionAmount,
-    `Auto-calculated: ${commissionRate * 100}% of ${referenceNumber} (${saleType})`, now, now).run();
+    `Rule: ${ruleResult.ruleName} (${(commissionRate * 100).toFixed(1)}%) on ${referenceNumber} (${saleType})`, now, now).run();
 
   const itemId = uuidv4();
   await db.prepare(`
@@ -9809,7 +9808,12 @@ api.post('/survey-responses', async (c) => {
     // Update survey response count
     await db.prepare('UPDATE surveys SET response_count = COALESCE(response_count, 0) + 1 WHERE id = ?')
       .bind(body.survey_id).run();
-    
+
+    const tenantId = c.get('tenantId');
+    await aggregateSurveyResults(db, tenantId, body.survey_id);
+    await auditLog(db, tenantId, userId || 'system', 'create', 'survey_response', id, null, { survey_id: body.survey_id, customer_id: body.customer_id }, c);
+    await recordActivity(db, tenantId, userId || 'system', null, 'submitted', 'survey_response', id, `Survey ${body.survey_id?.slice(0,8)}`, 'Survey response submitted');
+
     return c.json({ success: true, data: { id }, message: 'Survey response submitted' });
   } catch (error) {
     return c.json({ success: false, message: error.message }, 500);
@@ -18283,6 +18287,176 @@ api.get('/pipeline/returns', async (c) => { const db = c.env.DB; const tenantId 
 api.get('/order-lifecycle/stats', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const stats = await db.prepare("SELECT order_status as status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total_value, COALESCE(AVG(total_amount),0) as avg_value FROM orders WHERE tenant_id = ? GROUP BY order_status").bind(tenantId).all(); return c.json({ success: true, data: stats.results || [] }); } catch { return c.json({ success: true, data: [] }); } });
 
 api.get('/order-lifecycle/timeline', async (c) => { const db = c.env.DB; const tenantId = c.get('tenantId'); try { const { results } = await db.prepare("SELECT * FROM order_status_history WHERE tenant_id = ? ORDER BY changed_at DESC LIMIT 100").bind(tenantId).all(); return c.json({ success: true, data: results || [] }); } catch { return c.json({ success: true, data: [] }); } });
+
+// ==================== GROUP 3: CASH SESSION CLOSE (with auto finance sync) ====================
+api.post('/cash-sessions/:id/close', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const { id } = c.req.param();
+  try {
+    const session = await db.prepare('SELECT * FROM cash_sessions WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!session) return c.json({ success: false, message: 'Cash session not found' }, 404);
+    if (session.status === 'closed') return c.json({ success: false, message: 'Cash session already closed' }, 400);
+    const body = await c.req.json();
+    const closingBalance = body.closing_balance ?? session.opening_balance ?? 0;
+    const closingNotes = body.notes || null;
+    await db.prepare("UPDATE cash_sessions SET status = 'closed', closing_balance = ?, notes = ?, closed_at = datetime('now'), closed_by = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?")
+      .bind(closingBalance, closingNotes, userId, id, tenantId).run();
+    const journalId = await syncCashToFinanceLedger(db, tenantId, id, userId);
+    await auditLog(db, tenantId, userId, 'close', 'cash_session', id, null, { closing_balance: closingBalance, journal_id: journalId }, c);
+    await recordActivity(db, tenantId, userId, null, 'closed', 'cash_session', id, `Cash Session ${session.session_number || id.slice(0,8)}`, 'Cash session closed and synced to finance');
+    return c.json({ success: true, data: { id, status: 'closed', closing_balance: closingBalance, journal_entry_id: journalId }, message: 'Cash session closed and synced to finance ledger' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== GROUP 3: COMMISSION RULES CRUD ====================
+api.get('/commission-rules', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM commission_rules WHERE tenant_id = ? ORDER BY priority DESC, created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch { return c.json({ success: true, data: [] }); }
+});
+
+api.get('/commission-rules/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const rule = await db.prepare('SELECT * FROM commission_rules WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!rule) return c.json({ success: false, message: 'Commission rule not found' }, 404);
+    return c.json({ success: true, data: rule });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.post('/commission-rules', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json();
+    if (!body.name || !body.rule_type) return c.json({ success: false, message: 'name and rule_type are required' }, 400);
+    const id = crypto.randomUUID();
+    await db.prepare(`INSERT INTO commission_rules (id, tenant_id, name, description, rule_type, rate, flat_amount, agent_id, product_id, product_category_id, min_amount, max_amount, effective_from, effective_to, priority, is_active, created_by, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, datetime('now'), datetime('now'))`)
+      .bind(id, tenantId, body.name, body.description || null, body.rule_type, body.rate || 0, body.flat_amount || 0, body.agent_id || null, body.product_id || null, body.product_category_id || null, body.min_amount || null, body.max_amount || null, body.effective_from || null, body.effective_to || null, body.priority || 0, userId).run();
+    await auditLog(db, tenantId, userId, 'create', 'commission_rule', id, null, body, c);
+    return c.json({ success: true, data: { id }, message: 'Commission rule created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.put('/commission-rules/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const { id } = c.req.param();
+  try {
+    const existing = await db.prepare('SELECT * FROM commission_rules WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Commission rule not found' }, 404);
+    const body = await c.req.json();
+    await db.prepare(`UPDATE commission_rules SET name = ?, description = ?, rule_type = ?, rate = ?, flat_amount = ?, agent_id = ?, product_id = ?, product_category_id = ?, min_amount = ?, max_amount = ?, effective_from = ?, effective_to = ?, priority = ?, is_active = ?, updated_at = datetime('now') WHERE id = ? AND tenant_id = ?`)
+      .bind(body.name ?? existing.name, body.description ?? existing.description, body.rule_type ?? existing.rule_type, body.rate ?? existing.rate, body.flat_amount ?? existing.flat_amount, body.agent_id ?? existing.agent_id, body.product_id ?? existing.product_id, body.product_category_id ?? existing.product_category_id, body.min_amount ?? existing.min_amount, body.max_amount ?? existing.max_amount, body.effective_from ?? existing.effective_from, body.effective_to ?? existing.effective_to, body.priority ?? existing.priority, body.is_active ?? existing.is_active, id, tenantId).run();
+    await auditLog(db, tenantId, userId, 'update', 'commission_rule', id, existing, body, c);
+    return c.json({ success: true, message: 'Commission rule updated' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.delete('/commission-rules/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId'); const { id } = c.req.param();
+  try {
+    const existing = await db.prepare('SELECT * FROM commission_rules WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!existing) return c.json({ success: false, message: 'Commission rule not found' }, 404);
+    await db.prepare('DELETE FROM commission_rules WHERE id = ? AND tenant_id = ?').bind(id, tenantId).run();
+    await auditLog(db, tenantId, userId, 'delete', 'commission_rule', id, existing, null, c);
+    return c.json({ success: true, message: 'Commission rule deleted' });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== GROUP 3: COMMISSION PREVIEW (calculate without saving) ====================
+api.post('/commission-rules/preview', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const body = await c.req.json();
+    if (!body.agent_id || !body.sale_amount) return c.json({ success: false, message: 'agent_id and sale_amount are required' }, 400);
+    const result = await calculateCommissionFromRules(db, tenantId, body.agent_id, body.sale_amount, body.product_id || null, body.category_id || null);
+    return c.json({ success: true, data: { agent_id: body.agent_id, sale_amount: body.sale_amount, commission_rate: result.rate, commission_amount: result.amount, rule_id: result.ruleId, rule_name: result.ruleName } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== GROUP 3: SURVEY ANALYTICS DASHBOARD ====================
+api.get('/survey-analytics', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const surveyId = c.req.query('survey_id') || null;
+    const analytics = await aggregateSurveyResults(db, tenantId, surveyId);
+    let totalResponses = 0;
+    let surveyBreakdown = {};
+    for (const row of analytics) {
+      totalResponses += row.response_count || 0;
+      if (!surveyBreakdown[row.survey_id]) surveyBreakdown[row.survey_id] = { response_count: 0, questions: {} };
+      surveyBreakdown[row.survey_id].response_count += row.response_count || 0;
+      if (!surveyBreakdown[row.survey_id].questions[row.question_key]) surveyBreakdown[row.survey_id].questions[row.question_key] = [];
+      surveyBreakdown[row.survey_id].questions[row.question_key].push({ value: row.response_value, count: row.response_count, avg_score: row.avg_score });
+    }
+    return c.json({ success: true, data: { total_responses: totalResponses, survey_count: Object.keys(surveyBreakdown).length, breakdown: surveyBreakdown, raw: analytics } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/survey-analytics/:surveyId', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { surveyId } = c.req.param();
+  try {
+    const analytics = await aggregateSurveyResults(db, tenantId, surveyId);
+    const totalResponses = analytics.reduce((sum, r) => sum + (r.response_count || 0), 0);
+    const questions = {};
+    for (const row of analytics) {
+      if (!questions[row.question_key]) questions[row.question_key] = [];
+      questions[row.question_key].push({ value: row.response_value, count: row.response_count, avg_score: row.avg_score });
+    }
+    return c.json({ success: true, data: { survey_id: surveyId, total_responses: totalResponses, questions, raw: analytics } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+// ==================== GROUP 3: DATA RETENTION CLEANUP ====================
+api.post('/data-retention/cleanup', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json();
+    const retentionDays = body.retention_days || 365;
+    const dryRun = body.dry_run !== false;
+    const cutoffDate = new Date(Date.now() - retentionDays * 86400000).toISOString();
+    const targets = [
+      { table: 'audit_logs', dateCol: 'created_at' },
+      { table: 'activity_feed', dateCol: 'created_at' },
+      { table: 'notifications', dateCol: 'created_at' },
+      { table: 'webhook_logs', dateCol: 'created_at' },
+      { table: 'error_logs', dateCol: 'created_at' },
+    ];
+    const results = [];
+    for (const t of targets) {
+      try {
+        const countResult = await db.prepare(`SELECT COUNT(*) as count FROM ${t.table} WHERE tenant_id = ? AND ${t.dateCol} < ?`).bind(tenantId, cutoffDate).first();
+        const count = countResult?.count || 0;
+        if (!dryRun && count > 0) {
+          await db.prepare(`DELETE FROM ${t.table} WHERE tenant_id = ? AND ${t.dateCol} < ?`).bind(tenantId, cutoffDate).run();
+        }
+        results.push({ table: t.table, records: count, action: dryRun ? 'would_delete' : 'deleted' });
+      } catch { results.push({ table: t.table, records: 0, action: 'skipped', reason: 'table not found' }); }
+    }
+    const totalRecords = results.reduce((s, r) => s + r.records, 0);
+    if (!dryRun) {
+      await auditLog(db, tenantId, userId, 'data_retention_cleanup', 'system', null, null, { retention_days: retentionDays, cutoff_date: cutoffDate, total_deleted: totalRecords, details: results }, c);
+    }
+    return c.json({ success: true, data: { retention_days: retentionDays, cutoff_date: cutoffDate, dry_run: dryRun, total_records: totalRecords, details: results }, message: dryRun ? `Dry run: ${totalRecords} records would be deleted` : `${totalRecords} records deleted` });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/data-retention/policy', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const setting = await db.prepare("SELECT value FROM system_settings WHERE tenant_id = ? AND key = 'data_retention_days'").bind(tenantId).first();
+    const retentionDays = setting ? parseInt(setting.value) : 365;
+    const targets = ['audit_logs', 'activity_feed', 'notifications', 'webhook_logs', 'error_logs'];
+    const counts = [];
+    for (const table of targets) {
+      try {
+        const result = await db.prepare(`SELECT COUNT(*) as count FROM ${table} WHERE tenant_id = ?`).bind(tenantId).first();
+        counts.push({ table, total_records: result?.count || 0 });
+      } catch { counts.push({ table, total_records: 0, note: 'table not found' }); }
+    }
+    return c.json({ success: true, data: { retention_days: retentionDays, tables: counts } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
 
 app.route('/api', api);
 
