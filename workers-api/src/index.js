@@ -18661,8 +18661,8 @@ api.get('/reports/inventory-summary', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId');
   try {
     const [stockLevels, lowStock, movements, topMovers] = await Promise.all([
-      db.prepare("SELECT COUNT(*) as total_products, SUM(CASE WHEN si.quantity > 0 THEN 1 ELSE 0 END) as in_stock, SUM(CASE WHEN si.quantity <= 0 THEN 1 ELSE 0 END) as out_of_stock, SUM(CASE WHEN si.quantity <= si.reorder_point THEN 1 ELSE 0 END) as low_stock FROM stock_items si WHERE si.tenant_id = ?").bind(tenantId).first(),
-      db.prepare("SELECT p.name, si.quantity, si.reorder_point, w.name as warehouse FROM stock_items si JOIN products p ON si.product_id = p.id LEFT JOIN warehouses w ON si.warehouse_id = w.id WHERE si.tenant_id = ? AND si.quantity <= si.reorder_point ORDER BY si.quantity ASC LIMIT 20").bind(tenantId).all(),
+      db.prepare("SELECT COUNT(*) as total_products, SUM(CASE WHEN si.quantity_on_hand > 0 THEN 1 ELSE 0 END) as in_stock, SUM(CASE WHEN si.quantity_on_hand <= 0 THEN 1 ELSE 0 END) as out_of_stock FROM inventory_stock si WHERE si.tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT p.name, si.quantity_on_hand as quantity, w.name as warehouse FROM inventory_stock si JOIN products p ON si.product_id = p.id LEFT JOIN warehouses w ON si.warehouse_id = w.id WHERE si.tenant_id = ? AND si.quantity_on_hand <= 10 ORDER BY si.quantity_on_hand ASC LIMIT 20").bind(tenantId).all(),
       db.prepare("SELECT movement_type, COUNT(*) as count, SUM(quantity) as total_qty FROM stock_movements WHERE tenant_id = ? AND created_at > datetime('now', '-30 days') GROUP BY movement_type").bind(tenantId).all(),
       db.prepare("SELECT p.name, SUM(ABS(sm.quantity)) as total_movement FROM stock_movements sm JOIN products p ON sm.product_id = p.id WHERE sm.tenant_id = ? AND sm.created_at > datetime('now', '-30 days') GROUP BY sm.product_id ORDER BY total_movement DESC LIMIT 10").bind(tenantId).all()
     ]);
@@ -18677,7 +18677,7 @@ api.get('/reports/finance-summary', async (c) => {
       db.prepare("SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total FROM invoices WHERE tenant_id = ? GROUP BY status").bind(tenantId).all(),
       db.prepare("SELECT payment_method, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM payments WHERE tenant_id = ? GROUP BY payment_method").bind(tenantId).all(),
       db.prepare("SELECT CASE WHEN julianday('now') - julianday(due_date) <= 0 THEN 'current' WHEN julianday('now') - julianday(due_date) <= 30 THEN '1-30 days' WHEN julianday('now') - julianday(due_date) <= 60 THEN '31-60 days' WHEN julianday('now') - julianday(due_date) <= 90 THEN '61-90 days' ELSE '90+ days' END as bucket, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total FROM invoices WHERE tenant_id = ? AND status IN ('sent','overdue','partially_paid') GROUP BY bucket").bind(tenantId).all(),
-      db.prepare("SELECT status, COUNT(*) as count, COALESCE(SUM(total_amount),0) as total FROM commissions WHERE tenant_id = ? GROUP BY status").bind(tenantId).all()
+      db.prepare("SELECT status, COUNT(*) as count, COALESCE(SUM(amount),0) as total FROM commissions WHERE tenant_id = ? GROUP BY status").bind(tenantId).all()
     ]);
     return c.json({ success: true, data: { invoices: invoiceStats.results || [], payments: paymentStats.results || [], aging: agingBuckets.results || [], commissions: commissionStats.results || [] } });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
@@ -18687,9 +18687,9 @@ api.get('/reports/agent-performance', async (c) => {
   const db = c.env.DB; const tenantId = c.get('tenantId');
   try {
     const [agentSales, agentVisits, agentCommissions] = await Promise.all([
-      db.prepare("SELECT u.name, COUNT(o.id) as orders, COALESCE(SUM(o.total_amount),0) as revenue, COALESCE(AVG(o.total_amount),0) as avg_order FROM orders o JOIN users u ON o.created_by = u.id WHERE o.tenant_id = ? GROUP BY o.created_by ORDER BY revenue DESC").bind(tenantId).all(),
-      db.prepare("SELECT u.name, COUNT(v.id) as total_visits, SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END) as completed, ROUND(SUM(CASE WHEN v.status = 'completed' THEN 1.0 ELSE 0 END) / MAX(COUNT(v.id), 1) * 100, 1) as completion_rate FROM visits v JOIN users u ON v.agent_id = u.id WHERE v.tenant_id = ? GROUP BY v.agent_id ORDER BY total_visits DESC").bind(tenantId).all(),
-      db.prepare("SELECT u.name, COUNT(c.id) as commission_count, COALESCE(SUM(c.total_amount),0) as total_earned FROM commissions c JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ? GROUP BY c.agent_id ORDER BY total_earned DESC").bind(tenantId).all()
+      db.prepare("SELECT (u.first_name || ' ' || u.last_name) as name, COUNT(o.id) as orders, COALESCE(SUM(o.total_amount),0) as revenue, COALESCE(AVG(o.total_amount),0) as avg_order FROM orders o JOIN users u ON o.created_by = u.id WHERE o.tenant_id = ? GROUP BY o.created_by ORDER BY revenue DESC").bind(tenantId).all(),
+      db.prepare("SELECT (u.first_name || ' ' || u.last_name) as name, COUNT(v.id) as total_visits, SUM(CASE WHEN v.status = 'completed' THEN 1 ELSE 0 END) as completed, ROUND(SUM(CASE WHEN v.status = 'completed' THEN 1.0 ELSE 0 END) / MAX(COUNT(v.id), 1) * 100, 1) as completion_rate FROM visits v JOIN users u ON v.agent_id = u.id WHERE v.tenant_id = ? GROUP BY v.agent_id ORDER BY total_visits DESC").bind(tenantId).all(),
+      db.prepare("SELECT (u.first_name || ' ' || u.last_name) as name, COUNT(c.id) as commission_count, COALESCE(SUM(c.amount),0) as total_earned FROM commissions c JOIN users u ON c.agent_id = u.id WHERE c.tenant_id = ? GROUP BY c.agent_id ORDER BY total_earned DESC").bind(tenantId).all()
     ]);
     return c.json({ success: true, data: { sales: agentSales.results || [], visits: agentVisits.results || [], commissions: agentCommissions.results || [] } });
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
