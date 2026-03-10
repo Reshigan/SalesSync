@@ -176,7 +176,6 @@ class TradeMarketingService {
       throw error
     }
   }
-}
 
   async getVisits(filter?: any): Promise<any[]> {
     try {
