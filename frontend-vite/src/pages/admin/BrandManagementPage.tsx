@@ -36,7 +36,7 @@ export default function BrandManagementPage() {
     try {
       setLoading(true)
       const response = await brandService.getBrands()
-      setBrands(response.data || [])
+      setBrands(Array.isArray(response) ? response : response.data || [])
     } catch (error) {
       console.error('Failed to load brands:', error)
       toast.error('Failed to load brands')
@@ -50,10 +50,10 @@ export default function BrandManagementPage() {
     try {
       if (editingBrand) {
         await brandService.updateBrand(editingBrand.id, formData)
-        toast.error('Brand updated successfully')
+        toast.success('Brand updated successfully')
       } else {
         await brandService.createBrand(formData)
-        toast.error('Brand created successfully')
+        toast.success('Brand created successfully')
       }
       setShowModal(false)
       setEditingBrand(null)
@@ -82,7 +82,7 @@ export default function BrandManagementPage() {
     
     try {
       await brandService.deleteBrand(id)
-      toast.error('Brand deleted successfully')
+      toast.success('Brand deleted successfully')
       loadBrands()
     } catch (error) {
       console.error('Failed to delete brand:', error)

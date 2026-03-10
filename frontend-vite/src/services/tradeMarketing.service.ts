@@ -176,6 +176,47 @@ class TradeMarketingService {
       throw error
     }
   }
+
+  async getVisits(filter?: any): Promise<any[]> {
+    try {
+      const response = await apiClient.get('/visits', { params: filter })
+      return response.data.data || []
+    } catch (error) {
+      console.error('Failed to fetch visits:', error)
+      return []
+    }
+  }
+
+  async getAnalyticsSummary(): Promise<any> {
+    try {
+      const response = await apiClient.get(`${this.baseUrl}/analytics/summary`)
+      return response.data.data || {}
+    } catch (error) {
+      console.error('Failed to fetch analytics summary:', error)
+      return {}
+    }
+  }
+
+  async createSKUAvailability(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/sku-availability`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create SKU availability:', error)
+      throw error
+    }
+  }
+
+  async createShelfAnalytics(data: any): Promise<any> {
+    try {
+      const response = await apiClient.post(`${this.baseUrl}/shelf-analytics`, data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to create shelf analytics:', error)
+      throw error
+    }
+  }
 }
 
 export const tradeMarketingService = new TradeMarketingService()
+export default tradeMarketingService

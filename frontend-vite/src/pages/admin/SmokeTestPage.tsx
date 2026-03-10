@@ -280,15 +280,15 @@ export default function SmokeTestPage() {
           <div className="text-sm text-gray-600">Total Routes</div>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-2xl font-bold text-green-600">{successCount}</div>
+          <div className="text-2xl font-bold text-green-600">{activeTab === 'api' ? apiSuccessCount : routeSuccessCount}</div>
           <div className="text-sm text-gray-600">Passed</div>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-2xl font-bold text-red-600">{errorCount}</div>
+          <div className="text-2xl font-bold text-red-600">{activeTab === 'api' ? apiErrorCount : routeErrorCount}</div>
           <div className="text-sm text-gray-600">Failed</div>
         </div>
         <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <div className="text-2xl font-bold text-gray-400">{pendingCount}</div>
+          <div className="text-2xl font-bold text-gray-400">{activeTab === 'api' ? apiPendingCount : routePendingCount}</div>
           <div className="text-sm text-gray-600">Pending</div>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function SmokeTestPage() {
       {/* Actions */}
       <div className="mb-6">
         <button
-          onClick={runTests}
+          onClick={activeTab === 'api' ? runApiHealthChecks : runRouteTests}
           disabled={running}
           className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -387,7 +387,7 @@ export default function SmokeTestPage() {
       </div>
 
       {/* Export Results */}
-      {!running && (successCount > 0 || errorCount > 0) && (
+      {!running && (apiSuccessCount > 0 || apiErrorCount > 0 || routeSuccessCount > 0 || routeErrorCount > 0) && (
         <div className="mt-6">
           <button
             onClick={() => {

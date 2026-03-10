@@ -103,7 +103,7 @@ const ProductDistributionFormPage: React.FC = () => {
         distributionNotes: formData.distributionNotes
       });
 
-      toast.error('✅ Product distribution recorded successfully!');
+      toast.success('Product distribution recorded successfully!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to record distribution:', error);
