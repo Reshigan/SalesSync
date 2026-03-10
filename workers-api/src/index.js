@@ -18761,6 +18761,129 @@ api.get('/system/db-size', async (c) => {
   } catch (e) { return c.json({ success: false, message: e.message }, 500); }
 });
 
+// === MISSING ROUTE ALIASES AND ENDPOINTS ===
+
+api.get('/beat-plans', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM beat_plans WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch { return c.json({ success: true, data: [] }); }
+});
+
+api.post('/beat-plans', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json(); const id = crypto.randomUUID(); const now = new Date().toISOString();
+    await db.prepare("INSERT INTO beat_plans (id, tenant_id, name, description, route_id, agent_id, frequency, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)").bind(id, tenantId, body.name, body.description ?? null, body.route_id ?? null, body.agent_id ?? null, body.frequency ?? 'weekly', now).run();
+    return c.json({ success: true, data: { id }, message: 'Beat plan created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/beat-plans/:id', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const { id } = c.req.param();
+  try {
+    const plan = await db.prepare('SELECT * FROM beat_plans WHERE id = ? AND tenant_id = ?').bind(id, tenantId).first();
+    if (!plan) return c.json({ success: false, message: 'Beat plan not found' }, 404);
+    return c.json({ success: true, data: plan });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/dashboard/inventory', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [totalStock, lowStock, categories] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as count, SUM(COALESCE(quantity,0)) as total_qty FROM inventory_stock WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as count FROM inventory_stock WHERE tenant_id = ? AND quantity <= COALESCE(reorder_point, 10)").bind(tenantId).first(),
+      db.prepare("SELECT c.name, COUNT(p.id) as product_count FROM categories c LEFT JOIN products p ON c.id = p.category_id AND c.tenant_id = p.tenant_id WHERE c.tenant_id = ? GROUP BY c.id, c.name LIMIT 10").bind(tenantId).all()
+    ]);
+    return c.json({ success: true, data: { total_items: totalStock?.count ?? 0, total_quantity: totalStock?.total_qty ?? 0, low_stock_count: lowStock?.count ?? 0, categories: categories?.results ?? [] } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/dashboard/field-operations', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [visits, tasks, agents] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM visits WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed FROM tasks WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT COUNT(*) as count FROM users WHERE tenant_id = ? AND role IN ('agent','field_agent','sales_rep')").bind(tenantId).first()
+    ]);
+    return c.json({ success: true, data: { total_visits: visits?.total ?? 0, completed_visits: visits?.completed ?? 0, total_tasks: tasks?.total ?? 0, completed_tasks: tasks?.completed ?? 0, active_agents: agents?.count ?? 0 } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/dashboard/campaigns', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [stats, recent] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) as active, SUM(COALESCE(budget,0)) as total_budget, SUM(COALESCE(spent_amount,0)) as total_spent FROM campaigns WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT * FROM campaigns WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 5").bind(tenantId).all()
+    ]);
+    return c.json({ success: true, data: { total_campaigns: stats?.total ?? 0, active_campaigns: stats?.active ?? 0, total_budget: stats?.total_budget ?? 0, total_spent: stats?.total_spent ?? 0, recent_campaigns: recent?.results ?? [] } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/inventory-adjustments', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM inventory_adjustments WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch { return c.json({ success: true, data: [] }); }
+});
+
+api.post('/inventory-adjustments', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json(); const id = crypto.randomUUID(); const now = new Date().toISOString();
+    const adjNumber = 'ADJ-' + Date.now().toString(36).toUpperCase();
+    await db.prepare("INSERT INTO inventory_adjustments (id, tenant_id, adjustment_number, warehouse_id, reason, status, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?)").bind(id, tenantId, adjNumber, body.warehouse_id ?? null, body.reason ?? null, userId, now, now).run();
+    return c.json({ success: true, data: { id }, message: 'Adjustment created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/goods-receipts', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const { results } = await db.prepare('SELECT * FROM goods_received_notes WHERE tenant_id = ? ORDER BY created_at DESC').bind(tenantId).all();
+    return c.json({ success: true, data: results || [] });
+  } catch { return c.json({ success: true, data: [] }); }
+});
+
+api.post('/goods-receipts', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId'); const userId = c.get('userId');
+  try {
+    const body = await c.req.json(); const id = crypto.randomUUID(); const now = new Date().toISOString();
+    const grnNumber = 'GRN-' + Date.now().toString(36).toUpperCase();
+    await db.prepare("INSERT INTO goods_received_notes (id, tenant_id, grn_number, supplier_id, warehouse_id, status, received_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'draft', ?, ?, ?)").bind(id, tenantId, grnNumber, body.supplier_id ?? null, body.warehouse_id ?? null, userId, now, now).run();
+    return c.json({ success: true, data: { id }, message: 'GRN created' }, 201);
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/reports/inventory', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [stock, movements, lowStock] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total_items, SUM(COALESCE(quantity,0)) as total_qty FROM inventory_stock WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT movement_type, COUNT(*) as count, SUM(COALESCE(quantity,0)) as total_qty FROM stock_movements WHERE tenant_id = ? GROUP BY movement_type").bind(tenantId).all(),
+      db.prepare("SELECT i.*, p.name as product_name FROM inventory_stock i LEFT JOIN products p ON i.product_id = p.id WHERE i.tenant_id = ? AND i.quantity <= COALESCE(i.reorder_point, 10) ORDER BY i.quantity ASC LIMIT 20").bind(tenantId).all()
+    ]);
+    return c.json({ success: true, data: { total_items: stock?.total_items ?? 0, total_quantity: stock?.total_qty ?? 0, movements: movements?.results ?? [], low_stock_items: lowStock?.results ?? [] } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
+api.get('/reports/customers', async (c) => {
+  const db = c.env.DB; const tenantId = c.get('tenantId');
+  try {
+    const [stats, topCustomers, recentCustomers] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN status='active' THEN 1 ELSE 0 END) as active FROM customers WHERE tenant_id = ?").bind(tenantId).first(),
+      db.prepare("SELECT c.id, c.name, c.email, COUNT(o.id) as order_count, SUM(COALESCE(o.total_amount,0)) as total_spent FROM customers c LEFT JOIN orders o ON c.id = o.customer_id AND c.tenant_id = o.tenant_id WHERE c.tenant_id = ? GROUP BY c.id, c.name, c.email ORDER BY total_spent DESC LIMIT 10").bind(tenantId).all(),
+      db.prepare("SELECT * FROM customers WHERE tenant_id = ? ORDER BY created_at DESC LIMIT 10").bind(tenantId).all()
+    ]);
+    return c.json({ success: true, data: { total_customers: stats?.total ?? 0, active_customers: stats?.active ?? 0, top_customers: topCustomers?.results ?? [], recent_customers: recentCustomers?.results ?? [] } });
+  } catch (e) { return c.json({ success: false, message: e.message }, 500); }
+});
+
 // === MISSING ENDPOINTS: van-routes, distributions, users CRUD, kyc-checks, pos-materials, backups, integrations ===
 
 api.get('/van-routes', async (c) => {
