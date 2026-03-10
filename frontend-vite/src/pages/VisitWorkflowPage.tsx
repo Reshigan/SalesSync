@@ -83,7 +83,7 @@ const VisitWorkflowPage: React.FC = () => {
         visitNotes: visitNotes || undefined
       });
       
-      toast.error('Visit completed successfully!');
+      toast.success('Visit completed successfully!');
       navigate('/field-marketing');
     } catch (error) {
       console.error('Failed to complete visit:', error);

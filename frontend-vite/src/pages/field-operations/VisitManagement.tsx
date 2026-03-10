@@ -133,7 +133,7 @@ const VisitManagement: React.FC = () => {
       setShowCreateModal(false)
       resetForm()
       fetchVisits()
-      toast.error('Visit created successfully!')
+      toast.success('Visit created successfully!')
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error creating visit')
     }
@@ -149,7 +149,7 @@ const VisitManagement: React.FC = () => {
       setSelectedVisit(null)
       resetForm()
       fetchVisits()
-      toast.error('Visit updated successfully!')
+      toast.success('Visit updated successfully!')
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error updating visit')
     }
@@ -161,7 +161,7 @@ const VisitManagement: React.FC = () => {
     try {
       await apiClient.delete(`/visits/${visitId}`)
       fetchVisits()
-      toast.error('Visit deleted successfully!')
+      toast.success('Visit deleted successfully!')
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Error deleting visit')
     }

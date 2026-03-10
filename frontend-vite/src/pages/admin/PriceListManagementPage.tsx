@@ -37,7 +37,7 @@ export default function PriceListManagementPage() {
     
     try {
       await pricingService.deletePriceList(id)
-      toast.error('Price list deleted successfully')
+      toast.success('Price list deleted successfully')
       loadPriceLists()
     } catch (error) {
       console.error('Failed to delete price list:', error)

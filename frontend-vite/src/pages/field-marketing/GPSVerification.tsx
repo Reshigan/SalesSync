@@ -115,7 +115,7 @@ export default function GPSVerification() {
         justification: justification
       });
       
-      toast.error('Customer location updated successfully');
+      toast.success('Customer location updated successfully');
       window.location.reload();
     } catch (error) {
       console.error('Error updating customer location:', error);

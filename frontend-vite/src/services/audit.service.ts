@@ -42,6 +42,20 @@ class AuditService {
     }
   }
 
+  async getLogs(filter?: { search?: string; action?: string; entity_type?: string; date_from?: string; date_to?: string; page?: number; limit?: number }): Promise<{ logs: AuditEntry[]; total: number }> {
+    try {
+      const response = await apiClient.get('/audit-logs', { params: filter })
+      const data = response.data.data || response.data
+      return {
+        logs: Array.isArray(data) ? data : data?.logs || [],
+        total: data?.total || (Array.isArray(data) ? data.length : 0)
+      }
+    } catch (error) {
+      console.error('Failed to fetch audit logs:', error)
+      return { logs: [], total: 0 }
+    }
+  }
+
   async getAuditEntry(entityType: string, entityId: string, entryId: string): Promise<AuditEntry | null> {
     try {
       const response = await apiClient.get(`${this.baseUrl}/${entityType}/${entityId}/entries/${entryId}`)

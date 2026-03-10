@@ -165,7 +165,7 @@ const BrandActivationFormPage: React.FC = () => {
       const response = await apiClient.post('/trade-marketing-new/brand-activations', formData);
 
       if (response.data) {
-        toast.error('Brand Activation event created successfully!');
+        toast.success('Brand Activation event created successfully!');
         // Reset form
         setFormData({
           eventType: 'sampling',

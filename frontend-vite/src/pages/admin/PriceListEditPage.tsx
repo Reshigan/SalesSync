@@ -109,7 +109,7 @@ export default function PriceListEditPage() {
         await pricingService.updatePriceListItems(priceListId, items)
       }
 
-      toast.error(isNew ? 'Price list created successfully' : 'Price list updated successfully')
+      toast.success(isNew ? 'Price list created successfully' : 'Price list updated successfully')
       navigate('/admin/price-lists')
     } catch (error) {
       console.error('Failed to save price list:', error)

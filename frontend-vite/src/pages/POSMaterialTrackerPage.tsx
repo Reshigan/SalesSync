@@ -165,7 +165,7 @@ const POSMaterialTrackerPage: React.FC = () => {
       const response = await apiClient.post('/trade-marketing-new/pos-materials', installationData);
 
       if (response.data) {
-        toast.error('Installation recorded successfully!');
+        toast.success('Installation recorded successfully!');
         await loadInstallationHistory(); // Reload list
         setShowInstallForm(false);
         setSelectedMaterial(null);

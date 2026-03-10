@@ -104,7 +104,7 @@ const ShelfAnalyticsFormPage: React.FC = () => {
         competitorAnalysis: formData.competitors
       });
 
-      toast.error('✅ Shelf analytics recorded successfully!');
+      toast.success('Shelf analytics recorded successfully!');
       navigate(-1);
     } catch (error) {
       console.error('Failed to create shelf analytics:', error);
